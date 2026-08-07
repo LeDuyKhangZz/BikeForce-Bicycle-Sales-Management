@@ -24,6 +24,13 @@ và không còn OPEN QUESTION nghiệp vụ nào chờ trả lời.
 `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git` (DEC-028).
 `.gitignore` **đã kiểm chứng lại sau khi scaffold**: chặn `.env.local`, cho phép `.env.example`.
 
+> ⚠ **`git push` KHÔNG chạy được từ phía agent** (phát hiện 2026-08-07). Credential helper là
+> Git Credential Manager và môi trường không có TTY nên push luôn fail
+> (`could not read Username for 'https://github.com'`), kể cả khi tắt sandbox.
+> **Đây là giới hạn kỹ thuật, không phải thiếu quyền** — quyền push đứng vẫn còn hiệu lực.
+> Cách làm: agent **commit bình thường**, rồi **báo người dùng tự chạy `git push origin main`**.
+> Commit `7febb6b` (Phase 1) đang **chờ người dùng push**.
+
 ---
 
 ## Completed
