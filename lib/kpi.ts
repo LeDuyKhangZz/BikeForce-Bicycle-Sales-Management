@@ -34,7 +34,7 @@
  * buộc test, và BR-023 ghi rõ dải "Gần đạt" là `80–99.99%`. Đừng "sửa" bằng cách
  * xét ngưỡng trên số đã làm tròn: làm vậy là đổi BR-023, phải có DEC mới.
  */
-import { formatCurrencyVND, formatThousands } from '@/lib/currency';
+import { formatCompactVND, formatCurrencyVND, formatThousands } from '@/lib/currency';
 
 /** Ngưỡng do BR-023 quy định. Giao diện KHÔNG BAO GIỜ tự quyết ngưỡng này. */
 export type AchievementStatus = 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING';
@@ -124,6 +124,26 @@ export function formatMetricValue(value: number | null, metric: KpiMetric): stri
   if (value === null || !isUsableNumber(value)) return EMPTY_DISPLAY;
   if (metric === 'REVENUE') return formatCurrencyVND(value);
   return `${formatThousands(value)} ${METRIC_UNIT[metric]}`;
+}
+
+/**
+ * Bản RÚT GỌN của `formatMetricValue()` — thêm ở PHASE 6 cho thẻ ảnh 9:16.
+ *
+ * `150000000` + `REVENUE` → `'150tr'`; ba chỉ tiêu còn lại **không đổi** vì trần
+ * của chúng chỉ 4 chữ số (`MAX_SALES_QUANTITY = 10.000`) nên đã vừa khung sẵn.
+ *
+ * Vì sao là một hàm riêng chứ không phải một tham số `compact` của
+ * `formatMetricValue()`: chỗ gọi nhiều nhất vẫn là bảng đối chiếu trên web, nơi
+ * số đầy đủ mới đúng. Một tham số boolean ở đó sẽ luôn là `false` và sớm muộn
+ * cũng có người truyền nhầm. Hai cái tên, hai chỗ dùng rõ ràng.
+ *
+ * Chỗ DUY NHẤT được dùng bản này là bảng 4 dòng của thẻ ảnh (`docs/05 §14`) —
+ * khối "DOANH THU THỰC ĐẠT" bên dưới vẫn phải hiện số đầy đủ.
+ */
+export function formatMetricValueCompact(value: number | null, metric: KpiMetric): string {
+  if (value === null || !isUsableNumber(value)) return EMPTY_DISPLAY;
+  if (metric === 'REVENUE') return formatCompactVND(value);
+  return formatMetricValue(value, metric);
 }
 
 /**

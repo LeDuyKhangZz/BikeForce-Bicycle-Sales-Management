@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CalendarPlus, CheckCircle2, Clock, FileText, Image as ImageIcon } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, Clock, FileText } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonClassName } from '@/components/ui/button';
@@ -9,8 +9,10 @@ import { requireRole } from '@/features/auth/queries';
 import { AchievementTable } from '@/features/report-comparison/achievement-table';
 import { ReportNotes } from '@/features/report-comparison/report-notes';
 import { DiscardEveningDraft } from '@/features/report-evening/discard-evening-draft';
+import { ShareImageButton } from '@/features/report-share/share-image-button';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { messageForSavedParam } from '@/lib/reports/messages';
+import { shareImageFileName } from '@/lib/reports/share-card';
 import { getTodayView, type TodayCtaKey } from '@/lib/reports/today-cta';
 import { createClient } from '@/lib/supabase/server';
 import { getTodayReport } from '@/services/reports';
@@ -37,9 +39,6 @@ export const metadata: Metadata = {
  * 👉 Xoá `VIEW_REPORT` khỏi tập này ngay khi Phase 7 dựng xong route đó.
  */
 const CTA_ROUTES_NOT_READY: ReadonlySet<TodayCtaKey> = new Set<TodayCtaKey>(['VIEW_REPORT']);
-
-/** FR-018 — sinh ảnh PNG 1080×1920 là **Phase 6**. Xoá cờ này khi làm xong. */
-const EXPORT_IMAGE_NOT_READY = true;
 
 const STATE_ICON = {
   NO_REPORT: CalendarPlus,
@@ -144,23 +143,21 @@ export default async function SalesTodayPage({ searchParams }: Props) {
         )}
 
         {/*
-          BR-002 / FR-017 — nút Xuất ảnh CHỈ được bật khi báo cáo đã persist với
-          `status = 'COMPLETED'`, không bao giờ suy ra từ trạng thái form.
-          Ở bản hiện tại nút luôn disabled vì bản thân chức năng sinh ảnh là
-          FR-018 — Phase 6. Điều kiện BR-002 vẫn được giữ nguyên trong biểu thức
-          để Phase 6 chỉ việc xoá `EXPORT_IMAGE_NOT_READY`.
+          BR-002 / FR-017 — nút Xuất ảnh CHỈ xuất hiện khi báo cáo đã persist với
+          `status = 'COMPLETED'`; `canExportImage` đọc từ dữ liệu đã lưu, không
+          bao giờ suy ra từ trạng thái form. Route handler kiểm lại lần nữa
+          (`docs/07 §4.1`) — ẩn nút không phải là bảo mật.
+
+          `report !== null` là điều kiện thừa về mặt nghiệp vụ (`canExportImage`
+          chỉ bật ở nhánh COMPLETED, mà nhánh đó luôn có báo cáo) nhưng TypeScript
+          cần nó để thu hẹp kiểu — và nó rẻ hơn một dấu `!`.
         */}
-        <div className="flex flex-col gap-2">
-          <Button variant="secondary" size="lg" disabled={!view.canExportImage || EXPORT_IMAGE_NOT_READY}>
-            <ImageIcon aria-hidden="true" className="size-5" />
-            Xuất ảnh báo cáo
-          </Button>
-          {view.canExportImage && (
-            <p className="text-center text-xs text-muted-foreground">
-              Chức năng xuất ảnh 9:16 sẽ có ở bản cập nhật tiếp theo.
-            </p>
-          )}
-        </div>
+        {report !== null && view.canExportImage && (
+          <ShareImageButton
+            reportId={report.id}
+            fileName={shareImageFileName(profile.full_name, report.report_date)}
+          />
+        )}
       </div>
     </div>
   );

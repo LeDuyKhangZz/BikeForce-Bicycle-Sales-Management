@@ -1,5 +1,6 @@
 import { Card, CardTitle } from '@/components/ui/card';
-import { calculateAchievement, formatMetricValue, type KpiMetric } from '@/lib/kpi';
+import { calculateAchievement, formatMetricValue } from '@/lib/kpi';
+import { KPI_METRIC_ROWS } from '@/lib/reports/metric-rows';
 import type { DailyReport } from '@/services/reports';
 
 import { AchievementBadge } from './achievement-badge';
@@ -22,49 +23,17 @@ import { AchievementBadge } from './achievement-badge';
  * (BR-015).
  */
 
-type MetricRow = {
-  readonly metric: KpiMetric;
-  readonly label: string;
-  readonly target: (report: DailyReport) => number;
-  readonly actual: (report: DailyReport) => number | null;
-};
-
-/** Thứ tự bốn dòng lấy đúng `docs/05 §7.1`, giữ giống `CommitmentSummary`. */
-const METRIC_ROWS: readonly MetricRow[] = [
-  {
-    metric: 'VISIT_POINTS',
-    label: 'Viếng thăm',
-    target: (r) => r.target_visit_points,
-    actual: (r) => r.actual_visit_points,
-  },
-  {
-    metric: 'SALES_QUANTITY',
-    label: 'Doanh số',
-    target: (r) => r.target_sales_quantity,
-    actual: (r) => r.actual_sales_quantity,
-  },
-  {
-    metric: 'REVENUE',
-    label: 'Doanh thu',
-    target: (r) => r.target_revenue,
-    actual: (r) => r.actual_revenue,
-  },
-  {
-    metric: 'CUSTOMER_VISITS',
-    label: 'Khách hàng',
-    target: (r) => r.target_customer_visits,
-    actual: (r) => r.actual_customer_visits,
-  },
-];
-
 type Props = {
   report: DailyReport;
 };
 
 export function AchievementTable({ report }: Props) {
-  const rows = METRIC_ROWS.map((row) => {
-    const target = row.target(report);
-    const actual = row.actual(report);
+  // Danh sách bốn chỉ tiêu nằm ở `lib/reports/metric-rows.ts` — bảng này và thẻ
+  // ảnh 9:16 (Phase 6) đọc CÙNG một định nghĩa, nên không thể lệch nhau
+  // (`docs/07 §5`).
+  const rows = KPI_METRIC_ROWS.map((row) => {
+    const target = report[row.targetColumn];
+    const actual = report[row.actualColumn];
 
     return {
       label: row.label,

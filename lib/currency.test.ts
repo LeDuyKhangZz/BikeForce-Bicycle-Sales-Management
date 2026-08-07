@@ -7,7 +7,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { formatCurrencyVND, formatThousands, parseCurrencyInput } from './currency';
+import {
+  formatCompactVND,
+  formatCurrencyVND,
+  formatThousands,
+  parseCurrencyInput,
+} from './currency';
 
 /** Đổi NBSP thành space thường để assertion đọc được bằng mắt. */
 const nbsp = (value: string): string => value.replace(/ /g, ' ');
@@ -112,6 +117,49 @@ describe('parseCurrencyInput (BR-006, BR-010)', () => {
     // không thể sửa một bên mà quên bên kia.
     for (const value of [0, 1000, 125000000, 99999999999, 100000000000]) {
       expect(parseCurrencyInput(formatCurrencyVND(value))).toBe(value);
+    }
+  });
+});
+
+/**
+ * `formatCompactVND` — thêm ở PHASE 6 cho bảng 4 dòng của thẻ ảnh 9:16
+ * (`docs/05 §14`). Số đầy đủ vẫn là mặc định ở mọi nơi khác.
+ */
+describe('formatCompactVND — dạng rút gọn cho thẻ ảnh (docs/05 §14)', () => {
+  it.each([
+    ['dưới 1.000 ₫ thì không rút gọn — số 0 vẫn là tiền', 0, '0 ₫'],
+    ['sát ngưỡng dưới', 999, '999 ₫'],
+    ['đúng ngưỡng nghìn', 1000, '1k'],
+    ['nghìn có phần lẻ', 1500, '1,5k'],
+    ['trăm nghìn', 950000, '950k'],
+    ['đúng ngưỡng triệu', 1000000, '1tr'],
+    ['ví dụ của docs/05 §14', 150000000, '150tr'],
+    ['triệu có phần lẻ', 125500000, '125,5tr'],
+    ['tỷ, làm tròn 1 chữ số', 1250000000, '1,3tỷ'],
+    ['trần BR-017 — 12 chữ số vẫn ngắn gọn', 100000000000, '100tỷ'],
+  ])('%s', (_label, input, expected) => {
+    expect(nbsp(formatCompactVND(input))).toBe(expected);
+  });
+
+  it('làm tròn chạm 1.000 thì LÊN BẬC, không hiện "1.000tr"', () => {
+    // 999.999.999 ₫ chia 1e6 ra 999,999999 — làm tròn 1 chữ số thành 1.000.
+    expect(formatCompactVND(999999999)).toBe('1tỷ');
+    expect(formatCompactVND(999999999)).not.toContain('tr');
+  });
+
+  it('NaN và Infinity không bao giờ lọt ra UI (AGENTS.md §9)', () => {
+    expect(formatCompactVND(Number.NaN)).toBe('—');
+    expect(formatCompactVND(Number.POSITIVE_INFINITY)).toBe('—');
+  });
+
+  it('số âm không phải dữ liệu hợp lệ nhưng hàm không được throw', () => {
+    expect(() => formatCompactVND(-1000)).not.toThrow();
+    expect(typeof formatCompactVND(-1000)).toBe('string');
+  });
+
+  it('luôn ngắn hơn hoặc bằng bản đầy đủ — đó là toàn bộ lý do nó tồn tại', () => {
+    for (const value of [1000, 950000, 150000000, 100000000000]) {
+      expect(formatCompactVND(value).length).toBeLessThanOrEqual(formatCurrencyVND(value).length);
     }
   });
 });

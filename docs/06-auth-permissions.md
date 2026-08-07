@@ -281,16 +281,29 @@ Vì vậy: **ẩn nút KHÔNG phải là bảo mật** (Master Spec §5). Lớp 
 
 ### 5.2 Lớp 1 — middleware route guard
 
-**File đề xuất:** `middleware.ts` ở gốc dự án (chưa triển khai).
+**File:** `middleware.ts` ở gốc dự án — **đã triển khai ở Phase 2**, cập nhật ở Phase 6 (DEC-039).
 
 Nhiệm vụ, đúng thứ tự:
 1. Tạo Supabase server client từ `request.cookies` bằng `@supabase/ssr`.
 2. Gọi `supabase.auth.getUser()` — **đây chính là bước silent refresh** (§9).
-3. Nếu **không có user** và route không public ⇒ `redirect('/login?next=<pathname>')`.
+3. Nếu **không có user** và route không public ⇒ redirect `/login?next=<pathname>` — **trừ route API**, xem khung bên dưới.
 4. Nếu **có user** ⇒ đọc `role` và `is_active` từ `profiles`.
-5. `is_active = false` ⇒ `signOut()` + redirect `/login` kèm thông báo (§8).
+5. `is_active = false` ⇒ `signOut()` + redirect `/login` kèm thông báo (§8) — **trừ route API**.
 6. Sai role so với prefix route ⇒ redirect về dashboard đúng role (**không** hiện 403 để tránh lộ cấu trúc route).
 7. Trả về **đúng đối tượng response** mà thư viện đã gắn cookie vào.
+
+> ⚠ **Route API trả MÃ TRẠNG THÁI, không trả redirect — DEC-039, ISSUE-015 (Phase 6).**
+>
+> `isApiPath(pathname)` (ở `lib/auth/routes.ts`) tách hai nhánh này. Với đường dẫn dưới `/api/`:
+>
+> | Tình huống | Trang thường | Route API |
+> |---|---|---|
+> | Chưa đăng nhập | `307` → `/login?next=…` | **`401`** + `{ code: 'UNAUTHENTICATED', message }` |
+> | Hồ sơ mất / `is_active = false` (BR-009) | `307` → `/login?reason=deactivated` | **`403`** + `{ code: 'ACCOUNT_DISABLED', message }` |
+>
+> Lý do là một lỗi đã xảy ra thật: `fetch()` **tự đi theo redirect**, nên client nhận HTML trang đăng nhập kèm `status = 200` và lưu nó thành một file `.png` hỏng mà không báo lỗi gì. Chi tiết đầy đủ ở `docs/12 § ISSUE-015`.
+>
+> Cả hai nhánh đều đi qua `jsonPreservingCookies()` để **giữ cookie vừa refresh**, đúng như nhánh redirect — bỏ bước đó là làm hỏng silent refresh.
 
 **Ba lỗi kinh điển phải tránh** (ghi lại để không phải debug lại ở Phase 2):
 
@@ -320,9 +333,11 @@ Nhiệm vụ, đúng thứ tự:
 | `/admin/sales/new` | ADMIN | Như trên | `app/(admin)/layout.tsx` |
 | `/admin/sales/[id]` | ADMIN | Như trên | `app/(admin)/layout.tsx` |
 | `/admin/account` | ADMIN | Như trên | `app/(admin)/layout.tsx` |
-| `/api/reports/[id]/share-image` | SALES chủ report + ADMIN | Cần phiên; **không** phân biệt role ở middleware | Route handler tự kiểm tra: RLS đọc + `status = 'COMPLETED'` |
+| `/api/reports/[id]/share-image` | SALES chủ report + ADMIN | Cần phiên; **không** phân biệt role ở middleware. Thiếu phiên ⇒ **401 JSON**, không redirect (DEC-039) | Route handler tự kiểm tra: RLS đọc + `status = 'COMPLETED'` |
 
 > **Quan trọng:** `middleware` **không** kiểm tra được quyền trên từng `[id]` — nó không biết report đó của ai. Quyền cấp dòng **chỉ** do RLS quyết định. Matcher của middleware phải **bao gồm** `/api/*` (trừ static assets `_next/static`, `_next/image`, `favicon.ico`, file ảnh) để route handler xuất ảnh cũng được refresh cookie.
+>
+> `requiredRoleForPath('/api/…')` trả `null` — và đó là câu trả lời **đúng**, không phải thiếu sót: cả Sales chủ báo cáo lẫn Admin đều được gọi route này (BR-022), nên middleware không có căn cứ nào để chặn theo vai. Đã kiểm chứng thật ngày 2026-08-08: Admin gọi route với `id` báo cáo của Sales → **200**, ảnh đúng `1080×1920`.
 
 ### 5.3 Lớp 2 — kiểm tra role trong layout của route group
 

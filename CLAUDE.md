@@ -1,5 +1,5 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 5 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 6 | Last updated: 2026-08-08
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > **Đọc file này TRƯỚC, rồi đọc `SESSION_CHECKPOINT.md`.** Hai file đó đủ để bắt đầu làm việc.
@@ -21,17 +21,17 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 5 — KPI Engine: ĐÃ ĐÓNG 11/11 mục** (2026-08-07). Phase 0, 1, 2 đã đóng; Phase 3 còn 1 mục chờ OQ-18; Phase 4 còn 1 mục chờ E2E Phase 11 |
-| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration chạy thật trên **cả local lẫn cloud** · tầng auth đầy đủ · **luồng báo cáo ngày chạy thật đầu-cuối cả hai nửa** (`/sales/today`, `/sales/today/morning`, `/sales/today/evening`) · **KPI engine thật + bảng đối chiếu 4 chỉ tiêu** · bộ test 315 case |
+| Phase | **PHASE 6 — Xuất ảnh 9:16: 11/12 mục** (2026-08-08). Phase 0, 1, 2, 5 đã đóng; Phase 3 còn 1 mục chờ OQ-18; Phase 4 còn 1 mục chờ E2E Phase 11; **Phase 6 còn 1 mục cần thiết bị thật** (ISSUE-003) |
+| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration chạy thật trên **cả local lẫn cloud** · tầng auth đầy đủ · **luồng báo cáo ngày chạy thật đầu-cuối cả hai nửa** (`/sales/today`, `/sales/today/morning`, `/sales/today/evening`) · **KPI engine thật + bảng đối chiếu 4 chỉ tiêu** · **ảnh chia sẻ 9:16 sinh thật bằng Satori** · bộ test 369 case |
 | Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Quyền push đứng vẫn còn, **nhưng `git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
 | Supabase **local** | ✅ **Đã chạy thật** — Docker + CLI 2.111.0, Postgres 17.6.1.156. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
 | Supabase **cloud** | ✅ **Đã nối xong** — `rnmywhwanpxmipqducqu`, region `ap-southeast-1`, 5 migration đã `db push`, seed **không** được đẩy, signup đã tắt |
-| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-07): cả 3 exit 0, lint 0 error 0 warning |
-| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **315/315** (242 unit + 40 integration + 33 RLS). Coverage `lib/**`: stmt 98,57% · branch 99,01% · lines 99,11% |
+| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-08): cả 3 exit 0, lint 0 error 0 warning, build ra **8 route** |
+| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **369/369** (290 unit + 40 integration + 39 RLS), 15,3 giây. Coverage `lib/**`: stmt 98,46% · branch 99,28% · lines 98,75% |
 | E2E / a11y / Lighthouse | **N/A — chưa có `playwright.config.ts`, chưa có `e2e/*.spec.ts`.** Không được ghi PASS |
-| Chặn tiến độ | ✅ **Không còn chốt chặn nào.** ISSUE-008 và phần cài đặt của DEC-025 đã được người dùng trả lời ngày 2026-08-07 → **DEC-038**. 17/17 OQ ban đầu đã trả lời; 38 DEC và 25 BR đều `APPROVED` |
+| Chặn tiến độ | ✅ **Không còn chốt chặn nào.** 17/17 OQ ban đầu đã trả lời; **39 DEC** và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** **Phase 6 (xuất ảnh 9:16) là việc kế tiếp.** `lib/kpi.ts` nay đã có thân thật và là nguồn duy nhất của công thức KPI — thẻ ảnh 9:16 **phải gọi lại** `calculateAchievement()` / `formatMetricValue()` / `achievementLabel()`, tuyệt đối không tự tính hay tự ghép đơn vị (NFR-012). Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`, và **không được tự trả lời** một câu hỏi nghiệp vụ còn treo.
+**Hệ quả trực tiếp:** **Phase 7 (Sales History) là việc kế tiếp.** Bắt đầu bằng `getVietnamMonthRange()` — hàm **duy nhất** trong `lib/` còn cố ý là khung ném lỗi. Khi dựng xong `/sales/reports/[id]`, nhớ xoá `VIEW_REPORT` khỏi `CTA_ROUTES_NOT_READY`. Màn hình chi tiết **dùng lại** `AchievementTable` + `ReportNotes` + `ShareImageButton` đã có sẵn — không viết lại. Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`, và **không được tự trả lời** một câu hỏi nghiệp vụ còn treo.
 
 > ⏳ **Hai việc chờ người dùng, KHÔNG chặn việc code:**
 > 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
@@ -292,7 +292,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-038` (decision) · `ISSUE-001..ISSUE-014` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-039` (decision) · `ISSUE-001..ISSUE-015` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 `UC`, `FR`, `NFR`, `BR`, `AF` là **dãy đóng** — không thêm ID mới nếu không có xác nhận của người dùng. `OQ`, `DEC`, `ISSUE` là **dãy mở**: cấp ID mới = số lớn nhất từng dùng + 1, **không bao giờ renumber, không tái sử dụng ID đã CLOSED**.
 
@@ -326,13 +326,16 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 5. ~~**Phase 4 — Evening Report**~~ — ✅ **XONG 9/10 mục 2026-08-07.** Kiểm chứng trình duyệt 62/62 + hồi quy luồng sáng 11/11. Mục còn lại là **E2E Playwright**, thuộc Phase 11.
 6. ~~**Phase 5 — KPI Engine**~~ — ✅ **ĐÓNG ĐỦ 11/11 mục 2026-08-07.** ISSUE-008 + DEC-025 đã chốt (**DEC-038**); `lib/kpi.ts` có thân thật + 46 unit test; bảng đối chiếu `features/report-comparison/` gắn ở `/sales/today`; 315 test xanh; kiểm chứng trình duyệt **36/36**.
 7. **Đang chờ người dùng (không chặn code):** rotate service role key (ISSUE-011) · trả lời **OQ-18** (ISSUE-013).
-8. **Phase 6 — Xuất ảnh 9:16 (việc kế tiếp).** Route Handler `GET /api/reports/[id]/share-image` sinh PNG **1080×1920** bằng `ImageResponse` (Satori, DEC-010), gác `status = 'COMPLETED'` (BR-002), nhúng font có đủ dấu tiếng Việt (ISSUE-002). Thẻ ảnh **dùng lại `lib/kpi.ts`**, không tự tính lại `%` và không tự ghép đơn vị.
+8. ~~**Phase 6 — Xuất ảnh 9:16**~~ — ✅ **XONG 11/12 mục 2026-08-08.** Route Handler sinh PNG 1080×1920 bằng Satori, font Inter nhúng đủ dấu tiếng Việt, nút Xuất ảnh chạy thật với Web Share API + 2 fallback; **ISSUE-002 CLOSED** (không cần fallback `html-to-image`); phát sinh và đã sửa **ISSUE-015** bằng **DEC-039**; 44/44 phép kiểm trình duyệt. Mục còn lại: **kiểm Zalo trên thiết bị thật** (ISSUE-003) — cần điện thoại + link công khai.
+9. **Phase 7 — Sales History (việc kế tiếp).** `getVietnamMonthRange()` → `listReportsByMonth()` phân trang server-side → `/sales/history` → `/sales/reports/[id]` → xoá `VIEW_REPORT` khỏi `CTA_ROUTES_NOT_READY` → bottom nav 3 mục (DEC-018). Chi tiết từng bước ở `SESSION_CHECKPOINT.md § Next Exact Steps`.
 
 **Những thứ đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
 
 *Phase 2:* `force row level security` **an toàn** vì `postgres` có `rolbypassrls` · `now()` **dùng được** trong CHECK constraint · `service_role` **cố ý không có DML** trên 2 bảng nghiệp vụ (DEC-031) — đừng cấp thêm.
 
-*Phase 3:* `lib/date.ts` và `lib/currency.ts` **đã xong thật** (DEC-032) *(dòng này trước đây còn ghi "`lib/kpi.ts` vẫn cố ý ném lỗi" — **đã hết hiệu lực từ Phase 5**, xem mục Phase 5 bên dưới)* · client **không được** suy ra thông báo thành công từ `mode` của form (DEC-034, đã có lỗi thật) · `useReportDraft` **phải** dùng `useSyncExternalStore`, React Compiler chặn `setState` trong effect · nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" **cố ý disabled**, có hằng số đánh dấu chỗ phải xoá.
+*Phase 3:* `lib/date.ts` và `lib/currency.ts` **đã xong thật** (DEC-032) *(dòng này trước đây còn ghi "`lib/kpi.ts` vẫn cố ý ném lỗi" — **đã hết hiệu lực từ Phase 5**)* · client **không được** suy ra thông báo thành công từ `mode` của form (DEC-034, đã có lỗi thật) · `useReportDraft` **phải** dùng `useSyncExternalStore`, React Compiler chặn `setState` trong effect · CTA "Xem báo cáo hôm nay" **cố ý disabled** (`CTA_ROUTES_NOT_READY`, Phase 7) — *còn nút "Xuất ảnh" thì **đã bật thật ở Phase 6**, `EXPORT_IMAGE_NOT_READY` không còn tồn tại*.
+
+*Phase 6:* Satori **dựng được** bố cục 9:16 — ISSUE-002 CLOSED, đừng chuyển sang `html-to-image` · font `.ttf` trong `public/fonts/` là **asset bắt buộc**, Satori không đọc `woff2` và subset `vietnamese` **không có** chữ Latin cơ bản · `outputFileTracingIncludes` trong `next.config.ts` **không được xoá** · `getReportForShare()` **cố ý không nhận `salesId`** (thêm vào là chặn nhầm Admin — BR-022) · middleware trả **401/403 JSON** cho `/api/*` (DEC-039), đừng gộp lại thành redirect · `lib/reports/metric-rows.ts` là nguồn duy nhất của "4 chỉ tiêu là gì", Phase 8/9 **import chứ đừng khai lại** · `formatCompactVND` **chỉ** dành cho thẻ ảnh.
 
 *Phase 5:* `lib/kpi.ts` **đã có thân thật, không còn ném lỗi** — đừng viết lại · `calculateAchievement()` nhận **ba** tham số (`target, actual, metric`), đừng gọi bằng hai · `percent = 99.99` cho `display = '100,0%'` nhưng `status = 'NEAR'` là **đúng theo BR-014 × BR-023**, có test khoá lại, đừng "sửa" · `features/report-morning/commitment-summary.tsx` **cố ý chỉ một cột** và chỉ còn dùng ở `/sales/today/evening` — đừng gộp nó với `AchievementTable` · `getVietnamMonthRange()` **vẫn cố ý là khung ném lỗi** (Phase 7/9), việc Phase 5 đóng không có nghĩa hàm đó đã xong.
 

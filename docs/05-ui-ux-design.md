@@ -590,7 +590,15 @@ Danh sách đầy đủ những chỗ có chuyển động: nút (màu + scale 0
 
 ## 14. Thẻ ảnh chia sẻ 9:16 — bố cục (Master Spec §13)
 
-Kích thước cố định **1080 × 1920**, nền `#0B1220`, render server-side bằng Satori (DEC-010). Component: `features/report-share/DailyReportShareCard.tsx`.
+Kích thước cố định **1080 × 1920**, nền `#0B1220`, render server-side bằng Satori (DEC-010).
+Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `kebab-case` theo `AGENTS.md §3`; `DailyReportShareCard` là tên **component**).
+
+> ✅ **ĐÃ TRIỂN KHAI VÀ KIỂM CHỨNG THẬT — Phase 6, 2026-08-08.** Satori dựng được toàn bộ bố cục dưới đây, **không** phải dùng fallback `html-to-image` (ISSUE-002 → CLOSED). Ba điểm bố cục thật khác bản phác thảo ASCII bên dưới, đều là làm rõ chứ không đổi thiết kế:
+> 1. Ô "Hoàn thành" có **hai dòng**: con số (`125,0%`) và **nhãn chữ** bên dưới (`Vượt mục tiêu`). Nhãn lấy từ `achievementLabel()` — bắt buộc, vì quy tắc `color-not-only` ở §4.4 áp dụng cho ảnh còn mạnh hơn cho web (ảnh qua Zalo bị nén màu).
+> 2. Cột "Cam kết" và "Thực đạt" của dòng Doanh thu dùng **`formatCompactVND()`** (`150tr`, `100tỷ`) — số đầy đủ nằm ở khối "DOANH THU THỰC ĐẠT". Ba chỉ tiêu còn lại giữ đơn vị đầy đủ vì trần của chúng chỉ 4 chữ số.
+> 3. Footer ghim ở đáy bằng `marginTop: auto`, nên báo cáo ngắn để lại khoảng trống ở giữa — đúng ý đồ, không phải lỗi bố cục.
+>
+> Toàn bộ chuỗi hiển thị do **`lib/reports/share-card.ts`** dựng (hàm thuần, 43 unit test); component chỉ render và ánh xạ `status → màu`.
 
 ```
 ┌──────────────────────────────────────┐ 1080 × 1920
@@ -626,15 +634,25 @@ Kích thước cố định **1080 × 1920**, nền `#0B1220`, render server-sid
 └──────────────────────────────────────┘
 ```
 
-**Ràng buộc bắt buộc kiểm thử ở Phase 6** (Master Spec §13):
-- Tên dài 40+ ký tự → xuống dòng, không cắt chữ.
-- Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có dấu `…`.
-- Ghi chú 1000 ký tự → cắt ở 4 dòng, có dấu `…`.
-- Doanh thu 12 chữ số → vẫn nằm trong khung. Trong bảng dùng dạng rút gọn (`150tr`), số đầy đủ đặt ở khối "Doanh thu thực đạt".
-- Achievement 4 chữ số (`1.250,0%`) → hiển thị đủ.
-- `target = 0` → hiện `—`, không hiện `∞`/`NaN` (BR-015).
-- **Dấu tiếng Việt đầy đủ**: `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` phải render đúng — đây là rủi ro số một của font nhúng (ISSUE-002).
-- Satori không hỗ trợ CSS Grid — bố cục trên phải dựng hoàn toàn bằng flexbox, và mọi phần tử có nhiều con phải khai báo `display: flex`.
+**Ràng buộc bắt buộc kiểm thử ở Phase 6** (Master Spec §13) — cột cuối là kết quả **đo thật ngày 2026-08-08**:
+
+| Ràng buộc | Cách xử lý | Kết quả |
+|---|---|---|
+| Tên dài 40+ ký tự → xuống dòng, không cắt chữ | không cắt gì cả, để Satori tự wrap | ✅ tên 42 ký tự xuống 2 dòng |
+| Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có `…` | `truncateText(route, 104)` ở tầng dữ liệu | ✅ |
+| Ghi chú 1000 ký tự → cắt ở 4 dòng, có `…` | `truncateText(note, 232)` ở tầng dữ liệu | ✅ |
+| Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` trong bảng, số đầy đủ ở khối "DOANH THU THỰC ĐẠT" | ✅ `100tỷ` / `99.999.999.999 ₫` |
+| Achievement 4 chữ số (`1.250,0%`) hiển thị đủ | không clamp (BR-004) | ✅ |
+| `target = 0` không bao giờ ra `∞`/`NaN` (BR-015) | lấy nguyên `display` của `lib/kpi.ts` | ✅ `actual = 0` → `100,0%`; `actual > 0` → `+3 điểm` + "Vượt kế hoạch" |
+| **Dấu tiếng Việt đầy đủ** `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` | 3 file `.ttf` Inter nhúng trong `public/fonts/` | ✅ đủ, kèm `₫` (`U+20AB`) |
+| Satori không có CSS Grid | flexbox toàn bộ, `display: 'flex'` ở mọi container nhiều con | ✅ |
+
+> ⚠ **Đính chính so với bản trước:** dòng `target = 0` ở đây từng ghi "hiện `—`". Từ **DEC-038** (Phase 5), `—` chỉ dành cho ca **chưa có số liệu**; ca `target = 0 && actual > 0` hiện **số vượt tuyệt đối có đơn vị**. Thẻ ảnh không tự quyết định điều này — nó render `AchievementResult.display`.
+
+**Ba cái bẫy kỹ thuật đã trả giá thật ở Phase 6, ghi lại để không ai mất công lần nữa:**
+1. **Satori không đọc `woff2`.** Phải là `.ttf`/`.otf`/`.woff`. Google Fonts trả `woff2` cho trình duyệt hiện đại và trả `.ttf` cho User-Agent lạ — lấy đúng bản `.ttf`.
+2. **Subset `vietnamese` của Google Fonts KHÔNG chứa chữ Latin cơ bản** — nó chỉ có các ký tự riêng của tiếng Việt cộng `₫`. Nhúng mỗi subset đó thì chữ thường mất glyph. Dùng file `.ttf` đủ bộ ký tự (2849 glyph, ~320 KB mỗi weight).
+3. **Font phải được ghim vào bundle** bằng `outputFileTracingIncludes` trong `next.config.ts`: đường dẫn ghép runtime nên bộ dò phụ thuộc không thấy, `next build` vẫn xanh còn hàm trên Vercel ném `ENOENT`.
 
 ---
 

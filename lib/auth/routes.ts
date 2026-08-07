@@ -27,6 +27,27 @@ export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.includes(pathname);
 }
 
+const API_PREFIX = '/api';
+
+/**
+ * Route trả **dữ liệu**, không trả trang — hiện chỉ có
+ * `GET /api/reports/[id]/share-image` (DEC-003).
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO MIDDLEWARE PHẢI PHÂN BIỆT — ISSUE-015, phát hiện ở Phase 6
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Với một trang, "chưa đăng nhập" → redirect `/login` là đúng. Với một route
+ *  API thì SAI: `fetch()` **tự đi theo redirect**, nên client nhận HTML của
+ *  trang đăng nhập kèm `status = 200` và `response.ok === true`. Nút "Xuất ảnh"
+ *  sẽ vui vẻ lưu trang HTML đó thành một file `.png` hỏng.
+ *
+ *  Route API vì vậy phải nhận đúng mã trạng thái (`401`/`403`) như `docs/07 §4.1`
+ *  quy định, để client phân nhánh được.
+ */
+export function isApiPath(pathname: string): boolean {
+  return pathname === API_PREFIX || pathname.startsWith(`${API_PREFIX}/`);
+}
+
 /** Sau khi đăng nhập, mỗi role về đúng dashboard của mình. */
 export function dashboardPathFor(role: UserRole): string {
   return role === 'ADMIN' ? ADMIN_HOME : SALES_HOME;

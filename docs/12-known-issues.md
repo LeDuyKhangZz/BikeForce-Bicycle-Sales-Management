@@ -72,7 +72,7 @@ Diễn giải bắt buộc tuân thủ:
 | ID | Severity | Status | Chủ đề ngắn gọn | Phase liên quan | ID liên quan |
 |---|---|---|---|---|---|
 | ISSUE-001 | **P1** | **CLOSED** | OPEN QUESTION mức BLOCKING chưa được trả lời → không viết được migration. **Đã giải quyết 2026-08-07: người dùng trả lời đủ 17/17** | Phase 0 → Phase 2 | OQ-01…OQ-17, DEC-025, DEC-026, DEC-029, DEC-030 |
-| ISSUE-002 | P2 | OPEN | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt | Phase 6 | DEC-010, FR-018, UC-08 |
+| ISSUE-002 | P2 | **CLOSED** | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt. **Đã dựng thật 2026-08-08: Satori dựng đủ layout `docs/05 §14`, KHÔNG cần fallback `html-to-image`** | Phase 6 | DEC-010, FR-018, UC-08 |
 | ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa được kiểm chứng trên thiết bị thật | Phase 6, Phase 11 | NFR-009, DEC-011, FR-020 |
 | ISSUE-004 | P2 | **CLOSED** | TypeScript 7.0.2 + ESLint 10.8.0 là bản major mới, chưa xác nhận tương thích Next 16. **Đã xảy ra thật 2026-08-07: cả hai đều vỡ; pin `typescript@6.0.3` + `eslint@9.39.5`** | Phase 1 | DEC-002, NFR-012 |
 | ISSUE-005 | P3 | OPEN | `is_admin()` phát sinh thêm một truy vấn `profiles` mỗi câu lệnh RLS | Phase 2, Phase 11 | DEC-006, NFR-002, NFR-015 |
@@ -85,8 +85,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-012 | P3 | OPEN | Sau `supabase db reset`, GoTrue + Kong không tự phục hồi → mọi lần đăng nhập nhận `502` cho tới khi restart hai container | Phase 3 → mọi phase sau | ISSUE-010, DEC-022 |
 | ISSUE-013 | P3 | OPEN | **NFR-008 mâu thuẫn với FR-008**: form sáng có 5 trường bắt buộc nên sàn lý thuyết là 7 lần chạm, không thể ≤ 6. Đo thật: **7 chạm / 1,8 giây**. **Cần người dùng quyết định (OQ-18)** | Phase 3 | NFR-008, FR-008, UC-04, OQ-18 |
 | ISSUE-014 | P2 | **CLOSED** | Lưu báo cáo cuối ngày thành công nhưng **mất banner xác nhận** và **draft không bị xoá** — re-render RSC của route hiện tại sau Server Action làm form unmount trước khi effect chạy. Đã sửa bằng DEC-037 | Phase 4 | FR-015, FR-035, DEC-034, DEC-037 |
+| ISSUE-015 | **P1** | **CLOSED** | **MỚI** — middleware redirect **mọi** đường dẫn chưa đăng nhập về `/login`, kể cả `/api/*`. `fetch()` tự đi theo redirect ⇒ nút "Xuất ảnh" nhận HTML kèm `status 200` và lưu nó thành file `.png` hỏng. Đã sửa bằng **DEC-039** | Phase 6 | DEC-004, DEC-011, DEC-039, FR-020, NFR-014 |
 
-Tổng: **10 OPEN** (1 × P1, 2 × P2, 7 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
+Tổng: **8 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 6 × P3), **0 FIXING**, **0 VERIFY**, **7 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-006, ISSUE-008, ISSUE-014, ISSUE-015).
 
 ---
 
@@ -161,10 +162,12 @@ Checklist đóng issue — **cả 6 mục đã đạt ngày `2026-08-07`**:
 ### ISSUE-002
 
 **Severity: P2**
-**Status: OPEN**
+**Status: CLOSED — 2026-08-08, Satori dựng được toàn bộ layout, KHÔNG dùng fallback**
 
 **Module:**
-`app/api/reports/[id]/share-image/route.ts` và `features/report-share/DailyReportShareCard.tsx` — **cả hai đều là đề xuất, chưa triển khai**. Liên quan: DEC-010, DEC-021, FR-017, FR-018, FR-019, BR-002, UC-08, Phase 6.
+`app/api/reports/[id]/share-image/route.tsx` và `features/report-share/daily-report-share-card.tsx` — **cả hai nay đã tồn tại thật**. Liên quan: DEC-010, DEC-021, FR-017, FR-018, FR-019, BR-002, UC-08, Phase 6.
+
+> ⚠ Tên file thật khác mô tả cũ ở hai chỗ, cố ý: route là **`route.tsx`** (có JSX), và component là **`daily-report-share-card.tsx`** — `AGENTS.md §3` quy định file đặt tên `kebab-case`, chỉ tên component mới `PascalCase`. Mô tả `DailyReportShareCard.tsx` trong bản ghi gốc là tên component bị viết nhầm thành tên file.
 
 **Description:**
 Quyết định DEC-010 chọn sinh ảnh 9:16 **server-side** bằng `ImageResponse` (`next/og`, dựa trên Satori). Satori **không phải trình duyệt**: nó chỉ hỗ trợ một tập con CSS. Ràng buộc đã biết trước:
@@ -179,11 +182,11 @@ Rủi ro cụ thể: layout thẻ 9:16 thiết kế ở `docs/05` có thể **kh
 **Expected:**
 `GET /api/reports/[id]/share-image` trả về PNG **đúng 1080×1920**, đúng layout dark đã thiết kế (brand + "DAILY SALES REPORT", ngày, tên NV + mã NV, tuyến, bảng 4 dòng Cam kết/Thực đạt/%, dải KPI tổng quan, ghi chú cuối ngày, footer), đủ dấu tiếng Việt, kèm `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"` (FR-019) và `Cache-Control: private, no-store`.
 
-**Actual:**
-**Chưa quan sát được — đây là rủi ro đã nhận diện ở Phase 0, chưa có code để tái hiện.** Chưa có route handler, chưa có component thẻ, chưa có file font trong repository.
+**Actual (đo thật 2026-08-08):**
+**Rủi ro KHÔNG xảy ra.** Satori dựng đủ bố cục `docs/05 §14` ngay từ prototype đầu tiên. Ảnh xuất ra đúng `1080×1920`, `~73–110 KB`, dấu tiếng Việt render chính xác (`Ừ ẫ ợ ỹ đ Đ Ệ Ỡ`, `Thứ Bảy`, `Viếng thăm`) và ký hiệu `₫` (`U+20AB`) hiển thị đúng glyph.
 
 **Root Cause:**
-**Chưa xác định được**, vì chưa dựng prototype. Giả thuyết (ghi rõ là giả thuyết): khoảng cách giữa CSS mà thiết kế UI dùng tự nhiên (grid, `line-clamp`, biến màu `oklch` của Tailwind v4) và tập con CSS mà Satori thực sự dựng được. Chỉ prototype mới trả lời được khoảng cách đó rộng đến đâu.
+**Báo động đúng nhưng không thành hiện thực** — giữ nguyên entry theo quy tắc §3. Khoảng cách giữa CSS của thiết kế và tập con Satori hẹp hơn dự đoán, vì bốn ràng buộc đã được tuân thủ **ngay từ dòng code đầu tiên** thay vì phải sửa ngược: chỉ flexbox, `display: 'flex'` ở mọi container nhiều con, chỉ hex thuần, và cắt chuỗi ở tầng dữ liệu. Phần tốn công nhất hoá ra **không** phải layout mà là **font**: Satori không đọc `woff2`, và subset `vietnamese` của Google Fonts **không** chứa chữ Latin cơ bản, nên phải lấy đúng bản `.ttf` đủ bộ ký tự.
 
 **Fix:**
 1. **Việc đầu tiên của Phase 6** là dựng prototype thẻ 9:16 với dữ liệu giả, trước khi nối vào dữ liệu thật. Nếu Satori không dựng nổi, biết ngay từ ngày đầu chứ không phải cuối phase.
@@ -192,14 +195,27 @@ Rủi ro cụ thể: layout thẻ 9:16 thiết kế ở `docs/05` có thể **kh
 4. **Fallback đã ghi nhận trong DEC-010**: nếu Phase 6 chứng minh Satori không dựng nổi layout cần thiết → chuyển sang `html-to-image` client-side với `next/dynamic({ ssr: false })`, chờ `document.fonts.ready` trước khi chụp, và dùng đúng bảng hex thuần đó cho thẻ share. Việc chuyển này phải **ghi thành một DEC mới** trong `docs/11-decisions.md`, không sửa lén DEC-010.
 5. Nếu phải dùng fallback, lưu ý kéo theo: thư viện sinh ảnh không được nằm trong initial bundle (NFR-003) và ISSUE-003 trở nên nặng hơn vì việc chụp DOM chạy ngay trong webview Zalo.
 
-**Verification:**
-Kế hoạch kiểm chứng (**chưa chạy**):
-- Snapshot 6 edge case bắt buộc: tên 40+ ký tự, tuyến 300 ký tự, ghi chú 1000 ký tự, doanh thu 12 chữ số, achievement 4 chữ số (`1250,0%`), `—` khi `target = 0` (BR-015).
-- Kiểm tra thủ công dấu tiếng Việt trên ảnh xuất ra: `ừ ẫ ợ ỹ đ` hiển thị đúng, không rơi font.
-- Kiểm tra kích thước file PNG đúng `1080×1920`.
-- Kiểm tra header `Content-Disposition` sinh đúng tên file theo FR-019.
-- Kiểm tra BR-002: gọi route với report `status = 'MORNING_SUBMITTED'` → bị từ chối.
-- Kiểm tra bảo mật: salesA gọi `GET /api/reports/<id-của-salesB>/share-image` → 403/404 (thuộc bộ test E2E security ở `docs/08-testing-strategy.md`).
+**Verification (ĐÃ CHẠY — 2026-08-08):**
+
+| Hạng mục | Cách kiểm | Kết quả |
+|---|---|---|
+| Prototype Satori trước khi nối dữ liệu thật (bước Fix 1) | script Node dùng-một-lần, `ImageResponse` + 2 font | ✅ PNG `1080×1920`, dựng được |
+| 6 edge case bắt buộc | `lib/reports/share-card.test.ts` — **43 unit test** | ✅ PASS |
+| Dấu tiếng Việt + `₫` trên ảnh THẬT | fixture local có ghi chú `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ`, xem ảnh xuất ra bằng mắt | ✅ đúng, không rơi font |
+| Glyph coverage của font nhúng | parse bảng `cmap` của cả 3 file `.ttf` | ✅ 2849 glyph, đủ `ừ ẫ ợ ỹ đ Đ Ệ Ỡ ₫ …` |
+| Kích thước PNG | đọc chunk `IHDR` của response thật | ✅ `1080×1920` ở **cả 6** lần đo |
+| Header `Content-Disposition` (FR-019) | request thật qua Chromium | ✅ `attachment; filename="BikeForce_Report_Le-Duy-Khang_2026-08-08.png"` |
+| `Cache-Control: private, no-store` | request thật | ✅ |
+| BR-002 — báo cáo `MORNING_SUBMITTED` | đăng nhập chính chủ rồi gọi route | ✅ **403** `NOT_COMPLETED` |
+| Bảo mật IDOR — salesA gọi id của salesB | request thật + 6 test RLS `tests/rls/share-image.rls.test.ts` | ✅ **404** `REPORT_NOT_FOUND`, không phân biệt với id không tồn tại |
+| BR-022 — Admin xuất ảnh cho Sales | đăng nhập Admin, gọi đúng route đó | ✅ 200, ảnh đúng kích thước |
+| Tên 40+ ký tự · tuyến 300 · ghi chú 1000 · doanh thu 12 chữ số · `1.250,0%` · `target = 0` | một tấm ảnh chứa **tất cả**, xem bằng mắt | ✅ tên xuống dòng không cắt, tuyến cắt ở 2 dòng, ghi chú cắt ở 4 dòng, `100tỷ` trong bảng + `99.999.999.999 ₫` ở khối dưới, `+3 điểm` + "Vượt kế hoạch" |
+
+Tổng kiểm chứng trình duyệt: **44/44 PASS** ở 375px và 1440px.
+
+> ⚠ **Đính chính một dòng của mô tả gốc:** phần *Expected* ở trên viết `—` cho ca `target = 0`. Từ **DEC-038** (Phase 5), ca `target = 0 && actual > 0` hiển thị **số vượt tuyệt đối có đơn vị** (`+3 điểm`), không phải `—`; `—` chỉ dành cho ca chưa có số liệu. Thẻ ảnh lấy nguyên `display` của `lib/kpi.ts` nên tự động đúng.
+
+**Kết luận:** **KHÔNG** kích hoạt fallback `html-to-image` của DEC-010. Không có DEC mới nào cho việc này — DEC-010 giữ nguyên hiệu lực.
 
 ---
 
@@ -712,6 +728,44 @@ Script kiểm chứng dùng-một-lần trên Chromium 375px + 1440px (2026-08-0
 Hồi quy luồng đầu ngày sau refactor: **11/11 PASS**.
 
 ⚠ **Bài học cho các phase sau:** mọi Server Action kết thúc bằng "đổi trạng thái khiến chính route hiện tại redirect" đều dính lỗi này. Nếu route hiện tại có thể tự redirect sau khi dữ liệu đổi, **hãy để Server Action tự `redirect()`** thay vì trả `ok: true` cho client điều hướng. Phase 6 (xuất ảnh) và Phase 10 (bật/tắt `is_active`) đều có dạng đó.
+
+---
+
+### ISSUE-015
+
+**Severity: P1**
+**Status: CLOSED — đã sửa trong cùng Phase 6 (DEC-039)**
+
+**Module:**
+`middleware.ts`, `lib/auth/routes.ts`, `features/report-share/share-image-button.tsx`. Liên quan: DEC-004, DEC-011, DEC-039, FR-020, NFR-014, `docs/06 §5.2`, `docs/07 §4.1`.
+
+**Description:**
+`middleware.ts` phủ cả `/api/*` (cố ý — để refresh cookie phiên cho route ảnh), nhưng nhánh "chưa đăng nhập" của nó **redirect mọi đường dẫn** về `/login?next=…`. Với một route trả **dữ liệu** thì đó là câu trả lời sai hình dạng:
+
+1. `fetch()` **tự đi theo redirect** — hành vi mặc định của Fetch API, server không tắt được.
+2. Client nhận HTML của trang đăng nhập với `status = 200`, `response.ok === true`.
+3. Nút "Xuất ảnh" đi vào nhánh thành công, đóng gói HTML đó thành `Blob` và lưu ra file `.png`.
+
+Kết quả: Sales tải về một tấm "ảnh" không mở được, **không có thông báo lỗi nào**, rồi gửi nó lên Zalo cho khách. Xếp **P1** vì nó tạo ra một sản phẩm hỏng nhưng trông như đã thành công — đúng loại lỗi tệ nhất theo `docs/05 §8`.
+
+**Expected:** `GET /api/reports/<id>/share-image` khi chưa đăng nhập → **401** kèm JSON `{ code, message }` như `docs/07 §4.1` đã quy định.
+**Actual (đo 2026-08-08):** **307** `location: /login?next=%2Fapi%2Freports%2F…`, và client đi theo redirect thì thấy **200 + `text/html`**.
+
+**Root Cause:**
+Middleware được viết ở Phase 2, khi dự án **chưa có route API nào** — mọi đường dẫn lúc đó đều là trang, nên "chưa đăng nhập ⇒ redirect" là đúng cho 100% trường hợp. Route Handler duy nhất của dự án (DEC-003) chỉ xuất hiện ở Phase 6, và không có gì trong hệ thống buộc phải xem lại giả định cũ. Bản thân route handler **có** trả 401 đúng — nó chỉ không bao giờ được chạy tới.
+
+**Cách nó lộ ra:** một phép kiểm trong script kiểm chứng Phase 6 báo `chưa đăng nhập → 401` **FAIL, nhận 200**. Thoạt nhìn giống một lỗ hổng nghiêm trọng (ảnh phát cho người lạ), nên đã kiểm lại bằng `curl` trần trước khi kết luận — và `curl` không đi theo redirect nên phơi ra `307` thật. **Bài học phụ:** khi một phép kiểm bảo mật báo đỏ, hãy đo lại bằng công cụ **không** tự đi theo redirect trước khi tin vào con số.
+
+**Fix (ĐÃ ÁP DỤNG — DEC-039):**
+1. `isApiPath(pathname)` — hàm thuần ở `lib/auth/routes.ts`, có unit test.
+2. `middleware.ts` trả **401 `UNAUTHENTICATED`** (chưa đăng nhập) và **403 `ACCOUNT_DISABLED`** (BR-009) dạng JSON cho route API, qua `jsonPreservingCookies()` — vẫn mang theo cookie vừa refresh, giống nhánh redirect.
+3. Lớp phòng thủ thứ hai ở client: `share-image-button.tsx` từ chối mọi response có `content-type` khác `image/png`, kể cả khi `response.ok === true`.
+
+**Verification (2026-08-08):**
+- `curl` trần, không cookie: **`401`** (trước khi sửa: `307`).
+- Chromium, `maxRedirects: 0`: **401**, body `{"code":"UNAUTHENTICATED",…}`, `content-type` **không** phải `text/html` — 3/3 PASS.
+- `lib/auth/routes.test.ts` — 2 test mới cho `isApiPath`, gồm cả case bẫy `/apiary` và `/sales/api` **không** được nhận nhầm.
+- Hồi quy: trang thường chưa đăng nhập **vẫn** redirect về `/login` như cũ (bộ test auth 375px/1440px của Phase 2 không đổi hành vi).
 
 ---
 

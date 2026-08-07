@@ -748,6 +748,32 @@ Kèm theo, `lib/kpi.ts` xuất thêm ba hàm thuần: `formatMetricValue(value, 
 
 ---
 
+## DEC-039
+
+**Date:** 2026-08-08
+**Decision:** `middleware.ts` trả **mã trạng thái + JSON `{ code, message }`** cho request vào route dưới `/api/`, thay vì `307` redirect về `/login` như với trang. Cụ thể: chưa đăng nhập → **401 `UNAUTHENTICATED`**; hồ sơ mất hoặc `is_active = false` → **403 `ACCOUNT_DISABLED`**. Hàm nhận biết là `isApiPath()` ở `lib/auth/routes.ts`.
+
+**Reason:** Phát hiện khi kiểm chứng Phase 6 (**ISSUE-015**) — không phải suy đoán. Middleware cố ý phủ cả `/api/*` để refresh cookie phiên, nhưng nhánh "chưa đăng nhập" của nó redirect **mọi** đường dẫn. Hậu quả với đúng client của tính năng này:
+
+1. `fetch('/api/reports/<id>/share-image')` **tự đi theo redirect** — đó là hành vi mặc định của Fetch API, không tắt được từ phía server.
+2. Client vì vậy nhận HTML của trang đăng nhập kèm `status = 200`, và `response.ok === true`.
+3. Nút "Xuất ảnh" đi tiếp vào nhánh thành công và lưu trang HTML đó thành một file `.png` hỏng — người dùng gửi lên Zalo một tấm ảnh không mở được, **không có lỗi nào hiện ra**.
+
+Một endpoint trả dữ liệu phải trả lời bằng mã trạng thái để client phân nhánh được. `docs/07 §4.1` vốn đã ghi "401 chưa đăng nhập" — quyết định này làm cho code khớp lại với hợp đồng đã viết, chứ không mở rộng nó.
+
+**Alternatives:**
+*(a)* Loại `/api/*` khỏi `matcher` của middleware — bị loại: mất luôn việc refresh cookie phiên cho route đó, và bỏ hẳn một lớp phòng thủ trong khi vấn đề chỉ nằm ở **hình dạng câu trả lời**.
+*(b)* Để client tự phát hiện bằng cách kiểm `content-type` — **vẫn làm**, nhưng như lớp phòng thủ thứ hai chứ không phải cách sửa: nó không giúp gì cho một client khác (curl, ứng dụng khác) gọi cùng endpoint.
+*(c)* Trả 401 kèm body rỗng — bị loại: `docs/07 §4.1` quy định body JSON `{ code, message }`, và nút chia sẻ hiển thị thẳng `message` do server quyết định (cùng tinh thần DEC-034).
+
+**Impact:** `middleware.ts` (thêm `jsonPreservingCookies()`), `lib/auth/routes.ts` (`isApiPath()` + 2 unit test), `features/report-share/share-image-button.tsx` (kiểm `content-type`), `docs/06 §5.2`, `docs/07 §4.1`, ISSUE-015 (→ CLOSED).
+
+**Ghi chú:** quyết định này **không** đổi biên giới bảo mật. RLS vẫn là thứ chặn thật (DEC-004), route handler vẫn tự kiểm `auth` và `status` một lần nữa. Nó chỉ đổi **cách nói** với client khi bị từ chối.
+
+**Status:** APPROVED (technical, người dùng có quyền veto)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

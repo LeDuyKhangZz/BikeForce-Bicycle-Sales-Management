@@ -32,6 +32,13 @@ export const REPORT_MESSAGES = {
   WRONG_BUSINESS_DATE: 'Chỉ được tạo báo cáo cho ngày hôm nay.',
   /** Mất mạng / timeout. Form KHÔNG được reset (NFR-010). */
   SAVE_FAILED: 'Không lưu được. Kiểm tra kết nối rồi thử lại.',
+  /**
+   * BR-002 / FR-017 — gọi route ảnh cho một báo cáo chưa `COMPLETED`. Nút trên
+   * giao diện đã bị khoá, nên câu này chỉ tới tay người gọi thẳng URL.
+   */
+  NOT_COMPLETED: 'Chỉ xuất ảnh được sau khi hoàn tất báo cáo cuối ngày.',
+  /** Sinh ảnh 9:16 thất bại — chi tiết chỉ nằm ở log server (NFR-014). */
+  IMAGE_FAILED: 'Không tạo được ảnh báo cáo. Vui lòng thử lại.',
   UNKNOWN: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
 } as const;
 

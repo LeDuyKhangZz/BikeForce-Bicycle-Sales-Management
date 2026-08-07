@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 5 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 6 | Last updated: 2026-08-08
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -25,18 +25,21 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-07, sau Phase 5):** repository đã có schema chạy thật trên Supabase
+**Tình trạng hôm nay (2026-08-08, sau Phase 6):** repository đã có schema chạy thật trên Supabase
 local **và** cloud, tầng auth đầy đủ, **cả hai nửa của luồng báo cáo ngày chạy thật đầu-cuối**
 (cam kết sáng → hoàn tất cuối ngày → khoá vĩnh viễn), **KPI engine thật + bảng đối chiếu 4 chỉ tiêu
-hai chế độ hiển thị**, và bộ test 315 case. Kết quả thật của lần chạy cuối:
+hai chế độ hiển thị**, **ảnh chia sẻ 9:16 sinh thật bằng Satori**, và bộ test 369 case. Kết quả
+thật của lần chạy cuối:
 
 | Lệnh | Kết quả |
 |---|---|
-| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, 7 route) |
-| `npm run test:coverage` | ✅ `lib/**` → stmt **98,57%** · branch **99,01%** · func **96,43%** · lines **99,11%**; `lib/kpi.ts` **100%** cả bốn cột |
+| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, **8 route** — có `ƒ /api/reports/[id]/share-image`) |
+| `npx vitest run --project unit --coverage` | ✅ **290 passed**; `lib/**` → stmt **98,46%** · branch **99,28%** · func **97,43%** · lines **98,75%**; `lib/kpi.ts` và `lib/reports/share-card.ts` **100%** cả bốn cột |
 | `npm run typecheck` | ✅ exit 0 |
 | `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
-| `npm test` | ✅ **315 passed / 315** — 14 test file, 3 project (`unit` **242** · `integration` **40** · `rls` 33) |
+| `npm test` | ✅ **369 passed / 369** — 16 test file, 3 project (`unit` **290** · `integration` **40** · `rls` **39**), 15,3 giây |
+| Kiểm chứng xuất ảnh 9:16 trên Chromium (Phase 6) | ✅ **44/44 PASS** ở 375px và 1440px — header FR-019, `IHDR` 1080×1920, BR-002 → 403, IDOR → 404, BR-022 → 200, chưa đăng nhập → 401 |
+| Xem tận mắt ảnh PNG xuất ra (Phase 6) | ✅ dấu tiếng Việt `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ` + `₫` đúng glyph; ảnh gom đủ 6 edge case đọc được, không `NaN`/`∞` |
 | Kiểm chứng auth trên Chromium (Phase 2) | ✅ **32/32 PASS** ở 375px và 1440px |
 | Kiểm chứng tài khoản `is_active=false` (Phase 2) | ✅ **6/6 PASS** |
 | Kiểm chứng luồng báo cáo sáng trên Chromium (Phase 3) | ⚠ **57/58 PASS** ở 375px và 1440px — mục FAIL duy nhất là NFR-008 (7 lần chạm), xem ISSUE-013 |
@@ -238,18 +241,36 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 6 — 9:16 Image Export
 
-- [ ] Route Handler `GET /api/reports/[id]/share-image` sinh PNG **1080×1920** bằng `ImageResponse` (Satori), không screenshot cả trang — FR-018, DEC-010
-- [ ] Route handler xác thực session, đọc report dưới RLS, và **kiểm tra `status = 'COMPLETED'`** trước khi render — BR-002
-- [ ] Admin cũng gọi được đúng route này cho báo cáo của Sales — BR-022
-- [ ] Nhúng file font `.ttf`/`.woff` có **đầy đủ dấu tiếng Việt** (subset latin + vietnamese), đọc bằng `fs` ở Node runtime
-- [ ] `features/report-share/DailyReportShareCard.tsx` dùng chung view model với UI để số liệu không lệch, layout dark `#0B1220` với bảng token đã đo
-- [ ] Header `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"` và `Cache-Control: private, no-store` — FR-019
-- [ ] Nút "Xuất ảnh" chỉ enable khi báo cáo đã persist với `status = 'COMPLETED'` — FR-017, UC-08
-- [ ] Chia sẻ qua Web Share API khi `navigator.canShare({files})`, fallback `<a download>` — FR-020, DEC-011
-- [ ] Thư viện sinh ảnh không nằm trong initial bundle client — NFR-003
-- [ ] Test edge case: tên 40+ ký tự, tuyến 300 ký tự, ghi chú 1000 ký tự, doanh thu 12 chữ số, achievement 4 chữ số (`1250,0%`), `—` khi `target=0`, dấu tiếng Việt đầy đủ (ừ ẫ ợ ỹ đ)
+- [x] Route Handler `GET /api/reports/[id]/share-image` sinh PNG **1080×1920** bằng `ImageResponse` (Satori), không screenshot cả trang — FR-018, DEC-010
+      → `app/api/reports/[id]/share-image/route.tsx` (**`.tsx`** vì chứa JSX), `runtime = 'nodejs'`, `dynamic = 'force-dynamic'`. Kích thước đo trên chunk `IHDR` của chính response: **1080×1920 ở cả 6 lần đo**
+- [x] Route handler xác thực session, đọc report dưới RLS, và **kiểm tra `status = 'COMPLETED'`** trước khi render — BR-002
+      → dùng `lib/supabase/server.ts` (anon + cookie), **không** dùng `admin.ts`. Chính chủ gọi ảnh cho báo cáo `MORNING_SUBMITTED` → **403 `NOT_COMPLETED`**; salesA gọi id của salesB → **404 `REPORT_NOT_FOUND`**, không phân biệt với id không tồn tại (chống dò ID)
+- [x] Admin cũng gọi được đúng route này cho báo cáo của Sales — BR-022
+      → đo thật: Admin → **200**, ảnh đúng kích thước. `getReportForShare()` **cố ý không nhận `salesId`**; lọc thêm sẽ chặn nhầm Admin
+- [x] Nhúng file font `.ttf`/`.woff` có **đầy đủ dấu tiếng Việt** (subset latin + vietnamese), đọc bằng `fs` ở Node runtime
+      → 3 file Inter `.ttf` (400/600/700) trong `public/fonts/`, parse bảng `cmap` xác nhận **2849 glyph**, đủ `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` và `₫`. Đọc một lần mỗi tiến trình, ghim bundle bằng `outputFileTracingIncludes`
+- [x] `features/report-share/daily-report-share-card.tsx` dùng chung view model với UI để số liệu không lệch, layout dark `#0B1220` với bảng token đã đo
+      → tên file `kebab-case` theo `AGENTS.md §3`. Dùng chung **`lib/reports/metric-rows.ts`** với `AchievementTable` nên hai nơi không thể lệch nhau; mọi con số đi qua `lib/kpi.ts`
+- [x] Header `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"` và `Cache-Control: private, no-store` — FR-019
+      → đo thật trên response: `BikeForce_Report_Le-Duy-Khang_2026-08-08.png`
+- [x] Nút "Xuất ảnh" chỉ enable khi báo cáo đã persist với `status = 'COMPLETED'` — FR-017, UC-08
+      → mạnh hơn yêu cầu: chưa `COMPLETED` thì **không render** khối nút. `EXPORT_IMAGE_NOT_READY` đã xoá
+- [x] Chia sẻ qua Web Share API khi `navigator.canShare({files})`, fallback `<a download>` — FR-020, DEC-011
+      → ba đường ra: share sheet → `<a download>` → mở tab mới kèm hướng dẫn "nhấn giữ để lưu" (ISSUE-003 biện pháp 2). Huỷ share sheet (`AbortError`) **không** bị coi là lỗi. Kiểm chứng được đường 2 trên Chromium (desktop không hỗ trợ chia sẻ file)
+- [x] Thư viện sinh ảnh không nằm trong initial bundle client — NFR-003
+      → `ImageResponse` chỉ import trong Route Handler chạy Node runtime; client không thêm dependency nào
+- [x] Test edge case: tên 40+ ký tự, tuyến 300 ký tự, ghi chú 1000 ký tự, doanh thu 12 chữ số, achievement 4 chữ số (`1.250,0%`), `target=0`, dấu tiếng Việt đầy đủ (ừ ẫ ợ ỹ đ)
+      → **43 unit test** ở `lib/reports/share-card.test.ts` + một tấm ảnh chứa **tất cả** các case, đã xem bằng mắt. ⚠ Đính chính mô tả cũ: `target = 0 && actual > 0` hiện `+3 điểm` (**DEC-038**), không phải `—`
 - [ ] Kiểm chứng tay trên thiết bị thật trong **Zalo in-app webview**: mở app, tải ảnh, chia sẻ — ISSUE-003, NFR-009
-- [ ] Nếu Satori không dựng nổi layout: chuyển fallback `html-to-image` (`next/dynamic({ssr:false})`, `document.fonts.ready`, bảng màu hex thuần) và **ghi thành DEC mới**, không sửa lén — ISSUE-002
+      → **CHƯA LÀM ĐƯỢC** từ môi trường này: cần một điện thoại thật và một link công khai. Chờ sau khi deploy Vercel. Không tick bằng bất kỳ bằng chứng thay thế nào — `zalo-like` chỉ là Chromium đội `userAgent` khác
+- [x] Nếu Satori không dựng nổi layout: chuyển fallback `html-to-image` … và **ghi thành DEC mới**, không sửa lén — ISSUE-002
+      → **KHÔNG cần fallback.** Satori dựng đủ bố cục `docs/05 §14` ngay từ prototype đầu tiên. DEC-010 giữ nguyên, ISSUE-002 → **CLOSED**
+
+**Ngoài kế hoạch, phát sinh khi kiểm chứng — đã xử lý trong cùng phase:**
+
+- [x] **ISSUE-015 (P1) — middleware redirect route `/api/*` về `/login`**, khiến `fetch()` nhận HTML kèm `status 200` và lưu thành file `.png` hỏng. Sửa bằng **DEC-039**: `isApiPath()` + trả **401/403 JSON**, cộng một lớp kiểm `content-type` ở client
+- [x] `CommitmentSummary` còn tự ghép chuỗi `` `${n} điểm` `` từ Phase 3 — vi phạm NFR-012, đã chuyển sang `formatMetricValue()`
+- [x] Gộp bản sao thứ hai của danh sách 4 chỉ tiêu về **`lib/reports/metric-rows.ts`**, dùng chung cho `AchievementTable` và thẻ ảnh (`docs/07 §5`: hai nơi không bao giờ ra hai con số khác nhau)
 
 ## Phase 7 — Sales History
 

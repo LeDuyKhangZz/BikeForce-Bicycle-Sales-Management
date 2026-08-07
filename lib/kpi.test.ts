@@ -16,6 +16,7 @@ import {
   achievementLabel,
   calculateAchievement,
   formatMetricValue,
+  formatMetricValueCompact,
   getAchievementStatus,
   isKpiAchievedDay,
   type AchievementResult,
@@ -313,5 +314,25 @@ describe('isKpiAchievedDay — BR-024 "cả 4 chỉ tiêu ≥ 100%"', () => {
     expect(isKpiAchievedDay(day([[8, 10], [5, 5], [10, 12]]))).toBe(false);
     expect(isKpiAchievedDay([])).toBe(false);
     expect(isKpiAchievedDay(day([[8, 10], [5, 5], [10, 12], [12, 12], [1, 1]]))).toBe(false);
+  });
+});
+
+describe('formatMetricValueCompact — bản rút gọn cho thẻ ảnh 9:16 (Phase 6)', () => {
+  it('CHỈ doanh thu đổi cách hiển thị', () => {
+    expect(formatMetricValueCompact(150000000, 'REVENUE')).toBe('150tr');
+    expect(formatMetricValueCompact(100000000000, 'REVENUE')).toBe('100tỷ');
+  });
+
+  it('ba chỉ tiêu còn lại giữ nguyên bản đầy đủ — trần của chúng chỉ 4 chữ số', () => {
+    for (const metric of ['VISIT_POINTS', 'SALES_QUANTITY', 'CUSTOMER_VISITS'] as const) {
+      expect(formatMetricValueCompact(1000, metric)).toBe(formatMetricValue(1000, metric));
+    }
+    expect(formatMetricValueCompact(1000, 'SALES_QUANTITY')).toBe('1.000 xe');
+  });
+
+  it('giữ nguyên quy ước "—" khi chưa có số liệu', () => {
+    expect(formatMetricValueCompact(null, 'REVENUE')).toBe('—');
+    expect(formatMetricValueCompact(Number.NaN, 'REVENUE')).toBe('—');
+    expect(formatMetricValueCompact(-1, 'SALES_QUANTITY')).toBe('—');
   });
 });

@@ -1,5 +1,5 @@
 import { Card, CardTitle } from '@/components/ui/card';
-import { formatCurrencyVND } from '@/lib/currency';
+import { formatMetricValue } from '@/lib/kpi';
 import type { DailyReport } from '@/services/reports';
 
 type Props = {
@@ -19,11 +19,17 @@ type Props = {
  * nó **gọi** `formatCurrencyVND` chứ không tự format (AGENTS.md §9).
  */
 export function CommitmentSummary({ report }: Props) {
+  // Đơn vị (`điểm` / `xe` / `khách` / `₫`) CHỈ tồn tại trong `formatMetricValue`
+  // (NFR-012, DEC-038). Bản Phase 3 của khối này tự ghép `` `${n} điểm` `` nên
+  // số từ 1.000 trở lên mất dấu phân nhóm nghìn — đã sửa ở Phase 6.
   const rows: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'Điểm viếng thăm', value: `${report.target_visit_points} điểm` },
-    { label: 'Doanh số', value: `${report.target_sales_quantity} xe` },
-    { label: 'Doanh thu', value: formatCurrencyVND(report.target_revenue) },
-    { label: 'Khách hàng', value: `${report.target_customer_visits} khách` },
+    { label: 'Điểm viếng thăm', value: formatMetricValue(report.target_visit_points, 'VISIT_POINTS') },
+    { label: 'Doanh số', value: formatMetricValue(report.target_sales_quantity, 'SALES_QUANTITY') },
+    { label: 'Doanh thu', value: formatMetricValue(report.target_revenue, 'REVENUE') },
+    {
+      label: 'Khách hàng',
+      value: formatMetricValue(report.target_customer_visits, 'CUSTOMER_VISITS'),
+    },
   ];
 
   return (

@@ -307,9 +307,15 @@ flowchart TD
 
 ### 4.1 `GET /api/reports/[id]/share-image` — UC-08, FR-018
 
+> ✅ **ĐÃ TRIỂN KHAI — Phase 6, 2026-08-08.** Bảng dưới đây là hợp đồng thật, đã kiểm chứng 44/44 phép kiểm. Bốn điểm cần biết trước khi sửa route này:
+> 1. **Tên file là `route.tsx`**, không phải `.ts` — nó chứa JSX của thẻ ảnh.
+> 2. **Chưa đăng nhập trả 401 từ `middleware.ts`**, không phải từ route handler — xem **DEC-039**/**ISSUE-015**. Route handler vẫn giữ nhánh 401 của riêng nó làm lớp thứ hai; hai nơi trả cùng một hình dạng `{ code, message }`.
+> 3. Ngoài 401, middleware còn trả **403 `ACCOUNT_DISABLED`** cho tài khoản bị vô hiệu hoá giữa phiên (BR-009), trước khi route chạy.
+> 4. Route đọc dữ liệu bằng **`services/reports.getReportForShare()`** và dựng chuỗi bằng **`lib/reports/share-card.ts`** — nó không tự truy vấn và không tự format gì cả.
+
 | Mục | Nội dung |
 |---|---|
-| **File** | `app/api/reports/[id]/share-image/route.ts` |
+| **File** | `app/api/reports/[id]/share-image/route.tsx` |
 | **Runtime** | Node (cần đọc file font bằng `fs` cho Satori) |
 | **Input** | Path param `id` (uuid). Không nhận query param nào ảnh hưởng nội dung |
 | **Validation** | `id` phải là uuid hợp lệ — nếu không, trả 404 luôn, không truy vấn database |
@@ -330,6 +336,8 @@ flowchart TD
 > | `getSessionProfile(supabase, userId)` | `services/profiles.ts` | Vai trò của `getMyProfile`; nhận `userId` tường minh thay vì đọc `auth.uid()` bên trong, để chạy được dưới cả ba ngữ cảnh client |
 > | `getTodayReport(supabase, salesId, today)` | `services/reports.ts` | Vai trò của `getMyTodayReport`. **Không `select('*')`** — 18 cột nghiệp vụ liệt kê tường minh, bỏ `created_at`/`updated_at` |
 > | `insertMorningReport` · `updateMorningReport` | `services/reports.ts` | Hàm **ghi**, không có trong bảng đọc bên dưới. Trả `ReportWriteResult` đã dịch mã lỗi Postgres sang từ vựng nghiệp vụ (`DUPLICATE` / `REJECTED` / `UNKNOWN`) nên tầng trên không bao giờ thấy `PostgrestError` thô |
+> | `completeEveningReport` | `services/reports.ts` | Hàm **ghi** (Phase 4) — sáu cột đi chung MỘT câu `update` |
+> | **`getReportForShare(supabase, reportId)`** | `services/reports.ts` | **Phase 6.** Vai trò của `getReportById` cho riêng thẻ ảnh: 14 cột + embedded `sales:profiles!inner(full_name, employee_code)`. **Cố ý KHÔNG nhận `salesId`** — lọc thêm `.eq('sales_id')` sẽ chặn nhầm Admin (BR-022); quyền do RLS quyết định hoàn toàn |
 >
 > Các hàm còn lại trong bảng vẫn là **đề xuất**, thuộc Phase 7 → Phase 10.
 

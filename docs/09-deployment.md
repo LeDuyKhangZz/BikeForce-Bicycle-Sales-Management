@@ -387,6 +387,22 @@ fi
 
 Lớp bảo vệ tĩnh song song: `lib/supabase/admin.ts` bắt đầu bằng `import 'server-only'`. Nếu bất kỳ Client Component nào import nhầm file này, **build sẽ fail** thay vì âm thầm đóng gói secret vào bundle. Hai lớp này bổ sung cho nhau: `server-only` chặn lỗi lập trình, grep chặn mọi con đường còn lại.
 
+### 7.1. Ngược lại — thứ BẮT BUỘC phải commit: font của thẻ ảnh 9:16 (Phase 6)
+
+`public/fonts/Inter-Regular.ttf`, `Inter-SemiBold.ttf`, `Inter-Bold.ttf` (~320 KB mỗi file, tổng ~950 KB) **nằm trong repository và phải ở đó**. Chúng không phải asset build-time có thể tải lại lúc chạy: Satori đọc chúng bằng `fs` ở Node runtime để render PNG (DEC-010). Tải font qua mạng lúc render là đúng thứ ISSUE-002 cấm — một request hỏng nghĩa là ảnh mất dấu tiếng Việt, và lỗi đó chỉ lộ ra trên tấm ảnh đã gửi cho khách.
+
+Ba file này **không** đi vào client bundle: giao diện web nạp Inter qua `next/font/google` như cũ (DEC-013), hoàn toàn tách biệt.
+
+**Bắt buộc kèm theo — `next.config.ts`:**
+
+```ts
+outputFileTracingIncludes: {
+  '/api/reports/[id]/share-image': ['./public/fonts/**'],
+},
+```
+
+Đường dẫn font được ghép lúc chạy bằng `join(process.cwd(), 'public', 'fonts', …)`, nên bộ dò phụ thuộc của Vercel **không nhìn thấy nó**. Thiếu khai báo này thì `next build` vẫn xanh, còn hàm trên Vercel ném `ENOENT` ngay request đầu tiên — một lỗi chỉ xuất hiện sau khi deploy. Nếu sau này thêm route nào khác cũng đọc file từ đĩa, phải thêm entry tương ứng.
+
 ---
 
 ## 8. ENVIRONMENT VARIABLES

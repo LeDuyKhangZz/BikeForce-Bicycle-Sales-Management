@@ -1,10 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { LOGIN_REASONS } from '@/lib/auth/messages';
+import { AUTH_MESSAGES, LOGIN_REASONS } from '@/lib/auth/messages';
 import {
   LOGIN_PATH,
   dashboardPathFor,
+  isApiPath,
   isPublicPath,
   requiredRoleForPath,
   sanitizeNextPath,
@@ -68,6 +69,17 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     if (isPublicPath(pathname)) return response;
 
+    // Route API nhận MÃ TRẠNG THÁI, không nhận redirect — xem `isApiPath()`
+    // và ISSUE-015. Route handler cũng tự trả 401, nhưng nó không bao giờ chạy
+    // được nếu middleware đã đổi hướng request trước đó.
+    if (isApiPath(pathname)) {
+      return jsonPreservingCookies(
+        { code: 'UNAUTHENTICATED', message: AUTH_MESSAGES.SESSION_EXPIRED },
+        401,
+        response,
+      );
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = LOGIN_PATH;
     url.search = '';
@@ -83,6 +95,15 @@ export async function middleware(request: NextRequest) {
   // phía GoTrue; cookie bị xoá qua chính `setAll` ở trên.
   if (!profile || !profile.is_active) {
     await supabase.auth.signOut();
+
+    if (isApiPath(pathname)) {
+      return jsonPreservingCookies(
+        { code: 'ACCOUNT_DISABLED', message: AUTH_MESSAGES.ACCOUNT_DISABLED },
+        403,
+        response,
+      );
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = LOGIN_PATH;
     url.search = '';
@@ -126,6 +147,29 @@ function redirectPreservingCookies(url: URL, source: NextResponse): NextResponse
     redirectResponse.cookies.set(cookie);
   }
   return redirectResponse;
+}
+
+/**
+ * Câu trả lời của middleware cho một route API — cùng hình dạng `{ code, message }`
+ * mà `app/api/reports/[id]/share-image/route.tsx` dùng, để client chỉ phải đọc
+ * MỘT kiểu lỗi dù bị chặn ở lớp nào (`docs/07 §4.1`).
+ *
+ * Vẫn phải mang cookie vừa refresh sang, đúng như nhánh redirect: bỏ bước đó là
+ * làm hỏng silent refresh.
+ */
+function jsonPreservingCookies(
+  body: { code: string; message: string },
+  status: number,
+  source: NextResponse,
+): NextResponse {
+  const jsonResponse = NextResponse.json(body, {
+    status,
+    headers: { 'Cache-Control': 'private, no-store' },
+  });
+  for (const cookie of source.cookies.getAll()) {
+    jsonResponse.cookies.set(cookie);
+  }
+  return jsonResponse;
 }
 
 export const config = {

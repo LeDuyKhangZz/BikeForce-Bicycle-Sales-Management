@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 5 (ĐÃ ĐÓNG 11/11) → sẵn sàng Phase 6 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 6 (11/12 — còn 1 mục cần thiết bị thật) → sẵn sàng Phase 7 | Last updated: 2026-08-08
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -10,35 +10,46 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 5 — KPI Engine` — **ĐÃ ĐÓNG, 11/11 mục `[x]`** (2026-08-07).
-Phase 0, Phase 1, Phase 2 đã đóng. Phase 3 còn 1 mục treo chờ người dùng (OQ-18); Phase 4 còn 1 mục
-chờ bộ E2E của Phase 11.
+**Current Phase:** `PHASE 6 — Xuất ảnh 9:16` — **11/12 mục `[x]`** (2026-08-08).
+Phase 0, 1, 2, 5 đã đóng. Phase 3 còn 1 mục treo chờ người dùng (OQ-18); Phase 4 còn 1 mục chờ bộ
+E2E của Phase 11; Phase 6 còn 1 mục cần **thiết bị thật**.
 
-**Current Task:** **Bắt đầu PHASE 6 — Xuất ảnh 9:16 (FR-018, DEC-010).**
+**Current Task:** **Bắt đầu PHASE 7 — Sales History (FR-021, FR-022, UC-09, UC-10).**
 
-> ✅ **Hai chốt chặn của Phase 5 đã ĐÓNG.** Người dùng trả lời ngày 2026-08-07, ghi thành
-> **DEC-038**: (1) `AchievementResult.percent = null` đúng cho **cả hai** ca, phân biệt bằng
-> `status`; (2) `calculateAchievement()` nhận thêm tham số `metric` và trả về **cả** `display` đã
-> format **lẫn** `surplus` thô. `lib/kpi.ts` nay **có thân thật** và là nguồn duy nhất của công
-> thức KPI — Phase 6 phải **gọi lại** nó, không tự tính `%` và không tự ghép đơn vị (NFR-012).
+> ✅ **Phase 6 đã chạy thật đầu-cuối.** `GET /api/reports/[id]/share-image` sinh PNG **1080×1920**
+> bằng Satori với font Inter nhúng sẵn; nút "Xuất ảnh báo cáo" ở `/sales/today` bấm ra file thật.
+> **ISSUE-002 → CLOSED**: Satori dựng được toàn bộ bố cục `docs/05 §14`, **không** phải dùng
+> fallback `html-to-image`, DEC-010 giữ nguyên.
 
-> ⏳ **Hai việc chờ người dùng, KHÔNG chặn Phase 6:**
+> ⚠ **Một việc của Phase 6 CHƯA LÀM ĐƯỢC, đừng tick hộ:** kiểm tay trong **Zalo in-app webview trên
+> thiết bị thật** (ISSUE-003, NFR-009). Cần một điện thoại thật và một link công khai ⇒ phải chờ sau
+> khi deploy Vercel. Playwright project `zalo-like` chỉ đội `userAgent` khác, **không** tái hiện
+> được giới hạn API thật của webview — không được coi nó là bằng chứng.
+
+> ⏳ **Hai việc chờ người dùng, KHÔNG chặn Phase 7:**
 > 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
 > 2. **OQ-18 / ISSUE-013** — NFR-008 đặt "≤ 6 lần chạm" nhưng FR-008 có 5 trường bắt buộc nên sàn
 >    lý thuyết là 7; đo thật **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18`.
 >    **Đừng tự chọn hộ**, và **đừng bỏ bớt trường bắt buộc** để ép con số xuống.
 
-**Phase 3 + Phase 4 + Phase 5 đã làm được gì (tóm tắt cho session mới):**
+> 🔧 **Ghi nhận một sự cố môi trường đã tự hết:** giữa phiên 2026-08-08, **Docker Desktop hỏng ở mức
+> engine của chính nó** (`docker ps` trả `500 Internal Server Error`) làm mọi request tới Supabase
+> local timeout 30s — một lượt `npm test` chạy 434 giây rồi báo FAIL. **Không phải** ISSUE-012
+> (lần đó Kong/GoTrue mới là thủ phạm), và **không phải** lỗi code. Docker tự hồi phục, lượt cuối
+> cho **369/369 trong 15 giây**. Nếu gặp lại: khởi động lại Docker Desktop trước khi nghi ngờ code.
+
+**Phase 3 → Phase 6 đã làm được gì (tóm tắt cho session mới):**
 
 | Hạng mục | Trạng thái |
 |---|---|
-| `/sales/today` | ✅ FR-007 thật — badge trạng thái, cam kết 4 chỉ tiêu, **đúng 1 CTA chính** theo `status` |
+| `/sales/today` | ✅ FR-007 thật — badge trạng thái, bảng đối chiếu, **đúng 1 CTA chính**, **nút Xuất ảnh chạy thật (Phase 6)** |
 | `/sales/today/morning` | ✅ UC-04 (tạo) + UC-05 (sửa) — cùng một form, hai Server Action |
 | `/sales/today/evening` | ✅ **FR-013 + FR-014 thật (Phase 4)** — đối chiếu cam kết sáng + 6 ô thực đạt + `status → COMPLETED` |
-| `lib/date.ts` · `lib/currency.ts` | ✅ Triển khai thật (DEC-032). **`getVietnamMonthRange` vẫn là khung** — Phase 7 |
-| `lib/kpi.ts` | ✅ **Thân thật (Phase 5)** — 5 hàm thuần, 46 unit test, **coverage 100%** cả bốn cột |
+| `lib/date.ts` · `lib/currency.ts` | ✅ Triển khai thật (DEC-032). **`getVietnamMonthRange` vẫn là khung** — Phase 7. `formatCompactVND` thêm ở Phase 6 |
+| `lib/kpi.ts` | ✅ **Thân thật (Phase 5)** — 6 hàm thuần (thêm `formatMetricValueCompact` ở Phase 6), **coverage 100%** cả bốn cột |
 | Bảng đối chiếu 4 chỉ tiêu | ✅ **`features/report-comparison/` (Phase 5)** — 4 card ở < 768px, `<table>` thật từ 768px (DEC-019), gắn ở `/sales/today` |
-| Test | ✅ **315/315** (**242** unit · **40** integration · 33 RLS) |
+| **Ảnh chia sẻ 9:16** | ✅ **`app/api/reports/[id]/share-image/route.tsx` + `features/report-share/` (Phase 6)** — PNG 1080×1920 bằng Satori, font nhúng, Web Share API + 2 fallback |
+| Test | ✅ **369** (**290** unit · **40** integration · **39** RLS) — xem lưu ý về lượt chạy cuối ở §Testing State |
 
 > ⚠ **Sửa số liệu:** checkpoint này trước đây ghi `189 unit · 47 integration`. Tổng `269` **đúng**
 > nhưng cách chia **sai** — con số thật trước Phase 5 là `196 · 40 · 33`. Nguồn lệch:
@@ -149,31 +160,52 @@ cấu trúc DEC-023; 3 Supabase client + `lib/env.ts`; design token DEC-014; fon
   `npm run test:coverage` → `lib/**` stmt **98,57%** / branch **99,01%** / lines **99,11%** ·
   Chromium **36/36** ở 375px và 1440px.
 
+### Phase 6 (2026-08-08) — chi tiết ở `WORKLOG.md` Entry 009
+
+- **Dựng prototype Satori TRƯỚC** (đúng thứ tự `docs/12 § ISSUE-002 Fix bước 1`) → biết ngay từ đầu
+  là **không cần fallback**. **ISSUE-002 → CLOSED**, DEC-010 giữ nguyên.
+- **3 file font Inter `.ttf`** trong `public/fonts/` (400/600/700). Xác minh bằng cách **parse bảng
+  `cmap`**: 2849 glyph, đủ `ừ ẫ ợ ỹ đ Đ Ệ Ỡ ₫ …`. Ghim bundle bằng `outputFileTracingIncludes`.
+- **`lib/reports/share-card.ts`** — view model thuần: cắt tuyến/ghi chú ở tầng dữ liệu, dựng tên
+  file FR-019, `shareImagePath()`. **43 unit test** phủ toàn bộ edge case bắt buộc của Phase 6.
+- **`lib/reports/metric-rows.ts`** — gộp bản sao thứ hai của danh sách 4 chỉ tiêu; `AchievementTable`
+  và thẻ ảnh nay đọc **cùng một** định nghĩa (`docs/07 §5`).
+- **`formatCompactVND()` + `formatMetricValueCompact()`** — dạng rút gọn `150tr` / `100tỷ` cho bảng
+  trong ảnh (`docs/05 §14`); số đầy đủ vẫn ở khối "DOANH THU THỰC ĐẠT".
+- **`services/reports.getReportForShare()`** — **cố ý không nhận `salesId`**, để RLS quyết định
+  (nếu lọc thêm sẽ chặn nhầm Admin — BR-022).
+- **Route Handler + thẻ ảnh + nút chia sẻ** — xem bảng "Important Files" bên dưới.
+- **Phát sinh: ISSUE-015 (P1)**, sửa bằng **DEC-039** — middleware trả 401/403 JSON cho `/api/*`.
+- **Kiểm chứng bằng công cụ thật**: typecheck/lint/build exit 0 · `npm test` **368/368** ·
+  Chromium **44/44** ở 375px và 1440px · **xem tận mắt 2 tấm ảnh PNG** xuất ra.
+
 ---
 
 ## Currently Working On
 
-**Không có công việc code nào đang dở.** Phase 5 đã dừng ở một trạng thái sạch: mọi thứ đã viết đều
-đã chạy thật và đã có test.
+**Không có công việc code nào đang dở.** Phase 6 dừng ở trạng thái sạch: mọi thứ đã viết đều đã chạy
+thật và đã có test. Việc duy nhất còn nợ của phase là **kiểm tay trên thiết bị thật trong Zalo**,
+và nó **không thể** làm từ môi trường agent.
 
 ---
 
 ## Not Started
 
-- **Phase 6 → Phase 12:** chưa bắt đầu. Chưa có route handler ảnh 9:16, chưa có màn hình Admin
-  thật, chưa có lịch sử báo cáo, chưa có màn hình chi tiết `/sales/reports/[id]`.
+- **Phase 7 → Phase 12:** chưa bắt đầu. Chưa có màn hình Admin thật, chưa có lịch sử báo cáo, chưa
+  có màn hình chi tiết `/sales/reports/[id]`.
 - **Test còn thiếu:** `playwright.config.ts` và toàn bộ `e2e/*.spec.ts` (Phase 11);
   `tests/integration/indexes.test.ts` với `EXPLAIN ANALYZE` (Phase 11).
 
-**Những thứ Phase 3 + Phase 4 CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
+**Những thứ CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
 
 | Thứ chưa làm | Thuộc phase | Vì sao chưa làm |
 |---|---|---|
 | `getVietnamMonthRange()` | Phase 7 / 9 | Chỉ phục vụ filter tháng FR-021/FR-028; hành vi với chuỗi sai định dạng chưa chốt |
-| Nút "Xuất ảnh" hoạt động thật | Phase 6 | Nút đã render nhưng luôn `disabled`; cờ `EXPORT_IMAGE_NOT_READY` đánh dấu chỗ phải xoá |
-| `/sales/reports/[id]` | Phase 7 | CTA "Xem báo cáo hôm nay" render **disabled**; tập `CTA_ROUTES_NOT_READY` đánh dấu chỗ phải xoá |
+| ~~Nút "Xuất ảnh" hoạt động thật~~ | ~~Phase 6~~ | ✅ **XONG 2026-08-08** — cờ `EXPORT_IMAGE_NOT_READY` đã xoá |
+| `/sales/reports/[id]` | Phase 7 | CTA "Xem báo cáo hôm nay" render **disabled**; tập `CTA_ROUTES_NOT_READY` đánh dấu chỗ phải xoá — nay là cờ **duy nhất** còn lại trong file đó |
 | Bottom nav / sidebar DEC-018 | Phase 7, 8 | — |
 | UC-17/18/19 quản lý tài khoản | Phase 10 | `lib/supabase/admin.ts` vẫn chưa được gọi ở đâu cả — đúng thiết kế |
+| Kiểm Zalo webview trên máy thật | Phase 6 (nợ) / Phase 11 | Cần điện thoại thật + link công khai ⇒ chờ deploy Vercel (ISSUE-003) |
 
 > `/admin` hiện vẫn là **trang tối thiểu của Phase 2**, chỉ để luồng đăng nhập có đích đến thật và
 > test được — FR-024 (Phase 8) mới là nội dung thật. `/sales/today` **đã được thay bằng FR-007 thật ở
@@ -183,13 +215,13 @@ cấu trúc DEC-023; 3 Supabase client + `lib/env.ts`; design token DEC-014; fon
 
 ## Known Issues
 
-Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 9 OPEN, 5 đã CLOSED.**
+Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 8 OPEN, 7 đã CLOSED.**
 
 | ID | Sev | Status | Nội dung |
 |---|---|---|---|
 | ISSUE-001 | P1 | **CLOSED** | 17/17 OQ đã được trả lời |
-| ISSUE-002 | P2 | OPEN | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt → Phase 6 |
-| ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa kiểm chứng trên thiết bị thật → Phase 6 |
+| ISSUE-002 | P2 | **CLOSED** | Satori dựng được toàn bộ bố cục `docs/05 §14` (2026-08-08) — **không** dùng fallback `html-to-image`, DEC-010 giữ nguyên |
+| ISSUE-003 | P2 | OPEN | Zalo in-app webview **vẫn** chưa kiểm chứng trên thiết bị thật — cần điện thoại + link công khai |
 | ISSUE-004 | P2 | **CLOSED** | TS 7 + ESLint 10 đã vỡ thật; pin `typescript@6.0.3` + `eslint@9.39.5` |
 | ISSUE-005 | P3 | OPEN | `is_admin()` thêm một truy vấn `profiles` mỗi câu lệnh. Đã viết dạng `(select public.is_admin())`; **chưa đo `EXPLAIN`** → Phase 11 |
 | ISSUE-006 | P3 | **CLOSED** | Không xử lý gì quanh ngày nghỉ ở v1 |
@@ -200,7 +232,8 @@ Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 9 OPEN, 5 đã CLO
 | ISSUE-011 | **P1** | OPEN | service role key lọt vào transcript hội thoại do IDE tự đồng bộ `.env.local`. **Phải rotate.** Chưa vào git |
 | ISSUE-012 | P3 | OPEN | **MỚI** — sau `supabase db reset`, GoTrue + Kong không tự phục hồi → đăng nhập nhận `502` dù `docker ps` báo `healthy`. Có lệnh khắc phục đã kiểm chứng |
 | ISSUE-013 | P3 | OPEN | NFR-008 (≤ 6 chạm) mâu thuẫn với FR-008 (5 trường bắt buộc). Đo thật **7 chạm / 1,8 giây**. **Cần người dùng quyết định — OQ-18** |
-| ISSUE-014 | P2 | **CLOSED** | **MỚI** — lưu cuối ngày thành công nhưng mất banner + draft không bị xoá, do re-render RSC của route hiện tại sau Server Action. Sửa bằng **DEC-037** |
+| ISSUE-014 | P2 | **CLOSED** | lưu cuối ngày thành công nhưng mất banner + draft không bị xoá, do re-render RSC của route hiện tại sau Server Action. Sửa bằng **DEC-037** |
+| ISSUE-015 | **P1** | **CLOSED** | **MỚI** — middleware redirect `/api/*` về `/login`; `fetch()` đi theo redirect nên nút Xuất ảnh lưu HTML thành file `.png` hỏng mà không báo lỗi. Sửa bằng **DEC-039** |
 
 ---
 
@@ -374,9 +407,20 @@ giờ chạm production dù `.env.local` trỏ cloud (DEC-022). Đã kiểm ch�
 một URL cloud giả, `npm run test:db` vẫn **66/66 PASS**. `tests/integration/setup.ts` còn một chặn
 thứ hai — URL không phải localhost thì ném lỗi ngay.
 
-**File sẽ tạo ở Phase 6 (chưa tồn tại):** `app/api/reports/[id]/share-image/route.ts` và
-`features/report-share/DailyReportShareCard.tsx`. Cả hai **phải dùng lại `lib/kpi.ts`** — không
-tự tính `%`, không tự ghép đơn vị.
+**Tầng xuất ảnh 9:16 (Phase 6 — MỚI):**
+
+| File | Vai trò |
+|---|---|
+| `public/fonts/Inter-{Regular,SemiBold,Bold}.ttf` | **Asset BẮT BUỘC commit** — Satori đọc bằng `fs`. Không tải font qua mạng lúc render (`docs/09 §7.1`) |
+| `next.config.ts` | `outputFileTracingIncludes` ghim `public/fonts/**` vào bundle của route ảnh. **Thiếu dòng này build vẫn xanh, Vercel ném `ENOENT`** |
+| `app/api/reports/[id]/share-image/route.tsx` | Route Handler **DUY NHẤT** của dự án (DEC-003). `.tsx` vì chứa JSX. `runtime = 'nodejs'`. Font đọc một lần mỗi tiến trình |
+| `features/report-share/daily-report-share-card.tsx` | Thẻ ảnh — flexbox thuần, hex thuần, không `className`. Chỉ tự quyết `status → màu` |
+| `features/report-share/share-image-button.tsx` | Client — Web Share API → `<a download>` → mở tab mới. Kiểm `content-type` để không lưu HTML thành `.png` (ISSUE-015) |
+| `lib/reports/share-card.ts` | View model **thuần**: cắt chuỗi, tên file FR-019, `shareImagePath()` |
+| `lib/reports/metric-rows.ts` | **Nguồn DUY NHẤT** của "4 chỉ tiêu là gì" — dùng chung với `AchievementTable` |
+| `services/reports.ts` | Thêm `getReportForShare()` + `ShareReport`. **Không nhận `salesId`** — cố ý |
+| `middleware.ts` | Thêm `jsonPreservingCookies()` — 401/403 JSON cho `/api/*` (DEC-039) |
+| `lib/auth/routes.ts` | Thêm `isApiPath()` |
 
 ---
 
@@ -436,18 +480,21 @@ Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo �
 
 | Loại | Trạng thái |
 |---|---|
-| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, 7 route) |
+| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, **8 route** — thêm `ƒ /api/reports/[id]/share-image`) |
 | **Typecheck** | ✅ `npm run typecheck` → **exit 0** |
 | **Lint** | ✅ `npm run lint` → **exit 0**, 0 error 0 warning |
-| **Unit** | ✅ **242 passed** — `auth/routes` 14 · `date` 33 · `currency` **36** · `validation/report` 96 · `reports/today-cta` 17 · **`kpi` 46** |
+| **Unit** | ✅ **290 passed** — `auth/routes` **16** · `date` 33 · `currency` **51** · `validation/report` 96 · `reports/today-cta` 17 · `kpi` **49** · **`reports/share-card` 43** |
 | **Integration (DB)** | ✅ **40 passed** — UNIQUE, 16 CHECK, FK RESTRICT, 4 trigger, 3 function, bảng GRANT |
-| **RLS** | ✅ **33 passed** — JWT thật của `salesA`/`salesB`/`admin`/`inactive` + `anon`, gọi thẳng PostgREST. Gồm 7 test chạy `completeEveningReport()` dưới JWT thật |
-| **Tổng `npm test`** | ✅ **315 passed / 315**, 14 test file |
-| **Coverage (`npm run test:coverage`)** | ✅ `lib/**` — stmt **98,57%** · branch **99,01%** · func **96,43%** · lines **99,11%**. `lib/kpi.ts` **100%** cả bốn cột. ⚠ Chỉ tính các module `lib/` mà tầng unit **thực sự import**; `lib/hooks/`, `lib/supabase/`, `lib/env.ts`, `lib/utils.ts` không nằm trong đó |
+| **RLS** | ✅ **39 passed** — JWT thật của `salesA`/`salesB`/`admin`/`inactive` + `anon`. Gồm 7 test `completeEveningReport()` và **6 test `getReportForShare()`** (IDOR) |
+| **Tổng `npm test`** | ✅ **369 passed / 369**, 16 test file, 15,3 giây (đo lúc 01:03 ngày 2026-08-08, sau khi Docker hồi phục) |
+| **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **98,46%** · branch **99,28%** · func **97,43%** · lines **98,75%**. `lib/kpi.ts` và `lib/reports/share-card.ts` **100%** cả bốn cột. Hai dòng chưa phủ là **cố ý**: nhánh không tới được trong `formatCompactVND` và khung ném lỗi `getVietnamMonthRange`. ⚠ Chỉ tính các module `lib/` mà tầng unit **thực sự import** |
 | **UI mobile (Phase 2 — auth)** | ✅ Chromium 375px + 1440px: **32/32 PASS** |
 | **UI mobile (Phase 3 — báo cáo sáng)** | ⚠ Chromium 375px + 1440px: **57/58 PASS**. Mục lệch duy nhất là **NFR-008 (7 lần chạm)** — ISSUE-013, không phải lỗi code |
 | **UI mobile (Phase 4 — báo cáo cuối ngày)** | ✅ Chromium 375px + 1440px: **62/62 PASS** (lần đo trước khi sửa ISSUE-014: 59/62) |
 | **UI (Phase 5 — bảng đối chiếu KPI)** | ✅ Chromium 375px + 1440px: **36/36 PASS** (lần đo đầu 27/36 là do script đọc DOM quá sớm, không phải lỗi code — xem `WORKLOG.md` Entry 008 Errors 1) |
+| **Xuất ảnh 9:16 (Phase 6)** | ✅ Chromium 375px + 1440px: **44/44 PASS** — header FR-019, `IHDR` 1080×1920, BR-002 → 403, IDOR → 404, BR-022 → 200, chưa đăng nhập → 401 (ISSUE-015) |
+| **Ảnh PNG xuất ra (Phase 6)** | ✅ **đã xem tận mắt 2 tấm** — dấu tiếng Việt và `₫` đúng glyph; tấm thứ hai gom đủ 6 edge case, không `NaN`/`∞` |
+| **Zalo webview thiết bị thật** | ❌ `N/A — chưa làm được, cần điện thoại thật + link công khai` (ISSUE-003) |
 | **Hồi quy luồng sáng sau refactor Phase 4** | ✅ **11/11 PASS** — UC-04, UC-05, DEC-034 vẫn đúng |
 | **Tài khoản inactive** | ✅ **6/6 PASS**, gồm cả bị vô hiệu hoá **giữa phiên** |
 | **E2E (Playwright)** | ❌ `N/A — chưa có playwright.config.ts, chưa có e2e/*.spec.ts` |
@@ -462,7 +509,22 @@ trình duyệt là **công cụ dùng một lần, đã xoá, không commit** �
 
 ## Last Working Feature
 
-**Bảng đối chiếu KPI chạy thật trên cả hai bề rộng (Phase 5).** `next build` + `next start` trỏ vào
+**Xuất ảnh 9:16 chạy thật đầu-cuối (Phase 6).** `next build` + `next start` trỏ vào Supabase local,
+đăng nhập bằng một Sales đã `COMPLETED` → `/sales/today` hiện nút **"Xuất ảnh báo cáo"** (chưa hoàn
+tất thì nút **không xuất hiện**) → bấm → trình duyệt tải về
+`BikeForce_Report_Le-Duy-Khang_2026-08-08.png`, `image/png`, `Cache-Control: private, no-store`,
+`IHDR` đúng **1080×1920**. Mở ảnh ra: wordmark BIKEFORCE vàng, ngày `Thứ Bảy, 08/08/2026`, tên viết
+HOA, bảng 4 dòng `125,0% / 80,0% / 83,3% / 100,0%` mỗi dòng kèm **nhãn chữ** ("Vượt mục tiêu" /
+"Gần đạt") chứ không chỉ có màu, khối `125.000.000 ₫`, ghi chú `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ` **đủ dấu**.
+Một tấm thứ hai gom tất cả edge case: tên 42 ký tự xuống dòng không cắt, tuyến 300 ký tự cắt ở 2
+dòng, ghi chú 1000 ký tự cắt ở 4 dòng, `100tỷ` trong bảng và `99.999.999.999 ₫` ở khối dưới,
+`1.250,0%`, `+3 điểm` kèm "Vượt kế hoạch" — **không chỗ nào có `NaN`, `Infinity` hay `∞`**.
+Gọi thẳng URL: chính chủ với báo cáo chưa hoàn tất → **403**; salesA với `id` của salesB → **404**;
+Admin → **200** (BR-022); chưa đăng nhập → **401 JSON**, không phải trang HTML.
+
+Đây là **mốc an toàn thứ sáu**.
+
+**Mốc an toàn thứ năm — bảng đối chiếu KPI chạy thật trên cả hai bề rộng (Phase 5).** `next build` + `next start` trỏ vào
 Supabase local. Đăng nhập bằng `sales.c@bikeforce.local` (đang `MORNING_SUBMITTED`) → `/sales/today`
 hiện 4 card "Viếng thăm / Doanh số / Doanh thu / Khách hàng", mỗi card có cột **Cam kết** với đúng
 đơn vị (`5 điểm`, `9 xe`, `90.000.000 ₫`, `11 khách`), cột **Thực đạt** là `—`, badge xám
@@ -474,7 +536,8 @@ phải `tabular-nums`, **số liệu khớp y hệt bản mobile**. Đặt `targ
 "Hoàn thành" hiện `+7 xe` kèm nhãn "Vượt kế hoạch", `target = 0 && actual = 0` hiện `100,0%` —
 **không chỗ nào có `NaN`, `Infinity` hay `∞`**. Không cuộn ngang ở cả hai bề rộng.
 
-Đây là **mốc an toàn thứ năm** để quay về nếu Phase 6 làm vỡ thứ gì.
+Đây là **mốc an toàn thứ năm**. (Phase 6 đã chạy xong mà không làm vỡ gì ở đây — bảng đối chiếu vẫn
+đúng sau khi `AchievementTable` chuyển sang dùng chung `KPI_METRIC_ROWS`.)
 
 **Mốc an toàn thứ tư — luồng báo cáo ngày chạy thật ĐẦY ĐỦ cả hai nửa (Phase 4).** `next build` + `next start` trỏ vào
 Supabase local, đăng nhập bằng `sales.a@bikeforce.local` (đang `MORNING_SUBMITTED`) → `/sales/today`
@@ -507,37 +570,40 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
-> ✅ Phase 0, Phase 1, Phase 2, Phase 5 đã đóng đủ; Phase 3 xong 13/14 và Phase 4 xong 9/10 —
-> **không làm lại**. Hai mục treo của Phase 3 và Phase 4 **không chặn Phase 6**.
+> ✅ Phase 0, 1, 2, 5 đã đóng đủ; Phase 3 xong 13/14, Phase 4 xong 9/10, Phase 6 xong 11/12 —
+> **không làm lại**. Ba mục treo đó **không chặn Phase 7**.
 
-**PHASE 6 — Xuất ảnh 9:16. Không còn chốt chặn nghiệp vụ nào, làm được ngay:**
+**VIỆC 0 — kiểm tra môi trường trước khi gõ code (30 giây):**
 
-1. **Tạo `app/api/reports/[id]/share-image/route.ts`** — Route Handler DUY NHẤT của dự án (DEC-003).
-   `export const runtime = 'nodejs'` vì phải đọc file font bằng `fs`. Dùng `ImageResponse` của
-   `next/og` (Satori) sinh PNG **1080×1920**, **không** screenshot cả trang (FR-018, DEC-010).
-2. **Gác quyền và trạng thái TRƯỚC khi render** — xác thực session, đọc report **dưới RLS** bằng
-   `lib/supabase/server.ts`, và kiểm `status === 'COMPLETED'` (BR-002). Admin cũng gọi được đúng
-   route này cho báo cáo của Sales (BR-022). Không dùng `lib/supabase/admin.ts`.
-3. **Nhúng font có đủ dấu tiếng Việt** (subset `latin` + `vietnamese`), đọc `.ttf`/`.woff` bằng `fs`.
-   Đây là rủi ro thật đã ghi ở **ISSUE-002** — Satori chỉ hỗ trợ một tập con CSS. Kiểm bằng chuỗi
-   `Ừ ẫ ợ ỹ đ` (`sales.a` trong seed có sẵn ghi chú chứa đúng các ký tự này).
-4. **`features/report-share/DailyReportShareCard.tsx`** — layout dark `#0B1220` theo `docs/05 §14`.
-   **Bắt buộc gọi lại** `calculateAchievement()` / `formatMetricValue()` / `achievementLabel()` của
-   `lib/kpi.ts`. Nếu cần con số thô thay vì chuỗi thì dùng trường `surplus`, **đừng parse ngược**
-   `display`.
-5. **Header trả về:** `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"`
-   và `Cache-Control: private, no-store` (FR-019).
-6. **Bật nút "Xuất ảnh"** — xoá hằng số `EXPORT_IMAGE_NOT_READY` trong
-   `app/(sales)/sales/today/page.tsx`. Điều kiện `view.canExportImage` (BR-002) **đã có sẵn** trong
-   biểu thức, giữ nguyên. Thêm Web Share API khi `navigator.canShare({ files })`, fallback
-   `<a download>` (FR-020, DEC-011).
-7. **Test edge case theo `PROJECT_CHECKLIST.md § Phase 6`:** tên 40+ ký tự, tuyến 300 ký tự, ghi chú
-   1000 ký tự, doanh thu 12 chữ số, achievement 4 chữ số (`1.250,0%`), và **cả hai** nhánh
-   `target = 0`.
-8. **Nếu Satori không dựng nổi layout:** chuyển fallback `html-to-image` và **ghi thành DEC mới**,
-   không sửa lén (ISSUE-002).
+1. **`npx supabase status` trong thư mục dự án** rồi `npm test`. Kỳ vọng **369 passed**
+   (`unit` 290 · `integration` 40 · `rls` 39) trong ~15 giây. Nếu test treo hàng phút rồi FAIL,
+   **kiểm Docker trước khi nghi ngờ code** — xem `WORKLOG.md` Entry 009 mục **Errors 3**.
+   Nếu đăng nhập nhận `502` thì đó là **ISSUE-012**, có lệnh khắc phục ở mục `Database State`.
 
-**Hai việc chờ người dùng, KHÔNG chặn Phase 6:**
+**PHASE 7 — Sales History. Không còn chốt chặn nghiệp vụ nào, làm được ngay:**
+
+2. **`getVietnamMonthRange(yyyyMM)` trong `lib/date.ts`** — hiện **vẫn cố ý là khung ném lỗi**. Viết
+   thân thật + unit test: tháng 2 năm nhuận (`'2028-02'` → `to = '2028-02-29'`), tháng 12, và
+   **chuỗi sai định dạng** (theo DEC-033 thì hàm hiển thị trả `'—'`, nhưng hàm này trả về một
+   khoảng ngày dùng cho truy vấn — quyết cách xử lý rồi ghi vào `docs/08 §3.5.3`, đừng để ngỏ).
+3. **`services/reports.listReportsByMonth(supabase, salesId, month, page)`** — phân trang
+   **server-side** bằng `.range()` + `count: 'exact'`, `order by report_date desc`, bám
+   `idx_daily_reports_sales_date_desc`. **Không** `select('*')` (NFR-002). `PAGE_SIZE` là hằng số.
+4. **`app/(sales)/sales/history/page.tsx`** — FR-021, UC-09. Filter tháng qua `searchParams`, empty
+   state có icon + hướng dẫn + CTA. Mobile card, `<table>` từ 768px (DEC-019).
+5. **`app/(sales)/sales/reports/[id]/page.tsx`** — FR-022, UC-10. **Dùng lại nguyên** `AchievementTable`
+   + `ReportNotes` + `ShareImageButton` **đã có sẵn** — đừng viết lại. RLS chặn đọc báo cáo người
+   khác ⇒ service trả `null` ⇒ gọi `notFound()`.
+6. **Xoá `VIEW_REPORT` khỏi `CTA_ROUTES_NOT_READY`** trong `app/(sales)/sales/today/page.tsx` ngay
+   khi bước 5 xong. Đó là **cờ duy nhất còn lại** trong file đó (`EXPORT_IMAGE_NOT_READY` đã xoá ở
+   Phase 6), và cùng lúc xoá luôn câu "Màn hình chi tiết báo cáo sẽ có ở bản cập nhật tiếp theo".
+7. **Bottom nav Sales 3 mục** (Hôm nay / Lịch sử / Tài khoản) — icon **và** label, DEC-018. Danh
+   sách phải có `pb-20` để nav không che dòng cuối.
+8. **Test RLS bắt buộc:** salesA gọi `listReportsByMonth` với `salesId` của salesB → 0 dòng; salesA
+   mở `/sales/reports/<id-của-salesB>` → `notFound()`. Đặt ở `tests/rls/`, **không** phải
+   `tests/integration/` (role `postgres` có `rolbypassrls`).
+
+**Ba việc chờ người dùng / môi trường, KHÔNG chặn Phase 7:**
 
 9. **Rotate service role key (ISSUE-011, P1).** Dashboard → `Project Settings` → `API Keys` → mục
    secret → **`Generate new secret key`** → dán giá trị mới vào `.env.local`.
@@ -545,12 +611,16 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
    key vào ngữ cảnh hội thoại đúng như lần trước (`docs/06 §11.2` biện pháp thứ 8).
 10. **Trả lời OQ-18 (ISSUE-013).** Sau khi có quyết định: cập nhật `docs/01`, tạo DEC mới nếu nới
     NFR-008, đo lại, rồi mới tick mục cuối của Phase 3 trong `PROJECT_CHECKLIST.md`.
+11. **Kiểm ảnh 9:16 trong Zalo trên điện thoại thật (ISSUE-003)** — mục cuối cùng còn nợ của Phase 6.
+    Cần deploy Vercel trước để có link công khai. Kiểm đủ ba đường ra: share sheet có Zalo không,
+    `<a download>` có lưu được không, và ảnh mở ra có đúng dấu tiếng Việt không.
 
 **Việc của Phase 11 và Phase 12, chưa cần bây giờ:**
 
-11. `playwright.config.ts` + `e2e/*.spec.ts` (Phase 11) — **mục cuối của Phase 4 chỉ tick được sau
-    bước này**, vì nó đòi một bộ E2E hồi quy có commit, không phải script dùng-một-lần.
-12. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
+12. `playwright.config.ts` + `e2e/*.spec.ts` (Phase 11) — **mục cuối của Phase 4 chỉ tick được sau
+    bước này**, vì nó đòi một bộ E2E hồi quy có commit, không phải script dùng-một-lần. Ba script
+    kiểm chứng của Phase 3/4/5/6 là nguyên liệu tốt để viết lại thành spec thật.
+13. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
     `update public.profiles set role = 'ADMIN' where email = '<email>';` — **một lần duy nhất**.
 
 ---
@@ -603,9 +673,10 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
   React Compiler chặn cách viết kia (`react-hooks/set-state-in-effect`). Đừng đổi ngược lại.
 - **Đã đo NFR-008 thật: 7 chạm / 1,8 giây.** Đừng đo lại rồi kết luận khác; và **đừng bỏ bớt trường
   bắt buộc** để ép xuống 6 — đó là thay đổi nghiệp vụ, phải chờ OQ-18.
-- **Nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" cố ý `disabled`.** Hai cờ đánh dấu chỗ phải xoá đã
-  có sẵn trong `app/(sales)/sales/today/page.tsx`: `CTA_ROUTES_NOT_READY` (Phase 7) và
-  `EXPORT_IMAGE_NOT_READY` (Phase 6). Không phải bug.
+- ~~**Nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" cố ý `disabled`.**~~ — **hết hiệu lực một nửa.**
+  `EXPORT_IMAGE_NOT_READY` **đã xoá ở Phase 6**, nút Xuất ảnh nay chạy thật. Chỉ còn
+  `CTA_ROUTES_NOT_READY` (Phase 7) trong `app/(sales)/sales/today/page.tsx`. Không phải bug.
+
 **Từ Phase 5 (mới):**
 
 - **`lib/kpi.ts` ĐÃ CÓ THÂN THẬT** — không còn ném lỗi, không viết lại. Nếu thấy nó "lẽ ra vẫn là
@@ -628,6 +699,34 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
   sai (27/36 FAIL trong khi code hoàn toàn đúng). Dùng `waitForSelector` cho một phần tử cụ thể.
 - **Đừng kiểm chuỗi cấm bằng `page.textContent('body')`** — nó gộp cả RSC flight payload của Next,
   mà payload đó **luôn** chứa `$undefined`. Dùng `page.innerText('body')`.
+
+**Từ Phase 6 (mới):**
+
+- **Satori DỰNG ĐƯỢC bố cục 9:16 — đã chứng minh bằng ảnh thật.** ISSUE-002 đã `CLOSED`. **Đừng
+  chuyển sang `html-to-image`** vì "nghe nói Satori hạn chế"; muốn đổi phải có DEC mới và một lý do
+  đo được.
+- **Ba file font trong `public/fonts/` là ASSET BẮT BUỘC, không phải rác.** Đừng xoá, đừng thay bằng
+  `woff2` (Satori không đọc được), đừng thay bằng subset `vietnamese` đơn lẻ (subset đó **không có**
+  chữ Latin cơ bản). Cũng đừng chuyển sang tải font qua mạng lúc render.
+- **`outputFileTracingIncludes` trong `next.config.ts` KHÔNG được xoá.** Không có nó thì `next build`
+  vẫn xanh còn hàm trên Vercel ném `ENOENT` — một lỗi chỉ lộ ra sau khi deploy.
+- **Route ảnh là `route.tsx`, không phải `.ts`.** Nó chứa JSX. Đổi đuôi là vỡ build.
+- **`getReportForShare()` cố ý KHÔNG nhận `salesId`.** Thêm `.eq('sales_id', …)` "cho chắc" sẽ chặn
+  nhầm **Admin** (BR-022). Quyền ở đây là việc của RLS, và có 6 test RLS khoá lại.
+- **404 cho "không tồn tại" và "không có quyền" là CỐ Ý giống hệt nhau.** Phân biệt hai ca là biến
+  404 thành kênh dò ID. Đừng "cải thiện thông báo lỗi" ở chỗ này.
+- **Middleware trả 401/403 JSON cho `/api/*` (DEC-039) — đừng gộp lại thành redirect.** Lý do là
+  ISSUE-015, đã đo thật: `fetch()` tự đi theo redirect nên client lưu HTML thành file `.png` hỏng
+  **mà không báo lỗi gì**. Cũng đừng bỏ lớp kiểm `content-type` ở `share-image-button.tsx`.
+- **`lib/reports/metric-rows.ts` là nguồn DUY NHẤT của "4 chỉ tiêu là gì".** `AchievementTable` và
+  thẻ ảnh cùng đọc nó. **Đừng khai báo lại danh sách đó** trong màn hình Admin của Phase 8/9 — import
+  vào dùng.
+- **`formatCompactVND` chỉ dành cho THẺ ẢNH.** Bảng đối chiếu trên web và mọi màn hình khác dùng
+  `formatCurrencyVND` / `formatMetricValue` (số đầy đủ). Đừng "thống nhất" hai bên.
+- **Con số cắt chuỗi (104 / 232 ký tự) là ước lượng đã kiểm bằng ảnh thật.** Nếu đổi cỡ chữ hoặc lề
+  của thẻ, **phải render lại một tấm ảnh để nhìn** — không có test tự động nào bắt được chữ tràn khung.
+- **Khi một phép kiểm bảo mật báo đỏ, đo lại bằng công cụ KHÔNG tự đi theo redirect** (`curl` trần,
+  hoặc `maxRedirects: 0`) trước khi kết luận. Đã suýt kết luận sai thành "ảnh phát cho người lạ".
 
 **Từ Phase 4 (mới):**
 

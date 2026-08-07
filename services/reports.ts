@@ -43,6 +43,55 @@ const REPORT_COLUMNS = [
 
 export type DailyReport = Omit<DailyReportRow, 'created_at' | 'updated_at'>;
 
+/**
+ * Đúng tập cột thẻ ảnh 9:16 cần (FR-018) — hẹp hơn `REPORT_COLUMNS` vì ảnh
+ * không hiển thị `visit_purpose`, `morning_submitted_at` hay `sales_id`.
+ *
+ * `sales:profiles!inner(...)` là embedded resource của PostgREST, đặt bí danh
+ * `sales` cho dễ đọc ở tầng trên. `!inner` khiến báo cáo bị loại luôn nếu hồ sơ
+ * Sales không đọc được — RLS trên `profiles` (`profiles_select_self_or_admin`)
+ * cho Sales thấy hồ sơ của chính mình và cho Admin thấy tất cả, nên đúng hai
+ * nhóm được phép xuất ảnh (BR-022) đều lấy được tên.
+ */
+const SHARE_REPORT_COLUMNS = [
+  'id',
+  'report_date',
+  'status',
+  'planned_route',
+  'actual_route',
+  'target_visit_points',
+  'target_sales_quantity',
+  'target_revenue',
+  'target_customer_visits',
+  'actual_visit_points',
+  'actual_sales_quantity',
+  'actual_revenue',
+  'actual_customer_visits',
+  'evening_note',
+  'sales:profiles!inner(full_name, employee_code)',
+].join(', ');
+
+/** Dữ liệu đủ để dựng thẻ ảnh 9:16 — báo cáo + tên/mã của Sales sở hữu nó. */
+export type ShareReport = Pick<
+  DailyReportRow,
+  | 'id'
+  | 'report_date'
+  | 'status'
+  | 'planned_route'
+  | 'actual_route'
+  | 'target_visit_points'
+  | 'target_sales_quantity'
+  | 'target_revenue'
+  | 'target_customer_visits'
+  | 'actual_visit_points'
+  | 'actual_sales_quantity'
+  | 'actual_revenue'
+  | 'actual_customer_visits'
+  | 'evening_note'
+> & {
+  sales: Pick<Database['public']['Tables']['profiles']['Row'], 'full_name' | 'employee_code'>;
+};
+
 /** Đúng tập cột mà cam kết đầu ngày được phép ghi (UC-04, UC-05). */
 export type MorningReportWrite = Pick<
   TablesInsert<'daily_reports'>,
@@ -106,6 +155,39 @@ export async function getTodayReport(
   if (error) {
     // NFR-014: chi tiết kỹ thuật chỉ ở log server.
     console.error('[getTodayReport]', error.code, error.message);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Một báo cáo theo `id`, kèm tên và mã nhân viên của Sales sở hữu — UC-08,
+ * FR-018. Phục vụ Route Handler ảnh 9:16.
+ *
+ * **Không nhận `salesId`, và cố ý như vậy.** Quyền đọc ở đây do RLS quyết định
+ * hoàn toàn (`reports_select_own_or_admin`): Sales chỉ thấy báo cáo của mình
+ * (BR-003), Admin thấy tất cả (BR-022). Nếu hàm này tự lọc thêm
+ * `.eq('sales_id', …)` thì Admin sẽ không xuất được ảnh cho Sales — một luật
+ * nghiệp vụ bị viết nhầm thành một dòng phòng thủ thừa.
+ *
+ * `null` mang **hai** nghĩa cùng lúc — không tồn tại, hoặc bị RLS chặn. Tầng gọi
+ * phải trả **404 cho cả hai** để không xác nhận sự tồn tại của một `id` mà người
+ * gọi không có quyền (`docs/07 §4.1`, chống dò ID).
+ */
+export async function getReportForShare(
+  supabase: SupabaseClient<Database>,
+  reportId: string,
+): Promise<ShareReport | null> {
+  const { data, error } = await supabase
+    .from('daily_reports')
+    .select(SHARE_REPORT_COLUMNS)
+    .eq('id', reportId)
+    .maybeSingle<ShareReport>();
+
+  if (error) {
+    // NFR-014: chi tiết kỹ thuật chỉ ở log server.
+    console.error('[getReportForShare]', error.code, error.message);
     return null;
   }
 

@@ -5,6 +5,7 @@ import {
   LOGIN_PATH,
   SALES_HOME,
   dashboardPathFor,
+  isApiPath,
   isPublicPath,
   requiredRoleForPath,
   sanitizeNextPath,
@@ -92,5 +93,24 @@ describe('sanitizeNextPath — chống open redirect', () => {
     expect(sanitizeNextPath('')).toBeNull();
     expect(sanitizeNextPath(null)).toBeNull();
     expect(sanitizeNextPath(undefined)).toBeNull();
+  });
+});
+
+/**
+ * ISSUE-015 (Phase 6) — middleware phải trả 401/403 cho route API thay vì
+ * redirect về `/login`, vì `fetch()` tự đi theo redirect và biến trang HTML
+ * thành một "ảnh" 200 OK.
+ */
+describe('isApiPath — ISSUE-015', () => {
+  it('nhận đúng route ảnh 9:16, route API duy nhất của dự án (DEC-003)', () => {
+    expect(isApiPath('/api/reports/abc/share-image')).toBe(true);
+    expect(isApiPath('/api')).toBe(true);
+    expect(isApiPath('/api/')).toBe(true);
+  });
+
+  it('KHÔNG nhận nhầm trang thường — chúng vẫn phải redirect về /login', () => {
+    for (const pathname of ['/sales/today', '/admin', '/login', '/', '/apiary', '/sales/api']) {
+      expect(isApiPath(pathname)).toBe(false);
+    }
   });
 });

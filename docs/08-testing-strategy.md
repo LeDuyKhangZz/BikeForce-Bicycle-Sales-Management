@@ -940,17 +940,29 @@ Quy tắc tick: chỉ đánh `[x]` khi test đã **thật sự chạy và xanh**
 
 ### Phase 6 — 9:16 Image Export
 
-- [ ] E2E bước 25: nút export **disabled** khi status là `MORNING_SUBMITTED` (BR-002, FR-017)
-- [ ] E2E bước 26: nút export **enabled** sau khi lưu thành công với `COMPLETED`
-- [ ] E2E bước 27: response `content-type` là **`image/png`**, status 200
-- [ ] E2E bước 28: 8 byte đầu khớp PNG magic number
-- [ ] E2E bước 29: tên file khớp `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019)
-- [ ] Security X2: salesA gọi share-image của salesB → 403/404, không phải PNG
-- [ ] Security X3: gọi share-image khi report chưa `COMPLETED` → không phải 200/PNG (BR-002)
-- [ ] Security X17: header `Cache-Control: private, no-store`
-- [ ] NFR-003: thư viện sinh ảnh không nằm trong initial client bundle (bundle analyzer + E2E bước 30)
-- [ ] Edge case ảnh (brief §11): tên 40+ ký tự, tuyến 300 ký tự, ghi chú 1000 ký tự, doanh thu 12 chữ số, `12500,0%`, `—` khi target=0, dấu tiếng Việt `ừ ẫ ợ ỹ đ` hiển thị đủ dấu
+> **Đã kiểm chứng thật ngày 2026-08-08 — 44/44 PASS** bằng script Chromium dùng-một-lần (375px + 1440px) trên `next build` + `next start` trỏ vào Supabase local, cộng **43 unit test** ở `lib/reports/share-card.test.ts` và **6 test RLS** ở `tests/rls/share-image.rls.test.ts`.
+> Các mục còn `[ ]` là những mục **thật sự chưa làm được** ở phase này, không phải chưa chạy.
+
+- [x] Nút export **không hiển thị** khi status là `MORNING_SUBMITTED` (BR-002, FR-017)
+      → mạnh hơn "disabled": trạng thái chưa hoàn tất thì cả khối nút không được render
+- [x] Nút export **enabled** khi status là `COMPLETED`, và bấm được ra file
+- [x] Response `content-type` là **`image/png`**, status 200
+- [x] Chữ ký PNG đúng, và **`IHDR` cho đúng `1080×1920`** — đo trên chính response, không tin tham số truyền vào
+- [x] Tên file khớp `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019), đã bỏ dấu tiếng Việt
+- [x] Security X2: salesA gọi share-image của salesB → **404** `REPORT_NOT_FOUND`, không phải PNG
+- [x] Security X3: gọi share-image khi report chưa `COMPLETED` (**bằng phiên của chính chủ**) → **403** `NOT_COMPLETED` (BR-002)
+- [x] Security X17: header `Cache-Control: private, no-store`
+- [x] **MỚI** — chưa đăng nhập → **401 JSON, KHÔNG redirect** (ISSUE-015, DEC-039). Phải đo bằng `maxRedirects: 0`, nếu không client đi theo redirect và thấy `200 text/html`
+- [x] **MỚI** — `id` không phải uuid → 404 mà không chạm database
+- [x] **MỚI** — Admin gọi đúng route đó cho báo cáo của Sales → 200 (BR-022)
+- [x] NFR-003: thư viện sinh ảnh không nằm trong initial client bundle
+      → `ImageResponse` chỉ được import trong Route Handler chạy ở **Node runtime**; client chỉ có `fetch` + `navigator.share`, không thêm dependency nào
+- [x] Edge case ảnh (brief §11): tên 40+ ký tự, tuyến 300 ký tự, ghi chú 1000 ký tự, doanh thu 12 chữ số, `1.250,0%`, `target = 0`, dấu tiếng Việt `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` + `₫`
+      → 43 unit test trên view model **và** một tấm ảnh chứa tất cả, đã xem bằng mắt
 - [ ] Kiểm tay trên thiết bị thật trong Zalo in-app webview: mở app, lưu báo cáo, xuất ảnh, chia sẻ (**ISSUE-003**, NFR-009) — automation `zalo-like` **không** thay thế được bước này
+- [ ] Bộ E2E Playwright có commit cho luồng trên (Phase 11) — script Phase 6 là **dùng-một-lần, đã xoá**
+
+> ⚠ **Đính chính:** dòng edge case cũ ghi `12500,0%` và `—` khi `target = 0`. Con số đúng theo `PROJECT_CHECKLIST.md § Phase 6` là **4 chữ số** (`1.250,0%`), và từ **DEC-038** thì `target = 0 && actual > 0` hiện **số vượt tuyệt đối** (`+3 điểm`) chứ không phải `—`.
 
 ### Phase 7 — Sales History
 

@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 5 (ĐÃ ĐÓNG 11/11 mục) | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 6 (11/12 mục — còn 1 mục cần thiết bị thật) | Last updated: 2026-08-08
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,14 +10,20 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 4 — Evening Report: 9/10 mục xong (2026-08-07).**
+**PHASE 6 — Xuất ảnh 9:16: 11/12 mục xong (2026-08-08).**
 
-**Cả hai nửa của luồng báo cáo ngày nay đã chạy thật đầu-cuối:** cam kết sáng → hoàn tất cuối ngày
-→ `status = 'COMPLETED'` → khoá vĩnh viễn. `/sales/today/evening` là FR-013 + FR-014 thật, không
-còn là trang tối thiểu.
-Kết quả thật: `typecheck` / `build` / `lint` đều exit 0 · `npm test` **269/269 PASS**
-(189 unit + 47 integration + 33 RLS) · kiểm chứng trình duyệt **62/62** (cuối ngày) và **11/11**
-(hồi quy luồng sáng) ở 375px và 1440px.
+**Sales nay xuất được ảnh PNG 9:16 để gửi Zalo.** `GET /api/reports/[id]/share-image` sinh ảnh
+**1080×1920** bằng Satori với font nhúng đủ dấu tiếng Việt, gác `status = 'COMPLETED'` (BR-002) và
+để RLS quyết định quyền trên từng `id` (BR-003, BR-022). **ISSUE-002 đã CLOSED** — Satori dựng được
+toàn bộ bố cục, không phải dùng fallback.
+Kết quả thật: `typecheck` / `build` / `lint` đều exit 0 · `npm test` **368/368 PASS** (đo với code
+cuối; sau đó thêm 2 unit test, `--project unit` cho **290/290**) · kiểm chứng trình duyệt **44/44**
+ở 375px và 1440px · đã **xem tận mắt** hai tấm ảnh xuất ra.
+Mục còn lại: kiểm tay trong **Zalo webview trên thiết bị thật** (ISSUE-003) — cần điện thoại thật.
+
+Phát sinh và đã xử lý trong phase: **ISSUE-015 (P1)** — middleware redirect route `/api/*` về
+`/login`, khiến `fetch()` nhận HTML kèm `status 200` và lưu thành file `.png` hỏng. Sửa bằng
+**DEC-039**.
 
 **Mục duy nhất còn lại: E2E Playwright trên project `mobile-375`.** Luồng đã chạy thật trên
 Chromium, nhưng bằng script dùng-một-lần đã xoá — **không phải** bộ E2E hồi quy.
@@ -900,6 +906,191 @@ tiếng Việt đọc bằng `fs` ở Node runtime (ISSUE-002). Thẻ
 `formatMetricValue()` / `achievementLabel()` của `lib/kpi.ts` — không tự tính `%`, không tự ghép đơn
 vị (NFR-012). Xong route mới xoá cờ `EXPORT_IMAGE_NOT_READY` trong
 `app/(sales)/sales/today/page.tsx`.
+
+---
+
+### Entry 009
+
+**Date:** 2026-08-08
+**Phase:** PHASE 6 — Xuất ảnh 9:16 (**11/12 mục xong**; mục còn lại cần thiết bị thật)
+
+**Completed:**
+
+1. **Làm đúng việc mà `docs/12 § ISSUE-002 Fix bước 1` yêu cầu làm TRƯỚC TIÊN: dựng prototype
+   Satori với dữ liệu giả.** Kết quả ngay lần đầu: PNG **1080×1920**, dấu tiếng Việt và `₫` render
+   đúng. Nhờ vậy biết chắc **không phải dùng fallback `html-to-image`** trước khi viết một dòng nào
+   của luồng thật — DEC-010 giữ nguyên hiệu lực, **ISSUE-002 → CLOSED**.
+
+2. **Nhúng font.** Ba file `Inter-Regular/SemiBold/Bold.ttf` vào `public/fonts/`, mỗi file ~320 KB.
+   Xác minh bằng cách **parse bảng `cmap`** của từng file chứ không nhìn bằng mắt: **2849 glyph**,
+   đủ `ừ ẫ ợ ỹ đ Đ Ệ Ỡ`, `₫` (`U+20AB`) và `…`. Hai cái bẫy đã trả giá thật:
+   - **Satori không đọc `woff2`** — phải lấy đúng bản `.ttf` (Google Fonts trả `.ttf` cho
+     User-Agent lạ, trả `woff2` cho trình duyệt hiện đại).
+   - **Subset `vietnamese` của Google Fonts KHÔNG chứa chữ Latin cơ bản** — nó chỉ có ký tự riêng
+     của tiếng Việt cộng `₫`. Nhúng mỗi subset đó thì chữ thường mất glyph.
+
+3. **`lib/reports/share-card.ts` — view model THUẦN của thẻ ảnh.** Dựng toàn bộ chuỗi hiển thị từ
+   một dòng `daily_reports`, cắt tuyến ở 104 ký tự và ghi chú ở 232 ký tự **ở tầng dữ liệu** (Satori
+   không có `-webkit-line-clamp` — ISSUE-002), cắt ở ranh giới **từ** chứ không giữa từ. Kèm
+   `shareImageFileName()` (FR-019, bỏ dấu, xử lý cả `đ`/`Đ` mà `normalize('NFD')` không tách được)
+   và `shareImagePath()`. **43 unit test** — đây là nơi toàn bộ edge case bắt buộc của Phase 6 được
+   khoá lại mà không cần Satori, không cần trình duyệt, không cần database.
+
+4. **`lib/reports/metric-rows.ts` — gộp bản sao thứ hai của danh sách 4 chỉ tiêu.**
+   `AchievementTable` (Phase 5) và thẻ ảnh nay đọc **cùng một** định nghĩa "có chỉ tiêu nào, thứ tự
+   nào, nhãn gì, cột nào". `docs/07 §5` yêu cầu thẳng: "màn hình đối chiếu và thẻ ảnh 9:16 không bao
+   giờ ra hai con số khác nhau" — hai bảng hằng số song song là cách chắc chắn nhất để một ngày nào
+   đó chỉ một bên được sửa.
+
+5. **`formatCompactVND()` (`lib/currency.ts`) + `formatMetricValueCompact()` (`lib/kpi.ts`).**
+   `docs/05 §14` quy định bảng trong ảnh dùng dạng rút gọn (`150tr`), số đầy đủ đặt ở khối "DOANH
+   THU THỰC ĐẠT" — doanh thu 12 chữ số ở dạng đầy đủ làm vỡ khung 1080px. Đặt ở `lib/` vì định dạng
+   tiền chỉ có một nhà (AGENTS.md §9). Có case biên đã khoá bằng test: làm tròn `999.999.999` phải
+   **lên bậc** thành `1tỷ`, không được ra `1.000tr`.
+
+6. **`services/reports.getReportForShare()`** — 14 cột + embedded `sales:profiles!inner(...)`.
+   **Cố ý không nhận `salesId`**: lọc thêm `.eq('sales_id')` sẽ chặn nhầm Admin (BR-022), quyền để
+   RLS quyết định hoàn toàn.
+
+7. **`features/report-share/daily-report-share-card.tsx`** — bố cục `docs/05 §14`, flexbox toàn bộ,
+   hex thuần từ bảng đã đo `docs/05 §4.5`, không `className`. Mỗi ô "Hoàn thành" có **con số + nhãn
+   chữ** của `achievementLabel()` — quy tắc `color-not-only` áp dụng cho ảnh còn mạnh hơn cho web,
+   vì ảnh qua Zalo bị nén màu.
+
+8. **`app/api/reports/[id]/share-image/route.tsx`** — Route Handler duy nhất của dự án (DEC-003).
+   `runtime = 'nodejs'`, uuid được validate **trước khi** chạm database, đọc dưới RLS bằng
+   `lib/supabase/server.ts` (**không** dùng `admin.ts` — DEC-005), gác `status === 'COMPLETED'`
+   (BR-002), 404 giống hệt nhau cho "không tồn tại" và "không có quyền" (chống dò ID). Font đọc
+   **một lần mỗi tiến trình**, và được ghim vào bundle bằng `outputFileTracingIncludes` trong
+   `next.config.ts` — thiếu dòng đó thì `next build` vẫn xanh còn hàm trên Vercel ném `ENOENT`.
+
+9. **`features/report-share/share-image-button.tsx`** — ba đường ra theo DEC-011 và ISSUE-003:
+   Web Share API (`canShare({ files })`, **feature detection chứ không sniff userAgent**) →
+   `<a download>` → mở tab mới kèm câu "nhấn giữ vào ảnh để lưu". Huỷ share sheet (`AbortError`)
+   **không** bị coi là lỗi.
+
+10. **Bật nút Xuất ảnh ở `/sales/today`** — xoá cờ `EXPORT_IMAGE_NOT_READY`. Làm mạnh hơn yêu cầu:
+    chưa `COMPLETED` thì **không render** khối nút, thay vì render dạng disabled.
+
+11. **Sửa một vi phạm NFR-012 còn sót từ Phase 3:** `CommitmentSummary` tự ghép
+    `` `${n} điểm` ``, khiến số từ 1.000 trở lên mất dấu phân nhóm nghìn. Chuyển sang
+    `formatMetricValue()`.
+
+**Files Changed:**
+
+| File | Loại |
+|---|---|
+| `public/fonts/Inter-{Regular,SemiBold,Bold}.ttf` | **tạo mới** — asset bắt buộc commit (`docs/09 §7.1`) |
+| `app/api/reports/[id]/share-image/route.tsx` | **tạo mới** — Route Handler duy nhất |
+| `features/report-share/daily-report-share-card.tsx` | **tạo mới** |
+| `features/report-share/share-image-button.tsx` | **tạo mới** — client component |
+| `lib/reports/share-card.ts` · `share-card.test.ts` | **tạo mới** — view model + 43 test |
+| `lib/reports/metric-rows.ts` | **tạo mới** — nguồn duy nhất của 4 chỉ tiêu |
+| `tests/rls/share-image.rls.test.ts` | **tạo mới** — 6 test IDOR dưới JWT thật |
+| `lib/currency.ts` · `lib/currency.test.ts` | sửa — thêm `formatCompactVND` + 15 test |
+| `lib/kpi.ts` · `lib/kpi.test.ts` | sửa — thêm `formatMetricValueCompact` + 3 test |
+| `lib/auth/routes.ts` · `routes.test.ts` | sửa — thêm `isApiPath` + 2 test (ISSUE-015) |
+| `middleware.ts` | sửa — 401/403 JSON cho route API (DEC-039) |
+| `services/reports.ts` | sửa — `getReportForShare` + `ShareReport` |
+| `features/report-comparison/achievement-table.tsx` | sửa — dùng `KPI_METRIC_ROWS` chung |
+| `features/report-morning/commitment-summary.tsx` | sửa — bỏ ghép chuỗi đơn vị |
+| `app/(sales)/sales/today/page.tsx` | sửa — bật nút Xuất ảnh, xoá `EXPORT_IMAGE_NOT_READY` |
+| `lib/reports/messages.ts` | sửa — thêm `NOT_COMPLETED`, `IMAGE_FAILED` |
+| `next.config.ts` | sửa — `outputFileTracingIncludes` cho font |
+| `docs/05` · `docs/06` · `docs/07` · `docs/08` · `docs/09` | sửa — §14, §5.2, §4.1+§5, Phase 6, §7.1 |
+| `docs/11-decisions.md` | sửa — **thêm DEC-039** |
+| `docs/12-known-issues.md` | sửa — **ISSUE-002 → CLOSED**, **thêm ISSUE-015 (CLOSED)** |
+| `PROJECT_CHECKLIST.md` · `WORKLOG.md` · `SESSION_CHECKPOINT.md` · `CLAUDE.md` | sửa — đồng bộ |
+
+**Tests:**
+
+| Lệnh | Kết quả thật |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
+| `npm run build` | ✅ exit 0 — 8 route, có `ƒ /api/reports/[id]/share-image` |
+| `npm test` | ✅ **369 passed / 369**, 16 test file, 15,3 giây *(lượt cuối lúc 01:03, sau khi Docker hồi phục)* |
+| `npx vitest run --project unit --coverage` | ✅ **290 passed**; `lib/**` stmt **98,46%** · branch **99,28%** · func **97,43%** · lines **98,75%**; `lib/reports/share-card.ts` **100%** cả bốn cột |
+| `npm run test:db` | ✅ **79 passed** (40 integration + 39 rls) |
+| Kiểm chứng Chromium 375px + 1440px (script dùng-một-lần, đã xoá) | ✅ **44/44 PASS** |
+| Xem tận mắt 2 ảnh PNG xuất ra | ✅ đạt — xem mục dưới |
+| E2E Playwright / a11y / Lighthouse | ❌ `N/A — chưa có playwright.config.ts` |
+| Zalo in-app webview trên thiết bị thật | ❌ `N/A — chưa làm được, cần điện thoại thật` (ISSUE-003) |
+
+> **Ghi chú về đường đi tới con số 369:** một lượt `npm test` giữa chừng cho **368** (đó là trước
+> khi thêm 2 unit test cuối để phủ nốt 2 nhánh của `share-card.ts`), rồi Docker Desktop hỏng nên
+> lượt tiếp theo không chạy được — xem **Errors 3**. Sau khi Docker tự hồi phục, lượt cuối cho
+> **369/369 trong 15,3 giây**. Ghi lại đoạn này vì nó giải thích vì sao trong cùng một phiên có ba
+> con số khác nhau (368 · FAIL · 369), và không con số nào trong đó là regression.
+
+**44 phép kiểm trình duyệt gồm:** nút Xuất ảnh hiện và bấm được ở cả hai bề rộng, touch target
+≥ 44px, không cuộn ngang · bấm nút ra file đúng tên FR-019 đã bỏ dấu · `content-type: image/png`,
+`Content-Disposition: attachment`, `Cache-Control: private, no-store` · `IHDR` cho đúng
+**1080×1920** ở cả 6 lần đo · BR-002: chính chủ gọi ảnh cho báo cáo `MORNING_SUBMITTED` → **403
+`NOT_COMPLETED`** · BR-003: salesA gọi `id` của salesB → **404 `REPORT_NOT_FOUND`** · `id` không
+phải uuid → 404 · BR-022: Admin → 200 · chưa đăng nhập → **401 `UNAUTHENTICATED`**, không HTML ·
+ảnh edge case (tuyến 300, ghi chú 1000) vẫn đúng kích thước.
+
+**Hai tấm ảnh đã xem bằng mắt:**
+1. *Báo cáo thường* — `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ` hiện đủ dấu, `Thứ Bảy, 08/08/2026`, `125.000.000 ₫` với ký
+   hiệu `₫` đúng glyph, bốn dòng `125,0% / 80,0% / 83,3% / 100,0%` kèm nhãn chữ và màu đúng ngưỡng
+   BR-023.
+2. *Ảnh gom TẤT CẢ edge case* — tên 42 ký tự **xuống dòng chứ không bị cắt**; tuyến 300 ký tự cắt ở
+   2 dòng có `…`; ghi chú 1000 ký tự cắt đúng 4 dòng; `100tỷ` trong bảng và `99.999.999.999 ₫` ở
+   khối dưới; `1.250,0%`; `+3 điểm` kèm "Vượt kế hoạch" cho `target = 0`. **Không chỗ nào có `NaN`,
+   `Infinity` hay `∞`.**
+
+**Errors:**
+
+1. **ISSUE-015 (P1) — suýt phát cho khách một tấm ảnh hỏng.** Phép kiểm "chưa đăng nhập → 401" báo
+   FAIL với `200`. Thoạt nhìn giống một lỗ hổng nghiêm trọng (ảnh phát cho người lạ), nhưng đo lại
+   bằng `curl` trần cho thấy sự thật khác: middleware trả **`307` về `/login`**, và Playwright —
+   giống hệt `fetch()` của trình duyệt — **tự đi theo redirect** rồi thấy trang đăng nhập `200`.
+   Nghĩa là khi phiên hết hạn, nút "Xuất ảnh" sẽ lưu HTML trang đăng nhập thành một file `.png`
+   hỏng **mà không báo lỗi gì**. Sửa bằng **DEC-039**: `isApiPath()` + 401/403 JSON, cộng một lớp
+   kiểm `content-type` ở client. **Hai bài học:** (a) khi một phép kiểm bảo mật báo đỏ, đo lại bằng
+   công cụ **không** tự đi theo redirect trước khi kết luận; (b) middleware viết ở Phase 2 giả định
+   "mọi đường dẫn đều là trang" — giả định đó hết đúng ngay khi dự án có route API đầu tiên.
+
+2. **Một phép kiểm BR-002 ban đầu viết sai, không phải code sai.** Bài "báo cáo chưa hoàn tất → 403"
+   ban đầu dùng phiên của `sales.a` để gọi báo cáo của `sales.c`, nên nhận `404` — **đúng**, vì
+   BR-003 chặn trước BR-002. Muốn đo BR-002 thì phải đăng nhập **chính chủ**. Sửa phép kiểm, không
+   sửa code.
+
+3. **Docker Desktop hỏng ở mức engine giữa lúc chạy quality gate.** Một lượt `npm test` chạy
+   **434 giây** rồi báo 7 file FAIL / 60 skipped, trong khi lượt trước đó và lượt ngay sau đó đều
+   **368/368 trong ~19 giây**. Đến lượt `test:coverage` thì lỗi thành ổn định: mọi request tới
+   Supabase local timeout 30s, và `docker ps` trả **`500 Internal Server Error` cho chính API của
+   Docker** (`http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/containers/json`). Đây là lỗi
+   môi trường của máy, **không phải** lỗi code và **không phải** ISSUE-012 (lần này Kong/GoTrue
+   không phải thủ phạm — chính engine Docker chết). Đã **không** tự khởi động lại Docker Desktop vì
+   máy đang chạy thêm hai stack Supabase khác của người dùng (ISSUE-010). **Docker tự hồi phục sau
+   khoảng 10 phút**, và lượt `npm test` ngay sau đó cho **369/369 trong 15,3 giây** — xác nhận toàn
+   bộ sự việc là môi trường, không phải code. **Bài học:** khi bộ test DB đột nhiên chạy hàng phút
+   rồi FAIL hàng loạt, kiểm `docker ps` **trước** khi đọc lại code — nếu chính lệnh đó cũng lỗi thì
+   không có gì trong repository cần sửa cả.
+
+4. **Ước lượng số ký tự cắt chuỗi là ước lượng, và cần được kiểm bằng ảnh thật.** 104 ký tự cho
+   tuyến và 232 cho ghi chú suy ra từ bề rộng trung bình ~0,52em của Inter. Ảnh thật xác nhận đúng
+   2 dòng và đúng 4 dòng — nhưng nếu đổi cỡ chữ hay lề thì **phải render lại một tấm ảnh để nhìn**,
+   không có test tự động nào bắt được việc chữ tràn khung.
+
+**Decisions:** **DEC-039** (middleware trả 401/403 JSON cho route `/api/*` thay vì redirect —
+nguyên nhân là ISSUE-015, đã đo thật).
+
+**Remaining:** Đúng **một** mục của Phase 6: **kiểm tay trong Zalo in-app webview trên thiết bị
+thật** (ISSUE-003, NFR-009). Cần một điện thoại thật và một link công khai, nên phải chờ sau khi
+deploy Vercel — automation `zalo-like` **không** thay thế được. Ba việc treo từ trước vẫn nguyên:
+E2E Playwright (Phase 11) · rotate service role key (ISSUE-011) · trả lời OQ-18 (ISSUE-013).
+
+**Next:** **PHASE 7 — Sales History.** Bắt đầu bằng `getVietnamMonthRange(yyyyMM)` ở `lib/date.ts`
+(hiện **vẫn cố ý là khung ném lỗi**) kèm unit test cho tháng 2 năm nhuận và chuỗi sai định dạng,
+rồi `services/reports.listReportsByMonth()` phân trang server-side bám
+`idx_daily_reports_sales_date_desc`, rồi `/sales/history` và `/sales/reports/[id]`. Khi dựng xong
+`/sales/reports/[id]`, **xoá `VIEW_REPORT` khỏi tập `CTA_ROUTES_NOT_READY`** trong
+`app/(sales)/sales/today/page.tsx` — cờ đó nay là thứ **duy nhất** còn lại trong file đó. Màn hình
+chi tiết dùng lại `AchievementTable` + `ReportNotes` + `ShareImageButton` **đã có sẵn**, không viết
+lại.
 
 ---
 

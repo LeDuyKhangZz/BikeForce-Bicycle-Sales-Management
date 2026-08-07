@@ -55,6 +55,62 @@ export function formatThousands(value: number): string {
   return groupFormatter.format(value);
 }
 
+/* ---------------------------------------------------------------------------
+ * Dạng RÚT GỌN — thêm ở PHASE 6 cho thẻ ảnh 9:16 (`docs/05 §14`).
+ *
+ * Bảng 4 dòng của thẻ ảnh chỉ rộng 1080px mà phải chứa cả cột "Cam kết" lẫn cột
+ * "Thực đạt"; doanh thu 12 chữ số ở dạng đầy đủ (`100.000.000.000 ₫`) làm vỡ
+ * khung. `docs/05 §14` vì vậy quy định: **trong bảng dùng dạng rút gọn**, còn số
+ * đầy đủ đặt ở khối "DOANH THU THỰC ĐẠT" bên dưới.
+ *
+ * Đặt ở đây chứ không ở component vì AGENTS.md §9: định dạng tiền chỉ có MỘT
+ * nhà. Thẻ ảnh gọi qua `formatMetricValueCompact()` của `lib/kpi.ts`.
+ * ------------------------------------------------------------------------- */
+
+/** Bậc rút gọn theo cách người Việt đọc số tiền. Xếp GIẢM DẦN — thứ tự quan trọng. */
+const COMPACT_TIERS = [
+  { divisor: 1_000_000_000, suffix: 'tỷ' },
+  { divisor: 1_000_000, suffix: 'tr' },
+  { divisor: 1_000, suffix: 'k' },
+] as const;
+
+/** Dưới ngưỡng này thì rút gọn không rút được gì — hiện luôn số đầy đủ. */
+const COMPACT_FLOOR = 1_000;
+
+const compactFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
+
+/**
+ * `150000000` → `'150tr'` · `1250000000` → `'1,3tỷ'` · `950000` → `'950k'`.
+ *
+ * Dưới 1.000 ₫ (và mọi giá trị âm — không thể tới đây bằng đường dữ liệu thật vì
+ * DB có CHECK `>= 0`) thì trả về đúng `formatCurrencyVND()`, nên `0` vẫn đọc là
+ * `'0 ₫'` chứ không phải `'0k'`.
+ */
+export function formatCompactVND(value: number): string {
+  if (!Number.isFinite(value)) return EMPTY_DISPLAY;
+  if (value < COMPACT_FLOOR) return formatCurrencyVND(value);
+
+  for (let index = 0; index < COMPACT_TIERS.length; index += 1) {
+    const tier = COMPACT_TIERS[index];
+    if (tier === undefined || value < tier.divisor) continue;
+
+    const scaled = Math.round((value / tier.divisor) * 10) / 10;
+
+    // Làm tròn 1 chữ số có thể đẩy `999,97tr` thành `1.000tr` — con số đó đúng
+    // nhưng đọc sai bậc. Bậc cao hơn luôn tồn tại ở đây: nếu nó không tồn tại
+    // thì `value >= 1e9` và `scaled` không thể chạm 1.000 (trần BR-017 là 100 tỷ).
+    const higher = COMPACT_TIERS[index - 1];
+    if (scaled >= 1_000 && higher !== undefined) {
+      return `${compactFormatter.format(scaled / 1_000)}${higher.suffix}`;
+    }
+
+    return `${compactFormatter.format(scaled)}${tier.suffix}`;
+  }
+
+  // Không tới được: vòng lặp trên luôn khớp một bậc khi `value >= COMPACT_FLOOR`.
+  return formatCurrencyVND(value);
+}
+
 /** Số nguyên thuần: `'125000000'`. */
 const PLAIN_INTEGER = /^\d+$/;
 
