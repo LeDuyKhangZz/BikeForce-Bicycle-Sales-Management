@@ -74,12 +74,13 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-001 | **P1** | **CLOSED** | OPEN QUESTION mức BLOCKING chưa được trả lời → không viết được migration. **Đã giải quyết 2026-08-07: người dùng trả lời đủ 17/17** | Phase 0 → Phase 2 | OQ-01…OQ-17, DEC-025, DEC-026, DEC-029, DEC-030 |
 | ISSUE-002 | P2 | OPEN | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt | Phase 6 | DEC-010, FR-018, UC-08 |
 | ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa được kiểm chứng trên thiết bị thật | Phase 6, Phase 11 | NFR-009, DEC-011, FR-020 |
-| ISSUE-004 | P2 | OPEN | TypeScript 7.0.2 + ESLint 10.8.0 là bản major mới, chưa xác nhận tương thích Next 16 | Phase 1 | DEC-002, NFR-012 |
+| ISSUE-004 | P2 | **CLOSED** | TypeScript 7.0.2 + ESLint 10.8.0 là bản major mới, chưa xác nhận tương thích Next 16. **Đã xảy ra thật 2026-08-07: cả hai đều vỡ; pin `typescript@6.0.3` + `eslint@9.39.5`** | Phase 1 | DEC-002, NFR-012 |
 | ISSUE-005 | P3 | OPEN | `is_admin()` phát sinh thêm một truy vấn `profiles` mỗi câu lệnh RLS | Phase 2, Phase 11 | DEC-006, NFR-002, NFR-015 |
 | ISSUE-006 | P3 | **CLOSED** | Chưa có khái niệm ngày nghỉ → cảnh báo "chưa báo cáo" có thể tính cả người nghỉ. **Chủ nghiệp vụ xác nhận 2026-08-07: không xử lý gì thêm ở v1** | Phase 8 | OQ-08, AF-02, AF-15, FR-033, UC-20 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; là điều kiện tiên quyết nếu cho phép sửa sau khi `COMPLETED` | Phase 4+ (điều kiện) | OQ-04, OQ-05, BR-019, BR-020, AF-12 |
+| ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn nội bộ về khi nào `AchievementResult.percent = null` | Phase 5 | BR-015, DEC-025, OQ-11 |
 
-Tổng: **7 OPEN** (1 × P1, 3 × P2, 3 × P3), **0 FIXING**, **0 VERIFY**, **0 CLOSED**.
+Tổng: **5 OPEN** (0 × P1, 2 × P2, 3 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
 
 ---
 
@@ -243,7 +244,7 @@ Bổ sung: kiểm tra session còn sống sau khi đóng/mở lại webview; ki�
 ### ISSUE-004
 
 **Severity: P2**
-**Status: OPEN**
+**Status: CLOSED (2026-08-07, Phase 1)**
 
 **Module:**
 Toolchain / `package.json` (**chưa tồn tại**), cấu hình ESLint và TypeScript. Liên quan: DEC-001, DEC-002, NFR-012, Phase 1.
@@ -270,11 +271,21 @@ Ngay sau `create-next-app`, cả ba lệnh nền tảng đều chạy được t
 5. Không tự ý nới lỏng `strict` hoặc tắt rule cấm `any` để cho lint chạy được — đó là đánh đổi sai, vi phạm NFR-012. Nếu buộc phải chọn, lùi phiên bản chứ không hạ tiêu chuẩn.
 
 **Verification:**
-Kế hoạch kiểm chứng (**chưa chạy**):
-- Chạy build / typecheck / lint trên dự án vừa khởi tạo và **ghi lại nguyên văn kết quả** (kể cả khi lỗi) vào `WORKLOG.md`.
-- Ghi bộ phiên bản cuối cùng được pin vào `docs/09-deployment.md` và `docs/11-decisions.md`.
-- Xác nhận `tsconfig.json` có `"strict": true` và cấu hình ESLint có rule cấm `any`.
-- Đóng issue khi ba lệnh chạy được trên baseline rỗng **và** phiên bản đã được pin **và** DEC-002 đã có phần kết luận.
+✅ **ĐÃ KIỂM CHỨNG BẰNG LỆNH THẬT — 2026-08-07, Phase 1.** Rủi ro này **đã xảy ra thật**, ở **cả hai** package nghi ngờ.
+
+Nội dung gốc của issue ở trên được **giữ nguyên không sửa** theo STANDING RULE §3. Kết quả thật:
+
+1. **Giả thuyết ở § Root Cause là ĐÚNG cả hai vế.** Không phải lỗi cấu hình, mà là peer dependency chặn cứng ở thượng nguồn:
+   - `typescript-eslint@8.66.0` peer `typescript: ">=4.8.4 <6.1.0"` → **TS 7.0.2 bị từ chối** ngay lúc load module (`typescript-eslint does not support TS 7.0`, exit 2).
+   - `eslint-plugin-react@7.37.5` peer `eslint: "... || ^9.7"` → **ESLint 10.8.0 làm vỡ rule loader** (`contextOrFilename.getFilename is not a function`, exit 2). `7.37.5` là bản **mới nhất tồn tại**, nên không override nào cứu được.
+2. **Phát hiện ngoài dự kiến:** `create-next-app@16.3.0` vốn **không** cài TS 7 / ESLint 10 — template chính thức pin `"typescript": "^5"` và `"eslint": "^9"`. Giả định ngược lại trong `SESSION_CHECKPOINT.md` cũ là sai và đã được sửa.
+3. **Phiên bản đã pin:** `typescript@6.0.3` + `eslint@9.39.5`. Chọn TS **6.0.3** thay vì 5.x LTS vì 6.0.3 là bản stable nằm trong peer range `<6.1.0` — lý do đầy đủ ở `docs/11-decisions.md § DEC-002 — KẾT LUẬN SMOKE TEST`.
+4. **Ba lệnh nền tảng đã chạy và xanh** (trên project đã có code Phase 1):
+   `npm run typecheck` → exit 0 · `npm run lint` → exit 0 (0 error, 0 warning) · `npm run build` → exit 0.
+5. **Không hạ tiêu chuẩn để cho qua** (đúng yêu cầu số 5 của § Fix): `tsconfig.json` giữ `"strict": true` **và** thêm `noUncheckedIndexedAccess: true`; `@typescript-eslint/no-explicit-any` đặt mức **`error`** (mạnh hơn mặc định `warn`); không rule nào bị tắt.
+6. Kết quả và phiên bản đã ghi vào `docs/11-decisions.md` (DEC-002) và `WORKLOG.md` Entry 003.
+
+**Theo dõi tiếp (không chặn tiến độ):** nâng lên ESLint 10 / TS 7 chỉ khi `eslint-plugin-react` ra bản hỗ trợ ESLint 10 **và** `typescript-eslint` hỗ trợ TS ≥ 7.1 (typescript-eslint#10940). Khi đó tạo **DEC mới**, không sửa đè DEC-002.
 
 ---
 
@@ -399,6 +410,49 @@ Kế hoạch kiểm chứng, **chỉ áp dụng nếu quyền sửa được m�
 - Test integration: sửa một `daily_reports` đã `COMPLETED` → sinh **đúng một** dòng audit, chứa đúng `changed_by`, và đúng cặp giá trị cũ/mới.
 - Test: xoá bảng khỏi đường đi (giả lập trigger hỏng) → thao tác UPDATE phải **thất bại**, không được âm thầm bỏ qua audit.
 - Nếu v1 giữ khoá cứng: kiểm chứng bằng test RLS chứng minh salesA **không** UPDATE được report của chính mình khi `status = 'COMPLETED'` (0 rows affected), và Admin **không** UPDATE được cột số liệu của bất kỳ report nào. Khi đó ISSUE-007 chuyển `CLOSED` với ghi chú "không áp dụng ở v1 vì báo cáo bị khoá — mở lại nếu OQ-04/OQ-05 thay đổi".
+
+---
+
+### ISSUE-008
+
+**Severity: P3**
+**Status: OPEN**
+
+**Module:**
+`docs/01-business-analysis.md` (tài liệu, không phải code) → sẽ ảnh hưởng `lib/kpi.ts`. Liên quan: BR-015, DEC-025, OQ-11, Phase 5.
+
+**Description:**
+Hai chỗ trong cùng một tài liệu nói khác nhau về việc **khi nào** `AchievementResult.percent` được phép bằng `null`:
+
+- `docs/01-business-analysis.md` (mục mô tả `AchievementResult`): *"`percent: null` **chỉ** xảy ra ở trường hợp `target = 0 && actual > 0` (BR-015)"*.
+- `docs/01-business-analysis.md` §"Hệ quả cho việc cài đặt `lib/kpi.ts` (Phase 5)", bảng 4 dòng: dòng **"chưa có `actual`"** cũng ghi `percent` = `null`, status `PENDING`, hiển thị `—`.
+
+Chữ "**chỉ**" ở chỗ thứ nhất loại trừ đúng trường hợp mà chỗ thứ hai cho phép. Phát hiện khi viết khung `lib/kpi.ts` ở Phase 1.
+
+**Expected:**
+Một quy tắc duy nhất, không mơ hồ, cho `percent: null` — vì Phase 5 phải viết unit test biên đúng theo nó (`actual = null` là một case bắt buộc trong `PROJECT_CHECKLIST.md § Phase 5`).
+
+**Actual:**
+Hai phát biểu mâu thuẫn cùng tồn tại. **Chưa gây bug** vì `lib/kpi.ts` hiện mới chỉ là khung (thân hàm `throw`, chưa có logic).
+
+**Root Cause:**
+Nhiều khả năng do soạn thảo: bảng ở §"Hệ quả cho việc cài đặt" được **thêm sau** khi người dùng trả lời OQ-11 (Entry 002), còn câu "chỉ xảy ra khi…" là văn bản có từ trước và không được rà lại. Đây là **giả thuyết**, chưa xác nhận.
+
+**Fix:**
+Cách đọc hợp lý nhất — **chưa được chốt, không được tự áp dụng**: `percent: null` mang nghĩa "không tồn tại một con số phần trăm có ý nghĩa", đúng cho **cả hai** trường hợp (`target = 0 && actual > 0` → vượt kế hoạch; `actual = null` → chưa có số liệu), và hai trường hợp này phân biệt nhau bằng `status` (`EXCEEDED` vs `PENDING`) chứ không bằng `percent`. Nếu đúng vậy thì chỉ cần bỏ chữ "**chỉ**" ở phát biểu thứ nhất.
+
+Trình tự bắt buộc ở **đầu Phase 5**, trước khi viết thân `calculateAchievement()`:
+1. Chốt cách đọc, sửa `docs/01-business-analysis.md` cho khớp ở **cả hai** chỗ.
+2. Chốt luôn hạng mục còn treo của DEC-025: `AchievementResult` mang thêm **số vượt tuyệt đối + đơn vị** bằng cách nào (thêm tham số đơn vị vào `calculateAchievement()`, hay trả số vượt thô để tầng hiển thị tự format). `docs/11 § DEC-025` ghi rõ *"chốt cách cài đặt ở Phase 5"*.
+3. Cập nhật `AchievementResult` trong `lib/kpi.ts` và ghi chú TODO tương ứng ở đầu file.
+
+**Không** được đổi bản chất BR-015 — rule đã `APPROVED`; đây chỉ là làm rõ câu chữ mô tả kiểu dữ liệu, không phải đổi nghiệp vụ (Master Spec §71).
+
+**Verification:**
+Kế hoạch kiểm chứng (**chưa chạy** — Phase 5):
+- `docs/01-business-analysis.md` chỉ còn **một** phát biểu về `percent: null`, khớp với bảng 4 dòng.
+- Unit test `calculateAchievement` phủ đủ 4 dòng của bảng, trong đó có `actual = null` → `status = 'PENDING'`, `display = '—'`.
+- Không test nào cho ra `NaN` / `Infinity` (BR-015).
 
 ---
 

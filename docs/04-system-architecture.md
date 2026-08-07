@@ -6,7 +6,14 @@
 
 ## 0. Cách đọc tài liệu này
 
-**Trạng thái repository tại thời điểm viết:** repository chỉ có `BIKEFORCE_MASTER_SPEC.md`, `PROMPT_FIRST_SESSION.md`, `PROMPT_NEXT_SESSION.md` và thư mục `docs/`. **Chưa có `package.json`, chưa có source code, chưa có migration, chưa phải git repository.** Do đó:
+> **CẬP NHẬT 2026-08-07 — sau khi Phase 1 hoàn tất.** Đoạn mô tả trạng thái bên dưới được viết ở Phase 0 và **nay đã lỗi thời**; giữ lại để đối chiếu lịch sử. Trạng thái đúng ở thời điểm hiện tại:
+>
+> - Repository **đã có source code**: Next.js 16.3.0 App Router, `package.json` đã pin phiên bản, và **đã triển khai thật** các phần sau của tài liệu này — §5 cấu trúc thư mục, §4 ba Supabase client (`lib/supabase/{client,server,admin}.ts`), §8.1 khung `lib/kpi|currency|date` (mới có signature, thân hàm `throw`), §10.2 `.env.example`.
+> - **Chưa triển khai:** §2 `middleware.ts`, §7 lớp validation Zod, §8.2 `services/`, §9 toàn bộ hệ thống sinh ảnh, §10.3 script grep bundle. Những phần đó vẫn là **hợp đồng cho code sắp viết**.
+> - Kết quả kiểm chứng thật: `npm run build` exit 0 · `npm run typecheck` exit 0 · `npm run lint` exit 0. **Chưa có test nào** (unit/integration/E2E/RLS đều `N/A`).
+> - **Phiên bản đã PIN** sau smoke test: `typescript@6.0.3` và `eslint@9.39.5` — **không phải** TS 7.0.2 / ESLint 10.8.0 như dự kiến ở Phase 0. Lý do đầy đủ ở `docs/11 § DEC-002 — KẾT LUẬN SMOKE TEST` (ISSUE-004 nay `CLOSED`).
+
+**Trạng thái repository tại thời điểm viết (Phase 0 — đã lỗi thời, xem khối trên):** repository chỉ có `BIKEFORCE_MASTER_SPEC.md`, `PROMPT_FIRST_SESSION.md`, `PROMPT_NEXT_SESSION.md` và thư mục `docs/`. **Chưa có `package.json`, chưa có source code, chưa có migration, chưa phải git repository.** Do đó:
 
 - Mọi đường dẫn file, tên hàm, tên module trong tài liệu này là **đề xuất, chưa triển khai**. Chúng là hợp đồng kiến trúc mà Phase 1–12 phải tuân theo, không phải mô tả code đang tồn tại.
 - **Không có bất kỳ kết quả build / typecheck / lint / test nào để báo cáo.** Tất cả đều `N/A`.

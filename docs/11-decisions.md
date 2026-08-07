@@ -56,6 +56,58 @@
 **Status:** APPROVED
 **Follow-up bắt buộc:** Phase 1 phải chạy `tsc --noEmit`, `next build`, `next lint` với TypeScript 7. Nếu vỡ → lùi về TypeScript 5.x LTS và ghi kết quả vào chính entry này.
 
+### DEC-002 — KẾT LUẬN SMOKE TEST (2026-08-07, Phase 1)
+
+**Smoke test đã CHẠY THẬT.** Kết quả: **TypeScript 7.0.2 và ESLint 10.8.0 đều KHÔNG dùng được** với Next 16.3.0. Đây là lần đầu ISSUE-004 được kiểm chứng bằng lệnh thật thay vì giả thuyết.
+
+**Phát hiện 0 — `create-next-app@16.3.0` không hề cài TS 7 / ESLint 10.** Template chính thức của Next 16.3 pin `"typescript": "^5"` và `"eslint": "^9"`. Giả định trong `SESSION_CHECKPOINT.md` ("typescript 7.0.2 — do create-next-app cài") là **sai**.
+
+**Phát hiện 1 — TypeScript 7.0.2 làm vỡ lint.** `npx tsc --version` → 7.0.2. `next build` **pass**, `tsc --noEmit` **pass**, nhưng `eslint` **fail exit 2**:
+
+```
+typescript-eslint does not support TS 7.0.
+Please see .../announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0
+See also https://github.com/typescript-eslint/typescript-eslint/issues/10940
+```
+
+Nguyên nhân gốc: `typescript-eslint@8.66.0` (do `eslint-config-next@16.3.0` kéo vào) khai báo peer `typescript: ">=4.8.4 <6.1.0"`. TS 7 nằm ngoài range và bị chặn cứng ngay lúc load module, không phải lỗi cấu hình.
+
+**Phát hiện 2 — ESLint 10.8.0 làm vỡ lint, độc lập với TypeScript.** Sau khi hạ TypeScript xuống 6.0.3, `eslint` vẫn **fail exit 2**:
+
+```
+TypeError: Error while loading rule 'react/display-name':
+contextOrFilename.getFilename is not a function
+  at .../eslint-plugin-react/lib/util/version.js:31
+```
+
+Nguyên nhân gốc: `eslint-plugin-react@7.37.5` khai báo peer `eslint: "^3 || ... || ^9.7"` và **7.37.5 là bản MỚI NHẤT đang tồn tại trên npm** — chưa có bản nào hỗ trợ ESLint 10. Vì vậy **không** override/resolution nào cứu được; đây là chặn cứng ở thượng nguồn.
+
+**Phiên bản được PIN (đã kiểm chứng cả 3 lệnh xanh):**
+
+| Package | Pin | Ghi chú |
+|---|---|---|
+| `typescript` | **6.0.3** | Không phải 5.x LTS như phương án dự phòng ban đầu — xem lý do bên dưới |
+| `eslint` | **9.39.5** | Bản 9.x mới nhất; đúng dải mà `eslint-config-next@16.3.0` hỗ trợ |
+| `next` | 16.3.0 | |
+| `react` / `react-dom` | 19.2.8 | |
+| `tailwindcss` / `@tailwindcss/postcss` | 4.3.3 | |
+
+**Vì sao TypeScript 6.0.3 chứ không phải 5.x LTS như DEC-002 dự phòng:** `6.0.3` là bản **stable** (không phải beta) và nằm **trong** peer range `<6.1.0` của `typescript-eslint@8.66.0`, nên nó thoả mãn ràng buộc thật sự đang chặn ta. Chính thông báo lỗi của typescript-eslint cũng chỉ sang "TypeScript 6.0 API". Lùi tận 5.x sẽ bỏ đi hai major mà không thu được lợi ích tương thích nào. Đây là **sai lệch có chủ ý** so với câu chữ "TypeScript 5.x LTS" trong DEC-002 gốc, và được ghi lại ở đây đúng theo yêu cầu "không im lặng downgrade".
+
+**Bằng chứng baseline (chạy trên project đã có code Phase 1, không phải project rỗng):**
+
+```
+npm run typecheck  → exit 0
+npm run lint       → exit 0   (0 error, 0 warning)
+npm run build      → exit 0   (Next.js 16.3.0, Turbopack, 3/3 static pages)
+```
+
+**Ghi chú thêm — Turbopack:** `create-next-app@16.3.0` **không còn hỏi** về Turbopack và không còn cờ `--turbopack`; Next 16 dùng Turbopack làm bundler mặc định (`▲ Next.js 16.3.0 (Turbopack)`). Chỉ dẫn "trả lời No cho Turbopack" trong checkpoint cũ đã lỗi thời, không áp dụng được.
+
+**Điều KHÔNG bị đánh đổi:** `strict: true` vẫn bật (kèm `noUncheckedIndexedAccess`), và `@typescript-eslint/no-explicit-any` được đặt mức **`error`**. Không rule nào bị tắt để lint chạy được — đúng yêu cầu số 5 của ISSUE-004 § Fix.
+
+**Khi nào xét lại:** khi `eslint-plugin-react` phát hành bản hỗ trợ ESLint 10, **và** `typescript-eslint` hỗ trợ TS ≥ 7.1 (theo dõi typescript-eslint#10940). Lúc đó nâng cấp bằng một DEC mới, không sửa đè entry này.
+
 ---
 
 ## DEC-003

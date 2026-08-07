@@ -1,10 +1,11 @@
 # AGENTS.md — Engineering Rules cho BikeForce
-> Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 1 (đã hoàn tất) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > `CLAUDE.md` trả lời **"đọc gì, làm theo quy trình nào"**. File này trả lời **"viết code thế nào"**.
 > Đọc file này **trước khi gõ dòng code đầu tiên** của bất kỳ phase nào từ Phase 1 trở đi.
-> Mọi quy tắc dưới đây là **đề xuất kỹ thuật chưa triển khai** — repository hiện chưa có source code. Đây là hợp đồng cho code sắp viết, không phải mô tả code đang có.
+>
+> **Cập nhật 2026-08-07 (sau Phase 1):** repository **đã có source code**. Những phần dưới đây đã được triển khai thật và phải tuân theo, không còn là đề xuất: §1 cấu trúc thư mục, §2 TypeScript (`strict` + `noUncheckedIndexedAccess`, `no-explicit-any` mức `error`), §6 ba Supabase client, §10 design token và primitive UI. Phần còn lại (§5 `services/`, §7 RLS, §8 Server Action, §9 thân hàm `lib/kpi|currency|date`, §11 test) **vẫn là hợp đồng cho code sắp viết** — chưa có dòng nào.
 
 ---
 

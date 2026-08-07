@@ -25,8 +25,10 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-07):** repository chưa có `package.json` và chưa có dòng code nào,
-nên chưa từng có build / typecheck / lint / test nào được chạy. Mọi mục từ Phase 1 trở đi đều `[ ]`.
+**Tình trạng hôm nay (2026-08-07, sau Phase 1):** repository **đã có** `package.json` và source code
+nền tảng. Baseline đã chạy thật và xanh: `npm run build` exit 0, `npm run typecheck` exit 0,
+`npm run lint` exit 0 (0 error, 0 warning). **Chưa có test runner nào chạy** — Vitest và Playwright
+đã cài nhưng chưa có file test nào, nên mọi mục cần "test liên quan pass" vẫn để `[ ]`.
 
 ---
 
@@ -52,20 +54,30 @@ nên chưa từng có build / typecheck / lint / test nào được chạy. Mọ
 
 ## Phase 1 — Foundation
 
-- [ ] Khởi tạo project bằng `create-next-app` (App Router, TypeScript, Tailwind, ESLint, không dùng `src/`) — DEC-001
+- [x] Khởi tạo project bằng `create-next-app` (App Router, TypeScript, Tailwind, ESLint, không dùng `src/`) — DEC-001
 - [x] `git init` + `.gitignore` chuẩn Next.js chặn `.env*` (đã kiểm chứng thực nghiệm) + remote GitHub — DEC-027, DEC-028 (hoàn thành ở Phase 0)
-- [ ] Smoke test tương thích TypeScript 7.0.2 + ESLint 10.8.0 với Next 16.3; nếu vỡ thì lùi TypeScript 5.x LTS và ghi lại kết quả — DEC-002, ISSUE-004
-- [ ] Bật TypeScript `strict`, cấm `any` bằng lint rule — NFR-012
-- [ ] Cài runtime dependencies: `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `lucide-react`
-- [ ] Cài dev dependencies: `vitest`, `@playwright/test`, `@axe-core/playwright`, `supabase` (CLI)
-- [ ] Dựng cấu trúc thư mục `app/ components/ features/ lib/ services/ types/ supabase/ docs/` — DEC-023
-- [ ] Tạo 3 Supabase client tách vai trò: `lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts` (`import 'server-only'`) — DEC-005
-- [ ] Tạo `.env.example` chỉ có tên biến + placeholder (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`); `.env.local` nằm trong `.gitignore` — NFR-005
-- [ ] Khai báo design token đã đo vào Tailwind v4 `@theme` trong `globals.css` — DEC-014
-- [ ] Cấu hình font Inter Variable qua `next/font/google`, `display: swap`, subsets `['latin','vietnamese']`, `tabular-nums` cho số — DEC-013
-- [ ] Tạo khung `lib/kpi.ts`, `lib/currency.ts`, `lib/date.ts` với đúng signature Master Spec §9 (chưa cần logic đầy đủ)
-- [ ] Dựng primitive UI không biết nghiệp vụ trong `components/ui/`: Button, Input, Label, Card, Badge, Skeleton
-- [ ] Chạy được `next build`, `tsc --noEmit`, `eslint` lần đầu và ghi kết quả baseline vào `WORKLOG.md`
+- [x] Smoke test tương thích TypeScript 7.0.2 + ESLint 10.8.0 với Next 16.3; nếu vỡ thì lùi TypeScript 5.x LTS và ghi lại kết quả — DEC-002, ISSUE-004
+      → **CẢ HAI ĐỀU VỠ THẬT.** Đã pin `typescript@6.0.3` + `eslint@9.39.5`. Chi tiết: `docs/11 § DEC-002 — KẾT LUẬN SMOKE TEST`, ISSUE-004 nay `CLOSED`
+- [x] Bật TypeScript `strict`, cấm `any` bằng lint rule — NFR-012
+      → `strict: true` + `noUncheckedIndexedAccess: true`; `@typescript-eslint/no-explicit-any` mức `error`
+- [x] Cài runtime dependencies: `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `lucide-react`
+      → thêm `server-only` (bắt buộc cho `lib/supabase/admin.ts`)
+- [x] Cài dev dependencies: `vitest`, `@playwright/test`, `@axe-core/playwright`, `supabase` (CLI)
+      → đã cài + `npx playwright install chromium`. **Chưa có `vitest.config.ts` và chưa có file test nào** — thuộc Phase 11
+- [x] Dựng cấu trúc thư mục `app/ components/ features/ lib/ services/ types/ supabase/ docs/` — DEC-023
+- [x] Tạo 3 Supabase client tách vai trò: `lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts` (`import 'server-only'`) — DEC-005
+- [x] Tạo `.env.example` chỉ có tên biến + placeholder (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`); `.env.local` nằm trong `.gitignore` — NFR-005
+      → kiểm chứng lại bằng `git check-ignore`: `.env.local` bị chặn, `.env.example` được track
+- [x] Khai báo design token đã đo vào Tailwind v4 `@theme` trong `globals.css` — DEC-014
+      → kiểm chứng trên trình duyệt thật: `body` = `rgb(248,250,252)` (#F8FAFC), `h1` = `rgb(30,58,138)` (#1E3A8A)
+- [x] Cấu hình font Inter Variable qua `next/font/google`, `display: swap`, subsets `['latin','vietnamese']`, `tabular-nums` cho số — DEC-013
+      → kiểm chứng: `font-family` computed = `Inter, "Inter Fallback", …`; dấu tiếng Việt hiển thị đúng trên ảnh chụp 375px
+- [x] Tạo khung `lib/kpi.ts`, `lib/currency.ts`, `lib/date.ts` với đúng signature Master Spec §9 (chưa cần logic đầy đủ)
+      → thân hàm `throw` có chủ đích; logic + unit test là Phase 5. Phát hiện ISSUE-008 khi viết khung
+- [x] Dựng primitive UI không biết nghiệp vụ trong `components/ui/`: Button, Input, Label, Card, Badge, Skeleton
+      → kiểm chứng mobile 375px + desktop 1440px: **không cuộn ngang**, **không touch target < 44px**
+- [x] Chạy được `next build`, `tsc --noEmit`, `eslint` lần đầu và ghi kết quả baseline vào `WORKLOG.md`
+      → cả 3 exit 0; lint 0 error 0 warning. Nguyên văn ở `WORKLOG.md` Entry 003
 
 ## Phase 2 — Database & Auth
 

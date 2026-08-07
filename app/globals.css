@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   BikeForce — Design tokens
+   Nguồn: docs/05-ui-ux-design.md · DEC-012 (Swiss Modernism 2.0),
+   DEC-013 (font Inter), DEC-014 (bảng màu đã ĐO contrast), DEC-016 (không dark mode v1).
+
+   MỌI tỉ lệ contrast ghi dưới đây là số ĐÃ TÍNH bằng công thức relative
+   luminance của WCAG 2.x, không phải ước lượng bằng mắt (NFR-007).
+
+   Quy tắc dùng màu (AGENTS.md §10):
+     • Component CHỈ dùng semantic token, KHÔNG hardcode hex.
+       Ngoại lệ duy nhất: thẻ share 9:16 dùng bảng hex dark cố định vì Satori.
+     • Viền của control tương tác dùng --color-input-border (#64748B, 4.76:1),
+       KHÔNG dùng --color-border (#E2E8F0, 1.23:1 — chỉ là dải trang trí).
+     • Trạng thái không bao giờ chỉ bằng màu — badge luôn có icon + text.
+   ========================================================================== */
+
+@theme {
+  /* --- Font (DEC-013 — chỉ Inter, một họ font duy nhất) -------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Bề mặt ------------------------------------------------------------ */
+  --color-background: #f8fafc;
+  --color-card: #ffffff;
+
+  /* --- Chữ --------------------------------------------------------------- */
+  --color-foreground: #0f172a; /* trên nền 17.06:1 · AAA */
+  --color-heading: #1e3a8a; /* trên nền  9.90:1 · AAA */
+  --color-muted-foreground: #64748b; /* trên nền 4.55:1 · trên card 4.76:1 · AA */
+
+  /* --- Thương hiệu / hành động ------------------------------------------- */
+  --color-primary: #1e40af; /* chữ trắng trên nó 8.72:1 · AAA */
+  --color-primary-hover: #1d4ed8; /* trên card 6.70:1 · AA */
+  --color-secondary: #3b82f6; /* CHỈ cho đồ hoạ — không dùng làm chữ trên nền sáng */
+
+  /* --- Amber: nền và chữ là HAI màu khác nhau ----------------------------- */
+  --color-accent: #d97706; /* NỀN CTA amber. Chữ trắng trên nó chỉ 3.19:1
+                              → chỉ hợp lệ với chữ ≥18.66px bold */
+  --color-accent-text: #b45309; /* CHỮ amber trên nền sáng — trên card 5.02:1 · AA */
+
+  /* --- Trạng thái (đều là NỀN có chữ trắng) ------------------------------- */
+  --color-success: #15803d; /* chữ trắng trên nó 5.02:1 · AA */
+  --color-warning: #b45309; /* chữ trắng trên nó 5.02:1 · AA */
+  --color-destructive: #b91c1c; /* chữ trắng trên nó 6.47:1 · AA */
+
+  /* --- Đường kẻ và focus -------------------------------------------------- */
+  --color-border: #e2e8f0; /* 1.23:1 — CHỈ trang trí, KHÔNG bao giờ làm viền control */
+  --color-input-border: #64748b; /* trên card 4.76:1 — vượt ngưỡng WCAG 1.4.11 (≥3:1) */
+  --color-ring: #1d4ed8; /* focus ring 2px + offset 2px — 6.70:1 */
+
+  /* --- Badge trạng thái achievement (BR-023 — do getAchievementStatus quyết định) */
+  --color-status-exceeded-bg: #dcfce7;
+  --color-status-exceeded-fg: #166534; /* 6.49:1 */
+  --color-status-near-bg: #fef3c7;
+  --color-status-near-fg: #92400e; /* 6.37:1 */
+  --color-status-missed-bg: #fee2e2;
+  --color-status-missed-fg: #991b1b; /* 6.80:1 */
+  --color-status-pending-bg: #f1f5f9;
+  --color-status-pending-fg: #334155; /* 9.45:1 */
+  --color-status-info-bg: #dbeafe;
+  --color-status-info-fg: #1e40af; /* 7.15:1 */
+
+  /* --- Type scale (docs/05 §3.3) ----------------------------------------- */
+  --text-xs: 0.75rem; /* 12px — helper text, KHÔNG dùng cho nội dung chính */
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem; /* 14px — nhãn form, nội dung bảng, badge */
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem; /* 16px — body. TỐI THIỂU cho mọi <input> trên mobile */
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem; /* 18px — tiêu đề card */
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.25rem; /* 20px — tiêu đề section */
+  --text-xl--line-height: 1.35;
+  --text-2xl: 1.5rem; /* 24px — tiêu đề trang (h1 mobile) */
+  --text-2xl--line-height: 1.3;
+  --text-3xl: 2rem; /* 32px — số KPI mobile */
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 2.5rem; /* 40px — số KPI desktop, số lớn trên thẻ ảnh */
+  --text-4xl--line-height: 1.2;
+
+  /* --- Breakpoint (docs/05 — mobile-first từ 375px) ----------------------- */
+  --breakpoint-sm: 375px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Bỏ tap delay 300ms trên mobile (AGENTS.md §10 — touch & input). */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* iOS Safari tự phóng to trang khi focus vào control có font < 16px.
+   Đây không phải chuyện thẩm mỹ — nó làm layout nhảy (rule readable-font-size). */
+input,
+select,
+textarea {
+  font-size: var(--text-base);
+}
+
+/* Focus ring rõ ràng, KHÔNG BAO GIỜ `outline: none` mà không thay thế. */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Utility
+   -------------------------------------------------------------------------- */
+
+/* Mọi số liệu — KPI, bảng đối chiếu, tiền, %, ngày — phải canh thẳng cột.
+   Đây là cách đạt mục tiêu của font mono mà không tốn thêm một họ font (DEC-013). */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* --------------------------------------------------------------------------
+   Motion — chỉ transform và opacity, 150–200ms (DEC-015: không thư viện animation)
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

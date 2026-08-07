@@ -85,7 +85,12 @@ supabase --version  # se loi neu chua cai
 docker --version    # se loi neu chua cai
 ```
 
-> Ràng buộc phiên bản khác (next 16.3.0, react 19.2.8, typescript 7.0.2, tailwindcss 4.3.3, @supabase/supabase-js 2.112.2, @supabase/ssr 0.12.4, zod 4.4.3, @playwright/test 1.62.1, vitest 4.1.10, eslint 10.8.0, lucide-react 1.29.0) là **bản stable mới nhất kiểm chứng trên npm ngày 2026-08-07**. Pin chính xác được chốt ở Phase 1 sau smoke test (DEC-002); TypeScript 7 và ESLint 10 là bản major mới, rủi ro đã ghi ở ISSUE-004.
+> **PHIÊN BẢN ĐÃ PIN sau smoke test Phase 1 (2026-08-07)** — bảng này có thẩm quyền, `package.json` khớp đúng và **không dùng dải `^`**:
+> `next@16.3.0` · `react@19.2.8` · `react-dom@19.2.8` · **`typescript@6.0.3`** · `tailwindcss@4.3.3` · `@tailwindcss/postcss@4.3.3` · `@supabase/supabase-js@2.112.2` · `@supabase/ssr@0.12.4` · `zod@4.4.3` · `lucide-react@1.29.0` · `server-only@0.0.1` · **`eslint@9.39.5`** · `eslint-config-next@16.3.0` · `@playwright/test@1.62.1` · `@axe-core/playwright@4.12.1` · `vitest@4.1.10` · `@vitest/coverage-v8@4.1.10` · `@vitejs/plugin-react@6.0.5` · `supabase@2.111.0` (CLI).
+>
+> ⚠ **TypeScript 7.0.2 và ESLint 10.8.0 đã được thử và ĐỀU VỠ** — đây là ISSUE-004 xảy ra thật, nay `CLOSED`. TS 7 bị `typescript-eslint@8.66.0` từ chối (peer `typescript: ">=4.8.4 <6.1.0"`); ESLint 10 làm vỡ `eslint-plugin-react@7.37.5` (bản mới nhất tồn tại, chỉ hỗ trợ tới `eslint@^9.7`). Chi tiết và điều kiện xét lại: `docs/11 § DEC-002 — KẾT LUẬN SMOKE TEST`. **Đừng nâng cấp lại cho "mới" nếu chưa kiểm tra hai package thượng nguồn đó.**
+>
+> Ghi chú build: Next 16 dùng **Turbopack mặc định**; `create-next-app@16.3` không còn hỏi và không còn cờ `--turbopack`. Node 22 (máy dev hiện tại: v22.20.0).
 
 ---
 

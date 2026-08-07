@@ -21,14 +21,17 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 0 — Discovery & Business Analysis: deliverable đã hoàn tất** |
-| Source code | **CHƯA CÓ.** Không `package.json`, không `node_modules`, không migration, không component |
+| Phase | **PHASE 1 — Foundation: ĐÃ HOÀN TẤT** (2026-08-07). Phase 0 đóng trước đó cùng ngày |
+| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router, `package.json` đã pin, cấu trúc DEC-023 đầy đủ, 3 Supabase client, 6 primitive UI, khung `lib/kpi\|currency\|date`. **Chưa có** migration, chưa có route nghiệp vụ nào |
 | Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Người dùng đã cấp **quyền push đứng**: push sau mỗi lần code xong, không cần hỏi lại |
-| Supabase | **CHƯA có project.** Schema mới ở mức **đề xuất** trong `docs/02-database-design.md` |
-| Build / Typecheck / Lint / Unit / Integration / E2E | **N/A — chưa có code.** Không được ghi PASS ở bất kỳ đâu |
-| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER.** Người dùng đã trả lời **17/17 OPEN QUESTION** ngày 2026-08-07. ISSUE-001 đã CLOSED. Toàn bộ 30 DEC và 25 BR đều `APPROVED` |
+| Supabase | **CHƯA có project.** Schema mới ở mức **đề xuất** trong `docs/02-database-design.md`. `types/database.types.ts` hiện là **placeholder rỗng**, Phase 2 sẽ generate đè |
+| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-07): `npm run build` exit 0 · `npm run typecheck` exit 0 · `npm run lint` exit 0 (0 error, 0 warning) |
+| Unit / Integration / E2E | **N/A — chưa có file test nào.** Vitest + Playwright đã cài, `vitest.config.ts` chưa có. Không được ghi PASS |
+| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER.** 17/17 OPEN QUESTION đã trả lời. ISSUE-001, ISSUE-004, ISSUE-006 đã CLOSED. Toàn bộ 30 DEC và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** Phase 1 (Foundation) và Phase 2 (Database & Auth) **đều đã chạy được**. Nghiệp vụ đã chốt xong — theo Master Spec §71, **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`; muốn đổi phải tạo `DEC` mới và hỏi lại người dùng.
+**Hệ quả trực tiếp:** **Phase 2 (Database & Auth) là việc kế tiếp.** Nghiệp vụ đã chốt xong — theo Master Spec §71, **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`; muốn đổi phải tạo `DEC` mới và hỏi lại người dùng.
+
+> ⚠ **Bước đầu Phase 2 cần người dùng thao tác tay** (tạo Supabase project trên dashboard). Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy.
 
 ---
 
@@ -74,24 +77,33 @@ Mọi session phải làm **theo đúng thứ tự này**:
 
 Stack đã chốt (DEC-001): **Next.js App Router + TypeScript strict + Tailwind CSS v4 + Supabase (Postgres / Auth / RLS), deploy Vercel Free.**
 
-Phiên bản dưới đây là **latest stable đã verify trên npm ngày 2026-08-07**. Đây **chưa phải bản pin cuối cùng** — Phase 1 chạy compatibility smoke test rồi mới pin chính xác, và ghi kết quả vào `docs/11-decisions.md` như phần follow-up của DEC-002.
+Phiên bản dưới đây **đã được PIN CHÍNH XÁC** sau smoke test thật ở Phase 1 (2026-08-07). Đây là bảng có thẩm quyền — `package.json` khớp đúng bảng này, không dùng dải `^`.
 
-| Package | Version (verified latest stable 2026-08-07) |
-|---|---|
-| `next` | 16.3.0 |
-| `react` | 19.2.8 |
-| `typescript` | 7.0.2 |
-| `tailwindcss` | 4.3.3 |
-| `@supabase/supabase-js` | 2.112.2 |
-| `@supabase/ssr` | 0.12.4 |
-| `zod` | 4.4.3 |
-| `@playwright/test` | 1.62.1 |
-| `vitest` | 4.1.10 |
-| `eslint` | 10.8.0 |
-| `lucide-react` | 1.29.0 |
-| `html-to-image` | 1.11.13 *(fallback only — xem DEC-010)* |
+| Package | Version đã PIN | Ghi chú |
+|---|---|---|
+| `next` | 16.3.0 | Turbopack là bundler mặc định |
+| `react` / `react-dom` | 19.2.8 | |
+| `typescript` | **6.0.3** | ⚠ **KHÔNG phải 7.0.2** — xem cảnh báo dưới |
+| `tailwindcss` / `@tailwindcss/postcss` | 4.3.3 | |
+| `@supabase/supabase-js` | 2.112.2 | |
+| `@supabase/ssr` | 0.12.4 | |
+| `zod` | 4.4.3 | |
+| `lucide-react` | 1.29.0 | |
+| `server-only` | 0.0.1 | bắt buộc cho `lib/supabase/admin.ts` |
+| `eslint` | **9.39.5** | ⚠ **KHÔNG phải 10.8.0** — xem cảnh báo dưới |
+| `eslint-config-next` | 16.3.0 | |
+| `vitest` / `@vitest/coverage-v8` | 4.1.10 | đã cài, **chưa có config và chưa có test** |
+| `@playwright/test` | 1.62.1 | chromium đã tải |
+| `@axe-core/playwright` | 4.12.1 | |
+| `supabase` (CLI) | 2.111.0 | |
+| `html-to-image` | *(chưa cài)* | chỉ cài nếu Phase 6 phải dùng fallback — DEC-010 |
 
-**Cảnh báo tương thích (ISSUE-004, P2):** TypeScript 7 và ESLint 10 là bước nhảy major. Phase 1 **phải** verify `tsc` và `next lint` chạy được với Next 16; nếu vỡ thì lùi về TypeScript 5.x LTS và ghi lại quyết định. Không im lặng downgrade.
+**⚠ ISSUE-004 ĐÃ XẢY RA THẬT và đã CLOSED — đừng "nâng cấp lại" cho mới:**
+
+- **TypeScript 7.0.2 làm vỡ `eslint`.** `typescript-eslint@8.66.0` khai báo peer `typescript: ">=4.8.4 <6.1.0"` → nó **từ chối thẳng** TS 7 (`typescript-eslint does not support TS 7.0`). Build và `tsc` thì vẫn chạy, nên lỗi chỉ lộ khi lint.
+- **ESLint 10.8.0 cũng làm vỡ `eslint`, độc lập với TypeScript.** `eslint-plugin-react@7.37.5` — **bản mới nhất đang tồn tại** — chỉ hỗ trợ tới `eslint@^9.7` và ném `contextOrFilename.getFilename is not a function`. Không override nào cứu được.
+- Đã pin **`typescript@6.0.3`** (bản stable nằm trong peer range `<6.1.0`) thay vì lùi hẳn về 5.x LTS. Lý do đầy đủ: `docs/11-decisions.md § DEC-002 — KẾT LUẬN SMOKE TEST`.
+- Chỉ nâng lên TS 7 / ESLint 10 khi **cả hai** package thượng nguồn ra bản hỗ trợ, và phải tạo **DEC mới**.
 
 **Toolchain máy hiện tại:** Node v22.20.0 · npm 10.9.3 · git 2.48.1 · Python 3.13.2 · Windows 11 / PowerShell.
 
@@ -291,7 +303,8 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 **Bước tiếp theo của dự án (bám sát `SESSION_CHECKPOINT.md`):**
 1. ~~Người dùng trả lời `OQ-01..OQ-17`~~ — ✅ **XONG 2026-08-07, đủ 17/17.**
 2. ~~Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`~~ — ✅ **XONG**, đã đồng bộ `docs/01` … `docs/12`, `AGENTS.md`, `PROJECT_CHECKLIST.md`.
-3. **Phase 1 (bắt đầu ngay được):** `npx create-next-app@16` (TS strict, Tailwind v4, App Router, ESLint, không dùng `src/`), dựng cấu trúc DEC-023, cài `@supabase/supabase-js` + `@supabase/ssr` + `zod` + `lucide-react`, tạo `.env.example`, chạy build/typecheck/lint để có baseline.
+3. ~~**Phase 1 — Foundation**~~ — ✅ **XONG 2026-08-07.** Đã có Next.js 16.3, cấu trúc DEC-023, 3 Supabase client, design token, khung `lib/`, 6 primitive UI, baseline build/typecheck/lint xanh.
+4. **Phase 2 — Database & Auth (việc kế tiếp).** Bắt đầu bằng việc **người dùng tạo Supabase project** (region Singapore) — hướng dẫn thật chi tiết từng bước bấm, rồi mới viết `supabase/migrations/0001_*.sql`.
 
 ---
 

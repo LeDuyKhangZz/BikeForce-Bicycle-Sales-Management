@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 1 (đã hoàn tất) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -10,382 +10,305 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 0 — Discovery & Business Analysis` — **HOÀN TẤT.** Deliverable đủ 17 tài liệu,
-và **17/17 OPEN QUESTION đã được người dùng trả lời ngày 2026-08-07**. Không còn blocker nghiệp vụ.
+**Current Phase:** `PHASE 1 — Foundation` — **HOÀN TẤT** ngày 2026-08-07. Toàn bộ 14 mục của Phase 1
+trong `PROJECT_CHECKLIST.md` đã `[x]`, và baseline build/typecheck/lint đã chạy thật, xanh.
 
-**Current Task:** Sẵn sàng bắt đầu **PHASE 1 — Foundation**. Không còn việc gì đang dở dang ở Phase 0,
-và không còn OPEN QUESTION nào chờ trả lời. Phase 2 (migrations + RLS) cũng đã hết blocker nghiệp vụ.
+**Current Task:** Sẵn sàng bắt đầu **PHASE 2 — Database & Auth**. Không còn việc gì dở dang ở Phase 1
+và không còn OPEN QUESTION nghiệp vụ nào chờ trả lời.
 
-**Current Branch:** `main` — repository đã được `git init` ở Phase 0 và push lên GitHub
-`https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git` (DEC-028, điều chỉnh mốc của DEC-027).
-`.gitignore` đã có và **đã kiểm chứng** là chặn `.env*`.
+> ⚠ **Phase 2 mở đầu bằng một bước KHÔNG tự động hoá được:** người dùng phải tự tạo Supabase project
+> trên dashboard. Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng thao tác bấm** ở khúc Supabase
+> và Vercel — không được chỉ đưa lệnh CLI rồi tự chạy.
+
+**Current Branch:** `main` — remote `origin` =
+`https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git` (DEC-028).
+`.gitignore` **đã kiểm chứng lại sau khi scaffold**: chặn `.env.local`, cho phép `.env.example`.
 
 ---
 
 ## Completed
 
-Toàn bộ khối lượng Phase 0 đã hoàn tất trong phiên ngày 2026-08-07:
+### Phase 0 (2026-08-07) — xem chi tiết ở `WORKLOG.md` Entry 001 + 002
 
-- **Đọc toàn bộ `BIKEFORCE_MASTER_SPEC.md`** (69 mục).
-- **Khảo sát repository:** rỗng về mã nguồn — chỉ có `BIKEFORCE_MASTER_SPEC.md`,
-  `PROMPT_FIRST_SESSION.md`, `PROMPT_NEXT_SESSION.md`. Không có `package.json`, không có source
-  code, không có migration, **không phải git repo**. Toolchain: Node v22.20.0, npm 10.9.3,
-  git 2.48.1, Python 3.13.2. Platform: Windows 11 / PowerShell.
-- **Clone và CHẠY THẬT skill `ui-ux-pro-max`** (`nextlevelbuilder/ui-ux-pro-max-skill`, clone
-  `--depth 1`): đã thực thi `scripts/search.py` bằng Python 3.13.2 với **9 lệnh** (2 `--design-system`,
-  1 `--domain product`, 1 `--domain style`, 1 `--domain color`, 1 `--domain typography`,
-  2 `--domain ux`, 1 `--stack nextjs`), và đọc đầy đủ `references/pro-rules.md` +
-  `references/quick-reference.md`.
-- **Xác minh phiên bản npm latest stable tại 2026-08-07:** next 16.3.0, react 19.2.8,
-  typescript 7.0.2, tailwindcss 4.3.3, @supabase/supabase-js 2.112.2, @supabase/ssr 0.12.4,
-  zod 4.4.3, @playwright/test 1.62.1, vitest 4.1.10, eslint 10.8.0, lucide-react 1.29.0,
-  html-to-image 1.11.13 (chỉ fallback).
-- **Đo contrast toàn bộ bảng màu bằng script** (sáng + dark card 9:16), loại 4 màu fail
-  (`#94A3B8` 2.56:1, `#DBEAFE` 1.22:1, `#16A34A` 3.30:1, `#D97706` làm chữ 3.19:1) và chốt bộ thay
-  thế đạt AA/AAA — DEC-014.
-- **Phân tích nghiệp vụ và chốt:** 6 actor, **21 use case** (UC-01..UC-21), **37 functional
-  requirement** (FR-001..FR-037), **15 NFR** (NFR-001..NFR-015), **25 business rule**
-  (BR-001..BR-025), **15 đề xuất tính năng Admin** (AF-01..AF-15) theo format Master Spec §69.
-- **Đề xuất kỹ thuật (mức đề xuất, chưa triển khai):** database schema 2 bảng + 2 enum + constraint
-  + 5 index + 7 function/trigger; RLS deny-by-default; system architecture Next.js 16 App Router +
-  3 Supabase client; page map 16 route; navigation bottom nav / sidebar; chiến lược xuất ảnh 9:16
-  server-side (DEC-010); testing strategy 5 tầng; deployment Supabase Singapore + Vercel `sin1`.
-- **Tạo đủ 17 tài liệu kiểm soát dự án** theo Master Spec §44.
-- **Ghi DEC-001..DEC-030** vào `docs/11-decisions.md` (**toàn bộ 30 đều APPROVED** sau khi người dùng trả lời OQ) và
-  **ISSUE-001..ISSUE-007** vào `docs/12-known-issues.md` (tất cả `OPEN`).
-- **Gom 17 OPEN QUESTION** OQ-01..OQ-17 vào một danh sách duy nhất, trình cho người dùng, và **nhận đủ 17/17 câu trả lời ngày 2026-08-07**. Đã đồng bộ câu trả lời vào toàn bộ 17 tài liệu.
-- **Khởi tạo git + push lên GitHub** `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028).
-- **Kiểm chứng bằng công cụ:** 30/30 khối Mermaid parse sạch bằng mermaid 11.16.1; toàn bộ contrast tính bằng công thức WCAG; `.gitignore` chặn `.env` đã thử thực nghiệm.
+Bộ 17 tài liệu kiểm soát dự án; 21 UC · 37 FR · 15 NFR · 25 BR · 15 AF; DEC-001..DEC-030 (**30/30
+APPROVED**); ISSUE-001..ISSUE-007; **17/17 OPEN QUESTION đã được người dùng trả lời**; git init +
+push GitHub; đo contrast toàn bộ palette; chạy thật skill `ui-ux-pro-max`.
+
+### Phase 1 (2026-08-07) — xem chi tiết ở `WORKLOG.md` Entry 003
+
+- **Next.js 16.3.0 App Router + TypeScript + Tailwind v4 + ESLint**, không dùng `src/`, alias `@/*`.
+  Scaffold vào thư mục tạm rồi copy chọn lọc vì `create-next-app` từ chối chạy trong thư mục đã có
+  file markdown — cách này đồng thời **cứu `AGENTS.md` / `CLAUDE.md` / `.gitignore` khỏi bị ghi đè**
+  (template của Next 16.3 mặc định sinh cả `AGENTS.md` và `CLAUDE.md`).
+- **Smoke test ISSUE-004 / DEC-002 — rủi ro đã xảy ra thật ở CẢ HAI package.** Đã pin
+  `typescript@6.0.3` + `eslint@9.39.5`. ISSUE-004 nay `CLOSED`.
+- **424 package đã cài, phiên bản pin chính xác** (không dùng dải `^`). `playwright install chromium`
+  đã tải xong.
+- **Cấu trúc thư mục DEC-023 đầy đủ** — 31 thư mục kèm `.gitkeep`.
+- **3 Supabase client** đúng vai trò + `lib/env.ts` validate biến môi trường (tránh `!`).
+- **`.env.example`** đủ 4 biến, chỉ placeholder.
+- **Design token DEC-014 vào `@theme`** + type scale + breakpoint + `.tabular` + `prefers-reduced-motion`.
+- **Font Inter** (`latin` + `vietnamese`, `display: swap`), `<html lang="vi">`, không khoá zoom.
+- **Khung `lib/kpi.ts` · `lib/currency.ts` · `lib/date.ts`** đúng signature Master Spec §9 (thân hàm
+  `throw`, logic ở Phase 5).
+- **6 primitive UI**: Button, Input, Label, Card, Badge, Skeleton.
+- **Kiểm chứng bằng công cụ thật:** build/typecheck/lint đều exit 0; Chromium ở 375px và 1440px xác
+  nhận không cuộn ngang, không touch target < 44px, token màu và font Inter áp đúng.
 
 ---
 
 ## Currently Working On
 
-**Không có công việc code nào đang dở, và không còn chờ đầu vào nào từ người dùng.**
-
-- ✅ Toàn bộ **17/17 OPEN QUESTION đã được trả lời ngày 2026-08-07**.
-- ✅ `docs/11-decisions.md` đã cập nhật: **30/30 DEC đều `APPROVED`**, 0 `PROPOSED`.
-- ✅ Đã đồng bộ câu trả lời sang `docs/01`, `docs/02`, `docs/03`, `docs/04`, `docs/05`, `docs/06`,
-  `docs/09`, `docs/12`, `CLAUDE.md`, `AGENTS.md`, `PROJECT_CHECKLIST.md`.
-- ✅ `ISSUE-001` (P1) đã `CLOSED` với mục Verification điền đủ.
-- **Việc kế tiếp là bắt đầu Phase 1** — xem mục `Next Exact Steps`.
+**Không có công việc code nào đang dở, và không chờ đầu vào nào từ người dùng ở thời điểm này.**
+Việc kế tiếp là bắt đầu Phase 2 — xem `Next Exact Steps`.
 
 ---
 
 ## Not Started
 
-Toàn bộ Phase 1 → Phase 12 chưa bắt đầu — **chưa có một dòng mã nguồn nào**:
+- **Phase 2 — Database & Auth:** chưa có Supabase project, chưa có migration nào, chưa có RLS policy,
+  chưa có `/login`, chưa có `middleware.ts`, chưa có layout guard.
+- **Phase 3 → Phase 12:** chưa bắt đầu. Chưa có form, Server Action, Zod schema, route handler ảnh,
+  route nghiệp vụ nào.
+- **Test:** chưa có `vitest.config.ts`, chưa có một file `*.test.ts` hay `e2e/*.spec.ts` nào.
 
-- **Phase 1 — Foundation:** chưa có `package.json`, chưa `create-next-app`, chưa
-  cài dependency, chưa có cấu trúc thư mục, chưa có Supabase client, chưa có `.env.example`.
-- **Phase 2 — Database & Auth:** chưa có Supabase project, chưa có migration nào, chưa có RLS
-  policy, chưa có login/logout/middleware.
-- **Phase 3 — Morning Report** và **Phase 4 — Evening Report:** chưa có form, chưa có Server Action,
-  chưa có Zod schema.
-- **Phase 5 — KPI Engine:** chưa có `lib/kpi.ts`, `lib/currency.ts`, `lib/date.ts`.
-- **Phase 6 — 9:16 Image Export:** chưa có route handler, chưa có `DailyReportShareCard`, chưa nhúng
-  font tiếng Việt.
-- **Phase 7 — Sales History**, **Phase 8 — Admin Dashboard**, **Phase 9 — Admin Reports & Filters**,
-  **Phase 10 — Sales Management:** chưa có route, chưa có query, chưa có UI.
-- **Phase 11 — Testing & Security:** chưa cài Vitest/Playwright, chưa có test nào.
-- **Phase 12 — Deployment Preparation:** chưa có Supabase project, chưa có Vercel project.
+**Những thứ Phase 1 CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
+`middleware.ts` · `lib/validation/*` · `services/*` · thân hàm `lib/kpi|currency|date` ·
+`vitest.config.ts` · `playwright.config.ts` · `types/database.types.ts` thật.
 
 ---
 
 ## Known Issues
 
-Chưa có bug vì chưa có code. Các mục dưới đây là **rủi ro đã biết**, tất cả `Status: OPEN`, chi tiết
-đầy đủ ở `docs/12-known-issues.md`:
+Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 5 OPEN, 3 đã CLOSED.**
 
-| ID | Sev | Nội dung | Mitigation |
+| ID | Sev | Status | Nội dung |
 |---|---|---|---|
-| ISSUE-001 | P1 | **CLOSED (2026-08-07)** — 17/17 OQ đã được trả lời, không còn chặn migration | Đã xong, xem `docs/12` mục Verification |
-| ISSUE-002 | P2 | Satori (`next/og`) chỉ hỗ trợ tập con CSS và cần font nhúng có dấu tiếng Việt; rủi ro layout thẻ 9:16 phải làm lại | Dựng prototype thẻ ngay đầu Phase 6; fallback `html-to-image` đã ghi nhận |
-| ISSUE-003 | P2 | **Zalo in-app webview** chưa được kiểm chứng thực tế (Web Share API, download attachment) | Test tay trên thiết bị thật ở Phase 6 |
-| ISSUE-004 | P2 | TypeScript 7.0.2 và ESLint 10.8.0 là bản major mới; rủi ro không tương thích Next 16 plugin | Smoke test đầu Phase 1, lùi TypeScript 5.x LTS nếu cần — DEC-002 |
-| ISSUE-005 | P3 | `is_admin()` gọi trong RLS làm thêm một truy vấn `profiles` mỗi câu lệnh | Viết `(select public.is_admin())` để nâng thành InitPlan; nếu vẫn chậm thì chuyển role vào custom JWT claim |
-| ISSUE-006 | P3 | **CLOSED (2026-08-07)** — chủ nghiệp vụ xác nhận không xử lý gì quanh việc này ở v1 | Không cần hành động |
-| ISSUE-007 | P3 | Chưa có audit log; nếu OQ-04/OQ-05 cho phép sửa sau khi hoàn tất thì phải bổ sung trước khi bật quyền đó | Gắn với AF-12 trong roadmap |
+| ISSUE-001 | P1 | **CLOSED** | 17/17 OQ đã được trả lời |
+| ISSUE-002 | P2 | OPEN | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt → Phase 6 |
+| ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa kiểm chứng trên thiết bị thật → Phase 6 |
+| ISSUE-004 | P2 | **CLOSED** | TS 7 + ESLint 10 **đã vỡ thật**; pin `typescript@6.0.3` + `eslint@9.39.5` |
+| ISSUE-005 | P3 | OPEN | `is_admin()` thêm một truy vấn `profiles` mỗi câu lệnh → viết `(select public.is_admin())` |
+| ISSUE-006 | P3 | **CLOSED** | Không xử lý gì quanh ngày nghỉ ở v1 |
+| ISSUE-007 | P3 | OPEN | Chưa có audit log; chỉ cần nếu mở quyền sửa sau `COMPLETED` |
+| ISSUE-008 | P3 | OPEN | **MỚI** — `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null` → **phải chốt đầu Phase 5** |
 
 ---
 
 ## Important Business Decisions
 
-Danh sách đầy đủ DEC-001..DEC-030 ở `docs/11-decisions.md`. Những quyết định một session mới
-**bắt buộc phải biết** trước khi động vào code:
+Danh sách đầy đủ DEC-001..DEC-030 ở `docs/11-decisions.md`. Những điều một session mới **bắt buộc
+phải biết** trước khi động vào code:
 
 **Kiến trúc & bảo mật**
 
-- **DEC-001** — Next.js 16.3 App Router + TypeScript strict + Tailwind CSS v4 + Supabase
-  (Postgres/Auth/RLS), deploy Vercel Free.
-- **DEC-003** — Server Components để **đọc**, Server Actions để **ghi**; **không** xây REST API
-  riêng cho CRUD báo cáo.
-- **DEC-004** — **RLS là biên giới bảo mật thật**; middleware và layout guard chỉ là
-  defense-in-depth và UX.
-- **DEC-005** — Service role key **chỉ** dùng cho quản lý tài khoản (`auth.admin.*`), **không bao
-  giờ** dùng để đọc/ghi `daily_reports`.
-- **DEC-006** — `is_admin()` phải là `SECURITY DEFINER` và được gọi dạng `(select public.is_admin())`
-  trong policy (tránh đệ quy vô hạn khi policy trên `profiles` tự truy vấn `profiles`, đồng thời
-  tận dụng InitPlan).
-- **DEC-023** — Cấu trúc thư mục `app/ components/ features/ lib/ services/ types/ supabase/ docs/`;
-  business logic và data access **không** được viết trong component.
-- **DEC-027 + DEC-028** — Git đã init ở Phase 0, nhánh `main`, remote GitHub đã cấu hình. Người dùng cấp **quyền push đứng**: push sau mỗi lần code xong, không hỏi lại.
+- **DEC-003** — Server Components để **đọc**, Server Actions để **ghi**; **không** REST API riêng cho
+  CRUD báo cáo. Route Handler duy nhất: `GET /api/reports/[id]/share-image`.
+- **DEC-004** — **RLS là biên giới bảo mật thật**; middleware và layout guard chỉ là defense-in-depth.
+- **DEC-005** — Service role key **chỉ** cho `auth.admin.*`, **không bao giờ** đọc/ghi `daily_reports`.
+- **DEC-006** — `is_admin()` phải `SECURITY DEFINER` và gọi dạng `(select public.is_admin())`.
+- **DEC-023** — Business logic và data access **không** được viết trong component.
+
+**Toolchain (mới chốt ở Phase 1)**
+
+- **DEC-002 — đã có KẾT LUẬN SMOKE TEST.** Pin `typescript@6.0.3` + `eslint@9.39.5`.
+  **Đừng "nâng cấp cho mới"**: TS 7 bị `typescript-eslint@8.66.0` từ chối (peer `<6.1.0`), ESLint 10
+  làm vỡ `eslint-plugin-react@7.37.5` (bản mới nhất tồn tại, chỉ hỗ trợ `^9.7`).
+- Next 16 dùng **Turbopack mặc định**; `create-next-app@16.3` không còn hỏi và không còn cờ `--turbopack`.
 
 **Nghiệp vụ & dữ liệu**
 
-- **DEC-007** — Achievement **không persist**, luôn tính runtime trong `lib/kpi` (BR-011).
-- **DEC-008** — Tiền lưu `bigint` VND nguyên; format chỉ ở tầng hiển thị bằng
-  `Intl.NumberFormat('vi-VN')` (BR-010).
-- **DEC-009** — Ngày nghiệp vụ tính bằng
-  `Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'})`, không thêm dependency timezone
-  (BR-005).
-- **DEC-020** — Chỉ **2 trạng thái** `MORNING_SUBMITTED` / `COMPLETED`; không thêm `DRAFT`/`LOCKED`
-  khi chưa có nhu cầu thật (BR-008).
-- **DEC-021** — Không dùng Supabase Storage cho ảnh báo cáo (stream trực tiếp, không lưu).
-
-**Xuất ảnh 9:16**
-
-- **DEC-010** — Ảnh sinh **server-side** bằng `ImageResponse`/Satori tại
-  `GET /api/reports/[id]/share-image`, **không** capture DOM. Lý do: Zalo in-app webview hay vỡ với
-  `foreignObject`+canvas; Tailwind v4 sinh `oklch()`; font tiếng Việt phải load xong mới chụp được;
-  output luôn đúng 1080×1920; không tăng bundle client. Fallback `html-to-image` đã ghi nhận.
-  *(APPROVED technical — người dùng có thể veto.)*
-- **DEC-011** — Phân phối ảnh qua Web Share API (files) với fallback `<a download>`.
+- **DEC-007** — Achievement **không persist**, tính runtime (BR-011).
+- **DEC-008** — Tiền lưu `bigint` VND nguyên; format chỉ ở tầng hiển thị (BR-010).
+- **DEC-009** — Ngày nghiệp vụ bằng `Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'})` (BR-005).
+- **DEC-020** — Chỉ 2 trạng thái `MORNING_SUBMITTED` / `COMPLETED` (BR-008).
+- **DEC-025** — `target=0 & actual=0` → `100,0%`; `target=0 & actual>0` → `percent = null` + **số vượt
+  tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+3.000.000 ₫`). **Cách cài đặt chốt ở Phase 5.**
+- **DEC-026** — **Không** sửa sau `COMPLETED`, Admin **không** sửa báo cáo, **không** xoá, **không**
+  nhập bù ngày cũ.
+- **DEC-029 / DEC-030** — Viếng thăm giữ cả cột số lẫn cột text; không ngày nghỉ, không team/vùng,
+  chỉ 2 role; KPI do **Sales tự cam kết**.
 
 **UI/UX**
 
-- **DEC-012** — Design system: **Swiss Modernism 2.0** + **Executive Dashboard** cho KPI +
-  **Flat** cho tương tác; **override** kết quả "Exaggerated Minimalism" mà công cụ tự sinh, có nêu
-  lý do (style dành cho fashion/luxury/editorial, không hợp công cụ nhập liệu một tay ngoài thị
-  trường).
-- **DEC-013** — Font **chỉ Inter** (latin + vietnamese) + `tabular-nums`, thay vì cặp
-  Fira Code / Fira Sans mà công cụ xếp hạng 1.
-- **DEC-014** — Bảng màu chốt theo **contrast đã đo**: `#B45309` cho chữ amber, `#15803D` /
-  `#B91C1C` cho nền có chữ trắng, `#64748B` cho viền control tương tác.
-- **DEC-016** — **Không dark mode** ở v1 (trừ thẻ share vốn dark cố định).
-- **DEC-017** — Route `/login` thay vì `/auth/login` như ví dụ Master Spec §49.
-- **DEC-018** — Bottom nav ≤5 mục ở mobile, sidebar từ 1024px; không hiển thị đồng thời.
-- **DEC-019** — Bảng so sánh ở mobile render dạng 4 card, chỉ dùng `<table>` từ 768px
-  (cấm cuộn ngang).
-
-**Đang chờ người dùng**
-
-- **DEC-025** — `APPROVED`. BR-015: `target=0 & actual=0` → `100,0%`; `target=0 & actual>0` → `percent = null` và hiển thị **số vượt tuyệt đối** có dấu cộng + đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch"; khi tổng hợp của Admin thì **loại khỏi mẫu số**. Không bao giờ `NaN`/`∞`.
-- **DEC-026** — `APPROVED`. BR-019: khoá **vĩnh viễn** khi `COMPLETED` (kể cả cùng ngày). BR-020: Admin **không** sửa báo cáo. BR-021: chỉ tạo/sửa cho **đúng ngày hôm nay** giờ VN, không nhập bù. BR-013: **không xoá**, không cả soft delete.
-- **DEC-029** — `APPROVED`. Viếng thăm giữ **cả hai**: cột số bắt buộc + cột text tuỳ chọn.
-- **DEC-030** — `APPROVED`. Không ngày nghỉ, không team/vùng, chỉ 2 role, không SKU/đại lý/đơn hàng; KPI do **Sales tự cam kết**.
-- **DEC-002** — Pin phiên bản chính xác **sau smoke test** ở Phase 1; TypeScript 7 phải được kiểm
-  chứng, nếu vỡ thì lùi TypeScript 5.x LTS và ghi kết quả vào `docs/11-decisions.md`.
+- **DEC-012/013/014** — Swiss Modernism 2.0; chỉ font Inter; bảng màu theo contrast **đã đo**.
+- **DEC-016** — Không dark mode ở v1 (trừ thẻ share vốn dark cố định).
+- **DEC-017** — Route `/login`, không `/auth/login`.
+- **DEC-018/019** — Bottom nav ≤5 mục ở mobile, sidebar từ 1024px; bảng so sánh render 4 card ở
+  mobile, chỉ dùng `<table>` từ 768px.
 
 ---
 
 ## Important Files
 
-**Đã tồn tại từ trước (không sửa trong Phase 0):**
+**Tài liệu điều khiển (17 file từ Phase 0):** `CLAUDE.md`, `AGENTS.md`, `docs/01`…`docs/12`,
+`WORKLOG.md`, `SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Source code đã tồn tại (Phase 1):**
 
 | File | Vai trò |
 |---|---|
-| `BIKEFORCE_MASTER_SPEC.md` | Source of truth cấp cao nhất — đọc trước mọi việc |
-| `PROMPT_FIRST_SESSION.md` | Prompt khởi động phiên đầu tiên |
-| `PROMPT_NEXT_SESSION.md` | Prompt khởi động các phiên tiếp theo |
+| `package.json` | Phiên bản **đã pin chính xác** — không sửa thành dải `^` |
+| `tsconfig.json` | `strict: true` + `noUncheckedIndexedAccess: true` |
+| `eslint.config.mjs` | `no-explicit-any` mức **error**; `no-unused-vars` error + `argsIgnorePattern: "^_"` |
+| `app/layout.tsx` | Font Inter, `lang="vi"`, viewport không khoá zoom |
+| `app/globals.css` | **Toàn bộ design token DEC-014** trong `@theme` + type scale + breakpoint |
+| `app/page.tsx` | Trang tạm — Phase 2 thay bằng redirect theo role |
+| `lib/env.ts` | Đọc env **có validate**, validate lúc gọi (không lúc import) |
+| `lib/supabase/client.ts` | Browser, anon, chịu RLS |
+| `lib/supabase/server.ts` | **Đường dữ liệu chính** — RSC + Server Action + Route Handler |
+| `lib/supabase/admin.ts` | Service role, `import 'server-only'`, **CHỈ** `auth.admin.*` |
+| `lib/kpi.ts` · `lib/currency.ts` · `lib/date.ts` | **Khung, thân hàm `throw`** — logic ở Phase 5 |
+| `lib/utils.ts` | `cn()` — cố ý không dùng `clsx`/`tailwind-merge` |
+| `components/ui/*.tsx` | 6 primitive không biết nghiệp vụ |
+| `types/database.types.ts` | ⚠ **Placeholder rỗng** — Phase 2 generate đè |
+| `.env.example` | 4 biến, chỉ placeholder |
 
-**17 file tạo mới trong Phase 0:**
-
-| File | Đọc khi nào |
-|---|---|
-| `CLAUDE.md` | Bắt buộc, mở đầu mọi session |
-| `AGENTS.md` | Trước khi viết bất kỳ dòng code nào (layering, cấm business logic trong component) |
-| `docs/01-business-analysis.md` | Nguồn duy nhất của UC / FR / NFR / BR / **danh sách OQ đầy đủ** |
-| `docs/02-database-design.md` | Trước khi viết migration Phase 2 (ERD, cột, CHECK, index) |
-| `docs/03-workflow.md` | Trước khi làm Phase 3 / Phase 4 (morning flow, evening flow, save/export rule) |
-| `docs/04-system-architecture.md` | Trước Phase 1 (cấu trúc thư mục, 3 Supabase client, secret handling) |
-| `docs/05-ui-ux-design.md` | Trước khi làm bất kỳ UI nào (design system, token màu đã đo, rule UX) |
-| `docs/06-auth-permissions.md` | Trước Phase 2 (role, middleware, RLS policy chi tiết) |
-| `docs/07-api-data-flow.md` | Trước khi viết Server Action hoặc route handler |
-| `docs/08-testing-strategy.md` | Trước Phase 11 và mỗi khi thêm test |
-| `docs/09-deployment.md` | Trước Phase 12; chứa runbook tạo Admin đầu tiên |
-| `docs/10-future-roadmap.md` | Khi bị cám dỗ làm thêm tính năng — **không tự triển khai roadmap** |
-| `docs/11-decisions.md` | DEC-001..DEC-030; cập nhật mỗi khi có quyết định mới |
-| `docs/12-known-issues.md` | ISSUE-001..ISSUE-007; cập nhật khi phát sinh bug |
-| `WORKLOG.md` | Append entry mỗi phiên làm việc |
-| `SESSION_CHECKPOINT.md` | File này — cập nhật cuối mỗi milestone/session |
-| `PROJECT_CHECKLIST.md` | Tick `[x]` theo quy tắc 5 điều kiện |
-
-**File sẽ tạo ở Phase 1 (chưa tồn tại):** `package.json`, `.gitignore`, `.env.example`,
-`middleware.ts`, `lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts`,
-`lib/kpi.ts`, `lib/currency.ts`, `lib/date.ts`, `types/database.types.ts`.
+**File sẽ tạo ở Phase 2 (chưa tồn tại):** `middleware.ts`, `supabase/migrations/0001_*.sql` →
+`0005_*.sql`, `supabase/seed.sql`, `app/(auth)/login/page.tsx`, `lib/auth/*`, `services/*`.
 
 ---
 
 ## Database State
 
-**Chưa có Supabase project, chưa có migration nào được viết hay chạy.** Schema hiện chỉ tồn tại ở
-**mức đề xuất** trong `docs/02-database-design.md`, chờ câu trả lời OQ trước khi chốt.
+**Chưa có Supabase project, chưa có migration nào được viết hay chạy.** Schema hiện chỉ ở **mức đề
+xuất** trong `docs/02-database-design.md` — nhưng nay **đã hết blocker nghiệp vụ**, viết được ngay.
 
-- Không có `supabase/` directory, không có `supabase/migrations/*.sql`, không có `supabase/seed.sql`.
-- Không có `types/database.types.ts` (sẽ sinh bằng `supabase gen types typescript --linked` ở
-  Phase 2).
-- Đề xuất hiện tại: 2 enum (`user_role`, `report_status`), 2 bảng (`public.profiles`,
-  `public.daily_reports`), `UNIQUE(sales_id, report_date)`, 4 CHECK constraint chính, 5 index,
-  7 function/trigger, RLS deny-by-default trên cả 2 bảng, **không cấp DELETE policy**.
-- Các cột đang phụ thuộc OQ: `target_visit_points` / `visit_purpose` (OQ-01),
-  `actual_visit_points` / `actual_route` (OQ-02), khả năng thêm `deleted_at` (OQ-13).
-- Kế hoạch migration: `0001_init_enums_profiles.sql`, `0002_daily_reports.sql`,
-  `0003_functions_triggers.sql`, `0004_rls_policies.sql`, `0005_indexes.sql`, `seed.sql` (local
-  only). Đẩy bằng `supabase db push`, **không** sửa schema bằng tay trên dashboard. Migration chỉ
-  tiến tới; muốn lùi phải viết migration mới.
+- Không có `supabase/migrations/*.sql`, không có `supabase/seed.sql` (thư mục đã tạo, đang rỗng).
+- `types/database.types.ts` **là placeholder rỗng do Phase 1 tạo** để 3 Supabase client typecheck
+  được. Phase 2 phải ghi đè bằng `supabase gen types typescript --linked`.
+- Thiết kế đã chốt: 2 enum (`user_role`, `report_status`), 2 bảng (`public.profiles`,
+  `public.daily_reports`), `UNIQUE(sales_id, report_date)`, 4 CHECK chính, 5 index, 7 function/trigger,
+  RLS deny-by-default trên cả 2 bảng, **không cấp DELETE policy**.
+- Cột đã chốt theo OQ: `target_visit_points` + `visit_purpose`, `actual_visit_points` + `actual_route`.
+  **Không** có cột `deleted_at` (OQ-13).
 
 ---
 
 ## Testing State
 
-**Toàn bộ `N/A` vì chưa có code** — repository chưa có `package.json`, chưa có test runner, chưa có
-một dòng mã nguồn nào. Không có mục nào ở đây từng được chạy, nên **không mục nào được ghi là
-`PASS`**.
+| Loại | Trạng thái |
+|---|---|
+| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, 3/3 static pages) |
+| **Typecheck** | ✅ `npm run typecheck` → **exit 0** (`tsc --noEmit`, strict + noUncheckedIndexedAccess) |
+| **Lint** | ✅ `npm run lint` → **exit 0**, **0 error 0 warning** |
+| **UI mobile** | ✅ Chromium 375px + 1440px: không cuộn ngang, không touch target < 44px, token màu và font Inter áp đúng |
+| **Unit** | ❌ `N/A — chưa có file test nào.` Vitest đã cài, `vitest.config.ts` **chưa có** |
+| **Integration** | ❌ `N/A — chưa có Supabase local, chưa có schema` |
+| **E2E** | ❌ `N/A — chưa có `playwright.config.ts`, chưa có spec nào` (chromium đã tải) |
+| **RLS** | ❌ `N/A — chưa có policy nào để test` |
 
-- **Build:** `N/A — chưa có code` (chưa có `package.json`, chưa từng chạy `next build`)
-- **Typecheck:** `N/A — chưa có code` (chưa có `tsconfig.json`, chưa từng chạy `tsc --noEmit`)
-- **Lint:** `N/A — chưa có code` (chưa có cấu hình ESLint, chưa từng chạy `eslint`)
-- **Unit:** `N/A — chưa có code` (chưa cài Vitest, chưa có `lib/**` để test)
-- **Integration:** `N/A — chưa có code` (chưa có Supabase local, chưa có schema để test constraint
-  và RLS)
-- **E2E:** `N/A — chưa có code` (chưa cài Playwright, chưa có route nào để chạy)
-
-Baseline xanh đầu tiên sẽ được tạo ở cuối Phase 1 và ghi vào `WORKLOG.md` kèm output thật của lệnh.
+Bốn dòng cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào.
 
 ---
 
 ## Last Working Feature
 
-`Chưa có — repository chưa có source code.`
+**Baseline Phase 1** — ứng dụng Next.js chạy được thật: `npm run build` rồi `npm run start` phục vụ
+`/` trả HTTP 200, render đúng font Inter và đúng bảng màu, không cuộn ngang ở 375px.
 
-Không có tính năng nào từng chạy được, nên **không có mốc an toàn để quay về**. Điểm khởi đầu cho
-mọi công việc code là một project Next.js hoàn toàn mới tạo bằng `create-next-app` ở Phase 1.
+Đây là **mốc an toàn đầu tiên** để quay về nếu Phase 2 làm vỡ thứ gì.
 
 ---
 
 ## Next Exact Steps
 
-> ✅ **Hai bước đầu tiên của bản checkpoint trước đã XONG ngày 2026-08-07** — người dùng đã trả lời
-> đủ 17/17 OPEN QUESTION, toàn bộ DEC/BR đã chuyển sang `APPROVED`, 17 tài liệu đã được đồng bộ,
-> và `ISSUE-001` đã `CLOSED`. **Không làm lại.** Bắt đầu thẳng từ bước 1 dưới đây.
+> ✅ Phase 0 và Phase 1 đã xong — **không làm lại**. Bắt đầu thẳng từ bước 1.
 
-1. **Bắt đầu PHASE 1 — Foundation.** Không còn blocker nghiệp vụ nào.
-2. **Khởi tạo Next.js.** Chạy tại project root
-   `c:\Users\khang\OneDrive\Documents\BikeForce — Bicycle Sales Management System`:
-
-   ```bash
-   npx create-next-app@16 . --typescript --tailwind --eslint --app --no-src-dir --import-alias "@/*"
-   ```
-
-   Trả lời `No` cho Turbopack nếu được hỏi (giữ mặc định ổn định cho build trên Vercel), và chấp
-   nhận ghi vào thư mục hiện có mà **không xoá** 3 file markdown gốc, `docs/`, `WORKLOG.md`,
-   `SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
-3. ~~**Khởi tạo git**~~ — ✅ **ĐÃ XONG ở Phase 0** (DEC-028). Repo đã ở nhánh `main`, remote
-   `origin` = `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git`, `.gitignore`
-   đã có và **đã kiểm chứng** là chặn `.env*`. `create-next-app` sẽ ghi đè `.gitignore` — **phải
-   kiểm tra lại sau khi chạy** và khôi phục các mục `.env*`, `supabase/.env`, `test-results/`,
-   `playwright-report/` nếu bị mất. Người dùng đã cấp **quyền push đứng**: commit và push sau mỗi
-   lần code xong, **không cần hỏi lại**.
-
-4. **Cài đúng danh sách package dưới đây** (dùng phiên bản latest stable đã xác minh ngày
-   2026-08-07; ghi lại phiên bản thực tế được cài vào `WORKLOG.md`):
-
-   ```bash
-   npm install @supabase/supabase-js @supabase/ssr zod lucide-react
-   npm install -D vitest @vitejs/plugin-react @playwright/test @axe-core/playwright supabase
-   npx playwright install --with-deps chromium
-   ```
-
-   Runtime: `@supabase/supabase-js` (2.112.2), `@supabase/ssr` (0.12.4), `zod` (4.4.3),
-   `lucide-react` (1.29.0).
-   Dev: `vitest` (4.1.10), `@playwright/test` (1.62.1), `@axe-core/playwright`, `supabase` (CLI),
-   `eslint` (10.8.0 — do `create-next-app` cài), `typescript` (7.0.2 — do `create-next-app` cài).
-   **Chưa cài** `html-to-image` (1.11.13) — chỉ cài nếu Phase 6 phải dùng fallback (DEC-010).
-6. **Smoke test tương thích ngay lập tức** (ISSUE-004, DEC-002): chạy `npx tsc --noEmit`,
-   `npm run lint`, `npm run build` trên project trống. Nếu TypeScript 7.0.2 hoặc ESLint 10.8.0 xung
-   đột với Next 16.3, **lùi về TypeScript 5.x LTS / ESLint 9.x**, ghi kết quả thật vào
-   `docs/11-decisions.md` như phần follow-up của DEC-002 và vào `WORKLOG.md`.
-7. **Dựng cấu trúc thư mục theo DEC-023:** `app/`, `components/ui/`, `features/`, `lib/`,
-   `services/`, `types/`, `supabase/`, `docs/` (đã có). Tạo route group rỗng
-   `app/(auth)/`, `app/(sales)/`, `app/(admin)/`.
-8. **Tạo 3 Supabase client** đúng vai trò: `lib/supabase/client.ts` (`createBrowserClient`, anon
-   key), `lib/supabase/server.ts` (`createServerClient` + `cookies()`, anon key — đường dữ liệu
-   chính, chịu RLS), `lib/supabase/admin.ts` (service role, `import 'server-only'`, **chỉ** cho
-   `auth.admin.*`).
-9. **Tạo `.env.example`** chỉ gồm tên biến và placeholder, không giá trị thật:
-   `NEXT_PUBLIC_SUPABASE_URL=<your-project-url>`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>`,
-   `SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key-server-only>`,
-   `NEXT_PUBLIC_SITE_URL=http://localhost:3000`. Xác nhận `.env.local` nằm trong `.gitignore`.
-10. **Cấu hình design system Phase 1:** khai báo token màu đã đo (DEC-014) vào `@theme` của Tailwind
-    v4 trong `app/globals.css`; cấu hình Inter Variable qua `next/font/google` với
-    `display: 'swap'` và `subsets: ['latin','vietnamese']` (DEC-013); đặt type scale
-    12/14/16/18/20/24/32/40 và spacing 4/8px.
-11. **Chạy lại `next build` + `tsc --noEmit` + `eslint`** để có baseline, ghi **output thật** vào
-    `WORKLOG.md` (Entry 002), rồi tick các mục Phase 1 trong `PROJECT_CHECKLIST.md` theo đúng quy
-    tắc 5 điều kiện, và cập nhật lại file `SESSION_CHECKPOINT.md` này.
+1. **Hướng dẫn người dùng tạo Supabase project** (họ tự bấm, agent không làm thay được). Phải viết
+   **chi tiết từng thao tác**, tối thiểu gồm: đăng nhập supabase.com → New project → đặt tên
+   `bikeforce` → **Region: Southeast Asia (Singapore)** → đặt Database Password và lưu lại →
+   Create. Sau đó **Project Settings → API** để lấy 3 giá trị, và **Authentication → Providers →
+   Email** để **TẮT "Enable email signups"** (BR-012, FR-006 — không self-registration).
+2. **Người dùng tạo `.env.local`** từ `.env.example` và điền 3 giá trị vừa lấy. Nhắc rõ:
+   `SUPABASE_SERVICE_ROLE_KEY` là secret, **không** dán vào chat, **không** commit.
+3. **Viết migration theo đúng thứ tự** (mỗi file tự chứa cả `enable row level security` +
+   `force row level security` + policy tường minh, không tách sang file sau — AGENTS.md §7):
+   `supabase/migrations/0001_init_enums_profiles.sql` → `0002_daily_reports.sql` →
+   `0003_functions_triggers.sql` → `0004_rls_policies.sql` → `0005_indexes.sql`.
+   Nội dung chi tiết cột / CHECK / index / policy đã có sẵn trong `docs/02-database-design.md` và
+   `docs/06-auth-permissions.md` — **bám sát, không thiết kế lại**.
+4. **Đẩy migration** bằng `npx supabase link --project-ref <ref>` rồi `npx supabase db push`.
+   **Không** sửa schema bằng tay trên Dashboard.
+5. **Generate types thật:** `npx supabase gen types typescript --linked > types/database.types.ts`
+   — ghi đè placeholder hiện tại, rồi commit.
+6. **Viết `middleware.ts`** (refresh session cookie + route/role guard) và `app/(auth)/login/page.tsx`
+   + Server Action đăng nhập.
+7. **Viết RLS test bằng JWT thật** của `salesA` / `salesB` / `admin` — đây là điều kiện bắt buộc để
+   đóng Phase 2 (AGENTS.md §11). Cần `vitest.config.ts` trước.
+8. **Chạy lại đủ 4 lệnh** (`build`, `typecheck`, `lint`, `test`), ghi **output thật** vào `WORKLOG.md`
+   Entry 004, tick `PROJECT_CHECKLIST.md § Phase 2`, cập nhật file này, rồi commit + push.
 
 ---
 
 ## DO NOT REDO
 
-Sáu việc dưới đây **đã hoàn tất và đã được ghi lại**. Làm lại là lãng phí thời gian và có nguy cơ
-tạo ra kết quả mâu thuẫn với tài liệu hiện có:
+Những việc dưới đây **đã hoàn tất và đã được ghi lại**. Làm lại là lãng phí và có nguy cơ tạo ra kết
+quả mâu thuẫn với tài liệu hiện có.
 
-- **Đã đọc toàn bộ `BIKEFORCE_MASTER_SPEC.md`** — nội dung đã được chắt lọc vào `docs/01`..`docs/12`.
-  Chỉ tra cứu lại mục cụ thể khi cần, không cần đọc lại từ đầu để "nắm bối cảnh".
-- **Đã clone và CHẠY THẬT skill `ui-ux-pro-max`** (9 lệnh `search.py` + đọc đầy đủ `pro-rules.md`
-  và `quick-reference.md`) — **không cần clone lại, không cần chạy lại**. Kết quả và các quyết định
-  rút ra đã nằm trong `docs/05-ui-ux-design.md` (DEC-012, DEC-013, DEC-015).
-- **Đã đo contrast toàn bộ bảng màu bằng script** (bảng sáng + bảng dark của thẻ 9:16) — **không
-  cần đo lại**. Bảng token cuối cùng và các màu bị loại vì fail đã ghi trong `docs/05-ui-ux-design.md`
-  (DEC-014).
-- **Đã kiểm tra phiên bản npm mới nhất ngày 2026-08-07** cho toàn bộ dependency dự kiến — dùng lại
-  bảng phiên bản trong `docs/09-deployment.md`; chỉ kiểm tra lại nếu Phase 1 phát sinh xung đột thật
-  (ISSUE-004).
-- **Đã khảo sát repository** — ban đầu rỗng (3 file markdown); toolchain Node v22.20.0 /
-  npm 10.9.3 / git 2.48.1 / Python 3.13.2. Không cần khảo sát lại.
-- **Đã `git init` + push lên GitHub** (DEC-028) — nhánh `main`, remote `origin` đã cấu hình,
-  `.gitignore` đã kiểm chứng chặn `.env*`. **Không cần init lại.** Người dùng đã cấp **quyền push
-  đứng**: commit và push sau mỗi lần code xong, **không hỏi lại**.
-- **Đã hỏi và nhận đủ 17/17 câu trả lời OPEN QUESTION** (2026-08-07). **Tuyệt đối không hỏi lại**
-  những câu này. Câu trả lời chính thức nằm ở `docs/01-business-analysis.md § OPEN QUESTIONS`.
-- **Đã parse kiểm chứng toàn bộ 30 khối Mermaid** bằng mermaid 11.16.1 — 0 lỗi. Chỉ chạy lại khi
-  thêm hoặc sửa sơ đồ.
-- **Bộ 17 tài liệu Phase 0 đã tạo xong** — **chỉ cập nhật, không viết lại từ đầu**. Khi có câu trả
-  lời OQ thì sửa đúng phần liên quan và giữ nguyên toàn bộ ID BR-xxx / FR-xxx / NFR-xxx / UC-xx /
-  OQ-xx / DEC-xxx / ISSUE-xxx / AF-xx. **Không bao giờ renumber.**
+**Từ Phase 0:**
+
+- **Đã đọc toàn bộ `BIKEFORCE_MASTER_SPEC.md`** — nội dung đã chắt lọc vào `docs/01`..`docs/12`.
+- **Đã clone và CHẠY THẬT skill `ui-ux-pro-max`** (9 lệnh `search.py` + đọc đầy đủ `pro-rules.md`,
+  `quick-reference.md`) — **không clone lại, không chạy lại**. Kết quả ở `docs/05` (DEC-012/013/015).
+- **Đã đo contrast toàn bộ bảng màu bằng script** — **không đo lại**. Bảng token cuối cùng và các màu
+  bị loại vì fail đã ghi ở `docs/05` (DEC-014).
+- **Đã `git init` + push GitHub** (DEC-028) — **không init lại**. Người dùng cấp **quyền push đứng**:
+  commit và push sau mỗi lần code xong, **không hỏi lại**.
+- **Đã hỏi và nhận đủ 17/17 câu trả lời OPEN QUESTION** — **tuyệt đối không hỏi lại**. Câu trả lời
+  chính thức ở `docs/01-business-analysis.md § OPEN QUESTIONS`.
+- **Đã parse kiểm chứng 30/30 khối Mermaid** bằng mermaid 11.16.1 — chỉ chạy lại khi sửa sơ đồ.
+- **Bộ 17 tài liệu Phase 0 đã tạo xong** — **chỉ cập nhật, không viết lại từ đầu**. Giữ nguyên toàn bộ
+  ID `BR-xxx` / `FR-xxx` / `NFR-xxx` / `UC-xx` / `OQ-xx` / `DEC-xxx` / `ISSUE-xxx` / `AF-xx`.
+  **Không bao giờ renumber.**
+
+**Từ Phase 1 (mới):**
+
+- **Đã chạy smoke test tương thích toolchain** — **không thử lại TypeScript 7 hay ESLint 10**. Cả hai
+  đã được chứng minh là vỡ, kèm nguyên văn lỗi và peer range, ở `docs/11 § DEC-002 — KẾT LUẬN SMOKE
+  TEST` và ISSUE-004 § Verification. Chỉ xét lại khi **cả** `eslint-plugin-react` hỗ trợ ESLint 10
+  **và** `typescript-eslint` hỗ trợ TS ≥ 7.1 — và khi đó phải tạo **DEC mới**.
+- **Đã khởi tạo Next.js và pin phiên bản** — **không chạy lại `create-next-app`**, không đổi phiên bản
+  đã pin trong `package.json` thành dải `^`.
+- **Đã dựng cấu trúc thư mục DEC-023** (31 thư mục + `.gitkeep`) — không dựng lại, không đổi tên.
+- **Đã tạo 3 Supabase client và `lib/env.ts`** — không tạo thêm client Supabase ad-hoc ở nơi khác
+  (AGENTS.md §6: chỉ đúng 3 file này).
+- **Đã khai báo design token DEC-014 vào `@theme`** và đã **kiểm chứng trên trình duyệt thật**
+  (`body` = `rgb(248,250,252)`, `h1` = `rgb(30,58,138)`) — không đo lại, không khai báo lại.
+- **Đã kiểm chứng `.gitignore` chặn `.env.local`** sau khi scaffold — không cần thử lại.
 
 ---
 
 ## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG TOÀN BỘ
 
-**Không còn câu hỏi nào chờ trả lời.** Người dùng đã trả lời đủ **17/17** ngày `2026-08-07`.
+**Không còn câu hỏi nghiệp vụ nào chờ trả lời.** Người dùng đã trả lời đủ **17/17** ngày `2026-08-07`.
 Danh sách đầy đủ kèm câu trả lời chính thức: `docs/01-business-analysis.md § OPEN QUESTIONS`.
-
-Mười quyết định nghiệp vụ mà session sau **phải tuân thủ và không được tự ý đổi** (Master Spec §71):
 
 | ID | Câu trả lời chính thức |
 |---|---|
-| OQ-01 / OQ-02 | Viếng thăm giữ **cả hai**: cột số bắt buộc (`target_visit_points` / `actual_visit_points`) + cột text tuỳ chọn (`visit_purpose` / `actual_route`) |
+| OQ-01 / OQ-02 | Viếng thăm giữ **cả hai**: cột số bắt buộc + cột text tuỳ chọn |
 | OQ-03 | Doanh số = **số lượng xe** (integer). Doanh thu = **tiền VND** (bigint) |
-| OQ-04 | **KHÔNG** được sửa sau khi `COMPLETED` — khoá vĩnh viễn, kể cả trong cùng ngày |
-| OQ-05 | Admin **KHÔNG** được sửa báo cáo của Sales |
+| OQ-04 | **KHÔNG** sửa sau khi `COMPLETED` — khoá vĩnh viễn |
+| OQ-05 | Admin **KHÔNG** sửa báo cáo của Sales |
 | OQ-06 | Admin tạo tài khoản; Sales **không** tự đăng ký |
-| OQ-07 | Tuyến **nhập tự do** + gợi ý 5 tuyến gần nhất |
-| OQ-08 | **KHÔNG** có khái niệm ngày nghỉ ở v1. Không xử lý gì thêm quanh việc này |
+| OQ-07 | Tuyến nhập tự do + gợi ý 5 tuyến gần nhất |
+| OQ-08 | **KHÔNG** có khái niệm ngày nghỉ ở v1 |
 | OQ-09 | KPI do **Sales tự cam kết buổi sáng**; không có bảng `targets` |
 | OQ-10 | **KHÔNG** SKU / model xe / đại lý / đơn hàng |
-| OQ-11 | `target=0 & actual=0` → **`100,0%`**. `target=0 & actual>0` → `percent = null` + **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch"; **loại khỏi mẫu số** khi tổng hợp của Admin. Không bao giờ `NaN`/`∞` |
-| OQ-12 | Chỉ tạo/sửa cho **đúng ngày hôm nay** theo giờ VN; không giới hạn giờ trong ngày; **không** nhập bù |
-| OQ-13 | **KHÔNG** xoá báo cáo — không hard delete, không soft delete, không cột `deleted_at` |
-| OQ-14 | Doanh thu = **giá trị đơn hàng chốt trong ngày** (không phải tiền mặt đã thu) |
+| OQ-11 | `target=0 & actual=0` → `100,0%`; `actual>0` → `percent = null` + số vượt tuyệt đối, loại khỏi mẫu số khi tổng hợp |
+| OQ-12 | Chỉ đúng **ngày hôm nay** giờ VN; không nhập bù |
+| OQ-13 | **KHÔNG** xoá báo cáo — kể cả soft delete |
+| OQ-14 | Doanh thu = **giá trị đơn hàng chốt trong ngày** |
 | OQ-15 | **Chưa** chia team / khu vực ở v1 |
 | OQ-16 | **Chỉ 2 role**: `ADMIN`, `SALES` |
 | OQ-17 | "Ngày đạt KPI" = đạt **cả 4** chỉ tiêu ≥ 100% |
 
-**Một điểm theo dõi tiếp (không chặn tiến độ):**
+**Hai điểm kỹ thuật còn treo (không chặn tiến độ, phải chốt đúng lúc):**
 
-1. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
-   **phải làm audit log trước** và tạo `DEC` mới thay vì sửa DEC-026.
+1. **ISSUE-008 — đầu Phase 5:** `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null`.
+   Phải chốt **trước khi** viết thân `calculateAchievement()`.
+2. **DEC-025 — đầu Phase 5:** cách `AchievementResult` mang **số vượt tuyệt đối + đơn vị**
+   (thêm tham số đơn vị, hay trả số vượt thô để tầng hiển thị format). `docs/11` ghi rõ
+   *"chốt cách cài đặt ở Phase 5"*.
+3. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
+   **phải làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.

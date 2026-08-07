@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 1 (đã hoàn tất) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,18 +10,20 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 0 — Discovery & Business Analysis**
+**PHASE 1 — Foundation: ĐÃ HOÀN TẤT (2026-08-07).**
 
-Trạng thái: bộ deliverable tài liệu đã hoàn tất; **chưa được đóng phase** vì còn 9 OPEN QUESTION
-mức BLOCKING chưa có câu trả lời của người dùng (ISSUE-001). *(Tình trạng này đã được gỡ trong Entry 002 — xem bên dưới.)* Khi đó không được bắt đầu viết migration
-Phase 2 trước khi các câu này được chốt.
+Baseline đã chạy thật và xanh: build / typecheck / lint đều exit 0, UI đã kiểm tra ở 375px và
+1440px. **Việc kế tiếp là PHASE 2 — Database & Auth**, bắt đầu bằng bước người dùng tự tạo
+Supabase project trên dashboard.
+
+*(Lịch sử: Phase 0 từng bị chặn bởi 9 OPEN QUESTION mức BLOCKING — ISSUE-001; đã gỡ ở Entry 002.)*
 
 ---
 
 ## Overall Progress
 
 - [x] Phase 0 — Discovery & Business Analysis
-- [ ] Phase 1 — Foundation
+- [x] Phase 1 — Foundation
 - [ ] Phase 2 — Database & Auth
 - [ ] Phase 3 — Morning Report
 - [ ] Phase 4 — Evening Report
@@ -260,6 +262,121 @@ sửa báo cáo). `ISSUE-006` đã `CLOSED` — chủ nghiệp vụ xác nhận 
 cài `@supabase/supabase-js` + `@supabase/ssr` + `zod` + `lucide-react`, tạo `.env.example`, chạy
 build/typecheck/lint để có baseline xanh, rồi commit + push. **Lưu ý:** `create-next-app` sẽ ghi đè
 `.gitignore` — phải kiểm tra lại và khôi phục các mục `.env*` sau khi chạy.
+
+---
+
+### Entry 003
+
+**Date:** 2026-08-07
+**Phase:** PHASE 1 — Foundation (đóng phase)
+
+**Completed:**
+
+1. **Khởi tạo Next.js 16.3.0** bằng `create-next-app@16.3.0` với `--typescript --tailwind --eslint --app --no-src-dir --import-alias "@/*" --use-npm --skip-install --disable-git --empty`.
+   **Cách làm khác với checkpoint, có lý do:** project root chứa 8 file markdown mà `create-next-app` coi là "conflicting files" nên **từ chối chạy tại chỗ**. Đã scaffold vào thư mục tạm trong scratchpad rồi **copy có chọn lọc** 8 file (`eslint.config.mjs`, `next.config.ts`, `package.json`, `postcss.config.mjs`, `tsconfig.json`, `app/layout.tsx`, `app/page.tsx`, `app/globals.css`) vào root.
+   **Điều này còn tránh được một tai nạn:** `create-next-app@16.3` mặc định **sinh cả `AGENTS.md` và `CLAUDE.md`** (cờ `--agents-md` bật sẵn) — nếu chạy tại chỗ thì hai tài liệu điều khiển của dự án đã bị ghi đè. `.gitignore` của Phase 0 cũng được giữ nguyên vì không copy bản của template.
+2. **Chạy smoke test tương thích ISSUE-004 / DEC-002 — rủi ro đã XẢY RA THẬT ở cả hai package.** Chi tiết ở mục *Errors*. Kết quả: pin `typescript@6.0.3` + `eslint@9.39.5`.
+3. **Cài dependency và pin chính xác** (không dùng dải `^`): runtime `@supabase/supabase-js@2.112.2`, `@supabase/ssr@0.12.4`, `zod@4.4.3`, `lucide-react@1.29.0`, `server-only@0.0.1`; dev `vitest@4.1.10`, `@vitest/coverage-v8@4.1.10`, `@playwright/test@1.62.1`, `@axe-core/playwright@4.12.1`, `supabase@2.111.0`, `@vitejs/plugin-react@6.0.5`. Tổng 424 package. `npx playwright install chromium` đã tải xong (114.5 MiB).
+   **`server-only` là bổ sung ngoài danh sách checkpoint** — bắt buộc phải có thì `import 'server-only'` trong `lib/supabase/admin.ts` mới hoạt động (NFR-005).
+4. **Dựng đủ cấu trúc thư mục DEC-023** — 31 thư mục kèm `.gitkeep` (git không track thư mục rỗng): 3 route group `(auth)` / `(sales)` / `(admin)` với đủ route con, `app/api/reports/[id]/share-image/`, 10 thư mục `features/`, `components/ui/`, `lib/{validation,supabase,auth}/`, `services/`, `types/`, `supabase/migrations/`, `e2e/`, `public/fonts/`.
+5. **Tạo 3 Supabase client đúng vai trò** (DEC-005): `client.ts` (browser, anon), `server.ts` (RSC + Server Action + Route Handler, anon + `cookies()`), `admin.ts` (service role, mở đầu bằng `import 'server-only'`, comment nêu rõ **chỉ** `auth.admin.*`).
+   Thêm `lib/env.ts` đọc biến môi trường **có validate** để **không phải dùng `!`** (AGENTS.md §2 cấm non-null assertion không kèm giải thích). Cố ý validate **lúc gọi** chứ không lúc import — validate ở module scope sẽ làm `next build` vỡ trên máy chưa có `.env.local`, mà hiện chưa có Supabase project nào.
+6. **Tạo `.env.example`** đủ 4 biến, chỉ placeholder, kèm chỉ dẫn lấy giá trị ở đâu trên Supabase Dashboard và cảnh báo service role key.
+7. **Khai báo design token đã đo (DEC-014) vào `@theme` của Tailwind v4**, kèm type scale 12→40, breakpoint 375/768/1024/1440, utility `.tabular`, `prefers-reduced-motion`, `touch-action: manipulation`, và `font-size: 16px` cưỡng bức cho mọi control.
+8. **Cấu hình font Inter** (DEC-013): `next/font/google`, `subsets: ['latin','vietnamese']`, `display: 'swap'`, biến `--font-inter`. `<html lang="vi">`, viewport **không** khoá zoom.
+9. **Tạo khung `lib/kpi.ts`, `lib/currency.ts`, `lib/date.ts`** đúng signature Master Spec §9. Thân hàm cố ý `throw` — thà nổ to còn hơn âm thầm trả số sai; logic và unit test là Phase 5.
+10. **Dựng 6 primitive UI** trong `components/ui/`: Button, Input, Label, Card, Badge, Skeleton — không biết nghiệp vụ, chỉ nhận props nguyên thuỷ. `Badge` dùng từ vựng trình bày (`tone`) chứ **không** nhận `AchievementStatus`, để primitive không dính nghiệp vụ.
+
+**Files Changed:** 27 file **tạo mới** + 5 file **sửa**.
+
+*Tạo mới — cấu hình (6):* `package.json`, `package-lock.json`, `tsconfig.json`, `eslint.config.mjs`, `next.config.ts`, `postcss.config.mjs`
+*Tạo mới — app (3):* `app/layout.tsx`, `app/page.tsx`, `app/globals.css`
+*Tạo mới — lib (7):* `lib/env.ts`, `lib/utils.ts`, `lib/kpi.ts`, `lib/currency.ts`, `lib/date.ts`, `lib/supabase/client.ts`, `lib/supabase/server.ts`, `lib/supabase/admin.ts` *(8 file)*
+*Tạo mới — components (6):* `components/ui/{button,input,label,card,badge,skeleton}.tsx`
+*Tạo mới — khác (2):* `.env.example`, `types/database.types.ts` *(placeholder, Phase 2 generate đè)*
+*Tạo mới — 31 `.gitkeep`* giữ chỗ thư mục rỗng theo DEC-023
+*Sửa:* `CLAUDE.md`, `AGENTS.md`, `PROJECT_CHECKLIST.md`, `docs/11-decisions.md`, `docs/12-known-issues.md`, `SESSION_CHECKPOINT.md`, `WORKLOG.md`
+
+**Tests:**
+
+**Build / Typecheck / Lint — ĐÃ CHẠY THẬT, cả 3 exit 0.** Nguyên văn:
+
+```
+> bikeforce@0.1.0 typecheck
+> tsc --noEmit
+typecheck exit=0
+
+> bikeforce@0.1.0 lint
+> eslint
+lint exit=0                     (0 error, 0 warning)
+
+> bikeforce@0.1.0 build
+> next build
+▲ Next.js 16.3.0 (Turbopack)
+✓ Compiled successfully in 1813ms
+  Running TypeScript ...
+  Finished TypeScript in 4.8s ...
+✓ Generating static pages using 4 workers (3/3) in 1958ms
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+build exit=0
+```
+
+**Kiểm tra UI mobile — ĐÃ CHẠY THẬT** bằng Chromium (Playwright) trên server production `next start`, hai viewport:
+
+```
+[mobile-375] HTTP 200
+  cuon ngang        : scrollW=375 clientW=375 -> OK
+  html lang         : vi
+  body font-family  : Inter, "Inter Fallback", ui-sans-serif, system-ui, sans-serif
+  body background   : rgb(248, 250, 252)     ← #F8FAFC, khớp --color-background
+  h1 color          : rgb(30, 58, 138)       ← #1E3A8A, khớp --color-heading
+  touch target <44px: none
+[desktop-1440] HTTP 200
+  cuon ngang        : scrollW=1440 clientW=1440 -> OK
+  (các chỉ số còn lại giống hệt)
+KET QUA: PASS
+```
+
+Ảnh chụp 375px xác nhận dấu tiếng Việt hiển thị đủ (`ệ`, `ấ`, `ạ`, `ậ`, `ằ`). Script kiểm tra là công cụ dùng một lần, **đã xoá**, không commit.
+
+**Kiểm tra `.gitignore` — ĐÃ CHẠY THẬT.** Tạo `.env.local` giả rồi `git check-ignore -v`:
+`.env.local` → bị chặn bởi `.gitignore:10:.env.*` ✅ · `.env.example` → khớp `!.env.example`, **được track** ✅. File giả đã xoá.
+
+**Unit / Integration / E2E:** `N/A — chưa có file test nào.` Vitest và Playwright đã cài nhưng **chưa có `vitest.config.ts`**, chưa có `*.test.ts`, chưa có `e2e/*.spec.ts`. Không được diễn giải thành pass.
+
+**Errors:** Gặp **4 vấn đề thật**, tất cả đã xử lý:
+
+1. **`create-next-app` từ chối chạy trong thư mục có sẵn file markdown.** Xử lý: scaffold ra thư mục tạm rồi copy chọn lọc (xem *Completed* mục 1). Lợi ích phụ: cứu được `AGENTS.md` / `CLAUDE.md` / `.gitignore` khỏi bị ghi đè.
+2. **TypeScript 7.0.2 làm `eslint` vỡ hoàn toàn (exit 2):**
+   ```
+   typescript-eslint does not support TS 7.0.
+   See also https://github.com/typescript-eslint/typescript-eslint/issues/10940
+   ```
+   Nguyên nhân gốc: `typescript-eslint@8.66.0` peer `typescript: ">=4.8.4 <6.1.0"`. Đáng chú ý là `next build` và `tsc --noEmit` **vẫn pass** với TS 7 — lỗi chỉ lộ ở bước lint, đúng kiểu bug mà DEC-002 muốn bắt sớm.
+3. **ESLint 10.8.0 làm `eslint` vỡ, độc lập với TypeScript (exit 2):**
+   ```
+   TypeError: Error while loading rule 'react/display-name':
+   contextOrFilename.getFilename is not a function
+   ```
+   Nguyên nhân gốc: `eslint-plugin-react@7.37.5` peer chỉ tới `eslint@^9.7`, và **7.37.5 là bản mới nhất tồn tại trên npm** → không có đường vá bằng `overrides`. Xử lý: lùi `eslint@9.39.5`.
+4. **7 warning `no-unused-vars`** từ tham số của các hàm khung trong `lib/`. Xử lý **không phải** bằng cách tắt rule (AGENTS.md §14 cấm), mà **nâng rule lên `error`** kèm `argsIgnorePattern: "^_"` — công nhận quy ước `_` cho tham số cố ý chưa dùng, đồng thời khiến biến thừa thật sự bị fail chứ không chỉ cảnh báo.
+
+**Decisions:**
+
+- **DEC-002 — đã bổ sung mục "KẾT LUẬN SMOKE TEST"** vào `docs/11-decisions.md`: pin `typescript@6.0.3` + `eslint@9.39.5`, kèm nguyên văn lỗi và peer range chứng minh.
+  **Sai lệch có chủ ý so với DEC-002 gốc:** phương án dự phòng ghi "lùi về TypeScript 5.x LTS", nhưng đã chọn **6.0.3**. Lý do: 6.0.3 là bản **stable** nằm **trong** peer range `<6.1.0` của `typescript-eslint` — tức nó thoả mãn đúng ràng buộc đang chặn, còn lùi tận 5.x thì mất hai major mà không đổi được gì. Ghi lại rõ vì Master Spec cấm im lặng downgrade.
+- **Không tạo DEC mới** — mọi lựa chọn khác đều nằm trong khuôn khổ DEC đã APPROVED.
+- **Ghi nhận `create-next-app@16.3` không còn hỏi Turbopack** và không còn cờ `--turbopack`; Next 16 dùng Turbopack mặc định (`▲ Next.js 16.3.0 (Turbopack)`). Chỉ dẫn "trả lời No cho Turbopack" trong checkpoint cũ **đã lỗi thời**.
+
+**Remaining:** Không còn gì thuộc Phase 1.
+
+- **ISSUE-004 → `CLOSED`** với mục Verification điền đủ 6 điểm (nội dung gốc giữ nguyên theo STANDING RULE §3).
+- **ISSUE-008 mới (P3, OPEN):** `docs/01-business-analysis.md` mâu thuẫn nội bộ — một chỗ nói `percent: null` "**chỉ**" xảy ra khi `target=0 && actual>0`, nhưng bảng ở §"Hệ quả cho việc cài đặt `lib/kpi.ts`" lại cho `null` cả khi chưa có `actual`. Phát hiện khi viết khung `lib/kpi.ts`. **Không chặn tiến độ**, nhưng phải chốt ở **đầu Phase 5** trước khi viết thân `calculateAchievement()` — cùng lúc chốt nốt cách `AchievementResult` mang số vượt tuyệt đối + đơn vị (DEC-025 ghi "chốt cách cài đặt ở Phase 5").
+- **Nợ kỹ thuật đã biết, đúng kế hoạch:** chưa có `vitest.config.ts`, chưa có `middleware.ts`, `types/database.types.ts` mới là placeholder rỗng.
+
+**Next:** Vào **PHASE 2 — Database & Auth**. Việc đầu tiên **cần người dùng thao tác tay**: tạo Supabase project region Singapore trên dashboard, tắt signup công khai, rồi copy 3 giá trị vào `.env.local`. Người dùng đã yêu cầu **hướng dẫn chi tiết từng bước bấm** ở khúc này. Sau đó mới viết `supabase/migrations/0001_init_enums_profiles.sql`.
 
 ---
 
