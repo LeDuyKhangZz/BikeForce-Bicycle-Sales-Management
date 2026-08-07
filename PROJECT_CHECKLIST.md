@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 4 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 5 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -25,26 +25,34 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-07, sau Phase 4):** repository đã có schema chạy thật trên Supabase
+**Tình trạng hôm nay (2026-08-07, sau Phase 5):** repository đã có schema chạy thật trên Supabase
 local **và** cloud, tầng auth đầy đủ, **cả hai nửa của luồng báo cáo ngày chạy thật đầu-cuối**
-(cam kết sáng → hoàn tất cuối ngày → khoá vĩnh viễn), và bộ test 269 case. Kết quả thật của lần
-chạy cuối:
+(cam kết sáng → hoàn tất cuối ngày → khoá vĩnh viễn), **KPI engine thật + bảng đối chiếu 4 chỉ tiêu
+hai chế độ hiển thị**, và bộ test 315 case. Kết quả thật của lần chạy cuối:
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, 7 route) |
+| `npm run test:coverage` | ✅ `lib/**` → stmt **98,57%** · branch **99,01%** · func **96,43%** · lines **99,11%**; `lib/kpi.ts` **100%** cả bốn cột |
 | `npm run typecheck` | ✅ exit 0 |
 | `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
-| `npm test` | ✅ **269 passed / 269** — 13 test file, 3 project (`unit` 189 · `integration` 47 · `rls` 33) |
+| `npm test` | ✅ **315 passed / 315** — 14 test file, 3 project (`unit` **242** · `integration` **40** · `rls` 33) |
 | Kiểm chứng auth trên Chromium (Phase 2) | ✅ **32/32 PASS** ở 375px và 1440px |
 | Kiểm chứng tài khoản `is_active=false` (Phase 2) | ✅ **6/6 PASS** |
 | Kiểm chứng luồng báo cáo sáng trên Chromium (Phase 3) | ⚠ **57/58 PASS** ở 375px và 1440px — mục FAIL duy nhất là NFR-008 (7 lần chạm), xem ISSUE-013 |
 | Kiểm chứng luồng báo cáo cuối ngày trên Chromium (Phase 4) | ✅ **62/62 PASS** ở 375px và 1440px — sau khi sửa ISSUE-014 (lần đo trước đó: 59/62) |
 | Hồi quy luồng báo cáo sáng sau refactor (Phase 4) | ✅ **11/11 PASS** — UC-04 tạo, UC-05 sửa, DEC-034 vẫn đúng |
+| Kiểm chứng bảng đối chiếu KPI trên Chromium (Phase 5) | ✅ **36/36 PASS** ở 375px và 1440px — 4 card ↔ `<table>` thật, 3 tình huống `docs/05 §7.3`, không cuộn ngang, không `NaN`/`∞` |
 
 **Playwright E2E vẫn `N/A`** — chưa có `playwright.config.ts`, chưa có file `e2e/*.spec.ts` nào. Các
 kiểm chứng trình duyệt ở trên chạy bằng script dùng-một-lần (đã xoá, không commit), **không phải**
 bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
+
+> ⚠ **Sửa số liệu ở Phase 5 (2026-08-07):** bảng này trước đây ghi `unit 189 · integration 47`.
+> Tổng `269` là **đúng**, nhưng cách chia giữa hai project thì **sai** — đo lại bằng
+> `npx vitest run --project <tên>` cho `unit 196 · integration 40 · rls 33`. Nguồn lệch:
+> `lib/currency.test.ts` có **36** test chứ không phải 29 (file này chưa từng bị sửa từ Phase 3).
+> Sau khi thêm 46 test của `lib/kpi.test.ts`, con số hiện tại là **242 · 40 · 33 = 315**.
 
 ---
 
@@ -198,19 +206,35 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 5 — KPI Engine
 
-- [ ] `lib/kpi.ts` → `calculateAchievement(target, actual): AchievementResult` theo công thức `actual / target × 100` — FR-016, BR-014
-- [ ] `getAchievementStatus(pct): 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING'` với ranh giới ≥100 / 80–99.99 / <80 / chưa có actual — BR-023
-- [ ] Cho phép achievement > 100%, **không clamp** — BR-004
-- [ ] Xử lý `target = 0` theo BR-015: `actual = 0` → 100%; `actual > 0` → `percent: null` + hiển thị `—`. Không bao giờ ra `NaN` / `Infinity` / `∞` — OQ-11
-- [ ] Achievement **không persist** vào DB, luôn tính runtime — BR-011, DEC-007
-- [ ] `lib/currency.ts` → `formatCurrencyVND` bằng `Intl.NumberFormat('vi-VN')` và `parseCurrencyInput`; tiền lưu `bigint` VND nguyên — BR-010, DEC-008
-      → ✅ **ĐÃ XONG SỚM ở Phase 3** (DEC-032): cả hai hàm + `formatThousands`, **29 unit test** gồm khứ hồi format→parse. Ô này vẫn `[ ]` **chỉ vì** nó nằm chung nhóm với các mục `lib/kpi` còn chờ ISSUE-008
-- [ ] `lib/date.ts` → `getVietnamToday`, `formatVietnamDate`, `getVietnamMonthRange` bằng `Intl.DateTimeFormat`, không thêm dependency timezone — DEC-009, NFR-011
-      → ✅ `getVietnamToday` + `formatVietnamDate` + `isValidVietnamDate` **đã xong ở Phase 3** (DEC-032), **33 unit test**. ⏳ Còn thiếu **`getVietnamMonthRange`** — nó chỉ phục vụ filter tháng của FR-021/FR-028 nên để đúng Phase 7/Phase 9
-- [ ] Không component nào cài lại công thức KPI hoặc format tiền — logic chỉ tồn tại một nơi — NFR-012
-- [ ] Bảng đối chiếu 4 chỉ tiêu: 4 card ở mobile, `<table>` thật từ 768px, cấm cuộn ngang — DEC-019
-- [ ] Badge trạng thái luôn có **icon + text**, không dùng màu đơn thuần (Lucide `TrendingUp` / `Minus` / `TrendingDown` / `Clock`)
-- [ ] Unit test đầy đủ các biên: `target=0 & actual=0`, `target=0 & actual>0`, `actual>target`, `actual<target`, `actual=target`, `actual=null`, 79.99 / 80 / 99.99 / 100, tiền 0 / 1000 / 125000000 / 99999999999, `getVietnamToday` tại 16:59Z và 17:01Z — coverage `lib/**` ≥ 90%
+> **Trạng thái 2026-08-07: PHASE 5 ĐÃ ĐÓNG — 11/11 mục `[x]`.**
+> Hai chốt chặn đã được người dùng trả lời và ghi thành **DEC-038**: ISSUE-008 (`percent = null`
+> đúng cho **cả hai** ca, phân biệt bằng `status`) và cách `AchievementResult` mang số vượt tuyệt
+> đối (`calculateAchievement` nhận thêm `metric`, trả cả `display` lẫn `surplus`).
+> Bộ test khoá lại: `npm test` → **315/315 PASS** (242 unit · 40 integration · 33 RLS).
+> Kiểm chứng trình duyệt thật Chromium 375px + 1440px: **36/36 PASS**.
+
+- [x] `lib/kpi.ts` → `calculateAchievement(target, actual, metric): AchievementResult` theo công thức `actual / target × 100` — FR-016, BR-014
+      → Tham số thứ ba `metric` chốt ở **DEC-038**; nó chỉ dùng để dựng chuỗi số vượt tuyệt đối, không tham gia phép tính. `percent` giữ giá trị THÔ, làm tròn 1 chữ số thập phân **chỉ** ở `display`
+- [x] `getAchievementStatus(pct): 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING'` với ranh giới ≥100 / 80–99.99 / <80 / chưa có actual — BR-023
+      → Ngưỡng xét trên số **chưa làm tròn**. `NaN` / `Infinity` cũng trả `'PENDING'` thay vì rơi vào một ngưỡng nào
+- [x] Cho phép achievement > 100%, **không clamp** — BR-004
+      → Kiểm chứng bằng case `(1, 125)` → `12.500,0%` hiển thị đủ, không cắt
+- [x] Xử lý `target = 0` theo BR-015: `actual = 0` → `100,0%`; `actual > 0` → `percent: null` + **số vượt tuyệt đối có dấu cộng và đơn vị** (`+3 xe`, `+3.000.000 ₫`) kèm nhãn "Vượt kế hoạch". Không bao giờ ra `NaN` / `Infinity` / `∞` — OQ-11, DEC-025, DEC-038
+      → ⚠ Dòng này trước đây ghi "`actual > 0` → hiển thị `—`" — đó là **đề xuất mặc định trước khi OQ-11 được trả lời**, đã lỗi thời so với BR-015 `APPROVED`. Sửa ngày 2026-08-07. Có một bài test quét **288 tổ hợp** (8 target × 9 actual × 4 metric, gồm cả `NaN`/`±Infinity`/số âm) khẳng định bất biến này
+- [x] Achievement **không persist** vào DB, luôn tính runtime — BR-011, DEC-007
+      → Không có cột `%` nào trong schema; có test khẳng định `calculateAchievement` là hàm pure, không phụ thuộc đồng hồ
+- [x] `lib/currency.ts` → `formatCurrencyVND` bằng `Intl.NumberFormat('vi-VN')` và `parseCurrencyInput`; tiền lưu `bigint` VND nguyên — BR-010, DEC-008
+      → ✅ **ĐÃ XONG SỚM ở Phase 3** (DEC-032): cả hai hàm + `formatThousands`, **36 unit test** gồm khứ hồi format→parse *(con số này từng bị ghi nhầm là 29 ở nhiều nơi — đã đo lại và sửa ở Phase 5)*
+- [x] `lib/date.ts` → `getVietnamToday`, `formatVietnamDate`, `getVietnamMonthRange` bằng `Intl.DateTimeFormat`, không thêm dependency timezone — DEC-009, NFR-011
+      → ✅ `getVietnamToday` + `formatVietnamDate` + `isValidVietnamDate` **đã xong ở Phase 3** (DEC-032), **33 unit test**. ⏳ **`getVietnamMonthRange` vẫn cố ý là khung ném lỗi** — nó chỉ phục vụ filter tháng của FR-021/FR-028 nên thuộc Phase 7/Phase 9. Ô này tick vì phần thuộc Phase 5 đã đủ, **không phải** vì hàm tháng đã xong
+- [x] Không component nào cài lại công thức KPI hoặc format tiền — logic chỉ tồn tại một nơi — NFR-012
+      → Bảng ánh xạ chỉ tiêu → đơn vị (`xe` / `điểm` / `khách` / VND) nằm **duy nhất** trong `formatMetricValue()` của `lib/kpi.ts`; nhãn badge nằm duy nhất trong `achievementLabel()`. Component chỉ ánh xạ status → màu/icon (trình bày)
+- [x] Bảng đối chiếu 4 chỉ tiêu: 4 card ở mobile, `<table>` thật từ 768px, cấm cuộn ngang — DEC-019
+      → `features/report-comparison/achievement-table.tsx`, gắn ở `/sales/today`. Kiểm chứng thật: 375px hiện 4 card và `<table>` bị ẩn; 1440px hiện `<table>` có `<caption>` + 4 `<th scope="row">` và card bị ẩn; số liệu hai chế độ khớp nhau; **không cuộn ngang ở cả hai**
+- [x] Badge trạng thái luôn có **icon + text**, không dùng màu đơn thuần (Lucide `TrendingUp` / `Minus` / `TrendingDown` / `Clock`)
+      → `features/report-comparison/achievement-badge.tsx`. Ở trạng thái `PENDING` badge cố ý **chỉ** hiện chữ "Chờ số liệu" (cột "Thực đạt" đã mang dấu `—`)
+- [x] Unit test đầy đủ các biên: `target=0 & actual=0`, `target=0 & actual>0`, `actual>target`, `actual<target`, `actual=target`, `actual=null`, 79.99 / 80 / 99.99 / 100, tiền 0 / 1000 / 125000000 / 99999999999, `getVietnamToday` tại 16:59Z và 17:01Z — coverage `lib/**` ≥ 90%
+      → `lib/kpi.test.ts` **46 test PASS**, phủ đủ bảng biên của `docs/08 §3.1` + `§3.2`, cộng `formatMetricValue` / `achievementLabel` / `isKpiAchievedDay` (BR-024). Các case tiền và ngày đã có sẵn từ Phase 3 (`lib/currency.test.ts` 36, `lib/date.test.ts` 33). ✅ **Coverage ĐÃ ĐO THẬT** bằng `npm run test:coverage` (v8): `lib/**` → **stmt 98,57% · branch 99,01% · func 96,43% · lines 99,11%**, đều vượt ngưỡng 90%. `lib/kpi.ts` đạt **100% cả bốn cột**. ⚠ Con số này tính trên các module `lib/` mà bộ unit **thực sự import** (`auth/routes`, `currency`, `date`, `kpi`, `reports/today-cta`, `validation/report`); `lib/hooks/`, `lib/supabase/`, `lib/env.ts`, `lib/utils.ts` không nằm trong đó vì tầng unit không với tới được chúng
 
 ## Phase 6 — 9:16 Image Export
 

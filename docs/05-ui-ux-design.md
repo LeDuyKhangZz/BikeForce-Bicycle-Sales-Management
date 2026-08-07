@@ -337,6 +337,20 @@ Chỉ dùng để **xác nhận hành động nguy hiểm** (`confirmation-dialo
 
 Đây là màn hình Sales nhìn nhiều nhất, nên không được thoả hiệp.
 
+> ✅ **ĐÃ TRIỂN KHAI ở Phase 5 (2026-08-07).** Component: `features/report-comparison/achievement-table.tsx`
+> (bốn chỉ tiêu, hai chế độ) + `achievement-badge.tsx` (badge trạng thái) + `report-notes.tsx`
+> (tuyến kế hoạch / mục đích / tuyến thực tế / ghi chú cuối ngày — phần CHỮ, tách khỏi bảng để
+> không phá cấu trúc `<table>` ở ≥ 768px). Đang gắn ở **`/sales/today`**; Phase 7 sẽ dùng lại cho
+> `/sales/reports/[id]`.
+>
+> **Kiểm chứng thật trên Chromium 375px + 1440px (2026-08-07): 36/36 PASS** — 4 card ở mobile với
+> `<table>` bị ẩn, `<table>` thật có `<caption>` + `scope="row"` ở 1440px, số liệu hai chế độ khớp
+> nhau, **không cuộn ngang** ở cả hai, và cả ba tình huống của §7.3 đều đúng.
+>
+> ⚠ Không nhầm với `features/report-morning/commitment-summary.tsx` — component đó **cố ý chỉ một
+> cột** ("Cam kết") và chỉ còn phục vụ `/sales/today/evening`, nơi Sales đang NHẬP thực đạt nên chưa
+> có gì để đối chiếu. Đừng gộp hai component làm một.
+
 ### 7.1 Mobile (< 768px) — 4 card xếp dọc
 
 ```
@@ -389,6 +403,10 @@ Cột số căn phải, `tabular-nums`. `<caption>` mô tả bảng cho screen r
 | Chưa có số liệu cuối ngày | Cột "Thực đạt" là `—`, badge `PENDING` "Chờ số liệu" | BR-023 |
 | Vượt xa mục tiêu | `1.250,0%` — hiện đầy đủ, **không cắt về 100%** | BR-004 |
 | `target = 0` và `actual > 0` | Ô "Hoàn thành" hiện **số vượt tuyệt đối** có dấu cộng và đơn vị — `+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫` — kèm nhãn "Vượt kế hoạch". **Không bao giờ** `NaN` hay `∞` | BR-015 · **APPROVED** (OQ-11) |
+
+Cả ba chuỗi trên do **`lib/kpi.ts` sinh sẵn** (`display`), không component nào tự ghép (NFR-012, DEC-038). Badge trạng thái luôn **icon + text**, không bao giờ chỉ bằng màu: Lucide `TrendingUp` (Vượt mục tiêu / Vượt kế hoạch) · `Minus` (Gần đạt) · `TrendingDown` (Chưa đạt) · `Clock` (Chờ số liệu). Riêng ở trạng thái `PENDING`, badge **chỉ** hiện chữ "Chờ số liệu" — cột "Thực đạt" đã mang dấu `—` rồi, lặp lại thành `— · Chờ số liệu` chỉ thêm nhiễu.
+
+**Một điểm dễ tưởng là lỗi:** `percent = 99.99` hiện `100,0%` nhưng badge vẫn "Gần đạt". BR-014 làm tròn ở hiển thị, BR-023 xét ngưỡng trên số chưa làm tròn — cả hai đang `APPROVED`, xem DEC-038.
 
 ---
 

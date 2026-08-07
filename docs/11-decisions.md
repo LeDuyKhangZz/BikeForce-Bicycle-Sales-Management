@@ -27,11 +27,13 @@
 
 | Status | Số lượng | DEC |
 |---|---:|---|
-| APPROVED | **31** | DEC-001…DEC-031 — **toàn bộ**. DEC-001…DEC-030 chốt ngày 2026-08-07 sau khi người dùng trả lời đủ 17 OPEN QUESTION; DEC-031 thêm ở Phase 2 |
+| APPROVED | **38** | DEC-001…DEC-038 — **toàn bộ**. DEC-001…DEC-030 chốt ngày 2026-08-07 sau khi người dùng trả lời đủ 17 OPEN QUESTION; DEC-031 thêm ở Phase 2; DEC-032…DEC-034 ở Phase 3; DEC-035…DEC-037 ở Phase 4; **DEC-038 ở Phase 5** |
 | PROPOSED | 0 | — |
 | SUPERSEDED | 0 | — |
 | REJECTED | 0 | — |
-| **Tổng** | **31** | DEC-001…DEC-031 |
+| **Tổng** | **38** | DEC-001…DEC-038 |
+
+> Bảng này từng dừng ở `31` trong khi DEC-032…DEC-037 đã tồn tại bên dưới — lệch phát hiện và sửa ở Phase 5 (2026-08-07). Khi thêm DEC mới, **cập nhật cả bảng này**.
 
 ---
 
@@ -696,6 +698,53 @@ Vì sao dọn draft ở `/sales/today` là chỗ đúng, không phải chỗ ch�
 
 **Impact:** `features/report-evening/actions.ts`, `features/report-evening/evening-report-form.tsx`, `features/report-evening/discard-evening-draft.tsx`, `app/(sales)/sales/today/page.tsx`, `lib/reports/draft-keys.ts`, `docs/07 §3.7`, `docs/03 §5.2`, ISSUE-014.
 **Status:** **APPROVED** (technical, có thể veto)
+
+---
+
+## DEC-038
+
+**Date:** 2026-08-07
+**Decision:** Hai chốt chặn của Phase 5 — **ISSUE-008** và phần cài đặt còn để ngỏ của **DEC-025** — đã được người dùng trả lời. Đây là quyết định **làm rõ cách cài đặt**, **không** thay đổi bản chất BR-004, BR-011, BR-014, BR-015, BR-023, BR-024 (Master Spec §71).
+
+**(1) ISSUE-008 — `AchievementResult.percent = null` xảy ra khi nào.**
+`percent: null` mang đúng một nghĩa: **không tồn tại một con số phần trăm có ý nghĩa**. Nó đúng cho **cả hai** trường hợp:
+
+| Trường hợp | `percent` | `status` | Ý nghĩa |
+|---|---|---|---|
+| `target = 0 && actual > 0` | `null` | `EXCEEDED` | Vượt kế hoạch — không có mẫu số để chia |
+| chưa có `actual` | `null` | `PENDING` | Chờ số liệu cuối ngày |
+
+Hai ca phân biệt nhau bằng **`status`**, không bằng `percent`. Hệ quả cụ thể: bỏ chữ "**chỉ**" ở đoạn mô tả `AchievementResult` trong `docs/01`; `getAchievementStatus(null)` trả `'PENDING'` và `calculateAchievement()` **không** ủy quyền cho nó ở nhánh `target = 0 && actual > 0` mà gán thẳng `EXCEEDED` (đúng cảnh báo `docs/08 §3.1.1`).
+
+**(2) DEC-025 — `AchievementResult` mang số vượt tuyệt đối bằng cách nào.**
+`calculateAchievement()` **nhận thêm tham số thứ ba** `metric: KpiMetric` và trả về **cả hai** dạng:
+
+```ts
+type KpiMetric = 'VISIT_POINTS' | 'SALES_QUANTITY' | 'REVENUE' | 'CUSTOMER_VISITS';
+
+calculateAchievement(target: number, actual: number | null, metric: KpiMetric): {
+  percent: number | null;
+  status: AchievementStatus;
+  display: string;          // '83,3%' | '100,0%' | '+3 xe' | '+3.000.000 ₫' | '—'
+  surplus: number | null;   // số vượt THÔ, chỉ khác null khi target = 0 && actual > 0
+}
+```
+
+Kèm theo, `lib/kpi.ts` xuất thêm ba hàm thuần: `formatMetricValue(value, metric)` (nơi DUY NHẤT biết chỉ tiêu nào đi với đơn vị nào), `achievementLabel(result)` (phân biệt nhãn "Vượt mục tiêu" với "Vượt kế hoạch" — BR-015 × BR-023), và `isKpiAchievedDay(results)` (BR-024). Tên bốn hàm đã chốt từ Master Spec §9 — `calculateAchievement`, `getAchievementStatus` — **giữ nguyên**.
+
+**Reason:**
+*(1)* Cách đọc này là cách duy nhất khiến hai phát biểu mâu thuẫn trong `docs/01` cùng đúng mà không phải đổi một BR nào, và nó khớp với case `actual = null` mà `PROJECT_CHECKLIST.md § Phase 5` **bắt buộc** phải có unit test. Nếu chọn ngược lại (`percent` chỉ `null` ở một ca), `calculateAchievement` sẽ không nhận `actual = null` nữa và mỗi nơi hiển thị — bảng đối chiếu, thẻ ảnh 9:16, dashboard Admin — phải tự viết lấy nhánh "chờ số liệu", tức là ba bản sao của cùng một luật.
+*(2)* Đơn vị hiển thị khác nhau theo chỉ tiêu (`xe` / `điểm` / `khách` / VND đầy đủ). Nếu trả số vượt thô rồi để tầng hiển thị tự ghép, cùng một luật format sẽ nằm ở ba nơi và chắc chắn lệch nhau — đúng thứ NFR-012 cấm. Trả **cả** `display` **lẫn** `surplus` giữ được một nguồn duy nhất mà vẫn không ép nơi cần con số phải parse ngược chuỗi.
+
+**Alternatives:**
+*(1a)* Giữ chữ "chỉ", đổi chữ ký thành `actual: number` — bị loại vì đẩy nhánh PENDING ra ba component. *(1b)* Thêm trường `reason: 'NO_TARGET' | 'NO_ACTUAL' | null` — an toàn nhưng trùng thông tin với `status`, kiểu trả về phình ra mà không thêm khả năng nào.
+*(2a)* Trả `surplus` thô, tầng hiển thị tự format — bị loại theo lý do trên. *(2b)* Tách `formatSurplus(surplus, metric)` thành hàm riêng phải gọi ở bước hai — bị loại vì quên bước hai thì ô "Hoàn thành" ra số trần không đơn vị mà **không có lỗi nào báo**.
+
+**Impact:** `lib/kpi.ts` (thân thật), `lib/kpi.test.ts` (46 test **MỚI**), `features/report-comparison/` (thư mục feature **MỚI**: `achievement-table.tsx`, `achievement-badge.tsx`, `report-notes.tsx`), `app/(sales)/sales/today/page.tsx`, `features/report-morning/commitment-summary.tsx` (chú thích), `docs/01 §8.1` + §"Hệ quả cho việc cài đặt", `docs/05 §7`, `docs/08 §3.1` + §3.2, ISSUE-008 (→ CLOSED).
+
+**Ghi chú kèm theo — một hệ quả cố ý, đã khoá bằng test:** BR-014 làm tròn 1 chữ số thập phân ở tầng hiển thị, còn BR-023 xét ngưỡng trên số **chưa** làm tròn. Vì vậy `percent = 99.99` cho `display = '100,0%'` nhưng `status = 'NEAR'` ("Gần đạt"). Cả hai rule đều đang `APPROVED` và chính `PROJECT_CHECKLIST.md § Phase 5` liệt kê `99.99` là case biên bắt buộc. **Đừng "sửa" bằng cách xét ngưỡng trên số đã làm tròn** — đó là thay đổi BR-023 và phải có DEC mới.
+
+**Status:** **APPROVED** (người dùng xác nhận 2026-08-07)
 
 ---
 

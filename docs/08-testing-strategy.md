@@ -114,13 +114,17 @@ Coverage provider: `v8`. Loại trừ khỏi coverage: `types/database.types.ts`
 
 ### 2.4 Cấu trúc thư mục test
 
-`✅` = đã tồn tại và đã chạy xanh ở Phase 2. `⏳` = chưa triển khai, thuộc phase sau.
+`✅` = đã tồn tại và đã chạy xanh. `⏳` = chưa triển khai, thuộc phase sau.
+
+> Số liệu dưới đây **đo lại từng file** ngày 2026-08-07 (Phase 5) bằng `npx vitest run --project <ten> <file>`.
+> Ba con số từng bị ghi nhầm — `currency` 29 (thật: **36**), `constraints` 15 (thật: **16**),
+> `db-functions` 11 (thật: **12**) — đã sửa. Tổng hiện tại: **unit 242 · integration 40 · rls 33 = 315**.
 
 ```text
 lib/
   auth/routes.ts      lib/auth/routes.test.ts     ✅ 14 test
-  kpi.ts              lib/kpi.test.ts             ⏳ Phase 5 — còn chờ ISSUE-008
-  currency.ts         lib/currency.test.ts        ✅ 29 test (kéo lên Phase 3 — DEC-032)
+  kpi.ts              lib/kpi.test.ts             ✅ 46 test (Phase 5 — DEC-038 đã đóng ISSUE-008)
+  currency.ts         lib/currency.test.ts        ✅ 36 test (kéo lên Phase 3 — DEC-032)
   date.ts             lib/date.test.ts            ✅ 33 test (kéo lên Phase 3 — DEC-032)
   reports/today-cta.ts  lib/reports/today-cta.test.ts  ✅ 17 test — ba trạng thái FR-007 + BR-002
   validation/
@@ -130,10 +134,10 @@ lib/
 tests/
   integration/
     setup.ts                        ✅ pool `pg` + auth.admin client + chặn an toàn chỉ-local
-    daily-reports.constraints.test.ts   ✅ 15 test — UNIQUE, CHECK, FK, handle_new_user
+    daily-reports.constraints.test.ts   ✅ 16 test — UNIQUE, CHECK, FK, handle_new_user
     daily-reports.triggers.test.ts      ✅  6 test — guard_report_transition, set_updated_at
     profiles.triggers.test.ts           ✅  6 test — guard_profile_self_update
-    db-functions.test.ts                ✅ 11 test — vn_today, is_admin, is_active_sales, GRANT
+    db-functions.test.ts                ✅ 12 test — vn_today, is_admin, is_active_sales, GRANT
     indexes.test.ts                     ⏳ Phase 11 — EXPLAIN ANALYZE, NFR-002
   rls/
     setup.ts                        ✅ đăng nhập salesA / salesB / admin / inactive bằng JWT thật
@@ -174,19 +178,21 @@ npm run test:db     # tầng 2 + 3 — CẦN `npm run db:start` đang chạy
 
 Bắt buộc theo Master Spec §37 và brief §16. Không test nào ở tầng này được chạm mạng, filesystem, hay Supabase.
 
-### 3.1 `lib/kpi.ts` — `calculateAchievement(target: number, actual: number | null): AchievementResult`
+### 3.1 `lib/kpi.ts` — `calculateAchievement(target: number, actual: number | null, metric: KpiMetric): AchievementResult`
 
-`AchievementResult = { percent: number | null; status: AchievementStatus; display: string }`.
+`AchievementResult = { percent: number | null; status: AchievementStatus; display: string; surplus: number | null }`.
+
+`KpiMetric = 'VISIT_POINTS' | 'SALES_QUANTITY' | 'REVENUE' | 'CUSTOMER_VISITS'` — tham số thứ ba chốt ở **DEC-038**; nó chỉ dùng để dựng chuỗi số vượt tuyệt đối, không tham gia phép tính.
 
 | File under test | Case name | Input | Expected |
 |---|---|---|---|
-| `lib/kpi.ts` | `target=0 & actual=0 → coi là đạt cam kết 100%` | `(0, 0)` | `{ percent: 100, status: 'EXCEEDED', display: '100,0%' }` — BR-015, **phụ thuộc OQ-11** |
-| `lib/kpi.ts` | `target=0 & actual>0 → không NaN, không Infinity, hiển thị dấu gạch` | `(0, 5)` | `{ percent: null, status: 'EXCEEDED', display: '—' }` kèm nhãn phụ `"Vượt kế hoạch"` ở tầng UI — BR-015, **phụ thuộc OQ-11** |
+| `lib/kpi.ts` | `target=0 & actual=0 → coi là đạt cam kết 100%` | `(0, 0)` | `{ percent: 100, status: 'EXCEEDED', display: '100,0%', surplus: null }` — BR-015 **APPROVED** (OQ-11) |
+| `lib/kpi.ts` | `target=0 & actual>0 → không NaN, không Infinity, hiển thị SỐ VƯỢT tuyệt đối` | `(0, 5, 'SALES_QUANTITY')` | `{ percent: null, status: 'EXCEEDED', display: '+5 xe', surplus: 5 }`, `achievementLabel()` cho `"Vượt kế hoạch"` — BR-015 **APPROVED** (OQ-11), DEC-025, DEC-038 |
 | `lib/kpi.ts` | `actual > target → cho phép vượt 100%, không clamp` | `(8, 10)` | `{ percent: 125, status: 'EXCEEDED', display: '125,0%' }` — BR-004, Master Spec §9 |
 | `lib/kpi.ts` | `actual < target` | `(10, 8)` | `{ percent: 80, status: 'NEAR', display: '80,0%' }` — BR-014, Master Spec §9 |
 | `lib/kpi.ts` | `actual = target` | `(10, 10)` | `{ percent: 100, status: 'EXCEEDED', display: '100,0%' }` — BR-023 |
 | `lib/kpi.ts` | `actual = null → chưa có số liệu cuối ngày` | `(10, null)` | `{ percent: null, status: 'PENDING', display: '—' }` — BR-023 "Chờ số liệu"; xem cảnh báo §3.1.1 |
-| `lib/kpi.ts` | `vượt rất xa vẫn không clamp, không tràn định dạng` | `(1, 125)` | `{ percent: 12500, status: 'EXCEEDED', display: '12500,0%' }` — BR-004; đối chiếu §11 brief "achievement 4 chữ số" |
+| `lib/kpi.ts` | `vượt rất xa vẫn không clamp, không tràn định dạng` | `(1, 125)` | `{ percent: 12500, status: 'EXCEEDED', display: '12.500,0%' }` — BR-004; `vi-VN` phân nhóm nghìn nên có dấu `.`, khớp `docs/05 §7.3` (`1.250,0%`) |
 | `lib/kpi.ts` | `kết quả không bao giờ là NaN` | `(0, 0)`, `(0, 7)`, `(10, null)` | `Number.isNaN(result.percent)` là `false` với mọi input; `display` không chứa chuỗi `'NaN'` — Master Spec §9, §25 |
 | `lib/kpi.ts` | `kết quả không bao giờ là Infinity` | `(0, 1)` | `Number.isFinite(result.percent) || result.percent === null` là `true`; `display` không chứa `'∞'` hay `'Infinity'` — Master Spec §9, §25 |
 | `lib/kpi.ts` | `làm tròn 1 chữ số thập phân ở display, không làm tròn ở percent` | `(3, 1)` | `percent ≈ 33.3333…` (giá trị thô), `display === '33,3%'` — BR-014 |
@@ -194,14 +200,22 @@ Bắt buộc theo Master Spec §37 và brief §16. Không test nào ở tầng n
 | `lib/kpi.ts` | `doanh thu bigint lớn không mất chính xác ở mức hiển thị` | `(100000000000, 99999999999)` | `display === '100,0%'` (làm tròn 1 chữ số từ `99.999999999`); `percent` giữ giá trị thô — BR-017 |
 | `lib/kpi.ts` | `hàm là pure, không phụ thuộc thời gian` | gọi cùng input 2 lần cách nhau bởi `vi.setSystemTime` khác | Hai kết quả bằng nhau — BR-011 |
 
-#### 3.1.1 Hai mâu thuẫn cần chốt trước khi viết test này
+#### 3.1.1 Hai mâu thuẫn — ✅ ĐÃ CHỐT ngày 2026-08-07 (DEC-038, ISSUE-008 CLOSED)
 
-Đây là ghi nhận, **không phải quyết định**. Hai điểm dưới đây làm cho một số ô "Expected" ở trên chưa thể coi là chốt:
+Giữ nguyên phần ghi nhận dưới đây làm vết lịch sử. **Cả hai đều đã được người dùng trả lời**, và câu trả lời trùng với đề xuất mặc định — nên bảng §3.1 ở trên **không phải viết lại**, chỉ bổ sung tham số `metric` và trường `surplus`:
 
 - Brief §8 viết `percent: null` **chỉ** xảy ra ở trường hợp `target=0 && actual>0`. Nhưng trường hợp `actual = null` (chưa nhập báo cáo cuối ngày) cũng không thể có `percent` là số hợp lệ. Đề xuất giải quyết: cho phép `percent: null` ở **cả hai** trường hợp và phân biệt chúng bằng `status` (`'EXCEEDED'` vs `'PENDING'`). Ghi thành sub-bullet của **OQ-11**.
 - `getAchievementStatus(null)` theo BR-023 trả `'PENDING'` ("Chờ số liệu"). Nhưng trường hợp `target=0 && actual>0` cũng có `percent === null` mà nhãn nghiệp vụ là "Vượt kế hoạch". Vì vậy `calculateAchievement` **không được** ủy quyền mù quáng cho `getAchievementStatus(percent)` ở nhánh này mà phải tự đặt `status`. Ghi thành sub-bullet của **OQ-11**.
 
-Nếu OQ-11 được trả lời khác đề xuất mặc định (ví dụ `target=0 & actual=0` bị coi là `0%` hoặc là "không áp dụng"), thì **6 dòng đầu của bảng §3.1 phải viết lại**, và mọi nơi tổng hợp % ở Admin (FR-024, FR-028, AF-05, AF-06) cũng đổi theo.
+~~Nếu OQ-11 được trả lời khác đề xuất mặc định…~~ — **không xảy ra.** OQ-11 đã trả lời đúng theo đề xuất: `percent: null` cho **cả hai** ca, phân biệt bằng `status`; và `calculateAchievement` **tự đặt** `status = 'EXCEEDED'` ở nhánh `target = 0 && actual > 0` thay vì ủy quyền cho `getAchievementStatus(null)`. Cả hai điều này đã có test khoá lại trong `lib/kpi.test.ts`.
+
+**Ba nhóm case bổ sung ở Phase 5** (ngoài bảng §3.1, cùng file test):
+
+| Nhóm | Nội dung |
+|---|---|
+| `formatMetricValue` | 4 đơn vị (`điểm` / `xe` / `khách` / VND đầy đủ), giá trị `0`, phân nhóm nghìn (`1.500 xe`), `null` → `'—'`, đầu vào hỏng → `'—'` |
+| `achievementLabel` | Phân biệt `"Vượt mục tiêu"` (target thật, ≥100%) với `"Vượt kế hoạch"` (`target = 0 && actual > 0`); ba nhãn còn lại theo BR-023 |
+| `isKpiAchievedDay` | BR-024 — cả 4 `EXCEEDED` → `true`; một `NEAR` hoặc một `PENDING` → `false`; hai ca `target = 0` đều tính là đạt; **không đủ 4 chỉ tiêu → `false`** |
 
 ### 3.2 `lib/kpi.ts` — `getAchievementStatus(pct: number | null): 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING'`
 

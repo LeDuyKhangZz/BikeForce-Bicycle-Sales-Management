@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 4 (9/10 mục — mục cuối là E2E Playwright, thuộc Phase 11) | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 5 (ĐÃ ĐÓNG 11/11 mục) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -37,7 +37,7 @@ phương án ở OQ-18 / ISSUE-013**. Không chặn Phase 5.
 - [x] Phase 2 — Database & Auth
 - [ ] Phase 3 — Morning Report *(13/14 — chờ OQ-18)*
 - [ ] Phase 4 — Evening Report *(9/10 — mục cuối là E2E Playwright, thuộc Phase 11)*
-- [ ] Phase 5 — KPI Engine
+- [x] Phase 5 — KPI Engine
 - [ ] Phase 6 — 9:16 Image Export
 - [ ] Phase 7 — Sales History
 - [ ] Phase 8 — Admin Dashboard
@@ -762,6 +762,144 @@ trả lời OQ-18 (ISSUE-013).
 `calculateAchievement()`** — `docs/01` đang mâu thuẫn nội bộ về khi nào `AchievementResult.percent
 = null`, và DEC-025 còn để ngỏ cách mang **số vượt tuyệt đối + đơn vị**. Viết code trước rồi chốt
 sau là cách chắc chắn nhất để phải viết lại cả `lib/kpi.ts` lẫn bộ test của nó.
+
+---
+
+### Entry 008
+
+**Date:** 2026-08-07
+**Phase:** PHASE 5 — KPI Engine (**ĐÓNG ĐỦ 11/11 mục**)
+
+**Completed:**
+
+1. **Chốt hai chốt chặn của Phase 5 với người dùng TRƯỚC khi viết dòng code đầu tiên** — đúng thứ
+   tự mà `SESSION_CHECKPOINT.md` yêu cầu. Câu trả lời ghi thành **DEC-038**:
+   - **ISSUE-008** — `AchievementResult.percent = null` mang đúng một nghĩa "*không tồn tại một con
+     số phần trăm có ý nghĩa*", đúng cho **cả hai** ca (`target = 0 && actual > 0` thành `EXCEEDED`;
+     chưa có `actual` thành `PENDING`). Hai ca phân biệt nhau bằng **`status`**, không bằng
+     `percent`. Hệ quả: bỏ chữ "**chỉ**" trong `docs/01`. **Bản chất BR-015 không đổi**
+     (Master Spec §71).
+   - **DEC-025 (phần cài đặt)** — `calculateAchievement()` nhận thêm tham số thứ ba
+     `metric: KpiMetric` và trả về **cả** chuỗi đã format (`display`) **lẫn** số vượt thô
+     (`surplus`). Bảng ánh xạ chỉ tiêu sang đơn vị chỉ tồn tại trong `lib/kpi.ts`.
+
+2. **`lib/kpi.ts` — thân thật, thay cho khung ném lỗi từ Phase 1.** Xuất 5 hàm thuần:
+   `calculateAchievement(target, actual, metric)`, `getAchievementStatus(pct)` (tên đã chốt từ
+   Master Spec §9, **giữ nguyên**), cộng ba hàm mới của DEC-038: `formatMetricValue(value, metric)`
+   (nơi DUY NHẤT biết `xe` / `điểm` / `khách` / VND), `achievementLabel(result)` (phân biệt
+   "Vượt mục tiêu" với "Vượt kế hoạch" — BR-015 và BR-023), `isKpiAchievedDay(results)` (BR-024).
+   Không clamp (BR-004); `percent` giữ giá trị **thô**, làm tròn 1 chữ số thập phân **chỉ** ở
+   `display` (BR-014); đầu vào không dùng được trả `PENDING` + `'—'` thay vì ném lỗi (cùng triết lý
+   DEC-033).
+
+3. **`lib/kpi.test.ts` — 46 test, tất cả PASS.** Phủ đủ bảng biên `docs/08 §3.1` và `§3.2`, cộng
+   `formatMetricValue` / `achievementLabel` / `isKpiAchievedDay`. Có một bài **quét lưới 288 tổ hợp**
+   (8 target x 9 actual x 4 metric, gồm `NaN`, `±Infinity`, số âm) khẳng định bất biến BR-015:
+   `percent` luôn `null` hoặc hữu hạn, và `display` không bao giờ chứa `'NaN'` / `'Infinity'` /
+   `'∞'` / `'undefined'`.
+
+4. **`features/report-comparison/` — thư mục feature MỚI**, dựng bảng đối chiếu DEC-019:
+   - `achievement-table.tsx` — 4 chỉ tiêu, **hai chế độ**: 4 card xếp dọc ở dưới 768px, `<table>`
+     THẬT có `<caption>` và `<th scope="row">` từ 768px. Component không tính và không format gì.
+   - `achievement-badge.tsx` — ánh xạ `status` sang tone + icon Lucide (`TrendingUp` / `Minus` /
+     `TrendingDown` / `Clock`). **Ngưỡng và nhãn** vẫn thuộc `lib/kpi.ts`; component chỉ giữ phần
+     trình bày, đúng chú thích đầu `components/ui/badge.tsx`.
+   - `report-notes.tsx` — phần CHỮ (tuyến kế hoạch / mục đích / tuyến thực tế / ghi chú cuối ngày),
+     tách khỏi bảng để không phá cấu trúc `<table>`.
+
+5. **`/sales/today` thay danh sách cam kết một cột bằng bảng đối chiếu.** Ở trạng thái
+   `MORNING_SUBMITTED`, cột "Thực đạt" là `'—'` kèm badge "Chờ số liệu" — đúng `docs/05 §7.3` dòng
+   1. Card giữ chỗ "Bảng đối chiếu … nằm ở màn hình chi tiết báo cáo" đã bị xoá vì bảng nay có thật
+   ngay tại đây. `CommitmentSummary` **giữ nguyên** và chỉ còn phục vụ `/sales/today/evening`.
+
+6. **Đo coverage thật lần đầu của dự án** bằng `npm run test:coverage` (provider v8).
+
+**Files Changed:**
+
+| File | Loại |
+|---|---|
+| `lib/kpi.ts` | sửa — thay khung ném lỗi bằng thân thật |
+| `lib/kpi.test.ts` | **tạo mới** — 46 test |
+| `features/report-comparison/achievement-table.tsx` | **tạo mới** |
+| `features/report-comparison/achievement-badge.tsx` | **tạo mới** |
+| `features/report-comparison/report-notes.tsx` | **tạo mới** |
+| `app/(sales)/sales/today/page.tsx` | sửa — dùng `AchievementTable` + `ReportNotes` |
+| `features/report-morning/commitment-summary.tsx` | sửa — chỉ chú thích, làm rõ nó **không** phải bảng đối chiếu |
+| `docs/01-business-analysis.md` | sửa — §8.1 chữ ký hàm, đoạn mô tả `AchievementResult`, §"Hệ quả cho việc cài đặt" |
+| `docs/05-ui-ux-design.md` | sửa — §7 trạng thái triển khai, §7.3 nguồn sinh chuỗi và icon |
+| `docs/08-testing-strategy.md` | sửa — §3.1 chữ ký 3 tham số, 3 ô Expected lỗi thời, §3.1.1 đã chốt |
+| `docs/11-decisions.md` | sửa — **thêm DEC-038**, sửa bảng tra nhanh `31` thành `38` |
+| `docs/12-known-issues.md` | sửa — **ISSUE-008 chuyển CLOSED** kèm kết quả kiểm chứng thật |
+| `CLAUDE.md` · `PROJECT_CHECKLIST.md` · `SESSION_CHECKPOINT.md` · `WORKLOG.md` | sửa — đồng bộ trạng thái |
+
+**Tests:**
+
+| Lệnh | Kết quả thật |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
+| `npm run build` | ✅ exit 0 — Next.js 16.3.0, Turbopack, 7 route |
+| `npm test` | ✅ **315 passed / 315**, 14 test file |
+| `npx vitest run --project unit` | ✅ **242 passed** |
+| `npx vitest run --project integration` | ✅ **40 passed** |
+| `npx vitest run --project rls` | ✅ **33 passed** |
+| `npx vitest run --project unit lib/kpi.test.ts` | ✅ **46 passed** |
+| `npm run test:coverage` | ✅ `lib/**` — stmt **98,57%** · branch **99,01%** · func **96,43%** · lines **99,11%**; `lib/kpi.ts` **100%** cả bốn cột |
+| Kiểm chứng Chromium 375px + 1440px (script dùng-một-lần, đã xoá) | ✅ **36/36 PASS** |
+| E2E Playwright / a11y / Lighthouse | ❌ `N/A — chưa có playwright.config.ts` |
+
+Chi tiết 36 phép kiểm trình duyệt: 4 card ở 375px với `<table>` bị ẩn · `<table>` thật ở 1440px với
+card bị ẩn, có `<caption>` và 4 `<th scope="row">` · số liệu hai chế độ **khớp nhau** · thứ tự 4 chỉ
+tiêu đúng `docs/05 §7.1` · ba tình huống `docs/05 §7.3` (chờ số liệu ra `'—'` kèm "Chờ số liệu";
+`target=0 & actual=0` ra `'100,0%'` kèm "Vượt mục tiêu"; `target=0 & actual>0` ra `'+7 xe'` kèm
+"Vượt kế hoạch") · **không cuộn ngang** ở cả hai bề rộng · không trang nào chứa `NaN` / `Infinity` /
+`∞` / `undefined` trong text đã render.
+
+**Errors:**
+
+1. **Script kiểm chứng đọc DOM quá sớm — suýt kết luận sai về code.** Lần chạy đầu cho `27/36`, các
+   phép kiểm của hai tài khoản `COMPLETED` đều FAIL trong khi cùng dữ liệu đó lại PASS ở 1440px.
+   Nguyên nhân: `waitForLoadState('networkidle')` bắn **trước khi React render xong**, nên
+   `document.querySelector` trả `null` và mọi assertion sau đó sai một cách âm thầm. Sửa bằng
+   `waitForSelector('h1')` cộng `waitForSelector('table', { state: 'attached' })`. **Bài học cho
+   session sau: một script kiểm chứng đọc DOM phải chờ PHẦN TỬ THẬT, không chờ mạng.**
+2. **Phép kiểm `'undefined'` ban đầu là phép kiểm sai.** `page.textContent('body')` gộp cả nội dung
+   thẻ `<script>` chứa RSC flight payload của Next — payload đó **luôn** chứa chuỗi `$undefined`.
+   Đổi sang `page.innerText('body')` (chỉ text đã render) thì phép kiểm mới có nghĩa.
+3. **Phát hiện lệch số liệu test trong tài liệu (đã sửa).** `SESSION_CHECKPOINT.md` và
+   `PROJECT_CHECKLIST.md` ghi `unit 189 · integration 47 · rls 33`. Tổng `269` **đúng**, nhưng cách
+   chia **sai**: đo lại từng project cho `unit 196 · integration 40 · rls 33`. Nguồn lệch là
+   `lib/currency.test.ts` có **36** test chứ không phải 29 — và `git diff HEAD` xác nhận file này
+   **chưa từng bị sửa** kể từ Phase 3, tức con số 29 vốn đã sai chứ không phải mới lệch. Đã sửa ở cả
+   hai file cộng `docs/08 §2.4`. Theo CLAUDE.md §4, ghi lại đây thay vì âm thầm chọn một bên.
+4. **Bảng tra nhanh của `docs/11` đứng yên ở `31`** trong khi DEC-032 đến DEC-037 đã tồn tại bên
+   dưới. Đã sửa thành `38` và ghi chú nhắc cập nhật bảng khi thêm DEC mới.
+5. **Fixture `target = 0` phải dựng tay.** Seed không có báo cáo `target = 0` cho **ngày hôm nay**,
+   mà BR-015 chỉ hiển thị được ở báo cáo hôm nay. Đã `update` tạm trên database **local** cho
+   `sales.b` (`target_visit_points = 0`, `actual_visit_points = 0`, `target_sales_quantity = 0`),
+   kiểm chứng xong thì **khôi phục nguyên trạng** (`3` / `4` / `6`) và xác nhận lại bằng `select`.
+6. **Trạng thái seed đã khác `SESSION_CHECKPOINT.md`.** Checkpoint ghi `sales.c` chưa có báo cáo /
+   `sales.a` `MORNING_SUBMITTED` / `sales.b` `COMPLETED`; thực tế hôm nay là `sales.c`
+   `MORNING_SUBMITTED` / `sales.a` và `sales.b` đều `COMPLETED` — do chính các phiên kiểm chứng tay
+   trước đó ghi vào. Không phải bug; đã cập nhật lại mô tả fixture trong checkpoint.
+
+**Decisions:** **DEC-038** (chốt ISSUE-008: `percent = null` đúng cho cả hai ca, phân biệt bằng
+`status`; và chốt cách cài đặt DEC-025: `calculateAchievement` nhận `metric`, trả cả `display` lẫn
+`surplus`; kèm ghi chú về hệ quả cố ý `99.99` ra `'100,0%'` nhưng status `NEAR`).
+
+**Remaining:** Không còn mục nào của Phase 5. Ba việc treo từ trước **không thuộc Phase 5**: E2E
+Playwright (mục cuối Phase 4, thuộc Phase 11) · rotate service role key (ISSUE-011) · trả lời OQ-18
+(ISSUE-013). Riêng `getVietnamMonthRange()` **vẫn cố ý là khung ném lỗi** — nó phục vụ FR-021 và
+FR-028 nên thuộc Phase 7/9; việc Phase 5 đóng không có nghĩa hàm đó đã xong.
+
+**Next:** **PHASE 6 — Xuất ảnh 9:16.** Bắt đầu bằng Route Handler
+`app/api/reports/[id]/share-image/route.ts` dùng `ImageResponse` (Satori) sinh PNG **1080x1920**
+(FR-018, DEC-010), gác `status = 'COMPLETED'` trước khi render (BR-002), nhúng font `.ttf` có đủ dấu
+tiếng Việt đọc bằng `fs` ở Node runtime (ISSUE-002). Thẻ
+`features/report-share/DailyReportShareCard.tsx` **phải gọi lại** `calculateAchievement()` /
+`formatMetricValue()` / `achievementLabel()` của `lib/kpi.ts` — không tự tính `%`, không tự ghép đơn
+vị (NFR-012). Xong route mới xoá cờ `EXPORT_IMAGE_NOT_READY` trong
+`app/(sales)/sales/today/page.tsx`.
 
 ---
 

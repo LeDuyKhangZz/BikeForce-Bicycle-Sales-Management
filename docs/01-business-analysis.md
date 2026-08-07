@@ -331,7 +331,10 @@ Công thức KPI, format tiền và ngày nghiệp vụ **chỉ tồn tại ở 
 
 | Module (đề xuất, chưa triển khai) | Hàm | Trách nhiệm |
 |---|---|---|
-| `lib/kpi.ts` | `calculateAchievement(target: number, actual: number \| null): AchievementResult` | BR-004, BR-014, BR-015 |
+| `lib/kpi.ts` | `calculateAchievement(target: number, actual: number \| null, metric: KpiMetric): AchievementResult` | BR-004, BR-014, BR-015 |
+| `lib/kpi.ts` | `formatMetricValue(value: number \| null, metric: KpiMetric): string` → `8` ⇒ `8 điểm`; `150000000` ⇒ `150.000.000 ₫` | BR-015, DEC-025 |
+| `lib/kpi.ts` | `achievementLabel(result: AchievementResult): string` → `'Vượt mục tiêu'` / `'Vượt kế hoạch'` / `'Gần đạt'` / `'Chưa đạt'` / `'Chờ số liệu'` | BR-015, BR-023 |
+| `lib/kpi.ts` | `isKpiAchievedDay(results: readonly AchievementResult[]): boolean` | BR-024 |
 | `lib/kpi.ts` | `getAchievementStatus(pct: number \| null): 'EXCEEDED' \| 'NEAR' \| 'MISSED' \| 'PENDING'` | BR-023 |
 | `lib/currency.ts` | `formatCurrencyVND(value: number): string` → `125000000` ⇒ `125.000.000 ₫` | BR-010 |
 | `lib/currency.ts` | `parseCurrencyInput(raw: string): number \| null` | BR-006, BR-010 |
@@ -339,7 +342,11 @@ Công thức KPI, format tiền và ngày nghiệp vụ **chỉ tồn tại ở 
 | `lib/date.ts` | `formatVietnamDate(date: string): string` → `Thứ Sáu, 07/08/2026` | Hiển thị |
 | `lib/date.ts` | `getVietnamMonthRange(yyyyMM: string): { from: string; to: string }` | FR-021, FR-028 |
 
-`AchievementResult = { percent: number | null; status: AchievementStatus; display: string }`. `percent: null` **chỉ** xảy ra ở trường hợp `target = 0 && actual > 0` (BR-015); `display` là chuỗi đã format sẵn (`'80,0%'` / `'125,0%'` / `'—'`).
+`AchievementResult = { percent: number | null; status: AchievementStatus; display: string; surplus: number | null }`.
+
+`percent: null` mang đúng một nghĩa — **không tồn tại một con số phần trăm có ý nghĩa** — và xảy ra ở **cả hai** trường hợp: `target = 0 && actual > 0` (vượt kế hoạch) và **chưa có `actual`** (chờ số liệu). Hai trường hợp này phân biệt nhau bằng **`status`** (`EXCEEDED` vs `PENDING`), không bằng `percent`. `display` là chuỗi đã format sẵn (`'80,0%'` / `'125,0%'` / `'+3 xe'` / `'—'`); `surplus` là số vượt tuyệt đối THÔ, chỉ khác `null` ở đúng ca `target = 0 && actual > 0`.
+
+> Câu chữ ở đoạn này trước đây nói `percent: null` "**chỉ**" xảy ra khi `target = 0 && actual > 0`, mâu thuẫn với bảng 4 dòng ở §"Hệ quả cho việc cài đặt `lib/kpi.ts`". Người dùng đã chốt cách đọc ngày `2026-08-07` — xem **DEC-038** và **ISSUE-008 (CLOSED)**. Bản chất **BR-015 không đổi**.
 
 ---
 
@@ -763,18 +770,22 @@ Sáu business rule trước đây bị treo nay đã chốt — **được phép
 
 1. **AF-12 (audit log) chưa cần** — vì OQ-04 và OQ-05 đều trả lời "không được sửa". Nếu sau này mở quyền sửa, **bắt buộc làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
 
-### Hệ quả cho việc cài đặt `lib/kpi.ts` (Phase 5)
+### Hệ quả cho việc cài đặt `lib/kpi.ts` (Phase 5 — ✅ ĐÃ TRIỂN KHAI 2026-08-07)
 
 `AchievementResult` phải mang đủ thông tin để tầng hiển thị dựng được cả ba dạng ô "Hoàn thành", **không component nào được tự tính lại**:
 
-| Tình huống | `percent` | Hiển thị | Status |
-|---|---|---|---|
-| `target > 0` | `actual / target × 100` | `83,3%` | theo BR-023 |
-| `target = 0`, `actual = 0` | `100` | `100,0%` | `EXCEEDED` |
-| `target = 0`, `actual > 0` | `null` | `+3 xe` / `+3.000.000 ₫` | `EXCEEDED`, nhãn "Vượt kế hoạch" |
-| chưa có `actual` | `null` | `—` | `PENDING` |
+| Tình huống | `percent` | `display` | `surplus` | Status |
+|---|---|---|---|---|
+| `target > 0` | `actual / target × 100` | `83,3%` | `null` | theo BR-023 |
+| `target = 0`, `actual = 0` | `100` | `100,0%` | `null` | `EXCEEDED` |
+| `target = 0`, `actual > 0` | `null` | `+3 xe` / `+3.000.000 ₫` | `actual` | `EXCEEDED`, nhãn "Vượt kế hoạch" |
+| chưa có `actual` | `null` | `—` | `null` | `PENDING` |
 
 Đơn vị hiển thị theo từng chỉ tiêu: **xe** (doanh số) · **điểm** (viếng thăm) · **khách** (khách hàng) · **định dạng VND đầy đủ** qua `formatCurrencyVND` (doanh thu — không rút gọn thành `3tr`).
+
+**Cách cài đặt đã chốt (DEC-038):** `calculateAchievement()` nhận thêm tham số `metric: KpiMetric` (`'VISIT_POINTS' | 'SALES_QUANTITY' | 'REVENUE' | 'CUSTOMER_VISITS'`) và **tự dựng** chuỗi số vượt tuyệt đối; bảng ánh xạ chỉ tiêu → đơn vị chỉ tồn tại trong `lib/kpi.ts` (NFR-012). `surplus` giữ con số thô để thẻ ảnh 9:16 (Phase 6) và tổng hợp của Admin (Phase 9) không phải parse ngược từ chuỗi.
+
+**Một hệ quả cố ý cần biết:** BR-014 làm tròn 1 chữ số thập phân ở tầng hiển thị, còn BR-023 xét ngưỡng trên số **chưa** làm tròn. Vì vậy `percent = 99.99` hiện `'100,0%'` nhưng badge vẫn là "Gần đạt". Đây là hành vi đúng theo cả hai rule đang `APPROVED` và đã có unit test khoá lại — muốn đổi phải sửa BR-023 bằng một DEC mới.
 
 ---
 

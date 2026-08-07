@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 4 (9/10) → sẵn sàng Phase 5 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 5 (ĐÃ ĐÓNG 11/11) → sẵn sàng Phase 6 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -10,25 +10,25 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 4 — Evening Report` — **9/10 mục `[x]`** (2026-08-07).
-Phase 0, Phase 1, Phase 2 đã đóng. Phase 3 còn 1 mục treo chờ người dùng (OQ-18).
+**Current Phase:** `PHASE 5 — KPI Engine` — **ĐÃ ĐÓNG, 11/11 mục `[x]`** (2026-08-07).
+Phase 0, Phase 1, Phase 2 đã đóng. Phase 3 còn 1 mục treo chờ người dùng (OQ-18); Phase 4 còn 1 mục
+chờ bộ E2E của Phase 11.
 
-**Current Task:** **Bắt đầu PHASE 5 — KPI Engine.**
+**Current Task:** **Bắt đầu PHASE 6 — Xuất ảnh 9:16 (FR-018, DEC-010).**
 
-> 🛑 **PHASE 5 CÓ MỘT VIỆC PHẢI LÀM TRƯỚC KHI GÕ DÒNG CODE ĐẦU TIÊN: chốt ISSUE-008.**
-> `docs/01` đang **mâu thuẫn nội bộ** về việc khi nào `AchievementResult.percent = null`, và
-> **DEC-025** còn để ngỏ cách `AchievementResult` mang **số vượt tuyệt đối + đơn vị**
-> (`+3 xe`, `+3.000.000 ₫`). Viết thân `calculateAchievement()` trước rồi chốt sau là cách chắc
-> chắn nhất để phải viết lại cả `lib/kpi.ts` lẫn toàn bộ test của nó.
-> `lib/kpi.ts` hiện **vẫn cố ý ném lỗi** — đó không phải việc chưa làm xong, đó là chốt chặn.
+> ✅ **Hai chốt chặn của Phase 5 đã ĐÓNG.** Người dùng trả lời ngày 2026-08-07, ghi thành
+> **DEC-038**: (1) `AchievementResult.percent = null` đúng cho **cả hai** ca, phân biệt bằng
+> `status`; (2) `calculateAchievement()` nhận thêm tham số `metric` và trả về **cả** `display` đã
+> format **lẫn** `surplus` thô. `lib/kpi.ts` nay **có thân thật** và là nguồn duy nhất của công
+> thức KPI — Phase 6 phải **gọi lại** nó, không tự tính `%` và không tự ghép đơn vị (NFR-012).
 
-> ⏳ **Hai việc chờ người dùng, KHÔNG chặn Phase 5:**
+> ⏳ **Hai việc chờ người dùng, KHÔNG chặn Phase 6:**
 > 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
 > 2. **OQ-18 / ISSUE-013** — NFR-008 đặt "≤ 6 lần chạm" nhưng FR-008 có 5 trường bắt buộc nên sàn
 >    lý thuyết là 7; đo thật **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18`.
 >    **Đừng tự chọn hộ**, và **đừng bỏ bớt trường bắt buộc** để ép con số xuống.
 
-**Phase 3 + Phase 4 đã làm được gì (tóm tắt cho session mới):**
+**Phase 3 + Phase 4 + Phase 5 đã làm được gì (tóm tắt cho session mới):**
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -36,8 +36,14 @@ Phase 0, Phase 1, Phase 2 đã đóng. Phase 3 còn 1 mục treo chờ người 
 | `/sales/today/morning` | ✅ UC-04 (tạo) + UC-05 (sửa) — cùng một form, hai Server Action |
 | `/sales/today/evening` | ✅ **FR-013 + FR-014 thật (Phase 4)** — đối chiếu cam kết sáng + 6 ô thực đạt + `status → COMPLETED` |
 | `lib/date.ts` · `lib/currency.ts` | ✅ Triển khai thật (DEC-032). **`getVietnamMonthRange` vẫn là khung** — Phase 7 |
-| `lib/kpi.ts` | ❌ **Vẫn là khung ném lỗi** — bị ISSUE-008 chặn, Phase 5. Phase 3 và 4 cố ý không hiển thị `%` nào |
-| Test | ✅ **269/269** (189 unit · 47 integration · 33 RLS) |
+| `lib/kpi.ts` | ✅ **Thân thật (Phase 5)** — 5 hàm thuần, 46 unit test, **coverage 100%** cả bốn cột |
+| Bảng đối chiếu 4 chỉ tiêu | ✅ **`features/report-comparison/` (Phase 5)** — 4 card ở < 768px, `<table>` thật từ 768px (DEC-019), gắn ở `/sales/today` |
+| Test | ✅ **315/315** (**242** unit · **40** integration · 33 RLS) |
+
+> ⚠ **Sửa số liệu:** checkpoint này trước đây ghi `189 unit · 47 integration`. Tổng `269` **đúng**
+> nhưng cách chia **sai** — con số thật trước Phase 5 là `196 · 40 · 33`. Nguồn lệch:
+> `lib/currency.test.ts` có **36** test chứ không phải 29, và file đó chưa từng bị sửa từ Phase 3.
+> Đo lại bằng `npx vitest run --project <ten>`. Chi tiết ở `WORKLOG.md` Entry 008 mục Errors 3.
 
 **Supabase cloud đã nối xong:**
 
@@ -127,29 +133,42 @@ cấu trúc DEC-023; 3 Supabase client + `lib/env.ts`; design token DEC-014; fon
 - **Kiểm chứng bằng công cụ thật**: typecheck/lint/build exit 0 · `npm test` **269/269** ·
   Chromium **62/62** (cuối ngày) và **11/11** (hồi quy luồng sáng) ở 375px và 1440px.
 
+### Phase 5 (2026-08-07) — chi tiết ở `WORKLOG.md` Entry 008
+
+- **Chốt hai chốt chặn TRƯỚC khi viết code** — ISSUE-008 và phần cài đặt còn để ngỏ của DEC-025,
+  ghi thành **DEC-038**. ISSUE-008 nay `CLOSED`.
+- **`lib/kpi.ts` có thân thật**, thay khung ném lỗi từ Phase 1. Năm hàm thuần:
+  `calculateAchievement(target, actual, metric)` · `getAchievementStatus(pct)` ·
+  `formatMetricValue(value, metric)` · `achievementLabel(result)` · `isKpiAchievedDay(results)`.
+- **`lib/kpi.test.ts` — 46 test**, gồm một bài quét lưới **288 tổ hợp** khoá bất biến BR-015
+  (không bao giờ `NaN` / `Infinity` / `∞`).
+- **`features/report-comparison/` — feature MỚI**: `achievement-table.tsx` (hai chế độ hiển thị
+  DEC-019) · `achievement-badge.tsx` (status → tone + icon Lucide) · `report-notes.tsx` (phần chữ).
+- **`/sales/today`** thay danh sách cam kết một cột bằng bảng đối chiếu thật.
+- **Kiểm chứng bằng công cụ thật**: typecheck/lint/build exit 0 · `npm test` **315/315** ·
+  `npm run test:coverage` → `lib/**` stmt **98,57%** / branch **99,01%** / lines **99,11%** ·
+  Chromium **36/36** ở 375px và 1440px.
+
 ---
 
 ## Currently Working On
 
-**Không có công việc code nào đang dở.** Phase 4 đã dừng ở một trạng thái sạch: mọi thứ đã viết đều
+**Không có công việc code nào đang dở.** Phase 5 đã dừng ở một trạng thái sạch: mọi thứ đã viết đều
 đã chạy thật và đã có test.
 
 ---
 
 ## Not Started
 
-- **Phase 5 → Phase 12:** chưa bắt đầu. Chưa có `lib/kpi.ts` thật, chưa có bảng đối chiếu `%`, chưa
-  có route handler ảnh, chưa có màn hình Admin thật, chưa có lịch sử báo cáo.
+- **Phase 6 → Phase 12:** chưa bắt đầu. Chưa có route handler ảnh 9:16, chưa có màn hình Admin
+  thật, chưa có lịch sử báo cáo, chưa có màn hình chi tiết `/sales/reports/[id]`.
 - **Test còn thiếu:** `playwright.config.ts` và toàn bộ `e2e/*.spec.ts` (Phase 11);
-  `tests/integration/indexes.test.ts` với `EXPLAIN ANALYZE` (Phase 11); unit test cho `lib/kpi`
-  (Phase 5, còn chờ ISSUE-008).
+  `tests/integration/indexes.test.ts` với `EXPLAIN ANALYZE` (Phase 11).
 
 **Những thứ Phase 3 + Phase 4 CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
 
 | Thứ chưa làm | Thuộc phase | Vì sao chưa làm |
 |---|---|---|
-| Thân `lib/kpi.ts` (`calculateAchievement`, `getAchievementStatus`) | Phase 5 | Bị **ISSUE-008** chặn thật. Phase 3 và 4 cố ý **không hiển thị `%` nào** — màn hình cuối ngày chỉ NHẬP số |
-| Bảng đối chiếu Cam kết ↔ Thực đạt kèm `%` | Phase 5 | Cần `lib/kpi.ts`. `CommitmentSummary` hiện chỉ có cột "Cam kết" |
 | `getVietnamMonthRange()` | Phase 7 / 9 | Chỉ phục vụ filter tháng FR-021/FR-028; hành vi với chuỗi sai định dạng chưa chốt |
 | Nút "Xuất ảnh" hoạt động thật | Phase 6 | Nút đã render nhưng luôn `disabled`; cờ `EXPORT_IMAGE_NOT_READY` đánh dấu chỗ phải xoá |
 | `/sales/reports/[id]` | Phase 7 | CTA "Xem báo cáo hôm nay" render **disabled**; tập `CTA_ROUTES_NOT_READY` đánh dấu chỗ phải xoá |
@@ -164,7 +183,7 @@ cấu trúc DEC-023; 3 Supabase client + `lib/env.ts`; design token DEC-014; fon
 
 ## Known Issues
 
-Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 10 OPEN, 4 đã CLOSED.**
+Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 9 OPEN, 5 đã CLOSED.**
 
 | ID | Sev | Status | Nội dung |
 |---|---|---|---|
@@ -175,7 +194,7 @@ Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 10 OPEN, 4 đã CL
 | ISSUE-005 | P3 | OPEN | `is_admin()` thêm một truy vấn `profiles` mỗi câu lệnh. Đã viết dạng `(select public.is_admin())`; **chưa đo `EXPLAIN`** → Phase 11 |
 | ISSUE-006 | P3 | **CLOSED** | Không xử lý gì quanh ngày nghỉ ở v1 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; chỉ cần nếu mở quyền sửa sau `COMPLETED` |
-| ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null` → **phải chốt đầu Phase 5** |
+| ISSUE-008 | P3 | **CLOSED** | `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null` — **đã chốt 2026-08-07 bằng DEC-038**, kiểm chứng bằng 46 unit test + 36 phép kiểm trình duyệt |
 | ISSUE-009 | P3 | OPEN | **MỚI** — Next 16.3 deprecate tên `middleware.ts`, khuyến nghị `proxy.ts`. Cố ý hoãn, có điều kiện kích hoạt |
 | ISSUE-010 | P3 | OPEN | **MỚI** — máy đang chạy **3 stack Supabase local**; chọn nhầm container đã xảy ra thật |
 | ISSUE-011 | **P1** | OPEN | service role key lọt vào transcript hội thoại do IDE tự đồng bộ `.env.local`. **Phải rotate.** Chưa vào git |
@@ -224,7 +243,20 @@ phải biết**:
   **DEC-016** không dark mode v1 · **DEC-017** route `/login` · **DEC-018/019** bottom nav ≤5 mục,
   bảng so sánh 4 card ở mobile.
 
-**Ba quyết định MỚI của Phase 4 — đọc trước khi sửa `features/`, `lib/hooks/` hay `components/ui/`**
+**Quyết định MỚI của Phase 5 — đọc trước khi động vào `lib/kpi.ts` hoặc bất kỳ chỗ nào hiển thị `%`**
+
+- **DEC-038** — hai phần:
+  1. **`percent = null` đúng cho CẢ HAI ca** (`target = 0 && actual > 0` → `EXCEEDED`; chưa có
+     `actual` → `PENDING`), phân biệt bằng **`status`**. Đóng ISSUE-008. Bản chất BR-015 **không đổi**.
+  2. **`calculateAchievement(target, actual, metric)`** — ba tham số. Trả
+     `{ percent, status, display, surplus }`. `display` đã format sẵn để render thẳng
+     (`'83,3%'` / `'+3 xe'` / `'—'`); `surplus` là số vượt **thô** cho thẻ ảnh 9:16 và tổng hợp
+     Admin. Bảng đơn vị (`xe` / `điểm` / `khách` / VND) chỉ tồn tại trong `formatMetricValue()`.
+- **Một hệ quả cố ý, đã khoá bằng test:** `percent = 99.99` cho `display = '100,0%'` nhưng
+  `status = 'NEAR'`. BR-014 làm tròn ở hiển thị, BR-023 xét ngưỡng trên số **chưa** làm tròn — cả
+  hai đều `APPROVED`. **Đừng "sửa"** bằng cách xét ngưỡng trên số đã làm tròn.
+
+**Ba quyết định của Phase 4 — đọc trước khi sửa `features/`, `lib/hooks/` hay `components/ui/`**
 
 - **DEC-035** — `useReportDraft` nay ở **`lib/hooks/`**, `CurrencyField` nay ở **`components/ui/`**,
   và khoá localStorage của draft ở **`lib/reports/draft-keys.ts`**. Đừng tìm chúng trong
@@ -241,7 +273,8 @@ phải biết**:
 **Ba quyết định của Phase 3 — đọc trước khi sửa `lib/` hay `features/report-*`**
 
 - **DEC-032** — `lib/date.ts` và `lib/currency.ts` **đã triển khai ở Phase 3**, không phải Phase 5.
-  Nhưng **`lib/kpi.ts` vẫn là khung** và vẫn bị ISSUE-008 chặn. Đừng nhầm hai chuyện đó với nhau.
+  *(Câu tiếp theo của mục này trước đây ghi "`lib/kpi.ts` vẫn là khung và vẫn bị ISSUE-008 chặn" —
+  **đã hết hiệu lực từ Phase 5**, xem DEC-038.)*
 - **DEC-033** — Hàm **hiển thị** trả `'—'` (hoặc `''` cho `formatThousands`) khi đầu vào không hợp
   lệ, **không ném lỗi**. Có `isValidVietnamDate()` vì `new Date('2026-02-30')` không ném lỗi mà
   cuộn sang `2026-03-02`.
@@ -314,10 +347,20 @@ phải biết**:
 | `features/report-evening/discard-evening-draft.tsx` | Client component **không render gì** — dọn draft trên `/sales/today` khi `COMPLETED` (DEC-037) |
 | `lib/reports/messages.ts` | Thêm `NO_MORNING_REPORT`, `ALREADY_COMPLETED`, `EVENING_COMPLETED` + `SAVED_PARAM.EVENING_COMPLETED` |
 
-**Test (Phase 2 + 3 + 4):** `vitest.config.mts` (3 project) · `lib/auth/routes.test.ts` ·
-`lib/date.test.ts` · `lib/currency.test.ts` · `lib/validation/report.test.ts` (**96 test**) ·
-`lib/reports/today-cta.test.ts` · `tests/integration/*` (5 file) · `tests/rls/*` (**5 file**, thêm
-`report-service.rls.test.ts`).
+**Tầng KPI và bảng đối chiếu (Phase 5 — MỚI):**
+
+| File | Vai trò |
+|---|---|
+| `lib/kpi.ts` | **Nguồn DUY NHẤT** của công thức KPI **và** của bảng đơn vị. 5 hàm thuần, không I/O |
+| `lib/kpi.test.ts` | 46 test — bảng biên `docs/08 §3.1` + `§3.2`, cộng lưới 288 tổ hợp chống `NaN`/`∞` |
+| `features/report-comparison/achievement-table.tsx` | Bảng đối chiếu DEC-019 — 4 card ở < 768px, `<table>` thật từ 768px |
+| `features/report-comparison/achievement-badge.tsx` | Ánh xạ `status` → tone + icon Lucide. **Ngưỡng và nhãn vẫn ở `lib/kpi.ts`** |
+| `features/report-comparison/report-notes.tsx` | Tuyến kế hoạch / mục đích / tuyến thực tế / ghi chú cuối ngày |
+
+**Test (Phase 2 + 3 + 4 + 5):** `vitest.config.mts` (3 project) · `lib/auth/routes.test.ts` ·
+`lib/date.test.ts` (33) · `lib/currency.test.ts` (**36**) · `lib/validation/report.test.ts` (96) ·
+`lib/reports/today-cta.test.ts` (17) · **`lib/kpi.test.ts` (46 — MỚI)** · `tests/integration/*`
+(4 file, 40 test) · `tests/rls/*` (4 file, 33 test).
 
 **Hai file env (không commit, đều bị `.gitignore` chặn):**
 
@@ -331,8 +374,9 @@ giờ chạm production dù `.env.local` trỏ cloud (DEC-022). Đã kiểm ch�
 một URL cloud giả, `npm run test:db` vẫn **66/66 PASS**. `tests/integration/setup.ts` còn một chặn
 thứ hai — URL không phải localhost thì ném lỗi ngay.
 
-**File sẽ tạo ở Phase 5 (chưa tồn tại):** `lib/kpi.test.ts`, và thân thật của `lib/kpi.ts`
-(file đã có, hiện **cố ý ném lỗi** — chốt ISSUE-008 trước).
+**File sẽ tạo ở Phase 6 (chưa tồn tại):** `app/api/reports/[id]/share-image/route.ts` và
+`features/report-share/DailyReportShareCard.tsx`. Cả hai **phải dùng lại `lib/kpi.ts`** — không
+tự tính `%`, không tự ghép đơn vị.
 
 ---
 
@@ -370,8 +414,21 @@ Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo �
 > `docker exec supabase_db_<project> psql -U postgres -d postgres -t -c "select count(*) from public.daily_reports;"`
 > → thấy `22` là xong, có thể ngắt lệnh.
 >
-> **Fixture của seed rất tiện cho kiểm chứng tay:** `sales.c` chưa có báo cáo hôm nay ·
-> `sales.a` đang `MORNING_SUBMITTED` · `sales.b` đã `COMPLETED` — đúng ba trạng thái của FR-007.
+> **Fixture cho kiểm chứng tay — ĐỌC TRẠNG THÁI THẬT TRƯỚC KHI DÙNG.** Mô tả cũ ("`sales.c` chưa
+> có báo cáo · `sales.a` `MORNING_SUBMITTED` · `sales.b` `COMPLETED`") **đã lỗi thời**: chính các
+> phiên kiểm chứng tay của Phase 4 và Phase 5 đã ghi vào database local. Trạng thái đo được ngày
+> 2026-08-07 là `sales.c` `MORNING_SUBMITTED` · `sales.a` và `sales.b` đều `COMPLETED`.
+> Luôn kiểm bằng một câu `select` trước khi dựa vào fixture:
+>
+> ```bash
+> docker exec supabase_db_<project> psql -U postgres -d postgres -c \
+>   "select p.email, r.status from daily_reports r join profiles p on p.id = r.sales_id \
+>    where r.report_date = (select (now() at time zone 'Asia/Ho_Chi_Minh')::date);"
+> ```
+>
+> Muốn về đúng ba trạng thái gốc thì `npx supabase db reset` (nhớ ISSUE-012 ở trên).
+> **Không có báo cáo `target = 0` cho ngày hôm nay** trong seed — muốn nhìn tận mắt nhánh BR-015
+> thì `update` tạm trên database local rồi **khôi phục lại**, đúng như Phase 5 đã làm.
 
 ---
 
@@ -382,13 +439,15 @@ Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo �
 | **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, 7 route) |
 | **Typecheck** | ✅ `npm run typecheck` → **exit 0** |
 | **Lint** | ✅ `npm run lint` → **exit 0**, 0 error 0 warning |
-| **Unit** | ✅ **189 passed** — `auth/routes` 14 · `date` 33 · `currency` 29 · `validation/report` **96** · `reports/today-cta` 17 |
-| **Integration (DB)** | ✅ **47 passed** — UNIQUE, 16 CHECK, FK RESTRICT, 4 trigger, 3 function, bảng GRANT |
-| **RLS** | ✅ **33 passed** — JWT thật của `salesA`/`salesB`/`admin`/`inactive` + `anon`, gọi thẳng PostgREST. Gồm **7 test mới** chạy `completeEveningReport()` dưới JWT thật |
-| **Tổng `npm test`** | ✅ **269 passed / 269**, 13 test file |
+| **Unit** | ✅ **242 passed** — `auth/routes` 14 · `date` 33 · `currency` **36** · `validation/report` 96 · `reports/today-cta` 17 · **`kpi` 46** |
+| **Integration (DB)** | ✅ **40 passed** — UNIQUE, 16 CHECK, FK RESTRICT, 4 trigger, 3 function, bảng GRANT |
+| **RLS** | ✅ **33 passed** — JWT thật của `salesA`/`salesB`/`admin`/`inactive` + `anon`, gọi thẳng PostgREST. Gồm 7 test chạy `completeEveningReport()` dưới JWT thật |
+| **Tổng `npm test`** | ✅ **315 passed / 315**, 14 test file |
+| **Coverage (`npm run test:coverage`)** | ✅ `lib/**` — stmt **98,57%** · branch **99,01%** · func **96,43%** · lines **99,11%**. `lib/kpi.ts` **100%** cả bốn cột. ⚠ Chỉ tính các module `lib/` mà tầng unit **thực sự import**; `lib/hooks/`, `lib/supabase/`, `lib/env.ts`, `lib/utils.ts` không nằm trong đó |
 | **UI mobile (Phase 2 — auth)** | ✅ Chromium 375px + 1440px: **32/32 PASS** |
 | **UI mobile (Phase 3 — báo cáo sáng)** | ⚠ Chromium 375px + 1440px: **57/58 PASS**. Mục lệch duy nhất là **NFR-008 (7 lần chạm)** — ISSUE-013, không phải lỗi code |
 | **UI mobile (Phase 4 — báo cáo cuối ngày)** | ✅ Chromium 375px + 1440px: **62/62 PASS** (lần đo trước khi sửa ISSUE-014: 59/62) |
+| **UI (Phase 5 — bảng đối chiếu KPI)** | ✅ Chromium 375px + 1440px: **36/36 PASS** (lần đo đầu 27/36 là do script đọc DOM quá sớm, không phải lỗi code — xem `WORKLOG.md` Entry 008 Errors 1) |
 | **Hồi quy luồng sáng sau refactor Phase 4** | ✅ **11/11 PASS** — UC-04, UC-05, DEC-034 vẫn đúng |
 | **Tài khoản inactive** | ✅ **6/6 PASS**, gồm cả bị vô hiệu hoá **giữa phiên** |
 | **E2E (Playwright)** | ❌ `N/A — chưa có playwright.config.ts, chưa có e2e/*.spec.ts` |
@@ -396,14 +455,28 @@ Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo �
 | **EXPLAIN ANALYZE / InitPlan** | ❌ `N/A — chưa đo. Phase 11, NFR-002` |
 | **Lighthouse** | ❌ `N/A — chưa chạy` |
 
-Bốn dòng cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào. Ba script kiểm chứng
+Bốn dòng `N/A` ở cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào. Ba script kiểm chứng
 trình duyệt là **công cụ dùng một lần, đã xoá, không commit** — chúng không phải bộ E2E hồi quy.
 
 ---
 
 ## Last Working Feature
 
-**Luồng báo cáo ngày chạy thật ĐẦY ĐỦ cả hai nửa (Phase 4).** `next build` + `next start` trỏ vào
+**Bảng đối chiếu KPI chạy thật trên cả hai bề rộng (Phase 5).** `next build` + `next start` trỏ vào
+Supabase local. Đăng nhập bằng `sales.c@bikeforce.local` (đang `MORNING_SUBMITTED`) → `/sales/today`
+hiện 4 card "Viếng thăm / Doanh số / Doanh thu / Khách hàng", mỗi card có cột **Cam kết** với đúng
+đơn vị (`5 điểm`, `9 xe`, `90.000.000 ₫`, `11 khách`), cột **Thực đạt** là `—`, badge xám
+"Chờ số liệu" kèm icon đồng hồ. Đăng nhập bằng `sales.a` (đã `COMPLETED`, số liệu lẫn lộn) → bốn
+badge khác nhau: `100,0% Vượt mục tiêu` (▲ xanh) · `75,0% Chưa đạt` (▼ đỏ) · `80,0% Gần đạt`
+(— vàng) · `90,0% Gần đạt`. Giãn cửa sổ lên 1440px → 4 card **biến mất**, `<table>` thật hiện ra
+với `<caption>` cho screen reader, 4 cột "Chỉ tiêu / Cam kết sáng / Thực đạt / Hoàn thành", số căn
+phải `tabular-nums`, **số liệu khớp y hệt bản mobile**. Đặt `target = 0` cho một chỉ tiêu → ô
+"Hoàn thành" hiện `+7 xe` kèm nhãn "Vượt kế hoạch", `target = 0 && actual = 0` hiện `100,0%` —
+**không chỗ nào có `NaN`, `Infinity` hay `∞`**. Không cuộn ngang ở cả hai bề rộng.
+
+Đây là **mốc an toàn thứ năm** để quay về nếu Phase 6 làm vỡ thứ gì.
+
+**Mốc an toàn thứ tư — luồng báo cáo ngày chạy thật ĐẦY ĐỦ cả hai nửa (Phase 4).** `next build` + `next start` trỏ vào
 Supabase local, đăng nhập bằng `sales.a@bikeforce.local` (đang `MORNING_SUBMITTED`) → `/sales/today`
 hiện "Đã cam kết" + CTA "Hoàn thành báo cáo cuối ngày" → bấm CTA → `/sales/today/evening` hiện lại
 đủ 4 cam kết sáng để đối chiếu, mỗi ô nhập nhắc lại con số đã cam kết → điền 4 chỉ số thực đạt +
@@ -412,8 +485,6 @@ tuyến thật + ghi chú có dấu tiếng Việt → **Hoàn tất báo cáo h
 thành", draft localStorage bị xoá → vào lại `/evening` **và** `/morning` đều bị đá về `/sales/today`
 (BR-019 khoá vĩnh viễn). Tài khoản chưa có cam kết sáng (`sales.c`) vào `/evening` thì được đưa
 thẳng tới `/sales/today/morning` (BR-007).
-
-Đây là **mốc an toàn thứ tư** để quay về nếu Phase 5 làm vỡ thứ gì.
 
 **Mốc an toàn thứ ba — luồng cam kết đầu ngày chạy thật đầu-cuối (Phase 3).** `next build` + `next start` trỏ vào Supabase
 local, đăng nhập bằng `sales.c@bikeforce.local` → `/sales/today` hiện "Chưa báo cáo" + empty state →
@@ -436,49 +507,50 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
-> ✅ Phase 0, Phase 1, Phase 2, 13/14 mục Phase 3 và 9/10 mục Phase 4 đã xong — **không làm lại**.
+> ✅ Phase 0, Phase 1, Phase 2, Phase 5 đã đóng đủ; Phase 3 xong 13/14 và Phase 4 xong 9/10 —
+> **không làm lại**. Hai mục treo của Phase 3 và Phase 4 **không chặn Phase 6**.
 
-**Việc phải làm TRƯỚC TIÊN của Phase 5 — hỏi người dùng, đây là chốt chặn thật:**
+**PHASE 6 — Xuất ảnh 9:16. Không còn chốt chặn nghiệp vụ nào, làm được ngay:**
 
-1. **Chốt ISSUE-008 với người dùng.** `docs/01` mâu thuẫn nội bộ về việc khi nào
-   `AchievementResult.percent = null`. Đọc `docs/12 § ISSUE-008` để lấy đúng hai chỗ mâu thuẫn, rồi
-   hỏi. **Không tự chọn hộ** — con số `%` là thứ Sales và Admin dùng để đánh giá nhau.
-2. **Chốt cách `AchievementResult` mang số vượt tuyệt đối (DEC-025).** BR-015 nói `target = 0` và
-   `actual > 0` thì hiển thị `+3 xe` / `+3.000.000 ₫` kèm nhãn "Vượt kế hoạch", nhưng **hình dạng
-   của kiểu trả về chưa chốt**: đơn vị nằm trong `display` hay là một trường riêng? Quyết trước, viết
-   sau — nếu không, `lib/kpi.ts` và toàn bộ test của nó phải viết lại lần hai.
+1. **Tạo `app/api/reports/[id]/share-image/route.ts`** — Route Handler DUY NHẤT của dự án (DEC-003).
+   `export const runtime = 'nodejs'` vì phải đọc file font bằng `fs`. Dùng `ImageResponse` của
+   `next/og` (Satori) sinh PNG **1080×1920**, **không** screenshot cả trang (FR-018, DEC-010).
+2. **Gác quyền và trạng thái TRƯỚC khi render** — xác thực session, đọc report **dưới RLS** bằng
+   `lib/supabase/server.ts`, và kiểm `status === 'COMPLETED'` (BR-002). Admin cũng gọi được đúng
+   route này cho báo cáo của Sales (BR-022). Không dùng `lib/supabase/admin.ts`.
+3. **Nhúng font có đủ dấu tiếng Việt** (subset `latin` + `vietnamese`), đọc `.ttf`/`.woff` bằng `fs`.
+   Đây là rủi ro thật đã ghi ở **ISSUE-002** — Satori chỉ hỗ trợ một tập con CSS. Kiểm bằng chuỗi
+   `Ừ ẫ ợ ỹ đ` (`sales.a` trong seed có sẵn ghi chú chứa đúng các ký tự này).
+4. **`features/report-share/DailyReportShareCard.tsx`** — layout dark `#0B1220` theo `docs/05 §14`.
+   **Bắt buộc gọi lại** `calculateAchievement()` / `formatMetricValue()` / `achievementLabel()` của
+   `lib/kpi.ts`. Nếu cần con số thô thay vì chuỗi thì dùng trường `surplus`, **đừng parse ngược**
+   `display`.
+5. **Header trả về:** `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"`
+   và `Cache-Control: private, no-store` (FR-019).
+6. **Bật nút "Xuất ảnh"** — xoá hằng số `EXPORT_IMAGE_NOT_READY` trong
+   `app/(sales)/sales/today/page.tsx`. Điều kiện `view.canExportImage` (BR-002) **đã có sẵn** trong
+   biểu thức, giữ nguyên. Thêm Web Share API khi `navigator.canShare({ files })`, fallback
+   `<a download>` (FR-020, DEC-011).
+7. **Test edge case theo `PROJECT_CHECKLIST.md § Phase 6`:** tên 40+ ký tự, tuyến 300 ký tự, ghi chú
+   1000 ký tự, doanh thu 12 chữ số, achievement 4 chữ số (`1.250,0%`), và **cả hai** nhánh
+   `target = 0`.
+8. **Nếu Satori không dựng nổi layout:** chuyển fallback `html-to-image` và **ghi thành DEC mới**,
+   không sửa lén (ISSUE-002).
 
-**PHASE 5 — KPI Engine (sau khi có câu trả lời cho hai mục trên):**
+**Hai việc chờ người dùng, KHÔNG chặn Phase 6:**
 
-3. Viết thân **`lib/kpi.ts`**: `calculateAchievement(target, actual): AchievementResult` theo
-   `actual / target × 100` (BR-014, **không clamp** — BR-004 cho phép > 100%), và
-   `getAchievementStatus(pct)` với ranh giới `≥100` / `80–99.99` / `<80` / chưa có actual (BR-023).
-   Tên hàm **đã chốt**, không đặt tên khác.
-4. Viết **`lib/kpi.test.ts`** theo đúng bảng biên của `PROJECT_CHECKLIST.md § Phase 5` mục cuối:
-   `target=0 & actual=0`, `target=0 & actual>0`, `actual>target`, `actual<target`, `actual=target`,
-   `actual=null`, và bốn mốc `79.99 / 80 / 99.99 / 100`. **Không bao giờ ra `NaN` / `Infinity`.**
-5. Dựng **bảng đối chiếu 4 chỉ tiêu** — 4 card ở mobile, `<table>` thật từ 768px, **cấm cuộn ngang**
-   (DEC-019). Badge trạng thái luôn **icon + text**, không dùng màu đơn thuần (Lucide `TrendingUp` /
-   `Minus` / `TrendingDown` / `Clock`).
-6. Nơi gắn bảng đối chiếu: mở rộng `features/report-morning/commitment-summary.tsx` thành component
-   có **cả hai cột** (hiện chỉ có cột "Cam kết"), hoặc tạo component mới trong `features/` — nếu
-   dùng chung giữa `/sales/today` và `/sales/reports/[id]` thì nhớ luật `features/X` không import
-   `features/Y` (DEC-035, DEC-036).
-
-**Hai việc chờ người dùng, KHÔNG chặn Phase 5:**
-
-7. **Rotate service role key (ISSUE-011, P1).** Dashboard → `Project Settings` → `API Keys` → mục
+9. **Rotate service role key (ISSUE-011, P1).** Dashboard → `Project Settings` → `API Keys` → mục
    secret → **`Generate new secret key`** → dán giá trị mới vào `.env.local`.
    **Đóng `.env.local` trong IDE trước khi dán**, hoặc dán bằng terminal — nếu không, IDE lại tự đưa
    key vào ngữ cảnh hội thoại đúng như lần trước (`docs/06 §11.2` biện pháp thứ 8).
-8. **Trả lời OQ-18 (ISSUE-013).** Sau khi có quyết định: cập nhật `docs/01`, tạo DEC mới nếu nới
-   NFR-008, đo lại, rồi mới tick mục cuối của Phase 3 trong `PROJECT_CHECKLIST.md`.
+10. **Trả lời OQ-18 (ISSUE-013).** Sau khi có quyết định: cập nhật `docs/01`, tạo DEC mới nếu nới
+    NFR-008, đo lại, rồi mới tick mục cuối của Phase 3 trong `PROJECT_CHECKLIST.md`.
 
 **Việc của Phase 11 và Phase 12, chưa cần bây giờ:**
 
-9. `playwright.config.ts` + `e2e/*.spec.ts` (Phase 11) — **mục cuối của Phase 4 chỉ tick được sau
-   bước này**, vì nó đòi một bộ E2E hồi quy có commit, không phải script dùng-một-lần.
-10. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
+11. `playwright.config.ts` + `e2e/*.spec.ts` (Phase 11) — **mục cuối của Phase 4 chỉ tick được sau
+    bước này**, vì nó đòi một bộ E2E hồi quy có commit, không phải script dùng-một-lần.
+12. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
     `update public.profiles set role = 'ADMIN' where email = '<email>';` — **một lần duy nhất**.
 
 ---
@@ -522,8 +594,8 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 - **Đã triển khai `lib/date.ts` và `lib/currency.ts`** với đủ test — **không viết lại**. Nếu thấy
   chúng "lẽ ra thuộc Phase 5", đọc DEC-032 trước khi động tay.
-- **`lib/kpi.ts` vẫn ném lỗi có chủ đích.** Đừng "làm nốt cho đủ bộ": nó bị ISSUE-008 chặn thật, và
-  Phase 3 cố ý không hiển thị `%` nào. Chốt ISSUE-008 trước, viết code sau.
+- ~~**`lib/kpi.ts` vẫn ném lỗi có chủ đích.**~~ — **hết hiệu lực.** ISSUE-008 đã đóng ở Phase 5
+  (DEC-038) và `lib/kpi.ts` nay có thân thật. Xem mục "Từ Phase 5" ở trên.
 - **Đã kiểm chứng trên trình duyệt thật rằng client KHÔNG được suy ra thông báo từ `mode` của form**
   (DEC-034). `revalidatePath` làm trang form render lại ở chế độ SỬA ngay sau khi TẠO thành công.
   Đừng "đơn giản hoá" bằng cách bỏ `data.notice` — lỗi sẽ quay lại y nguyên.
@@ -534,6 +606,29 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 - **Nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" cố ý `disabled`.** Hai cờ đánh dấu chỗ phải xoá đã
   có sẵn trong `app/(sales)/sales/today/page.tsx`: `CTA_ROUTES_NOT_READY` (Phase 7) và
   `EXPORT_IMAGE_NOT_READY` (Phase 6). Không phải bug.
+**Từ Phase 5 (mới):**
+
+- **`lib/kpi.ts` ĐÃ CÓ THÂN THẬT** — không còn ném lỗi, không viết lại. Nếu thấy nó "lẽ ra vẫn là
+  khung", đọc DEC-038 trước khi động tay.
+- **`calculateAchievement()` nhận BA tham số** (`target, actual, metric`). Gọi bằng hai tham số sẽ
+  không biên dịch. `metric` chỉ dùng để dựng chuỗi số vượt, **không** tham gia phép tính.
+- **`percent = 99.99` cho `display = '100,0%'` nhưng `status = 'NEAR'` là ĐÚNG.** BR-014 làm tròn ở
+  hiển thị, BR-023 xét ngưỡng trên số chưa làm tròn — cả hai đang `APPROVED`, đã có test khoá lại.
+  **Đừng "sửa"**; muốn đổi phải sửa BR-023 bằng DEC mới.
+- **Bảng đơn vị chỉ nằm trong `formatMetricValue()`.** Đừng viết `` `${n} xe` `` ở component nào —
+  kể cả thẻ ảnh 9:16 của Phase 6.
+- **`CommitmentSummary` cố ý CHỈ CÓ MỘT CỘT** và chỉ còn phục vụ `/sales/today/evening`. Nó **không
+  phải** bảng đối chiếu, và **không** được gộp với `AchievementTable`.
+- **`getVietnamMonthRange()` VẪN cố ý là khung ném lỗi.** Phase 5 đóng **không** có nghĩa hàm đó đã
+  xong — nó phục vụ FR-021/FR-028 nên thuộc Phase 7/9.
+- **Đã đo coverage thật lần đầu** — `lib/**` vượt xa ngưỡng 90%. Không cần đo lại ở Phase 6 trừ khi
+  thêm module mới vào `lib/`.
+- **Script kiểm chứng trình duyệt phải chờ PHẦN TỬ THẬT, không chờ mạng.**
+  `waitForLoadState('networkidle')` bắn **trước khi React render xong** — đã gây một vòng chẩn đoán
+  sai (27/36 FAIL trong khi code hoàn toàn đúng). Dùng `waitForSelector` cho một phần tử cụ thể.
+- **Đừng kiểm chuỗi cấm bằng `page.textContent('body')`** — nó gộp cả RSC flight payload của Next,
+  mà payload đó **luôn** chứa `$undefined`. Dùng `page.innerText('body')`.
+
 **Từ Phase 4 (mới):**
 
 - **Đã đo thật và đã sửa ISSUE-014.** `revalidatePath` **không** phải nguyên nhân — Next re-render
@@ -593,9 +688,10 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 **Ba điểm kỹ thuật còn treo (không chặn tiến độ, phải chốt đúng lúc):**
 
-1. **ISSUE-008 — đầu Phase 5:** `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null`.
-   Phải chốt **trước khi** viết thân `calculateAchievement()`.
-2. **DEC-025 — đầu Phase 5:** cách `AchievementResult` mang **số vượt tuyệt đối + đơn vị**.
+1. ~~**ISSUE-008 — đầu Phase 5**~~ — ✅ **ĐÃ ĐÓNG 2026-08-07** bằng **DEC-038**: `percent = null`
+   đúng cho **cả hai** ca, phân biệt bằng `status`.
+2. ~~**DEC-025 — đầu Phase 5**~~ — ✅ **ĐÃ ĐÓNG 2026-08-07** bằng **DEC-038**:
+   `calculateAchievement(target, actual, metric)` trả cả `display` đã format lẫn `surplus` thô.
 3. **Buộc đổi mật khẩu lần đầu — trước Phase 10:** `docs/06 §3.3` ghi chú 6 nêu hai phương án
    (cờ trong `user_metadata` vs thêm cột vào `profiles`), **chưa chốt**. Phải quyết và ghi thành DEC
    mới **trước** khi làm UC-17. Schema hiện **không có** cột nào cho việc này.

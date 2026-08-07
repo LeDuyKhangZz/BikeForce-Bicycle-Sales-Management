@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
+import { AchievementTable } from '@/features/report-comparison/achievement-table';
+import { ReportNotes } from '@/features/report-comparison/report-notes';
 import { DiscardEveningDraft } from '@/features/report-evening/discard-evening-draft';
-import { CommitmentSummary } from '@/features/report-morning/commitment-summary';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { messageForSavedParam } from '@/lib/reports/messages';
 import { getTodayView, type TodayCtaKey } from '@/lib/reports/today-cta';
@@ -101,21 +102,20 @@ export default async function SalesTodayPage({ searchParams }: Props) {
           </p>
         </Card>
       ) : (
-        <CommitmentSummary report={report} />
-      )}
-
-      {view.state === 'COMPLETED' && (
         <>
-          {/* FR-035 — không render gì, chỉ dọn draft cuối ngày đã hết ý nghĩa. */}
-          <DiscardEveningDraft today={today} />
-          <Card>
-            <p className="text-sm text-muted-foreground">
-              Bảng đối chiếu cam kết với thực đạt và ảnh chia sẻ 9:16 nằm ở màn hình chi tiết báo
-              cáo.
-            </p>
-          </Card>
+          {/*
+            Phase 5 — bảng đối chiếu thay cho danh sách cam kết một cột của
+            Phase 3. Ở trạng thái `MORNING_SUBMITTED`, cột "Thực đạt" là `'—'`
+            và badge là "Chờ số liệu" (`docs/05 §7.3` dòng 1) — đó là hành vi
+            đúng, không phải dữ liệu thiếu.
+          */}
+          <AchievementTable report={report} />
+          <ReportNotes report={report} />
         </>
       )}
+
+      {/* FR-035 — không render gì, chỉ dọn draft cuối ngày đã hết ý nghĩa. */}
+      {view.state === 'COMPLETED' && <DiscardEveningDraft today={today} />}
 
       <div className="flex flex-col gap-3">
         {CTA_ROUTES_NOT_READY.has(view.primaryCta.key) ? (

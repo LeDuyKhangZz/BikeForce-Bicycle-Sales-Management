@@ -7,13 +7,13 @@ type Props = {
 };
 
 /**
- * Bốn chỉ tiêu đã cam kết buổi sáng — phần "Cam kết" của bảng đối chiếu
- * (`docs/05 §7.1`).
+ * Bốn chỉ tiêu đã cam kết buổi sáng — CHỈ cột "Cam kết", cố ý một cột.
  *
- * ⚠ Ở Phase 3 mới chỉ có cột **Cam kết**. Cột "Thực đạt" và ô "% hoàn thành" là
- * PHASE 4 + PHASE 5: chúng cần `lib/kpi.ts`, mà `calculateAchievement()` còn
- * chờ chốt ISSUE-008 (`percent = null` trong những trường hợp nào). Hiển thị một
- * con số phần trăm tính sai còn tệ hơn không hiển thị gì (BR-011, BR-014).
+ * ⚠ Đây KHÔNG phải bảng đối chiếu. Từ Phase 5, bảng đối chiếu hai cột kèm ô
+ * "% hoàn thành" là `features/report-comparison/achievement-table.tsx` và nó
+ * đang phục vụ `/sales/today`. Component này còn lại đúng một chỗ dùng:
+ * `/sales/today/evening` — nơi Sales đang NHẬP thực đạt và cần nhìn lại con số
+ * đã cam kết, chứ chưa có gì để đối chiếu. Đừng gộp hai component làm một.
  *
  * Component `features/` được biết nghiệp vụ nên nhận thẳng typed domain data;
  * nó **gọi** `formatCurrencyVND` chứ không tự format (AGENTS.md §9).

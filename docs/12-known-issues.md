@@ -78,7 +78,7 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-005 | P3 | OPEN | `is_admin()` phát sinh thêm một truy vấn `profiles` mỗi câu lệnh RLS | Phase 2, Phase 11 | DEC-006, NFR-002, NFR-015 |
 | ISSUE-006 | P3 | **CLOSED** | Chưa có khái niệm ngày nghỉ → cảnh báo "chưa báo cáo" có thể tính cả người nghỉ. **Chủ nghiệp vụ xác nhận 2026-08-07: không xử lý gì thêm ở v1** | Phase 8 | OQ-08, AF-02, AF-15, FR-033, UC-20 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; là điều kiện tiên quyết nếu cho phép sửa sau khi `COMPLETED` | Phase 4+ (điều kiện) | OQ-04, OQ-05, BR-019, BR-020, AF-12 |
-| ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn nội bộ về khi nào `AchievementResult.percent = null` | Phase 5 | BR-015, DEC-025, OQ-11 |
+| ISSUE-008 | P3 | **CLOSED** | `docs/01` mâu thuẫn nội bộ về khi nào `AchievementResult.percent = null` — đã chốt cách đọc ở **DEC-038** (2026-08-07) | Phase 5 | BR-015, DEC-025, DEC-038, OQ-11 |
 | ISSUE-009 | P3 | OPEN | Next.js 16.3 **deprecate** quy ước file `middleware.ts`, khuyến nghị đổi tên thành `proxy.ts` | Phase 2 → khi nâng Next major | DEC-004, FR-002, FR-004 |
 | ISSUE-010 | P3 | OPEN | Máy phát triển chạy **nhiều stack Supabase local cùng lúc** → chọn nhầm container/port là chuyện đã xảy ra thật | Phase 2, Phase 11 | DEC-022, DEC-031 |
 | ISSUE-011 | **P1** | OPEN | **Service role key đã lọt vào transcript hội thoại** khi IDE tự đồng bộ `.env.local`. Phải **rotate** | Phase 2 | NFR-005, DEC-005, DEC-031 |
@@ -422,7 +422,7 @@ Kế hoạch kiểm chứng, **chỉ áp dụng nếu quyền sửa được m�
 ### ISSUE-008
 
 **Severity: P3**
-**Status: OPEN**
+**Status: CLOSED** *(2026-08-07 — người dùng đã chốt cách đọc, xem DEC-038)*
 
 **Module:**
 `docs/01-business-analysis.md` (tài liệu, không phải code) → sẽ ảnh hưởng `lib/kpi.ts`. Liên quan: BR-015, DEC-025, OQ-11, Phase 5.
@@ -455,10 +455,15 @@ Trình tự bắt buộc ở **đầu Phase 5**, trước khi viết thân `calc
 **Không** được đổi bản chất BR-015 — rule đã `APPROVED`; đây chỉ là làm rõ câu chữ mô tả kiểu dữ liệu, không phải đổi nghiệp vụ (Master Spec §71).
 
 **Verification:**
-Kế hoạch kiểm chứng (**chưa chạy** — Phase 5):
-- `docs/01-business-analysis.md` chỉ còn **một** phát biểu về `percent: null`, khớp với bảng 4 dòng.
-- Unit test `calculateAchievement` phủ đủ 4 dòng của bảng, trong đó có `actual = null` → `status = 'PENDING'`, `display = '—'`.
-- Không test nào cho ra `NaN` / `Infinity` (BR-015).
+**ĐÃ CHẠY THẬT ngày 2026-08-07 (Phase 5) — đạt cả 3 mục:**
+
+1. ✅ `docs/01-business-analysis.md` chỉ còn **một** phát biểu về `percent: null` và nó khớp với bảng 4 dòng ở §"Hệ quả cho việc cài đặt `lib/kpi.ts`". Chữ "**chỉ**" đã bị bỏ; đoạn mô tả `AchievementResult` nay nói rõ `null` đúng cho **cả hai** ca, phân biệt bằng `status`.
+2. ✅ `lib/kpi.test.ts` — **46 test, 46 PASS** (`npx vitest run --project unit lib/kpi.test.ts`). Phủ đủ 4 dòng của bảng, gồm `actual = null` → `{ percent: null, status: 'PENDING', display: '—', surplus: null }`, và cả hai ca `target = 0`.
+3. ✅ Không test nào cho ra `NaN` / `Infinity`: có một bài quét lưới **8 target × 9 actual × 4 metric = 288 tổ hợp** (gồm cả `NaN`, `±Infinity`, số âm) và khẳng định `percent` luôn là `null` hoặc hữu hạn, `surplus` luôn là `null` hoặc hữu hạn, và `display` không bao giờ chứa `'NaN'` / `'Infinity'` / `'∞'` / `'undefined'`.
+
+**Kiểm chứng thêm trên trình duyệt thật** (Chromium 375px + 1440px, Supabase local, script dùng-một-lần đã xoá): **36/36 PASS**, trong đó ba tình huống của `docs/05 §7.3` đều đúng — chưa có số liệu → `'—'` + "Chờ số liệu"; `target = 0 && actual = 0` → `'100,0%'` + "Vượt mục tiêu"; `target = 0 && actual > 0` → `'+7 xe'` + "Vượt kế hoạch". Không trang nào chứa `NaN` / `Infinity` / `∞` trong text đã render.
+
+**Cách đọc chính thức** (DEC-038): `percent: null` nghĩa là *không tồn tại một con số phần trăm có ý nghĩa*, đúng cho **cả hai** ca; `status` (`EXCEEDED` vs `PENDING`) là thứ phân biệt chúng. Bản chất BR-015 **không đổi**.
 
 ---
 
