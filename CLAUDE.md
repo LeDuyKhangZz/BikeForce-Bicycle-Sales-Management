@@ -1,5 +1,5 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 2 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 3 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > **Đọc file này TRƯỚC, rồi đọc `SESSION_CHECKPOINT.md`.** Hai file đó đủ để bắt đầu làm việc.
@@ -21,19 +21,23 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 2 — Database & Auth: 13/14 mục xong** (2026-08-07). Phase 0 và Phase 1 đã đóng cùng ngày |
-| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration đã chạy thật · tầng auth đầy đủ (`middleware.ts`, `/login`, guard 2 route group, `features/auth/*`, `services/profiles.ts`) · bộ test 80 case. **Chưa có** route nghiệp vụ báo cáo (Phase 3+) |
+| Phase | **PHASE 3 — Morning Report: 13/14 mục xong** (2026-08-07). Phase 0, 1, 2 đã đóng cùng ngày |
+| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration chạy thật trên **cả local lẫn cloud** · tầng auth đầy đủ · **luồng cam kết đầu ngày chạy thật đầu-cuối** (`/sales/today`, `/sales/today/morning`) · bộ test 213 case |
 | Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Quyền push đứng vẫn còn, **nhưng `git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
-| Supabase **local** | ✅ **Đã chạy thật** — Docker + CLI 2.111.0, Postgres 17.6.1.156. Cả 5 migration + seed apply thành công. `types/database.types.ts` là file **generate thật** (259 dòng) |
-| Supabase **cloud** | ⏳ **Người dùng đang tạo** (region Singapore). Hướng dẫn từng cú bấm: `docs/09-deployment.md §3.0` |
+| Supabase **local** | ✅ **Đã chạy thật** — Docker + CLI 2.111.0, Postgres 17.6.1.156. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
+| Supabase **cloud** | ✅ **Đã nối xong** — `rnmywhwanpxmipqducqu`, region `ap-southeast-1`, 5 migration đã `db push`, seed **không** được đẩy, signup đã tắt |
 | Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-07): cả 3 exit 0, lint 0 error 0 warning |
-| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **80/80** (14 unit + 40 integration + 26 RLS) |
+| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **213/213** (140 unit + 47 integration + 26 RLS) |
 | E2E / a11y / Lighthouse | **N/A — chưa có `playwright.config.ts`, chưa có `e2e/*.spec.ts`.** Không được ghi PASS |
-| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER nghiệp vụ.** 17/17 OQ đã trả lời. 31 DEC và 25 BR đều `APPROVED` |
+| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER.** 17/17 OQ ban đầu đã trả lời. 34 DEC và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** **Phase 3 (Morning Report) làm được ngay** — không cần chờ Supabase cloud, vì schema đã chạy thật ở local (DEC-022). Nghiệp vụ đã chốt xong; theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
+**Hệ quả trực tiếp:** **Phase 4 (Evening Report) làm được ngay.** Nghiệp vụ đã chốt xong; theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
 
-> ⚠ **Việc duy nhất còn chờ người dùng:** tạo Supabase project trên cloud. Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy. Runbook đầy đủ đã viết sẵn ở `docs/09-deployment.md §3.0`.
+> ⏳ **Hai việc chờ người dùng, KHÔNG chặn việc code:**
+> 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
+> 2. **Trả lời OQ-18** (ISSUE-013) — NFR-008 đặt "≤ 6 lần chạm" nhưng FR-008 có 5 trường bắt buộc nên sàn lý thuyết là 7; đo thật được **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18`. **Đừng tự chọn hộ**, và **đừng bỏ bớt trường bắt buộc** để ép con số xuống.
+>
+> Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy.
 
 ---
 
@@ -126,16 +130,20 @@ BikeForce/
 │   │                             # /admin/analytics, /admin/sales, /admin/sales/new,
 │   │                             # /admin/sales/[id], /admin/account
 │   └── api/reports/[id]/share-image/   # Route Handler trả PNG 1080×1920
-├── components/ui/                # primitive không biết nghiệp vụ: Button, Input, Card, Badge…
+├── components/ui/                # primitive không biết nghiệp vụ: Button, Input, Card, Badge,
+│                                 # Textarea, FormField, Label, Skeleton
 ├── features/                     # component + action + query của MỘT nghiệp vụ
-│   ├── morning-report/
-│   ├── evening-report/
-│   ├── report-share/             # DailyReportShareCard.tsx
+│   ├── auth/                     # ⚠ TÊN THẬT TRONG REPO là `report-morning/`,
+│   ├── report-morning/           #    KHÔNG phải `morning-report/`. Đừng tạo thư mục trùng nghĩa
+│   ├── report-evening/           #    Phase 4
+│   ├── report-share/             # DailyReportShareCard.tsx — Phase 6
 │   ├── sales-history/
 │   └── admin-*/
 ├── lib/                          # kpi, currency, date, validation (Zod), supabase clients, auth helpers
-│   ├── kpi.ts  currency.ts  date.ts
-│   ├── validation/
+│   ├── kpi.ts  currency.ts  date.ts  utils.ts  env.ts
+│   ├── auth/      routes.ts  messages.ts
+│   ├── reports/   today-cta.ts  messages.ts
+│   ├── validation/  auth.ts  report.ts
 │   └── supabase/  client.ts  server.ts  admin.ts
 ├── services/                     # data access thuần: nhận supabase client, trả typed data
 ├── types/                        # database.types.ts (generate từ Supabase CLI) + domain types
@@ -215,7 +223,8 @@ Một task **không** DONE chỉ vì đã viết code. DONE khi:
 11. `SESSION_CHECKPOINT.md` đã cập nhật.
 
 > Chỉ tick `[x]` trong `PROJECT_CHECKLIST.md` khi **code xong VÀ build pass VÀ typecheck pass VÀ lint pass VÀ test liên quan pass**.
-> Ở thời điểm hiện tại chưa có code, nên **không mục nào ngoài Phase 0 được tick**, và mọi trạng thái test đều ghi `N/A`.
+> Phase 0, 1, 2 đã tick đủ. Phase 3 tick 13/14 — mục cuối để nguyên `[ ]` vì đo thật không đạt (ISSUE-013), **không** tick vì "gần đạt".
+> E2E / a11y / Lighthouse vẫn ghi `N/A` cho tới Phase 11.
 
 ---
 
@@ -252,7 +261,9 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 
 `Next Exact Steps` trong checkpoint phải **cụ thể tới mức session sau gõ được ngay** — ví dụ tên lệnh, tên file, tên hàm; không viết "tiếp tục làm Admin".
 
-> **Lưu ý cho giai đoạn hiện tại:** bước 1–4 chưa chạy được vì chưa có code. Ghi đúng `N/A — chưa có code`. **Tuyệt đối không ghi PASS.**
+> **Lưu ý cho giai đoạn hiện tại:** bước 1–4 **chạy được và phải chạy thật** — `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`. Chỉ E2E / a11y / Lighthouse mới ghi `N/A`. **Tuyệt đối không ghi PASS khi chưa thấy kết quả.**
+>
+> Nếu task đụng UI thì **phải kiểm chứng trên trình duyệt thật** ở 375px (DoD mục 6) — Phase 2 và Phase 3 đều làm bằng script Playwright dùng-một-lần rồi xoá, **không commit**. Cách này đã bắt được một lỗi mà unit test không thể thấy (DEC-034).
 
 ---
 
@@ -279,7 +290,9 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-17` (open question) · `DEC-001..DEC-030` (decision) · `ISSUE-001..ISSUE-007` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-034` (decision) · `ISSUE-001..ISSUE-013` (issue) · `AF-01..AF-15` (admin feature proposal).
+
+`UC`, `FR`, `NFR`, `BR`, `AF` là **dãy đóng** — không thêm ID mới nếu không có xác nhận của người dùng. `OQ`, `DEC`, `ISSUE` là **dãy mở**: cấp ID mới = số lớn nhất từng dùng + 1, **không bao giờ renumber, không tái sử dụng ID đã CLOSED**.
 
 **Business rule hay bị vi phạm nhất — thuộc lòng:**
 
@@ -306,19 +319,24 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 **Bước tiếp theo của dự án (bám sát `SESSION_CHECKPOINT.md`):**
 1. ~~Người dùng trả lời `OQ-01..OQ-17`~~ — ✅ **XONG 2026-08-07, đủ 17/17.**
 2. ~~Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`~~ — ✅ **XONG.**
-3. ~~**Phase 1 — Foundation**~~ — ✅ **XONG 2026-08-07.**
-4. ~~**Phase 2 — schema + auth**~~ — ✅ **XONG 13/14 mục 2026-08-07.** 5 migration đã chạy thật, tầng auth đầy đủ, 80 test xanh.
-5. **Đang chờ người dùng:** tạo Supabase project **cloud** → `supabase link` → `db push` → `gen types --linked`.
-6. **Phase 3 — Morning Report (việc kế tiếp, làm được ngay).** Bắt đầu bằng `lib/validation/report.ts` + test của nó, rồi `services/reports.ts`, rồi `features/report-morning/`.
+3. ~~**Phase 1 — Foundation**~~ · ~~**Phase 2 — schema + auth**~~ — ✅ **XONG 2026-08-07**, cả hai đã đóng đủ mục. Supabase cloud đã nối xong.
+4. ~~**Phase 3 — Morning Report**~~ — ✅ **XONG 13/14 mục 2026-08-07.** 213 test xanh, kiểm chứng trình duyệt 57/58.
+5. **Đang chờ người dùng (không chặn code):** rotate service role key (ISSUE-011) · trả lời **OQ-18** (ISSUE-013).
+6. **Phase 4 — Evening Report (việc kế tiếp, làm được ngay).** Bắt đầu bằng `eveningReportSchema` **thêm vào** `lib/validation/report.ts` + test, rồi `completeEveningReport` trong `services/reports.ts`, rồi `features/report-evening/`, rồi thay trang tối thiểu `/sales/today/evening`.
 
-**Ba thứ Phase 2 đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
-`force row level security` **an toàn** vì `postgres` có `rolbypassrls` · `now()` **dùng được** trong CHECK constraint · `service_role` **cố ý không có DML** trên 2 bảng nghiệp vụ (DEC-031) — đừng cấp thêm.
+**Những thứ đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
+
+*Phase 2:* `force row level security` **an toàn** vì `postgres` có `rolbypassrls` · `now()` **dùng được** trong CHECK constraint · `service_role` **cố ý không có DML** trên 2 bảng nghiệp vụ (DEC-031) — đừng cấp thêm.
+
+*Phase 3:* `lib/date.ts` và `lib/currency.ts` **đã xong thật** (DEC-032) — nhưng `lib/kpi.ts` **vẫn cố ý ném lỗi** vì ISSUE-008 · client **không được** suy ra thông báo thành công từ `mode` của form (DEC-034, đã có lỗi thật) · `useReportDraft` **phải** dùng `useSyncExternalStore`, React Compiler chặn `setState` trong effect · nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" **cố ý disabled**, có hằng số đánh dấu chỗ phải xoá.
 
 ---
 
-## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG TOÀN BỘ (2026-08-07)
+## OPEN QUESTIONS — 17/17 câu ban đầu ĐÃ ĐÓNG (2026-08-07) · **OQ-18 đang chờ**
 
-Người dùng đã trả lời **đủ 17/17** câu. Không còn câu nào chờ. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
+Người dùng đã trả lời **đủ 17/17** câu của bộ ban đầu — **tuyệt đối không hỏi lại**. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
+
+> ⏳ **OQ-18 (MỚI, phát sinh ở Phase 3):** NFR-008 đặt "hoàn tất báo cáo sáng ≤ 6 lần chạm", nhưng FR-008 quy định 5 trường bắt buộc nên sàn lý thuyết là `1 + 5 + 1 = 7`. Đo thật: **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18` và `docs/12 § ISSUE-013`. **Không chặn Phase 4.** Đây là câu hỏi mới, không phải hỏi lại câu cũ.
 
 Mười quyết định nghiệp vụ mà mọi session sau phải nhớ:
 

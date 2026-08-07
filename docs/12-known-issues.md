@@ -82,8 +82,10 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-009 | P3 | OPEN | Next.js 16.3 **deprecate** quy ước file `middleware.ts`, khuyến nghị đổi tên thành `proxy.ts` | Phase 2 → khi nâng Next major | DEC-004, FR-002, FR-004 |
 | ISSUE-010 | P3 | OPEN | Máy phát triển chạy **nhiều stack Supabase local cùng lúc** → chọn nhầm container/port là chuyện đã xảy ra thật | Phase 2, Phase 11 | DEC-022, DEC-031 |
 | ISSUE-011 | **P1** | OPEN | **Service role key đã lọt vào transcript hội thoại** khi IDE tự đồng bộ `.env.local`. Phải **rotate** | Phase 2 | NFR-005, DEC-005, DEC-031 |
+| ISSUE-012 | P3 | OPEN | Sau `supabase db reset`, GoTrue + Kong không tự phục hồi → mọi lần đăng nhập nhận `502` cho tới khi restart hai container | Phase 3 → mọi phase sau | ISSUE-010, DEC-022 |
+| ISSUE-013 | P3 | OPEN | **NFR-008 mâu thuẫn với FR-008**: form sáng có 5 trường bắt buộc nên sàn lý thuyết là 7 lần chạm, không thể ≤ 6. Đo thật: **7 chạm / 1,8 giây**. **Cần người dùng quyết định (OQ-18)** | Phase 3 | NFR-008, FR-008, UC-04, OQ-18 |
 
-Tổng: **8 OPEN** (1 × P1, 2 × P2, 5 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
+Tổng: **10 OPEN** (1 × P1, 2 × P2, 7 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
 
 ---
 
@@ -579,6 +581,94 @@ Kế hoạch kiểm chứng (**chưa chạy** — chờ người dùng rotate):
 - Gọi cùng endpoint bằng key **mới** ⇒ `200`.
 - `git log -S "sb_secret" --all` ⇒ **0 kết quả** (xác nhận key chưa từng vào lịch sử git).
 - `docs/06 §11.2` đã có biện pháp thứ 8.
+
+---
+
+### ISSUE-012
+
+**Severity: P3**
+**Status: OPEN**
+
+**Module:**
+Môi trường phát triển — Supabase CLI local + Docker. Liên quan: ISSUE-010, DEC-022, Phase 3.
+
+**Description:**
+Sau khi chạy `npx supabase db reset`, hai container `supabase_auth_*` (GoTrue) và `supabase_kong_*` **không tự phục hồi**: mọi request đăng nhập trả `502` từ Kong, và server log của ứng dụng ghi `An invalid response was received from the upstream server`, sau đó là `Database error querying schema`.
+
+**Expected:**
+`db reset` xong là đăng nhập được ngay bằng tài khoản seed.
+
+**Actual:**
+`GET /auth/v1/health` → `502`. Bản thân container GoTrue báo `healthy`, nên nhìn `docker ps` sẽ tưởng mọi thứ bình thường. Đã tốn một vòng chẩn đoán sai hướng ở Phase 3 vì điều này.
+
+**Root Cause:**
+Hai nguyên nhân chồng lên nhau:
+1. `db reset` tạo lại container Postgres ⇒ GoTrue giữ pool kết nối trỏ tới instance cũ.
+2. Kong cache DNS/địa chỉ upstream ⇒ khi GoTrue được tạo lại với IP khác, Kong vẫn gọi địa chỉ cũ.
+
+**Fix:**
+Chạy sau mỗi lần `db reset` (đã kiểm chứng thật, khôi phục `200` trong dưới 15 giây):
+
+```bash
+docker restart supabase_auth_<project> supabase_rest_<project>
+sleep 8
+docker restart supabase_kong_<project>
+```
+
+Lấy đúng tên container bằng `docker ps --filter "name=supabase_auth"` — **trong thư mục dự án** để không đụng hai stack Supabase khác trên máy (ISSUE-010).
+
+**Ghi chú thêm:** trên máy này `npx supabase db reset` **treo ở bước "Restarting containers"** và không tự thoát, dù migration + seed đã apply xong. Kiểm bằng
+`docker exec supabase_db_<project> psql -U postgres -d postgres -t -c "select count(*) from public.daily_reports;"` → thấy `22` là seed đã chạy xong, có thể ngắt lệnh.
+
+**Verification:**
+- `curl -o /dev/null -w "%{http_code}" http://127.0.0.1:54321/auth/v1/health` → `200`.
+- Đăng nhập bằng `sales.a@bikeforce.local` trên `next start` → vào được `/sales/today`. **Đã chạy thật 2026-08-07.**
+
+---
+
+### ISSUE-013
+
+**Severity: P3**
+**Status: OPEN — cần người dùng quyết định (OQ-18)**
+
+**Module:**
+`/sales/today/morning` — NFR-008, FR-008, UC-04. Liên quan: `docs/01 §OPEN QUESTIONS`, Phase 3.
+
+**Description:**
+NFR-008 đặt mục tiêu *"Hoàn tất báo cáo sáng ≤ 60 giây, ≤ 6 lần chạm"*. Đo thật trên Chromium ở 375px: **thời gian đạt (1,8 giây), số lần chạm KHÔNG đạt — 7 lần**.
+
+**Expected:** ≤ 6 lần chạm.
+**Actual:** 7 lần chạm, phân rã như sau:
+
+| # | Thao tác |
+|---|---|
+| 1 | Chạm CTA "Tạo báo cáo đầu ngày" ở `/sales/today` |
+| 2 | Chạm ô Tuyến ghé thăm |
+| 3 | Chạm ô Mục tiêu điểm viếng thăm |
+| 4 | Chạm ô Mục tiêu doanh số |
+| 5 | Chạm chip `+10tr` của ô Doanh thu |
+| 6 | Chạm ô Mục tiêu số lượng khách hàng |
+| 7 | Chạm nút "Lưu báo cáo đầu ngày" |
+
+*(Chưa tính số lần gõ trên bàn phím số — nếu tính cả gõ phím thì con số lớn hơn nhiều.)*
+
+**Root Cause:**
+Không phải lỗi cài đặt. FR-008 quy định **5 trường bắt buộc**; sàn lý thuyết của luồng là `1 (mở form) + 5 (chạm từng ô) + 1 (lưu) = 7`. **NFR-008 ≤ 6 không thể đạt cùng lúc với FR-008 nếu "chạm" nghĩa là một lần chạm màn hình.** Đây là mâu thuẫn giữa hai requirement, không phải chỗ để tối ưu code.
+
+Ba thứ đã làm và có hiệu quả thật, nhưng không đủ để xuống 6: chip cộng nhanh `+1tr/+5tr/+10tr` (đổi 8 lần gõ phím thành 1 lần chạm), `inputMode="numeric"`, `enterKeyHint="next"`.
+
+**Fix:** **CHƯA ÁP DỤNG — chờ người dùng chọn.** Ba phương án:
+
+| # | Phương án | Đánh đổi |
+|---|---|---|
+| (a) | Nới NFR-008 thành **≤ 8 lần chạm**, giữ nguyên 5 trường | Không mất dữ liệu nghiệp vụ nào. Cần sửa `docs/01` + tạo DEC mới |
+| (b) | Định nghĩa lại "chạm" = **số ô phải nhập** (5), không tính mở form và nút lưu | Chỉ là đổi cách đo, nhưng phải ghi rõ để lần đo sau không lệch |
+| (c) | Bỏ bớt một trường bắt buộc khỏi form sáng | **Thay đổi nghiệp vụ** — đụng FR-008 và schema. Không được tự làm |
+
+Cho tới khi có quyết định, mục *"Walkthrough xác nhận hoàn tất báo cáo sáng ≤ 60 giây và ≤ 6 lần chạm"* trong `PROJECT_CHECKLIST.md` Phase 3 **để nguyên `[ ]`**.
+
+**Verification:**
+Script kiểm chứng dùng-một-lần đã đếm số lần chạm và đo thời gian thật trên Chromium 375px (2026-08-07): **7 chạm / 1,8 giây**. Sau khi chốt phương án, phải đo lại và ghi số mới vào `WORKLOG.md`.
 
 ---
 

@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 2 ĐÃ ĐÓNG (14/14) → sẵn sàng Phase 3 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 3 (13/14) → sẵn sàng Phase 4 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -10,9 +10,28 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 2 — Database & Auth` — ✅ **ĐÃ ĐÓNG, 14/14 mục `[x]`** (2026-08-07).
+**Current Phase:** `PHASE 3 — Morning Report` — **13/14 mục `[x]`** (2026-08-07).
+Phase 0, Phase 1, Phase 2 đều đã đóng.
 
-**Current Task:** **Bắt đầu PHASE 3 — Morning Report.** Không còn gì chặn, không chờ đầu vào nào.
+**Current Task:** **Bắt đầu PHASE 4 — Evening Report.** Không có gì chặn việc code.
+
+> ⏳ **Một câu hỏi đang chờ người dùng, KHÔNG chặn Phase 4: OQ-18 / ISSUE-013.**
+> NFR-008 đặt mục tiêu "hoàn tất báo cáo sáng ≤ 60 giây và ≤ 6 lần chạm". Đo thật ở 375px:
+> **1,8 giây (đạt) · 7 lần chạm (không đạt)**. Nguyên nhân là **mâu thuẫn giữa NFR-008 và FR-008**:
+> FR-008 quy định 5 trường bắt buộc nên sàn lý thuyết là `1 (mở form) + 5 (chạm ô) + 1 (lưu) = 7`.
+> Ba phương án nằm ở `docs/01 § OQ-18` và `docs/12 § ISSUE-013`. **Đừng tự chọn hộ người dùng**, và
+> **đừng "tối ưu" code để ép xuống 6** — không có cách nào làm được mà không bỏ bớt một trường bắt buộc.
+
+**Phase 3 đã làm được gì (tóm tắt cho session mới):**
+
+| Hạng mục | Trạng thái |
+|---|---|
+| `/sales/today` | ✅ FR-007 thật — badge trạng thái, cam kết 4 chỉ tiêu, **đúng 1 CTA chính** theo `status` |
+| `/sales/today/morning` | ✅ UC-04 (tạo) + UC-05 (sửa) — cùng một form, hai Server Action |
+| `/sales/today/evening` | ⚠ **Trang tối thiểu** — mới có guard vai + BR-007 + hiển thị lại cam kết sáng (FR-013). Form thực đạt là **Phase 4** |
+| `lib/date.ts` · `lib/currency.ts` | ✅ Triển khai thật (DEC-032). **`getVietnamMonthRange` vẫn là khung** — Phase 7 |
+| `lib/kpi.ts` | ❌ **Vẫn là khung ném lỗi** — bị ISSUE-008 chặn, Phase 5. Phase 3 cố ý không hiển thị `%` nào |
+| Test | ✅ **213/213** (140 unit · 47 integration · 26 RLS) |
 
 **Supabase cloud đã nối xong:**
 
@@ -70,37 +89,59 @@ cấu trúc DEC-023; 3 Supabase client + `lib/env.ts`; design token DEC-014; fon
 - **Kiểm chứng bằng công cụ thật**: build/typecheck/lint exit 0 · `npm test` **80/80** ·
   Chromium **32/32** ở 375px và 1440px · tài khoản inactive **6/6**.
 
+### Phase 3 (2026-08-07) — chi tiết ở `WORKLOG.md` Entry 006
+
+- **`lib/date.ts` + `lib/currency.ts` triển khai thật** (DEC-032 — kéo lên sớm từ Phase 5 vì
+  `report_date` của FR-010 không có đường nào khác). 33 + 29 unit test.
+- **`lib/validation/report.ts`** — `morningReportSchema` + `reportDateSchema`, **47 test**. Schema
+  **strip** `sales_id`/`report_date`/`status` do client gửi; một schema gánh cả chuỗi `FormData` lẫn số.
+- **`lib/reports/today-cta.ts`** — bảng ba trạng thái FR-007 dưới dạng **hàm thuần**, **17 test**.
+- **`lib/reports/messages.ts`** — chuỗi thông báo của luồng báo cáo, dùng chung cho Phase 4.
+- **`services/reports.ts`** — `getTodayReport` / `insertMorningReport` / `updateMorningReport`.
+- **`features/report-morning/`** — 2 Server Action, form client, `useReportDraft`, `CurrencyField`
+  (3 chip cộng nhanh), `CommitmentSummary`.
+- **3 route Sales** + **3 primitive UI mới** (`Textarea`, `FormField`, `buttonClassName`).
+- **Kiểm chứng bằng công cụ thật**: build/typecheck/lint exit 0 · `npm test` **213/213** ·
+  Chromium **57/58** ở 375px và 1440px (mục lệch duy nhất: NFR-008 — ISSUE-013).
+
 ---
 
 ## Currently Working On
 
-**Không có công việc code nào đang dở.** Đang chờ **đúng một** đầu vào từ người dùng: Supabase
-project trên cloud. Mọi việc khác của Phase 2 đã xong và đã kiểm chứng.
+**Không có công việc code nào đang dở.** Phase 3 đã dừng ở một trạng thái sạch: mọi thứ đã viết đều
+đã chạy thật và đã có test.
 
 ---
 
 ## Not Started
 
-- **Phase 3 → Phase 12:** chưa bắt đầu. Chưa có form nhập liệu, chưa có Zod schema báo cáo, chưa có
-  Server Action ghi báo cáo, chưa có route handler ảnh, chưa có màn hình Admin thật.
+- **Phase 4 → Phase 12:** chưa bắt đầu. Chưa có form nhập thực đạt cuối ngày, chưa có `lib/kpi.ts`
+  thật, chưa có route handler ảnh, chưa có màn hình Admin thật, chưa có lịch sử báo cáo.
 - **Test còn thiếu:** `playwright.config.ts` và toàn bộ `e2e/*.spec.ts` (Phase 11);
-  `tests/integration/indexes.test.ts` với `EXPLAIN ANALYZE` (Phase 11); unit test cho
-  `lib/kpi|currency|date` (Phase 5).
+  `tests/integration/indexes.test.ts` với `EXPLAIN ANALYZE` (Phase 11); unit test cho `lib/kpi`
+  (Phase 5, còn chờ ISSUE-008).
 
-**Những thứ Phase 2 CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
-thân hàm `lib/kpi|currency|date` (Phase 5) · bottom nav / sidebar DEC-018 (Phase 7, Phase 8) ·
-UC-17/18/19 tạo và quản lý tài khoản Sales (Phase 10) · `lib/supabase/admin.ts` chưa được gọi ở
-đâu cả (đúng — nó chỉ dùng từ Phase 10).
+**Những thứ Phase 3 CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
 
-> `/sales/today` và `/admin` hiện là **trang tối thiểu của Phase 2**, chỉ để luồng đăng nhập có đích
-> đến thật và test được. FR-007 (Phase 3) và FR-024 (Phase 8) mới là nội dung thật. Điều này đã ghi
-> ngay trong comment đầu hai file đó.
+| Thứ chưa làm | Thuộc phase | Vì sao không làm ở Phase 3 |
+|---|---|---|
+| Thân `lib/kpi.ts` (`calculateAchievement`, `getAchievementStatus`) | Phase 5 | Bị **ISSUE-008** chặn thật. Phase 3 cố ý **không hiển thị `%` nào** — chỉ có cột "Cam kết" |
+| `getVietnamMonthRange()` | Phase 7 / 9 | Chỉ phục vụ filter tháng FR-021/FR-028; hành vi với chuỗi sai định dạng chưa chốt |
+| Form nhập thực đạt cuối ngày | Phase 4 | `/sales/today/evening` mới là **trang tối thiểu** |
+| Nút "Xuất ảnh" hoạt động thật | Phase 6 | Nút đã render nhưng luôn `disabled`; cờ `EXPORT_IMAGE_NOT_READY` đánh dấu chỗ phải xoá |
+| `/sales/reports/[id]` | Phase 7 | CTA "Xem báo cáo hôm nay" render **disabled**; tập `CTA_ROUTES_NOT_READY` đánh dấu chỗ phải xoá |
+| Bottom nav / sidebar DEC-018 | Phase 7, 8 | — |
+| UC-17/18/19 quản lý tài khoản | Phase 10 | `lib/supabase/admin.ts` vẫn chưa được gọi ở đâu cả — đúng thiết kế |
+
+> `/admin` hiện vẫn là **trang tối thiểu của Phase 2**, chỉ để luồng đăng nhập có đích đến thật và
+> test được — FR-024 (Phase 8) mới là nội dung thật. `/sales/today` **đã được thay bằng FR-007 thật ở
+> Phase 3**. Điều này đã ghi ngay trong comment đầu mỗi file.
 
 ---
 
 ## Known Issues
 
-Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 7 OPEN, 3 đã CLOSED.**
+Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 10 OPEN, 3 đã CLOSED.**
 
 | ID | Sev | Status | Nội dung |
 |---|---|---|---|
@@ -114,13 +155,15 @@ Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 7 OPEN, 3 đã CLO
 | ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null` → **phải chốt đầu Phase 5** |
 | ISSUE-009 | P3 | OPEN | **MỚI** — Next 16.3 deprecate tên `middleware.ts`, khuyến nghị `proxy.ts`. Cố ý hoãn, có điều kiện kích hoạt |
 | ISSUE-010 | P3 | OPEN | **MỚI** — máy đang chạy **3 stack Supabase local**; chọn nhầm container đã xảy ra thật |
-| ISSUE-011 | **P1** | OPEN | **MỚI** — service role key lọt vào transcript hội thoại do IDE tự đồng bộ `.env.local`. **Phải rotate.** Chưa vào git |
+| ISSUE-011 | **P1** | OPEN | service role key lọt vào transcript hội thoại do IDE tự đồng bộ `.env.local`. **Phải rotate.** Chưa vào git |
+| ISSUE-012 | P3 | OPEN | **MỚI** — sau `supabase db reset`, GoTrue + Kong không tự phục hồi → đăng nhập nhận `502` dù `docker ps` báo `healthy`. Có lệnh khắc phục đã kiểm chứng |
+| ISSUE-013 | P3 | OPEN | **MỚI** — NFR-008 (≤ 6 chạm) mâu thuẫn với FR-008 (5 trường bắt buộc). Đo thật **7 chạm / 1,8 giây**. **Cần người dùng quyết định — OQ-18** |
 
 ---
 
 ## Important Business Decisions
 
-Danh sách đầy đủ DEC-001..DEC-031 ở `docs/11-decisions.md`. Những điều một session mới **bắt buộc
+Danh sách đầy đủ DEC-001..DEC-034 ở `docs/11-decisions.md`. Những điều một session mới **bắt buộc
 phải biết**:
 
 **Kiến trúc & bảo mật**
@@ -157,6 +200,17 @@ phải biết**:
   **DEC-016** không dark mode v1 · **DEC-017** route `/login` · **DEC-018/019** bottom nav ≤5 mục,
   bảng so sánh 4 card ở mobile.
 
+**Ba quyết định MỚI của Phase 3 — đọc trước khi sửa `lib/` hay `features/report-*`**
+
+- **DEC-032** — `lib/date.ts` và `lib/currency.ts` **đã triển khai ở Phase 3**, không phải Phase 5.
+  Nhưng **`lib/kpi.ts` vẫn là khung** và vẫn bị ISSUE-008 chặn. Đừng nhầm hai chuyện đó với nhau.
+- **DEC-033** — Hàm **hiển thị** trả `'—'` (hoặc `''` cho `formatThousands`) khi đầu vào không hợp
+  lệ, **không ném lỗi**. Có `isValidVietnamDate()` vì `new Date('2026-02-30')` không ném lỗi mà
+  cuộn sang `2026-03-02`.
+- **DEC-034** — Zod schema của báo cáo dùng **`snake_case` trùng tên cột**, khác ví dụ `camelCase`
+  ở `docs/07 §3.5`. Và **`ActionResult` thành công mang `data.notice`** — server quyết định câu xác
+  nhận, client không suy ra từ `mode` (đã có lỗi thật vì chuyện này).
+
 ---
 
 ## Important Files
@@ -191,8 +245,27 @@ phải biết**:
 | `app/(auth)/login/page.tsx` | `/login` (DEC-017) |
 | `app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` | Lớp 2 — guard theo route group |
 
-**Test (Phase 2 — MỚI):** `vitest.config.mts` (3 project) · `lib/auth/routes.test.ts` ·
-`tests/integration/*` (5 file) · `tests/rls/*` (4 file).
+**Tầng báo cáo đầu ngày (Phase 3 — MỚI):**
+
+| File | Vai trò |
+|---|---|
+| `lib/date.ts` | `getVietnamToday`, `formatVietnamDate`, `isValidVietnamDate` — **đã có logic thật**. `getVietnamMonthRange` vẫn ném lỗi (Phase 7) |
+| `lib/currency.ts` | `formatCurrencyVND`, `parseCurrencyInput`, `formatThousands` — **đã có logic thật** |
+| `lib/validation/report.ts` | `morningReportSchema` (6 ô, strip mọi khoá server-owned) + `reportDateSchema` + 6 hằng số miền giá trị khớp CHECK constraint |
+| `lib/reports/today-cta.ts` | **Hàm thuần** `getTodayView` / `canOpenMorningForm` + hằng số đường dẫn. Đây là nơi DUY NHẤT quyết định CTA của FR-007 |
+| `lib/reports/messages.ts` | `REPORT_MESSAGES`, `SAVED_PARAM`, `messageForSavedParam` — dùng chung với Phase 4 |
+| `services/reports.ts` | `getTodayReport`, `insertMorningReport`, `updateMorningReport`. Dịch mã lỗi Postgres sang `DUPLICATE`/`REJECTED`/`UNKNOWN` |
+| `features/report-morning/actions.ts` | `saveMorningReport` (UC-04) + `updateMorningReport` (UC-05), đủ 7 bước `docs/07 §1.3` |
+| `features/report-morning/morning-report-form.tsx` | Form client — validate on blur bằng **chính** schema của server |
+| `features/report-morning/use-report-draft.ts` | `useReportDraft` — `useSyncExternalStore`, **không** `setState` trong effect |
+| `features/report-morning/currency-field.tsx` | Ô tiền + 3 chip cộng nhanh `+1tr/+5tr/+10tr` |
+| `features/report-morning/commitment-summary.tsx` | 4 chỉ tiêu cam kết — dùng lại ở `/sales/today` **và** `/sales/today/evening` |
+| `components/ui/{textarea,form-field}.tsx` | Primitive mới |
+| `components/ui/button.tsx` | Thêm `buttonClassName()` cho CTA dạng `<Link>` |
+
+**Test (Phase 2 + Phase 3):** `vitest.config.mts` (3 project) · `lib/auth/routes.test.ts` ·
+`lib/date.test.ts` · `lib/currency.test.ts` · `lib/validation/report.test.ts` ·
+`lib/reports/today-cta.test.ts` · `tests/integration/*` (5 file) · `tests/rls/*` (4 file).
 
 **Hai file env (không commit, đều bị `.gitignore` chặn):**
 
@@ -206,14 +279,16 @@ giờ chạm production dù `.env.local` trỏ cloud (DEC-022). Đã kiểm ch�
 một URL cloud giả, `npm run test:db` vẫn **66/66 PASS**. `tests/integration/setup.ts` còn một chặn
 thứ hai — URL không phải localhost thì ném lỗi ngay.
 
-**File sẽ tạo ở Phase 3 (chưa tồn tại):** `lib/validation/report.ts`, `features/report-morning/*`,
-`app/(sales)/sales/today/morning/page.tsx`.
+**File sẽ tạo ở Phase 4 (chưa tồn tại):** `features/report-evening/*`, và `eveningReportSchema`
+thêm vào `lib/validation/report.ts` (file đã có, chỉ thêm export).
 
 ---
 
 ## Database State
 
-**Supabase LOCAL: đã có schema đầy đủ và đã chạy thật.** Supabase CLOUD: **chưa tạo**.
+**Schema đã chạy thật trên CẢ HAI môi trường** — Supabase local (Postgres 17.6.1.156) và cloud
+`rnmywhwanpxmipqducqu` region `ap-southeast-1` (Postgres 17.6.1.155). **Không có migration mới ở
+Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo đầu ngày.
 
 - 2 enum (`user_role`, `report_status`), 2 bảng (`public.profiles`, `public.daily_reports`).
 - `UNIQUE(sales_id, report_date)`, 16 CHECK, 3 index hiệu năng, 7 function, 6 trigger.
@@ -231,77 +306,114 @@ thứ hai — URL không phải localhost thì ném lỗi ngay.
   ⚠ Máy đang chạy thêm 2 stack Supabase khác (`cq-tntt-manager` 54421/54422, `Polymind_Chinese`
   55321/55322) — xem ISSUE-010. Luôn lấy cổng bằng `npx supabase status` **trong thư mục dự án**.
 
+> ⚠ **Sau mỗi `npx supabase db reset` phải restart 3 container, nếu không mọi lần đăng nhập nhận
+> `502`** (ISSUE-012 — đã mất một vòng chẩn đoán sai vì `docker ps` vẫn báo `healthy`):
+>
+> ```bash
+> docker restart supabase_auth_<project> supabase_rest_<project>
+> sleep 8 && docker restart supabase_kong_<project>
+> ```
+>
+> Trên máy này `db reset` còn **treo ở bước "Restarting containers"** dù seed đã chạy xong. Kiểm bằng
+> `docker exec supabase_db_<project> psql -U postgres -d postgres -t -c "select count(*) from public.daily_reports;"`
+> → thấy `22` là xong, có thể ngắt lệnh.
+>
+> **Fixture của seed rất tiện cho kiểm chứng tay:** `sales.c` chưa có báo cáo hôm nay ·
+> `sales.a` đang `MORNING_SUBMITTED` · `sales.b` đã `COMPLETED` — đúng ba trạng thái của FR-007.
+
 ---
 
 ## Testing State
 
 | Loại | Trạng thái |
 |---|---|
-| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, 6/6 static pages) |
+| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, 7 route) |
 | **Typecheck** | ✅ `npm run typecheck` → **exit 0** |
 | **Lint** | ✅ `npm run lint` → **exit 0**, 0 error 0 warning |
-| **Unit** | ✅ `npm run test:unit` → **14 passed** (`lib/auth/routes.test.ts`) |
-| **Integration (DB)** | ✅ **40 passed** — UNIQUE, 16 CHECK, FK RESTRICT, 4 trigger, 3 function, bảng GRANT |
+| **Unit** | ✅ `npm run test:unit` → **140 passed** — `auth/routes` 14 · `date` 33 · `currency` 29 · `validation/report` 47 · `reports/today-cta` 17 |
+| **Integration (DB)** | ✅ **47 passed** — UNIQUE, 16 CHECK, FK RESTRICT, 4 trigger, 3 function, bảng GRANT |
 | **RLS** | ✅ **26 passed** — JWT thật của `salesA`/`salesB`/`admin`/`inactive` + `anon`, gọi thẳng PostgREST |
-| **Tổng `npm test`** | ✅ **80 passed / 80**, 8 test file |
-| **UI mobile** | ✅ Chromium 375px + 1440px: **32/32 PASS** — không cuộn ngang, touch target ≥44px, input ≥48px + 16px, mọi input có `<label for>` |
+| **Tổng `npm test`** | ✅ **213 passed / 213**, 12 test file |
+| **UI mobile (Phase 2 — auth)** | ✅ Chromium 375px + 1440px: **32/32 PASS** |
+| **UI mobile (Phase 3 — báo cáo sáng)** | ⚠ Chromium 375px + 1440px: **57/58 PASS**. Mục lệch duy nhất là **NFR-008 (7 lần chạm)** — ISSUE-013, không phải lỗi code |
 | **Tài khoản inactive** | ✅ **6/6 PASS**, gồm cả bị vô hiệu hoá **giữa phiên** |
 | **E2E (Playwright)** | ❌ `N/A — chưa có playwright.config.ts, chưa có e2e/*.spec.ts` |
 | **A11y (axe-core)** | ❌ `N/A — chưa chạy` |
 | **EXPLAIN ANALYZE / InitPlan** | ❌ `N/A — chưa đo. Phase 11, NFR-002` |
 | **Lighthouse** | ❌ `N/A — chưa chạy` |
 
-Bốn dòng cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào. Hai script kiểm chứng
+Bốn dòng cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào. Ba script kiểm chứng
 trình duyệt là **công cụ dùng một lần, đã xoá, không commit** — chúng không phải bộ E2E hồi quy.
 
 ---
 
 ## Last Working Feature
 
-**Luồng xác thực đầu-cuối chạy thật.** `next build` + `next start`, đăng nhập bằng tài khoản seed
+**Luồng cam kết đầu ngày chạy thật đầu-cuối (Phase 3).** `next build` + `next start` trỏ vào Supabase
+local, đăng nhập bằng `sales.c@bikeforce.local` → `/sales/today` hiện "Chưa báo cáo" + empty state →
+bấm CTA → điền form → **Lưu** → quay về `/sales/today` với banner "Đã lưu báo cáo đầu ngày", trạng
+thái đổi thành "Đã cam kết", CTA đổi thành "Hoàn thành báo cáo cuối ngày" → bấm "Sửa cam kết sáng"
+→ form prefill đúng → sửa → banner "Đã cập nhật cam kết sáng". Tài khoản đã `COMPLETED` (`sales.b`)
+vào thẳng `/sales/today/morning` thì bị đá về `/sales/today` (BR-019).
+
+Đây là **mốc an toàn thứ ba** để quay về nếu Phase 4 làm vỡ thứ gì.
+
+**Mốc an toàn thứ hai — luồng xác thực đầu-cuối (Phase 2).** `next build` + `next start`, đăng nhập bằng tài khoản seed
 (`sales.a@bikeforce.local` / `admin@bikeforce.local`, mật khẩu local `LocalDev#2026`) → vào đúng
 dashboard theo role → đăng xuất → bị chặn lại. Sai vai bị đưa về dashboard của chính mình; tài khoản
 bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
-Đây là **mốc an toàn thứ hai** để quay về nếu Phase 3 làm vỡ thứ gì.
+Đây là **mốc an toàn thứ hai**.
 
 ---
 
 ## Next Exact Steps
 
-> ✅ Phase 0, Phase 1 và 13/14 mục Phase 2 đã xong — **không làm lại**.
+> ✅ Phase 0, Phase 1, Phase 2 và 13/14 mục Phase 3 đã xong — **không làm lại**.
 
-> ✅ **Nhóm A và B của bản checkpoint trước đã HOÀN TẤT** — Supabase cloud đã tạo, đã tắt signup, đã
-> `link` + `db push` + `gen types --linked`, đã kiểm chứng bằng HTTP thật. Không làm lại.
+**Hai việc cần người dùng, KHÔNG chặn việc code:**
 
-**Việc bảo mật, làm trước (ISSUE-011, P1):**
-
-1. **Rotate service role key.** Dashboard → `Project Settings` → `API Keys` → mục secret →
-   **`Generate new secret key`** → dán giá trị mới vào `.env.local`.
+1. **Rotate service role key (ISSUE-011, P1).** Dashboard → `Project Settings` → `API Keys` → mục
+   secret → **`Generate new secret key`** → dán giá trị mới vào `.env.local`.
    **Đóng `.env.local` trong IDE trước khi dán**, hoặc dán bằng terminal — nếu không, IDE lại tự đưa
    key vào ngữ cảnh hội thoại đúng như lần trước (`docs/06 §11.2` biện pháp thứ 8).
+2. **Trả lời OQ-18 (ISSUE-013).** NFR-008 ≤ 6 lần chạm không thể đạt cùng lúc với FR-008 (5 trường
+   bắt buộc); đo thật được **7 chạm / 1,8 giây**. Ba phương án nằm ở `docs/01 § OQ-18`. Sau khi có
+   quyết định: cập nhật `docs/01`, tạo DEC mới nếu nới NFR-008, đo lại, rồi mới tick mục cuối của
+   Phase 3 trong `PROJECT_CHECKLIST.md`.
 
-**PHASE 3 — Morning Report (việc chính, bắt đầu ngay):**
+**PHASE 4 — Evening Report (việc chính, bắt đầu ngay, không chờ hai mục trên):**
 
-2. Viết `lib/validation/report.ts` — `morningReportSchema` theo `docs/08 §3` (từ chối số âm, `NaN`,
-   `Infinity`, chuỗi rác, ngày tương lai; trần doanh thu 100 tỷ; `planned_route` 1–300 sau `btrim`).
-   Schema **không được** khai báo `sales_id`, `status`, `report_date` — server tự đặt (AGENTS.md §8).
-3. Viết `lib/validation/report.test.ts` — bảng case đã liệt kê sẵn ở `docs/08 §3`, gồm cả biên
-   `100000000000` (hợp lệ) và `100000000001` (không hợp lệ).
-4. Viết `services/reports.ts` → `getTodayReport(supabase, salesId, today)` dùng
-   `uq_daily_reports_sales_date`, `select` tường minh cột, **không** `select('*')`.
-5. Viết `features/report-morning/` (form + `saveMorningReport` action) và
-   `app/(sales)/sales/today/morning/page.tsx`; đồng thời thay trang tối thiểu `/sales/today` bằng
-   FR-007 thật (trạng thái báo cáo hôm nay + **đúng 1 CTA chính** theo `status`).
+3. Thêm **`eveningReportSchema`** vào `lib/validation/report.ts` (file đã có — **thêm export, không
+   viết file mới**): 4 ô `actual_*` bắt buộc theo `ck_completed_requires_actuals`, `actual_route`
+   tuỳ chọn ≤ 300, `evening_note` tuỳ chọn ≤ 1000 (BR-018). Dùng lại `integerField()` và các hằng số
+   `MAX_*` đã có. Bảng case ở `docs/08 §3.6` (các dòng `evening_note` và "schema cuối ngày bắt buộc
+   đủ 4 chỉ số actual").
+4. Thêm test vào `lib/validation/report.test.ts` — gồm `evening_note` 1000 ký tự **tiếng Việt có
+   dấu** (`'ừ'.repeat(1000)`) phải hợp lệ và 1001 ký tự phải bị từ chối.
+5. Thêm **`completeEveningReport(supabase, reportId, salesId, values)`** vào `services/reports.ts`:
+   `update` 4 cột `actual_*` + `evening_note` + `evening_submitted_at = now()` + `status = 'COMPLETED'`,
+   rồi `.eq('id')` `.eq('sales_id')` `.select('id')` `.maybeSingle()`. 0 dòng ⇒ `REJECTED` (đã
+   `COMPLETED` hoặc không phải của mình). Dùng lại `ReportWriteResult` đã có.
+6. Viết `features/report-evening/{actions.ts,evening-report-form.tsx}` — copy đúng khung 7 bước của
+   `features/report-morning/actions.ts`, và **dùng lại** `useReportDraft` bằng cách nâng nó lên chỗ
+   dùng chung được (`features/X` **không** được import `features/Y` — AGENTS.md §1.2; cân nhắc chuyển
+   `use-report-draft.ts` sang `components/` hoặc `lib/` dạng hook thuần).
+7. Thay trang tối thiểu `app/(sales)/sales/today/evening/page.tsx` bằng FR-013 + FR-014 thật.
+   Guard BR-007 và `CommitmentSummary` **đã có sẵn** trong file đó, giữ nguyên.
+8. Sau khi lưu thành công: `status = 'COMPLETED'` ⇒ `getTodayView()` tự đổi CTA và bật
+   `canExportImage` — **không phải sửa gì trong `lib/reports/today-cta.ts`**, nó đã có test cho
+   nhánh này rồi.
 
 **Việc của Phase 12, chưa cần bây giờ:**
 
-6. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
+9. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
    `update public.profiles set role = 'ADMIN' where email = '<email>';` — **một lần duy nhất**.
    Chỉ cần trước khi có người dùng thật đăng nhập vào production.
 
-> ⚠ **Chặn ở đầu Phase 5, không phải Phase 3:** ISSUE-008 (`percent = null` khi nào) và cách
-> `AchievementResult` mang số vượt tuyệt đối (DEC-025). Phase 3 chưa cần `lib/kpi.ts`.
+> ⚠ **Chặn ở đầu Phase 5, không phải Phase 4:** ISSUE-008 (`percent = null` khi nào) và cách
+> `AchievementResult` mang số vượt tuyệt đối (DEC-025). Phase 4 **chưa cần** `lib/kpi.ts` — màn hình
+> cuối ngày chỉ NHẬP số, còn bảng đối chiếu có `%` là Phase 5.
 
 ---
 
@@ -340,12 +452,35 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 - **Đã đổi `vitest.config.ts` → `vitest.config.mts`** có lý do (cảnh báo `configLoader: 'native'`).
   Đừng đổi ngược lại.
 
+**Từ Phase 3 (mới):**
+
+- **Đã triển khai `lib/date.ts` và `lib/currency.ts`** với đủ test — **không viết lại**. Nếu thấy
+  chúng "lẽ ra thuộc Phase 5", đọc DEC-032 trước khi động tay.
+- **`lib/kpi.ts` vẫn ném lỗi có chủ đích.** Đừng "làm nốt cho đủ bộ": nó bị ISSUE-008 chặn thật, và
+  Phase 3 cố ý không hiển thị `%` nào. Chốt ISSUE-008 trước, viết code sau.
+- **Đã kiểm chứng trên trình duyệt thật rằng client KHÔNG được suy ra thông báo từ `mode` của form**
+  (DEC-034). `revalidatePath` làm trang form render lại ở chế độ SỬA ngay sau khi TẠO thành công.
+  Đừng "đơn giản hoá" bằng cách bỏ `data.notice` — lỗi sẽ quay lại y nguyên.
+- **`useReportDraft` cố ý dùng `useSyncExternalStore`,** không phải `useEffect` + `setState`.
+  React Compiler chặn cách viết kia (`react-hooks/set-state-in-effect`). Đừng đổi ngược lại.
+- **Đã đo NFR-008 thật: 7 chạm / 1,8 giây.** Đừng đo lại rồi kết luận khác; và **đừng bỏ bớt trường
+  bắt buộc** để ép xuống 6 — đó là thay đổi nghiệp vụ, phải chờ OQ-18.
+- **Nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" cố ý `disabled`.** Hai cờ đánh dấu chỗ phải xoá đã
+  có sẵn trong `app/(sales)/sales/today/page.tsx`: `CTA_ROUTES_NOT_READY` (Phase 7) và
+  `EXPORT_IMAGE_NOT_READY` (Phase 6). Không phải bug.
+- **`/sales/today/evening` là trang tối thiểu có chủ đích** — guard vai + BR-007 + `CommitmentSummary`
+  đã đúng và Phase 4 dùng lại được. Chỉ cần **thêm** form, không cần viết lại file.
+
 ---
 
-## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG TOÀN BỘ
+## OPEN QUESTIONS — 17/17 câu ban đầu đã đóng · **OQ-18 đang chờ**
 
-**Không còn câu hỏi nghiệp vụ nào chờ trả lời.** Người dùng đã trả lời đủ **17/17** ngày `2026-08-07`.
-Danh sách đầy đủ kèm câu trả lời chính thức: `docs/01-business-analysis.md § OPEN QUESTIONS`.
+**Không còn câu hỏi nghiệp vụ nào của bộ 17 câu ban đầu.** Người dùng đã trả lời đủ **17/17** ngày
+`2026-08-07`. Danh sách đầy đủ kèm câu trả lời chính thức: `docs/01-business-analysis.md § OPEN QUESTIONS`.
+
+> ⏳ **OQ-18 (MỚI, phát sinh ở Phase 3 — không phải hỏi lại câu cũ):** NFR-008 đặt "≤ 6 lần chạm"
+> nhưng FR-008 có 5 trường bắt buộc nên sàn lý thuyết là 7. Đo thật: **7 chạm / 1,8 giây**.
+> Ba phương án ở `docs/01 § OQ-18` và `docs/12 § ISSUE-013`. **Không chặn Phase 4.**
 
 | ID | Câu trả lời chính thức |
 |---|---|

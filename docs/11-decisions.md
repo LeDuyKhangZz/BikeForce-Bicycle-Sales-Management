@@ -540,6 +540,87 @@ Ba khẳng định này được **khoá lại bằng test tự động** trong 
 
 ---
 
+## DEC-032
+
+**Date:** 2026-08-07 (Phase 3)
+**Loại:** Technical
+**Decision:** Triển khai **sớm** `getVietnamToday()`, `formatVietnamDate()` (`lib/date.ts`) và `formatCurrencyVND()`, `parseCurrencyInput()`, `formatThousands()` (`lib/currency.ts`) **ngay trong Phase 3**, thay vì chờ Phase 5 như kế hoạch ban đầu. Kèm luôn bộ unit test đầy đủ của `docs/08 §3.3, §3.4, §3.5`. **`getVietnamMonthRange()` KHÔNG được kéo lên** — vẫn là khung ném lỗi, thuộc Phase 7 (FR-021) / Phase 9 (FR-028).
+
+**Reason:** Phase 3 không chạy được nếu thiếu chúng, và đây là ràng buộc vật lý chứ không phải sở thích:
+
+- **FR-010 / BR-005** yêu cầu `report_date = getVietnamToday()`. Không có hàm này thì Server Action không có ngày nghiệp vụ để ghi, và RLS `reports_insert_own_today` (`report_date = vn_today()`) sẽ từ chối mọi INSERT.
+- **FR-007** yêu cầu `/sales/today` hiển thị ngày VN → cần `formatVietnamDate()`.
+- **FR-008 + `docs/05 §6.2`** yêu cầu CurrencyInput phân nhóm nghìn khi blur và gửi lên **số nguyên** → cần `parseCurrencyInput()` + `formatThousands()`; và `/sales/today` hiển thị mục tiêu doanh thu → cần `formatCurrencyVND()`.
+
+**Quan trọng — điều này KHÔNG kéo `lib/kpi.ts` lên theo.** `calculateAchievement()` và `getAchievementStatus()` vẫn là khung ném lỗi, vì chúng bị chặn thật bởi **ISSUE-008** (`percent = null` trong những trường hợp nào) và **DEC-025** (cách mang số vượt tuyệt đối). Phase 3 chỉ hiển thị **cột cam kết**, không hiển thị `%` nào, nên không chạm tới `lib/kpi.ts`. Ranh giới này là cố ý và phải giữ: hiển thị một phần trăm tính sai còn tệ hơn không hiển thị gì.
+
+**Alternatives:**
+(a) **Viết một hàm ngày/tiền cục bộ trong `features/report-morning/`** cho tạm đủ dùng, để Phase 5 viết bản thật. Bị loại thẳng: vi phạm AGENTS.md §9 (công thức chỉ tồn tại một nơi) và tạo ra đúng loại nhân bản mà NFR-012 cấm.
+(b) **Hoãn Phase 3, làm Phase 5 trước.** Bị loại: Phase 5 đang bị ISSUE-008 chặn thật, nên đổi thứ tự chỉ dời chỗ chờ chứ không giải quyết gì.
+(c) **Dùng `new Date().toISOString().slice(0,10)`** cho nhanh. Bị loại tuyệt đối: đó chính là bug múi giờ mà BR-005 và DEC-009 sinh ra để chặn.
+
+**Impact:** `lib/date.ts`, `lib/currency.ts`, `lib/date.test.ts` (33 case), `lib/currency.test.ts` (29 case); `PROJECT_CHECKLIST.md` Phase 5 (hai gạch đầu dòng về `lib/currency` và `lib/date` nay đã có code + test, nhưng **chưa được tick** vì mục Phase 5 còn bao cả `lib/kpi.ts`).
+**Status:** **APPROVED** (technical, có thể veto)
+
+---
+
+## DEC-033
+
+**Date:** 2026-08-07 (Phase 3)
+**Loại:** Technical
+**Decision:** Hàm **hiển thị** trong `lib/` nhận đầu vào không hợp lệ thì **trả chuỗi thay thế, không ném lỗi**:
+
+| Hàm | Đầu vào không hợp lệ | Trả về |
+|---|---|---|
+| `formatVietnamDate(date)` | không đúng `YYYY-MM-DD`, hoặc ngày không tồn tại trên lịch (`2026-02-30`) | `'—'` |
+| `formatCurrencyVND(value)` | `NaN`, `Infinity`, `-Infinity` | `'—'` |
+| `formatThousands(value)` | `NaN`, `Infinity`, `-Infinity` | `''` (chuỗi rỗng — nó ghi thẳng vào ô nhập) |
+| `parseCurrencyInput(raw)` | mọi thứ không phải số nguyên VND hợp lệ | `null` *(đã có từ trước, ghi lại cho đủ bảng)* |
+
+Đi kèm: `lib/date.ts` xuất thêm `isValidVietnamDate(value)` — hàm thuần kiểm một chuỗi có phải ngày CÓ THẬT trên lịch không, dùng chung bởi `formatVietnamDate` và `reportDateSchema`.
+
+**Reason:** `docs/08 §3.5.2` để ngỏ điểm này (*"Không throw; trả chuỗi rỗng hoặc `—`. Hành vi chính xác chốt ở Phase 5"*), và Phase 3 phải chốt vì `/sales/today` gọi `formatVietnamDate` ở mọi request. Chọn `'—'` vì ba lý do:
+
+1. **Trùng với `display` của `AchievementResult`** khi không có số liệu (`docs/08 §3.1`) — một ký tự duy nhất cho "không có giá trị" trên toàn giao diện.
+2. **Ném lỗi từ một hàm format là sai tầng.** Một dòng dữ liệu lạ trong DB không được phép làm sập cả trang; việc chặn dữ liệu sai là của Zod và CHECK constraint.
+3. **Master Spec §9 và §25 cấm `NaN` / `Infinity` lọt ra UI.** Nếu formatter im lặng đi qua, `Intl` sẽ in ra `"NaN ₫"` — đúng thứ bị cấm.
+
+`isValidVietnamDate` tồn tại vì `new Date('2026-02-30')` **không ném lỗi** — JavaScript cuộn sang `2026-03-02`. Muốn từ chối ngày không tồn tại (case của `docs/08 §3.6`) thì buộc phải so ngược từng thành phần sau khi parse.
+
+**Alternatives:**
+(a) **Ném lỗi và để `error.tsx` bắt.** Bị loại: một ngày rác làm hỏng cả màn hình "Hôm nay", trong khi phần còn lại vẫn đọc được.
+(b) **Trả chuỗi rỗng ở mọi hàm.** Bị loại cho `formatVietnamDate`: một ô trống trên giao diện trông như lỗi render, còn `'—'` nói rõ "không có giá trị".
+
+**Impact:** `lib/date.ts`, `lib/currency.ts`, `lib/date.test.ts`, `lib/currency.test.ts`, `docs/08 §3.5.2` (điểm để ngỏ nay đã chốt).
+**Status:** **APPROVED** (technical, có thể veto)
+
+---
+
+## DEC-034
+
+**Date:** 2026-08-07 (Phase 3)
+**Loại:** Technical
+**Decision:** Zod schema của báo cáo dùng **khoá `snake_case` trùng đúng tên cột** của `public.daily_reports` (`planned_route`, `target_revenue`, …), **không** dùng `camelCase` như ví dụ minh hoạ ở `docs/07 §3.5`. Tên field trên form, khoá của `fieldErrors`, và khoá của payload gửi xuống `services/` đều là cùng một chuỗi đó.
+
+Kèm theo: Server Action trả về `data.notice` — **server** quyết định câu xác nhận nào hiện ở `/sales/today`, client không tự suy ra.
+
+**Reason:**
+
+- `docs/08 §3.6` — tài liệu test, cụ thể hơn ví dụ minh hoạ của `docs/07` — đã ghi issue path là `['target_sales_quantity']`.
+- Trùng tên cột nghĩa là output của `safeParse` gắn thẳng vào `TablesInsert<'daily_reports'>` **không cần tầng ánh xạ**. Tầng ánh xạ đó là nơi rất dễ gõ nhầm một cột mà TypeScript không bắt được, vì cả hai bên đều là `string`.
+- `fieldErrors` từ server khớp thẳng `name` của input ⇒ gắn lỗi đúng ô và autofocus ô lỗi đầu tiên không cần bảng tra.
+
+Về `data.notice`: đã xảy ra **lỗi thật** khi kiểm chứng trên Chromium. Sau khi tạo báo cáo thành công, `revalidatePath('/sales/today/morning')` khiến RSC của chính trang form render lại; lúc đó đã có báo cáo nên `mode` chuyển từ `'create'` sang `'edit'`. Client suy ra thông báo từ `mode` hiện tại nên hiện nhầm *"Đã cập nhật cam kết sáng"* cho một lần TẠO MỚI. Chỉ server mới biết chắc nó vừa `insert` hay vừa `update`.
+
+**Alternatives:**
+(a) **Dùng `camelCase` đúng chữ của `docs/07 §3.5`.** Bị loại: thêm một tầng ánh xạ không ai kiểm được, và mâu thuẫn với bảng test đã viết ở `docs/08 §3.6`.
+(b) **Client nhớ `mode` bằng `useRef` tại thời điểm submit.** Bị loại: vẫn là suy đoán ở phía client, chỉ khó sai hơn một chút. Server biết sự thật thì để server nói.
+
+**Impact:** `lib/validation/report.ts`, `features/report-morning/*`, `services/reports.ts`, `lib/reports/messages.ts`, `docs/07 §3.5`, `docs/07 §3.6`.
+**Status:** **APPROVED** (technical, có thể veto)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

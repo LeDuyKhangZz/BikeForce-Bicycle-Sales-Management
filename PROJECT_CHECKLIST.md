@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 2 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 3 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -25,17 +25,19 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-07, sau Phase 2):** repository đã có schema chạy thật trên Supabase
-local, tầng auth đầy đủ, và **bộ test đầu tiên của dự án**. Kết quả thật của lần chạy cuối:
+**Tình trạng hôm nay (2026-08-07, sau Phase 3):** repository đã có schema chạy thật trên Supabase
+local **và** cloud, tầng auth đầy đủ, **luồng báo cáo đầu ngày chạy thật đầu-cuối**, và bộ test 213
+case. Kết quả thật của lần chạy cuối:
 
 | Lệnh | Kết quả |
 |---|---|
-| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, 6/6 static pages) |
+| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, 7 route) |
 | `npm run typecheck` | ✅ exit 0 |
 | `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
-| `npm test` | ✅ **80 passed / 80** — 8 test file, 3 project (`unit`, `integration`, `rls`) |
-| Kiểm chứng auth trên Chromium | ✅ **32/32 PASS** ở 375px và 1440px |
-| Kiểm chứng tài khoản `is_active=false` | ✅ **6/6 PASS** |
+| `npm test` | ✅ **213 passed / 213** — 12 test file, 3 project (`unit` 140 · `integration` 47 · `rls` 26) |
+| Kiểm chứng auth trên Chromium (Phase 2) | ✅ **32/32 PASS** ở 375px và 1440px |
+| Kiểm chứng tài khoản `is_active=false` (Phase 2) | ✅ **6/6 PASS** |
+| Kiểm chứng luồng báo cáo sáng trên Chromium (Phase 3) | ⚠ **57/58 PASS** ở 375px và 1440px — mục FAIL duy nhất là NFR-008 (7 lần chạm), xem ISSUE-013 |
 
 **Playwright E2E vẫn `N/A`** — chưa có `playwright.config.ts`, chưa có file `e2e/*.spec.ts` nào. Các
 kiểm chứng trình duyệt ở trên chạy bằng script dùng-một-lần (đã xoá, không commit), **không phải**
@@ -128,20 +130,39 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 3 — Morning Report
 
-- [ ] `/sales/today` hiển thị tên, ngày VN, trạng thái báo cáo hôm nay và **đúng 1 CTA chính** theo trạng thái — FR-007, UC-03
-- [ ] `/sales/today/morning` form đầu ngày: tuyến, mục tiêu viếng thăm, mục tiêu doanh số, mục tiêu doanh thu, SL khách hàng dự kiến — FR-008, UC-04
-- [ ] Họ tên lấy từ `profiles`, hiển thị read-only, không cho nhập lại — FR-009
-- [ ] `report_date` mặc định `getVietnamToday()` theo `Asia/Ho_Chi_Minh` — FR-010, BR-005
-- [ ] Zod schema cho form sáng: integer ≥ 0, revenue `bigint` ≤ 100.000.000.000, từ chối NaN/Infinity/chuỗi rác — BR-006, BR-017
-- [ ] Chặn tạo trùng báo cáo cùng ngày ở **cả ba tầng**: UI, Server Action, và `UNIQUE(sales_id, report_date)` — FR-011, BR-001
-- [ ] Server Action tự kiểm tra auth → role → Zod trước khi ghi, log lỗi ở server và chỉ trả message an toàn về client — NFR-006, NFR-014
-- [ ] Sửa được báo cáo sáng khi `status = 'MORNING_SUBMITTED'` — FR-012, BR-019, UC-05
-- [ ] Chặn tạo báo cáo cho ngày tương lai và chặn nhập bù ngày cũ — BR-016, BR-021
-- [ ] UX form: label hiển thị (không placeholder-only), `inputMode="numeric"`, `min-h-[48px] text-base`, validate on blur, error `role="alert"` ngay dưới field, autofocus field lỗi đầu tiên
-- [ ] Draft localStorage khôi phục khi mất mạng hoặc đóng tab, kèm cảnh báo `beforeunload` khi form dirty — FR-035
-- [ ] Sticky action bar full-width `h-12`, disable + spinner khi đang gửi, có `env(safe-area-inset-bottom)`
-- [ ] Trạng thái loading (skeleton >300ms), empty state và error state có nút "Thử lại"
+> **Trạng thái 2026-08-07: 13/14 mục `[x]`.** Mục còn lại (walkthrough NFR-008) **không phải lỗi code** — nó bị
+> chặn bởi một mâu thuẫn giữa NFR-008 và FR-008, đã ghi thành **ISSUE-013 + OQ-18** và **cần người dùng quyết định**.
+> Bốn cổng chất lượng đã chạy thật: `npm run build` · `npm run typecheck` · `npm run lint` đều exit 0;
+> `npm test` → **213/213**. Kiểm chứng Chromium 375px + 1440px: **57/58**.
+
+- [x] `/sales/today` hiển thị tên, ngày VN, trạng thái báo cáo hôm nay và **đúng 1 CTA chính** theo trạng thái — FR-007, UC-03
+      → Quyết định CTA nằm ở `lib/reports/today-cta.ts` (**hàm thuần**, 17 unit test), không nằm trong JSX. Đủ 3 trạng thái của `docs/03 §3.2`. ⚠ CTA `Xem báo cáo hôm nay` render **disabled** vì `/sales/reports/[id]` là Phase 7 — có hằng số `CTA_ROUTES_NOT_READY` đánh dấu rõ chỗ phải xoá
+- [x] `/sales/today/morning` form đầu ngày: tuyến, mục tiêu viếng thăm, mục tiêu doanh số, mục tiêu doanh thu, SL khách hàng dự kiến — FR-008, UC-04
+      → 6 ô (5 bắt buộc + `visit_purpose` tuỳ chọn theo DEC-029). Ô doanh thu có 3 chip cộng nhanh `+1tr/+5tr/+10tr`
+- [x] Họ tên lấy từ `profiles`, hiển thị read-only, không cho nhập lại — FR-009
+      → Kiểm chứng thật: **không tồn tại** `input[name="full_name"]` trong DOM
+- [x] `report_date` mặc định `getVietnamToday()` theo `Asia/Ho_Chi_Minh` — FR-010, BR-005
+      → `lib/date.ts` triển khai thật ở phase này (DEC-032), 33 unit test gồm biên 16:59Z/17:00Z/17:01Z và 4 timezone tiến trình
+- [x] Zod schema cho form sáng: integer ≥ 0, revenue `bigint` ≤ 100.000.000.000, từ chối NaN/Infinity/chuỗi rác — BR-006, BR-017
+      → `lib/validation/report.ts`, **47 test**. Schema **strip** `sales_id`/`report_date`/`status` do client gửi — có test khoá lại
+- [x] Chặn tạo trùng báo cáo cùng ngày ở **cả ba tầng**: UI, Server Action, và `UNIQUE(sales_id, report_date)` — FR-011, BR-001
+      → Lớp 1: RSC của `/morning` luôn query trước rồi mở chế độ SỬA (kiểm chứng thật với `sales.a`). Lớp 2: action map `23505` → `CONFLICT`. Lớp 3: constraint, đã có integration test từ Phase 2
+- [x] Server Action tự kiểm tra auth → role → Zod trước khi ghi, log lỗi ở server và chỉ trả message an toàn về client — NFR-006, NFR-014
+      → Đủ 7 bước của `docs/07 §1.3`. `services/reports.ts` dịch mã lỗi Postgres sang từ vựng nghiệp vụ nên `PostgrestError` thô không bao giờ lên tới UI
+- [x] Sửa được báo cáo sáng khi `status = 'MORNING_SUBMITTED'` — FR-012, BR-019, UC-05
+      → Kiểm chứng thật: sửa doanh số 5 → 7 xe, hiện đúng banner "Đã cập nhật cam kết sáng"
+- [x] Chặn tạo báo cáo cho ngày tương lai và chặn nhập bù ngày cũ — BR-016, BR-021
+      → `reportDateSchema` (unit test cho quá khứ/tương lai/ngày không tồn tại) + RLS `reports_insert_own_today` + CHECK `ck_report_not_future`
+- [x] UX form: label hiển thị (không placeholder-only), `inputMode="numeric"`, `min-h-[48px] text-base`, validate on blur, error `role="alert"` ngay dưới field, autofocus field lỗi đầu tiên
+      → Kiểm chứng thật trên Chromium: **mọi** input có `<label for>`, cao ≥ 48px, font ≥ 16px; validate on blur dùng **chính** schema của server
+- [x] Draft localStorage khôi phục khi mất mạng hoặc đóng tab, kèm cảnh báo `beforeunload` khi form dirty — FR-035
+      → `useReportDraft` dùng `useSyncExternalStore` (không `setState` trong effect). Khoá gắn với **ngày nghiệp vụ** để draft hôm qua không lọt vào form hôm nay. Kiểm chứng thật: reload trang → khôi phục + có nút "Bỏ nội dung nhập dở"
+- [x] Sticky action bar full-width `h-12`, disable + spinner khi đang gửi, có `env(safe-area-inset-bottom)`
+      → `min-h-12` full-width, `pb-[calc(0.75rem+env(safe-area-inset-bottom))]`, khoá cả trong lúc chờ điều hướng để chống double submit
+- [x] Trạng thái loading (skeleton >300ms), empty state và error state có nút "Thử lại"
+      → Dùng lại `loading.tsx`/`error.tsx` của route group `(sales)` (Phase 2); empty state có icon + hướng dẫn + đúng 1 CTA
 - [ ] Walkthrough xác nhận hoàn tất báo cáo sáng ≤ 60 giây và ≤ 6 lần chạm — NFR-008
+      → **ĐÃ ĐO THẬT: 1,8 giây (đạt) · 7 lần chạm (KHÔNG đạt).** Sàn lý thuyết là 7 vì FR-008 có 5 trường bắt buộc. **Không tick** cho tới khi người dùng chọn phương án ở **OQ-18 / ISSUE-013**
 
 ## Phase 4 — Evening Report
 
@@ -164,7 +185,9 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 - [ ] Xử lý `target = 0` theo BR-015: `actual = 0` → 100%; `actual > 0` → `percent: null` + hiển thị `—`. Không bao giờ ra `NaN` / `Infinity` / `∞` — OQ-11
 - [ ] Achievement **không persist** vào DB, luôn tính runtime — BR-011, DEC-007
 - [ ] `lib/currency.ts` → `formatCurrencyVND` bằng `Intl.NumberFormat('vi-VN')` và `parseCurrencyInput`; tiền lưu `bigint` VND nguyên — BR-010, DEC-008
+      → ✅ **ĐÃ XONG SỚM ở Phase 3** (DEC-032): cả hai hàm + `formatThousands`, **29 unit test** gồm khứ hồi format→parse. Ô này vẫn `[ ]` **chỉ vì** nó nằm chung nhóm với các mục `lib/kpi` còn chờ ISSUE-008
 - [ ] `lib/date.ts` → `getVietnamToday`, `formatVietnamDate`, `getVietnamMonthRange` bằng `Intl.DateTimeFormat`, không thêm dependency timezone — DEC-009, NFR-011
+      → ✅ `getVietnamToday` + `formatVietnamDate` + `isValidVietnamDate` **đã xong ở Phase 3** (DEC-032), **33 unit test**. ⏳ Còn thiếu **`getVietnamMonthRange`** — nó chỉ phục vụ filter tháng của FR-021/FR-028 nên để đúng Phase 7/Phase 9
 - [ ] Không component nào cài lại công thức KPI hoặc format tiền — logic chỉ tồn tại một nơi — NFR-012
 - [ ] Bảng đối chiếu 4 chỉ tiêu: 4 card ở mobile, `<table>` thật từ 768px, cấm cuộn ngang — DEC-019
 - [ ] Badge trạng thái luôn có **icon + text**, không dùng màu đơn thuần (Lucide `TrendingUp` / `Minus` / `TrendingDown` / `Clock`)

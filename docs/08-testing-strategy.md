@@ -5,6 +5,28 @@
 
 ---
 
+## 0-BIS. TRẠNG THÁI THẬT TÍNH TỚI 2026-08-07 (hết Phase 3) — ĐỌC MỤC NÀY TRƯỚC
+
+Mục `0` ngay bên dưới được viết ở Phase 0 khi repository chưa có một dòng code nào. **Nó đã lỗi thời**; giữ lại để không mất dấu lịch sử. Số liệu có thẩm quyền:
+
+| Hạng mục | Trạng thái thật | Lệnh đã chạy |
+|---|---|---|
+| Build | ✅ exit 0 | `npm run build` |
+| Typecheck | ✅ exit 0 | `npm run typecheck` |
+| Lint | ✅ exit 0, 0 error 0 warning | `npm run lint` |
+| **Unit** | ✅ **140 passed** — `auth/routes` 14 · `date` 33 · `currency` 29 · `validation/report` 47 · `reports/today-cta` 17 | `npm run test:unit` |
+| **Integration (DB)** | ✅ **47 passed** | `npm run test:db` |
+| **RLS** | ✅ **26 passed** | `npm run test:db` |
+| **Tổng** | ✅ **213 passed / 213**, 12 test file | `npm test` |
+| E2E (Playwright) | ❌ `N/A — chưa có playwright.config.ts, chưa có e2e/*.spec.ts` | — |
+| A11y (axe-core) | ❌ `N/A — chưa chạy` | — |
+| `EXPLAIN ANALYZE` | ❌ `N/A — chưa đo, Phase 11` | — |
+| Lighthouse | ❌ `N/A — chưa chạy` | — |
+
+**Kiểm chứng trình duyệt của Phase 3** (Chromium 375px + 1440px, script dùng-một-lần, **đã xoá, không commit**): **57 PASS / 1 FAIL**. Mục FAIL duy nhất là **NFR-008 — 7 lần chạm thay vì ≤ 6**, đã ghi thành ISSUE-013 + OQ-18 và **không** phải lỗi cài đặt. Đây **không phải** bộ E2E hồi quy; bốn dòng `N/A` ở trên giữ nguyên giá trị `N/A`.
+
+---
+
 ## 0. TRẠNG THÁI THỰC TẾ TẠI THỜI ĐIỂM VIẾT
 
 **Tại thời điểm viết tài liệu này, KHÔNG có bài test nào đã được chạy, vì trong repository chưa tồn tại một dòng code nào.**
@@ -97,12 +119,13 @@ Coverage provider: `v8`. Loại trừ khỏi coverage: `types/database.types.ts`
 ```text
 lib/
   auth/routes.ts      lib/auth/routes.test.ts     ✅ 14 test
-  kpi.ts              lib/kpi.test.ts             ⏳ Phase 5
-  currency.ts         lib/currency.test.ts        ⏳ Phase 5
-  date.ts             lib/date.test.ts            ⏳ Phase 5
+  kpi.ts              lib/kpi.test.ts             ⏳ Phase 5 — còn chờ ISSUE-008
+  currency.ts         lib/currency.test.ts        ✅ 29 test (kéo lên Phase 3 — DEC-032)
+  date.ts             lib/date.test.ts            ✅ 33 test (kéo lên Phase 3 — DEC-032)
+  reports/today-cta.ts  lib/reports/today-cta.test.ts  ✅ 17 test — ba trạng thái FR-007 + BR-002
   validation/
     auth.ts                                       ✅ phủ gián tiếp qua login-form + signInAction
-    report.ts         lib/validation/report.test.ts   ⏳ Phase 3
+    report.ts         lib/validation/report.test.ts   ✅ 47 test (Phase 3)
     profile.ts        lib/validation/profile.test.ts  ⏳ Phase 10
 tests/
   integration/

@@ -35,20 +35,40 @@ const SIZE_CLASS: Record<Size, string> = {
  * trong globals.css) · disabled opacity 0.45 + cursor-not-allowed + thuộc tính
  * `disabled` thật.
  */
+/**
+ * Lớp CSS của nút, tách riêng để **link điều hướng** dùng chung được.
+ *
+ * Một CTA đưa người dùng sang trang khác phải là `<a>` thật (giữ được mở tab
+ * mới, giữ được back stack, đọc đúng bằng screen reader), nhưng nó vẫn phải
+ * trông và chạm giống hệt nút. Trả về chuỗi class thay vì dựng cơ chế `asChild`
+ * — dự án không dùng Radix, và một hàm thuần thì không tốn runtime nào.
+ */
+export function buttonClassName({
+  variant = 'primary',
+  size = 'md',
+  className,
+}: {
+  variant?: Variant;
+  size?: Size;
+  className?: string;
+} = {}): string {
+  return cn(
+    'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
+    'transition-[transform,background-color,opacity] duration-150',
+    'active:scale-[0.98]',
+    'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45',
+    VARIANT_CLASS[variant],
+    SIZE_CLASS[size],
+    className,
+  );
+}
+
 export function Button({ variant = 'primary', size = 'md', className, type, ...props }: Props) {
   return (
     <button
       // Mặc định `type="button"`: quên `type` trong <form> sẽ vô tình submit.
       type={type ?? 'button'}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-        'transition-[transform,background-color,opacity] duration-150',
-        'active:scale-[0.98]',
-        'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45',
-        VARIANT_CLASS[variant],
-        SIZE_CLASS[size],
-        className,
-      )}
+      className={buttonClassName({ variant, size, className })}
       {...props}
     />
   );

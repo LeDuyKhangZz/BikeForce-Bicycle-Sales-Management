@@ -411,13 +411,20 @@ Cột số căn phải, `tabular-nums`. `<caption>` mô tả bảng cho screen r
 
 ## 9. Page inventory (Master Spec §49 — *page inventory*)
 
+> **Ba primitive UI thêm ở Phase 3**, bổ sung cho bộ 6 primitive của Phase 1:
+> `components/ui/textarea.tsx` (§6.2 — `min-h-24`, `resize-y` để không sinh cuộn ngang) ·
+> `components/ui/form-field.tsx` (bố cục chuẩn label → control → helper/counter → lỗi có `role="alert"` + icon) ·
+> `buttonClassName()` xuất từ `components/ui/button.tsx` — để một CTA điều hướng render bằng `<Link>` thật mà vẫn trông và chạm y hệt nút (giữ được mở tab mới, back stack, và ngữ nghĩa cho screen reader).
+>
+> **Đã kiểm chứng thật trên Chromium 375px và 1440px (2026-08-07)** cho cả ba route Sales: không cuộn ngang, mọi touch target ≥ 44px, mọi input ≥ 48px và ≥ 16px, mọi input có `<label for>`.
+
 | Route | Role | Mục đích | Component chính | Loading | Empty | Error | Mobile → Desktop |
 |---|---|---|---|---|---|---|---|
 | `/` | any | Redirect theo role | — | spinner | — | về `/login` | như nhau |
 | `/login` | public | UC-01 | LoginForm | nút loading | — | lỗi dưới form + banner | 1 cột canh giữa, `max-w-sm` |
-| `/sales/today` | SALES | UC-03, FR-007 | TodayStatusCard, StatTile, CTA chính | skeleton card | "Chưa có báo cáo hôm nay" + CTA tạo | ErrorState + Thử lại | 1 cột → 2–3 cột KPI |
-| `/sales/today/morning` | SALES | UC-04, UC-05 | MorningReportForm | skeleton form | — | lỗi theo field + banner | 1 cột `max-w-md`, sticky CTA |
-| `/sales/today/evening` | SALES | UC-06 | CommitmentRecap + EveningReportForm | skeleton | — | như trên | như trên |
+| `/sales/today` | SALES | UC-03, FR-007 | ✅ **ĐÃ DỰNG (Phase 3)** — badge trạng thái, `CommitmentSummary`, đúng 1 CTA chính | skeleton card | "Chưa có báo cáo hôm nay" + CTA tạo | ErrorState + Thử lại | 1 cột → 2–3 cột KPI |
+| `/sales/today/morning` | SALES | UC-04, UC-05 | ✅ **ĐÃ DỰNG (Phase 3)** — `MorningReportForm` | skeleton form | — | lỗi theo field + banner | 1 cột `max-w-md`, sticky CTA |
+| `/sales/today/evening` | SALES | UC-06 | ⚠ **TRANG TỐI THIỂU (Phase 3)** — mới có guard vai + BR-007 + `CommitmentSummary` (FR-013). `EveningReportForm` là **Phase 4** | skeleton | — | như trên | như trên |
 | `/sales/history` | SALES | UC-09, FR-021 | MonthFilter, ReportListItem, Pagination | skeleton list | "Tháng này chưa có báo cáo" | ErrorState | card → bảng từ 768px |
 | `/sales/reports/[id]` | SALES | UC-10, UC-07, UC-08 | ReportDetail, ComparisonTable, ShareButton | skeleton | — | 404 nếu không phải của mình | card → bảng từ 768px |
 | `/sales/account` | SALES | UC-11 | ProfileCard, ChangePasswordForm, LogoutButton | skeleton | — | lỗi theo field | 1 cột |

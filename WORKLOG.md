@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 2 (còn 1 mục chờ người dùng) | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 3 (13/14 mục — mục cuối chờ người dùng trả lời OQ-18) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,16 +10,16 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 2 — Database & Auth: 13/14 mục xong (2026-08-07).**
+**PHASE 3 — Morning Report: 13/14 mục xong (2026-08-07).**
 
-Schema đã chạy thật trên Supabase local (Postgres 17.6.1.156), tầng auth đầy đủ và đã kiểm chứng
-trên trình duyệt. Kết quả thật: `build` / `typecheck` / `lint` đều exit 0 · `npm test` **80/80 PASS**
-(14 unit + 40 integration + 26 RLS) · kiểm chứng luồng auth **32/32 PASS** · tài khoản inactive
-**6/6 PASS**.
+Luồng cam kết đầu ngày chạy thật đầu-cuối: `/sales/today` theo FR-007 với đúng một CTA chính theo
+trạng thái · `/sales/today/morning` tạo và sửa được · draft localStorage · chống trùng ba tầng.
+Kết quả thật: `build` / `typecheck` / `lint` đều exit 0 · `npm test` **213/213 PASS**
+(140 unit + 47 integration + 26 RLS) · kiểm chứng trình duyệt **57/58 PASS** ở 375px và 1440px.
 
-**Mục duy nhất còn lại: người dùng tự tạo Supabase project trên cloud** (region Singapore) —
-hướng dẫn từng cú bấm ở `docs/09-deployment.md §3.0`. Sau đó: `supabase link` → `db push` →
-`gen types --linked`.
+**Mục duy nhất còn lại: walkthrough NFR-008.** Đã đo thật — **1,8 giây (đạt), 7 lần chạm (không đạt
+≤ 6)**. Đây là **mâu thuẫn giữa NFR-008 và FR-008** (5 trường bắt buộc ⇒ sàn lý thuyết là 7), không
+phải lỗi code. **Cần người dùng chọn 1 trong 3 phương án ở OQ-18 / ISSUE-013.**
 
 *(Lịch sử: Phase 0 từng bị chặn bởi 9 OPEN QUESTION mức BLOCKING — ISSUE-001; đã gỡ ở Entry 002.)*
 
@@ -29,7 +29,7 @@ hướng dẫn từng cú bấm ở `docs/09-deployment.md §3.0`. Sau đó: `su
 
 - [x] Phase 0 — Discovery & Business Analysis
 - [x] Phase 1 — Foundation
-- [ ] Phase 2 — Database & Auth
+- [x] Phase 2 — Database & Auth
 - [ ] Phase 3 — Morning Report
 - [ ] Phase 4 — Evening Report
 - [ ] Phase 5 — KPI Engine
@@ -546,6 +546,100 @@ Còn hai việc *ngoài* Phase 2, đã ghi rõ: rotate service role key (ISSUE-0
 
 **Next:** Vào **PHASE 3 — Morning Report**: `lib/validation/report.ts` + `lib/validation/report.test.ts`
 → `services/reports.ts` → `features/report-morning/` → `app/(sales)/sales/today/morning/page.tsx`.
+
+---
+
+### Entry 006
+
+**Date:** 2026-08-07
+**Phase:** PHASE 3 — Morning Report (13/14 mục · mục còn lại chờ người dùng trả lời OQ-18)
+
+**Completed:**
+
+1. **`lib/date.ts` và `lib/currency.ts` triển khai thật** — kéo lên sớm từ Phase 5, ghi thành
+   **DEC-032**. Lý do là ràng buộc vật lý, không phải sở thích: không có `getVietnamToday()` thì
+   Server Action không có `report_date` để ghi và RLS `reports_insert_own_today` từ chối mọi INSERT.
+   - `getVietnamToday`, `formatVietnamDate`, `isValidVietnamDate` — **33 unit test**, gồm biên
+     `16:59Z / 17:00Z / 17:01Z` và chạy lại toàn bộ bảng ở 4 timezone tiến trình (`UTC`,
+     `America/New_York`, `Asia/Ho_Chi_Minh`, `Pacific/Kiritimati` = UTC+14).
+   - `formatCurrencyVND`, `parseCurrencyInput`, `formatThousands` — **29 unit test**, gồm test khứ
+     hồi `parse(format(v)) === v` để không ai sửa một bên mà quên bên kia.
+   - **`lib/kpi.ts` CỐ Ý không kéo theo** — nó bị ISSUE-008 chặn thật, và Phase 3 không hiển thị `%`
+     nào nên không cần tới.
+2. **`lib/validation/report.ts`** — `morningReportSchema` + `reportDateSchema`, **47 unit test** theo
+   đúng bảng của `docs/08 §3.6`. Ba điểm đáng ghi:
+   - Schema **strip** `sales_id` / `report_date` / `status` / `actual_*` do client gửi kèm — có test
+     khoá lại (AGENTS.md §8, docs/07 QUY TẮC 2 và 3).
+   - Một schema gánh **cả chuỗi lẫn số**: form gửi `FormData` nên mọi giá trị lên server là chuỗi,
+     còn test truyền số. `z.preprocess` dùng lại `parseCurrencyInput` thay vì viết parser thứ hai.
+   - Khoá dùng `snake_case` trùng tên cột (**DEC-034**), khác ví dụ `camelCase` ở `docs/07 §3.5`.
+3. **`lib/reports/today-cta.ts`** — quyết định "trạng thái nào thì hiện CTA nào" tách thành **hàm
+   thuần**, **17 unit test** phủ đủ 3 trạng thái của `docs/03 §3.2` và bất biến
+   `canExportImage === (state === 'COMPLETED')` (BR-002). Không còn một câu `if` nghiệp vụ nào trong JSX.
+4. **`services/reports.ts`** — `getTodayReport` (18 cột tường minh, **không** `select('*')`),
+   `insertMorningReport`, `updateMorningReport`. Dịch mã lỗi Postgres sang từ vựng nghiệp vụ
+   (`DUPLICATE` / `REJECTED` / `UNKNOWN`) nên `PostgrestError` thô không bao giờ lên tới UI.
+5. **`features/report-morning/`** — Server Action `saveMorningReport` + `updateMorningReport` (đủ 7
+   bước của `docs/07 §1.3`), form client, `useReportDraft`, `CurrencyField` với 3 chip cộng nhanh,
+   `CommitmentSummary`.
+6. **Ba route Sales**: `/sales/today` viết lại theo FR-007 thật, `/sales/today/morning` mới, và
+   `/sales/today/evening` **ở mức tối thiểu** (guard vai + BR-007 + hiển thị lại cam kết sáng theo
+   FR-013) để CTA chính của trạng thái `MORNING_SUBMITTED` có đích đến thật — cùng cách Phase 2 đã
+   làm với `/sales/today`.
+7. **Ba primitive UI mới**: `components/ui/textarea.tsx`, `components/ui/form-field.tsx`, và
+   `buttonClassName()` xuất từ `button.tsx` để CTA điều hướng render bằng `<Link>` thật mà vẫn trông
+   và chạm y hệt nút.
+
+**Files Changed:**
+Mới: `lib/date.test.ts`, `lib/currency.test.ts`, `lib/validation/report.ts`,
+`lib/validation/report.test.ts`, `lib/reports/today-cta.ts`, `lib/reports/today-cta.test.ts`,
+`lib/reports/messages.ts`, `services/reports.ts`, `features/report-morning/{actions,morning-report-form,currency-field,commitment-summary,use-report-draft}`,
+`components/ui/{textarea,form-field}.tsx`, `app/(sales)/sales/today/{morning,evening}/page.tsx`.
+Sửa: `lib/date.ts`, `lib/currency.ts`, `components/ui/button.tsx`,
+`app/(sales)/sales/today/page.tsx`, `docs/01`, `docs/05`, `docs/07`, `docs/08`, `docs/11`, `docs/12`,
+`PROJECT_CHECKLIST.md`, `WORKLOG.md`, `SESSION_CHECKPOINT.md`, `CLAUDE.md`.
+
+**Tests:** **ĐÃ CHẠY THẬT, đủ 4 lệnh.**
+`npm run typecheck` exit 0 · `npm run build` exit 0 (7 route) · `npm run lint` exit 0 (0 error,
+0 warning) · `npm test` → **213 passed / 213** (unit 140 · integration 47 · RLS 26; trước phase này
+là 80).
+
+**Kiểm chứng trình duyệt thật** (Chromium 375px + 1440px, script dùng-một-lần, **đã xoá, không
+commit**): **57 PASS / 1 FAIL**. Phủ: ba trạng thái dashboard bằng ba tài khoản seed khác nhau
+(`sales.c` chưa báo cáo, `sales.a` `MORNING_SUBMITTED`, `sales.b` `COMPLETED`); tạo báo cáo; sửa
+báo cáo; validate biên `100000000001` và số âm; draft localStorage khôi phục sau reload; vào thẳng
+`/morning` khi đã `COMPLETED` bị đá về `/sales/today` (BR-019); và ở mọi màn hình: không cuộn ngang,
+touch target ≥ 44px, input ≥ 48px + 16px, mọi input có `<label for>`.
+**Chưa chạy:** E2E Playwright, a11y, `EXPLAIN ANALYZE`, Lighthouse — vẫn `N/A`, thuộc Phase 11.
+
+**Errors:** **Ba lỗi thật, tất cả đã sửa hoặc đã ghi nhận.**
+
+1. **Banner xác nhận hiện sai câu sau khi TẠO báo cáo.** Sau khi `insert` thành công,
+   `revalidatePath('/sales/today/morning')` làm RSC của chính trang form render lại; lúc đó đã có
+   báo cáo nên `mode` chuyển `'create'` → `'edit'`, và client suy ra thông báo từ `mode` hiện tại
+   nên hiện *"Đã cập nhật cam kết sáng"* cho một lần tạo mới. **Sửa tận gốc:** Server Action trả về
+   `data.notice`; client không suy ra nữa (**DEC-034**). Bắt được nhờ chạy thật trên trình duyệt —
+   unit test không thể thấy lỗi này.
+2. **Sau `supabase db reset`, GoTrue + Kong không tự phục hồi** → mọi lần đăng nhập nhận `502`, và
+   `docker ps` vẫn báo `healthy` nên rất dễ chẩn đoán sai. Ghi thành **ISSUE-012** kèm lệnh khắc
+   phục đã kiểm chứng.
+3. **React Compiler chặn hai cách viết quen tay** trong `useReportDraft`: đọc `ref.current` lúc
+   render (`react-hooks/refs`) và `setState` đồng bộ trong effect (`react-hooks/set-state-in-effect`).
+   Viết lại bằng `useSyncExternalStore` — đúng API mà React dành cho một external store như
+   `localStorage`, và bỏ luôn một vòng render thừa sau mỗi lần hydrate.
+
+**Decisions:** **DEC-032** (kéo `lib/date` + `lib/currency` lên Phase 3) · **DEC-033** (hàm hiển thị
+trả `'—'` thay vì ném lỗi khi đầu vào không hợp lệ; thêm `isValidVietnamDate`) · **DEC-034**
+(schema dùng `snake_case` trùng tên cột; `notice` do server quyết định).
+
+**Remaining:** Đúng **một** mục của Phase 3 chưa tick: walkthrough NFR-008. **Đã đo thật: 1,8 giây
+(đạt) nhưng 7 lần chạm (không đạt ≤ 6).** Không phải lỗi cài đặt — FR-008 quy định 5 trường bắt
+buộc nên sàn lý thuyết là `1 + 5 + 1 = 7`. Hai requirement mâu thuẫn nhau ⇒ **cần người dùng quyết
+định**, đã ghi thành **ISSUE-013** và **OQ-18** với ba phương án.
+
+**Next:** **PHASE 4 — Evening Report**, bắt đầu bằng `eveningReportSchema` trong
+`lib/validation/report.ts` + test, rồi `completeEveningReport` trong `services/reports.ts`, rồi
+`features/report-evening/`, rồi thay trang tối thiểu `/sales/today/evening` bằng FR-013/FR-014 thật.
 
 ---
 

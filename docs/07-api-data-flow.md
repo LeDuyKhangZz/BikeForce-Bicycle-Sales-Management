@@ -138,7 +138,22 @@ flowchart TD
 
 ## 3. Catalogue — Server Actions
 
-> Tất cả là **đề xuất, chưa triển khai**. Đường dẫn file theo cấu trúc đã chốt ở `docs/04-system-architecture.md §5`.
+> Trạng thái triển khai tính tới **2026-08-07 (hết Phase 3)**:
+>
+> | Action | Trạng thái | File thật |
+> |---|---|---|
+> | `signIn` · `signOut` | ✅ **ĐÃ TRIỂN KHAI** (Phase 2) | `features/auth/actions.ts` |
+> | `saveMorningReport` · `updateMorningReport` | ✅ **ĐÃ TRIỂN KHAI** (Phase 3) | `features/report-morning/actions.ts` |
+> | `changePassword` · `updateOwnProfile` | ⏳ đề xuất — Phase 7 (UC-11) | — |
+> | `saveEveningReport` | ⏳ đề xuất — Phase 4 | — |
+> | `createSalesAccount` · `updateSalesProfile` · `setSalesActiveStatus` | ⏳ đề xuất — Phase 10 | — |
+>
+> **Hai điểm bản triển khai đi khác tài liệu này — đã ghi thành DEC-034, đọc trước khi sửa:**
+>
+> 1. **Payload dùng `snake_case` trùng tên cột** (`planned_route`, `target_revenue`, …), **không** `camelCase` như ví dụ ở §3.5 bên dưới. Nhờ vậy output của Zod gắn thẳng vào `TablesInsert<'daily_reports'>` mà không cần tầng ánh xạ, và `fieldErrors` khớp thẳng `name` của input. `docs/08 §3.6` vốn đã viết theo `snake_case`.
+> 2. **`ActionResult` thành công của luồng báo cáo mang thêm `data.notice`** — **server** quyết định câu xác nhận nào hiện ở `/sales/today`, client không suy ra từ `mode` của form. Lý do là một lỗi thật đã gặp: `revalidatePath` khiến trang form render lại ở chế độ SỬA ngay sau khi TẠO thành công.
+>
+> Ngoài hai điểm đó, bản triển khai bám đúng bảng bên dưới, kể cả thứ tự 7 bước của §1.3.
 
 ### 3.1 `signIn`
 
@@ -297,6 +312,16 @@ flowchart TD
 ---
 
 ## 5. Catalogue — Query functions (`services/`)
+
+> **Đã triển khai tính tới hết Phase 3:**
+>
+> | Hàm | File thật | Ghi chú lệch với bảng bên dưới |
+> |---|---|---|
+> | `getSessionProfile(supabase, userId)` | `services/profiles.ts` | Vai trò của `getMyProfile`; nhận `userId` tường minh thay vì đọc `auth.uid()` bên trong, để chạy được dưới cả ba ngữ cảnh client |
+> | `getTodayReport(supabase, salesId, today)` | `services/reports.ts` | Vai trò của `getMyTodayReport`. **Không `select('*')`** — 18 cột nghiệp vụ liệt kê tường minh, bỏ `created_at`/`updated_at` |
+> | `insertMorningReport` · `updateMorningReport` | `services/reports.ts` | Hàm **ghi**, không có trong bảng đọc bên dưới. Trả `ReportWriteResult` đã dịch mã lỗi Postgres sang từ vựng nghiệp vụ (`DUPLICATE` / `REJECTED` / `UNKNOWN`) nên tầng trên không bao giờ thấy `PostgrestError` thô |
+>
+> Các hàm còn lại trong bảng vẫn là **đề xuất**, thuộc Phase 7 → Phase 10.
 
 Nguyên tắc chung cho mọi hàm dưới đây: **nhận `supabase` client làm tham số** (không tự tạo — để test được và để không bao giờ lỡ tay dùng service-role client), **chọn đúng cột cần** (không `select *`), **luôn phân trang** với danh sách, và **không quyết định quyền** (quyền là việc của RLS + Server Action).
 
