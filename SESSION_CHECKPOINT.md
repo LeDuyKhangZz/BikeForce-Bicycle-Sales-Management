@@ -10,10 +10,10 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 0 — Discovery & Business Analysis` (deliverables hoàn tất, chờ giải đáp
-OPEN QUESTION)
+**Current Phase:** `PHASE 0 — Discovery & Business Analysis` — **HOÀN TẤT.** Deliverable đủ 17 tài liệu,
+và **17/17 OPEN QUESTION đã được người dùng trả lời ngày 2026-08-07**. Không còn blocker nghiệp vụ.
 
-**Current Task:** Chờ người dùng trả lời **9 câu OQ mức BLOCKING** trước khi chốt schema và bắt đầu
+**Current Task:** Sẵn sàng bắt đầu **PHASE 1 — Foundation**. Không còn việc gì đang dở dang ở Phase 0.
 Phase 1. Không viết migration, không code production feature trước khi có câu trả lời.
 
 **Current Branch:** `main` — repository đã được `git init` ở Phase 0 và push lên GitHub
@@ -51,24 +51,24 @@ Toàn bộ khối lượng Phase 0 đã hoàn tất trong phiên ngày 2026-08-0
   3 Supabase client; page map 16 route; navigation bottom nav / sidebar; chiến lược xuất ảnh 9:16
   server-side (DEC-010); testing strategy 5 tầng; deployment Supabase Singapore + Vercel `sin1`.
 - **Tạo đủ 17 tài liệu kiểm soát dự án** theo Master Spec §44.
-- **Ghi DEC-001..DEC-030** vào `docs/11-decisions.md` (26 APPROVED, 4 PROPOSED) và
+- **Ghi DEC-001..DEC-030** vào `docs/11-decisions.md` (**toàn bộ 30 đều APPROVED** sau khi người dùng trả lời OQ) và
   **ISSUE-001..ISSUE-007** vào `docs/12-known-issues.md` (tất cả `OPEN`).
-- **Gom 17 OPEN QUESTION** OQ-01..OQ-17 vào một danh sách duy nhất, trong đó **9 câu BLOCKING**.
+- **Gom 17 OPEN QUESTION** OQ-01..OQ-17 vào một danh sách duy nhất, trình cho người dùng, và **nhận đủ 17/17 câu trả lời ngày 2026-08-07**. Đã đồng bộ câu trả lời vào toàn bộ 17 tài liệu.
+- **Khởi tạo git + push lên GitHub** `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028).
+- **Kiểm chứng bằng công cụ:** 30/30 khối Mermaid parse sạch bằng mermaid 11.16.1; toàn bộ contrast tính bằng công thức WCAG; `.gitignore` chặn `.env` đã thử thực nghiệm.
 
 ---
 
 ## Currently Working On
 
-**Không có công việc code nào đang dở.** Trạng thái hiện tại là **chờ đầu vào từ người dùng**:
+**Không có công việc code nào đang dở, và không còn chờ đầu vào nào từ người dùng.**
 
-- Đang chờ câu trả lời cho **OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-11, OQ-12, OQ-13**
-  (9 câu BLOCKING) và xác nhận **OQ-03**.
-- Ngay khi có câu trả lời, việc kế tiếp là cập nhật `docs/11-decisions.md` (DEC-025, DEC-026 từ
-  `PROPOSED` sang `APPROVED` hoặc thay đổi theo quyết định mới), rồi đồng bộ ngược lại
-  `docs/01-business-analysis.md`, `docs/02-database-design.md`, `docs/03-workflow.md`,
-  `docs/06-auth-permissions.md`.
-- **Không** được tự trả lời thay người dùng các câu BLOCKING và **không** được coi "đề xuất mặc
-  định" là đã được duyệt.
+- ✅ Toàn bộ **17/17 OPEN QUESTION đã được trả lời ngày 2026-08-07**.
+- ✅ `docs/11-decisions.md` đã cập nhật: **30/30 DEC đều `APPROVED`**, 0 `PROPOSED`.
+- ✅ Đã đồng bộ câu trả lời sang `docs/01`, `docs/02`, `docs/03`, `docs/04`, `docs/05`, `docs/06`,
+  `docs/09`, `docs/12`, `CLAUDE.md`, `AGENTS.md`, `PROJECT_CHECKLIST.md`.
+- ✅ `ISSUE-001` (P1) đã `CLOSED` với mục Verification điền đủ.
+- **Việc kế tiếp là bắt đầu Phase 1** — xem mục `Next Exact Steps`.
 
 ---
 
@@ -99,7 +99,7 @@ Chưa có bug vì chưa có code. Các mục dưới đây là **rủi ro đã b
 
 | ID | Sev | Nội dung | Mitigation |
 |---|---|---|---|
-| ISSUE-001 | P1 | Chưa có câu trả lời cho **9 OPEN QUESTION mức BLOCKING** → không thể viết migration Phase 2 | Hỏi người dùng, chờ chốt trước khi code |
+| ISSUE-001 | P1 | **CLOSED (2026-08-07)** — 17/17 OQ đã được trả lời, không còn chặn migration | Đã xong, xem `docs/12` mục Verification |
 | ISSUE-002 | P2 | Satori (`next/og`) chỉ hỗ trợ tập con CSS và cần font nhúng có dấu tiếng Việt; rủi ro layout thẻ 9:16 phải làm lại | Dựng prototype thẻ ngay đầu Phase 6; fallback `html-to-image` đã ghi nhận |
 | ISSUE-003 | P2 | **Zalo in-app webview** chưa được kiểm chứng thực tế (Web Share API, download attachment) | Test tay trên thiết bị thật ở Phase 6 |
 | ISSUE-004 | P2 | TypeScript 7.0.2 và ESLint 10.8.0 là bản major mới; rủi ro không tương thích Next 16 plugin | Smoke test đầu Phase 1, lùi TypeScript 5.x LTS nếu cần — DEC-002 |
@@ -170,9 +170,10 @@ Danh sách đầy đủ DEC-001..DEC-030 ở `docs/11-decisions.md`. Những quy
 
 **Đang chờ người dùng**
 
-- **DEC-025** — `PROPOSED`. BR-015 (xử lý `target = 0`) chờ **OQ-11**.
-- **DEC-026** — `PROPOSED`. BR-019 / BR-020 / BR-021 / BR-013 (sửa sau khi hoàn tất, Admin sửa,
-  nhập bù, xoá) chờ **OQ-04 / OQ-05 / OQ-12 / OQ-13**.
+- **DEC-025** — `APPROVED`. BR-015: `target=0 & actual=0` → `100,0%`; `target=0 & actual>0` → `percent = null` và hiển thị **số vượt tuyệt đối** có dấu cộng + đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch"; khi tổng hợp của Admin thì **loại khỏi mẫu số**. Không bao giờ `NaN`/`∞`.
+- **DEC-026** — `APPROVED`. BR-019: khoá **vĩnh viễn** khi `COMPLETED` (kể cả cùng ngày). BR-020: Admin **không** sửa báo cáo. BR-021: chỉ tạo/sửa cho **đúng ngày hôm nay** giờ VN, không nhập bù. BR-013: **không xoá**, không cả soft delete.
+- **DEC-029** — `APPROVED`. Viếng thăm giữ **cả hai**: cột số bắt buộc + cột text tuỳ chọn.
+- **DEC-030** — `APPROVED`. Không ngày nghỉ, không team/vùng, chỉ 2 role, không SKU/đại lý/đơn hàng; KPI do **Sales tự cam kết**.
 - **DEC-002** — Pin phiên bản chính xác **sau smoke test** ở Phase 1; TypeScript 7 phải được kiểm
   chứng, nếu vỡ thì lùi TypeScript 5.x LTS và ghi kết quả vào `docs/11-decisions.md`.
 
@@ -265,17 +266,12 @@ mọi công việc code là một project Next.js hoàn toàn mới tạo bằng
 
 ## Next Exact Steps
 
-1. **Trình 9 câu OQ mức BLOCKING cho người dùng và chờ trả lời:** OQ-01, OQ-02, OQ-04, OQ-05,
-   OQ-08, OQ-09, OQ-11, OQ-12, OQ-13; kèm xác nhận OQ-03. Hỏi **một lần, gom đủ**, mỗi câu nêu rõ
-   đề xuất mặc định để người dùng chỉ cần duyệt hoặc sửa. Nội dung đầy đủ ở
-   `docs/01-business-analysis.md § OPEN QUESTIONS`.
-2. **Sau khi có câu trả lời:** cập nhật `docs/11-decisions.md` — chuyển **DEC-025** và **DEC-026**
-   từ `PROPOSED` sang `APPROVED` (hoặc sửa theo quyết định mới), cập nhật trạng thái BR-013, BR-015,
-   BR-019, BR-020, BR-021 trong `docs/01-business-analysis.md`, rồi đồng bộ
-   `docs/02-database-design.md` (cột và CHECK), `docs/03-workflow.md` (luồng sửa/khoá) và
-   `docs/06-auth-permissions.md` (RLS policy). **Chỉ cập nhật, không viết lại từ đầu.**
-   Đóng hoặc hạ severity **ISSUE-001** trong `docs/12-known-issues.md`.
-3. **Khởi tạo project (Phase 1).** Chạy tại project root
+> ✅ **Hai bước đầu tiên của bản checkpoint trước đã XONG ngày 2026-08-07** — người dùng đã trả lời
+> đủ 17/17 OPEN QUESTION, toàn bộ DEC/BR đã chuyển sang `APPROVED`, 17 tài liệu đã được đồng bộ,
+> và `ISSUE-001` đã `CLOSED`. **Không làm lại.** Bắt đầu thẳng từ bước 1 dưới đây.
+
+1. **Bắt đầu PHASE 1 — Foundation.** Không còn blocker nghiệp vụ nào.
+2. **Khởi tạo Next.js.** Chạy tại project root
    `c:\Users\khang\OneDrive\Documents\BikeForce — Bicycle Sales Management System`:
 
    ```bash
@@ -285,16 +281,14 @@ mọi công việc code là một project Next.js hoàn toàn mới tạo bằng
    Trả lời `No` cho Turbopack nếu được hỏi (giữ mặc định ổn định cho build trên Vercel), và chấp
    nhận ghi vào thư mục hiện có mà **không xoá** 3 file markdown gốc, `docs/`, `WORKLOG.md`,
    `SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
-4. **Khởi tạo git** (DEC-027) và bảo đảm `.gitignore` có `.env*`, `node_modules`, `.next`,
-   `coverage`, `playwright-report`, `test-results`:
+3. ~~**Khởi tạo git**~~ — ✅ **ĐÃ XONG ở Phase 0** (DEC-028). Repo đã ở nhánh `main`, remote
+   `origin` = `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git`, `.gitignore`
+   đã có và **đã kiểm chứng** là chặn `.env*`. `create-next-app` sẽ ghi đè `.gitignore` — **phải
+   kiểm tra lại sau khi chạy** và khôi phục các mục `.env*`, `supabase/.env`, `test-results/`,
+   `playwright-report/` nếu bị mất. Người dùng đã cấp **quyền push đứng**: commit và push sau mỗi
+   lần code xong, **không cần hỏi lại**.
 
-   ```bash
-   git init
-   git add -A
-   git commit -m "chore: phase 0 docs + next.js foundation"
-   ```
-
-5. **Cài đúng danh sách package dưới đây** (dùng phiên bản latest stable đã xác minh ngày
+4. **Cài đúng danh sách package dưới đây** (dùng phiên bản latest stable đã xác minh ngày
    2026-08-07; ghi lại phiên bản thực tế được cài vào `WORKLOG.md`):
 
    ```bash
@@ -350,31 +344,50 @@ tạo ra kết quả mâu thuẫn với tài liệu hiện có:
 - **Đã kiểm tra phiên bản npm mới nhất ngày 2026-08-07** cho toàn bộ dependency dự kiến — dùng lại
   bảng phiên bản trong `docs/09-deployment.md`; chỉ kiểm tra lại nếu Phase 1 phát sinh xung đột thật
   (ISSUE-004).
-- **Đã khảo sát repository** — repo rỗng, chỉ 3 file markdown, **không phải git repo**; toolchain
-  Node v22.20.0 / npm 10.9.3 / git 2.48.1 / Python 3.13.2. Không cần khảo sát lại.
+- **Đã khảo sát repository** — ban đầu rỗng (3 file markdown); toolchain Node v22.20.0 /
+  npm 10.9.3 / git 2.48.1 / Python 3.13.2. Không cần khảo sát lại.
+- **Đã `git init` + push lên GitHub** (DEC-028) — nhánh `main`, remote `origin` đã cấu hình,
+  `.gitignore` đã kiểm chứng chặn `.env*`. **Không cần init lại.** Người dùng đã cấp **quyền push
+  đứng**: commit và push sau mỗi lần code xong, **không hỏi lại**.
+- **Đã hỏi và nhận đủ 17/17 câu trả lời OPEN QUESTION** (2026-08-07). **Tuyệt đối không hỏi lại**
+  những câu này. Câu trả lời chính thức nằm ở `docs/01-business-analysis.md § OPEN QUESTIONS`.
+- **Đã parse kiểm chứng toàn bộ 30 khối Mermaid** bằng mermaid 11.16.1 — 0 lỗi. Chỉ chạy lại khi
+  thêm hoặc sửa sơ đồ.
 - **Bộ 17 tài liệu Phase 0 đã tạo xong** — **chỉ cập nhật, không viết lại từ đầu**. Khi có câu trả
   lời OQ thì sửa đúng phần liên quan và giữ nguyên toàn bộ ID BR-xxx / FR-xxx / NFR-xxx / UC-xx /
   OQ-xx / DEC-xxx / ISSUE-xxx / AF-xx. **Không bao giờ renumber.**
 
 ---
 
-## OPEN QUESTIONS
+## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG TOÀN BỘ
 
-Các OQ đang trực tiếp chặn checkpoint này (danh sách đầy đủ:
-`docs/01-business-analysis.md § OPEN QUESTIONS`):
+**Không còn câu hỏi nào chờ trả lời.** Người dùng đã trả lời đủ **17/17** ngày `2026-08-07`.
+Danh sách đầy đủ kèm câu trả lời chính thức: `docs/01-business-analysis.md § OPEN QUESTIONS`.
 
-| ID | Mức | Câu hỏi rút gọn | Đề xuất mặc định |
-|---|---|---|---|
-| OQ-01 | BLOCKING | "Mục tiêu viếng thăm" = số điểm/đại lý hay mục đích chuyến đi? | Cả hai: `target_visit_points` (int, bắt buộc) + `visit_purpose` (text, optional) |
-| OQ-02 | BLOCKING | "Đã viếng thăm" = con số hay tuyến thực tế đã đi? | Cả hai: `actual_visit_points` (int, bắt buộc) + `actual_route` (text, optional) |
-| OQ-03 | BLOCKING (xác nhận) | Doanh số = số lượng xe (cái), Doanh thu = tiền VND? | Đúng như hiểu hiện tại |
-| OQ-04 | BLOCKING | Sau khi `COMPLETED` còn được sửa không? | (a) Khoá ngay khi `COMPLETED` |
-| OQ-05 | BLOCKING | Admin có được sửa báo cáo của Sales không? | Không trong v1 |
-| OQ-08 | BLOCKING | Có khái niệm ngày nghỉ / không đi thị trường không? | v1 không có |
-| OQ-09 | BLOCKING | KPI do Sales tự cam kết hay Admin giao trước? | Sales tự cam kết (Master Spec §7) |
-| OQ-11 | BLOCKING | Khi `target = 0` thì % hoàn thành hiển thị thế nào? | `actual=0` → 100%; `actual>0` → `—` + "Vượt kế hoạch" |
-| OQ-12 | BLOCKING | Nhập trễ / nhập bù / có giờ cut-off không? | Chỉ đúng ngày hôm nay theo giờ VN, không nhập bù |
-| OQ-13 | BLOCKING | Xoá báo cáo? Soft hay hard delete? | v1 không xoá |
+Mười quyết định nghiệp vụ mà session sau **phải tuân thủ và không được tự ý đổi** (Master Spec §71):
 
-Các câu NON-BLOCKING (OQ-06, OQ-07, OQ-10, OQ-14, OQ-15, OQ-16, OQ-17) làm theo đề xuất mặc định;
-đổi sau vẫn rẻ.
+| ID | Câu trả lời chính thức |
+|---|---|
+| OQ-01 / OQ-02 | Viếng thăm giữ **cả hai**: cột số bắt buộc (`target_visit_points` / `actual_visit_points`) + cột text tuỳ chọn (`visit_purpose` / `actual_route`) |
+| OQ-03 | Doanh số = **số lượng xe** (integer). Doanh thu = **tiền VND** (bigint) |
+| OQ-04 | **KHÔNG** được sửa sau khi `COMPLETED` — khoá vĩnh viễn, kể cả trong cùng ngày |
+| OQ-05 | Admin **KHÔNG** được sửa báo cáo của Sales |
+| OQ-06 | Admin tạo tài khoản; Sales **không** tự đăng ký |
+| OQ-07 | Tuyến **nhập tự do** + gợi ý 5 tuyến gần nhất |
+| OQ-08 | **KHÔNG** có khái niệm ngày nghỉ ở v1 — chấp nhận việc cảnh báo báo oan người nghỉ phép (ISSUE-006) |
+| OQ-09 | KPI do **Sales tự cam kết buổi sáng**; không có bảng `targets` |
+| OQ-10 | **KHÔNG** SKU / model xe / đại lý / đơn hàng |
+| OQ-11 | `target=0 & actual=0` → **`100,0%`**. `target=0 & actual>0` → `percent = null` + **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch"; **loại khỏi mẫu số** khi tổng hợp của Admin. Không bao giờ `NaN`/`∞` |
+| OQ-12 | Chỉ tạo/sửa cho **đúng ngày hôm nay** theo giờ VN; không giới hạn giờ trong ngày; **không** nhập bù |
+| OQ-13 | **KHÔNG** xoá báo cáo — không hard delete, không soft delete, không cột `deleted_at` |
+| OQ-14 | Doanh thu = **giá trị đơn hàng chốt trong ngày** (không phải tiền mặt đã thu) |
+| OQ-15 | **Chưa** chia team / khu vực ở v1 |
+| OQ-16 | **Chỉ 2 role**: `ADMIN`, `SALES` |
+| OQ-17 | "Ngày đạt KPI" = đạt **cả 4** chỉ tiêu ≥ 100% |
+
+**Hai điểm theo dõi tiếp (không chặn tiến độ):**
+
+1. **ISSUE-006 vẫn OPEN** — cảnh báo "Sales chưa báo cáo" sẽ tính cả người nghỉ phép. Giao diện
+   **phải dùng từ trung tính**: ghi *"Chưa có báo cáo hôm nay"*, **không** ghi *"vi phạm"*.
+2. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
+   **phải làm audit log trước** và tạo `DEC` mới thay vì sửa DEC-026.

@@ -388,7 +388,7 @@ Cột số căn phải, `tabular-nums`. `<caption>` mô tả bảng cho screen r
 |---|---|---|
 | Chưa có số liệu cuối ngày | Cột "Thực đạt" là `—`, badge `PENDING` "Chờ số liệu" | BR-023 |
 | Vượt xa mục tiêu | `1.250,0%` — hiện đầy đủ, **không cắt về 100%** | BR-004 |
-| `target = 0` và `actual > 0` | Ô % hiện `—` kèm nhãn "Vượt kế hoạch". **Không bao giờ** `NaN` hay `∞` | BR-015 · **chờ OQ-11** |
+| `target = 0` và `actual > 0` | Ô "Hoàn thành" hiện **số vượt tuyệt đối** có dấu cộng và đơn vị — `+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫` — kèm nhãn "Vượt kế hoạch". **Không bao giờ** `NaN` hay `∞` | BR-015 · **APPROVED** (OQ-11) |
 
 ---
 
@@ -649,5 +649,5 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Nh�
 | Luồng màn hình và luồng lỗi end-to-end | `docs/03-workflow.md` |
 | Chữ ký Server Action, thông báo lỗi cho người dùng | `docs/07-api-data-flow.md` |
 | Test viewport mobile và test accessibility | `docs/08-testing-strategy.md` |
-| Trạng thái APPROVED/PROPOSED của DEC-012..DEC-019 | `docs/11-decisions.md` |
+| Trạng thái của DEC-012..DEC-019 (đều APPROVED) | `docs/11-decisions.md` |
 | Rủi ro ISSUE-002 (Satori), ISSUE-003 (Zalo webview) | `docs/12-known-issues.md` |

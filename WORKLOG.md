@@ -13,7 +13,7 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 **PHASE 0 — Discovery & Business Analysis**
 
 Trạng thái: bộ deliverable tài liệu đã hoàn tất; **chưa được đóng phase** vì còn 9 OPEN QUESTION
-mức BLOCKING chưa có câu trả lời của người dùng (ISSUE-001). Không được bắt đầu viết migration
+mức BLOCKING chưa có câu trả lời của người dùng (ISSUE-001). *(Tình trạng này đã được gỡ trong Entry 002 — xem bên dưới.)* Khi đó không được bắt đầu viết migration
 Phase 2 trước khi các câu này được chốt.
 
 ---
@@ -133,7 +133,7 @@ vì repository chưa có `package.json` và chưa có dòng code nào. Không đ
 
 **Errors:** `None.`
 
-**Decisions:** ghi **DEC-001..DEC-030** vào `docs/11-decisions.md` (26 APPROVED + 4 PROPOSED).
+**Decisions:** ghi **DEC-001..DEC-030** vào `docs/11-decisions.md` (khi đó 26 APPROVED + 4 PROPOSED; cả 4 đã chuyển APPROVED trong Entry 002).
 Các quyết định đáng chú ý nhất:
 
 - **DEC-010** — Ảnh báo cáo 9:16 sinh **server-side** bằng `ImageResponse` / Satori tại
@@ -200,6 +200,69 @@ OQ-17) là NON-BLOCKING: làm theo đề xuất mặc định, đổi sau vẫn 
 
 ---
 
+### Entry 002
+
+**Date:** 2026-08-07
+**Phase:** PHASE 0 — Discovery & Business Analysis (đóng phase)
+
+**Completed:**
+- **Nhận đủ 17/17 câu trả lời OPEN QUESTION từ người dùng.** Đây là thứ duy nhất còn chặn Phase 0.
+  Câu trả lời cho từng câu được ghi vào `docs/01-business-analysis.md § OPEN QUESTIONS` dưới dạng
+  cột **CÂU TRẢ LỜI CHÍNH THỨC**, giữ nguyên câu hỏi gốc không xoá.
+- **Chuyển 4 quyết định từ `PROPOSED` sang `APPROVED`:** DEC-025, DEC-026, DEC-029, DEC-030.
+  Bảng tra nhanh trong `docs/11-decisions.md` nay là **30/30 APPROVED, 0 PROPOSED**.
+- **Chuyển 6 business rule từ `PROPOSED` sang `APPROVED`:** BR-013, BR-015, BR-019, BR-020, BR-021,
+  BR-024.
+- **DEC-025 được viết lại theo lựa chọn thực tế của người dùng** — khác đề xuất mặc định ban đầu:
+  khi `target = 0` và `actual > 0` thì hiển thị **số vượt tuyệt đối** (`+3 xe`, `+3.000.000 ₫`)
+  thay vì `—`. Kéo theo `AchievementResult` phải mang thêm số vượt và đơn vị.
+- **Đóng ISSUE-001 (P1)** trong `docs/12-known-issues.md` với mục Verification điền đủ 6 mục.
+  Theo Master Spec §56, nội dung gốc của issue được **giữ nguyên**, không xoá.
+- **Khởi tạo git repository và push lên GitHub** — nhánh `main`, remote
+  `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management`. Ghi thành **DEC-028** kèm quyền push đứng do
+  người dùng cấp. `.gitignore` được tạo **trước** commit đầu tiên và đã **kiểm chứng thực nghiệm**
+  bằng cách thử `git add` một file `.env.local` giả — không lọt vào staging.
+- **Chạy verify độc lập trên toàn bộ tài liệu** (3 critic agent của workflow bị chặn bởi session
+  limit nên tự làm bằng công cụ):
+  - Parse **30/30 khối Mermaid** bằng chính engine `mermaid@11.16.1` + `jsdom` → phát hiện và sửa
+    1 lỗi cú pháp thật (`PK_FK` không phải key type hợp lệ trong `erDiagram`, đã đổi thành `PK, FK`).
+  - Đối chiếu không gian ID giữa 17 tài liệu → BR 25 · FR 37 · NFR 15 · UC 21 · OQ 17, **không có
+    ID mồ côi**.
+  - Đối chiếu tên cột schema và route giữa các tài liệu → khớp hoàn toàn.
+  - Rà mọi tuyên bố về build/test → **không có chỗ nào ghi PASS sai**.
+
+**Files Changed:** `docs/01-business-analysis.md`, `docs/02-database-design.md`,
+`docs/03-workflow.md`, `docs/04-system-architecture.md`, `docs/05-ui-ux-design.md`,
+`docs/06-auth-permissions.md`, `docs/09-deployment.md`, `docs/11-decisions.md`,
+`docs/12-known-issues.md`, `CLAUDE.md`, `AGENTS.md`, `PROJECT_CHECKLIST.md`,
+`SESSION_CHECKPOINT.md`, `WORKLOG.md`, `.gitignore` (mới).
+
+**Tests:** `N/A — vẫn chưa có source code.` Không chạy build/typecheck/lint/unit/integration/E2E.
+Kiểm chứng duy nhất đã chạy là parse Mermaid và đối chiếu ID/schema/route trên tài liệu.
+
+**Errors:** Không có lỗi chặn. Đã sửa **5 sai sót thật** phát hiện trong quá trình verify:
+1. `formatVietnamDate('2026-08-07')` ghi ví dụ là *Thứ Năm* — thực tế **2026-08-07 là Thứ Sáu**
+   (kiểm bằng `Intl.DateTimeFormat`). Sửa ở `docs/01`, `docs/02`, `docs/04`.
+2. ERD trong `docs/02` dùng `PK_FK` — không hợp lệ, mermaid parse lỗi. Đổi thành `PK, FK`.
+3. Nhiều tài liệu ghi dải quyết định là `DEC-001..DEC-027` trong khi thực có **30**.
+4. Bảng đếm trong `docs/11-decisions.md` ghi 24 APPROVED — đúng phải là 26 (rồi thành 30).
+5. Sau khi `git init`, nhiều tài liệu vẫn còn câu "chưa phải git repository" — đã đồng bộ 13 chỗ.
+
+**Decisions:** DEC-025 (viết lại theo lựa chọn của người dùng), DEC-026, DEC-029, DEC-030 chuyển
+sang `APPROVED`. **DEC-028** mới: remote GitHub + quyền push đứng + git init ngay ở Phase 0
+(điều chỉnh mốc thời gian của DEC-027).
+
+**Remaining:** Không còn gì thuộc Phase 0. **Không còn OPEN QUESTION nào chờ trả lời.**
+Hai điểm theo dõi tiếp nhưng **không chặn tiến độ**: `ISSUE-006` (cảnh báo báo oan người nghỉ phép
+— người dùng đã biết và chấp nhận) và `AF-12` audit log (chưa cần vì không ai được sửa báo cáo).
+
+**Next:** Vào **PHASE 1 — Foundation**: `create-next-app@16`, dựng cấu trúc thư mục theo DEC-023,
+cài `@supabase/supabase-js` + `@supabase/ssr` + `zod` + `lucide-react`, tạo `.env.example`, chạy
+build/typecheck/lint để có baseline xanh, rồi commit + push. **Lưu ý:** `create-next-app` sẽ ghi đè
+`.gitignore` — phải kiểm tra lại và khôi phục các mục `.env*` sau khi chạy.
+
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần
@@ -235,23 +298,29 @@ lịch sử, sai thì thêm entry đính chính chứ không viết đè.
 
 ---
 
-## OPEN QUESTIONS
+## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG TOÀN BỘ (2026-08-07)
 
-Các OQ ảnh hưởng trực tiếp tới nội dung và tiến độ ghi trong file này (danh sách đầy đủ:
-`docs/01-business-analysis.md § OPEN QUESTIONS`):
+**Không còn câu nào chờ trả lời.** Người dùng đã trả lời đủ **17/17** — xem Entry 002 ở trên.
+Câu trả lời chính thức đầy đủ: `docs/01-business-analysis.md § OPEN QUESTIONS`.
 
-| ID | Câu hỏi rút gọn | Đề xuất mặc định |
-|---|---|---|
-| OQ-01 | "Mục tiêu viếng thăm" = số điểm hay mục đích chuyến đi? | Cả hai: `target_visit_points` + `visit_purpose` |
-| OQ-02 | "Đã viếng thăm" = con số hay tuyến thực tế? | Cả hai: `actual_visit_points` + `actual_route` |
-| OQ-03 | Doanh số = số lượng xe, Doanh thu = tiền VND? | Đúng như hiểu hiện tại |
-| OQ-04 | Sửa được sau khi `COMPLETED` không? | Khoá ngay khi `COMPLETED` |
-| OQ-05 | Admin sửa báo cáo của Sales? | Không trong v1 |
-| OQ-08 | Có ngày nghỉ / không đi thị trường? | v1 không có |
-| OQ-09 | Sales tự cam kết hay Admin giao KPI? | Sales tự cam kết |
-| OQ-11 | `target = 0` thì % hiển thị ra sao? | `actual=0` → 100%; `actual>0` → `—` |
-| OQ-12 | Nhập trễ / nhập bù / cut-off? | Chỉ đúng ngày hôm nay theo giờ VN |
-| OQ-13 | Xoá báo cáo? | v1 không xoá |
+| ID | Câu trả lời chính thức |
+|---|---|
+| OQ-01 / OQ-02 | **Cả hai** — cột số bắt buộc + cột text tuỳ chọn |
+| OQ-03 | Doanh số = số lượng xe (integer); Doanh thu = tiền VND (bigint) |
+| OQ-04 | **Không** sửa sau khi `COMPLETED` — khoá vĩnh viễn |
+| OQ-05 | Admin **không** sửa báo cáo của Sales |
+| OQ-06 | Admin tạo tài khoản; Sales không tự đăng ký |
+| OQ-07 | Tuyến nhập tự do |
+| OQ-08 | **Không** có ngày nghỉ ở v1 — chấp nhận ISSUE-006 |
+| OQ-09 | **Sales tự cam kết** buổi sáng |
+| OQ-10 | **Không** SKU / đại lý / đơn hàng |
+| OQ-11 | `actual=0` → `100,0%`; `actual>0` → **số vượt tuyệt đối** (`+3 xe`, `+3.000.000 ₫`), `percent = null`, loại khỏi mẫu số khi tổng hợp |
+| OQ-12 | Chỉ đúng ngày hôm nay giờ VN; không nhập bù |
+| OQ-13 | **Không** xoá, kể cả soft delete |
+| OQ-14 | Doanh thu = giá trị đơn hàng chốt trong ngày |
+| OQ-15 | Chưa chia team/vùng |
+| OQ-16 | Chỉ 2 role |
+| OQ-17 | Ngày đạt KPI = cả 4 chỉ tiêu ≥ 100% |
 
-Chừng nào 9 câu BLOCKING chưa được trả lời, mục `## Overall Progress` **không được** tick thêm
-phase nào và **không được** viết migration của Phase 2.
+Quy tắc còn hiệu lực: `## Overall Progress` chỉ được tick thêm một phase khi phase đó qua đủ
+quality gate của Master Spec §42 — **không phải** khi "đã viết xong code".

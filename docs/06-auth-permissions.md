@@ -45,7 +45,7 @@ Liên quan trực tiếp:
 | Supabase Postgres + RLS | — | — | **Biên giới bảo mật thật sự** |
 
 - Enum: `create type public.user_role as enum ('ADMIN','SALES');`
-- **Không có role thứ ba trong v1** (OQ-16 — non-blocking, đề xuất mặc định: không).
+- **Không có role thứ ba trong v1** — OQ-16 đã được trả lời: **chỉ 2 role** `ADMIN` và `SALES` (DEC-030).
 - **Không có self-registration** (BR-012, FR-006). "Enable email signups" phải **tắt** trong Supabase Auth settings.
 - Quan hệ 1-1 bắt buộc: mỗi `auth.users` row phải có đúng một `profiles` row, tạo bởi trigger `handle_new_user()`.
 - `profiles.email` phải khớp `auth.users.email` và unique toàn hệ thống (BR-025).
@@ -202,11 +202,11 @@ Cột **"Chặn ở đâu (thật sự)"** phải chỉ đúng tên policy RLS h
 |---|---|---|---|---|---|---|
 | 1 | View own report | UC-10, FR-022 | N/A | **Có** | RLS `reports_select_own_or_admin` — `sales_id = auth.uid()` | APPROVED |
 | 2 | View all reports | UC-13/UC-14, FR-025/FR-027, BR-003 | **Có** | **Không** | RLS `reports_select_own_or_admin` — nhánh `(select public.is_admin())` | APPROVED |
-| 3 | Create morning report | UC-04, FR-008, BR-021 | **Không** | **Có\*** | RLS `reports_insert_own_today` + guard `requireActiveSales` trong `saveMorningReport` | **PROPOSED — OQ-05** (Admin), **OQ-12** (chỉ ngày hôm nay) |
-| 4 | Edit morning report | UC-05, FR-012, BR-019 | **Không** | **Có\*** | RLS `reports_update_own_open` — `USING status = 'MORNING_SUBMITTED'` + trigger `guard_report_transition` | **PROPOSED — OQ-04, OQ-05** |
-| 5 | Complete evening report | UC-06, FR-014/FR-015, BR-007/BR-008 | **Không** | **Có\*** | RLS `reports_update_own_open` + CHECK `ck_completed_requires_actuals` | **PROPOSED — OQ-05** |
-| 6 | Edit after `COMPLETED` | UC-06, BR-019 | **Không** | **Không** | Không policy nào khớp: `reports_update_own_open` có `USING ... status = 'MORNING_SUBMITTED'` ⇒ báo cáo tự khoá sau khi hoàn tất | **PROPOSED — OQ-04 (blocking)** |
-| 7 | Delete report | BR-013 | **Không** | **Không** | **Không cấp DELETE policy** trên `daily_reports` cho `authenticated` | **PROPOSED — OQ-13 (blocking)** |
+| 3 | Create morning report | UC-04, FR-008, BR-021 | **Không** | **Có\*** | RLS `reports_insert_own_today` + guard `requireActiveSales` trong `saveMorningReport` | **APPROVED** (Admin), **OQ-12** (chỉ ngày hôm nay) |
+| 4 | Edit morning report | UC-05, FR-012, BR-019 | **Không** | **Có\*** | RLS `reports_update_own_open` — `USING status = 'MORNING_SUBMITTED'` + trigger `guard_report_transition` | **APPROVED** |
+| 5 | Complete evening report | UC-06, FR-014/FR-015, BR-007/BR-008 | **Không** | **Có\*** | RLS `reports_update_own_open` + CHECK `ck_completed_requires_actuals` | **APPROVED** |
+| 6 | Edit after `COMPLETED` | UC-06, BR-019 | **Không** | **Không** | Không policy nào khớp: `reports_update_own_open` có `USING ... status = 'MORNING_SUBMITTED'` ⇒ báo cáo tự khoá sau khi hoàn tất | **APPROVED** (OQ-04) |
+| 7 | Delete report | BR-013 | **Không** | **Không** | **Không cấp DELETE policy** trên `daily_reports` cho `authenticated` | **APPROVED** (OQ-13) |
 | 8 | Export own image 9:16 | UC-08, FR-017/FR-018, BR-002 | N/A | **Có\*** | Route Handler `GET /api/reports/[id]/share-image`: đọc qua RLS + kiểm tra `status = 'COMPLETED'` | APPROVED |
 | 9 | Export any image 9:16 | BR-022 | **Có** | **Không** | Cùng route handler; quyền đọc do RLS quyết định, Sales khác chủ ⇒ 0 rows ⇒ 404 | APPROVED |
 | 10 | View own history | UC-09, FR-021 | N/A | **Có** | RLS `reports_select_own_or_admin` + filter `sales_id = auth.uid()` ở service layer | APPROVED |
@@ -219,7 +219,7 @@ Cột **"Chặn ở đâu (thật sự)"** phải chỉ đúng tên policy RLS h
 | 17 | Activate / deactivate account | UC-19, FR-032, BR-009 | **Có** | **Không** | RLS `profiles_update_admin` + trigger `guard_profile_self_update` chặn non-admin đổi `is_active` | APPROVED |
 | 18 | Change own password | UC-11, FR-023 | **Có** | **Có** | Supabase Auth `updateUser`, chỉ tác động lên chính `auth.uid()` của phiên hiện tại — không đi qua RLS bảng `public` | APPROVED |
 | 19 | Change own name / phone | UC-11 | **Có\*** | **Có\*** | RLS `profiles_update_self` + trigger `guard_profile_self_update` chặn `role`, `is_active`, `email`, `id` | **Cho phép ở tầng DB; v1 chưa có FR cấp UI** — xem ghi chú (b) |
-| 20 | Change role | UC-18, OQ-16 | **Có\*** | **Không** | ADMIN: về mặt DB `profiles_update_admin` cho phép. SALES: trigger `guard_profile_self_update` chặn tuyệt đối | **PROPOSED — OQ-16**; v1 UI không expose đổi role |
+| 20 | Change role | UC-18, OQ-16 | **Có\*** | **Không** | ADMIN: về mặt DB `profiles_update_admin` cho phép. SALES: trigger `guard_profile_self_update` chặn tuyệt đối | **APPROVED**; v1 UI không expose đổi role |
 
 **Ghi chú:**
 
@@ -638,16 +638,16 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dư
 
 | ID | Câu hỏi (rút gọn) | Mức | Đề xuất mặc định | Ảnh hưởng lên tài liệu này |
 |---|---|---|---|---|
-| **OQ-04** | Sales hoàn tất báo cáo cuối ngày rồi có được sửa không? (a) không bao giờ (b) sửa trong ngày (c) sửa đến khi Admin khoá | **BLOCKING** | (a) Khoá ngay khi `COMPLETED` | Quyết định biểu thức `USING` của `reports_update_own_open`, dòng 4 và 6 của permission matrix, và nhu cầu audit log AF-12 (ISSUE-007) |
-| **OQ-05** | Admin có được sửa báo cáo của Sales không? | **BLOCKING** | Không trong v1 | Quyết định có thêm policy UPDATE cho admin trên `daily_reports` hay không; dòng 3/4/5 của permission matrix (Master Spec §50 nêu "Optional" cho Admin, brief chốt "Không") |
-| **OQ-13** | Xoá báo cáo: Admin có được xoá không? Soft hay hard delete? | **BLOCKING** | v1 không xoá; nếu cần thì soft delete `deleted_at` + chỉ Admin | Quyết định có DELETE policy hay không (dòng 7); nếu soft delete thì **mọi** policy SELECT phải thêm điều kiện lọc `deleted_at is null` |
-| **OQ-16** | Có cần role thứ ba, ví dụ Trưởng nhóm chỉ xem team mình? | NON-BLOCKING | Không trong v1 | Nếu có: phải sửa enum `user_role`, thêm hàm kiểu `is_team_lead()`, viết lại toàn bộ policy SELECT theo phạm vi team, và thêm cột `team` vào `profiles` (liên quan OQ-15); dòng 20 của permission matrix |
+| **OQ-04** | Sales hoàn tất báo cáo cuối ngày rồi có được sửa không? (a) không bao giờ (b) sửa trong ngày (c) sửa đến khi Admin khoá | ✅ **ĐÃ TRẢ LỜI** | (a) Khoá ngay khi `COMPLETED` | Quyết định biểu thức `USING` của `reports_update_own_open`, dòng 4 và 6 của permission matrix, và nhu cầu audit log AF-12 (ISSUE-007) |
+| **OQ-05** | Admin có được sửa báo cáo của Sales không? | ✅ **ĐÃ TRẢ LỜI** | Không trong v1 | Quyết định có thêm policy UPDATE cho admin trên `daily_reports` hay không; dòng 3/4/5 của permission matrix (Master Spec §50 nêu "Optional" cho Admin, brief chốt "Không") |
+| **OQ-13** | Xoá báo cáo: Admin có được xoá không? Soft hay hard delete? | ✅ **ĐÃ TRẢ LỜI** | v1 không xoá; nếu cần thì soft delete `deleted_at` + chỉ Admin | Quyết định có DELETE policy hay không (dòng 7); nếu soft delete thì **mọi** policy SELECT phải thêm điều kiện lọc `deleted_at is null` |
+| **OQ-16** | Có cần role thứ ba, ví dụ Trưởng nhóm chỉ xem team mình? | ✅ **ĐÃ TRẢ LỜI** | Không trong v1 | Nếu có: phải sửa enum `user_role`, thêm hàm kiểu `is_team_lead()`, viết lại toàn bộ policy SELECT theo phạm vi team, và thêm cột `team` vào `profiles` (liên quan OQ-15); dòng 20 của permission matrix |
 
 **Câu hỏi liên đới (không thuộc phạm vi trực tiếp nhưng chạm vào RLS):**
 - **OQ-12** — nhập bù ngày cũ. Đang được hiện thực bằng `report_date = public.vn_today()` trong `reports_insert_own_today`. Nếu đổi, policy này phải viết lại (BR-021).
 - **OQ-06** — xác nhận không có self-registration. Đang được hiện thực bằng cách tắt signup ở Supabase settings **và** không cấp INSERT policy trên `profiles` (BR-012).
 
-> Cho tới khi 3 câu BLOCKING ở trên được trả lời, **không được viết migration `0004_rls_policies.sql`** (ISSUE-001, P1). Mọi policy trong §6 đang ở trạng thái đề xuất và có thể thay đổi.
+> ✅ **Đã hết blocker (2026-08-07):** cả ba câu trên đã được người dùng trả lời (đều là "Không"), nên `0004_rls_policies.sql` đã viết được. ISSUE-001 đã CLOSED. Ghi chú cũ giữ lại làm ngữ cảnh: mọi policy trong §6 đang ở trạng thái đề xuất và có thể thay đổi.
 
 ---
 

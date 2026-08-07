@@ -159,7 +159,7 @@ Vi phạm 1 trong 2 luật này là lý do đủ để **từ chối** một tha
 
 - **Mọi bảng trong schema `public` đều bật RLS**, deny-by-default (NFR-004).
 - Migration tạo bảng mới **phải chứa trong cùng file**: `create table` + `alter table ... enable row level security` + `alter table ... force row level security` + **policy tường minh cho từng operation cần cấp**. Không tách sang migration sau, không để "làm nốt ở bước sau".
-- Operation không được cấp policy thì **không cấp** — ví dụ `DELETE` trên `daily_reports` không có policy nào (BR-013, chờ OQ-13), `INSERT` trên `profiles` không cấp cho `authenticated`.
+- Operation không được cấp policy thì **không cấp** — ví dụ `DELETE` trên `daily_reports` không có policy nào (BR-013 — APPROVED, OQ-13 trả lời "không xoá"), `INSERT` trên `profiles` không cấp cho `authenticated`.
 - **Không bao giờ `disable row level security` để một query chạy được.** Query không chạy nghĩa là policy sai hoặc thiết kế sai — sửa policy hoặc sửa truy vấn, không hạ hàng rào.
 - Helper `public.is_admin()` phải là `stable security definer set search_path = public, pg_temp`, nếu không policy trên `profiles` tự truy vấn `profiles` sẽ **infinite recursion** (DEC-006).
 - Trong policy luôn viết dạng bọc `select`: `(select public.is_admin())`, `(select auth.uid())` — Postgres nâng thành InitPlan và đánh giá một lần cho cả câu lệnh thay vì mỗi row (ISSUE-005).
@@ -202,7 +202,7 @@ Quy tắc:
 - Component, service, Server Action, route handler ảnh — tất cả **gọi** các hàm này, không tự tính.
 - `achievement = actual / target × 100`; cho phép **> 100%**, **không clamp** (BR-004). Làm tròn 1 chữ số thập phân chỉ ở tầng hiển thị (BR-014).
 - **Không bao giờ để `NaN` hay `Infinity` lọt ra UI.** `display` của `AchievementResult` là chuỗi đã sẵn sàng render (`'80,0%'`, `'125,0%'`, `'—'`).
-- Trường hợp `target = 0` đi theo `BR-015`, hiện đang **PROPOSED, chờ OQ-11** — implement đúng đề xuất mặc định và đánh dấu rõ trong code comment rằng rule chưa APPROVED.
+- Trường hợp `target = 0` đi theo `BR-015`, **đã APPROVED** (OQ-11): `actual = 0` → `100,0%`; `actual > 0` → `percent = null` và hiển thị **số vượt tuyệt đối** có dấu cộng + đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch"; khi tổng hợp của Admin thì **loại dòng này khỏi mẫu số**. Ghi chú cũ comment rằng rule chưa APPROVED.
 - **Achievement không persist vào DB** (BR-011, DEC-007). Không thêm cột `%`, không cache vào bảng.
 - Tiền lưu `bigint` VND; format chỉ ở tầng hiển thị (BR-010, DEC-008).
 - **Không dùng `new Date()` để suy ra ngày nghiệp vụ.** Chỉ `getVietnamToday()`. Không thêm dependency timezone (DEC-009).
@@ -364,4 +364,4 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Nh�
 | OQ-13 | Xoá báo cáo: có/không, soft hay hard? | v1 không xoá | §7 không cấp policy `DELETE` |
 | OQ-01 / OQ-02 | Cấu trúc trường "viếng thăm" mục tiêu và thực đạt | Mỗi bên một cột integer bắt buộc + một cột text optional | §2 kiểu generate, §5 cột `select`, §9 công thức dòng "Viếng thăm" |
 
-Các business rule tương ứng — `BR-013`, `BR-015`, `BR-019`, `BR-020`, `BR-021`, `BR-024` — hiện đang `PROPOSED` (DEC-025, DEC-026). Implement theo đề xuất mặc định là được, nhưng **phải comment rõ trong code là rule chưa APPROVED**, và không được viết migration Phase 2 trước khi 9 câu BLOCKING có câu trả lời (ISSUE-001).
+Các business rule tương ứng — `BR-013`, `BR-015`, `BR-019`, `BR-020`, `BR-021`, `BR-024` — **đã `APPROVED`** ngày 2026-08-07 (DEC-025, DEC-026). Được phép implement thẳng theo chúng, và theo Master Spec §71 **không được tự ý thay đổi**. Ghi chú cũ: implement theo đề xuất mặc định là được, nhưng **phải comment rõ trong code là rule chưa APPROVED**, và không được viết migration Phase 2 trước khi 9 câu BLOCKING có câu trả lời (ISSUE-001).

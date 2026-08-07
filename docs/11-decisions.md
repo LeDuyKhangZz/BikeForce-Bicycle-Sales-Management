@@ -27,8 +27,8 @@
 
 | Status | Số lượng | DEC |
 |---|---:|---|
-| APPROVED | 26 | DEC-001…DEC-024, DEC-027, DEC-028 |
-| PROPOSED (chờ OPEN QUESTION) | 4 | DEC-025, DEC-026, DEC-029, DEC-030 |
+| APPROVED | **30** | DEC-001…DEC-030 — **toàn bộ**, sau khi người dùng trả lời đủ 17 OPEN QUESTION ngày 2026-08-07 |
+| PROPOSED | 0 | — |
 | SUPERSEDED | 0 | — |
 | REJECTED | 0 | — |
 | **Tổng** | **30** | DEC-001…DEC-030 |
@@ -346,26 +346,33 @@ Hai quy tắc cứng: **business logic không nằm trong component**, **data ac
 ## DEC-025
 
 **Date:** 2026-08-07
-**Decision (đề xuất):** Khi `target = 0`: nếu `actual = 0` thì coi là **100%** (đã làm đúng cam kết); nếu `actual > 0` thì hiển thị `—` kèm nhãn "Vượt kế hoạch". Không bao giờ hiển thị `NaN` hay `∞`.
-**Reason:** Master Spec §9 bắt buộc "Trường hợp target = 0 phải có business rule rõ ràng trước khi chốt" và cấm `NaN`/`Infinity`. Về mặt toán học `x/0` không xác định, nên phải là một quy ước nghiệp vụ. Đề xuất này giữ được ý nghĩa: cam kết 0 và làm 0 là *đạt cam kết*; cam kết 0 mà làm được thì tốt hơn cam kết, nhưng không có mẫu số để ra một con số phần trăm trung thực. Việc này ảnh hưởng cả số liệu tổng hợp của Admin (một Sales cam kết 0 không được làm lệch achievement trung bình toàn đội).
-**Alternatives:** (a) `target=0, actual>0 → 100%` — che mất việc cam kết quá thấp. (b) Trả `null` và bỏ dòng đó khỏi bảng — người dùng mất thông tin. (c) Cấm luôn `target = 0` ở tầng validation — cứng nhắc, có ngày Sales thật sự không có mục tiêu cho một chỉ tiêu nào đó.
-**Impact:** `lib/kpi.ts`, mọi chỗ hiển thị %, thẻ ảnh 9:16, aggregate của Admin, bộ unit test.
-**Status:** **PROPOSED — chờ OQ-11**
+**Decision:** Khi `target = 0`:
+- `actual = 0` → hiển thị **`100,0%`**, status `EXCEEDED` (đã làm đúng cam kết).
+- `actual > 0` → **hiển thị số vượt tuyệt đối có dấu cộng và đơn vị**, ví dụ `+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`; nhãn "Vượt kế hoạch"; `percent = null`.
+- **Tuyệt đối không** hiển thị `NaN` hay `∞` ở bất kỳ đâu.
+- Trong mọi phép **tổng hợp của Admin** (achievement trung bình, ngày đạt KPI), dòng có `target = 0 && actual > 0` bị **loại khỏi mẫu số**, không được quy thành 0% hay 100%.
+
+**Reason:** Master Spec §9 bắt buộc "Trường hợp target = 0 phải có business rule rõ ràng trước khi chốt" và cấm `NaN`/`Infinity`. `x/0` không xác định về mặt toán học nên bắt buộc phải là một quy ước nghiệp vụ. Người dùng đã chọn phương án này (2026-08-07) vì nó **vừa trung thực vừa còn thông tin**: không bịa ra một con số phần trăm vô nghĩa, đồng thời vẫn cho người đọc biết đã vượt **bao nhiêu**. Phương án hiển thị `—` tuy trung thực nhưng làm mất thông tin; phương án quy về `100%` che mất việc cam kết quá thấp.
+**Alternatives:** (a) Hiển thị `—` + nhãn "Vượt kế hoạch" — trung thực nhưng cụt thông tin. (b) Quy cả hai trường hợp về `100%` — đơn giản nhất nhưng che việc cam kết 0 mà vẫn được tính "đạt" mỗi ngày. (c) Cấm `target = 0` ở validation (bắt tối thiểu 1) — không bao giờ gặp chia-cho-0, nhưng ngày đi bảo hành/chăm sóc khách thật sự không có mục tiêu bán xe thì Sales buộc phải khai số giả, làm nhiễu số liệu.
+**Impact:** `lib/kpi.ts` (`AchievementResult` phải mang thêm trường hiển thị số vượt và đơn vị), bảng đối chiếu ở `docs/05 §7.3`, thẻ ảnh 9:16, aggregate của Admin, bộ unit test cho `calculateAchievement`.
+**Ràng buộc kèm theo:** đơn vị hiển thị khác nhau theo chỉ tiêu — `xe` (doanh số), `điểm` (viếng thăm), `khách` (khách hàng), và **định dạng tiền VND đầy đủ** cho doanh thu (dùng `formatCurrencyVND`, không rút gọn). Vì vậy `calculateAchievement()` phải nhận thêm tham số đơn vị, hoặc trả về số vượt thô để tầng hiển thị tự format — chốt cách cài đặt ở Phase 5.
+**Status:** **APPROVED** (người dùng xác nhận 2026-08-07 — OQ-11 đã trả lời)
 
 ---
 
 ## DEC-026
 
 **Date:** 2026-08-07
-**Decision (đề xuất):** Bộ quy tắc sửa/xoá mặc định, tất cả đang chờ xác nhận:
-- **BR-019 / OQ-04** — Sales chỉ sửa được báo cáo của chính mình khi `status = 'MORNING_SUBMITTED'`. Khi đã `COMPLETED` thì khoá vĩnh viễn.
-- **BR-020 / OQ-05** — Admin **không** sửa số liệu báo cáo của Sales trong v1.
+**Decision:** Bộ quy tắc sửa/xoá, **đã được người dùng xác nhận toàn bộ**:
+- **BR-019 / OQ-04** — Sales chỉ sửa được báo cáo của chính mình khi `status = 'MORNING_SUBMITTED'`. Khi đã `COMPLETED` thì **khoá vĩnh viễn**, kể cả trong cùng ngày.
+- **BR-020 / OQ-05** — Admin **không** sửa số liệu báo cáo của Sales. Không có policy `UPDATE` nào cho Admin trên `daily_reports`.
 - **BR-021 / OQ-12** — Báo cáo chỉ được tạo/sửa cho **đúng ngày hôm nay** theo giờ Việt Nam. Không nhập bù ngày cũ, không giới hạn giờ trong ngày.
-- **BR-013 / OQ-13** — Không xoá báo cáo trong v1. Không cấp `DELETE` policy cho ai.
-**Reason:** Cả bốn đều nằm trong nhóm Master Spec §31 và §32 yêu cầu **phải hỏi**, và §7 cấm tự đoán khi ảnh hưởng database/permission/workflow. Mặc định chọn phương án chặt nhất vì: nới lỏng về sau là một migration cộng một policy, còn siết lại sau khi đã cho phép thì phải đối chiếu dữ liệu đã bị sửa mà không có audit log. Ngoài ra khoá sau khi `COMPLETED` bảo vệ đúng điểm nhạy cảm — Sales đã xuất ảnh gửi Zalo rồi thì số liệu trên hệ thống không nên khác ảnh đã gửi.
-**Alternatives:** (a) Cho sửa thoải mái trong ngày — tiện cho Sales nhưng số liệu Admin nhìn có thể đổi dưới chân, và cần audit log (AF-12) trước khi bật. (b) Cho Admin sửa mọi thứ — mạnh nhưng bắt buộc phải có audit log, nếu không sẽ không ai chứng minh được số liệu gốc.
-**Impact:** RLS policy `reports_update_own_open`, `guard_report_transition()`, UI (hiện hay ẩn nút Sửa), nhu cầu audit log AF-12, `docs/03-workflow.md`, `docs/06-auth-permissions.md`.
-**Status:** **PROPOSED — chờ OQ-04, OQ-05, OQ-12, OQ-13**
+- **BR-013 / OQ-13** — **Không xoá báo cáo.** Không cấp `DELETE` policy, không `GRANT DELETE` cho `authenticated`. Không có cột `deleted_at` (không soft delete).
+**Reason:** Cả bốn nằm trong nhóm Master Spec §31 và §32 yêu cầu **phải hỏi**; người dùng đã trả lời ngày 2026-08-07 và chọn đúng phương án chặt nhất. Khoá sau khi `COMPLETED` bảo vệ đúng điểm nhạy cảm — Sales đã xuất ảnh gửi Zalo rồi thì số liệu trên hệ thống không được khác ảnh đã gửi. Không cho Admin sửa nghĩa là **chưa cần audit log** (AF-12) trong v1, giữ hệ thống gọn.
+**Alternatives:** (a) Cho sửa trong ngày — tiện cho Sales nhưng số liệu Admin đang xem có thể đổi dưới chân. (b) Cho Admin sửa — bắt buộc phải có audit log trước, nếu không không ai chứng minh được số liệu gốc.
+**Impact:** RLS policy `reports_update_own_open` (điều kiện `status = 'MORNING_SUBMITTED'` giữ nguyên và **chính nó** là cơ chế khoá), `guard_report_transition()`, không tồn tại action `adminUpdateReport` / `deleteReport`, UI ẩn nút Sửa khi `COMPLETED`.
+**Hệ quả vận hành cần lưu ý:** vì **không ai** sửa được sau khi hoàn tất, Sales nhập sai số thì cách xử lý duy nhất là ghi nhận ngoài hệ thống. Nếu thực tế vận hành thấy việc này gây khó, hãy mở lại OQ-04/OQ-05 bằng một `DEC` mới — **và phải làm audit log (AF-12) trước khi bật quyền sửa**.
+**Status:** **APPROVED** (người dùng xác nhận 2026-08-07 — OQ-04, OQ-05, OQ-12, OQ-13 đã trả lời)
 
 ---
 
@@ -395,33 +402,42 @@ Hai quy tắc cứng: **business logic không nằm trong component**, **data ac
 ## DEC-029
 
 **Date:** 2026-08-07
-**Decision (đề xuất):** "Mục tiêu viếng thăm" và "Đã viếng thăm" được mô hình hoá thành **cả hai**: một cột số đếm được bắt buộc (`target_visit_points` / `actual_visit_points`) **và** một cột văn bản tuỳ chọn (`visit_purpose` / `actual_route`).
+**Decision:** "Mục tiêu viếng thăm" và "Đã viếng thăm" được mô hình hoá thành **cả hai**: một cột số đếm được bắt buộc (`target_visit_points` / `actual_visit_points`) **và** một cột văn bản tuỳ chọn (`visit_purpose` / `actual_route`).
 **Reason:** Bảng đối chiếu mà Master Spec §9 quy định có dòng "Viếng thăm" kèm cột "Hoàn thành %". Muốn tính được phần trăm thì bắt buộc phải có một con số — nếu "Mục tiêu viếng thăm" chỉ là văn bản mô tả mục đích chuyến đi thì dòng đó không thể có %, và bảng đối chiếu trong Master Spec sẽ không thực hiện được đúng như mô tả. Giữ thêm cột văn bản để không mất thông tin định tính mà Sales muốn ghi (mục đích chuyến đi, tuyến thực tế đã đi khác kế hoạch).
 Lưu ý phân biệt: **điểm viếng thăm** là địa điểm/đại lý, còn **khách hàng** (`target_customer_visits` / `actual_customer_visits`) là người gặp — đây là hai chỉ tiêu riêng, đúng như Master Spec §7 và §8 liệt kê tách rời.
 **Alternatives:** (a) Chỉ văn bản — mất dòng "Viếng thăm" trong bảng đối chiếu. (b) Chỉ số — mất thông tin định tính, và Sales sẽ nhét mục đích chuyến đi vào ô "Tuyến ghé thăm".
 **Impact:** Schema `daily_reports`, form đầu ngày và cuối ngày, bảng đối chiếu, thẻ ảnh 9:16, `lib/kpi.ts`.
-**Status:** **PROPOSED — chờ OQ-01 và OQ-02**
+**Status:** **APPROVED** (người dùng xác nhận 2026-08-07 — OQ-01 và OQ-02 đều trả lời "cả hai")
 
 ---
 
 ## DEC-030
 
 **Date:** 2026-08-07
-**Decision (đề xuất):** v1 **không** có khái niệm ngày nghỉ/nghỉ phép (OQ-08), **không** có khu vực/team (OQ-15), **không** có role thứ ba (OQ-16), **không** có SKU/model xe/đại lý/đơn hàng (OQ-10), và KPI do **Sales tự cam kết buổi sáng** chứ không phải Admin giao trước (OQ-09).
+**Decision:** v1 **không** có khái niệm ngày nghỉ/nghỉ phép (OQ-08), **không** có khu vực/team (OQ-15), **không** có role thứ ba (OQ-16), **không** có SKU/model xe/đại lý/đơn hàng (OQ-10), và KPI do **Sales tự cam kết buổi sáng** chứ không phải Admin giao trước (OQ-09).
 **Reason:** Master Spec §39 liệt kê tất cả những thứ này vào nhóm LATER và §71 yêu cầu "Ưu tiên MVP thực sự sử dụng được". Riêng OQ-09 là quan trọng nhất: nếu Admin giao chỉ tiêu trước thì toàn bộ workflow đảo chiều — cần một bảng `targets` riêng, cần quyền ghi mới cho Admin, và "báo cáo đầu ngày" không còn là hành vi cam kết nữa. Master Spec §7 mô tả rõ Sales là người nhập mục tiêu, nên mặc định giữ nguyên như vậy.
 **Alternatives:** Đưa team/region vào ngay — thêm cột `team` nullable sau này rất rẻ, chưa cần bây giờ. Đưa quản lý ngày nghỉ vào ngay — cần thiết thật nếu Admin dùng chỉ số "Sales chưa báo cáo" để đánh giá, nên đây là câu hỏi BLOCKING chứ không phải mặc định an toàn tuyệt đối (xem ISSUE-006).
 **Impact:** Schema, danh sách cảnh báo Admin, `docs/01-business-analysis.md`, `docs/10-future-roadmap.md` (AF-11, AF-14, AF-15).
-**Status:** **PROPOSED — chờ OQ-08, OQ-09, OQ-10, OQ-15, OQ-16**
+**Status:** **APPROVED** (người dùng xác nhận 2026-08-07 — OQ-08, OQ-09, OQ-10, OQ-15, OQ-16 đã trả lời)
+**Cảnh báo vận hành do người dùng nêu khi trả lời OQ-08:** vì v1 không có khái niệm nghỉ phép, chỉ số "Sales chưa báo cáo" (FR-033, AF-02) sẽ **báo oan người đang nghỉ phép**. Đây là hạn chế đã biết và được chấp nhận có ý thức, không phải sơ suất — vẫn theo dõi ở **ISSUE-006**. Giao diện cảnh báo phải ghi rõ "chưa có báo cáo" chứ **không** được ghi "vi phạm" hay "không hoàn thành nhiệm vụ", để Admin tự đối chiếu với lịch nghỉ bên ngoài.
 
 ---
 
-## Các quyết định còn chờ (tóm tắt cho session sau)
+## Trạng thái: không còn quyết định nào bị chặn
 
-| DEC | Chờ OPEN QUESTION | Chặn việc gì |
-|---|---|---|
-| DEC-025 | OQ-11 | Viết `lib/kpi.ts` và unit test của nó (Phase 5) |
-| DEC-026 | OQ-04, OQ-05, OQ-12, OQ-13 | Viết RLS policy và trigger (Phase 2) |
-| DEC-029 | OQ-01, OQ-02 | Viết migration `daily_reports` (Phase 2) |
-| DEC-030 | OQ-08, OQ-09, OQ-10, OQ-15, OQ-16 | Chốt phạm vi schema (Phase 2) |
+Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:
 
-> **Không được viết migration của Phase 2 trước khi 4 nhóm trên được trả lời.** Danh sách câu hỏi đầy đủ nằm ở `docs/01-business-analysis.md` mục OPEN QUESTIONS.
+| DEC | Trước | Sau | OQ đã trả lời | Nội dung chốt |
+|---|---|---|---|---|
+| DEC-025 | PROPOSED | **APPROVED** | OQ-11 | `target=0 & actual=0` → `100,0%`. `target=0 & actual>0` → **số vượt tuyệt đối** (`+3 xe`, `+3.000.000 ₫`), `percent = null`, loại khỏi mẫu số khi tổng hợp |
+| DEC-026 | PROPOSED | **APPROVED** | OQ-04, OQ-05, OQ-12, OQ-13 | Khoá vĩnh viễn khi `COMPLETED`; Admin không sửa; chỉ nhập đúng ngày hôm nay; không xoá (kể cả soft delete) |
+| DEC-029 | PROPOSED | **APPROVED** | OQ-01, OQ-02 | Giữ **cả hai**: cột số bắt buộc + cột text tuỳ chọn, cho cả target lẫn actual |
+| DEC-030 | PROPOSED | **APPROVED** | OQ-08, OQ-09, OQ-10, OQ-15, OQ-16 | Không ngày nghỉ, không team/vùng, chỉ 2 role, không SKU/đại lý/đơn hàng, KPI do Sales tự cam kết |
+
+**Hệ quả:** Phase 2 (migrations + RLS) **đã hết blocker**, có thể viết được ngay sau khi Phase 1 dựng xong nền.
+
+Hai điểm cần theo dõi tiếp, **không chặn tiến độ** nhưng đã ghi nhận:
+- **ISSUE-006** (từ OQ-08) — không có khái niệm nghỉ phép nên cảnh báo "Sales chưa báo cáo" sẽ báo oan người nghỉ. Đây là hạn chế được chấp nhận có ý thức; ngôn từ trên giao diện phải trung tính.
+- **AF-12 (audit log)** — chưa cần vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa (OQ-04/OQ-05), **phải làm audit log trước**.
+
+Danh sách câu hỏi và câu trả lời đầy đủ nằm ở `docs/01-business-analysis.md` mục OPEN QUESTIONS.

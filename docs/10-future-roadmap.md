@@ -11,7 +11,7 @@ Tài liệu này liệt kê **mọi tính năng nằm ngoài MVP** của BikeFor
 
 1. **Chống scope creep.** Mọi ý tưởng đã được nghĩ tới đều có chỗ để ghi, nên không ai phải "nhét tạm" nó vào MVP.
 2. **Ghi lại lý do hoãn**, để lần sau không phải tranh luận lại từ đầu.
-3. **Ghi lại phụ thuộc thật** — phần lớn các mục dưới đây không bị chặn vì khó, mà vì đang chờ một OPEN QUESTION nghiệp vụ chưa có câu trả lời.
+3. **Ghi lại phụ thuộc thật** — phần lớn các mục dưới đây không bị hoãn vì khó, mà vì một quyết định nghiệp vụ đã chốt là "chưa cần ở v1". Sau ngày 2026-08-07, **toàn bộ 17 OPEN QUESTION đã được trả lời**, nên các phụ thuộc dưới đây không còn là "chờ đáp án" mà là **"đã quyết định hoãn"** — muốn đưa lên MVP thì phải tạo `DEC` mới và hỏi lại người dùng.
 
 Phạm vi v1 đã chốt tại brief §2 và Master Spec §39: **Daily Sales Performance Reporting**. Không CRM, không kho, không POS, không đơn hàng, không danh mục sản phẩm.
 
@@ -65,7 +65,7 @@ flowchart LR
   OQ17["OQ-17 — định nghĩa ngày đạt KPI"] --> AF10
 ```
 
-Hệ quả cần nói thẳng: **9 OPEN QUESTION mức BLOCKING chưa có câu trả lời (ISSUE-001)** không chỉ chặn migration Phase 2, mà còn khoá luôn phần lớn roadmap. Không nên ước lượng thời gian cho bất kỳ mục `LATER` nào trước khi OQ tương ứng được chốt.
+✅ **Cập nhật 2026-08-07:** toàn bộ 17 OPEN QUESTION đã được trả lời và `ISSUE-001` đã `CLOSED`. Sơ đồ trên vì vậy đọc theo nghĩa mới: mỗi mũi tên không còn là "đang bị chặn" mà là **"đã được quyết định là chưa làm ở v1"**. Cụ thể — OQ-09 trả lời *Sales tự cam kết* nên **AF-11 bị hoãn hẳn**; OQ-08 trả lời *không có ngày nghỉ* nên **AF-15 bị hoãn** (và sinh ra ISSUE-006 được chấp nhận); OQ-04/OQ-05 trả lời *không ai được sửa* nên **AF-12 audit log chưa cần**; OQ-07 trả lời *tuyến nhập tự do* nên **AF-14 bị hoãn**. Nay đã ước lượng được thời gian cho các mục `LATER`, nhưng **không được tự ý triển khai** mục nào nếu người dùng không yêu cầu.
 
 ---
 
@@ -197,11 +197,13 @@ Reason:       Về kỹ thuật gần như miễn phí — chỉ là ORDER BY tr
               khuyến khích khai khống số liệu — mà v1 KHÔNG có audit log (AF-12) để phát hiện. Vì vậy
               phải là tính năng Admin bật/tắt được, không bật mặc định, và không hiển thị cho Sales.
 Dependency:   - AF-06 Sales Performance table phải xong trước (nguồn số liệu).
-              - OQ-17 (non-blocking): "Ngày đạt KPI" là đạt cả 4 chỉ tiêu hay chỉ doanh thu — BR-024 đang
-                PROPOSED. Xếp hạng theo tiêu chí này sẽ đổi kết quả nếu OQ-17 trả lời khác.
-              - OQ-11 (BLOCKING): khi target = 0, achievement trả `percent: null` (BR-015). Phải quyết
-                định rõ dòng đó được xếp hạng thế nào — bỏ khỏi trung bình hay tính là 100% — nếu không,
-                Sales đặt target = 0 sẽ leo lên đầu bảng.
+              - OQ-17 ĐÃ TRẢ LỜI (2026-08-07): "Ngày đạt KPI" = đạt CẢ 4 chỉ tiêu >= 100% (BR-024,
+                APPROVED). Tiêu chí xếp hạng vì vậy đã chốt.
+              - OQ-11 ĐÃ TRẢ LỜI (2026-08-07): khi target = 0 và actual > 0 thì achievement trả
+                `percent: null` kèm số vượt tuyệt đối (BR-015, APPROVED), và dòng đó bị LOẠI KHỎI
+                MẪU SỐ khi tính trung bình. Nhờ vậy lỗ hổng "đặt target = 0 để leo lên đầu bảng" đã
+                được bịt ngay ở tầng lib/kpi.ts — leaderboard chỉ cần dùng lại kết quả đó, không
+                được tự tính lại.
               - OQ-15 (non-blocking): nếu sau này có team/khu vực thì ranking phải nhóm theo team, không
                 thì so sánh Sales thành thị với Sales tỉnh là không công bằng.
               - `lib/kpi` là nơi duy nhất được tính achievement (BR-011, NFR-012) — ranking không được

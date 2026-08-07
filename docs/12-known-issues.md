@@ -71,7 +71,7 @@ Diễn giải bắt buộc tuân thủ:
 
 | ID | Severity | Status | Chủ đề ngắn gọn | Phase liên quan | ID liên quan |
 |---|---|---|---|---|---|
-| ISSUE-001 | **P1** | OPEN | OPEN QUESTION mức BLOCKING chưa được trả lời → không viết được migration | Phase 0 → Phase 2 | OQ-01…OQ-13, DEC-025, DEC-026 |
+| ISSUE-001 | **P1** | **CLOSED** | OPEN QUESTION mức BLOCKING chưa được trả lời → không viết được migration. **Đã giải quyết 2026-08-07: người dùng trả lời đủ 17/17** | Phase 0 → Phase 2 | OQ-01…OQ-17, DEC-025, DEC-026, DEC-029, DEC-030 |
 | ISSUE-002 | P2 | OPEN | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt | Phase 6 | DEC-010, FR-018, UC-08 |
 | ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa được kiểm chứng trên thiết bị thật | Phase 6, Phase 11 | NFR-009, DEC-011, FR-020 |
 | ISSUE-004 | P2 | OPEN | TypeScript 7.0.2 + ESLint 10.8.0 là bản major mới, chưa xác nhận tương thích Next 16 | Phase 1 | DEC-002, NFR-012 |
@@ -88,7 +88,7 @@ Tổng: **7 OPEN** (1 × P1, 3 × P2, 3 × P3), **0 FIXING**, **0 VERIFY**, **0 
 ### ISSUE-001
 
 **Severity: P1**
-**Status: OPEN**
+**Status: CLOSED** — đóng ngày `2026-08-07`, xem mục Verification
 
 **Module:**
 Bàn giao Phase 0 → Phase 2. Ảnh hưởng trực tiếp: `supabase/migrations/0001_init_enums_profiles.sql`, `0002_daily_reports.sql`, `0003_functions_triggers.sql`, `0004_rls_policies.sql` (đều **đề xuất, chưa triển khai**), `docs/01-business-analysis.md`, `docs/02-database-design.md`, `docs/06-auth-permissions.md`, `docs/11-decisions.md`.
@@ -122,7 +122,9 @@ Trước khi Phase 2 bắt đầu:
 5. Chỉ khi đó mới viết file migration đầu tiên.
 
 **Actual:**
-Đây là mục **duy nhất** trong tài liệu này có thể khẳng định trạng thái thực tế, vì nó nói về trạng thái tài liệu chứ không về hành vi phần mềm: tính đến `2026-08-07`, **chưa có câu trả lời nào** cho các OQ BLOCKING. `DEC-025` và `DEC-026` vẫn ở `PROPOSED`. `BR-013/015/019/020/021` vẫn ở `PROPOSED`. Chưa có migration nào tồn tại trong repository.
+*(Trạng thái tại thời điểm phát hiện, giữ nguyên để có vết)* — khi issue được mở, **chưa có câu trả lời nào** cho các OQ BLOCKING; `DEC-025`, `DEC-026` ở `PROPOSED`; `BR-013/015/019/020/021` ở `PROPOSED`; chưa có migration nào trong repository.
+
+**Cập nhật `2026-08-07`:** người dùng đã trả lời **đủ 17/17 OPEN QUESTION** trong cùng ngày. Toàn bộ nguyên nhân gây chặn đã được gỡ. Vẫn chưa có migration nào tồn tại trong repository, nhưng lý do bây giờ là **chưa tới Phase 2**, không còn là **bị chặn nghiệp vụ**.
 
 **Root Cause:**
 Không phải lỗi kỹ thuật. Master Spec cố ý để mở một số quyết định nghiệp vụ và đánh dấu chúng là cần xác nhận — §31 `REPORT LOCKING — CẦN XÁC NHẬN`, §32 `DELETE REPORT — CẦN XÁC NHẬN`, §40 `CÂU HỎI BUSINESS CẦN XÁC NHẬN`. Phase 0 đã làm đúng việc của mình là biến chúng thành danh sách `OQ-xx` có đề xuất mặc định và phân tích ảnh hưởng, nhưng **quyền trả lời thuộc về chủ nghiệp vụ**, không thuộc về người/agent viết tài liệu. Tự trả lời thay sẽ tạo ra schema sai một cách im lặng.
@@ -136,15 +138,16 @@ Không phải lỗi kỹ thuật. Master Spec cố ý để mở một số quy�
 - **Không dùng workaround "cứ viết migration theo đề xuất mặc định rồi sửa sau".** Với `OQ-09` (Admin giao KPI) và `OQ-13` (soft delete), sửa sau nghĩa là viết lại phần lớn schema và toàn bộ query — chi phí không tuyến tính.
 
 **Verification:**
-Checklist đóng issue (chưa mục nào đạt):
-- [ ] Mọi OQ BLOCKING trong `docs/01-business-analysis.md` có mục `Answer:` + ngày.
-- [ ] `DEC-025`, `DEC-026` trong `docs/11-decisions.md` không còn `Status: PROPOSED`.
-- [ ] `BR-013`, `BR-015`, `BR-019`, `BR-020`, `BR-021` không còn `PROPOSED` trong `docs/01`.
-- [ ] Bảng cột trong `docs/02-database-design.md` khớp 1-1 với câu trả lời (không còn dòng nào chú thích `(OQ-xx)`).
-- [ ] Bảng RLS policy trong `docs/06-auth-permissions.md` khớp với câu trả lời OQ-04/OQ-05/OQ-12/OQ-13.
-- [ ] `PROJECT_CHECKLIST.md`: mục "OPEN QUESTION đã được trả lời" chuyển `[x]`.
+Checklist đóng issue — **cả 6 mục đã đạt ngày `2026-08-07`**:
+- [x] Mọi OQ trong `docs/01-business-analysis.md §OPEN QUESTIONS` có cột **CÂU TRẢ LỜI CHÍNH THỨC** kèm ngày; câu hỏi gốc được giữ nguyên, không xoá.
+- [x] `DEC-025`, `DEC-026` (và cả `DEC-029`, `DEC-030`) trong `docs/11-decisions.md` chuyển sang `Status: APPROVED`. Bảng tra nhanh: **30/30 APPROVED, 0 PROPOSED**.
+- [x] `BR-013`, `BR-015`, `BR-019`, `BR-020`, `BR-021`, `BR-024` không còn `PROPOSED` trong `docs/01` — đều `APPROVED`.
+- [x] `docs/02-database-design.md`: bảng "BR enforce ở đâu" đã chuyển toàn bộ sang `APPROVED`; các chú thích `(OQ-xx)` trên cột được giữ lại **có chủ ý** để ghi vết nguồn gốc quyết định, không phải dấu hiệu còn treo.
+- [x] `docs/06-auth-permissions.md`: ma trận quyền không còn dòng `PROPOSED`; mục OQ đánh dấu ✅ ĐÃ TRẢ LỜI.
+- [x] `PROJECT_CHECKLIST.md`: mục "Toàn bộ 17 OPEN QUESTION đã được người dùng trả lời" đã `[x]`.
 
-Khi cả 6 mục đạt → `Status: CLOSED`, ghi ngày và người xác nhận vào chính mục Verification này.
+**Người xác nhận:** chủ nghiệp vụ (người dùng), qua trao đổi trực tiếp ngày `2026-08-07`.
+**Ghi chú theo Master Spec §56:** issue này **không bị xoá** sau khi fix — giữ lại toàn bộ nội dung gốc làm lịch sử.
 
 ---
 

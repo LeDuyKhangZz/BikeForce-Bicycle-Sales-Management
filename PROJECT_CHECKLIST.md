@@ -40,13 +40,13 @@ nên chưa từng có build / typecheck / lint / test nào được chạy. Mọ
 - [x] Chốt 21 use case UC-01..UC-21 và 6 actor
 - [x] Chốt 37 functional requirement FR-001..FR-037 kèm priority M/S/L và mapping về UC
 - [x] Chốt 15 non-functional requirement NFR-001..NFR-015 kèm cách đo
-- [x] Chốt 25 business rule BR-001..BR-025 kèm nơi enforce và trạng thái APPROVED/PROPOSED
+- [x] Chốt 25 business rule BR-001..BR-025 kèm nơi enforce — **toàn bộ đã APPROVED** sau khi người dùng trả lời 17/17 OQ
 - [x] Đề xuất database schema, RLS deny-by-default, index và trigger — `docs/02-database-design.md`
 - [x] Đề xuất system architecture, page map 16 route, navigation, chiến lược xuất ảnh 9:16 (DEC-010), testing strategy, deployment
 - [x] Đề xuất 15 tính năng Admin AF-01..AF-15 theo đúng format Master Spec §69 (Feature / Business Value / Complexity / MVP / Reason)
 - [x] Ghi DEC-001..DEC-030 vào `docs/11-decisions.md` và ISSUE-001..ISSUE-007 vào `docs/12-known-issues.md`
 - [x] Tạo đủ **17 tài liệu kiểm soát dự án** theo Master Spec §44 và gom 17 OPEN QUESTION OQ-01..OQ-17 vào một danh sách duy nhất
-- [ ] **Toàn bộ OPEN QUESTION mức BLOCKING đã được người dùng trả lời** — OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-11, OQ-12, OQ-13 (thêm OQ-03 mức xác nhận). Đây là mục **chặn Phase 2** — ISSUE-001
+- [x] **Toàn bộ 17 OPEN QUESTION đã được người dùng trả lời** (2026-08-07) — OQ-01…OQ-17, không còn câu nào chờ. DEC-025/026/029/030 chuyển PROPOSED → APPROVED
 
 ---
 
@@ -251,5 +251,5 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 | OQ-13 | Xoá báo cáo? | v1 không xoá | Phase 2 |
 | OQ-17 | "Ngày đạt KPI" = cả 4 chỉ tiêu hay chỉ doanh thu? | Cả 4 chỉ tiêu ≥ 100% | Phase 10 |
 
-**Không được bắt đầu tick bất kỳ mục nào của Phase 2 khi 9 câu BLOCKING chưa được trả lời**
+✅ **Đã hết blocker** — 17/17 OPEN QUESTION được trả lời ngày 2026-08-07, Phase 2 đã viết được
 (ISSUE-001).

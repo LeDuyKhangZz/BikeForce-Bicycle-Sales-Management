@@ -115,7 +115,7 @@ Theo Master Spec §39 LATER, **tuyệt đối không tự triển khai** trong v
 | Ngày nghỉ / nghỉ phép | AF-15 — phụ thuộc OQ-08 |
 | Admin giao KPI trước cho Sales | AF-11 — phụ thuộc OQ-09 |
 | Ranking / leaderboard | AF-10 — SHOULD, có rủi ro văn hoá đội |
-| Xoá báo cáo (hard/soft delete) | BR-013 PROPOSED — chờ OQ-13 |
+| Xoá báo cáo (hard/soft delete, kể cả `deleted_at`) | BR-013 APPROVED — OQ-13 trả lời "Không" |
 | i18n / đa ngôn ngữ | Ứng dụng nội bộ, chỉ tiếng Việt |
 
 ### 2.4 Ranh giới scope cần nhớ khi implement
@@ -159,10 +159,10 @@ Ma trận kỹ thuật đầy đủ (policy, middleware, layout) nằm ở `docs
 |---|---|---|---|
 | Xem báo cáo của chính mình | Có | Có | BR-003 |
 | Xem báo cáo của người khác | Có (toàn bộ) | **Không** | BR-003, NFR-004 |
-| Tạo báo cáo đầu ngày | **Không** (đề xuất) | Có | BR-020 — PROPOSED, OQ-05 |
-| Hoàn thành báo cáo cuối ngày | **Không** (đề xuất) | Có | BR-020 — PROPOSED, OQ-05 |
-| Sửa nội dung số liệu báo cáo của Sales | **Không** (đề xuất) | Chỉ của mình, chỉ khi `MORNING_SUBMITTED` | BR-019/BR-020 — PROPOSED, OQ-04/OQ-05 |
-| Xoá báo cáo | **Không** | **Không** | BR-013 — PROPOSED, OQ-13 |
+| Tạo báo cáo đầu ngày | **Không** | Có | BR-020 — APPROVED, OQ-05 |
+| Hoàn thành báo cáo cuối ngày | **Không** | Có | BR-020 — APPROVED, OQ-05 |
+| Sửa nội dung số liệu báo cáo của Sales | **Không** | Chỉ của mình, chỉ khi `MORNING_SUBMITTED`; khoá vĩnh viễn khi `COMPLETED` | BR-019/BR-020 — APPROVED, OQ-04/OQ-05 |
+| Xoá báo cáo | **Không** | **Không** | BR-013 — APPROVED, OQ-13 |
 | Xuất ảnh 9:16 | Có (báo cáo bất kỳ, đã `COMPLETED`) | Có (báo cáo của mình, đã `COMPLETED`) | BR-002, BR-022 |
 | Tạo / sửa hồ sơ Sales | Có | **Không** | FR-030, FR-031 |
 | Bật / tắt `is_active` | Có | **Không** | FR-032, BR-009 |
@@ -188,7 +188,7 @@ Role phải được enforce ở **4 tầng**, và **ẩn nút/menu ở frontend
 | UC-02 | Đăng xuất | Sales, Admin | FR-003 |
 | UC-03 | Xem dashboard hôm nay | Sales | FR-007; ngày theo BR-005 |
 | UC-04 | Tạo báo cáo đầu ngày | Sales | FR-008…FR-011; BR-001, BR-005, BR-006, BR-016, BR-021 |
-| UC-05 | Sửa báo cáo đầu ngày (trước khi hoàn tất) | Sales | FR-012; BR-019 (PROPOSED, OQ-04) |
+| UC-05 | Sửa báo cáo đầu ngày (trước khi hoàn tất) | Sales | FR-012; BR-019 (APPROVED, OQ-04) |
 | UC-06 | Hoàn thành báo cáo cuối ngày | Sales | FR-013…FR-015; BR-007, BR-008 |
 | UC-07 | Xem đối chiếu cam kết / thực đạt | Sales, Admin | FR-016; BR-004, BR-011, BR-014, BR-015, BR-023 |
 | UC-08 | Xuất ảnh báo cáo 9:16 | Sales | FR-017…FR-020; **BR-002**, BR-022 |
@@ -199,7 +199,7 @@ Role phải được enforce ở **4 tầng**, và **ẩn nút/menu ở frontend
 | UC-13 | Xem danh sách toàn bộ báo cáo + filter/search | Admin | FR-025, FR-026; AF-03; NFR-002 |
 | UC-14 | Xem chi tiết báo cáo của một Sales bất kỳ | Admin | FR-027; AF-04 |
 | UC-15 | Xem analytics theo tháng | Admin | FR-028, FR-037; AF-05, AF-08 |
-| UC-16 | Xem bảng hiệu suất theo từng Sales | Admin | FR-029; AF-06; BR-024 (PROPOSED, OQ-17) |
+| UC-16 | Xem bảng hiệu suất theo từng Sales | Admin | FR-029; AF-06; BR-024 (APPROVED, OQ-17) |
 | UC-17 | Tạo tài khoản Sales | Admin | FR-030; BR-012, BR-025; service role server-side |
 | UC-18 | Sửa hồ sơ Sales | Admin | FR-031; BR-025 |
 | UC-19 | Kích hoạt / vô hiệu hoá tài khoản Sales | Admin | FR-032; BR-009 |
@@ -295,7 +295,7 @@ Priority: **M** = MUST (MVP), **S** = SHOULD, **L** = LATER.
 
 ## 8. BUSINESS RULES
 
-Danh sách canonical. **Không đổi số, không tái đánh số.** Cột `Status` phân biệt rõ rule đã chốt và rule đang chờ trả lời OQ.
+Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đến `2026-08-07`, **toàn bộ 25 business rule đều ở trạng thái `APPROVED`** — sáu rule trước đây `PROPOSED` (BR-013, BR-015, BR-019, BR-020, BR-021, BR-024) đã được chốt sau khi người dùng trả lời đủ 17 OPEN QUESTION. Theo Master Spec §71, **không được tự ý thay đổi** bất kỳ rule nào; muốn đổi phải tạo `DEC` mới và hỏi lại người dùng.
 
 | ID | Rule | Enforced at | Status |
 |---|---|---|---|
@@ -311,18 +311,18 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Cột `St
 | BR-010 | Tiền lưu dạng số nguyên VND; **không** lưu chuỗi đã format | DB `bigint` | APPROVED (Spec §26) |
 | BR-011 | Achievement **không được persist**, luôn tính runtime từ target/actual | architecture | APPROVED (Spec §23) |
 | BR-012 | Chỉ Admin tạo tài khoản; không có self-registration | server + Supabase settings | APPROVED (Spec §6) — xác nhận lại ở OQ-06 |
-| BR-013 | Không xoá cứng dữ liệu báo cáo trong v1 | không cấp DELETE policy | PROPOSED — OQ-13 |
+| BR-013 | **Không xoá báo cáo** dưới bất kỳ hình thức nào (không hard delete, không soft delete, không cột `deleted_at`) | không cấp DELETE policy, không `GRANT DELETE` | **APPROVED** (OQ-13) |
 | BR-014 | Công thức: `achievement = actual / target × 100`, làm tròn 1 chữ số thập phân khi hiển thị | `lib/kpi` | APPROVED (Spec §9) |
-| BR-015 | Khi `target = 0`: `actual = 0` → coi là **100%** (đạt cam kết); `actual > 0` → hiển thị `—` kèm nhãn "Vượt kế hoạch", **không** hiển thị `∞`/`NaN` | `lib/kpi` | **PROPOSED — OQ-11 (blocking)** |
+| BR-015 | Khi `target = 0`: `actual = 0` → **100%**; `actual > 0` → hiển thị **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+3.000.000 ₫`) kèm nhãn "Vượt kế hoạch", `percent = null`. **Không** `∞`/`NaN`. Khi tổng hợp của Admin, dòng này bị **loại khỏi mẫu số** | `lib/kpi` | **APPROVED** (OQ-11) |
 | BR-016 | Không tạo/sửa báo cáo cho ngày trong tương lai | server + DB CHECK | APPROVED (technical safety) |
 | BR-017 | Doanh thu có trần hợp lý 100.000.000.000 VND để chặn lỗi gõ phím | Zod + DB CHECK | APPROVED (technical) |
 | BR-018 | Ghi chú cuối ngày là optional, tối đa 1000 ký tự | Zod + DB CHECK | APPROVED (technical) |
-| BR-019 | Sales chỉ sửa được báo cáo của chính mình, và chỉ khi status = `MORNING_SUBMITTED` | RLS + server | **PROPOSED — OQ-04 (blocking)** |
-| BR-020 | Admin không tạo/sửa nội dung số liệu báo cáo của Sales trong v1 | không cấp UPDATE policy cho admin trên cột số liệu | **PROPOSED — OQ-05 (blocking)** |
-| BR-021 | Báo cáo sáng chỉ được tạo cho **đúng ngày hôm nay** (VN); không nhập bù ngày cũ | server + RLS | **PROPOSED — OQ-12 (blocking)** |
+| BR-019 | Sales chỉ sửa được báo cáo của chính mình, và chỉ khi status = `MORNING_SUBMITTED`. Khi `COMPLETED` thì **khoá vĩnh viễn**, kể cả trong cùng ngày | RLS + server | **APPROVED** (OQ-04) |
+| BR-020 | Admin **không** tạo/sửa nội dung số liệu báo cáo của Sales | không tồn tại UPDATE policy nào cho Admin trên `daily_reports` | **APPROVED** (OQ-05) |
+| BR-021 | Báo cáo chỉ được tạo/sửa cho **đúng ngày hôm nay** theo giờ VN; không giới hạn giờ trong ngày; **không** nhập bù ngày cũ | server + RLS | **APPROVED** (OQ-12) |
 | BR-022 | Admin cũng được xuất ảnh báo cáo của Sales (dùng lại đúng route) | route handler | APPROVED (technical, low risk) |
 | BR-023 | Trạng thái hiển thị achievement: ≥100% "Vượt mục tiêu", 80–99.99% "Gần đạt", <80% "Chưa đạt", chưa có actual → "Chờ số liệu" | `lib/kpi` `getAchievementStatus()` | APPROVED (technical) |
-| BR-024 | "Ngày đạt KPI" = ngày có **cả 4** chỉ tiêu ≥ 100% | `lib/kpi` | PROPOSED — OQ-17 (non-blocking) |
+| BR-024 | "Ngày đạt KPI" = ngày có **cả 4** chỉ tiêu ≥ 100% | `lib/kpi` | **APPROVED** (OQ-17) |
 | BR-025 | Email của profile phải khớp email trong `auth.users`, unique toàn hệ thống | DB unique + trigger | APPROVED (technical) |
 
 ### 8.1 Logic tập trung bắt buộc (Master Spec §9)
@@ -638,8 +638,8 @@ Danh sách hành vi mong đợi cho các tình huống biên. Đây là **đầu
 | 4 | **Hai tab** cùng mở form sáng và cùng submit | Tab thứ nhất insert thành công. Tab thứ hai vi phạm `uq_daily_reports_sales_date` → Postgres `23505` → UI hiện "Bạn đã có báo cáo cho hôm nay" + link tới báo cáo, **không** tạo row thứ hai (BR-001, FR-011). |
 | 5 | **Double-submit** do bấm nhanh 2 lần / mạng chậm | Nút chuyển `disabled` + spinner ngay khi bấm (Master Spec §30). Nếu request thứ hai vẫn lọt: sáng → chặn bởi UNIQUE; cuối ngày → request thứ hai thấy `status` đã là `COMPLETED`, `USING` của policy không khớp, 0 rows affected, UI hiện trạng thái đã hoàn tất thay vì báo lỗi đỏ. |
 | 6 | **Mất mạng giữa chừng** khi submit | Form **không reset**, draft localStorage giữ nguyên (FR-035), hiện lỗi rõ + nút "Thử lại". Nút Xuất ảnh vẫn disabled (BR-002, NFR-010). |
-| 7 | **`target = 0` và `actual = 0`** | Hiển thị **100%**, status `EXCEEDED` (đạt cam kết). Không `NaN`, không `∞`. Đây là BR-015 — **PROPOSED, chờ OQ-11**. |
-| 8 | **`target = 0` và `actual > 0`** | `percent = null`, `display = '—'`, kèm nhãn "Vượt kế hoạch". Không `∞`. Ở tổng hợp Admin, dòng này không được kéo trung bình thành `NaN`. BR-015 — **PROPOSED, chờ OQ-11**. |
+| 7 | **`target = 0` và `actual = 0`** | Hiển thị **`100,0%`**, status `EXCEEDED` (đạt cam kết). Không `NaN`, không `∞`. BR-015 — **APPROVED**. |
+| 8 | **`target = 0` và `actual > 0`** | `percent = null`, hiển thị **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch". Không `∞`. Ở tổng hợp Admin, dòng này bị **loại khỏi mẫu số**, không quy thành 0% hay 100%. BR-015 — **APPROVED**. |
 | 9 | **`actual` vượt `target` nhiều lần** (target 8, actual 100 → 1250,0%) | Hiển thị đúng `1250,0%`, **không clamp về 100%** (BR-004). Thẻ ảnh 9:16 phải chứa nổi chuỗi 4 chữ số phần nguyên mà không tràn/cắt chữ. |
 | 10 | **Doanh thu 12 chữ số** (ví dụ `100000000000` = trần BR-017) | Lưu đúng ở `bigint`. Hiển thị `100.000.000.000 ₫`. Trên thẻ 9:16 phải giảm cỡ chữ hoặc xuống dòng, không tràn khung. Giá trị vượt trần bị Zod + CHECK từ chối kèm message dễ hiểu, không phải lỗi DB thô. |
 | 11 | **Họ tên rất dài** (40+ ký tự, tối đa 100 theo CHECK) | UI **wrap** chứ không `truncate` ở trang chi tiết. Trên thẻ 9:16 giới hạn số dòng an toàn. Tên file PNG: dấu tiếng Việt được chuyển sang dạng không dấu, khoảng trắng thành `-`, loại bỏ ký tự không hợp lệ cho filesystem, giữ đúng khuôn `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019). |
@@ -669,7 +669,7 @@ Danh sách hành vi mong đợi cho các tình huống biên. Đây là **đầu
 
 Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo Master Spec §55) nằm ở `docs/11-decisions.md`. Bảng dưới đây là **tóm tắt trạng thái**: tất cả `Date = 2026-08-07`.
 
-**Tổng: 30 quyết định — 26 APPROVED, 4 PROPOSED.**
+**Tổng: 30 quyết định — toàn bộ 30 đều APPROVED** sau khi người dùng trả lời đủ 17 OPEN QUESTION ngày 2026-08-07.
 
 | ID | Nội dung (rút gọn) | Status |
 |---|---|---|
@@ -697,64 +697,73 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 | DEC-022 | Test DB/RLS chạy trên Supabase local qua Supabase CLI, không test trên production | APPROVED |
 | DEC-023 | Cấu trúc thư mục `app/ components/ features/ lib/ services/ types/ supabase/ docs/` | APPROVED |
 | DEC-024 | PWA chỉ manifest + Add to Home Screen; không service worker/offline sync ở v1 | APPROVED |
-| DEC-025 | BR-015 (`target = 0`) đang **PROPOSED**, chờ OQ-11 | **PROPOSED** |
-| DEC-026 | BR-019 / BR-020 / BR-021 / BR-013 (sửa sau hoàn tất, admin sửa, nhập bù, xoá) đang **PROPOSED**, chờ OQ-04 / OQ-05 / OQ-12 / OQ-13 | **PROPOSED** |
+| DEC-025 | BR-015 (`target = 0`): `actual=0` → 100%; `actual>0` → số vượt tuyệt đối, loại khỏi mẫu số khi tổng hợp | APPROVED |
+| DEC-026 | BR-019 / BR-020 / BR-021 / BR-013: khoá vĩnh viễn khi `COMPLETED`, Admin không sửa, chỉ nhập đúng ngày hôm nay, không xoá | APPROVED |
 | DEC-027 | Khởi tạo git repository kèm `.gitignore` chuẩn Next.js chặn `.env*` | APPROVED |
 | DEC-028 | Remote GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management`; người dùng đã cấp **quyền push đứng** — push sau mỗi lần code xong, không hỏi lại. Git được init ngay ở Phase 0 (điều chỉnh mốc của DEC-027) | APPROVED |
-| DEC-029 | "Mục tiêu / Đã viếng thăm" mô hình hoá thành **cả hai**: cột số (`target_visit_points` / `actual_visit_points`) + cột text (`visit_purpose` / `actual_route`) — **PROPOSED**, chờ OQ-01 / OQ-02 | **PROPOSED** |
-| DEC-030 | v1 không có ngày nghỉ, không có team/vùng, không có role thứ ba, không có SKU/đại lý/đơn hàng; KPI do Sales tự cam kết — **PROPOSED**, chờ OQ-08 / OQ-09 / OQ-10 / OQ-15 / OQ-16 | **PROPOSED** |
+| DEC-029 | "Mục tiêu / Đã viếng thăm" giữ **cả hai**: cột số bắt buộc (`target_visit_points` / `actual_visit_points`) + cột text tuỳ chọn (`visit_purpose` / `actual_route`) | APPROVED |
+| DEC-030 | v1 không có ngày nghỉ, không có team/vùng, chỉ 2 role, không SKU/đại lý/đơn hàng; KPI do Sales tự cam kết | APPROVED |
 
-**Hệ quả nghiệp vụ cần nhớ:** 5 business rule đang ở trạng thái PROPOSED (BR-013, BR-015, BR-019, BR-020, BR-021) đều gắn trực tiếp với DEC-025/DEC-026, và phạm vi schema còn phụ thuộc DEC-029/DEC-030. **Không được coi chúng là đã chốt** khi viết migration hay policy.
+**Hệ quả nghiệp vụ cần nhớ:** 6 business rule trước đây bị treo (BR-013, BR-015, BR-019, BR-020, BR-021, BR-024) **nay đã APPROVED** — được phép viết migration và policy theo chúng. Theo Master Spec §71, **không được tự ý thay đổi** chúng; muốn đổi phải tạo `DEC` mới và hỏi lại người dùng.
 
 ---
 
-## OPEN QUESTIONS
+## OPEN QUESTIONS — **ĐÃ ĐƯỢC TRẢ LỜI ĐẦY ĐỦ (2026-08-07)**
 
 > **Đây là DANH SÁCH ĐẦY ĐỦ DUY NHẤT của toàn dự án.** Mọi tài liệu khác (`docs/02` … `docs/12`, `CLAUDE.md`, `AGENTS.md`) chỉ liệt kê các `OQ-xx` liên quan trực tiếp tới nó và **trỏ ngược về mục này**. Không được tạo `OQ` mới ở tài liệu khác.
 
-Mức độ: `BLOCKING` = phải trả lời **trước khi** viết migration ở Phase 2. `NON-BLOCKING` = triển khai theo đề xuất mặc định, đổi sau vẫn rẻ.
+> ✅ **Ngày 2026-08-07, người dùng đã trả lời đủ 17/17 câu hỏi.** Không còn câu nào ở trạng thái chờ. Phase 2 (migrations + RLS) đã hết blocker. Các câu trả lời dưới đây là **business decision đã được xác nhận** — theo Master Spec §66 chúng đứng ở mức ưu tiên sự thật **cao nhất**, và theo Master Spec §71 **không được tự ý thay đổi**.
 
-| ID | Câu hỏi | Mức | Đề xuất mặc định | Ảnh hưởng |
-|---|---|---|---|---|
-| OQ-01 | "Mục tiêu viếng thăm" là **số điểm/đại lý** (đếm được) hay **mục đích chuyến đi** (văn bản)? | **BLOCKING** | Cả hai: `target_visit_points` (integer, bắt buộc — để tính được dòng "Viếng thăm" trong bảng đối chiếu) + `visit_purpose` (text, optional) | Cột DB, form, bảng so sánh, thẻ ảnh 9:16 |
-| OQ-02 | "Đã viếng thăm" là **con số** hay **danh sách/tuyến thực tế đã đi**? | **BLOCKING** | Cả hai: `actual_visit_points` (integer, bắt buộc) + `actual_route` (text, optional) | Cột DB, form cuối ngày, công thức % |
-| OQ-03 | Xác nhận: **Doanh số = số lượng xe (cái)**, **Doanh thu = tiền VND**? | BLOCKING (xác nhận) | Đúng như hiểu hiện tại | Kiểu dữ liệu, đơn vị, nhãn UI |
-| OQ-04 | Sales **hoàn tất** báo cáo cuối ngày rồi có được sửa không? (a) không bao giờ (b) sửa trong ngày hôm đó (c) sửa đến khi Admin khoá | **BLOCKING** | (a) Khoá ngay khi `COMPLETED` — đơn giản, chống sửa số liệu sau khi đã gửi Zalo | RLS UPDATE policy, trigger, UI, nhu cầu audit log |
-| OQ-05 | **Admin** có được sửa báo cáo của Sales không? | **BLOCKING** | Không trong v1. Nếu sai số liệu, Admin liên hệ Sales; nếu buộc phải sửa thì cần audit log (AF-12) | RLS policy admin, audit log, UI |
-| OQ-06 | Xác nhận **Admin tạo tài khoản**, Sales **không** tự đăng ký? | NON-BLOCKING | Đúng — tắt signup ở Supabase | Cấu hình Auth, UC-17 |
-| OQ-07 | **Tuyến** nhập tự do hay Admin cấu hình danh sách sẵn? | NON-BLOCKING | v1 nhập tự do + gợi ý 5 tuyến gần nhất của chính Sales. Nếu cần thống kê theo tuyến thì phải có bảng `routes` (AF-14) | Bảng mới, form, khả năng thống kê |
-| OQ-08 | Có khái niệm **ngày nghỉ / nghỉ phép / không đi thị trường** không? | **BLOCKING** | v1 không có. Admin dashboard chỉ đếm ngày làm việc thực tế và không phân biệt nghỉ phép | Cột/bảng mới, logic "chưa báo cáo", tỷ lệ tuân thủ |
-| OQ-09 | KPI là **Sales tự cam kết sáng** hay **Admin giao chỉ tiêu trước**? | **BLOCKING** | Sales tự cam kết (đúng Master Spec §7) | Nếu Admin giao: cần bảng `targets` riêng, permission mới, đổi cả workflow — AF-11 |
-| OQ-10 | v1 có cần **SKU / model xe / đại lý / đơn hàng** không? | NON-BLOCKING | Không. Chỉ tổng số lượng và tổng tiền | Toàn bộ mô hình dữ liệu |
-| OQ-11 | Khi **target = 0** thì % hoàn thành hiển thị thế nào? | **BLOCKING** | `actual=0` → **100%** (đạt cam kết); `actual>0` → hiển thị `—` + nhãn "Vượt kế hoạch". Tuyệt đối không `NaN`/`∞` | `lib/kpi`, mọi chỗ hiển thị %, tổng hợp Admin |
-| OQ-12 | **Nhập trễ / nhập bù**: Sales có được tạo báo cáo sáng vào buổi chiều không? Có được nhập bù ngày hôm qua không? Có giờ cắt (cut-off) không? | **BLOCKING** | Chỉ được tạo/sửa cho **đúng ngày hôm nay** theo giờ VN, không giới hạn giờ trong ngày, không nhập bù | RLS INSERT/UPDATE policy, CHECK constraint, alerts |
-| OQ-13 | **Xoá báo cáo**: Admin có được xoá không? Soft delete hay hard delete? | **BLOCKING** | v1 không xoá. Nếu cần thì soft delete (`deleted_at`) + chỉ Admin | Cột mới, mọi truy vấn phải lọc, RLS |
-| OQ-14 | "Doanh thu" là **tiền đã thu thực tế** hay **giá trị đơn hàng ghi nhận**? | NON-BLOCKING | Giá trị đơn hàng chốt trong ngày | Chỉ ảnh hưởng định nghĩa + nhãn UI/tooltip |
-| OQ-15 | Sales có chia **khu vực / team / vùng** không? | NON-BLOCKING | v1 không. Thêm cột `team` nullable sau này rất rẻ | Cột profiles, filter Admin, nhóm số liệu |
-| OQ-16 | Ngoài Admin và Sales, có cần role thứ 3 (ví dụ Trưởng nhóm chỉ xem team mình) không? | NON-BLOCKING | Không trong v1 | Enum role, RLS, navigation |
-| OQ-17 | "**Ngày đạt KPI**" định nghĩa là đạt **cả 4** chỉ tiêu, hay chỉ cần đạt **doanh thu**? | NON-BLOCKING | Cả 4 chỉ tiêu ≥ 100% | `lib/kpi`, bảng hiệu suất AF-06 |
+| ID | Câu hỏi | **CÂU TRẢ LỜI CHÍNH THỨC** | Ràng buộc sinh ra |
+|---|---|---|---|
+| OQ-01 | "Mục tiêu viếng thăm" là số điểm/đại lý hay mục đích chuyến đi? | **Cả hai.** `target_visit_points` (integer, **bắt buộc**) + `visit_purpose` (text, tuỳ chọn) | DEC-029 · giữ đủ 4 dòng trong bảng đối chiếu |
+| OQ-02 | "Đã viếng thăm" là con số hay tuyến thực tế đã đi? | **Cả hai.** `actual_visit_points` (integer, **bắt buộc** khi hoàn tất) + `actual_route` (text, tuỳ chọn) | DEC-029 · `ck_completed_requires_actuals` |
+| OQ-03 | Doanh số = số lượng xe? Doanh thu = tiền VND? | **Xác nhận đúng.** Doanh số là **số lượng xe** (integer, đơn vị "xe"); doanh thu là **tiền VND** (bigint) | BR-006, BR-010, DEC-008 |
+| OQ-04 | Sales hoàn tất báo cáo rồi có được sửa không? | **KHÔNG.** Khoá vĩnh viễn ngay khi `status = 'COMPLETED'`, kể cả trong cùng ngày | **BR-019 APPROVED** · DEC-026 |
+| OQ-05 | Admin có được sửa báo cáo của Sales không? | **KHÔNG.** Không có policy `UPDATE` nào cho Admin trên `daily_reports` | **BR-020 APPROVED** · DEC-026 · AF-12 chưa cần |
+| OQ-06 | Admin tạo tài khoản, Sales không tự đăng ký? | **Xác nhận đúng.** Tắt public signup ở Supabase | BR-012, UC-17 |
+| OQ-07 | Tuyến nhập tự do hay Admin cấu hình sẵn? | **Nhập tự do.** v1 dùng ô text + gợi ý 5 tuyến gần nhất của chính Sales | AF-14 đẩy sang roadmap |
+| OQ-08 | Có khái niệm ngày nghỉ / không đi thị trường không? | **KHÔNG có ở v1** — *người dùng đã nêu rõ hệ quả: cảnh báo "Sales chưa báo cáo" sẽ **báo oan người nghỉ phép**. Chấp nhận có ý thức.* | DEC-030 · **ISSUE-006 vẫn OPEN** · AF-15 roadmap |
+| OQ-09 | KPI do Sales tự cam kết hay Admin giao trước? | **Sales tự cam kết buổi sáng** (đúng Master Spec §7) | DEC-030 · AF-11 roadmap · không cần bảng `targets` |
+| OQ-10 | v1 có cần SKU / model xe / đại lý / đơn hàng không? | **KHÔNG.** Chỉ tổng số lượng và tổng tiền | DEC-030 · giữ đúng 2 bảng nghiệp vụ |
+| OQ-11 | Khi `target = 0` thì ô "Hoàn thành" hiển thị gì? | **`actual = 0` → `100,0%`.** **`actual > 0` → số vượt tuyệt đối có dấu cộng và đơn vị**: `+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`; nhãn "Vượt kế hoạch"; `percent = null`. **Không bao giờ `NaN` / `∞`.** Khi tổng hợp của Admin, dòng này bị **loại khỏi mẫu số** | **BR-015 APPROVED** · DEC-025 |
+| OQ-12 | Có được nhập bù ngày cũ không? Có giờ cắt không? | **Chỉ đúng ngày hôm nay theo giờ Việt Nam.** Không giới hạn giờ trong ngày, **không** nhập bù ngày cũ | **BR-021 APPROVED** · DEC-026 |
+| OQ-13 | Có xoá báo cáo không? Soft hay hard delete? | **KHÔNG xoá.** Không `DELETE` policy, không `GRANT DELETE`, **không** cột `deleted_at` | **BR-013 APPROVED** · DEC-026 |
+| OQ-14 | "Doanh thu" là tiền đã thu hay giá trị đơn hàng? | **Giá trị đơn hàng chốt trong ngày** (không phải tiền mặt đã thu) | Nhãn + tooltip trên form và thẻ ảnh |
+| OQ-15 | Sales có chia khu vực / team / vùng không? | **Chưa chia ở v1** | DEC-030 · thêm `profiles.team` sau này vẫn rẻ |
+| OQ-16 | Có cần role thứ ba không? | **KHÔNG. Chỉ 2 role**: `ADMIN`, `SALES` | DEC-030 · enum `user_role` giữ 2 giá trị |
+| OQ-17 | "Ngày đạt KPI" là đạt cả 4 chỉ tiêu hay chỉ doanh thu? | **Đạt cả 4 chỉ tiêu ≥ 100%** | **BR-024 APPROVED** · `lib/kpi`, AF-06 |
 
-### Tóm tắt mức độ chặn
+### Business rule chuyển từ PROPOSED sang APPROVED
 
-- **9 câu ở mức BLOCKING:** OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-11, OQ-12, OQ-13.
-- **1 câu BLOCKING dạng xác nhận:** OQ-03 — chỉ cần người dùng xác nhận lại cách hiểu hiện tại, không cần quyết định mới.
-- **7 câu NON-BLOCKING:** OQ-06, OQ-07, OQ-10, OQ-14, OQ-15, OQ-16, OQ-17 — triển khai theo đề xuất mặc định.
+Sáu business rule trước đây bị treo nay đã chốt — **được phép viết migration theo chúng**:
 
-> **Phase 1 không được chốt schema, và Phase 2 không được viết migration, cho tới khi 9 câu BLOCKING ở trên được trả lời** — rủi ro này đã ghi nhận là **ISSUE-001 (P1, OPEN)** trong `docs/12-known-issues.md`.
-
-### Business rule bị treo theo từng OQ
-
-| OQ | Business rule đang PROPOSED | Nếu câu trả lời khác đề xuất thì phải sửa |
+| BR | Nội dung đã chốt | Nơi enforce |
 |---|---|---|
-| OQ-04 | BR-019 | RLS `reports_update_own_open`, trigger `guard_report_transition()`, UI chế độ chỉ đọc, có thể phải thêm AF-12 audit log (ISSUE-007) |
-| OQ-05 | BR-020 | Thêm UPDATE policy cho Admin trên cột số liệu, bắt buộc kèm audit log (AF-12, ISSUE-007), sửa `docs/06` |
-| OQ-11 | BR-015 | `lib/kpi.calculateAchievement()`, mọi chỗ hiển thị `%`, tổng hợp Admin, thẻ ảnh 9:16 |
-| OQ-12 | BR-021 | RLS INSERT/UPDATE, `ck_report_not_future`, UI chọn ngày, logic cảnh báo AF-02 |
-| OQ-13 | BR-013 | Thêm cột `deleted_at`, mọi truy vấn phải lọc, thêm DELETE/soft-delete policy |
-| OQ-17 | BR-024 | `lib/kpi`, cột "số ngày đạt KPI" ở bảng hiệu suất AF-06 |
-| OQ-08 | — | Logic "chưa báo cáo" của AF-02 hiện có thể báo động giả cho người nghỉ phép (ISSUE-006) |
-| OQ-01 / OQ-02 | — | Cột `target_visit_points` / `visit_purpose` / `actual_visit_points` / `actual_route` trong `daily_reports` |
-| OQ-09 | — | Nếu Admin giao chỉ tiêu: cần bảng `targets`, đổi toàn bộ morning flow (AF-11) |
+| **BR-013** | Không xoá báo cáo dưới bất kỳ hình thức nào | Không cấp `DELETE` policy, không `GRANT DELETE` |
+| **BR-015** | `target=0 & actual=0` → 100%; `target=0 & actual>0` → số vượt tuyệt đối, `percent = null`, loại khỏi mẫu số khi tổng hợp | `lib/kpi.ts` |
+| **BR-019** | Sales chỉ sửa báo cáo của chính mình khi `status = 'MORNING_SUBMITTED'` | RLS `reports_update_own_open` + server |
+| **BR-020** | Admin không sửa số liệu báo cáo của Sales | Không tồn tại UPDATE policy cho Admin |
+| **BR-021** | Chỉ tạo/sửa báo cáo cho đúng ngày hôm nay theo giờ VN | RLS `reports_insert_own_today` + `ck_report_not_future` |
+| **BR-024** | "Ngày đạt KPI" = cả 4 chỉ tiêu ≥ 100% | `lib/kpi.ts` |
+
+### Hai điểm cần theo dõi tiếp (không chặn tiến độ)
+
+1. **ISSUE-006 vẫn OPEN** — do OQ-08 chốt "không có ngày nghỉ", chỉ số "Sales chưa báo cáo" (FR-033, AF-02) sẽ tính cả người đang nghỉ phép. Người dùng đã biết và chấp nhận. **Yêu cầu triển khai:** giao diện cảnh báo phải dùng từ trung tính — ghi *"Chưa có báo cáo hôm nay"*, **không** được ghi *"vi phạm"* hay *"không hoàn thành nhiệm vụ"* — để Admin tự đối chiếu với lịch nghỉ bên ngoài hệ thống.
+2. **AF-12 (audit log) chưa cần** — vì OQ-04 và OQ-05 đều trả lời "không được sửa". Nếu sau này mở quyền sửa, **bắt buộc làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
+
+### Hệ quả cho việc cài đặt `lib/kpi.ts` (Phase 5)
+
+`AchievementResult` phải mang đủ thông tin để tầng hiển thị dựng được cả ba dạng ô "Hoàn thành", **không component nào được tự tính lại**:
+
+| Tình huống | `percent` | Hiển thị | Status |
+|---|---|---|---|
+| `target > 0` | `actual / target × 100` | `83,3%` | theo BR-023 |
+| `target = 0`, `actual = 0` | `100` | `100,0%` | `EXCEEDED` |
+| `target = 0`, `actual > 0` | `null` | `+3 xe` / `+3.000.000 ₫` | `EXCEEDED`, nhãn "Vượt kế hoạch" |
+| chưa có `actual` | `null` | `—` | `PENDING` |
+
+Đơn vị hiển thị theo từng chỉ tiêu: **xe** (doanh số) · **điểm** (viếng thăm) · **khách** (khách hàng) · **định dạng VND đầy đủ** qua `formatCurrencyVND` (doanh thu — không rút gọn thành `3tr`).
 
 ---
 

@@ -383,7 +383,7 @@ sequenceDiagram
 - Cho phép **> 100%**, tuyệt đối **không clamp** (BR-004).
 - Làm tròn **1 chữ số thập phân** khi hiển thị (BR-014), ví dụ `80,0%` / `125,0%`.
 - **Không bao giờ** xuất hiện `NaN` hay `Infinity` (Master Spec §9).
-- `target = 0` và `actual = 0` → **100%**; `target = 0` và `actual > 0` → hiển thị `—` kèm nhãn "Vượt kế hoạch" (BR-015 ⚠ **OQ-11 blocking**).
+- `target = 0` và `actual = 0` → **`100,0%`**; `target = 0` và `actual > 0` → hiển thị **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+3.000.000 ₫`) kèm nhãn "Vượt kế hoạch", `percent = null` (BR-015 — **APPROVED**, OQ-11 đã trả lời).
 - Badge trạng thái: ≥100% `Vượt mục tiêu`, 80–99.99% `Gần đạt`, <80% `Chưa đạt`, chưa có actual `Chờ số liệu` (BR-023). Mỗi badge có **icon + text**, không dùng màu đơn thuần.
 - Toàn bộ công thức chỉ tồn tại trong `lib/kpi.ts`; **không component nào được tự tính lại** (NFR-012, Master Spec §9).
 
@@ -892,7 +892,7 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 
 > Danh sách đầy đủ OQ-01..OQ-17 nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dưới đây chỉ là các câu **ảnh hưởng trực tiếp tới workflow trong tài liệu này**, kèm **nhánh workflow chính xác** sẽ phải thay đổi.
 
-### OQ-04 — Sales hoàn tất báo cáo cuối ngày rồi có được sửa không? `BLOCKING`
+### OQ-04 — Sales hoàn tất báo cáo cuối ngày rồi có được sửa không? ✅ `ĐÃ TRẢ LỜI: KHÔNG`
 
 **Đề xuất mặc định:** (a) khoá ngay khi `COMPLETED`.
 
@@ -910,7 +910,7 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 
 **Ảnh hưởng ngoài workflow:** RLS `reports_update_own_open` (USING), trigger `guard_report_transition()`, BR-019, DEC-026.
 
-### OQ-12 — Nhập trễ / nhập bù: có được tạo báo cáo sáng vào buổi chiều, hay bù ngày hôm qua, có giờ cắt không? `BLOCKING`
+### OQ-12 — Nhập trễ / nhập bù: có được tạo báo cáo sáng vào buổi chiều, hay bù ngày hôm qua, có giờ cắt không? ✅ `ĐÃ TRẢ LỜI: chỉ đúng ngày hôm nay, không giới hạn giờ, không nhập bù`
 
 **Đề xuất mặc định:** chỉ tạo/sửa cho **đúng ngày hôm nay** theo giờ VN; không giới hạn giờ trong ngày; không nhập bù.
 
@@ -927,7 +927,7 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 
 **Ảnh hưởng ngoài workflow:** RLS `reports_insert_own_today` (điều kiện `report_date = public.vn_today()`), `reports_update_own_open`, CHECK `ck_report_not_future`, BR-021, DEC-026.
 
-### OQ-08 — Có khái niệm ngày nghỉ / nghỉ phép / không đi thị trường không? `BLOCKING`
+### OQ-08 — Có khái niệm ngày nghỉ / nghỉ phép / không đi thị trường không? ✅ `ĐÃ TRẢ LỜI: KHÔNG ở v1 — chấp nhận việc cảnh báo báo oan người nghỉ phép (ISSUE-006)`
 
 **Đề xuất mặc định:** v1 **không có**; Admin dashboard chỉ đếm ngày làm việc thực tế và không phân biệt nghỉ phép.
 
@@ -956,5 +956,5 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 | Ma trận quyền theo role, sơ đồ permission flow | `docs/06-auth-permissions.md` |
 | Chữ ký Server Action, hình dạng dữ liệu trả về | `docs/07-api-data-flow.md` |
 | Danh sách test case cho từng failure flow ở §10 | `docs/08-testing-strategy.md` |
-| Trạng thái APPROVED/PROPOSED của mọi BR và DEC | `docs/11-decisions.md` |
+| Trạng thái APPROVED của mọi BR và DEC (toàn bộ 30 DEC đã APPROVED) | `docs/11-decisions.md` |
 | Rủi ro ISSUE-001..ISSUE-007 | `docs/12-known-issues.md` |

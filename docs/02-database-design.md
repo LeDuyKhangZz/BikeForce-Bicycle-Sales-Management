@@ -14,7 +14,7 @@
 | Migration đã chạy | **Không có migration nào được chạy** |
 | Build / typecheck / lint / test | `N/A` — chưa có source code |
 
-Toàn bộ SQL trong tài liệu này là **ĐỀ XUẤT — chưa chạy, chờ trả lời các OPEN QUESTION mức BLOCKING** (ISSUE-001). Không được coi bất kỳ đoạn nào là "đã kiểm chứng trên database thật".
+Toàn bộ SQL trong tài liệu này là **ĐỀ XUẤT — chưa chạy**, nhưng **đã hết blocker nghiệp vụ**: người dùng đã trả lời đủ 17/17 OPEN QUESTION ngày 2026-08-07 (ISSUE-001 đã CLOSED). Không được coi bất kỳ đoạn nào là "đã kiểm chứng trên database thật".
 
 Schema chốt cuối cùng chỉ được viết vào `supabase/migrations/` ở **PHASE 2 — Database & Auth**, sau khi OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-12, OQ-13 (và OQ-03, OQ-11) có câu trả lời.
 
@@ -211,9 +211,9 @@ Một dòng cho mỗi (Sales × ngày nghiệp vụ). Dòng được **tạo** b
 
 ---
 
-## 7. SQL DDL — ĐỀ XUẤT, CHƯA CHẠY, CHỜ OQ BLOCKING
+## 7. SQL DDL — ĐỀ XUẤT, CHƯA CHẠY (đã hết blocker nghiệp vụ)
 
-> **ĐỀ XUẤT — chưa chạy, chờ OQ BLOCKING.**
+> **ĐỀ XUẤT — chưa chạy.** Nghiệp vụ đã chốt xong (17/17 OQ đã trả lời), nên nội dung dưới đây là bản dùng được cho Phase 2; vẫn phải chạy thật và test trước khi coi là đúng.
 > Không copy các file này vào `supabase/migrations/` cho tới khi OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-12, OQ-13 (và OQ-03, OQ-11) được trả lời. Đây là ISSUE-001, mức P1.
 > Đường dẫn đích khi được duyệt: `supabase/migrations/` (đẩy bằng `supabase db push`, không sửa schema bằng tay trên Supabase Dashboard).
 
@@ -675,7 +675,7 @@ create policy reports_update_own_open
   with check (sales_id = (select auth.uid()));
 
 -- Cố ý KHÔNG có policy DELETE (BR-013), và cũng không có UPDATE cho Admin
--- (BR-020, chờ OQ-05).
+-- (BR-020, APPROVED theo OQ-05: Admin KHÔNG sửa số liệu báo cáo).
 ```
 
 ### 7.5 `supabase/migrations/0005_indexes.sql`
@@ -908,7 +908,7 @@ Postgres trả `numeric` cho `sum(bigint)`. PostgREST/`supabase-js` serialize `n
 Ba lý do, xếp theo mức độ nghiêm trọng:
 
 1. **Lệch dữ liệu là chuyện chắc chắn xảy ra, không phải rủi ro.** Nếu `%` được lưu, thì mỗi lần `actual_revenue` đổi mà quên tính lại là một dòng dữ liệu nói dối. Với FR-012 (sửa cam kết sáng) thì đường sửa đó có thật.
-2. **Công thức chưa được chốt.** BR-015 (trường hợp `target = 0`) đang ở trạng thái **PROPOSED, chờ OQ-11**. Persist một `%` ngay bây giờ là đóng băng một quy tắc chưa được duyệt vào 18.000 dòng dữ liệu, và khi OQ-11 có câu trả lời thì phải backfill toàn bộ.
+2. **Công thức có nhánh không phải là số.** BR-015 (`target = 0` và `actual > 0`) trả `percent = null` và hiển thị số vượt tuyệt đối (`+3 xe`) chứ không phải một con số phần trăm — một cột `numeric` không biểu diễn được điều đó. Persist một `%` là đóng băng một quy tắc chưa được duyệt vào 18.000 dòng dữ liệu, và khi OQ-11 có câu trả lời thì phải backfill toàn bộ.
 3. **`%` không phải một con số duy nhất.** `AchievementResult` gồm `percent: number | null`, `status`, và `display` (chuỗi đã format `'80,0%'` / `'125,0%'` / `'—'`). Làm tròn 1 chữ số (BR-014) là quy tắc **hiển thị**; lưu nó vào DB là trộn tầng trình bày vào tầng dữ liệu.
 
 Generated column cũng bị loại vì cùng lý do 2 và 3: nhánh `target = 0 && actual > 0 → hiển thị '—'` là quy tắc hiển thị, không biểu diễn được bằng một số.
@@ -1091,18 +1091,18 @@ Thứ tự xử lý khi đó: (1) kiểm tra lại kế hoạch truy vấn và i
 | BR-010 | `bigint` cho `target_revenue` / `actual_revenue` |
 | BR-011 | **Sự vắng mặt** của mọi cột `%` — xem §12 |
 | BR-012 | Không có policy INSERT trên `profiles`; không cấp INSERT cho `authenticated`; `handle_new_user()` ép `role = 'SALES'` |
-| BR-013 | Không có policy DELETE; không cấp DELETE cho `authenticated`; FK `ON DELETE RESTRICT` — **PROPOSED, chờ OQ-13** |
+| BR-013 | Không có policy DELETE; không cấp DELETE cho `authenticated`; FK `ON DELETE RESTRICT`; **không** có cột `deleted_at` — **APPROVED** (OQ-13) |
 | BR-014 | `lib/kpi.ts`, không ở DB |
-| BR-015 | `lib/kpi.ts`, không ở DB — **PROPOSED, chờ OQ-11** |
+| BR-015 | `lib/kpi.ts`, không ở DB — **APPROVED** (OQ-11): `target=0 & actual>0` → `percent = null` + số vượt tuyệt đối |
 | BR-016 | `ck_report_not_future` |
 | BR-017 | `ck_target_revenue`, `ck_actual_revenue` (trần 100.000.000.000) |
 | BR-018 | `ck_evening_note_len` |
-| BR-019 | Policy `reports_update_own_open` (`status = 'MORNING_SUBMITTED'` trong USING) — **PROPOSED, chờ OQ-04** |
-| BR-020 | **Sự vắng mặt** của policy UPDATE cho Admin trên `daily_reports` — **PROPOSED, chờ OQ-05** |
-| BR-021 | Policy `reports_insert_own_today` (`report_date = public.vn_today()`) — **PROPOSED, chờ OQ-12** |
+| BR-019 | Policy `reports_update_own_open` (`status = 'MORNING_SUBMITTED'` trong USING — chính điều kiện này là cơ chế khoá vĩnh viễn) — **APPROVED** (OQ-04) |
+| BR-020 | **Sự vắng mặt** của policy UPDATE cho Admin trên `daily_reports` — **APPROVED** (OQ-05) |
+| BR-021 | Policy `reports_insert_own_today` (`report_date = public.vn_today()`) — **APPROVED** (OQ-12) |
 | BR-022 | Policy `reports_select_own_or_admin` cho Admin đọc; route handler dùng lại |
 | BR-023 | `lib/kpi.ts` `getAchievementStatus()`, không ở DB |
-| BR-024 | `lib/kpi.ts`, không ở DB — **PROPOSED, chờ OQ-17** |
+| BR-024 | `lib/kpi.ts`, không ở DB — **APPROVED** (OQ-17): cả 4 chỉ tiêu ≥ 100% |
 | BR-025 | `uq_profiles_email`; `handle_new_user()` copy email; `guard_profile_self_update()` chặn Sales đổi email. **Chưa khép kín cho luồng Admin đổi email — xem §9.** |
 
 ### 15.1 Kiểm thử schema bắt buộc trước khi coi Phase 2 là xong

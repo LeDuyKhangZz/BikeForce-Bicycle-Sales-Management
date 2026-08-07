@@ -672,7 +672,7 @@ Tất cả đều **chưa thực hiện**.
 
 **Nhưng có một ràng buộc thứ tự bắt buộc:**
 
-> Các câu trả lời OQ **thay đổi nội dung migration**. Vì migration chỉ tiến tới (§4.1, §12.2), **không được viết `0001` … `0005` trước khi các OQ mức BLOCKING được trả lời.** Viết sớm rồi phải sửa nghĩa là phải đẻ thêm migration vá lên production — chính xác là thứ mà kỷ luật forward-only sinh ra để tránh. Đây là nội dung của ISSUE-001 (P1).
+> ✅ **Đã hết blocker (2026-08-07):** người dùng đã trả lời đủ 17/17 OPEN QUESTION, nên nội dung migration đã chốt được. Vì migration chỉ tiến tới (§4.1, §12.2), vẫn phải rà lại `docs/02-database-design.md` một lần trước khi viết `0001` … `0005`. Đoạn cũ (giữ lại làm ngữ cảnh): các OQ mức BLOCKING được trả lời.** Viết sớm rồi phải sửa nghĩa là phải đẻ thêm migration vá lên production — chính xác là thứ mà kỷ luật forward-only sinh ra để tránh. Đây là nội dung của ISSUE-001 (P1).
 
 Các OQ ảnh hưởng trực tiếp tới nội dung migration mà tài liệu này sẽ đẩy lên:
 

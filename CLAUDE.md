@@ -26,9 +26,9 @@
 | Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Người dùng đã cấp **quyền push đứng**: push sau mỗi lần code xong, không cần hỏi lại |
 | Supabase | **CHƯA có project.** Schema mới ở mức **đề xuất** trong `docs/02-database-design.md` |
 | Build / Typecheck / Lint / Unit / Integration / E2E | **N/A — chưa có code.** Không được ghi PASS ở bất kỳ đâu |
-| Chặn tiến độ | **ISSUE-001 (P1): 9 OPEN QUESTION mức BLOCKING chưa có câu trả lời** → không thể viết migration Phase 2 |
+| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER.** Người dùng đã trả lời **17/17 OPEN QUESTION** ngày 2026-08-07. ISSUE-001 đã CLOSED. Toàn bộ 30 DEC và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** không được bắt đầu Phase 2 (migrations/RLS) khi 9 câu BLOCKING chưa được người dùng trả lời. Phase 1 (Foundation) có thể chạy song song vì không phụ thuộc schema.
+**Hệ quả trực tiếp:** Phase 1 (Foundation) và Phase 2 (Database & Auth) **đều đã chạy được**. Nghiệp vụ đã chốt xong — theo Master Spec §71, **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`; muốn đổi phải tạo `DEC` mới và hỏi lại người dùng.
 
 ---
 
@@ -253,7 +253,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** lưu tiền dưới dạng chuỗi đã format — `bigint` VND (BR-010, DEC-008).
 - ❌ **Không** dùng `new Date()` trực tiếp để suy ra ngày nghiệp vụ — phải qua `getVietnamToday()` (BR-005).
 - ❌ **Không** enable nút "Xuất ảnh" dựa trên trạng thái form; chỉ dựa trên báo cáo đã persist với `status = 'COMPLETED'` (BR-002).
-- ❌ **Không** viết migration Phase 2 khi 9 câu OQ BLOCKING chưa được trả lời (ISSUE-001).
+- ❌ **Không** tự ý thay đổi business rule đã `APPROVED` (toàn bộ BR-001…BR-025 đều đã APPROVED từ 2026-08-07). Muốn đổi: tạo `DEC` mới + hỏi người dùng.
 - ❌ **Không** tự thêm feature ngoài MVP (CRM, kho, POS, SKU, GPS, đơn hàng) để dự án "to hơn".
 - ❌ **Không** tự triển khai mục trong `docs/10-future-roadmap.md`.
 - ❌ **Không** rewrite lại bộ tài liệu Phase 0 từ đầu — chỉ cập nhật (xem `DO NOT REDO` trong checkpoint).
@@ -289,28 +289,32 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 `lib/supabase/client.ts` (browser, anon, chịu RLS) · `lib/supabase/server.ts` (RSC + Server Actions, anon, chịu RLS — **đường dữ liệu chính**) · `lib/supabase/admin.ts` (service role, `import 'server-only'`, **chỉ** `auth.admin.*` cho UC-17/18/19).
 
 **Bước tiếp theo của dự án (bám sát `SESSION_CHECKPOINT.md`):**
-1. Người dùng trả lời `OQ-01..OQ-17`, ưu tiên 9 câu BLOCKING.
-2. Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`, đồng bộ `docs/01`, `docs/02`, `docs/03`, `docs/06`.
-3. Phase 1: `npx create-next-app@16` (TS strict, Tailwind v4, App Router, ESLint, không dùng `src/`), dựng cấu trúc DEC-023, cài `@supabase/supabase-js` + `@supabase/ssr` + `zod` + `lucide-react`, tạo `.env.example`, chạy build/typecheck/lint để có baseline.
+1. ~~Người dùng trả lời `OQ-01..OQ-17`~~ — ✅ **XONG 2026-08-07, đủ 17/17.**
+2. ~~Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`~~ — ✅ **XONG**, đã đồng bộ `docs/01` … `docs/12`, `AGENTS.md`, `PROJECT_CHECKLIST.md`.
+3. **Phase 1 (bắt đầu ngay được):** `npx create-next-app@16` (TS strict, Tailwind v4, App Router, ESLint, không dùng `src/`), dựng cấu trúc DEC-023, cài `@supabase/supabase-js` + `@supabase/ssr` + `zod` + `lucide-react`, tạo `.env.example`, chạy build/typecheck/lint để có baseline.
 
 ---
 
-## OPEN QUESTIONS
+## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG TOÀN BỘ (2026-08-07)
 
-Danh sách đầy đủ nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dưới đây là **9 câu mức BLOCKING** đang chặn Phase 2 (ISSUE-001):
+Người dùng đã trả lời **đủ 17/17** câu. Không còn câu nào chờ. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
 
-| ID | Câu hỏi rút gọn | Đề xuất mặc định |
+Mười quyết định nghiệp vụ mà mọi session sau phải nhớ:
+
+| Chủ đề | Quyết định đã chốt | BR / DEC |
 |---|---|---|
-| OQ-01 | "Mục tiêu viếng thăm" là số điểm/đại lý hay mục đích chuyến đi? | Cả hai: `target_visit_points` (bắt buộc) + `visit_purpose` (optional) |
-| OQ-02 | "Đã viếng thăm" là con số hay tuyến thực tế đã đi? | Cả hai: `actual_visit_points` (bắt buộc) + `actual_route` (optional) |
-| OQ-04 | Hoàn tất báo cáo cuối ngày rồi có được sửa không? | (a) Khoá ngay khi `COMPLETED` |
-| OQ-05 | Admin có được sửa báo cáo của Sales không? | Không trong v1 |
-| OQ-08 | Có khái niệm ngày nghỉ / không đi thị trường không? | v1 không có |
-| OQ-09 | KPI do Sales tự cam kết hay Admin giao trước? | Sales tự cam kết |
-| OQ-11 | Khi `target = 0` thì % hiển thị thế nào? | `actual=0` → 100%; `actual>0` → `—` + "Vượt kế hoạch". Không `NaN`/`∞` |
-| OQ-12 | Nhập trễ/nhập bù/giờ cắt? | Chỉ tạo/sửa cho đúng ngày hôm nay theo giờ VN, không nhập bù |
-| OQ-13 | Xoá báo cáo: có/không, soft hay hard? | v1 không xoá |
+| Viếng thăm | Giữ **cả hai**: cột số bắt buộc + cột text tuỳ chọn (`target_visit_points`+`visit_purpose`, `actual_visit_points`+`actual_route`) | DEC-029 |
+| Đơn vị | Doanh số = **số lượng xe** (integer). Doanh thu = **tiền VND** (bigint), nghĩa là **giá trị đơn hàng chốt trong ngày** | BR-006, BR-010 |
+| Sửa sau khi hoàn tất | **KHÔNG.** Khoá vĩnh viễn khi `status = 'COMPLETED'`, kể cả trong cùng ngày | BR-019, DEC-026 |
+| Admin sửa báo cáo | **KHÔNG.** Không tồn tại UPDATE policy nào cho Admin trên `daily_reports` | BR-020, DEC-026 |
+| Xoá báo cáo | **KHÔNG.** Không DELETE policy, không `GRANT DELETE`, **không** cột `deleted_at` | BR-013, DEC-026 |
+| Nhập bù ngày cũ | **KHÔNG.** Chỉ đúng ngày hôm nay theo giờ VN; không giới hạn giờ trong ngày | BR-021, DEC-026 |
+| `target = 0` | `actual = 0` → **`100,0%`**. `actual > 0` → `percent = null` + **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch". Khi tổng hợp của Admin thì **loại khỏi mẫu số**. Không bao giờ `NaN`/`∞` | BR-015, DEC-025 |
+| Ai đặt KPI | **Sales tự cam kết buổi sáng.** Không có bảng `targets`, Admin không giao chỉ tiêu | DEC-030 |
+| Ngày nghỉ / team / role | **Không có** khái niệm nghỉ phép, **không** chia team/vùng, **chỉ 2 role** `ADMIN`/`SALES` | DEC-030 |
+| Ngày đạt KPI | Đạt **cả 4** chỉ tiêu ≥ 100% | BR-024 |
 
-Thêm: **OQ-03** ở mức `BLOCKING (xác nhận)` — chỉ cần người dùng xác nhận "Doanh số = số lượng xe, Doanh thu = tiền VND". Các câu `OQ-06, OQ-07, OQ-10, OQ-14, OQ-15, OQ-16, OQ-17` là NON-BLOCKING: cứ làm theo đề xuất mặc định, đổi sau vẫn rẻ.
+**Hai điểm phải nhớ khi triển khai:**
 
-Các business rule đang chờ chính là `BR-013` (OQ-13), `BR-015` (OQ-11), `BR-019` (OQ-04), `BR-020` (OQ-05), `BR-021` (OQ-12), `BR-024` (OQ-17) — tất cả đang `PROPOSED`, tương ứng DEC-025 và DEC-026. **Không được implement chúng như thể đã APPROVED.**
+1. **ISSUE-006 vẫn OPEN.** Vì không có khái niệm nghỉ phép, chỉ số "Sales chưa báo cáo" (FR-033, AF-02) sẽ tính cả người đang nghỉ. Người dùng đã biết và chấp nhận. Giao diện cảnh báo **phải dùng từ trung tính** — ghi *"Chưa có báo cáo hôm nay"*, **không** ghi *"vi phạm"* hay *"không hoàn thành nhiệm vụ"*.
+2. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa, **phải làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
