@@ -416,10 +416,9 @@ Lưu ý phân biệt: **điểm viếng thăm** là địa điểm/đại lý, c
 **Date:** 2026-08-07
 **Decision:** v1 **không** có khái niệm ngày nghỉ/nghỉ phép (OQ-08), **không** có khu vực/team (OQ-15), **không** có role thứ ba (OQ-16), **không** có SKU/model xe/đại lý/đơn hàng (OQ-10), và KPI do **Sales tự cam kết buổi sáng** chứ không phải Admin giao trước (OQ-09).
 **Reason:** Master Spec §39 liệt kê tất cả những thứ này vào nhóm LATER và §71 yêu cầu "Ưu tiên MVP thực sự sử dụng được". Riêng OQ-09 là quan trọng nhất: nếu Admin giao chỉ tiêu trước thì toàn bộ workflow đảo chiều — cần một bảng `targets` riêng, cần quyền ghi mới cho Admin, và "báo cáo đầu ngày" không còn là hành vi cam kết nữa. Master Spec §7 mô tả rõ Sales là người nhập mục tiêu, nên mặc định giữ nguyên như vậy.
-**Alternatives:** Đưa team/region vào ngay — thêm cột `team` nullable sau này rất rẻ, chưa cần bây giờ. Đưa quản lý ngày nghỉ vào ngay — cần thiết thật nếu Admin dùng chỉ số "Sales chưa báo cáo" để đánh giá, nên đây là câu hỏi BLOCKING chứ không phải mặc định an toàn tuyệt đối (xem ISSUE-006).
+**Alternatives:** Đưa team/region vào ngay — thêm cột `team` nullable sau này rất rẻ, chưa cần bây giờ. Đưa quản lý ngày nghỉ vào ngay — người dùng đã xác nhận không cần ở v1.
 **Impact:** Schema, danh sách cảnh báo Admin, `docs/01-business-analysis.md`, `docs/10-future-roadmap.md` (AF-11, AF-14, AF-15).
 **Status:** **APPROVED** (người dùng xác nhận 2026-08-07 — OQ-08, OQ-09, OQ-10, OQ-15, OQ-16 đã trả lời)
-**Cảnh báo vận hành do người dùng nêu khi trả lời OQ-08:** vì v1 không có khái niệm nghỉ phép, chỉ số "Sales chưa báo cáo" (FR-033, AF-02) sẽ **báo oan người đang nghỉ phép**. Đây là hạn chế đã biết và được chấp nhận có ý thức, không phải sơ suất — vẫn theo dõi ở **ISSUE-006**. Giao diện cảnh báo phải ghi rõ "chưa có báo cáo" chứ **không** được ghi "vi phạm" hay "không hoàn thành nhiệm vụ", để Admin tự đối chiếu với lịch nghỉ bên ngoài.
 
 ---
 
@@ -437,7 +436,6 @@ Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTIO
 **Hệ quả:** Phase 2 (migrations + RLS) **đã hết blocker**, có thể viết được ngay sau khi Phase 1 dựng xong nền.
 
 Hai điểm cần theo dõi tiếp, **không chặn tiến độ** nhưng đã ghi nhận:
-- **ISSUE-006** (từ OQ-08) — không có khái niệm nghỉ phép nên cảnh báo "Sales chưa báo cáo" sẽ báo oan người nghỉ. Đây là hạn chế được chấp nhận có ý thức; ngôn từ trên giao diện phải trung tính.
 - **AF-12 (audit log)** — chưa cần vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa (OQ-04/OQ-05), **phải làm audit log trước**.
 
 Danh sách câu hỏi và câu trả lời đầy đủ nằm ở `docs/01-business-analysis.md` mục OPEN QUESTIONS.

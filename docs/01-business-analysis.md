@@ -203,7 +203,7 @@ Role phải được enforce ở **4 tầng**, và **ẩn nút/menu ở frontend
 | UC-17 | Tạo tài khoản Sales | Admin | FR-030; BR-012, BR-025; service role server-side |
 | UC-18 | Sửa hồ sơ Sales | Admin | FR-031; BR-025 |
 | UC-19 | Kích hoạt / vô hiệu hoá tài khoản Sales | Admin | FR-032; BR-009 |
-| UC-20 | Xem cảnh báo Sales chưa báo cáo | Admin | FR-033; AF-02; ISSUE-006 (OQ-08) |
+| UC-20 | Xem cảnh báo Sales chưa báo cáo | Admin | FR-033; AF-02 |
 | UC-21 | Export CSV danh sách báo cáo | Admin (SHOULD HAVE) | FR-034; AF-09 |
 
 ### 5.1 Vòng đời trạng thái báo cáo (BR-008)
@@ -723,7 +723,7 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 | OQ-05 | Admin có được sửa báo cáo của Sales không? | **KHÔNG.** Không có policy `UPDATE` nào cho Admin trên `daily_reports` | **BR-020 APPROVED** · DEC-026 · AF-12 chưa cần |
 | OQ-06 | Admin tạo tài khoản, Sales không tự đăng ký? | **Xác nhận đúng.** Tắt public signup ở Supabase | BR-012, UC-17 |
 | OQ-07 | Tuyến nhập tự do hay Admin cấu hình sẵn? | **Nhập tự do.** v1 dùng ô text + gợi ý 5 tuyến gần nhất của chính Sales | AF-14 đẩy sang roadmap |
-| OQ-08 | Có khái niệm ngày nghỉ / không đi thị trường không? | **KHÔNG có ở v1** — *người dùng đã nêu rõ hệ quả: cảnh báo "Sales chưa báo cáo" sẽ **báo oan người nghỉ phép**. Chấp nhận có ý thức.* | DEC-030 · **ISSUE-006 vẫn OPEN** · AF-15 roadmap |
+| OQ-08 | Có khái niệm ngày nghỉ / không đi thị trường không? | **KHÔNG có ở v1.** Không xử lý gì thêm quanh việc này | DEC-030 · ISSUE-006 CLOSED · AF-15 roadmap |
 | OQ-09 | KPI do Sales tự cam kết hay Admin giao trước? | **Sales tự cam kết buổi sáng** (đúng Master Spec §7) | DEC-030 · AF-11 roadmap · không cần bảng `targets` |
 | OQ-10 | v1 có cần SKU / model xe / đại lý / đơn hàng không? | **KHÔNG.** Chỉ tổng số lượng và tổng tiền | DEC-030 · giữ đúng 2 bảng nghiệp vụ |
 | OQ-11 | Khi `target = 0` thì ô "Hoàn thành" hiển thị gì? | **`actual = 0` → `100,0%`.** **`actual > 0` → số vượt tuyệt đối có dấu cộng và đơn vị**: `+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`; nhãn "Vượt kế hoạch"; `percent = null`. **Không bao giờ `NaN` / `∞`.** Khi tổng hợp của Admin, dòng này bị **loại khỏi mẫu số** | **BR-015 APPROVED** · DEC-025 |
@@ -747,10 +747,9 @@ Sáu business rule trước đây bị treo nay đã chốt — **được phép
 | **BR-021** | Chỉ tạo/sửa báo cáo cho đúng ngày hôm nay theo giờ VN | RLS `reports_insert_own_today` + `ck_report_not_future` |
 | **BR-024** | "Ngày đạt KPI" = cả 4 chỉ tiêu ≥ 100% | `lib/kpi.ts` |
 
-### Hai điểm cần theo dõi tiếp (không chặn tiến độ)
+### Một điểm cần nhớ khi triển khai
 
-1. **ISSUE-006 vẫn OPEN** — do OQ-08 chốt "không có ngày nghỉ", chỉ số "Sales chưa báo cáo" (FR-033, AF-02) sẽ tính cả người đang nghỉ phép. Người dùng đã biết và chấp nhận. **Yêu cầu triển khai:** giao diện cảnh báo phải dùng từ trung tính — ghi *"Chưa có báo cáo hôm nay"*, **không** được ghi *"vi phạm"* hay *"không hoàn thành nhiệm vụ"* — để Admin tự đối chiếu với lịch nghỉ bên ngoài hệ thống.
-2. **AF-12 (audit log) chưa cần** — vì OQ-04 và OQ-05 đều trả lời "không được sửa". Nếu sau này mở quyền sửa, **bắt buộc làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
+1. **AF-12 (audit log) chưa cần** — vì OQ-04 và OQ-05 đều trả lời "không được sửa". Nếu sau này mở quyền sửa, **bắt buộc làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
 
 ### Hệ quả cho việc cài đặt `lib/kpi.ts` (Phase 5)
 

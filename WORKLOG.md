@@ -253,8 +253,8 @@ sang `APPROVED`. **DEC-028** mới: remote GitHub + quyền push đứng + git i
 (điều chỉnh mốc thời gian của DEC-027).
 
 **Remaining:** Không còn gì thuộc Phase 0. **Không còn OPEN QUESTION nào chờ trả lời.**
-Hai điểm theo dõi tiếp nhưng **không chặn tiến độ**: `ISSUE-006` (cảnh báo báo oan người nghỉ phép
-— người dùng đã biết và chấp nhận) và `AF-12` audit log (chưa cần vì không ai được sửa báo cáo).
+Một điểm theo dõi tiếp nhưng **không chặn tiến độ**: `AF-12` audit log (chưa cần vì không ai được
+sửa báo cáo). `ISSUE-006` đã `CLOSED` — chủ nghiệp vụ xác nhận không xử lý gì quanh ngày nghỉ ở v1.
 
 **Next:** Vào **PHASE 1 — Foundation**: `create-next-app@16`, dựng cấu trúc thư mục theo DEC-023,
 cài `@supabase/supabase-js` + `@supabase/ssr` + `zod` + `lucide-react`, tạo `.env.example`, chạy
@@ -311,7 +311,7 @@ Câu trả lời chính thức đầy đủ: `docs/01-business-analysis.md § OP
 | OQ-05 | Admin **không** sửa báo cáo của Sales |
 | OQ-06 | Admin tạo tài khoản; Sales không tự đăng ký |
 | OQ-07 | Tuyến nhập tự do |
-| OQ-08 | **Không** có ngày nghỉ ở v1 — chấp nhận ISSUE-006 |
+| OQ-08 | **Không** có ngày nghỉ ở v1; không xử lý gì thêm |
 | OQ-09 | **Sales tự cam kết** buổi sáng |
 | OQ-10 | **Không** SKU / đại lý / đơn hàng |
 | OQ-11 | `actual=0` → `100,0%`; `actual>0` → **số vượt tuyệt đối** (`+3 xe`, `+3.000.000 ₫`), `percent = null`, loại khỏi mẫu số khi tổng hợp |

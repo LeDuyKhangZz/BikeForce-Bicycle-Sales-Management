@@ -556,7 +556,7 @@ flowchart TD
     D --> E
     E --> F["/admin/sales/:id — hồ sơ, hiệu suất, lịch sử báo cáo"]
     F --> G{"Người này có đang đi làm không ?"}
-    G -->|"v1 KHÔNG biết được"| H["⚠ OQ-08: chưa có khái niệm ngày nghỉ nên cảnh báo có thể báo động giả — ISSUE-006"]
+    G -->|"v1 KHÔNG biết được"| H["v1 không lưu ngày nghỉ nên hệ thống không phân biệt được — OQ-08 đã chốt: không xử lý ở v1"]
     G -->|"Có, thực sự quên báo cáo"| I["Admin liên hệ Sales ngoài hệ thống, ví dụ Zalo"]
     I --> J["Admin KHÔNG tạo và KHÔNG sửa báo cáo thay Sales trong v1 — BR-020, ⚠ OQ-05"]
     J --> K["Sales tự vào /sales/today và hoàn tất"]
@@ -927,7 +927,7 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 
 **Ảnh hưởng ngoài workflow:** RLS `reports_insert_own_today` (điều kiện `report_date = public.vn_today()`), `reports_update_own_open`, CHECK `ck_report_not_future`, BR-021, DEC-026.
 
-### OQ-08 — Có khái niệm ngày nghỉ / nghỉ phép / không đi thị trường không? ✅ `ĐÃ TRẢ LỜI: KHÔNG ở v1 — chấp nhận việc cảnh báo báo oan người nghỉ phép (ISSUE-006)`
+### OQ-08 — Có khái niệm ngày nghỉ / nghỉ phép / không đi thị trường không? ✅ `ĐÃ TRẢ LỜI: KHÔNG ở v1`
 
 **Đề xuất mặc định:** v1 **không có**; Admin dashboard chỉ đếm ngày làm việc thực tế và không phân biệt nghỉ phép.
 
@@ -935,12 +935,12 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 
 | Vị trí | Hiện tại | Nếu đổi |
 |---|---|---|
-| §9.2 flowchart, nút quyết định "Người này có đang đi làm không?" | Nhánh `v1 KHÔNG biết được` → cảnh báo có thể báo động giả (ISSUE-006) | Nhánh này trở thành một truy vấn thật; Sales đang nghỉ bị **loại khỏi** danh sách "chưa báo cáo" |
+| §9.2 flowchart, nút quyết định "Người này có đang đi làm không?" | Nhánh `v1 KHÔNG biết được` → cảnh báo có thể báo động giả  | Nhánh này trở thành một truy vấn thật; Sales đang nghỉ bị **loại khỏi** danh sách "chưa báo cáo" |
 | §9.1 — 12 chỉ số Master Spec §16 | "Tổng số Sales active" là mẫu số; "Số Sales chưa báo cáo" = active − đã báo cáo | Mẫu số đổi thành "Sales active **và đang làm việc hôm nay**"; toàn bộ 4 chỉ số đếm người phải tính lại |
 | §9 — workflow Admin | Chỉ có 5 workflow (§9.1..§9.5) | Phải thêm workflow thứ 6: "Đánh dấu ngày nghỉ cho một Sales" (AF-15) |
 | §3.1 flowchart Sales | Không có báo cáo → luôn hiển thị CTA "Tạo báo cáo đầu ngày" | Nếu hôm nay là ngày nghỉ đã duyệt: hiển thị trạng thái "Ngày nghỉ" thay vì thúc giục tạo báo cáo |
 
-**Ảnh hưởng ngoài workflow:** bảng/cột mới, định nghĩa "tỷ lệ tuân thủ", AF-15, ISSUE-006.
+**Ảnh hưởng ngoài workflow (chỉ áp dụng nếu sau này đổi ý):** bảng/cột mới, định nghĩa "tỷ lệ tuân thủ", AF-15.
 
 ---
 

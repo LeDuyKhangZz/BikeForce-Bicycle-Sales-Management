@@ -168,7 +168,6 @@ nên chưa từng có build / typecheck / lint / test nào được chạy. Mọ
 - [ ] Truy vấn dùng `idx_daily_reports_date_status`, xác nhận bằng `EXPLAIN ANALYZE`
 - [ ] Skeleton cho phần tải >300ms và empty state khi chưa Sales nào báo cáo
 - [ ] Kiểm tra `is_admin()` được gọi dạng `(select public.is_admin())` để Postgres nâng thành InitPlan — DEC-006, ISSUE-005
-- [ ] Ghi rõ trên UI rằng chỉ số "chưa báo cáo" chưa loại trừ ngày nghỉ (phụ thuộc OQ-08) — ISSUE-006
 
 ## Phase 9 — Admin Reports & Filters
 

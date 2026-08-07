@@ -76,7 +76,7 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa được kiểm chứng trên thiết bị thật | Phase 6, Phase 11 | NFR-009, DEC-011, FR-020 |
 | ISSUE-004 | P2 | OPEN | TypeScript 7.0.2 + ESLint 10.8.0 là bản major mới, chưa xác nhận tương thích Next 16 | Phase 1 | DEC-002, NFR-012 |
 | ISSUE-005 | P3 | OPEN | `is_admin()` phát sinh thêm một truy vấn `profiles` mỗi câu lệnh RLS | Phase 2, Phase 11 | DEC-006, NFR-002, NFR-015 |
-| ISSUE-006 | P3 | OPEN | Chưa có khái niệm ngày nghỉ → cảnh báo "chưa báo cáo" có thể báo động giả | Phase 8 | OQ-08, AF-02, AF-15, FR-033, UC-20 |
+| ISSUE-006 | P3 | **CLOSED** | Chưa có khái niệm ngày nghỉ → cảnh báo "chưa báo cáo" có thể tính cả người nghỉ. **Chủ nghiệp vụ xác nhận 2026-08-07: không xử lý gì thêm ở v1** | Phase 8 | OQ-08, AF-02, AF-15, FR-033, UC-20 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; là điều kiện tiên quyết nếu cho phép sửa sau khi `COMPLETED` | Phase 4+ (điều kiện) | OQ-04, OQ-05, BR-019, BR-020, AF-12 |
 
 Tổng: **7 OPEN** (1 × P1, 3 × P2, 3 × P3), **0 FIXING**, **0 VERIFY**, **0 CLOSED**.
@@ -323,7 +323,7 @@ Kế hoạch kiểm chứng (**chưa chạy**):
 ### ISSUE-006
 
 **Severity: P3**
-**Status: OPEN**
+**Status: CLOSED** — đóng ngày `2026-08-07` theo quyết định của chủ nghiệp vụ, xem mục Verification
 
 **Module:**
 AF-02 Missing Report Alerts trên `/admin` (**đề xuất, chưa triển khai**). Liên quan: FR-033, UC-20, OQ-08, AF-15, Phase 8.
@@ -343,17 +343,18 @@ Cảnh báo chỉ trỏ vào người **thực sự quên báo cáo** trong mộ
 Đây là **hệ quả của quyết định phạm vi**, không phải lỗi triển khai. Mô hình dữ liệu hiện tại **không có chỗ nào để biểu đạt** ý "hôm nay tôi không đi thị trường": `daily_reports` chỉ có hai trạng thái `MORNING_SUBMITTED` và `COMPLETED` (DEC-020), và không có row nào nghĩa là "chưa báo cáo" — không phân biệt được với "không cần báo cáo". Nguyên nhân gốc nằm ở OQ-08 chưa được trả lời, chứ không nằm ở câu SQL.
 
 **Fix:**
-Mitigation cho v1 (không cần đổi schema):
-1. **Đặt nhãn mô tả, không phán xét.** Hiển thị "Chưa có báo cáo hôm nay" thay vì "Vi phạm", "Trễ hạn", hay "Không tuân thủ". Nhãn mô tả sự kiện thì đúng trong mọi trường hợp; nhãn phán xét thì sai ngay khi người đó đang nghỉ phép.
-2. **Không dùng chỉ số này để tính tỷ lệ tuân thủ, xếp hạng, hay đánh giá cá nhân** ở v1. Nó là danh sách nhắc việc cho Admin, không phải số liệu nhân sự.
-3. Cho Admin thấy rõ con số này được tính từ đâu (tooltip hoặc dòng chú thích: "Tính trên các tài khoản Sales đang hoạt động, chưa có báo cáo cho ngày hôm nay").
-4. Nếu **OQ-08 được trả lời là "có"**: kích hoạt **AF-15** (Quản lý ngày nghỉ / không đi thị trường) từ `docs/10-future-roadmap.md`, thêm bảng hoặc cột tương ứng và loại trừ khỏi truy vấn alert. Việc này phải ghi thành **DEC mới** và cập nhật `docs/02`, `docs/06` theo Master Spec §62.
+**Không làm gì.** Chủ nghiệp vụ đã xem xét và quyết định ngày `2026-08-07`: **không xử lý gì quanh việc này ở v1** — không thêm bảng/cột ngày nghỉ, và **không** thêm ràng buộc đặc biệt nào cho nhãn hay cách hiển thị của khối cảnh báo AF-02. Khối cảnh báo cứ triển khai bình thường theo FR-033.
+
+Nếu sau này thực tế vận hành cho thấy cần: kích hoạt **AF-15** (Quản lý ngày nghỉ) từ `docs/10-future-roadmap.md`, và việc đó phải ghi thành **DEC mới** kèm cập nhật `docs/02`, `docs/06` theo Master Spec §62.
 
 **Verification:**
-Kế hoạch kiểm chứng (**chưa thực hiện**):
-- Rà lại toàn bộ nhãn UI của khối alert ở `/admin` khi làm Phase 8, đối chiếu với mục 1 và 3 ở trên.
-- Sau khi hệ thống chạy thật khoảng một tuần, hỏi Admin trực tiếp: trong danh sách "chưa báo cáo" mỗi ngày, bao nhiêu người thực sự là quên? Nếu tỷ lệ báo động giả cao đến mức Admin ngừng dùng danh sách → kích hoạt AF-15 và mở lại OQ-08.
-- Đóng issue khi hoặc (a) OQ-08 được xác nhận là "không cần" và Admin chấp nhận nhãn mô tả, hoặc (b) AF-15 đã triển khai và alert đã loại trừ ngày nghỉ.
+Đóng theo tiêu chí (a) mà chính issue này đặt ra khi mở: *"OQ-08 được xác nhận là 'không cần'"*.
+- [x] **OQ-08 đã được trả lời `KHÔNG` ngày 2026-08-07** — ghi ở `docs/01-business-analysis.md § OPEN QUESTIONS` và DEC-030 (`APPROVED`).
+- [x] Chủ nghiệp vụ xác nhận thêm, cũng ngày `2026-08-07`, rằng **không cần biện pháp giảm thiểu nào** — kể cả ràng buộc về từ ngữ trên UI. Mọi ràng buộc phái sinh trước đó đã được gỡ khỏi `docs/01`, `docs/11`, `CLAUDE.md`, `SESSION_CHECKPOINT.md`, `WORKLOG.md`, `PROJECT_CHECKLIST.md`.
+- [x] Không còn mục checklist hay yêu cầu triển khai nào gắn với issue này.
+
+**Người xác nhận:** chủ nghiệp vụ (người dùng), trao đổi trực tiếp ngày `2026-08-07`.
+**Ghi chú theo Master Spec §56:** issue **không bị xoá** — giữ nguyên Description / Root Cause gốc làm lịch sử, chỉ đổi `Status` và điền Verification.
 
 ---
 

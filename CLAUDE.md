@@ -314,7 +314,6 @@ Mười quyết định nghiệp vụ mà mọi session sau phải nhớ:
 | Ngày nghỉ / team / role | **Không có** khái niệm nghỉ phép, **không** chia team/vùng, **chỉ 2 role** `ADMIN`/`SALES` | DEC-030 |
 | Ngày đạt KPI | Đạt **cả 4** chỉ tiêu ≥ 100% | BR-024 |
 
-**Hai điểm phải nhớ khi triển khai:**
+**Một điểm phải nhớ khi triển khai:**
 
-1. **ISSUE-006 vẫn OPEN.** Vì không có khái niệm nghỉ phép, chỉ số "Sales chưa báo cáo" (FR-033, AF-02) sẽ tính cả người đang nghỉ. Người dùng đã biết và chấp nhận. Giao diện cảnh báo **phải dùng từ trung tính** — ghi *"Chưa có báo cáo hôm nay"*, **không** ghi *"vi phạm"* hay *"không hoàn thành nhiệm vụ"*.
-2. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa, **phải làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
+1. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa, **phải làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.

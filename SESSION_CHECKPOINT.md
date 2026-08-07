@@ -104,7 +104,7 @@ Chưa có bug vì chưa có code. Các mục dưới đây là **rủi ro đã b
 | ISSUE-003 | P2 | **Zalo in-app webview** chưa được kiểm chứng thực tế (Web Share API, download attachment) | Test tay trên thiết bị thật ở Phase 6 |
 | ISSUE-004 | P2 | TypeScript 7.0.2 và ESLint 10.8.0 là bản major mới; rủi ro không tương thích Next 16 plugin | Smoke test đầu Phase 1, lùi TypeScript 5.x LTS nếu cần — DEC-002 |
 | ISSUE-005 | P3 | `is_admin()` gọi trong RLS làm thêm một truy vấn `profiles` mỗi câu lệnh | Viết `(select public.is_admin())` để nâng thành InitPlan; nếu vẫn chậm thì chuyển role vào custom JWT claim |
-| ISSUE-006 | P3 | Chưa quyết xử lý ngày nghỉ (OQ-08) nên chỉ số "Sales chưa báo cáo" có thể báo động giả cho người nghỉ phép | Chờ OQ-08; ghi chú rõ trên UI Admin |
+| ISSUE-006 | P3 | **CLOSED (2026-08-07)** — chủ nghiệp vụ xác nhận không xử lý gì quanh việc này ở v1 | Không cần hành động |
 | ISSUE-007 | P3 | Chưa có audit log; nếu OQ-04/OQ-05 cho phép sửa sau khi hoàn tất thì phải bổ sung trước khi bật quyền đó | Gắn với AF-12 trong roadmap |
 
 ---
@@ -374,7 +374,7 @@ Mười quyết định nghiệp vụ mà session sau **phải tuân thủ và k
 | OQ-05 | Admin **KHÔNG** được sửa báo cáo của Sales |
 | OQ-06 | Admin tạo tài khoản; Sales **không** tự đăng ký |
 | OQ-07 | Tuyến **nhập tự do** + gợi ý 5 tuyến gần nhất |
-| OQ-08 | **KHÔNG** có khái niệm ngày nghỉ ở v1 — chấp nhận việc cảnh báo báo oan người nghỉ phép (ISSUE-006) |
+| OQ-08 | **KHÔNG** có khái niệm ngày nghỉ ở v1. Không xử lý gì thêm quanh việc này |
 | OQ-09 | KPI do **Sales tự cam kết buổi sáng**; không có bảng `targets` |
 | OQ-10 | **KHÔNG** SKU / model xe / đại lý / đơn hàng |
 | OQ-11 | `target=0 & actual=0` → **`100,0%`**. `target=0 & actual>0` → `percent = null` + **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch"; **loại khỏi mẫu số** khi tổng hợp của Admin. Không bao giờ `NaN`/`∞` |
@@ -385,9 +385,7 @@ Mười quyết định nghiệp vụ mà session sau **phải tuân thủ và k
 | OQ-16 | **Chỉ 2 role**: `ADMIN`, `SALES` |
 | OQ-17 | "Ngày đạt KPI" = đạt **cả 4** chỉ tiêu ≥ 100% |
 
-**Hai điểm theo dõi tiếp (không chặn tiến độ):**
+**Một điểm theo dõi tiếp (không chặn tiến độ):**
 
-1. **ISSUE-006 vẫn OPEN** — cảnh báo "Sales chưa báo cáo" sẽ tính cả người nghỉ phép. Giao diện
-   **phải dùng từ trung tính**: ghi *"Chưa có báo cáo hôm nay"*, **không** ghi *"vi phạm"*.
-2. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
+1. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
    **phải làm audit log trước** và tạo `DEC` mới thay vì sửa DEC-026.
