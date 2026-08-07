@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 2 (13/14 mục xong) | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 2 ĐÃ ĐÓNG (14/14) → sẵn sàng Phase 3 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -10,18 +10,30 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 2 — Database & Auth` — **13/14 mục đã `[x]`**. Schema đã chạy thật, tầng
-auth đầy đủ và đã kiểm chứng trên trình duyệt thật.
+**Current Phase:** `PHASE 2 — Database & Auth` — ✅ **ĐÃ ĐÓNG, 14/14 mục `[x]`** (2026-08-07).
 
-**Current Task:** Chờ **một** việc mà agent không làm thay được: **người dùng tạo Supabase project
-trên cloud** (region **Southeast Asia (Singapore)**). Hướng dẫn từng cú bấm đã viết sẵn ở
-`docs/09-deployment.md §3.0`.
+**Current Task:** **Bắt đầu PHASE 3 — Morning Report.** Không còn gì chặn, không chờ đầu vào nào.
 
-> ✅ **Toàn bộ phần còn lại của Phase 2 đã hoàn tất và đã kiểm chứng trên Supabase LOCAL** (Docker,
-> Postgres 17.6.1.156 — đúng DEC-022). Không cần chờ cloud để làm tiếp; cloud chỉ là nơi deploy.
+**Supabase cloud đã nối xong:**
+
+| Hạng mục | Giá trị |
+|---|---|
+| project-ref | `rnmywhwanpxmipqducqu` |
+| Tên | `BikeForce_Bicycle Sales Management` |
+| Region | **`ap-southeast-1`** (Singapore) ✅ |
+| Trạng thái | `ACTIVE_HEALTHY`, Postgres `17.6.1.155`, GoTrue `v2.195.0` |
+| Migration | ✅ Cả 5 file đã `db push` thành công. **Seed KHÔNG được đẩy** (`seeds: []`) |
+| Tự đăng ký | ✅ **Đã tắt** — `POST /auth/v1/signup` → `422 signup_disabled` (BR-012, FR-006) |
+| Deny-by-default | ✅ `anon` đọc `profiles`/`daily_reports` → `401` + `42501 permission denied` |
+| `types/database.types.ts` | ✅ Generate bằng `--linked`. Khác bản `--local` đúng một khối metadata ⇒ **schema hai bên khớp** |
+
+> ⚠ **ISSUE-011 (P1) — service role key đã lọt vào transcript hội thoại**, cần **rotate**. Key chưa
+> từng vào git (`git log -S "sb_secret" --all` → 0 kết quả). Nhờ DEC-031, key đó không đọc/ghi được
+> `profiles` và `daily_reports`; bán kính giới hạn ở `auth.admin.*`.
 
 **Current Branch:** `main` — remote `origin` =
 `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git` (DEC-028).
+`origin/main` đã đồng bộ tới `61271ac`.
 
 > ⚠ **`git push` KHÔNG chạy được từ phía agent** (phát hiện 2026-08-07). Credential helper là
 > Git Credential Manager và môi trường không có TTY nên push luôn fail
@@ -102,6 +114,7 @@ Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 7 OPEN, 3 đã CLO
 | ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null` → **phải chốt đầu Phase 5** |
 | ISSUE-009 | P3 | OPEN | **MỚI** — Next 16.3 deprecate tên `middleware.ts`, khuyến nghị `proxy.ts`. Cố ý hoãn, có điều kiện kích hoạt |
 | ISSUE-010 | P3 | OPEN | **MỚI** — máy đang chạy **3 stack Supabase local**; chọn nhầm container đã xảy ra thật |
+| ISSUE-011 | **P1** | OPEN | **MỚI** — service role key lọt vào transcript hội thoại do IDE tự đồng bộ `.env.local`. **Phải rotate.** Chưa vào git |
 
 ---
 
@@ -258,38 +271,34 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 > ✅ Phase 0, Phase 1 và 13/14 mục Phase 2 đã xong — **không làm lại**.
 
-**Nhóm A — cần người dùng thao tác (đang chờ):**
+> ✅ **Nhóm A và B của bản checkpoint trước đã HOÀN TẤT** — Supabase cloud đã tạo, đã tắt signup, đã
+> `link` + `db push` + `gen types --linked`, đã kiểm chứng bằng HTTP thật. Không làm lại.
 
-1. **Tạo Supabase project cloud** theo `docs/09-deployment.md §3.0`. Điểm sống còn:
-   region **Southeast Asia (Singapore) `ap-southeast-1`** (không đổi được sau khi tạo), bỏ chọn
-   **GitHub**, bỏ tick **"Automatically expose new tables"**, lưu **Database password**.
-2. **Tắt tự đăng ký:** `Authentication → Sign In / Providers → Email` → tắt
-   **"Allow new users to sign up"** và tắt **"Confirm email"** (BR-012, FR-006).
-3. **Điền `.env.local`** 3 giá trị từ `Project Settings → API`. Giữ `SUPABASE_DB_URL` trỏ local.
+**Việc bảo mật, làm trước (ISSUE-011, P1):**
 
-**Nhóm B — agent chạy ngay sau khi có Nhóm A:**
+1. **Rotate service role key.** Dashboard → `Project Settings` → `API Keys` → mục secret →
+   **`Generate new secret key`** → dán giá trị mới vào `.env.local`.
+   **Đóng `.env.local` trong IDE trước khi dán**, hoặc dán bằng terminal — nếu không, IDE lại tự đưa
+   key vào ngữ cảnh hội thoại đúng như lần trước (`docs/06 §11.2` biện pháp thứ 8).
 
-```bash
-npx supabase link --project-ref <project-ref>
-npx supabase db push                 # đẩy 5 migration lên cloud — KHÔNG seed production
-npx supabase gen types typescript --linked > types/database.types.ts
-npm run typecheck && npm run lint && npm run build
-```
+**PHASE 3 — Morning Report (việc chính, bắt đầu ngay):**
 
-4. **Chạy runbook Admin đầu tiên** trên cloud (`docs/09-deployment.md §10`): tạo user trên Dashboard
-   rồi `update public.profiles set role = 'ADMIN' where email = '<email>';` — **một lần duy nhất**.
-5. **Kiểm chứng trên cloud** theo `docs/09 §6`: `relrowsecurity = true` cho mọi bảng `public`;
-   liệt kê 6 policy; thử `POST /auth/v1/signup` bằng anon key → phải bị từ chối.
-
-**Nhóm C — PHASE 3 (Morning Report), làm được ngay không cần chờ cloud:**
-
-6. Viết `lib/validation/report.ts` — `morningReportSchema` theo `docs/08 §3` (từ chối số âm, `NaN`,
+2. Viết `lib/validation/report.ts` — `morningReportSchema` theo `docs/08 §3` (từ chối số âm, `NaN`,
    `Infinity`, chuỗi rác, ngày tương lai; trần doanh thu 100 tỷ; `planned_route` 1–300 sau `btrim`).
-7. Viết `lib/validation/report.test.ts` — bảng case đã liệt kê sẵn ở `docs/08 §3`.
-8. Viết `services/reports.ts` → `getTodayReport(supabase, salesId, today)` dùng
-   `uq_daily_reports_sales_date`, `select` tường minh cột, không `select('*')`.
-9. Viết `features/report-morning/` (form + `saveMorningReport` action) và
-   `app/(sales)/sales/today/morning/page.tsx`.
+   Schema **không được** khai báo `sales_id`, `status`, `report_date` — server tự đặt (AGENTS.md §8).
+3. Viết `lib/validation/report.test.ts` — bảng case đã liệt kê sẵn ở `docs/08 §3`, gồm cả biên
+   `100000000000` (hợp lệ) và `100000000001` (không hợp lệ).
+4. Viết `services/reports.ts` → `getTodayReport(supabase, salesId, today)` dùng
+   `uq_daily_reports_sales_date`, `select` tường minh cột, **không** `select('*')`.
+5. Viết `features/report-morning/` (form + `saveMorningReport` action) và
+   `app/(sales)/sales/today/morning/page.tsx`; đồng thời thay trang tối thiểu `/sales/today` bằng
+   FR-007 thật (trạng thái báo cáo hôm nay + **đúng 1 CTA chính** theo `status`).
+
+**Việc của Phase 12, chưa cần bây giờ:**
+
+6. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
+   `update public.profiles set role = 'ADMIN' where email = '<email>';` — **một lần duy nhất**.
+   Chỉ cần trước khi có người dùng thật đăng nhập vào production.
 
 > ⚠ **Chặn ở đầu Phase 5, không phải Phase 3:** ISSUE-008 (`percent = null` khi nào) và cách
 > `AchievementResult` mang số vượt tuyệt đối (DEC-025). Phase 3 chưa cần `lib/kpi.ts`.

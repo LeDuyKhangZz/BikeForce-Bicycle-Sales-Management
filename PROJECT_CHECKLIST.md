@@ -92,11 +92,13 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 2 — Database & Auth
 
-> **Trạng thái 2026-08-07:** 13/14 mục `[x]`. Mục duy nhất còn `[ ]` là tạo Supabase project **trên cloud** — bước người dùng phải tự bấm, đang thực hiện.
-> Toàn bộ schema đã chạy thật trên **Supabase local** (Postgres 17.6.1.156, DEC-022) và có bộ test khoá lại: `npm run test:db` → **66/66 PASS**.
+> **Trạng thái 2026-08-07: PHASE 2 ĐÃ ĐÓNG — 14/14 mục `[x]`.**
+> Schema đã chạy thật trên **cả hai** môi trường: Supabase local (Postgres 17.6.1.156) và Supabase
+> cloud `rnmywhwanpxmipqducqu` region `ap-southeast-1` (Postgres 17.6.1.155). Bộ test khoá lại:
+> `npm test` → **80/80 PASS**.
 
-- [ ] Tạo Supabase project region Singapore; bật email/password provider; **tắt** signup công khai — FR-006, BR-012
-      → ⏳ **Đang chờ người dùng.** Hướng dẫn từng cú bấm: `docs/09-deployment.md §3.0`. Local đã có tương đương và đã dùng để kiểm chứng toàn bộ
+- [x] Tạo Supabase project region Singapore; bật email/password provider; **tắt** signup công khai — FR-006, BR-012
+      → Project `rnmywhwanpxmipqducqu` ("BikeForce_Bicycle Sales Management"), region **`ap-southeast-1`**, `ACTIVE_HEALTHY`. **Kiểm chứng thật bằng HTTP:** `POST /auth/v1/signup` → `422 signup_disabled "Signups not allowed for this instance"`; `GET /auth/v1/health` → 200 (GoTrue v2.195.0). 5 migration đã `db push` thành công, **seed KHÔNG được đẩy** (`seeds: []`)
 - [x] Migration `0001_init_enums_profiles.sql`: enum `user_role`, `report_status`, bảng `public.profiles` đầy đủ CHECK và UNIQUE — BR-025
       → `citext` cài vào schema `extensions`; RLS `enable` + `force` bật ngay trong file này; `service_role` cố ý không được cấp DML (DEC-031)
 - [x] Migration `0002_daily_reports.sql`: bảng `public.daily_reports` + `uq_daily_reports_sales_date`, `ck_report_not_future`, `ck_completed_requires_actuals`, `ck_morning_has_no_evening_ts` — BR-001, BR-006, BR-007, BR-016, BR-017, BR-018
@@ -110,7 +112,7 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 - [x] `supabase/seed.sql` chỉ dùng local (1 admin + 3 sales + ~20 report mẫu), không seed production
       → 4 tài khoản + **22 báo cáo**, phủ EXCEEDED/NEAR/MISSED/PENDING, `target=0`, ghi chú 1000 ký tự, tên 42 ký tự có dấu
 - [x] Sinh `types/database.types.ts` bằng `supabase gen types typescript --linked` và commit
-      → Sinh bằng `--local` (259 dòng) vì project cloud chưa có. **Phải chạy lại bằng `--linked` ngay sau khi `supabase link`** — cùng schema nên nội dung dự kiến không đổi, nhưng vẫn phải xác nhận
+      → ✅ Đã chạy `--linked` thật sau khi `supabase link`. So với bản `--local`, khác **đúng một khối metadata** `__InternalSupabase.PostgrestVersion: "14.15"` — **schema hai bên giống hệt nhau**, đúng như mong đợi vì cùng 5 migration
 - [x] Trang `/login` + Server Action đăng nhập bằng email + mật khẩu — FR-001, UC-01
       → Kiểm chứng trên Chromium: chống user enumeration (sai mật khẩu và email không tồn tại cho **cùng một câu**), validate on blur bằng chính Zod schema của server, chống open redirect ở `?next=`
 - [x] `middleware.ts` refresh session cookie và chặn route theo role — FR-002, FR-004

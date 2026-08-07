@@ -491,6 +491,64 @@ Nợ kỹ thuật đã biết, đúng kế hoạch: chưa có `playwright.config
 
 ---
 
+### Entry 005
+
+**Date:** 2026-08-07
+**Phase:** PHASE 2 — Database & Auth (đóng phase)
+
+**Completed:**
+
+1. **Người dùng tạo xong Supabase project trên cloud.** Xác minh bằng `supabase projects list`:
+   `ref = rnmywhwanpxmipqducqu`, tên `BikeForce_Bicycle Sales Management`, **region `ap-southeast-1`**
+   (đúng Singapore như DEC yêu cầu), `status: ACTIVE_HEALTHY`, Postgres `17.6.1.155`.
+2. **Sửa một lỗi cấu hình thật trong `.env.local`.** Người dùng dán `NEXT_PUBLIC_SUPABASE_URL` là
+   `https://<ref>.supabase.co/rest/v1/` — đó là **endpoint REST**, không phải Project URL.
+   `@supabase/supabase-js` tự nối thêm `/rest/v1` và `/auth/v1` vào URL gốc, nên giá trị đó sẽ tạo ra
+   `/rest/v1/rest/v1/...` và `/rest/v1/auth/v1/...` ⇒ **mọi truy vấn và mọi lần đăng nhập đều 404**.
+   Đã sửa thành `https://rnmywhwanpxmipqducqu.supabase.co`.
+3. **Kiểm chứng cấu hình Auth trên cloud bằng HTTP thật**, không tin màn hình dashboard:
+   - `GET /auth/v1/health` → `200`, GoTrue `v2.195.0` ⇒ project sống.
+   - `POST /auth/v1/signup` → **`422 {"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}`**
+     ⇒ **BR-012 / FR-006 đã được thực thi ở tầng hạ tầng**, không chỉ ở UI.
+4. **`supabase link` + `supabase db push`** — cả 5 migration apply thành công lên cloud.
+   `db push` báo `seeds: []` ⇒ **`seed.sql` KHÔNG bị đẩy lên production**, đúng DEC-022.
+5. **Generate lại `types/database.types.ts` bằng `--linked`.** So với bản sinh từ local, khác **đúng
+   một khối** `__InternalSupabase: { PostgrestVersion: "14.15" }` — nghĩa là **schema local và cloud
+   giống hệt nhau**. Lấy bản cloud làm chuẩn.
+6. **Kiểm chứng deny-by-default trên cloud** bằng anon key thật:
+   `GET /rest/v1/profiles` và `GET /rest/v1/daily_reports` → **`401` + `42501 permission denied for table`**
+   ⇒ `anon` không có cửa nào vào hai bảng nghiệp vụ, đúng NFR-004.
+7. **Xác nhận người dùng đã push GitHub:** `origin/main` và `main` cùng ở `61271ac`.
+
+**Files Changed:** `types/database.types.ts` (regenerate từ cloud), `.env.local` (không commit — sửa
+URL), `PROJECT_CHECKLIST.md`, `SESSION_CHECKPOINT.md`, `WORKLOG.md`, `docs/09-deployment.md`,
+`docs/12-known-issues.md`.
+
+**Tests:** **ĐÃ CHẠY LẠI ĐỦ 4 LỆNH sau khi đổi file types.**
+`typecheck` exit 0 · `lint` exit 0 (0 error, 0 warning) · `npm test` → **80 passed / 80** ·
+`build` exit 0.
+
+Cộng thêm 5 kiểm chứng HTTP trực tiếp trên cloud đã liệt kê ở *Completed* mục 3 và 6.
+**Chưa chạy:** E2E Playwright, a11y, `EXPLAIN ANALYZE`, Lighthouse — vẫn `N/A`, thuộc Phase 11.
+
+**Errors:** **1 lỗi cấu hình thật** (URL có đuôi `/rest/v1/` — mục 2 ở trên), đã sửa.
+**1 sự cố bảo mật:** service role key (`sb_secret_...`) **đã lọt vào transcript hội thoại** do IDE tự
+đồng bộ nội dung `.env.local` sau khi người dùng điền. Đã báo người dùng **rotate key**. Ghi thành
+**ISSUE-011**. Điểm đáng ghi nhận: nhờ **DEC-031**, key này **không** đọc/ghi được `profiles` và
+`daily_reports` (không có GRANT), nên bán kính thiệt hại giới hạn ở `auth.admin.*` — đây là lần đầu
+DEC-031 chứng minh giá trị thực tế.
+
+**Decisions:** Không tạo DEC mới. Mọi thao tác nằm trong khuôn khổ DEC-022, DEC-031, BR-012.
+
+**Remaining:** **Không còn gì thuộc Phase 2.** Phase 2 đóng với 14/14 mục.
+Còn hai việc *ngoài* Phase 2, đã ghi rõ: rotate service role key (ISSUE-011), và chạy runbook Admin
+đầu tiên trên cloud (`docs/09 §10`) — việc này thuộc Phase 12, chỉ cần trước khi có người dùng thật.
+
+**Next:** Vào **PHASE 3 — Morning Report**: `lib/validation/report.ts` + `lib/validation/report.test.ts`
+→ `services/reports.ts` → `features/report-morning/` → `app/(sales)/sales/today/morning/page.tsx`.
+
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần

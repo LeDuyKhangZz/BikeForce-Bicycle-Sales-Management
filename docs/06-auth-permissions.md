@@ -643,6 +643,7 @@ Hashing mật khẩu do **Supabase Auth (GoTrue)** đảm nhiệm hoàn toàn. *
 | Cấu hình Vercel | Đặt cho cả Production/Preview/Development, đánh dấu **server-side only**; bật "Protect Preview Deployments" vì đây là app nội bộ |
 | Chốt chặn CI | Bước CI **grep bundle client** (`.next/static`) tìm dấu vết service role key; phát hiện ⇒ **fail build** (NFR-005) |
 | Không log | Không `console.log` object cấu hình Supabase; log lỗi phải lọc bỏ header/khoá |
+| **Không để IDE đồng bộ** | **Bổ sung sau ISSUE-011 (đã xảy ra thật 2026-08-07).** Khi điền secret vào `.env.local`: **đóng file trong IDE trước**, hoặc điền bằng terminal. Tính năng "chia sẻ file đang mở vào ngữ cảnh" của IDE/AI assistant sẽ đưa nguyên nội dung file vào transcript — bảy biện pháp phía trên **không chặn được kênh này** |
 
 **Được phép public (không phải rò rỉ):** `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Anon key **được thiết kế để nằm trong client** — nó không cấp quyền gì ngoài những gì RLS cho phép. Đây chính xác là lý do RLS phải đúng: **anon key + RLS sai = toàn bộ dữ liệu bị lộ.**
 

@@ -81,8 +81,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn nội bộ về khi nào `AchievementResult.percent = null` | Phase 5 | BR-015, DEC-025, OQ-11 |
 | ISSUE-009 | P3 | OPEN | Next.js 16.3 **deprecate** quy ước file `middleware.ts`, khuyến nghị đổi tên thành `proxy.ts` | Phase 2 → khi nâng Next major | DEC-004, FR-002, FR-004 |
 | ISSUE-010 | P3 | OPEN | Máy phát triển chạy **nhiều stack Supabase local cùng lúc** → chọn nhầm container/port là chuyện đã xảy ra thật | Phase 2, Phase 11 | DEC-022, DEC-031 |
+| ISSUE-011 | **P1** | OPEN | **Service role key đã lọt vào transcript hội thoại** khi IDE tự đồng bộ `.env.local`. Phải **rotate** | Phase 2 | NFR-005, DEC-005, DEC-031 |
 
-Tổng: **7 OPEN** (0 × P1, 2 × P2, 5 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
+Tổng: **8 OPEN** (1 × P1, 2 × P2, 5 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
 
 ---
 
@@ -541,6 +542,43 @@ Mitigation **đã áp dụng** ở Phase 2:
 Đã kiểm chứng 2026-08-07: sau khi chuyển sang tên container đầy đủ, truy vấn `information_schema.role_table_grants` trên schema `public` chỉ trả về đúng **2 bảng** (`profiles`, `daily_reports`) thay vì 50+ bảng của dự án khác. Bộ test `npm run test:db` chạy qua `SUPABASE_DB_URL` cho **66/66 PASS**.
 
 Còn để `OPEN` vì mitigation là **quy ước thao tác**, không phải hàng rào kỹ thuật đầy đủ: một lệnh `docker exec` viết ẩu trong tương lai vẫn có thể trúng nhầm container.
+
+---
+
+### ISSUE-011
+
+**Severity: P1**
+**Status: OPEN**
+
+**Module:**
+`.env.local` (không commit) + project Supabase cloud `rnmywhwanpxmipqducqu`. Liên quan: NFR-005, DEC-005, DEC-031, Phase 2.
+
+**Description:**
+Sau khi người dùng điền giá trị thật vào `.env.local`, IDE **tự đồng bộ nội dung file đã sửa vào ngữ cảnh hội thoại**. Vì vậy **service role key** (dạng `sb_secret_...`) đã nằm trong transcript, dù cả tài liệu lẫn hướng dẫn đều nói rõ "không dán vào chat".
+
+**Expected:**
+Service role key chỉ tồn tại ở đúng hai nơi: `.env.local` trên máy (đã bị `.gitignore` chặn) và biến môi trường server-side trên Vercel.
+
+**Actual:**
+Key nằm thêm trong một transcript hội thoại. `.gitignore` vẫn hoạt động đúng — key **không** vào git, đã kiểm bằng `git check-ignore -v .env.local` → khớp `.gitignore:10:.env.*`.
+
+**Root Cause:**
+Không phải lỗi của `.gitignore` hay của quy trình commit. Nguyên nhân là **một kênh rò rỉ mà tài liệu chưa lường tới**: tính năng tự đồng bộ file đang mở của IDE. `docs/06 §11.2` liệt kê 7 biện pháp bảo vệ service role key (đặt tên biến, `server-only`, giới hạn phạm vi, không commit, không ghi vào docs, cấu hình Vercel, grep CI) — **không biện pháp nào chặn được kênh này**.
+
+**Fix:**
+1. **Rotate key ngay.** Dashboard → `Project Settings` → `API Keys` → mục secret → **`Generate new secret key`** (hoặc `Rotate`) → dán giá trị mới vào `.env.local`, ghi đè giá trị cũ.
+2. Nếu đã đặt biến trên Vercel thì cập nhật lại ở cả 3 scope (Production / Preview / Development).
+3. **Bổ sung vào `docs/06 §11.2`** biện pháp thứ 8: *khi điền secret vào `.env.local`, đóng file trong IDE trước, hoặc điền bằng terminal* — để tính năng đồng bộ của IDE không chạm tới.
+
+**Bán kính thiệt hại — nhỏ hơn thông thường, và đây là công của DEC-031:**
+Key này **bypass RLS** nhưng **không bypass GRANT**, mà migration `0001`/`0002` cố ý **không cấp DML** cho `service_role`. Đã kiểm chứng trên chính cloud: `anon` nhận `42501 permission denied` trên cả hai bảng, và `service_role` cũng không có `SELECT/INSERT/UPDATE/DELETE`. Vì vậy key rò rỉ **không đọc hay sửa được** `profiles` và `daily_reports`. Cái nó còn làm được là `auth.admin.*`: liệt kê `auth.users`, tạo/xoá tài khoản, đổi mật khẩu. Vẫn đủ nghiêm trọng để xếp **P1** và phải rotate.
+
+**Verification:**
+Kế hoạch kiểm chứng (**chưa chạy** — chờ người dùng rotate):
+- Gọi `GET /auth/v1/admin/users` bằng key **cũ** ⇒ phải nhận `401`.
+- Gọi cùng endpoint bằng key **mới** ⇒ `200`.
+- `git log -S "sb_secret" --all` ⇒ **0 kết quả** (xác nhận key chưa từng vào lịch sử git).
+- `docs/06 §11.2` đã có biện pháp thứ 8.
 
 ---
 
