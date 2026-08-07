@@ -127,6 +127,11 @@ playwright.config.ts                ⏳ Phase 11 — 3 project: mobile-375, desk
 1. **Tên file là `vitest.config.mts`, không phải `.ts`.** Với `.ts`, Vite 7 cảnh báo `ESM syntax in a file loaded as CommonJS` và cho biết `configLoader: 'native'` sẽ thành mặc định ở major sau — tức là cảnh báo hôm nay là lỗi ngày mai. Đuôi `.mts` xử lý dứt điểm mà không phải đặt `"type": "module"` cho cả dự án (việc đó sẽ đụng `next.config.ts` và `postcss.config.mjs`).
 2. **Vitest KHÔNG tự nạp `.env.local` ở mode `test`.** Phải gọi `loadEnv('test', rootDir, '')` của Vite trong config rồi truyền vào `test.env` của từng project. Thiếu bước này thì `SUPABASE_DB_URL` là `undefined` và toàn bộ tầng 2/3 hỏng với thông báo khó hiểu.
 3. **`integration` và `rls` đặt `fileParallelism: false`** vì cùng chạm một database. Không có cơ chế tự bỏ qua khi database offline — bỏ qua im lặng sẽ khiến bộ test "xanh" mà chưa kiểm gì, đúng thứ Master Spec §42 cấm.
+4. **Hai file env, hai mục đích — đây là hàng rào chống xoá nhầm dữ liệu production.**
+   `.env.local` phục vụ **ứng dụng** và sẽ trỏ vào Supabase **cloud** ngay khi Phase 2 nối xong.
+   `.env.test.local` phục vụ **bộ test** và luôn trỏ vào Supabase **local**; vì `loadEnv('test', …)` nạp nó **sau** `.env.local` nên nó đè lên.
+   Cần thiết vì tầng 2 và 3 **xoá và ghi đè dữ liệu** — một lần `npm test` đọc nhầm cấu hình cloud là mất dữ liệu thật (DEC-022).
+   **Đã kiểm chứng thật** (2026-08-07): đặt `.env.local` trỏ một URL cloud giả rồi chạy `npm run test:db` → vẫn **66/66 PASS**, tức bộ test vẫn chạy trên local. Ngoài ra `tests/integration/setup.ts` còn một chặn thứ hai: URL không phải `127.0.0.1`/`localhost` thì ném lỗi ngay, không chạy tiếp.
 
 **Lệnh:**
 

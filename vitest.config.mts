@@ -20,8 +20,19 @@ import { defineConfig } from 'vitest/config';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 
-// `loadEnv` đọc .env, .env.local, .env.test, .env.test.local. Cần gọi tường
-// minh vì Vitest KHÔNG tự nạp `.env.local` ở mode `test`.
+/**
+ * Nạp env theo thứ tự `.env` → `.env.local` → `.env.test` → `.env.test.local`,
+ * file sau đè file trước. Phải gọi tường minh vì Vitest **không** tự nạp
+ * `.env.local` ở mode `test`.
+ *
+ * Thứ tự này là thứ giữ cho bộ test an toàn: `.env.local` trỏ vào Supabase
+ * CLOUD (môi trường chạy `npm run dev` / `npm run build`), còn `.env.test.local`
+ * trỏ vào Supabase LOCAL và **đè lên** nó. Nhờ vậy `npm test` không bao giờ
+ * chạm production, kể cả khi ai đó quên (DEC-022).
+ *
+ * `tests/integration/setup.ts` vẫn có chặn an toàn riêng — hai lớp, không phải
+ * một, vì bộ test này XOÁ dữ liệu.
+ */
 const env = loadEnv('test', rootDir, '');
 
 const alias = { '@': rootDir.replace(/\/$/, '') };

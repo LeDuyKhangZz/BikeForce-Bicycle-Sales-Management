@@ -181,6 +181,18 @@ phải biết**:
 **Test (Phase 2 — MỚI):** `vitest.config.mts` (3 project) · `lib/auth/routes.test.ts` ·
 `tests/integration/*` (5 file) · `tests/rls/*` (4 file).
 
+**Hai file env (không commit, đều bị `.gitignore` chặn):**
+
+| File | Ai dùng | Trỏ vào đâu |
+|---|---|---|
+| `.env.local` | Ứng dụng — `npm run dev` / `build` / `start` | Supabase **cloud** (sau khi người dùng tạo project) |
+| `.env.test.local` | Bộ test — `npm test` / `npm run test:db` | Supabase **local**, luôn luôn |
+
+`loadEnv('test', …)` nạp `.env.test.local` **sau** `.env.local` nên nó đè lên ⇒ `npm test` không bao
+giờ chạm production dù `.env.local` trỏ cloud (DEC-022). Đã kiểm chứng thật: đặt `.env.local` sang
+một URL cloud giả, `npm run test:db` vẫn **66/66 PASS**. `tests/integration/setup.ts` còn một chặn
+thứ hai — URL không phải localhost thì ném lỗi ngay.
+
 **File sẽ tạo ở Phase 3 (chưa tồn tại):** `lib/validation/report.ts`, `features/report-morning/*`,
 `app/(sales)/sales/today/morning/page.tsx`.
 
