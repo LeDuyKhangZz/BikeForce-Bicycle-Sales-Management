@@ -46,6 +46,8 @@ export const MAX_CUSTOMER_VISITS = 1_000;
 export const MAX_ROUTE_LENGTH = 300;
 /** `ck_visit_purpose_len`. */
 export const MAX_VISIT_PURPOSE_LENGTH = 300;
+/** BR-018 — `ck_evening_note_len`. Đo theo KÝ TỰ (`char_length`), không theo byte. */
+export const MAX_EVENING_NOTE_LENGTH = 1_000;
 
 /**
  * Chuẩn hoá đầu vào số TRƯỚC khi Zod kiểm kiểu.
@@ -80,6 +82,25 @@ function integerField(max: number, label: string) {
 }
 
 /**
+ * Một ô văn bản TUỲ CHỌN, tối đa `max` ký tự.
+ *
+ * Ô trống trên form gửi lên chuỗi rỗng; quy về `null` để ghi xuống cột nullable
+ * chứ không ghi chuỗi rỗng — `''` và `null` là hai thứ khác nhau khi hiển thị
+ * lại, và cột `text` nullable của `docs/02` cố ý dùng `null` cho "không có".
+ *
+ * Độ dài đo SAU `trim`, khớp cách `ck_*_len` đếm bằng `char_length` (ký tự
+ * Unicode, không phải byte) — nhờ vậy 300 ký tự tiếng Việt có dấu vẫn hợp lệ.
+ */
+function optionalTextField(max: number, label: string) {
+  return z
+    .string()
+    .trim()
+    .max(max, { message: `${label} tối đa ${max.toLocaleString('vi-VN')} ký tự.` })
+    .nullish()
+    .transform((value) => (value == null || value === '' ? null : value));
+}
+
+/**
  * `z.number()` của Zod từ chối `NaN` và `Infinity` sẵn, nhưng đó là hành vi
  * ngầm định — `docs/08 §3.6` yêu cầu case tường minh, và test khoá nó lại.
  */
@@ -92,16 +113,8 @@ export const morningReportSchema = z.object({
       message: `Tuyến ghé thăm tối đa ${MAX_ROUTE_LENGTH} ký tự.`,
     }),
 
-  // Optional (DEC-029, OQ-01). Ô trống trên form gửi lên chuỗi rỗng — quy về
-  // `null` để ghi xuống cột nullable, không ghi chuỗi rỗng.
-  visit_purpose: z
-    .string()
-    .trim()
-    .max(MAX_VISIT_PURPOSE_LENGTH, {
-      message: `Mục đích chuyến đi tối đa ${MAX_VISIT_PURPOSE_LENGTH} ký tự.`,
-    })
-    .nullish()
-    .transform((value) => (value == null || value === '' ? null : value)),
+  // Optional (DEC-029, OQ-01).
+  visit_purpose: optionalTextField(MAX_VISIT_PURPOSE_LENGTH, 'Mục đích chuyến đi'),
 
   target_visit_points: integerField(MAX_VISIT_POINTS, 'Mục tiêu điểm viếng thăm'),
   target_sales_quantity: integerField(MAX_SALES_QUANTITY, 'Mục tiêu doanh số'),
@@ -110,6 +123,42 @@ export const morningReportSchema = z.object({
 });
 
 export type MorningReportInput = z.infer<typeof morningReportSchema>;
+
+/**
+ * Thực đạt cuối ngày — UC-06, FR-014, BR-018.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO CẢ BỐN CHỈ SỐ `actual_*` ĐỀU BẮT BUỘC
+ * ─────────────────────────────────────────────────────────────────────────
+ *  `ck_completed_requires_actuals` (0002) đòi cả bốn cột `actual_*` **và**
+ *  `evening_submitted_at` khác `null` thì `status` mới được là `'COMPLETED'`.
+ *  Cho phép bỏ trống một ô ở tầng này nghĩa là người dùng gõ xong cả form rồi
+ *  mới nhận một lỗi `23514` thô từ Postgres — `docs/07 §6.1` coi đó là bug của
+ *  tầng validation, không phải "database đã chặn rồi nên thôi".
+ *
+ *  Biên số học dùng lại đúng các hằng `MAX_*` phía trên: CHECK của cột `actual_*`
+ *  và cột `target_*` cùng một dải giá trị (0002), nên không có hằng số thứ hai
+ *  để lệch nhau.
+ *
+ *  Hai ô tuỳ chọn: `actual_route` (DEC-029, OQ-02 — tuyến đi thật, đối chiếu với
+ *  `planned_route`) và `evening_note` ≤ 1000 ký tự (BR-018).
+ *
+ *  Giống `morningReportSchema`, schema này **không có** `report_id`, `sales_id`,
+ *  `status`, `evening_submitted_at`: `report_id` được validate riêng bằng
+ *  `z.uuid()` trong Server Action, ba khoá còn lại do server đặt (QUY TẮC 2, 3).
+ */
+export const eveningReportSchema = z.object({
+  actual_route: optionalTextField(MAX_ROUTE_LENGTH, 'Tuyến thực tế'),
+
+  actual_visit_points: integerField(MAX_VISIT_POINTS, 'Số điểm đã viếng thăm'),
+  actual_sales_quantity: integerField(MAX_SALES_QUANTITY, 'Doanh số thực đạt'),
+  actual_revenue: integerField(MAX_REVENUE_VND, 'Doanh thu thực đạt'),
+  actual_customer_visits: integerField(MAX_CUSTOMER_VISITS, 'Số khách hàng đã gặp'),
+
+  evening_note: optionalTextField(MAX_EVENING_NOTE_LENGTH, 'Ghi chú cuối ngày'),
+});
+
+export type EveningReportInput = z.infer<typeof eveningReportSchema>;
 
 /**
  * Ngày nghiệp vụ hợp lệ để GHI báo cáo.

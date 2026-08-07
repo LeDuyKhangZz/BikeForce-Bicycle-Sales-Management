@@ -54,6 +54,17 @@ export type MorningReportWrite = Pick<
   | 'target_customer_visits'
 >;
 
+/** Đúng tập cột mà thực đạt cuối ngày được phép ghi (UC-06, FR-014). */
+export type EveningReportWrite = Pick<
+  TablesInsert<'daily_reports'>,
+  | 'actual_route'
+  | 'actual_visit_points'
+  | 'actual_sales_quantity'
+  | 'actual_revenue'
+  | 'actual_customer_visits'
+  | 'evening_note'
+>;
+
 /**
  * Lỗi ghi đã được DỊCH sang từ vựng nghiệp vụ. Tầng trên không bao giờ nhìn
  * thấy `PostgrestError` thô (AGENTS.md §5, docs/07 QUY TẮC 4).
@@ -173,6 +184,64 @@ export async function updateMorningReport(
   // 0 dòng khớp: không phải chủ báo cáo, hoặc báo cáo đã COMPLETED nên bị khoá.
   // Cố ý KHÔNG phân biệt hai trường hợp trong kết quả trả về — chống dò ID
   // (docs/07 §3.6).
+  if (data === null) return { ok: false, error: 'REJECTED' };
+
+  return { ok: true, reportId: data.id };
+}
+
+/**
+ * Hoàn tất báo cáo cuối ngày — UC-06, FR-014, FR-015, BR-008.
+ *
+ * Đây là **lần chuyển trạng thái duy nhất** của vòng đời báo cáo:
+ * `MORNING_SUBMITTED → COMPLETED`. Sau câu lệnh này báo cáo tự khoá vĩnh viễn
+ * (BR-019) vì policy `reports_update_own_open` đánh giá `USING` trên dòng CŨ:
+ * lần UPDATE kế tiếp thấy `OLD.status = 'COMPLETED'` nên khớp 0 dòng.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  BỐN CỘT PHẢI GHI CÙNG MỘT CÂU LỆNH
+ * ─────────────────────────────────────────────────────────────────────────
+ *  `status`, bốn cột `actual_*` và `evening_submitted_at` đi chung một UPDATE
+ *  chứ không tách làm hai bước. `ck_completed_requires_actuals` được đánh giá
+ *  trên dòng SAU khi câu lệnh chạy xong, nên ghi `status` trước rồi số liệu sau
+ *  sẽ vỡ ngay ở bước một — và quan trọng hơn, một câu lệnh nghĩa là không có
+ *  trạng thái trung gian nào tồn tại dù chỉ trong một mili giây.
+ *
+ *  `evening_submitted_at` do **tầng gọi** truyền vào (docs/07 QUY TẮC 3), giống
+ *  cách `report_date` được truyền vào `insertMorningReport`. Trigger cố ý KHÔNG
+ *  tự đóng dấu cột này — xem ghi chú cuối `0003_functions_triggers.sql`: chỉ một
+ *  nơi được ghi một cột.
+ *
+ * `.eq('sales_id')` là lớp phòng thủ **thêm**, không thay RLS (AGENTS.md §8).
+ */
+export async function completeEveningReport(
+  supabase: SupabaseClient<Database>,
+  reportId: string,
+  salesId: string,
+  submittedAt: string,
+  values: EveningReportWrite,
+): Promise<ReportWriteResult> {
+  const { data, error } = await supabase
+    .from('daily_reports')
+    .update({
+      ...values,
+      evening_submitted_at: submittedAt,
+      // BR-008 — bước thứ hai và cũng là bước cuối của vòng đời.
+      status: 'COMPLETED',
+    })
+    .eq('id', reportId)
+    .eq('sales_id', salesId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    console.error('[completeEveningReport]', error.code, error.message);
+
+    if (error.code && PG_REJECTED_CODES.has(error.code)) return { ok: false, error: 'REJECTED' };
+    return { ok: false, error: 'UNKNOWN' };
+  }
+
+  // 0 dòng khớp: báo cáo đã COMPLETED (hai tab cùng bấm Lưu — docs/07 §7), hoặc
+  // không phải của mình. Cố ý KHÔNG phân biệt trong kết quả trả về.
   if (data === null) return { ok: false, error: 'REJECTED' };
 
   return { ok: true, reportId: data.id };

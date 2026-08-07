@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import { AUTH_MESSAGES } from '@/lib/auth/messages';
+import { authorizeSalesWrite } from '@/features/auth/queries';
 import { REPORT_MESSAGES, SAVED_PARAM, type SavedParamValue } from '@/lib/reports/messages';
 import {
   EVENING_REPORT_PATH,
@@ -11,14 +11,12 @@ import {
   SALES_TODAY_PATH,
 } from '@/lib/reports/today-cta';
 import { getVietnamToday } from '@/lib/date';
-import { createClient } from '@/lib/supabase/server';
 import { morningReportSchema, reportDateSchema } from '@/lib/validation/report';
 import {
   insertMorningReport,
   updateMorningReport as updateMorningReportRow,
   type MorningReportWrite,
 } from '@/services/reports';
-import { getSessionProfile, type SessionProfile } from '@/services/profiles';
 import type { ActionResult } from '@/types/action-result';
 
 /**
@@ -41,54 +39,12 @@ export type MorningReportState =
   | ActionResult<{ reportId: string; notice: SavedParamValue }>
   | null;
 
-/** Server Action là ENDPOINT CÔNG KHAI — ai cũng gọi được bằng HTTP thủ công. */
-type Authorized =
-  | { ok: true; profile: SessionProfile }
-  | { ok: false; failure: Exclude<MorningReportState, null> };
-
-async function authorizeSalesWrite(): Promise<Authorized> {
-  const supabase = await createClient();
-
-  // LUÔN getUser() ở server — getSession() chỉ đọc cookie mà không xác minh
-  // chữ ký nên giả mạo được (`docs/06 §3.1`).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      ok: false,
-      failure: { ok: false, code: 'UNAUTHORIZED', message: AUTH_MESSAGES.SESSION_EXPIRED },
-    };
-  }
-
-  const profile = await getSessionProfile(supabase, user.id);
-
-  if (!profile) {
-    return {
-      ok: false,
-      failure: { ok: false, code: 'NOT_FOUND', message: AUTH_MESSAGES.PROFILE_MISSING },
-    };
-  }
-
-  // BR-009 — tài khoản bị vô hiệu hoá GIỮA PHIÊN vẫn còn cookie hợp lệ.
-  if (!profile.is_active) {
-    return {
-      ok: false,
-      failure: { ok: false, code: 'ACCOUNT_DISABLED', message: AUTH_MESSAGES.ACCOUNT_DISABLED },
-    };
-  }
-
-  // DEC-030 — chỉ Sales tự cam kết KPI; Admin không tạo báo cáo hộ ai.
-  if (profile.role !== 'SALES') {
-    return {
-      ok: false,
-      failure: { ok: false, code: 'FORBIDDEN', message: REPORT_MESSAGES.FORBIDDEN },
-    };
-  }
-
-  return { ok: true, profile };
-}
+/**
+ * Server Action là ENDPOINT CÔNG KHAI — ai cũng gọi được bằng HTTP thủ công,
+ * nên ba bước kiểm quyền ở `authorizeSalesWrite()` là bắt buộc, không phải
+ * trang trí. Guard đó nằm ở `features/auth/queries.ts` và **dùng chung** với
+ * báo cáo cuối ngày (DEC-036).
+ */
 
 /** Gom `fieldErrors` theo đúng tên field để UI gắn lỗi ngay dưới từng ô. */
 function validationFailure(error: z.ZodError): Exclude<MorningReportState, null> {
@@ -129,7 +85,7 @@ export async function saveMorningReport(
   formData: FormData,
 ): Promise<MorningReportState> {
   const auth = await authorizeSalesWrite();
-  if (!auth.ok) return auth.failure;
+  if (!auth.ok) return auth;
 
   const parsed = morningReportSchema.safeParse(readMorningFormData(formData));
   if (!parsed.success) return validationFailure(parsed.error);
@@ -143,8 +99,7 @@ export async function saveMorningReport(
     return { ok: false, code: 'VALIDATION', message: REPORT_MESSAGES.WRONG_BUSINESS_DATE };
   }
 
-  const supabase = await createClient();
-  const result = await insertMorningReport(supabase, auth.profile.id, today, parsed.data);
+  const result = await insertMorningReport(auth.supabase, auth.profile.id, today, parsed.data);
 
   if (!result.ok) {
     // BR-001. Đây là đường phòng thủ THẬT cho tình huống hai tab bấm Lưu cùng
@@ -181,7 +136,7 @@ export async function updateMorningReport(
   formData: FormData,
 ): Promise<MorningReportState> {
   const auth = await authorizeSalesWrite();
-  if (!auth.ok) return auth.failure;
+  if (!auth.ok) return auth;
 
   const reportId = reportIdSchema.safeParse(formData.get('report_id'));
   if (!reportId.success) {
@@ -192,8 +147,12 @@ export async function updateMorningReport(
   if (!parsed.success) return validationFailure(parsed.error);
 
   const values: MorningReportWrite = parsed.data;
-  const supabase = await createClient();
-  const result = await updateMorningReportRow(supabase, reportId.data, auth.profile.id, values);
+  const result = await updateMorningReportRow(
+    auth.supabase,
+    reportId.data,
+    auth.profile.id,
+    values,
+  );
 
   if (!result.ok) {
     if (result.error === 'REJECTED') {

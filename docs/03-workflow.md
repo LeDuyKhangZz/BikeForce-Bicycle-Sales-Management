@@ -297,6 +297,14 @@ sequenceDiagram
 
 ## 5. Luồng E — Báo cáo cuối ngày, tính achievement, bật export (UC-06, UC-07)
 
+> ✅ **PHẦN NHẬP THỰC ĐẠT ĐÃ TRIỂN KHAI (Phase 4, 2026-08-07).** Ba điểm bản chạy thật đi khác sơ đồ bên dưới — sơ đồ giữ nguyên làm bản thiết kế gốc, ba điểm này là bản đính chính:
+>
+> 1. **Điều hướng sau khi lưu do SERVER phát ra**, không phải `router.replace` ở client như bước 27 của §5.2: `saveEveningReport` kết thúc bằng `redirect('/sales/today?saved=evening')`. Lý do là một lỗi đã đo thật — **ISSUE-014**, sửa theo **DEC-037**.
+> 2. **Đích đến là `/sales/today`, không phải `/sales/reports/[id]`** — route chi tiết báo cáo là FR-022, **Phase 7**, chưa tồn tại.
+> 3. **Bảng đối chiếu và `lib/kpi` (bước 30–34) là PHASE 5**, chưa chạy ở Phase 4. Màn hình cuối ngày chỉ NHẬP số; không có một phép chia `%` nào trong `features/report-evening/`, vì `calculateAchievement()` còn chờ chốt ISSUE-008.
+>
+> Một điểm nữa **đúng như thiết kế và đã kiểm chứng**: khi chưa có cam kết sáng, `/sales/today/evening` đưa thẳng về `/sales/today/morning` (BR-007), chứ không về `/sales/today`.
+
 ### 5.1 Text step-list (đúng mẫu Master Spec §47)
 
 ```text

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
+import { DiscardEveningDraft } from '@/features/report-evening/discard-evening-draft';
 import { CommitmentSummary } from '@/features/report-morning/commitment-summary';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { messageForSavedParam } from '@/lib/reports/messages';
@@ -104,12 +105,16 @@ export default async function SalesTodayPage({ searchParams }: Props) {
       )}
 
       {view.state === 'COMPLETED' && (
-        <Card>
-          <p className="text-sm text-muted-foreground">
-            Bảng đối chiếu cam kết với thực đạt và ảnh chia sẻ 9:16 nằm ở màn hình chi tiết báo
-            cáo.
-          </p>
-        </Card>
+        <>
+          {/* FR-035 — không render gì, chỉ dọn draft cuối ngày đã hết ý nghĩa. */}
+          <DiscardEveningDraft today={today} />
+          <Card>
+            <p className="text-sm text-muted-foreground">
+              Bảng đối chiếu cam kết với thực đạt và ảnh chia sẻ 9:16 nằm ở màn hình chi tiết báo
+              cáo.
+            </p>
+          </Card>
+        </>
       )}
 
       <div className="flex flex-col gap-3">

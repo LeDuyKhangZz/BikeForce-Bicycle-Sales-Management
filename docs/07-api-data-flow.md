@@ -102,12 +102,17 @@ MorningReportForm
 EveningReportForm
 → Zod (eveningReportSchema)
 → saveEveningReport()
+→ authorizeSalesWrite()  (auth + is_active + role SALES — DEC-036)
 → kiểm tra status hiện tại = MORNING_SUBMITTED (BR-007, BR-008)
-→ services/reports.completeReport()
+→ services/reports.completeEveningReport()
 → Supabase (RLS: reports_update_own_open)
 → daily_reports.status = COMPLETED
-→ UI enable nút Xuất ảnh (BR-002)
+→ revalidatePath('/sales/today')
+→ redirect('/sales/today?saved=evening')            (DEC-037)
+→ /sales/today đọc lại status ĐÃ PERSIST → enable nút Xuất ảnh (BR-002)
 ```
+
+> Tên hàm service là **`completeEveningReport`**, không phải `completeReport` như bản phác thảo đầu tiên của mục này — khớp ví dụ đặt tên Server Action ở `AGENTS.md §3` và `SESSION_CHECKPOINT.md`.
 
 ```text
 ShareButton
@@ -144,8 +149,8 @@ flowchart TD
 > |---|---|---|
 > | `signIn` · `signOut` | ✅ **ĐÃ TRIỂN KHAI** (Phase 2) | `features/auth/actions.ts` |
 > | `saveMorningReport` · `updateMorningReport` | ✅ **ĐÃ TRIỂN KHAI** (Phase 3) | `features/report-morning/actions.ts` |
+> | `saveEveningReport` | ✅ **ĐÃ TRIỂN KHAI** (Phase 4) | `features/report-evening/actions.ts` |
 > | `changePassword` · `updateOwnProfile` | ⏳ đề xuất — Phase 7 (UC-11) | — |
-> | `saveEveningReport` | ⏳ đề xuất — Phase 4 | — |
 > | `createSalesAccount` · `updateSalesProfile` · `setSalesActiveStatus` | ⏳ đề xuất — Phase 10 | — |
 >
 > **Hai điểm bản triển khai đi khác tài liệu này — đã ghi thành DEC-034, đọc trước khi sửa:**
@@ -237,18 +242,23 @@ flowchart TD
 
 ### 3.7 `saveEveningReport` — UC-06
 
+> ✅ **ĐÃ TRIỂN KHAI (Phase 4, 2026-08-07).** Bảng dưới đây đã được cập nhật theo bản chạy thật; hai điểm đi khác bản đề xuất ban đầu được đánh dấu ⚠ và có DEC riêng.
+
 | Mục | Nội dung |
 |---|---|
 | **File** | `features/report-evening/actions.ts` |
-| **Input** | `{ reportId, actualRoute?, actualVisitPoints, actualSalesQuantity, actualRevenue, actualCustomerVisits, eveningNote? }` |
-| **Zod** | `eveningReportSchema`; `eveningNote` ≤ 1000 ký tự (BR-018) |
-| **Permission** | Chủ báo cáo + `is_active` + `status = 'MORNING_SUBMITTED'` (BR-007) |
-| **Database** | `update daily_reports set actual_* , evening_note, evening_submitted_at = now(), status = 'COMPLETED' where id = $1` |
-| **Output** | `ActionResult<{ reportId: string; status: 'COMPLETED' }>` — **UI chỉ enable nút Xuất ảnh khi nhận được `status: 'COMPLETED'` từ đây** (BR-002) |
-| **Errors** | `REPORT_NOT_FOUND` · `NO_MORNING_REPORT` → "Chưa có báo cáo đầu ngày cho hôm nay." · `REPORT_LOCKED` · `VALIDATION_FAILED` · `NETWORK` → "Không lưu được. Kiểm tra kết nối rồi thử lại." — **form giữ nguyên dữ liệu** |
-| **Revalidate** | `/sales/today`, `/sales/reports/[id]`, `/sales/history` |
+| **Input** | `report_id` + `{ actual_route?, actual_visit_points, actual_sales_quantity, actual_revenue, actual_customer_visits, evening_note? }` — ⚠ **`snake_case`** trùng tên cột, đúng như DEC-034 đã chốt cho luồng sáng |
+| **Zod** | `eveningReportSchema` trong `lib/validation/report.ts`; 4 chỉ số `actual_*` **bắt buộc** (khớp `ck_completed_requires_actuals`), `actual_route` ≤ 300, `evening_note` ≤ 1000 ký tự (BR-018) |
+| **Permission** | Chủ báo cáo + `is_active` + `role = 'SALES'` + `status = 'MORNING_SUBMITTED'` (BR-007) — guard dùng chung `authorizeSalesWrite()` của `features/auth/queries.ts` (DEC-036) |
+| **Database** | `services/reports.completeEveningReport()` → `update daily_reports set actual_*, evening_note, evening_submitted_at, status = 'COMPLETED' where id = $1 and sales_id = $2` — **một câu lệnh duy nhất**, vì `ck_completed_requires_actuals` đánh giá trên dòng sau khi lệnh chạy xong |
+| **Output** | ⚠ **Không trả về gì khi thành công — action tự `redirect('/sales/today?saved=evening')`** (DEC-037, ISSUE-014). Kiểu trả về chỉ còn nhánh lỗi: `Exclude<ActionResult<never>, { ok: true }> \| null` |
+| **Errors** | `NOT_FOUND` → "Không tìm thấy báo cáo." · `NOT_FOUND` → "Chưa có báo cáo đầu ngày cho hôm nay." (BR-007) · `CONFLICT` → "Báo cáo hôm nay đã hoàn tất rồi." (BR-019) · `VALIDATION` với `fieldErrors` · `UNKNOWN` → "Không lưu được. Kiểm tra kết nối rồi thử lại." — **form giữ nguyên dữ liệu** (NFR-010, đã kiểm chứng trên Chromium) |
+| **Revalidate** | `/sales/today` và `/sales/today/morning`. ⚠ **Cố ý KHÔNG revalidate `/sales/today/evening`** — xem ISSUE-014 |
+| **Ba lớp chặn `report_id`** | (1) action đối chiếu `report_id` với báo cáo của `getVietnamToday()` — chặn hoàn tất một báo cáo NGÀY CŨ còn mở (BR-021, RLS **không** chặn việc này); (2) `.eq('sales_id')` trong service; (3) RLS `reports_update_own_open` |
 
-> **Điểm quan trọng nhất của cả tài liệu này:** trạng thái enable của nút Xuất ảnh **phải** bắt nguồn từ giá trị `status` mà server trả về sau khi ghi thành công. Không được suy ra từ "form đã điền đủ", không được suy ra từ state phía client. Master Spec §12 nói thẳng: *"Nút Export không được enable chỉ vì form 'trông có vẻ đầy đủ'."*
+> **Điểm quan trọng nhất của cả tài liệu này:** trạng thái enable của nút Xuất ảnh **phải** bắt nguồn từ `status` đã persist, không được suy ra từ "form đã điền đủ" hay từ state phía client. Master Spec §12 nói thẳng: *"Nút Export không được enable chỉ vì form 'trông có vẻ đầy đủ'."*
+>
+> ⚠ **Bản triển khai đi CHẶT HƠN bản đề xuất, không lỏng hơn.** Đề xuất ban đầu là "UI bật nút khi nhận `status: 'COMPLETED'` từ action". Thực tế nút Xuất ảnh nằm ở `/sales/today`, và điều kiện bật của nó là `getTodayView(report).canExportImage` — tức đọc `status` **đã persist trong database** ở lần render kế tiếp. Không có đường nào cho giá trị trả về của action, hay trạng thái form, tham gia vào quyết định đó.
 
 ### 3.8 `createSalesAccount` — UC-17
 

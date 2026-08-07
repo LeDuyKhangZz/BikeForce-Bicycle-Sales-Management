@@ -34,11 +34,15 @@ Mũi tên = "được phép import". **Không có mũi tên ngược.**
 | Tầng | ĐƯỢC import | KHÔNG được import |
 |---|---|---|
 | `app/` | `features/`, `components/ui/`, `lib/`, `types/` | `services/` trực tiếp trong page phức tạp — đi qua `features/*/queries.ts`. Ngoại lệ: RSC đơn giản có thể gọi `services/` trực tiếp, nhưng không được tự viết query inline |
-| `features/<X>/` | `components/ui/`, `lib/`, `services/`, `types/`, `features/<X>/` (nội bộ) | `features/<Y>/` khác — dùng chung thì nâng lên `lib/` hoặc `components/ui/` |
+| `features/<X>/` | `components/ui/`, `lib/`, `services/`, `types/`, `features/<X>/` (nội bộ), **`features/auth/` (ngoại lệ duy nhất — DEC-036)** | `features/<Y>/` khác — dùng chung thì nâng lên `lib/` hoặc `components/ui/` |
 | `components/ui/` | `lib/` (chỉ helper thuần như `cn`), `types/` | `services/`, `features/`, `lib/supabase/*` — primitive **không biết gì về nghiệp vụ và dữ liệu** |
 | `lib/` | `types/`, `lib/` khác | `app/`, `features/`, `components/`, `services/` |
 | `services/` | `lib/` (kiểu, helper), `types/` | `app/`, `features/`, `components/` |
 | `types/` | — | tất cả |
+
+**Ngoại lệ `features/auth/` (DEC-036, Phase 4).** Guard quyền phải chạm `services/profiles`, mà `lib/` bị cấm import `services/` — nên nó không thể nâng lên `lib/`. Vì vậy `features/auth/queries.ts` (`requireProfile`, `requireRole`, `authorizeSalesWrite`) là **thứ duy nhất** một feature khác được phép import từ một feature khác. Không mở rộng ngoại lệ này cho bất kỳ feature nào khác mà không có DEC mới.
+
+**Hook React dùng chung** đặt ở `lib/hooks/` (DEC-035) — chỉ hook **thuần**: không `services/`, không `lib/supabase/*`, không nghiệp vụ. Hiện có `use-report-draft.ts`.
 
 ### 1.3 Hai luật cứng, không có ngoại lệ
 

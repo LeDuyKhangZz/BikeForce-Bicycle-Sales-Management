@@ -125,7 +125,7 @@ lib/
   reports/today-cta.ts  lib/reports/today-cta.test.ts  ✅ 17 test — ba trạng thái FR-007 + BR-002
   validation/
     auth.ts                                       ✅ phủ gián tiếp qua login-form + signInAction
-    report.ts         lib/validation/report.test.ts   ✅ 47 test (Phase 3)
+    report.ts         lib/validation/report.test.ts   ✅ 96 test (47 Phase 3 + 49 Phase 4)
     profile.ts        lib/validation/profile.test.ts  ⏳ Phase 10
 tests/
   integration/
@@ -140,6 +140,10 @@ tests/
     daily-reports.rls.test.ts       ✅ 16 test
     profiles.rls.test.ts            ✅  7 test
     anon.rls.test.ts                ✅  3 test
+    report-service.rls.test.ts      ✅  7 test (Phase 4) — `services/reports.completeEveningReport()`
+                                        chạy dưới JWT THẬT. Cố ý KHÔNG ở tầng integration:
+                                        role `postgres` có `rolbypassrls` nên bài test ở đó sẽ
+                                        "xanh" kể cả khi policy sai hoàn toàn
 e2e/                                ⏳ Phase 11 (toàn bộ)
 vitest.config.mts                   ✅ 3 project: "unit", "integration", "rls"
 playwright.config.ts                ⏳ Phase 11 — 3 project: mobile-375, desktop-1440, zalo-like

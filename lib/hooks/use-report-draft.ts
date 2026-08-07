@@ -10,6 +10,15 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
  * Nó không bao giờ được coi là "đã lưu".
  *
  * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO HOOK NÀY NẰM Ở `lib/` CHỨ KHÔNG Ở `features/report-morning/`
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Nó ra đời ở Phase 3 cho form đầu ngày, và Phase 4 cần đúng nó cho form cuối
+ *  ngày. `features/report-evening/` **không được** import `features/report-morning/`
+ *  (AGENTS.md §1.2) — dùng chung thì phải nâng lên `lib/`. Hook này đủ điều kiện
+ *  để ở đây: nó không biết một chữ nào về báo cáo, chỉ nhận một khoá chuỗi và
+ *  một object `Record<string, string>` (DEC-035).
+ *
+ * ─────────────────────────────────────────────────────────────────────────
  *  VÌ SAO DÙNG `useSyncExternalStore` CHỨ KHÔNG `useEffect` + `setState`
  * ─────────────────────────────────────────────────────────────────────────
  *  localStorage là một **external store** đúng nghĩa, và đây là API React sinh

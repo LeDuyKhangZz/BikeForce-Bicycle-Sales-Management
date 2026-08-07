@@ -8,6 +8,8 @@ type Props = {
   id: string;
   label: string;
   value: string;
+  /** Câu gợi ý dưới ô khi giá trị chưa parse được. Mặc định: đơn vị tiền tệ. */
+  helperText?: string;
   error?: string;
   disabled?: boolean;
   onChange: (value: string) => void;
@@ -29,14 +31,28 @@ const QUICK_ADD_STEPS = [
  * Ô nhập tiền VND — BR-010, DEC-008.
  *
  * Người dùng gõ số thuần; khi `blur` thì hiển thị phân nhóm nghìn
- * (`150.000.000`). Giá trị gửi lên server vẫn là chuỗi đó, và
- * `morningReportSchema` quy nó về **số nguyên** bằng `parseCurrencyInput` —
- * database KHÔNG BAO GIỜ nhận chuỗi đã format.
+ * (`150.000.000`). Giá trị gửi lên server vẫn là chuỗi đó, và schema Zod của
+ * báo cáo quy nó về **số nguyên** bằng `parseCurrencyInput` — database KHÔNG
+ * BAO GIỜ nhận chuỗi đã format.
  *
  * `type="text"` chứ không `type="number"`: `number` cho phép cuộn chuột làm đổi
  * giá trị, hiện spinner khó chạm, và chặn luôn dấu chấm phân nhóm.
+ *
+ * ⚠ Đây là **primitive không biết nghiệp vụ** (AGENTS.md §1.2): nó nhận props
+ * nguyên thuỷ, không biết mình đang nhập "mục tiêu" hay "thực đạt". Nó ra đời ở
+ * `features/report-morning/` tại Phase 3 và được nâng lên đây ở Phase 4 khi form
+ * cuối ngày cần đúng nó — `features/X` không được import `features/Y` (DEC-035).
  */
-export function CurrencyField({ id, label, value, error, disabled, onChange, onBlur }: Props) {
+export function CurrencyField({
+  id,
+  label,
+  value,
+  helperText,
+  error,
+  disabled,
+  onChange,
+  onBlur,
+}: Props) {
   const parsed = parseCurrencyInput(value);
 
   function handleBlur(raw: string) {
@@ -59,7 +75,7 @@ export function CurrencyField({ id, label, value, error, disabled, onChange, onB
       error={error}
       helperText={
         parsed === null
-          ? 'Đơn vị: đồng (₫). Nhập số nguyên, không nhập phần lẻ.'
+          ? (helperText ?? 'Đơn vị: đồng (₫). Nhập số nguyên, không nhập phần lẻ.')
           : `Đang nhập: ${formatCurrencyVND(parsed)}`
       }
     >

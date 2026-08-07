@@ -20,6 +20,14 @@ export const REPORT_MESSAGES = {
   REPORT_LOCKED: 'Báo cáo đã hoàn tất nên không sửa được.',
   /** 0 dòng khớp: không tồn tại HOẶC không phải của mình — cố ý không phân biệt. */
   REPORT_NOT_FOUND: 'Không tìm thấy báo cáo.',
+  /** BR-007 — chưa có cam kết sáng thì không có gì để hoàn tất. */
+  NO_MORNING_REPORT: 'Chưa có báo cáo đầu ngày cho hôm nay.',
+  /**
+   * BR-019 — báo cáo đã `COMPLETED` rồi lại bấm Lưu lần nữa (hai tab, hoặc bấm
+   * lại nút Back). Câu này khác `REPORT_LOCKED` ở chỗ nó nói về việc **hoàn
+   * tất**, không phải việc sửa.
+   */
+  ALREADY_COMPLETED: 'Báo cáo hôm nay đã hoàn tất rồi.',
   /** BR-005, BR-016, BR-021 — chỉ đúng ngày hôm nay theo giờ VN. */
   WRONG_BUSINESS_DATE: 'Chỉ được tạo báo cáo cho ngày hôm nay.',
   /** Mất mạng / timeout. Form KHÔNG được reset (NFR-010). */
@@ -31,6 +39,7 @@ export const REPORT_MESSAGES = {
 export const REPORT_SAVED_NOTICES = {
   MORNING_CREATED: 'Đã lưu báo cáo đầu ngày.',
   MORNING_UPDATED: 'Đã cập nhật cam kết sáng.',
+  EVENING_COMPLETED: 'Đã hoàn tất báo cáo hôm nay.',
 } as const;
 
 export type ReportSavedNotice = keyof typeof REPORT_SAVED_NOTICES;
@@ -39,6 +48,7 @@ export type ReportSavedNotice = keyof typeof REPORT_SAVED_NOTICES;
 export const SAVED_PARAM = {
   MORNING_CREATED: 'morning',
   MORNING_UPDATED: 'morning-updated',
+  EVENING_COMPLETED: 'evening',
 } as const;
 
 /**
@@ -56,5 +66,6 @@ export type SavedParamValue = (typeof SAVED_PARAM)[keyof typeof SAVED_PARAM];
 export function messageForSavedParam(value: string | undefined): string | null {
   if (value === SAVED_PARAM.MORNING_CREATED) return REPORT_SAVED_NOTICES.MORNING_CREATED;
   if (value === SAVED_PARAM.MORNING_UPDATED) return REPORT_SAVED_NOTICES.MORNING_UPDATED;
+  if (value === SAVED_PARAM.EVENING_COMPLETED) return REPORT_SAVED_NOTICES.EVENING_COMPLETED;
   return null;
 }

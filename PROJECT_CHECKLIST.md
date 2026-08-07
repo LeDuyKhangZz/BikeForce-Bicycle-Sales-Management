@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 3 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 4 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -25,19 +25,22 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-07, sau Phase 3):** repository đã có schema chạy thật trên Supabase
-local **và** cloud, tầng auth đầy đủ, **luồng báo cáo đầu ngày chạy thật đầu-cuối**, và bộ test 213
-case. Kết quả thật của lần chạy cuối:
+**Tình trạng hôm nay (2026-08-07, sau Phase 4):** repository đã có schema chạy thật trên Supabase
+local **và** cloud, tầng auth đầy đủ, **cả hai nửa của luồng báo cáo ngày chạy thật đầu-cuối**
+(cam kết sáng → hoàn tất cuối ngày → khoá vĩnh viễn), và bộ test 269 case. Kết quả thật của lần
+chạy cuối:
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, 7 route) |
 | `npm run typecheck` | ✅ exit 0 |
 | `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
-| `npm test` | ✅ **213 passed / 213** — 12 test file, 3 project (`unit` 140 · `integration` 47 · `rls` 26) |
+| `npm test` | ✅ **269 passed / 269** — 13 test file, 3 project (`unit` 189 · `integration` 47 · `rls` 33) |
 | Kiểm chứng auth trên Chromium (Phase 2) | ✅ **32/32 PASS** ở 375px và 1440px |
 | Kiểm chứng tài khoản `is_active=false` (Phase 2) | ✅ **6/6 PASS** |
 | Kiểm chứng luồng báo cáo sáng trên Chromium (Phase 3) | ⚠ **57/58 PASS** ở 375px và 1440px — mục FAIL duy nhất là NFR-008 (7 lần chạm), xem ISSUE-013 |
+| Kiểm chứng luồng báo cáo cuối ngày trên Chromium (Phase 4) | ✅ **62/62 PASS** ở 375px và 1440px — sau khi sửa ISSUE-014 (lần đo trước đó: 59/62) |
+| Hồi quy luồng báo cáo sáng sau refactor (Phase 4) | ✅ **11/11 PASS** — UC-04 tạo, UC-05 sửa, DEC-034 vẫn đúng |
 
 **Playwright E2E vẫn `N/A`** — chưa có `playwright.config.ts`, chưa có file `e2e/*.spec.ts` nào. Các
 kiểm chứng trình duyệt ở trên chạy bằng script dùng-một-lần (đã xoá, không commit), **không phải**
@@ -166,16 +169,32 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 4 — Evening Report
 
-- [ ] `/sales/today/evening` hiển thị lại **toàn bộ cam kết sáng** để đối chiếu trực tiếp — FR-013, UC-06
-- [ ] Nhập thực đạt: đã viếng thăm, doanh số, doanh thu, SL khách hàng, ghi chú optional — FR-014
-- [ ] Zod schema cho form tối, ghi chú tối đa 1000 ký tự — BR-006, BR-017, BR-018
-- [ ] Lưu thành công → `status = 'COMPLETED'` và ghi `evening_submitted_at` — FR-015, BR-008
-- [ ] Chặn nhập báo cáo cuối ngày khi chưa có báo cáo đầu ngày cùng ngày (server + CHECK) — BR-007
-- [ ] Khoá báo cáo sau khi `COMPLETED` theo phương án mặc định của OQ-04; nếu người dùng chọn khác thì sửa RLS policy và trigger tương ứng — BR-019
-- [ ] `guard_report_transition` chặn `COMPLETED → MORNING_SUBMITTED` và chặn đổi `sales_id` / `report_date`
-- [ ] Draft localStorage cho form tối — FR-035
-- [ ] Save thất bại không mất dữ liệu form, có nút retry — NFR-010
+> **Trạng thái 2026-08-07: 9/10 mục `[x]`.** Mục còn lại là **E2E Playwright** — `playwright.config.ts` và
+> `e2e/*.spec.ts` **chưa tồn tại** (thuộc Phase 11), nên không được ghi PASS dưới bất kỳ hình thức nào.
+> Bốn cổng chất lượng đã chạy thật: `npm run typecheck` · `npm run build` · `npm run lint` đều exit 0;
+> `npm test` → **269/269**. Kiểm chứng Chromium 375px + 1440px: **62/62** (luồng cuối ngày) và
+> **11/11** (hồi quy luồng đầu ngày sau refactor).
+
+- [x] `/sales/today/evening` hiển thị lại **toàn bộ cam kết sáng** để đối chiếu trực tiếp — FR-013, UC-06
+      → Dùng lại `CommitmentSummary` (đủ 4 chỉ tiêu + tuyến + mục đích). Thêm một lớp đối chiếu thứ hai: **mỗi ô nhập mang theo con số đã cam kết trong helper text** (`Cam kết sáng: 8 xe.`) để không phải cuộn lên. Kiểm chứng thật E08–E10, E16
+- [x] Nhập thực đạt: đã viếng thăm, doanh số, doanh thu, SL khách hàng, ghi chú optional — FR-014
+      → 6 ô (4 bắt buộc + `actual_route` + `evening_note` tuỳ chọn theo DEC-029/OQ-02). Ô doanh thu dùng lại `CurrencyField` với 3 chip cộng nhanh. Kiểm chứng thật E11–E15, E27
+- [x] Zod schema cho form tối, ghi chú tối đa 1000 ký tự — BR-006, BR-017, BR-018
+      → `eveningReportSchema` trong `lib/validation/report.ts`, **49 unit test mới**. Có case `'ừ'.repeat(1000)` hợp lệ và 1001 ký tự bị từ chối (đo theo **ký tự**, không theo byte). Schema **strip** `sales_id`/`report_date`/`status`/`evening_submitted_at` **và cả `target_*`** — có test khoá lại
+- [x] Lưu thành công → `status = 'COMPLETED'` và ghi `evening_submitted_at` — FR-015, BR-008
+      → `completeEveningReport()` ghi 4 cột `actual_*` + `evening_note` + `evening_submitted_at` + `status` trong **MỘT** câu lệnh. Kiểm chứng thật: dữ liệu persist đúng, dấu tiếng Việt nguyên vẹn, cột `target_*` **không** bị đụng tới
+- [x] Chặn nhập báo cáo cuối ngày khi chưa có báo cáo đầu ngày cùng ngày (server + CHECK) — BR-007
+      → Lớp 1: RSC redirect sang `/sales/today/morning` (E01). Lớp 2: Server Action trả `NO_MORNING_REPORT`. Lớp 3: `ck_completed_requires_actuals` — có test RLS bỏ qua Zod để chứng minh DB tự đứng được
+- [x] Khoá báo cáo sau khi `COMPLETED` theo phương án mặc định của OQ-04; nếu người dùng chọn khác thì sửa RLS policy và trigger tương ứng — BR-019
+      → OQ-04 đã chốt **KHÔNG cho sửa**, nên **không** đụng vào policy/trigger. Kiểm chứng thật E02, E33, E34 + test RLS "hoàn tất lần thứ hai bị từ chối, dữ liệu không bị ghi đè"
+- [x] `guard_report_transition` chặn `COMPLETED → MORNING_SUBMITTED` và chặn đổi `sales_id` / `report_date`
+      → Đã có **6 integration test từ Phase 2** và vẫn xanh. Phase 4 xác nhận thêm bằng tay: `update ... set status='MORNING_SUBMITTED'` chạy bằng role `postgres` (có `rolbypassrls`) **vẫn bị trigger từ chối**
+- [x] Draft localStorage cho form tối — FR-035
+      → Dùng lại `useReportDraft` sau khi nâng lên `lib/hooks/` (DEC-035); khoá gắn với ngày nghiệp vụ. Kiểm chứng thật E23–E26, E31. ⚠ Việc **xoá draft sau khi lưu** phải chuyển sang `DiscardEveningDraft` trên `/sales/today` — xem ISSUE-014 / DEC-037
+- [x] Save thất bại không mất dữ liệu form, có nút retry — NFR-010
+      → Kiểm chứng thật E20–E22: submit thiếu ô → ở lại trang, dữ liệu đã gõ còn nguyên, có error summary + lỗi inline `role="alert"`, nút Lưu bấm lại được ngay
 - [ ] E2E luồng đầy đủ Morning → Save → Reopen → Evening → Save chạy xanh trên project `mobile-375`
+      → **KHÔNG tick.** Luồng này **đã chạy thật đầu-cuối trên Chromium** (62/62 + 11/11), nhưng bằng **script dùng-một-lần đã xoá, không commit** — đó **không phải** bộ E2E hồi quy. `playwright.config.ts` và project `mobile-375` thuộc **Phase 11** và chưa tồn tại
 
 ## Phase 5 — KPI Engine
 

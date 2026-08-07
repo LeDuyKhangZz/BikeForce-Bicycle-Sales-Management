@@ -84,6 +84,7 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-011 | **P1** | OPEN | **Service role key đã lọt vào transcript hội thoại** khi IDE tự đồng bộ `.env.local`. Phải **rotate** | Phase 2 | NFR-005, DEC-005, DEC-031 |
 | ISSUE-012 | P3 | OPEN | Sau `supabase db reset`, GoTrue + Kong không tự phục hồi → mọi lần đăng nhập nhận `502` cho tới khi restart hai container | Phase 3 → mọi phase sau | ISSUE-010, DEC-022 |
 | ISSUE-013 | P3 | OPEN | **NFR-008 mâu thuẫn với FR-008**: form sáng có 5 trường bắt buộc nên sàn lý thuyết là 7 lần chạm, không thể ≤ 6. Đo thật: **7 chạm / 1,8 giây**. **Cần người dùng quyết định (OQ-18)** | Phase 3 | NFR-008, FR-008, UC-04, OQ-18 |
+| ISSUE-014 | P2 | **CLOSED** | Lưu báo cáo cuối ngày thành công nhưng **mất banner xác nhận** và **draft không bị xoá** — re-render RSC của route hiện tại sau Server Action làm form unmount trước khi effect chạy. Đã sửa bằng DEC-037 | Phase 4 | FR-015, FR-035, DEC-034, DEC-037 |
 
 Tổng: **10 OPEN** (1 × P1, 2 × P2, 7 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
 
@@ -669,6 +670,43 @@ Cho tới khi có quyết định, mục *"Walkthrough xác nhận hoàn tất b
 
 **Verification:**
 Script kiểm chứng dùng-một-lần đã đếm số lần chạm và đo thời gian thật trên Chromium 375px (2026-08-07): **7 chạm / 1,8 giây**. Sau khi chốt phương án, phải đo lại và ghi số mới vào `WORKLOG.md`.
+
+---
+
+### ISSUE-014
+
+**Severity: P2**
+**Status: CLOSED — đã sửa trong cùng Phase 4 (DEC-037)**
+
+**Module:**
+`features/report-evening/*`, `app/(sales)/sales/today/evening/page.tsx`. Liên quan: DEC-034, DEC-037, FR-015, FR-035.
+
+**Description:**
+Sau khi lưu báo cáo cuối ngày **thành công**, người dùng bị đưa về `/sales/today` **không có** `?saved=evening`, nên **không thấy câu xác nhận** "Đã hoàn tất báo cáo hôm nay"; đồng thời **draft localStorage của form cuối ngày không bị xoá**.
+
+Trạng thái dữ liệu vẫn đúng (`status = 'COMPLETED'`, đủ 4 cột `actual_*`, có `evening_submitted_at`) — đây là lỗi **phản hồi cho người dùng**, không phải lỗi ghi dữ liệu. Nhưng nó vi phạm FR-035 ("xoá draft sau khi lưu thành công") và làm người dùng không chắc mình đã lưu được hay chưa, đúng thứ `docs/05 §8` cấm.
+
+**Expected:** quay về `/sales/today?saved=evening`, hiện banner xác nhận, draft bị xoá.
+**Actual:** quay về `/sales/today`, không banner, draft còn nguyên.
+
+**Root Cause:**
+Sau mỗi Server Action, Next render lại RSC của **route hiện tại**. Lần render lại đó của `/sales/today/evening` thấy `status` vừa thành `'COMPLETED'` nên chạy `redirect(SALES_TODAY_PATH)` — điều hướng **phía server**, không mang query param. Nó làm `EveningReportForm` unmount **trước khi** `useEffect` bắt `state.ok` kịp commit, nên `router.replace()` và `clearDraft()` không bao giờ chạy.
+
+**Cùng họ với ISSUE của DEC-034:** cả hai đều là "re-render route hiện tại sau Server Action phá vỡ giả định client được chạy nốt".
+
+Đã thử bỏ `revalidatePath('/sales/today/evening')` — **không cứu được**, vì Next re-render route hiện tại dù có revalidate hay không.
+
+**Fix (ĐÃ ÁP DỤNG — DEC-037):**
+1. `saveEveningReport` **tự `redirect()`** tới `/sales/today?saved=evening`. Điều hướng do server phát ra, deterministic, không còn cuộc đua.
+2. Dọn draft chuyển sang `features/report-evening/discard-evening-draft.tsx` — client component không render gì, gắn trên `/sales/today` khi trạng thái là `COMPLETED`.
+3. Khoá localStorage của draft gom về `lib/reports/draft-keys.ts` để ba nơi không gõ lệch chuỗi (DEC-035).
+
+**Verification:**
+Script kiểm chứng dùng-một-lần trên Chromium 375px + 1440px (2026-08-07):
+**trước khi sửa 59/62 PASS** (đỏ đúng 3 mục: URL `?saved=`, banner xác nhận, xoá draft) → **sau khi sửa 62/62 PASS**.
+Hồi quy luồng đầu ngày sau refactor: **11/11 PASS**.
+
+⚠ **Bài học cho các phase sau:** mọi Server Action kết thúc bằng "đổi trạng thái khiến chính route hiện tại redirect" đều dính lỗi này. Nếu route hiện tại có thể tự redirect sau khi dữ liệu đổi, **hãy để Server Action tự `redirect()`** thay vì trả `ok: true` cho client điều hướng. Phase 6 (xuất ảnh) và Phase 10 (bật/tắt `is_active`) đều có dạng đó.
 
 ---
 

@@ -1,5 +1,5 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 3 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 4 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > **Đọc file này TRƯỚC, rồi đọc `SESSION_CHECKPOINT.md`.** Hai file đó đủ để bắt đầu làm việc.
@@ -21,17 +21,17 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 3 — Morning Report: 13/14 mục xong** (2026-08-07). Phase 0, 1, 2 đã đóng cùng ngày |
-| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration chạy thật trên **cả local lẫn cloud** · tầng auth đầy đủ · **luồng cam kết đầu ngày chạy thật đầu-cuối** (`/sales/today`, `/sales/today/morning`) · bộ test 213 case |
+| Phase | **PHASE 4 — Evening Report: 9/10 mục xong** (2026-08-07). Phase 0, 1, 2 đã đóng; Phase 3 còn 1 mục chờ OQ-18 |
+| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration chạy thật trên **cả local lẫn cloud** · tầng auth đầy đủ · **luồng báo cáo ngày chạy thật đầu-cuối cả hai nửa** (`/sales/today`, `/sales/today/morning`, `/sales/today/evening`) · bộ test 269 case |
 | Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Quyền push đứng vẫn còn, **nhưng `git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
 | Supabase **local** | ✅ **Đã chạy thật** — Docker + CLI 2.111.0, Postgres 17.6.1.156. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
 | Supabase **cloud** | ✅ **Đã nối xong** — `rnmywhwanpxmipqducqu`, region `ap-southeast-1`, 5 migration đã `db push`, seed **không** được đẩy, signup đã tắt |
 | Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-07): cả 3 exit 0, lint 0 error 0 warning |
-| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **213/213** (140 unit + 47 integration + 26 RLS) |
+| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **269/269** (189 unit + 47 integration + 33 RLS) |
 | E2E / a11y / Lighthouse | **N/A — chưa có `playwright.config.ts`, chưa có `e2e/*.spec.ts`.** Không được ghi PASS |
-| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER.** 17/17 OQ ban đầu đã trả lời. 34 DEC và 25 BR đều `APPROVED` |
+| Chặn tiến độ | ⚠ **Phase 5 bị ISSUE-008 chặn thật** — phải chốt với người dùng trước khi viết `lib/kpi.ts`. 17/17 OQ ban đầu đã trả lời; 37 DEC và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** **Phase 4 (Evening Report) làm được ngay.** Nghiệp vụ đã chốt xong; theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
+**Hệ quả trực tiếp:** **Phase 5 (KPI Engine) KHÔNG bắt đầu bằng code.** Nó bắt đầu bằng việc chốt **ISSUE-008** (`percent = null` khi nào) và hình dạng số vượt tuyệt đối của **DEC-025** với người dùng. Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`, và **không được tự trả lời** một câu hỏi nghiệp vụ còn treo.
 
 > ⏳ **Hai việc chờ người dùng, KHÔNG chặn việc code:**
 > 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
@@ -131,18 +131,19 @@ BikeForce/
 │   │                             # /admin/sales/[id], /admin/account
 │   └── api/reports/[id]/share-image/   # Route Handler trả PNG 1080×1920
 ├── components/ui/                # primitive không biết nghiệp vụ: Button, Input, Card, Badge,
-│                                 # Textarea, FormField, Label, Skeleton
+│                                 # Textarea, FormField, Label, Skeleton, CurrencyField
 ├── features/                     # component + action + query của MỘT nghiệp vụ
 │   ├── auth/                     # ⚠ TÊN THẬT TRONG REPO là `report-morning/`,
 │   ├── report-morning/           #    KHÔNG phải `morning-report/`. Đừng tạo thư mục trùng nghĩa
-│   ├── report-evening/           #    Phase 4
+│   ├── report-evening/           #    ✅ đã có (Phase 4)
 │   ├── report-share/             # DailyReportShareCard.tsx — Phase 6
 │   ├── sales-history/
 │   └── admin-*/
 ├── lib/                          # kpi, currency, date, validation (Zod), supabase clients, auth helpers
 │   ├── kpi.ts  currency.ts  date.ts  utils.ts  env.ts
 │   ├── auth/      routes.ts  messages.ts
-│   ├── reports/   today-cta.ts  messages.ts
+│   ├── hooks/     use-report-draft.ts        # hook React THUẦN dùng chung — DEC-035
+│   ├── reports/   today-cta.ts  messages.ts  draft-keys.ts
 │   ├── validation/  auth.ts  report.ts
 │   └── supabase/  client.ts  server.ts  admin.ts
 ├── services/                     # data access thuần: nhận supabase client, trả typed data
@@ -290,7 +291,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-034` (decision) · `ISSUE-001..ISSUE-013` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-037` (decision) · `ISSUE-001..ISSUE-014` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 `UC`, `FR`, `NFR`, `BR`, `AF` là **dãy đóng** — không thêm ID mới nếu không có xác nhận của người dùng. `OQ`, `DEC`, `ISSUE` là **dãy mở**: cấp ID mới = số lớn nhất từng dùng + 1, **không bao giờ renumber, không tái sử dụng ID đã CLOSED**.
 
@@ -320,15 +321,18 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 1. ~~Người dùng trả lời `OQ-01..OQ-17`~~ — ✅ **XONG 2026-08-07, đủ 17/17.**
 2. ~~Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`~~ — ✅ **XONG.**
 3. ~~**Phase 1 — Foundation**~~ · ~~**Phase 2 — schema + auth**~~ — ✅ **XONG 2026-08-07**, cả hai đã đóng đủ mục. Supabase cloud đã nối xong.
-4. ~~**Phase 3 — Morning Report**~~ — ✅ **XONG 13/14 mục 2026-08-07.** 213 test xanh, kiểm chứng trình duyệt 57/58.
-5. **Đang chờ người dùng (không chặn code):** rotate service role key (ISSUE-011) · trả lời **OQ-18** (ISSUE-013).
-6. **Phase 4 — Evening Report (việc kế tiếp, làm được ngay).** Bắt đầu bằng `eveningReportSchema` **thêm vào** `lib/validation/report.ts` + test, rồi `completeEveningReport` trong `services/reports.ts`, rồi `features/report-evening/`, rồi thay trang tối thiểu `/sales/today/evening`.
+4. ~~**Phase 3 — Morning Report**~~ — ✅ **XONG 13/14 mục 2026-08-07.** Kiểm chứng trình duyệt 57/58.
+5. ~~**Phase 4 — Evening Report**~~ — ✅ **XONG 9/10 mục 2026-08-07.** 269 test xanh, kiểm chứng trình duyệt 62/62 + hồi quy luồng sáng 11/11. Mục còn lại là **E2E Playwright**, thuộc Phase 11.
+6. **Đang chờ người dùng (không chặn code):** rotate service role key (ISSUE-011) · trả lời **OQ-18** (ISSUE-013).
+7. **Phase 5 — KPI Engine (việc kế tiếp).** ⚠ **KHÔNG bắt đầu bằng code.** Bắt đầu bằng việc **chốt ISSUE-008** (`AchievementResult.percent = null` khi nào) và **hình dạng số vượt tuyệt đối của DEC-025** với người dùng. Sau đó mới viết thân `lib/kpi.ts` + `lib/kpi.test.ts`, rồi bảng đối chiếu 4 chỉ tiêu (DEC-019).
 
 **Những thứ đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
 
 *Phase 2:* `force row level security` **an toàn** vì `postgres` có `rolbypassrls` · `now()` **dùng được** trong CHECK constraint · `service_role` **cố ý không có DML** trên 2 bảng nghiệp vụ (DEC-031) — đừng cấp thêm.
 
 *Phase 3:* `lib/date.ts` và `lib/currency.ts` **đã xong thật** (DEC-032) — nhưng `lib/kpi.ts` **vẫn cố ý ném lỗi** vì ISSUE-008 · client **không được** suy ra thông báo thành công từ `mode` của form (DEC-034, đã có lỗi thật) · `useReportDraft` **phải** dùng `useSyncExternalStore`, React Compiler chặn `setState` trong effect · nút "Xuất ảnh" và CTA "Xem báo cáo hôm nay" **cố ý disabled**, có hằng số đánh dấu chỗ phải xoá.
+
+*Phase 4:* `useReportDraft` nay ở `lib/hooks/`, `CurrencyField` nay ở `components/ui/` (DEC-035) — **không phải file bị mất** · guard quyền của Server Action đã gom về `authorizeSalesWrite()` ở `features/auth/queries.ts` (DEC-036) — **đừng viết lại** · `saveEveningReport` **cố ý tự `redirect()` và không trả gì khi thành công** (DEC-037, ISSUE-014) — **đừng thêm lại nhánh `ok: true`**, nó không bao giờ tới được client · 7 test RLS của `completeEveningReport` **phải ở `tests/rls/`**, chuyển sang `tests/integration/` là làm chúng vô nghĩa (`postgres` có `rolbypassrls`).
 
 ---
 

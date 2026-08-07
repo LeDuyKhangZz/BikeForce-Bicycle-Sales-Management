@@ -621,6 +621,84 @@ Về `data.notice`: đã xảy ra **lỗi thật** khi kiểm chứng trên Chro
 
 ---
 
+## DEC-035
+
+**Date:** 2026-08-07 (Phase 4)
+**Loại:** Technical
+**Decision:** Ba thứ ra đời ở `features/report-morning/` tại Phase 3 được **nâng lên tầng dùng chung** khi Phase 4 cần đúng chúng:
+
+| Thứ | Từ | Sang | Vì sao ở đó |
+|---|---|---|---|
+| `useReportDraft` | `features/report-morning/use-report-draft.ts` | **`lib/hooks/use-report-draft.ts`** | Hook thuần, không biết một chữ nào về báo cáo — chỉ nhận một khoá chuỗi và `Record<string, string>` |
+| `CurrencyField` | `features/report-morning/currency-field.tsx` | **`components/ui/currency-field.tsx`** | Primitive nhận props nguyên thuỷ, không biết mình đang nhập "mục tiêu" hay "thực đạt" |
+| Khoá localStorage của draft | chuỗi gõ tay trong mỗi form | **`lib/reports/draft-keys.ts`** | Ba nơi cần đúng chuỗi này; nơi thứ ba (`DiscardEveningDraft`) không có form để mà gõ theo |
+
+`lib/hooks/` là **thư mục mới** so với bảng cấu trúc của DEC-023. Nó chỉ chứa hook React **thuần**: không `services/`, không `lib/supabase/*`, không nghiệp vụ.
+
+**Reason:** AGENTS.md §1.2 cấm `features/X` import `features/Y`, và bảng đó nói rõ cách xử lý: *"dùng chung thì nâng lên `lib/` hoặc `components/ui/`"*. Phương án còn lại là nhân bản — mà `useReportDraft` có `useSyncExternalStore` + xử lý quota localStorage + khoá theo ngày nghiệp vụ (BR-021); hai bản sao của thứ đó sẽ lệch nhau ở lần sửa đầu tiên.
+
+**Alternatives:**
+(a) **Copy sang `features/report-evening/`.** Bị loại: nhân bản ~200 dòng logic tinh vi, vi phạm CLAUDE.md §11.
+(b) **Để `features/report-evening/` import `features/report-morning/`.** Bị loại: form cuối ngày không phụ thuộc nghiệp vụ vào form đầu ngày; phụ thuộc đó chỉ là tai nạn lịch sử của thứ tự phase.
+(c) **Đặt `useReportDraft` vào `components/ui/`.** Bị loại: nó không phải component.
+
+**Impact:** `lib/hooks/use-report-draft.ts`, `components/ui/currency-field.tsx`, `lib/reports/draft-keys.ts`, `features/report-morning/morning-report-form.tsx`, `features/report-evening/*`, `CLAUDE.md §6`, `AGENTS.md §1`.
+**Status:** **APPROVED** (technical, có thể veto)
+
+---
+
+## DEC-036
+
+**Date:** 2026-08-07 (Phase 4)
+**Loại:** Architecture
+**Decision:** `features/auth/` là **ngoại lệ duy nhất** của luật "`features/X` không import `features/Y`" (AGENTS.md §1.2). Mọi feature khác được phép import `features/auth/queries.ts`.
+
+Đi kèm: guard ba bước của Server Action ghi báo cáo (auth → profile → `is_active` + `role = 'SALES'`) chuyển từ `features/report-morning/actions.ts` sang **`features/auth/queries.ts` dưới tên `authorizeSalesWrite()`**, trả về `SalesWriteAuthorization` (kèm luôn `supabase` client để tầng gọi không tạo client lần hai).
+
+**Reason:** Guard này phải chạm `services/profiles`, mà AGENTS.md §1.2 cấm `lib/` import `services/` — nên nó **không thể** ở `lib/`, đúng như `docs/06 §5.3` đã ghi khi đặt `requireProfile`/`requireRole` vào `features/auth/`. Phase 3 để một bản trong `features/report-morning/actions.ts`; Phase 4 cần **đúng** nó. Nhân bản 40 dòng kiểm quyền ra hai chỗ là cách chắc chắn nhất để một ngày nào đó chỉ một trong hai chỗ được vá — và chỗ không được vá là một lỗ hổng phân quyền, không phải một lỗi hiển thị.
+
+Không dùng `requireRole('SALES')` có sẵn được: hàm đó **redirect** khi không đạt, mà redirect trong một Server Action gọi từ `useActionState` làm client không bao giờ nhận `ActionResult` — form treo ở "đang lưu". AGENTS.md §2 cấm throw xuyên biên giới Server Action để báo lỗi nghiệp vụ.
+
+**Alternatives:**
+(a) **Đưa guard vào `services/`.** Bị loại: AGENTS.md §5 nói service **không quyết định quyền**.
+(b) **Mỗi feature giữ một bản riêng.** Bị loại — xem Reason.
+(c) **Tách phần thuần sang `lib/auth/` rồi mỗi feature tự gọi `getCurrentProfile()`.** Bị loại: vẫn là `features/X` import `features/Y`, chỉ nhiều bước hơn.
+
+**Impact:** `AGENTS.md §1.2`, `docs/04 §layering`, `features/auth/queries.ts`, `features/report-morning/actions.ts`, `features/report-evening/actions.ts`.
+**Status:** **APPROVED** (architecture — cần người dùng biết, có thể veto)
+
+---
+
+## DEC-037
+
+**Date:** 2026-08-07 (Phase 4)
+**Loại:** Technical
+**Decision:** `saveEveningReport` **tự `redirect()`** tới `/sales/today?saved=evening` sau khi ghi thành công, thay vì trả `ok: true` cho client tự điều hướng như `saveMorningReport`. Kiểu trả về vì thế chỉ còn nhánh thất bại:
+
+```ts
+export type EveningReportState = Exclude<ActionResult<never>, { ok: true }> | null;
+```
+
+Việc dọn draft localStorage chuyển sang `features/report-evening/discard-evening-draft.tsx` — một client component **không render gì**, gắn trên `/sales/today` khi `view.state === 'COMPLETED'`.
+
+**Reason:** Đã **đo thật trên Chromium** ở Phase 4 và thấy hỏng: sau mỗi Server Action, Next render lại RSC của route hiện tại. Lần render lại đó của `/sales/today/evening` thấy `status` vừa thành `'COMPLETED'` nên chạy `redirect(SALES_TODAY_PATH)` — một điều hướng **phía server**, không mang `?saved=`. Nó làm form unmount **trước khi** `useEffect` bắt `state.ok` kịp commit, nên `router.replace()` và `clearDraft()` không bao giờ chạy.
+
+Hậu quả đo được: **mất banner "Đã hoàn tất báo cáo hôm nay"**, và **draft còn nguyên trong localStorage** sau khi lưu thành công (3/62 mục của kịch bản kiểm chứng đỏ). Đã thử bỏ `revalidatePath('/sales/today/evening')` — **không cứu được**: Next re-render route hiện tại dù có revalidate hay không. Đây là **cùng họ với DEC-034**: `revalidate`/re-render của route hiện tại phá vỡ giả định "client được chạy nốt sau khi action thành công".
+
+Vì sao dọn draft ở `/sales/today` là chỗ đúng, không phải chỗ chữa cháy: **báo cáo hôm nay đã hoàn tất ⇒ không còn bản nháp cuối ngày nào của hôm nay còn ý nghĩa.** Nó đúng cả khi người dùng hoàn tất ở tab khác, hoặc hoàn tất trên điện thoại rồi mở lại trên máy tính.
+
+⚠ **Hệ quả cho BR-002 — chặt hơn chứ không lỏng hơn.** `docs/07 §3.7` viết rằng UI bật nút "Xuất ảnh" khi nhận `status: 'COMPLETED'` **từ action**. Bản triển khai không nhận gì từ action cả: nút nằm ở `/sales/today` và điều kiện bật là `getTodayView(report).canExportImage`, tức đọc `status` **đã persist** từ database. Không có đường nào cho trạng thái form phía client tham gia — đúng tinh thần Master Spec §12.
+
+**Alternatives:**
+(a) **Bỏ `redirect()` ở nhánh `COMPLETED` của trang, render một thẻ "đã hoàn tất".** Bị loại: form vẫn bị thay thế bởi cây RSC mới ⇒ effect vẫn không chạy. Không giải quyết gốc.
+(b) **Xoá draft ngay khi bấm Lưu.** Bị loại: `values` của form được suy ra TỪ draft, nên ô nhập sẽ trống ngay lập tức, và nếu lưu hỏng thì mất trắng dữ liệu — vi phạm NFR-010.
+(c) **Bọc server action bằng một reducer client rồi dọn sau `await`.** Bị loại: `redirect()` ném `NEXT_REDIRECT` nên code sau `await` không chạy; mà nếu không redirect thì lại rơi vào chính cuộc đua trên.
+
+**Impact:** `features/report-evening/actions.ts`, `features/report-evening/evening-report-form.tsx`, `features/report-evening/discard-evening-draft.tsx`, `app/(sales)/sales/today/page.tsx`, `lib/reports/draft-keys.ts`, `docs/07 §3.7`, `docs/03 §5.2`, ISSUE-014.
+**Status:** **APPROVED** (technical, có thể veto)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

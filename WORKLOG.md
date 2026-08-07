@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 3 (13/14 mục — mục cuối chờ người dùng trả lời OQ-18) | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 4 (9/10 mục — mục cuối là E2E Playwright, thuộc Phase 11) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,16 +10,21 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 3 — Morning Report: 13/14 mục xong (2026-08-07).**
+**PHASE 4 — Evening Report: 9/10 mục xong (2026-08-07).**
 
-Luồng cam kết đầu ngày chạy thật đầu-cuối: `/sales/today` theo FR-007 với đúng một CTA chính theo
-trạng thái · `/sales/today/morning` tạo và sửa được · draft localStorage · chống trùng ba tầng.
-Kết quả thật: `build` / `typecheck` / `lint` đều exit 0 · `npm test` **213/213 PASS**
-(140 unit + 47 integration + 26 RLS) · kiểm chứng trình duyệt **57/58 PASS** ở 375px và 1440px.
+**Cả hai nửa của luồng báo cáo ngày nay đã chạy thật đầu-cuối:** cam kết sáng → hoàn tất cuối ngày
+→ `status = 'COMPLETED'` → khoá vĩnh viễn. `/sales/today/evening` là FR-013 + FR-014 thật, không
+còn là trang tối thiểu.
+Kết quả thật: `typecheck` / `build` / `lint` đều exit 0 · `npm test` **269/269 PASS**
+(189 unit + 47 integration + 33 RLS) · kiểm chứng trình duyệt **62/62** (cuối ngày) và **11/11**
+(hồi quy luồng sáng) ở 375px và 1440px.
 
-**Mục duy nhất còn lại: walkthrough NFR-008.** Đã đo thật — **1,8 giây (đạt), 7 lần chạm (không đạt
-≤ 6)**. Đây là **mâu thuẫn giữa NFR-008 và FR-008** (5 trường bắt buộc ⇒ sàn lý thuyết là 7), không
-phải lỗi code. **Cần người dùng chọn 1 trong 3 phương án ở OQ-18 / ISSUE-013.**
+**Mục duy nhất còn lại: E2E Playwright trên project `mobile-375`.** Luồng đã chạy thật trên
+Chromium, nhưng bằng script dùng-một-lần đã xoá — **không phải** bộ E2E hồi quy.
+`playwright.config.ts` thuộc **Phase 11**, nên mục này **để nguyên `[ ]`**.
+
+**Phase 3 vẫn còn 1 mục treo** (walkthrough NFR-008 — 7 chạm / 1,8 giây), **chờ người dùng chọn
+phương án ở OQ-18 / ISSUE-013**. Không chặn Phase 5.
 
 *(Lịch sử: Phase 0 từng bị chặn bởi 9 OPEN QUESTION mức BLOCKING — ISSUE-001; đã gỡ ở Entry 002.)*
 
@@ -30,8 +35,8 @@ phải lỗi code. **Cần người dùng chọn 1 trong 3 phương án ở OQ-1
 - [x] Phase 0 — Discovery & Business Analysis
 - [x] Phase 1 — Foundation
 - [x] Phase 2 — Database & Auth
-- [ ] Phase 3 — Morning Report
-- [ ] Phase 4 — Evening Report
+- [ ] Phase 3 — Morning Report *(13/14 — chờ OQ-18)*
+- [ ] Phase 4 — Evening Report *(9/10 — mục cuối là E2E Playwright, thuộc Phase 11)*
 - [ ] Phase 5 — KPI Engine
 - [ ] Phase 6 — 9:16 Image Export
 - [ ] Phase 7 — Sales History
@@ -640,6 +645,123 @@ buộc nên sàn lý thuyết là `1 + 5 + 1 = 7`. Hai requirement mâu thuẫn 
 **Next:** **PHASE 4 — Evening Report**, bắt đầu bằng `eveningReportSchema` trong
 `lib/validation/report.ts` + test, rồi `completeEveningReport` trong `services/reports.ts`, rồi
 `features/report-evening/`, rồi thay trang tối thiểu `/sales/today/evening` bằng FR-013/FR-014 thật.
+
+---
+
+### Entry 007
+
+**Date:** 2026-08-07
+**Phase:** PHASE 4 — Evening Report (9/10 mục · mục còn lại là E2E Playwright, thuộc Phase 11)
+
+**Completed:**
+
+1. **`eveningReportSchema` thêm vào `lib/validation/report.ts`** — **49 unit test mới** (file này
+   giờ có 96 test, trước là 47). Bốn chỉ số `actual_*` **bắt buộc**, khớp đúng
+   `ck_completed_requires_actuals`; `actual_route` ≤ 300 và `evening_note` ≤ 1000 ký tự (BR-018)
+   là tuỳ chọn. Ba điểm đáng ghi:
+   - Có case `'ừ'.repeat(1000)` **hợp lệ** và 1001 ký tự **bị từ chối** — chứng minh đo theo **ký
+     tự** chứ không theo byte, khớp cách `char_length` của Postgres đếm.
+   - Schema strip `sales_id` / `report_date` / `status` / `evening_submitted_at` **và cả `target_*`**
+     — có test khoá lại. Nếu payload cuối ngày ghi đè được `target_*` thì Sales có thể hạ chỉ tiêu
+     xuống đúng bằng thực đạt ngay lúc chốt sổ (BR-019).
+   - Rút `optionalTextField()` dùng chung cho `visit_purpose`, `actual_route`, `evening_note` thay
+     vì gõ lại ba lần cùng một chuỗi `.trim().max().nullish().transform()`.
+2. **`completeEveningReport()` trong `services/reports.ts`** — ghi 4 cột `actual_*` + `evening_note`
+   + `evening_submitted_at` + `status` trong **MỘT** câu lệnh. Đây không phải chuyện phong cách:
+   `ck_completed_requires_actuals` đánh giá trên dòng sau khi câu lệnh chạy xong, nên tách làm hai
+   bước sẽ vỡ ngay ở bước một — và một câu lệnh nghĩa là không có trạng thái trung gian nào tồn tại
+   dù chỉ một mili giây.
+3. **`features/report-evening/`** — `saveEveningReport` (đủ 7 bước `docs/07 §1.3`),
+   `evening-report-form.tsx`, và `discard-evening-draft.tsx`. Form khác form sáng ba điểm: chỉ có
+   **một chế độ** (BR-019 khoá vĩnh viễn nên không tồn tại lần lưu thứ hai); **mỗi ô mang theo con
+   số đã cam kết sáng** trong helper text để đối chiếu mà không phải cuộn lên (FR-013); và **nói
+   trước rằng thao tác không hoàn tác được** ngay cạnh nút Lưu — thay vì một hộp thoại xác nhận tốn
+   thêm một lần chạm cho mọi người dùng.
+4. **`/sales/today/evening` thay bằng FR-013 + FR-014 thật.** Hai nhánh guard: chưa có cam kết sáng
+   → `/sales/today/morning` (BR-007, đúng `docs/03 §5.2` bước 9 — không phải về `/sales/today` như
+   trang tối thiểu của Phase 3); đã `COMPLETED` → `/sales/today` (BR-019).
+5. **Ba thứ nâng lên tầng dùng chung (DEC-035, DEC-036)** vì `features/X` không được import
+   `features/Y`: `useReportDraft` → `lib/hooks/`, `CurrencyField` → `components/ui/`, và guard quyền
+   `authorizeSalesWrite()` → `features/auth/queries.ts`. Cái thứ ba cần **DEC-036** vì nó mở một
+   ngoại lệ cho luật layering: guard phải chạm `services/` nên không thể ở `lib/`, và nhân bản 40
+   dòng kiểm quyền ra hai chỗ là cách chắc chắn nhất để một ngày nào đó chỉ một trong hai chỗ được
+   vá — mà chỗ không được vá là một lỗ hổng phân quyền.
+6. **`tests/rls/report-service.rls.test.ts` — 7 test mới**, chạy `completeEveningReport()` dưới
+   **JWT thật** qua PostgREST. Cố ý **không** đặt ở tầng integration: role `postgres` ở đó có
+   `rolbypassrls` nên bài test sẽ "xanh" kể cả khi policy sai hoàn toàn. Phủ BR-003 (salesB gửi kèm
+   `sales_id` của nạn nhân vẫn bị chặn), BR-009, BR-019 (lần hoàn tất thứ hai bị từ chối **và** dữ
+   liệu không bị ghi đè), BR-020, và một case bỏ qua Zod để chứng minh CHECK tự đứng được.
+
+**Files Changed:**
+Mới: `features/report-evening/{actions.ts,evening-report-form.tsx,discard-evening-draft.tsx}`,
+`lib/reports/draft-keys.ts`, `tests/rls/report-service.rls.test.ts`.
+Di chuyển: `features/report-morning/use-report-draft.ts` → `lib/hooks/use-report-draft.ts` ·
+`features/report-morning/currency-field.tsx` → `components/ui/currency-field.tsx`.
+Sửa: `lib/validation/report.ts`, `lib/validation/report.test.ts`, `lib/reports/messages.ts`,
+`services/reports.ts`, `features/auth/queries.ts`, `features/report-morning/{actions.ts,morning-report-form.tsx}`,
+`app/(sales)/sales/today/page.tsx`, `app/(sales)/sales/today/evening/page.tsx`,
+`AGENTS.md`, `docs/03`, `docs/07`, `docs/08`, `docs/11`, `docs/12`, `PROJECT_CHECKLIST.md`,
+`WORKLOG.md`, `SESSION_CHECKPOINT.md`, `CLAUDE.md`.
+
+**Tests:** **ĐÃ CHẠY THẬT, đủ 4 lệnh.**
+`npm run typecheck` exit 0 · `npm run lint` exit 0 (0 error, 0 warning) · `npm run build` exit 0
+(7 route) · `npm test` → **269 passed / 269** (unit 189 · integration 47 · RLS 33; trước phase này
+là 213).
+
+**Kiểm chứng trình duyệt thật** (Chromium 375px + 1440px, hai script dùng-một-lần, **đã xoá, không
+commit**): **62/62 PASS** cho luồng cuối ngày và **11/11 PASS** cho hồi quy luồng đầu ngày. Phủ:
+ba nhánh guard bằng ba tài khoản seed (`sales.c` chưa báo cáo → `/morning`; `sales.b` đã
+`COMPLETED` → `/sales/today`; `admin` → `/admin`); đủ 6 ô của FR-014 có `<label for>`, cao ≥ 48px,
+font ≥ 16px, 4 ô số có `inputMode="numeric"`; validate on blur; submit lỗi **không mất dữ liệu**
+(NFR-010); draft localStorage khôi phục sau reload rồi bị xoá sau khi lưu; chip `+10tr`; lưu thành
+công → banner + trạng thái "Đã hoàn thành"; vào lại `/evening` và `/morning` đều bị khoá (BR-019);
+nút Xuất ảnh vẫn `disabled` (Phase 6); không cuộn ngang; **0 console error**.
+Dữ liệu đã persist được kiểm lại thẳng trong Postgres: đủ 4 `actual_*`, có `evening_submitted_at`,
+`evening_note` giữ nguyên dấu tiếng Việt (`Ừ ẫ ợ ỹ đ`), và **cột `target_*` không bị đụng tới**.
+
+⚠ Để app trỏ vào Supabase **local** cho lần kiểm chứng này, đã dùng một file
+`.env.production.local` tạm (ưu tiên cao hơn `.env.local` trong thứ tự nạp của Next ở chế độ
+production) rồi **xoá sau khi xong** — **không đụng một dòng nào vào `.env.local` của người dùng**,
+tránh lặp lại ISSUE-011. File đó bị `.gitignore` chặn, đã kiểm bằng `git check-ignore`.
+
+**Chưa chạy:** E2E Playwright, a11y, `EXPLAIN ANALYZE`, Lighthouse — vẫn `N/A`, thuộc Phase 11.
+
+**Errors:** **Hai lỗi thật, cả hai đã sửa.**
+
+1. **ISSUE-014 (P2) — lưu cuối ngày thành công nhưng mất banner xác nhận và draft không bị xoá.**
+   Kịch bản kiểm chứng bắt được: 59/62, đỏ đúng 3 mục. **Nguyên nhân:** sau mỗi Server Action, Next
+   render lại RSC của **route hiện tại**; lần render lại đó của `/sales/today/evening` thấy `status`
+   vừa thành `'COMPLETED'` nên chạy `redirect()` — điều hướng **phía server**, không mang `?saved=`.
+   Nó làm form unmount **trước khi** `useEffect` bắt `state.ok` kịp commit.
+   **Đã thử bỏ `revalidatePath('/sales/today/evening')` — KHÔNG cứu được**, vì Next re-render route
+   hiện tại dù có revalidate hay không. **Sửa tận gốc (DEC-037):** để chính Server Action
+   `redirect('/sales/today?saved=evening')`, và chuyển việc dọn draft sang `DiscardEveningDraft`
+   trên `/sales/today` — nơi chắc chắn chạy được, và đúng nghĩa hơn ("báo cáo đã hoàn tất ⇒ không
+   còn bản nháp cuối ngày nào còn ý nghĩa", đúng cả khi hoàn tất từ tab khác).
+   Đây là **cùng họ với DEC-034** — lần thứ hai giả định "client được chạy nốt sau khi action thành
+   công" bị re-render của route hiện tại phá vỡ. Lần này đã ghi thành bài học cho Phase 6 và
+   Phase 10 ở cuối ISSUE-014.
+2. **Server `next start` cũ không chết theo lệnh dừng, giữ port 3100 và phục vụ một build đã bị ghi
+   đè** → lần chạy kiểm chứng kế tiếp cho 47/62 với hàng loạt `500`. Mất một vòng chẩn đoán sai
+   trước khi nhận ra kết quả đó **không hợp lệ**, không phải regression. Cách làm đúng đã áp dụng:
+   `Get-NetTCPConnection -LocalPort 3100` để tìm PID thật rồi `Stop-Process -Force`, xác nhận port
+   trống, mới chạy lại.
+
+**Decisions:** **DEC-035** (nâng `useReportDraft` → `lib/hooks/`, `CurrencyField` →
+`components/ui/`, khoá draft → `lib/reports/draft-keys.ts`) · **DEC-036** (`features/auth/` là ngoại
+lệ duy nhất của luật "features/X không import features/Y"; `authorizeSalesWrite()` dùng chung) ·
+**DEC-037** (Server Action cuối ngày tự `redirect()`; dọn draft ở `/sales/today`).
+
+**Remaining:** Đúng **một** mục của Phase 4 chưa tick: **E2E Playwright trên project `mobile-375`**.
+Luồng đó **đã chạy thật đầu-cuối trên Chromium**, nhưng bằng script dùng-một-lần đã xoá — **không
+phải** bộ E2E hồi quy. `playwright.config.ts` và ba project của nó thuộc **Phase 11**.
+Hai việc chờ người dùng vẫn treo nguyên, **không chặn code**: rotate service role key (ISSUE-011) và
+trả lời OQ-18 (ISSUE-013).
+
+**Next:** **PHASE 5 — KPI Engine.** ⚠ **Phải chốt ISSUE-008 TRƯỚC khi viết thân
+`calculateAchievement()`** — `docs/01` đang mâu thuẫn nội bộ về khi nào `AchievementResult.percent
+= null`, và DEC-025 còn để ngỏ cách mang **số vượt tuyệt đối + đơn vị**. Viết code trước rồi chốt
+sau là cách chắc chắn nhất để phải viết lại cả `lib/kpi.ts` lẫn bộ test của nó.
 
 ---
 

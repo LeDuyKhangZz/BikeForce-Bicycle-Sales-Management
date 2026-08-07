@@ -6,9 +6,12 @@ import { Save, RotateCcw } from 'lucide-react';
 import type { ZodType } from 'zod';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyField } from '@/components/ui/currency-field';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useReportDraft } from '@/lib/hooks/use-report-draft';
+import { morningDraftKey } from '@/lib/reports/draft-keys';
 import { SALES_TODAY_PATH } from '@/lib/reports/today-cta';
 import {
   MAX_ROUTE_LENGTH,
@@ -16,8 +19,6 @@ import {
   morningReportSchema,
 } from '@/lib/validation/report';
 
-import { CurrencyField } from './currency-field';
-import { useReportDraft } from './use-report-draft';
 import { saveMorningReport, updateMorningReport, type MorningReportState } from './actions';
 
 /** Sáu ô của form, tất cả giữ dưới dạng CHUỖI đúng như người dùng gõ. */
@@ -72,7 +73,7 @@ export function MorningReportForm({ mode, reportId, today, initialValues }: Prop
   const [state, formAction, isPending] = useActionState<MorningReportState, FormData>(action, null);
 
   const { values, setValue, isDirty, restoredFromDraft, discardDraft, clearDraft } = useReportDraft(
-    `bikeforce:morning-draft:${today}`,
+    morningDraftKey(today),
     initialValues,
   );
 

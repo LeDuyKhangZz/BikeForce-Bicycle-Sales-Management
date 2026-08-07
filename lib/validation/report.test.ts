@@ -8,8 +8,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  MAX_EVENING_NOTE_LENGTH,
   MAX_REVENUE_VND,
   MAX_ROUTE_LENGTH,
+  eveningReportSchema,
   morningReportSchema,
   reportDateSchema,
 } from './report';
@@ -197,6 +199,214 @@ describe('morningReportSchema — chất lượng thông báo lỗi', () => {
     expect(message).toContain('doanh thu');
     expect(message).not.toContain('Expected');
     expect(message).not.toContain('Too small');
+  });
+});
+
+/* ===========================================================================
+ * eveningReportSchema — UC-06, FR-014, BR-018 (Phase 4)
+ * ========================================================================= */
+
+/** Payload thực đạt hợp lệ tối thiểu; từng case chỉ ghi đè đúng field đang kiểm. */
+function validEveningInput(overrides: Record<string, unknown> = {}) {
+  return {
+    actual_route: 'Quận 1 → Quận 3',
+    actual_visit_points: 7,
+    actual_sales_quantity: 4,
+    actual_revenue: 120_000_000,
+    actual_customer_visits: 10,
+    evening_note: 'Khách hẹn quay lại cuối tuần.',
+    ...overrides,
+  };
+}
+
+describe('eveningReportSchema — bốn chỉ số actual đều BẮT BUỘC (BR-007)', () => {
+  it.each([
+    'actual_visit_points',
+    'actual_sales_quantity',
+    'actual_revenue',
+    'actual_customer_visits',
+  ])('thiếu %s → từ chối, khớp `ck_completed_requires_actuals`', (field) => {
+    const input = validEveningInput();
+    delete input[field as keyof typeof input];
+
+    const result = eveningReportSchema.safeParse(input);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.some((issue) => issue.path[0] === field)).toBe(true);
+  });
+
+  it.each([
+    'actual_visit_points',
+    'actual_sales_quantity',
+    'actual_revenue',
+    'actual_customer_visits',
+  ])('%s để trống trên form → từ chối, không âm thầm thành 0', (field) => {
+    expect(eveningReportSchema.safeParse(validEveningInput({ [field]: '' })).success).toBe(false);
+  });
+
+  it.each([
+    'actual_visit_points',
+    'actual_sales_quantity',
+    'actual_revenue',
+    'actual_customer_visits',
+  ])('%s = null bị từ chối (cột nullable ở DB nhưng COMPLETED thì không)', (field) => {
+    expect(eveningReportSchema.safeParse(validEveningInput({ [field]: null })).success).toBe(false);
+  });
+});
+
+describe('eveningReportSchema — miền giá trị số (BR-006, BR-017)', () => {
+  it.each([
+    ['số âm ở actual_sales_quantity', 'actual_sales_quantity', -1],
+    ['số âm ở actual_revenue', 'actual_revenue', -1],
+    ['NaN', 'actual_revenue', Number.NaN],
+    ['Infinity', 'actual_revenue', Number.POSITIVE_INFINITY],
+    ['-Infinity', 'actual_revenue', Number.NEGATIVE_INFINITY],
+    ['số thập phân ở cột integer', 'actual_sales_quantity', 1.5],
+    ['chuỗi rác ở cột số', 'actual_revenue', 'abc'],
+    ['ký hiệu khoa học', 'actual_revenue', '1e9'],
+    ['doanh thu vượt trần BR-017', 'actual_revenue', MAX_REVENUE_VND + 1],
+    ['actual_sales_quantity > 10000', 'actual_sales_quantity', 10_001],
+    ['actual_visit_points > 1000', 'actual_visit_points', 1_001],
+    ['actual_customer_visits > 1000', 'actual_customer_visits', 1_001],
+  ])('từ chối %s', (_label, field, value) => {
+    const result = eveningReportSchema.safeParse(validEveningInput({ [field]: value }));
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.some((issue) => issue.path[0] === field)).toBe(true);
+  });
+
+  it.each([
+    // BR-004 — thực đạt được phép VƯỢT cam kết, và cam kết không nằm trong
+    // schema này nên không có ràng buộc chéo nào chặn chuyện đó.
+    ['0 ở mọi chỉ số — một ngày không bán được xe nào vẫn phải báo cáo', 'actual_sales_quantity', 0],
+    ['0 doanh thu', 'actual_revenue', 0],
+    ['đúng trần doanh thu (biên inclusive)', 'actual_revenue', MAX_REVENUE_VND],
+    ['đúng trần doanh số', 'actual_sales_quantity', 10_000],
+    ['đúng trần điểm viếng thăm', 'actual_visit_points', 1_000],
+  ])('chấp nhận %s', (_label, field, value) => {
+    expect(eveningReportSchema.safeParse(validEveningInput({ [field]: value })).success).toBe(true);
+  });
+
+  it('nhận chuỗi FormData đã phân nhóm nghìn', () => {
+    const result = eveningReportSchema.safeParse(
+      validEveningInput({ actual_revenue: '120.000.000', actual_sales_quantity: '4' }),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.actual_revenue).toBe(120_000_000);
+    expect(result.data.actual_sales_quantity).toBe(4);
+  });
+});
+
+describe('eveningReportSchema — evening_note (BR-018)', () => {
+  it.each([
+    ['bỏ trống', ''],
+    ['chỉ khoảng trắng', '   '],
+    ['null', null],
+    ['undefined', undefined],
+  ])('evening_note %s → null (cột nullable, không ghi chuỗi rỗng)', (_label, value) => {
+    const result = eveningReportSchema.safeParse(validEveningInput({ evening_note: value }));
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.evening_note).toBeNull();
+  });
+
+  it(`từ chối evening_note ${MAX_EVENING_NOTE_LENGTH + 1} ký tự`, () => {
+    const input = validEveningInput({ evening_note: 'a'.repeat(MAX_EVENING_NOTE_LENGTH + 1) });
+    expect(eveningReportSchema.safeParse(input).success).toBe(false);
+  });
+
+  it(`chấp nhận evening_note đúng ${MAX_EVENING_NOTE_LENGTH} ký tự tiếng Việt có dấu`, () => {
+    // Đo theo KÝ TỰ chứ không theo byte — 'ừ' chiếm 3 byte UTF-8, nên nếu ở đâu
+    // đó đếm bằng byte thì case này sẽ đỏ. `char_length` của Postgres cũng đếm
+    // theo ký tự, hai tầng khớp nhau (docs/08 §3.6).
+    const input = validEveningInput({ evening_note: 'ừ'.repeat(MAX_EVENING_NOTE_LENGTH) });
+    expect(eveningReportSchema.safeParse(input).success).toBe(true);
+  });
+
+  it('trim evening_note trước khi trả về', () => {
+    const result = eveningReportSchema.safeParse(
+      validEveningInput({ evening_note: '  Trời mưa lớn buổi chiều.  ' }),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.evening_note).toBe('Trời mưa lớn buổi chiều.');
+  });
+});
+
+describe('eveningReportSchema — actual_route (DEC-029, OQ-02)', () => {
+  it.each([
+    ['bỏ trống', ''],
+    ['null', null],
+    ['undefined', undefined],
+  ])('actual_route %s → null — tuyến thực tế là TUỲ CHỌN', (_label, value) => {
+    const result = eveningReportSchema.safeParse(validEveningInput({ actual_route: value }));
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.actual_route).toBeNull();
+  });
+
+  it(`từ chối actual_route ${MAX_ROUTE_LENGTH + 1} ký tự — ck_actual_route_len`, () => {
+    const input = validEveningInput({ actual_route: 'a'.repeat(MAX_ROUTE_LENGTH + 1) });
+    expect(eveningReportSchema.safeParse(input).success).toBe(false);
+  });
+
+  it(`chấp nhận actual_route đúng ${MAX_ROUTE_LENGTH} ký tự`, () => {
+    const input = validEveningInput({ actual_route: 'ừ'.repeat(MAX_ROUTE_LENGTH) });
+    expect(eveningReportSchema.safeParse(input).success).toBe(true);
+  });
+});
+
+describe('eveningReportSchema — hợp đồng bảo mật (AGENTS.md §8, docs/07 QUY TẮC 2 & 3)', () => {
+  it.each(['sales_id', 'report_date', 'status', 'id', 'evening_submitted_at'])(
+    'strip "%s" do client gửi kèm — server tự đặt',
+    (key) => {
+      const result = eveningReportSchema.safeParse(
+        validEveningInput({ [key]: 'giá-trị-bị-sửa-tay' }),
+      );
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data).not.toHaveProperty(key);
+    },
+  );
+
+  it('cũng strip cả các cột target_* — form tối không được sửa cam kết sáng', () => {
+    // Nếu payload cuối ngày ghi đè được `target_*` thì Sales có thể hạ chỉ tiêu
+    // xuống đúng bằng thực đạt ngay lúc chốt sổ. Đó là lý do UC-06 chỉ ghi
+    // `actual_*` (BR-019).
+    const result = eveningReportSchema.safeParse(
+      validEveningInput({ target_revenue: 1, target_sales_quantity: 1 }),
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data).not.toHaveProperty('target_revenue');
+    expect(result.data).not.toHaveProperty('target_sales_quantity');
+  });
+
+  it('báo lỗi cho TẤT CẢ field sai, không dừng ở field đầu (rule error-summary)', () => {
+    const result = eveningReportSchema.safeParse(
+      validEveningInput({
+        actual_revenue: -1,
+        actual_sales_quantity: 10_001,
+        evening_note: 'a'.repeat(MAX_EVENING_NOTE_LENGTH + 1),
+      }),
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    const failedFields = new Set(result.error.issues.map((issue) => issue.path[0]));
+    expect(failedFields).toEqual(
+      new Set(['actual_revenue', 'actual_sales_quantity', 'evening_note']),
+    );
   });
 });
 
