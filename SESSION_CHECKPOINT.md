@@ -13,8 +13,8 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 **Current Phase:** `PHASE 0 — Discovery & Business Analysis` — **HOÀN TẤT.** Deliverable đủ 17 tài liệu,
 và **17/17 OPEN QUESTION đã được người dùng trả lời ngày 2026-08-07**. Không còn blocker nghiệp vụ.
 
-**Current Task:** Sẵn sàng bắt đầu **PHASE 1 — Foundation**. Không còn việc gì đang dở dang ở Phase 0.
-Phase 1. Không viết migration, không code production feature trước khi có câu trả lời.
+**Current Task:** Sẵn sàng bắt đầu **PHASE 1 — Foundation**. Không còn việc gì đang dở dang ở Phase 0,
+và không còn OPEN QUESTION nào chờ trả lời. Phase 2 (migrations + RLS) cũng đã hết blocker nghiệp vụ.
 
 **Current Branch:** `main` — repository đã được `git init` ở Phase 0 và push lên GitHub
 `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git` (DEC-028, điều chỉnh mốc của DEC-027).
