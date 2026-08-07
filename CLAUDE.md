@@ -1,5 +1,5 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 2 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > **Đọc file này TRƯỚC, rồi đọc `SESSION_CHECKPOINT.md`.** Hai file đó đủ để bắt đầu làm việc.
@@ -21,17 +21,19 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 1 — Foundation: ĐÃ HOÀN TẤT** (2026-08-07). Phase 0 đóng trước đó cùng ngày |
-| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router, `package.json` đã pin, cấu trúc DEC-023 đầy đủ, 3 Supabase client, 6 primitive UI, khung `lib/kpi\|currency\|date`. **Chưa có** migration, chưa có route nghiệp vụ nào |
-| Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Người dùng đã cấp **quyền push đứng**: push sau mỗi lần code xong, không cần hỏi lại |
-| Supabase | **CHƯA có project.** Schema mới ở mức **đề xuất** trong `docs/02-database-design.md`. `types/database.types.ts` hiện là **placeholder rỗng**, Phase 2 sẽ generate đè |
-| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-07): `npm run build` exit 0 · `npm run typecheck` exit 0 · `npm run lint` exit 0 (0 error, 0 warning) |
-| Unit / Integration / E2E | **N/A — chưa có file test nào.** Vitest + Playwright đã cài, `vitest.config.ts` chưa có. Không được ghi PASS |
-| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER.** 17/17 OPEN QUESTION đã trả lời. ISSUE-001, ISSUE-004, ISSUE-006 đã CLOSED. Toàn bộ 30 DEC và 25 BR đều `APPROVED` |
+| Phase | **PHASE 2 — Database & Auth: 13/14 mục xong** (2026-08-07). Phase 0 và Phase 1 đã đóng cùng ngày |
+| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration đã chạy thật · tầng auth đầy đủ (`middleware.ts`, `/login`, guard 2 route group, `features/auth/*`, `services/profiles.ts`) · bộ test 80 case. **Chưa có** route nghiệp vụ báo cáo (Phase 3+) |
+| Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Quyền push đứng vẫn còn, **nhưng `git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
+| Supabase **local** | ✅ **Đã chạy thật** — Docker + CLI 2.111.0, Postgres 17.6.1.156. Cả 5 migration + seed apply thành công. `types/database.types.ts` là file **generate thật** (259 dòng) |
+| Supabase **cloud** | ⏳ **Người dùng đang tạo** (region Singapore). Hướng dẫn từng cú bấm: `docs/09-deployment.md §3.0` |
+| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-07): cả 3 exit 0, lint 0 error 0 warning |
+| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **80/80** (14 unit + 40 integration + 26 RLS) |
+| E2E / a11y / Lighthouse | **N/A — chưa có `playwright.config.ts`, chưa có `e2e/*.spec.ts`.** Không được ghi PASS |
+| Chặn tiến độ | ✅ **KHÔNG CÒN BLOCKER nghiệp vụ.** 17/17 OQ đã trả lời. 31 DEC và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** **Phase 2 (Database & Auth) là việc kế tiếp.** Nghiệp vụ đã chốt xong — theo Master Spec §71, **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`; muốn đổi phải tạo `DEC` mới và hỏi lại người dùng.
+**Hệ quả trực tiếp:** **Phase 3 (Morning Report) làm được ngay** — không cần chờ Supabase cloud, vì schema đã chạy thật ở local (DEC-022). Nghiệp vụ đã chốt xong; theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
 
-> ⚠ **Bước đầu Phase 2 cần người dùng thao tác tay** (tạo Supabase project trên dashboard). Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy.
+> ⚠ **Việc duy nhất còn chờ người dùng:** tạo Supabase project trên cloud. Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy. Runbook đầy đủ đã viết sẵn ở `docs/09-deployment.md §3.0`.
 
 ---
 
@@ -92,7 +94,8 @@ Phiên bản dưới đây **đã được PIN CHÍNH XÁC** sau smoke test th�
 | `server-only` | 0.0.1 | bắt buộc cho `lib/supabase/admin.ts` |
 | `eslint` | **9.39.5** | ⚠ **KHÔNG phải 10.8.0** — xem cảnh báo dưới |
 | `eslint-config-next` | 16.3.0 | |
-| `vitest` / `@vitest/coverage-v8` | 4.1.10 | đã cài, **chưa có config và chưa có test** |
+| `vitest` / `@vitest/coverage-v8` | 4.1.10 | ✅ đã có `vitest.config.mts` (3 project) và **80 test đang xanh** |
+| `pg` / `@types/pg` | 8.22.0 / 8.20.4 | **devDependency, chỉ dùng cho test** — kết nối Postgres local dựng fixture (DEC-031). Ứng dụng KHÔNG import |
 | `@playwright/test` | 1.62.1 | chromium đã tải |
 | `@axe-core/playwright` | 4.12.1 | |
 | `supabase` (CLI) | 2.111.0 | |
@@ -302,9 +305,14 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 
 **Bước tiếp theo của dự án (bám sát `SESSION_CHECKPOINT.md`):**
 1. ~~Người dùng trả lời `OQ-01..OQ-17`~~ — ✅ **XONG 2026-08-07, đủ 17/17.**
-2. ~~Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`~~ — ✅ **XONG**, đã đồng bộ `docs/01` … `docs/12`, `AGENTS.md`, `PROJECT_CHECKLIST.md`.
-3. ~~**Phase 1 — Foundation**~~ — ✅ **XONG 2026-08-07.** Đã có Next.js 16.3, cấu trúc DEC-023, 3 Supabase client, design token, khung `lib/`, 6 primitive UI, baseline build/typecheck/lint xanh.
-4. **Phase 2 — Database & Auth (việc kế tiếp).** Bắt đầu bằng việc **người dùng tạo Supabase project** (region Singapore) — hướng dẫn thật chi tiết từng bước bấm, rồi mới viết `supabase/migrations/0001_*.sql`.
+2. ~~Cập nhật `docs/11-decisions.md` từ `PROPOSED` → `APPROVED`~~ — ✅ **XONG.**
+3. ~~**Phase 1 — Foundation**~~ — ✅ **XONG 2026-08-07.**
+4. ~~**Phase 2 — schema + auth**~~ — ✅ **XONG 13/14 mục 2026-08-07.** 5 migration đã chạy thật, tầng auth đầy đủ, 80 test xanh.
+5. **Đang chờ người dùng:** tạo Supabase project **cloud** → `supabase link` → `db push` → `gen types --linked`.
+6. **Phase 3 — Morning Report (việc kế tiếp, làm được ngay).** Bắt đầu bằng `lib/validation/report.ts` + test của nó, rồi `services/reports.ts`, rồi `features/report-morning/`.
+
+**Ba thứ Phase 2 đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
+`force row level security` **an toàn** vì `postgres` có `rolbypassrls` · `now()` **dùng được** trong CHECK constraint · `service_role` **cố ý không có DML** trên 2 bảng nghiệp vụ (DEC-031) — đừng cấp thêm.
 
 ---
 

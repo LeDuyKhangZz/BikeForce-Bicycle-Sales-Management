@@ -18,6 +18,10 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     // File generate bằng `supabase gen types typescript` — không sửa tay, không lint.
     "types/database.types.ts",
+    // Artifact runtime do `supabase start` sinh ra (bundle edge function đã
+    // minify). Không phải mã nguồn của dự án; đã nằm trong supabase/.gitignore.
+    "supabase/.temp/**",
+    "supabase/.branches/**",
   ]),
   {
     rules: {

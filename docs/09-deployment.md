@@ -98,6 +98,58 @@ docker --version    # se loi neu chua cai
 
 Thực hiện **một lần**, ở Phase 2. Mỗi bước có tiêu chí xác nhận rõ ràng.
 
+### 3.0. HƯỚNG DẪN TỪNG CÚ BẤM — màn hình "New project"
+
+> Viết chi tiết theo yêu cầu của người dùng. Đây là bước **agent không làm thay được**.
+> Bảy ô trên màn hình `supabase.com/dashboard/new/<org>`, theo đúng thứ tự từ trên xuống:
+
+| # | Ô | Chọn gì | Vì sao |
+|---|---|---|---|
+| 1 | **Organization** | Org sẵn có (Free) | Không ảnh hưởng code |
+| 2 | **GitHub (optional)** | ⛔ **ĐỂ TRỐNG / bỏ chọn** | Bật lên thì Supabase tự deploy schema từ GitHub. Dự án đã chốt đẩy migration bằng `supabase db push` từ máy (AGENTS.md §6). Hai hệ thống cùng đẩy migration sẽ xung đột, và tính năng này còn tự tạo preview branch ăn hạn mức Free |
+| 3 | **Project name** | Tuỳ ý (`bikeforce`, `BikeForce-Bicycle-Sales-Management`…) | Chỉ là nhãn nội bộ, không đi vào code |
+| 4 | **Database password** | Bấm **Generate a password** → bấm **Copy** → **lưu ngay vào password manager** | Supabase **không cho xem lại**. Cần cho `supabase db push`. **Không** dán vào chat, không commit, không ghi vào `.env*` |
+| 5 | **Region** | 🇸🇬 **Southeast Asia (Singapore) `ap-southeast-1`** | **KHÔNG ĐỔI ĐƯỢC SAU KHI TẠO.** Xem §3.0.1 |
+| 6 | **Enable Data API** | ✅ **Giữ tick** | `supabase-js` / PostgREST cần nó. Tắt là toàn bộ đường dữ liệu chính (DEC-003) không chạy |
+| 7 | **Automatically expose new tables** | ⛔ **BỎ TICK** | Chính Supabase khuyến nghị tắt. Migration `0001`/`0002` đã `grant` tường minh đúng quyền cần thiết cho `authenticated`, và cố ý **không** cấp gì cho `anon` và `service_role` (DEC-031). Để tick nghĩa là bảng mới tự động mở cho `anon` — trái deny-by-default của NFR-004 |
+| 8 | **Enable automatic RLS** | ✅ **Nên tick** | Lưới an toàn: bảng mới nào quên bật RLS sẽ được bật tự động — đúng thứ §11 CẢNH BÁO 4 của `docs/02` cảnh báo. Migration của dự án vẫn tự `enable` + `force`, cái này chỉ là lớp dự phòng. Nếu về sau `db push` báo lỗi lạ liên quan event trigger thì tắt và ghi vào `WORKLOG.md` |
+
+Bấm **Create new project**, chờ **2–5 phút** tới khi trạng thái là `Active Healthy`.
+
+#### 3.0.1. Vì sao bắt buộc Singapore, và vì sao KHÔNG theo nhãn `RECOMMENDED`
+
+Nhãn `RECOMMENDED` của Supabase dựa trên vị trí máy đang bấm và sức chứa datacenter của họ, **không** dựa trên việc người dùng thật của app ở đâu. Người dùng thật của BikeForce là đội Sales ở Việt Nam, dùng 4G ngoài thị trường.
+
+| Region | Khoảng cách tới VN | RTT thực tế | Kết luận |
+|---|---|---|---|
+| **Southeast Asia (Singapore)** `ap-southeast-1` | ~1.100 km | **25–45 ms** | ✅ **Chọn** |
+| Northeast Asia (Tokyo) `ap-northeast-1` | ~4.000 km | 60–90 ms | Chậm gấp đôi |
+| Central EU (Frankfurt) `eu-central-1` | ~9.000 km | **200–300 ms** | ❌ Lag rõ rệt |
+
+Một lần lưu báo cáo là vài lượt đi-về database. Chọn EU thì mỗi lần bấm "Lưu", Sales chờ thêm gần **một giây** — ảnh hưởng trực tiếp NFR-001 và NFR-008. Vercel cũng được đặt ở `sin1` (§9) để hai đầu nằm cùng khu vực.
+
+#### 3.0.2. Ngay sau khi project `Active Healthy` — 3 việc phải làm
+
+1. **Tắt tự đăng ký (BR-012, FR-006).**
+   `Authentication` (menu trái) → `Sign In / Providers` → mục **Email** → **tắt** công tắc **"Allow new users to sign up"** → **Save**.
+   *Chỉ ẩn nút đăng ký ở frontend là KHÔNG đủ* — endpoint `/auth/v1/signup` vẫn mở với anon key.
+   Trong cùng màn hình: **tắt "Confirm email"** (lý do ở §3.3 mục 3).
+
+2. **Lấy 3 giá trị cấu hình.**
+   `Project Settings` (bánh răng) → `API`:
+   - **Project URL** → dán vào `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon / public** key → dán vào `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role** key (phải bấm **Reveal**) → dán vào `SUPABASE_SERVICE_ROLE_KEY`
+     ⚠ **Key này bypass RLS. Không dán vào chat, không commit, không gửi qua tin nhắn.**
+
+3. **Tạo `.env.local`.**
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
+   rồi điền 3 giá trị trên. Giữ nguyên `SUPABASE_DB_URL` trỏ về local — biến đó chỉ dùng cho test và **không** được đặt trên Vercel.
+
+**Xác nhận trước khi đi tiếp:** mở trình duyệt ẩn danh, gọi `POST <project-url>/auth/v1/signup` kèm anon key → phải bị từ chối. Nếu tạo được tài khoản thì bước 1 chưa xong.
+
 ### 3.1. Tạo project
 
 1. Đăng nhập Supabase Dashboard → **New project**.

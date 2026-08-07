@@ -75,7 +75,7 @@ flowchart TD
 | Tầng | Công cụ | Phiên bản | Môi trường | Tầng này SỞ HỮU | Tầng này CỐ Ý KHÔNG kiểm |
 |---|---|---|---|---|---|
 | Unit | `vitest` | 4.1.10 (verified latest stable on 2026-08-07; pin chính xác chốt ở Phase 1 — DEC-002) | Node, không mạng, không DB | Công thức achievement (BR-004, BR-014, BR-015), ngưỡng badge (BR-023), format tiền (BR-010, DEC-008), ngày nghiệp vụ VN (BR-005, DEC-009), Zod schema (BR-006, BR-016, BR-017, BR-018) | Không kiểm quyền, không kiểm SQL, không kiểm render UI, không kiểm Supabase client. Nếu một unit test cần mock Supabase thì logic đó đang đặt sai chỗ — phải kéo về `lib/` hoặc `services/`. |
-| Integration / DB | `vitest` + Supabase CLI (`supabase start`) | vitest 4.1.10; Supabase CLI phiên bản chốt ở Phase 2 | Postgres local trong Docker, kết nối bằng **service role** để dựng/dọn fixture | `UNIQUE(sales_id, report_date)` (BR-001), toàn bộ `CHECK` constraint, trigger `set_updated_at` / `handle_new_user` / `guard_report_transition` / `guard_profile_self_update`, hàm `vn_today()` / `is_admin()` / `is_active_sales()`, kế hoạch index (NFR-002) | Không kiểm RLS (service role bypass RLS — đó là mục đích của tầng 3). Không kiểm UI. Không kiểm Server Action. |
+| Integration / DB | `vitest` + Supabase CLI (`supabase start`) + `pg` | vitest 4.1.10; Supabase CLI **2.111.0**; `pg` **8.22.0** | Postgres local trong Docker, kết nối **trực tiếp bằng role `postgres`** qua `SUPABASE_DB_URL` để dựng/dọn fixture. ⚠ **Đổi so với bản Phase 0** — xem DEC-031: `service_role` **không** có DML trên hai bảng nghiệp vụ (BYPASSRLS không vượt qua GRANT), nên không dùng service-role client làm fixture được. Tài khoản test vẫn tạo qua `auth.admin.createUser` thật (đường của UC-17) | `UNIQUE(sales_id, report_date)` (BR-001), toàn bộ `CHECK` constraint, trigger `set_updated_at` / `handle_new_user` / `guard_report_transition` / `guard_profile_self_update`, hàm `vn_today()` / `is_admin()` / `is_active_sales()`, kế hoạch index (NFR-002) | Không kiểm RLS (service role bypass RLS — đó là mục đích của tầng 3). Không kiểm UI. Không kiểm Server Action. |
 | RLS / Security | `@supabase/supabase-js` chạy trong Vitest | 2.112.2 | Cùng Postgres local, nhưng kết nối bằng **anon key + JWT thật** của từng user | Toàn bộ policy `profiles_*` và `reports_*`, IDOR (Master Spec §34), deny-by-default (NFR-004), tách biệt salesA/salesB/admin/inactive | Không kiểm giao diện, không kiểm redirect, không kiểm middleware. Middleware chỉ là defense-in-depth và UX (DEC-004) — nó được kiểm ở tầng E2E. |
 | E2E | `@playwright/test` | 1.62.1 (verified latest stable on 2026-08-07) | App build production (`next build && next start`) trỏ vào Supabase local | Luồng nghiệp vụ đầu-cuối (UC-01…UC-21), quy tắc "save trước — export sau" (BR-002, FR-017), guard route theo role (FR-004), viewport mobile, khôi phục lỗi (NFR-010) | Không dùng E2E để kiểm công thức toán (đã có unit). Không dùng E2E để kiểm phân quyền ở tầng dữ liệu (đã có RLS). Không dùng E2E làm test hồi quy pixel. |
 | A11y | `@axe-core/playwright` | phiên bản chốt ở Phase 11 (chưa verify trên npm ngày 2026-08-07) | Chạy trong project `desktop-1440` và `mobile-375` | Vi phạm WCAG máy dò được: contrast, label, vai trò ARIA, thứ tự heading (NFR-007) | Không thay thế **manual keyboard walkthrough** (§8.2). axe chỉ bắt được khoảng 30–40% vấn đề a11y thực tế; phần còn lại phải kiểm tay. |
@@ -90,42 +90,51 @@ flowchart TD
 
 Coverage provider: `v8`. Loại trừ khỏi coverage: `types/database.types.ts` (generate tự động), `**/*.config.*`, `supabase/**`, `e2e/**`.
 
-### 2.4 Cấu trúc thư mục test (đề xuất, chưa triển khai)
+### 2.4 Cấu trúc thư mục test
+
+`✅` = đã tồn tại và đã chạy xanh ở Phase 2. `⏳` = chưa triển khai, thuộc phase sau.
 
 ```text
 lib/
-  kpi.ts              lib/kpi.test.ts
-  currency.ts         lib/currency.test.ts
-  date.ts             lib/date.test.ts
+  auth/routes.ts      lib/auth/routes.test.ts     ✅ 14 test
+  kpi.ts              lib/kpi.test.ts             ⏳ Phase 5
+  currency.ts         lib/currency.test.ts        ⏳ Phase 5
+  date.ts             lib/date.test.ts            ⏳ Phase 5
   validation/
-    report.ts         lib/validation/report.test.ts
-    profile.ts        lib/validation/profile.test.ts
+    auth.ts                                       ✅ phủ gián tiếp qua login-form + signInAction
+    report.ts         lib/validation/report.test.ts   ⏳ Phase 3
+    profile.ts        lib/validation/profile.test.ts  ⏳ Phase 10
 tests/
   integration/
-    setup.ts                        khởi tạo service-role client, truncate giữa các test
-    fixtures.ts                     seed 1 admin + 3 sales + report mẫu
-    daily-reports.constraints.test.ts
-    daily-reports.triggers.test.ts
-    profiles.triggers.test.ts
-    db-functions.test.ts            vn_today, is_admin, is_active_sales
-    indexes.test.ts                 EXPLAIN ANALYZE — NFR-002
+    setup.ts                        ✅ pool `pg` + auth.admin client + chặn an toàn chỉ-local
+    daily-reports.constraints.test.ts   ✅ 15 test — UNIQUE, CHECK, FK, handle_new_user
+    daily-reports.triggers.test.ts      ✅  6 test — guard_report_transition, set_updated_at
+    profiles.triggers.test.ts           ✅  6 test — guard_profile_self_update
+    db-functions.test.ts                ✅ 11 test — vn_today, is_admin, is_active_sales, GRANT
+    indexes.test.ts                     ⏳ Phase 11 — EXPLAIN ANALYZE, NFR-002
   rls/
-    setup.ts                        đăng nhập salesA / salesB / admin / inactive
-    daily-reports.rls.test.ts
-    profiles.rls.test.ts
-    anon.rls.test.ts
-e2e/
-  fixtures/auth.ts                  storageState cho từng role
-  sales-flow.spec.ts
-  admin-flow.spec.ts
-  security.spec.ts
-  mobile-viewport.spec.ts
-  a11y.spec.ts
-vitest.config.ts                    2 project: "unit" và "integration"
-playwright.config.ts                3 project: mobile-375, desktop-1440, zalo-like
+    setup.ts                        ✅ đăng nhập salesA / salesB / admin / inactive bằng JWT thật
+    daily-reports.rls.test.ts       ✅ 16 test
+    profiles.rls.test.ts            ✅  7 test
+    anon.rls.test.ts                ✅  3 test
+e2e/                                ⏳ Phase 11 (toàn bộ)
+vitest.config.mts                   ✅ 3 project: "unit", "integration", "rls"
+playwright.config.ts                ⏳ Phase 11 — 3 project: mobile-375, desktop-1440, zalo-like
 ```
 
-Ghi chú: Vitest 4 khai báo nhiều project bằng khoá `projects` trong `vitest.config.ts`. Cú pháp chính xác được xác nhận ở Phase 1 trong bước smoke test cùng với TypeScript 7 và ESLint 10 (DEC-002, ISSUE-004) — không được coi cú pháp trong tài liệu này là đã kiểm chứng.
+**Ba ghi chú từ việc chạy thật ở Phase 2:**
+
+1. **Tên file là `vitest.config.mts`, không phải `.ts`.** Với `.ts`, Vite 7 cảnh báo `ESM syntax in a file loaded as CommonJS` và cho biết `configLoader: 'native'` sẽ thành mặc định ở major sau — tức là cảnh báo hôm nay là lỗi ngày mai. Đuôi `.mts` xử lý dứt điểm mà không phải đặt `"type": "module"` cho cả dự án (việc đó sẽ đụng `next.config.ts` và `postcss.config.mjs`).
+2. **Vitest KHÔNG tự nạp `.env.local` ở mode `test`.** Phải gọi `loadEnv('test', rootDir, '')` của Vite trong config rồi truyền vào `test.env` của từng project. Thiếu bước này thì `SUPABASE_DB_URL` là `undefined` và toàn bộ tầng 2/3 hỏng với thông báo khó hiểu.
+3. **`integration` và `rls` đặt `fileParallelism: false`** vì cùng chạm một database. Không có cơ chế tự bỏ qua khi database offline — bỏ qua im lặng sẽ khiến bộ test "xanh" mà chưa kiểm gì, đúng thứ Master Spec §42 cấm.
+
+**Lệnh:**
+
+```bash
+npm run test        # cả 3 project
+npm run test:unit   # chỉ tầng 1 — không cần Docker
+npm run test:db     # tầng 2 + 3 — CẦN `npm run db:start` đang chạy
+```
 
 ---
 

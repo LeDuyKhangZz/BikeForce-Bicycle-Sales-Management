@@ -1,0 +1,81 @@
+/**
+ * Bản đồ route ↔ role, dưới dạng HÀM THUẦN (không I/O, không Supabase).
+ *
+ * Đặt ở `lib/` để `middleware.ts`, layout của route group và Server Action đều
+ * dùng chung MỘT nguồn — không nơi nào tự viết lại `pathname.startsWith('/admin')`.
+ * Vì thuần tuý nên unit test được không cần database (AGENTS.md §1.2: `lib/`
+ * chỉ import `types/`).
+ *
+ * Nguồn: `docs/06-auth-permissions.md §5.2` (bảng route protection), DEC-017
+ * (route là `/login`, KHÔNG phải `/auth/login`).
+ */
+import type { Database } from '@/types/database.types';
+
+export type UserRole = Database['public']['Enums']['user_role'];
+
+export const LOGIN_PATH = '/login';
+export const SALES_HOME = '/sales/today';
+export const ADMIN_HOME = '/admin';
+
+const SALES_PREFIX = '/sales';
+const ADMIN_PREFIX = '/admin';
+
+/** Route vào được khi CHƯA đăng nhập. */
+const PUBLIC_PATHS: readonly string[] = [LOGIN_PATH];
+
+export function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.includes(pathname);
+}
+
+/** Sau khi đăng nhập, mỗi role về đúng dashboard của mình. */
+export function dashboardPathFor(role: UserRole): string {
+  return role === 'ADMIN' ? ADMIN_HOME : SALES_HOME;
+}
+
+/**
+ * Role bắt buộc để vào một pathname, hoặc `null` nếu route chỉ cần "đã đăng
+ * nhập" mà không phân biệt vai.
+ *
+ * `null` là câu trả lời ĐÚNG cho `/api/reports/[id]/share-image`: cả Sales chủ
+ * báo cáo lẫn Admin đều được gọi (BR-022), và quyền trên từng `id` do **RLS**
+ * quyết định chứ không phải middleware — middleware không biết báo cáo đó của ai
+ * (`docs/06 §5.2`).
+ */
+export function requiredRoleForPath(pathname: string): UserRole | null {
+  if (pathname === SALES_PREFIX || pathname.startsWith(`${SALES_PREFIX}/`)) return 'SALES';
+  if (pathname === ADMIN_PREFIX || pathname.startsWith(`${ADMIN_PREFIX}/`)) return 'ADMIN';
+  return null;
+}
+
+/**
+ * Ký tự điều khiển C0 (`U+0000`–`U+001F`) và DEL (`U+007F`) — nguyên liệu của
+ * đòn chẻ header (CR/LF injection).
+ *
+ * Kiểm bằng mã ký tự thay vì regex có ký tự điều khiển viết thẳng trong nguồn:
+ * ký tự vô hình trong file nguồn là thứ không ai đọc review được, và dễ bị công
+ * cụ định dạng làm hỏng.
+ */
+function hasControlChar(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
+}
+
+/**
+ * Làm sạch tham số `?next=` trước khi redirect — chống **open redirect**
+ * (`docs/06 §3.1` quy tắc 5).
+ *
+ * Chỉ chấp nhận đường dẫn NỘI BỘ: bắt đầu bằng đúng một dấu `/`, không phải
+ * `//host` hay `/\host` (trình duyệt hiểu cả hai là URL tuyệt đối), không chứa
+ * ký tự điều khiển. Trả `null` khi không hợp lệ ⇒ nơi gọi dùng dashboard mặc định.
+ */
+export function sanitizeNextPath(raw: string | null | undefined): string | null {
+  if (typeof raw !== 'string' || raw.length === 0) return null;
+  if (!raw.startsWith('/')) return null;
+  if (raw.startsWith('//') || raw.startsWith('/\\')) return null;
+  if (hasControlChar(raw)) return null;
+  if (raw === LOGIN_PATH || raw.startsWith(`${LOGIN_PATH}?`)) return null;
+  return raw;
+}

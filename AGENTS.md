@@ -149,8 +149,9 @@ Vi phạm 1 trong 2 luật này là lý do đủ để **từ chối** một tha
 
 - **Tuyệt đối không dùng service-role client để đọc hay ghi `daily_reports`, hay để lấy dữ liệu cho bất kỳ báo cáo/dashboard/analytics nào** (DEC-005). Service role bỏ qua RLS — dùng nó cho report data là tự vô hiệu hoá toàn bộ mô hình bảo mật.
 - `lib/supabase/admin.ts` phải mở đầu bằng `import 'server-only';`. Nếu file này lọt vào client bundle, build phải fail.
-- Không tạo client Supabase ad-hoc ở nơi khác. Chỉ 3 file trên.
+- Không tạo client Supabase ad-hoc ở nơi khác. Chỉ 3 file trên, **cộng đúng một ngoại lệ đã ghi nhận**: `middleware.ts` tự tạo client bằng `createServerClient` ngay trong file, vì client của `lib/supabase/server.ts` dùng `cookies()` từ `next/headers` — thứ **không tồn tại** trong ngữ cảnh middleware. Middleware phải đọc cookie từ `request` và ghi cookie mới vào `response`, hai đối tượng chỉ có ở đó. Ngoại lệ này vẫn dùng **anon key** và vẫn chịu RLS.
 - `middleware.ts` refresh session cookie và guard route/role. Đây là **UX + defense-in-depth**, không phải biên giới bảo mật (DEC-004).
+- **`service_role` KHÔNG có quyền DML trên `profiles` và `daily_reports`** (DEC-031) — `rolbypassrls` không vượt qua `GRANT`. Nghĩa là DEC-005 được **database ép**, không chỉ là kỷ luật code. Đừng cấp thêm quyền cho `service_role` để "cho tiện"; có test khoá lại và nó sẽ đỏ.
 - Schema chỉ đổi bằng migration trong `supabase/migrations/`, đẩy bằng `supabase db push`. **Không sửa schema bằng tay trên Supabase Dashboard.** Migration chỉ tiến tới; muốn lùi thì viết migration mới.
 - Sau mỗi lần đổi schema: `supabase gen types typescript --linked > types/database.types.ts` rồi commit.
 
@@ -264,7 +265,7 @@ Chi tiết ở `docs/08-testing-strategy.md`. Điều kiện tối thiểu để
 
 | Phase | Bắt buộc phải có test trước khi đóng |
 |---|---|
-| Phase 2 — Database & Auth | Integration: persist báo cáo, vi phạm `UNIQUE(sales_id, report_date)`, CHECK `ck_completed_requires_actuals`, trigger chặn `COMPLETED → MORNING_SUBMITTED`, trigger chặn Sales tự đổi `role`. **RLS test bằng JWT thật của salesA / salesB / admin**: salesA đọc report salesB → 0 rows; salesA update report salesB → 0 rows affected; salesA insert với `sales_id = salesB` → bị từ chối; salesA delete → bị từ chối; admin đọc tất cả → có dữ liệu; user inactive → bị chặn |
+| Phase 2 — Database & Auth | ✅ **ĐÃ XONG 2026-08-07 — 80/80 PASS.** Integration: persist báo cáo, vi phạm `UNIQUE(sales_id, report_date)`, CHECK `ck_completed_requires_actuals`, trigger chặn `COMPLETED → MORNING_SUBMITTED`, trigger chặn Sales tự đổi `role`. **RLS test bằng JWT thật của salesA / salesB / admin**: salesA đọc report salesB → 0 rows; salesA update report salesB → 0 rows affected; salesA insert với `sales_id = salesB` → bị từ chối; salesA delete → bị từ chối; admin đọc tất cả → có dữ liệu; user inactive → bị chặn. Chạy bằng `npm run test:db` (cần `npm run db:start`) |
 | Phase 3 / 4 — Morning & Evening Report | Unit cho Zod schema: từ chối số âm, `NaN`, `Infinity`, chuỗi rác, ngày tương lai. E2E luồng lưu và mở lại |
 | Phase 5 — KPI Engine | Unit `calculateAchievement`: `target=0 & actual=0`, `target=0 & actual>0`, `actual>target`, `actual<target`, `actual=target`, `actual=null`. `getAchievementStatus` tại biên 79.99 / 80 / 99.99 / 100. `formatCurrencyVND` với 0 / 1000 / 125000000 / 99999999999. `parseCurrencyInput`. `getVietnamToday` mock 16:59Z và 17:01Z phải ra hai ngày khác nhau; 23:30 VN và 00:30 VN |
 | Phase 6 — Image Export | Edge case thẻ 9:16: tên 40+ ký tự, tuyến 300 ký tự, ghi chú 1000 ký tự, doanh thu 12 chữ số, achievement 4 chữ số, `—` khi `target=0`, dấu tiếng Việt đầy đủ. Security: `GET /api/reports/<id-của-salesB>/share-image` từ salesA → 403/404 |

@@ -27,11 +27,11 @@
 
 | Status | Số lượng | DEC |
 |---|---:|---|
-| APPROVED | **30** | DEC-001…DEC-030 — **toàn bộ**, sau khi người dùng trả lời đủ 17 OPEN QUESTION ngày 2026-08-07 |
+| APPROVED | **31** | DEC-001…DEC-031 — **toàn bộ**. DEC-001…DEC-030 chốt ngày 2026-08-07 sau khi người dùng trả lời đủ 17 OPEN QUESTION; DEC-031 thêm ở Phase 2 |
 | PROPOSED | 0 | — |
 | SUPERSEDED | 0 | — |
 | REJECTED | 0 | — |
-| **Tổng** | **30** | DEC-001…DEC-030 |
+| **Tổng** | **31** | DEC-001…DEC-031 |
 
 ---
 
@@ -154,6 +154,34 @@ npm run build      → exit 0   (Next.js 16.3.0, Turbopack, 3/3 static pages)
 **Alternatives:** (a) Nhét `role` vào custom JWT claim qua Auth Hook — nhanh hơn nữa nhưng thêm cấu hình, và claim bị "cũ" cho tới khi token refresh (nguy hiểm khi vừa deactivate một tài khoản). (b) Không có hàm, viết subquery trực tiếp trong từng policy — lặp code, vẫn đệ quy.
 **Impact:** `supabase/migrations/0003_functions_triggers.sql`, `0004_rls_policies.sql`, ISSUE-005.
 **Status:** APPROVED
+
+### DEC-006 — KẾT LUẬN PHASE 2 (đã chạy thật, 2026-08-07)
+
+`docs/02 §11 CẢNH BÁO 2` đặt ra một rủi ro chưa được kiểm chứng: `force row level security` áp policy cho **cả chủ sở hữu bảng**, nên có thể (1) làm đệ quy `42P17` quay lại dù đã `SECURITY DEFINER`, và (2) làm `handle_new_user()` **không INSERT được** vào `profiles` (bảng cố ý không có INSERT policy) ⇒ `auth.admin.createUser` hỏng ⇒ UC-17 vỡ. Tài liệu yêu cầu chạy thật hai kịch bản trước khi quyết chọn lối thoát (A) hay (B).
+
+**Đã chạy thật trên Supabase local (Postgres 17.6.1.156). Rủi ro KHÔNG xảy ra. Không cần lối thoát nào.**
+
+```text
+select rolname, rolsuper, rolbypassrls from pg_roles where rolname in (...);
+
+    rolname        | rolsuper | rolbypassrls
+-------------------+----------+--------------
+ anon              | f        | f
+ authenticated     | f        | f
+ postgres          | f        | t      ← owner của bảng và của hàm
+ service_role      | f        | t
+ supabase_admin    | t        | t
+ supabase_auth_admin | f      | f
+```
+
+Vì `postgres` — chủ sở hữu của `public.profiles` và của cả 7 function/trigger — **có `rolbypassrls`**, `FORCE ROW LEVEL SECURITY` không áp lên nó. Do đó:
+
+- `is_admin()` chạy `SECURITY DEFINER` dưới quyền `postgres` ⇒ truy vấn `profiles` bên trong không bị áp lại policy ⇒ **không đệ quy**. Khoá bằng test `db-functions.test.ts › DEC-006 — SECURITY DEFINER nên KHÔNG gây đệ quy 42P17`.
+- `handle_new_user()` **INSERT được** vào `profiles` dù bảng không có INSERT policy nào. Khoá bằng test `daily-reports.constraints.test.ts › handle_new_user() › sinh được profiles dưới FORCE RLS`, và mọi `createTestUser()` trong bộ test đều đi qua `auth.admin.createUser` thật.
+
+**Kết luận:** giữ nguyên `enable` + `force row level security` trên cả hai bảng, đúng thiết kế gốc. Lối thoát (A) *(bỏ `force` trên `profiles`)* và (B) *(đưa `role` vào custom JWT claim)* **không được dùng** và vẫn nằm nguyên trong `docs/02 §11` như phương án dự phòng nếu Supabase đổi quyền của role `postgres` trong tương lai.
+
+Cách khai báo hàm cũng được khoá bằng test: `provolatile = 's'`, `prosecdef = true`, và `proconfig` chứa `search_path=` cho cả `is_admin()` lẫn `is_active_sales()`.
 
 ---
 
@@ -471,6 +499,44 @@ Lưu ý phân biệt: **điểm viếng thăm** là địa điểm/đại lý, c
 **Alternatives:** Đưa team/region vào ngay — thêm cột `team` nullable sau này rất rẻ, chưa cần bây giờ. Đưa quản lý ngày nghỉ vào ngay — người dùng đã xác nhận không cần ở v1.
 **Impact:** Schema, danh sách cảnh báo Admin, `docs/01-business-analysis.md`, `docs/10-future-roadmap.md` (AF-11, AF-14, AF-15).
 **Status:** **APPROVED** (người dùng xác nhận 2026-08-07 — OQ-08, OQ-09, OQ-10, OQ-15, OQ-16 đã trả lời)
+
+---
+
+## DEC-031
+
+**Date:** 2026-08-07 (Phase 2)
+**Loại:** Technical
+**Decision:** `service_role` **không được cấp bất kỳ quyền DML nào** (`select` / `insert` / `update` / `delete`) trên `public.profiles` và `public.daily_reports`. Hệ quả kéo theo: tầng test Integration và RLS **không dùng service-role client để dựng fixture** như `docs/08 §2.2` dự kiến ban đầu, mà dùng **kết nối Postgres trực tiếp** bằng role `postgres` qua biến `SUPABASE_DB_URL` — một kênh chỉ tồn tại trên máy local (DEC-022). Thêm devDependency `pg@8.22.0` + `@types/pg@8.20.4` cho việc này.
+
+**Reason:** Phát hiện khi chạy thật ở Phase 2, và nó sửa một hiểu nhầm nằm trong chính tài liệu của dự án:
+
+> **`rolbypassrls` KHÔNG vượt qua `GRANT`.** Hai cơ chế này độc lập. `service_role` có `rolbypassrls = true` nên nó bỏ qua *policy*, nhưng nếu không được `GRANT` thì nó vẫn nhận `42501 permission denied for table`.
+
+`docs/02 §11 CẢNH BÁO 4` viết *"service_role vẫn đi vòng qua RLS… không có cơ chế database nào cứu được nếu kỷ luật này bị phá — chỉ có code review và bước grep bundle trong CI"*. Câu đó **đúng một nửa**: RLS thì không cứu được, nhưng **GRANT thì cứu được**. Vì migration `0001`/`0002` chỉ cấp DML cho `authenticated`, `service_role` mặc nhiên không chạm được hai bảng nghiệp vụ. Điều đó biến **DEC-005** từ một kỷ luật code thành một hàng rào do chính database ép — đúng tinh thần "mọi quyền phải quy được về một policy hoặc một guard có thể chỉ tên" (`docs/06 §1`).
+
+Giữ trạng thái này thay vì "sửa cho tiện test" là lựa chọn có chủ đích: đánh đổi một chút phiền phức ở tầng test để lấy một lớp phòng thủ thật ở production.
+
+**Đã kiểm chứng thật** trên Supabase local (Postgres 17.6.1.156), bằng `information_schema.role_table_grants`:
+
+| grantee | `profiles` | `daily_reports` |
+|---|---|---|
+| `anon` | *(không có DML)* | *(không có DML)* |
+| `authenticated` | `SELECT, UPDATE` | `SELECT, INSERT, UPDATE` |
+| `service_role` | *(không có DML)* | *(không có DML)* |
+
+Ba khẳng định này được **khoá lại bằng test tự động** trong `tests/integration/db-functions.test.ts` để không ai vô tình cấp thêm quyền mà không bị đỏ.
+
+**Không ảnh hưởng tới UC-17 / UC-18 / UC-19:**
+- `auth.admin.createUser` / `updateUserById` đi qua **GoTrue** và schema `auth`, không qua PostgREST của schema `public`.
+- Admin sửa hồ sơ Sales và bật/tắt `is_active` bằng client `authenticated` dưới policy `profiles_update_admin` — đúng thiết kế của `docs/06 §4` dòng 16–17.
+
+**Alternatives:**
+(a) **Cấp DML cho `service_role`** để giữ nguyên `docs/08 §2.2`. Bị loại: đánh mất một lớp phòng thủ thật chỉ để tiện dựng fixture, và làm DEC-005 quay lại phụ thuộc kỷ luật con người.
+(b) **Chạy fixture bằng `docker exec … psql`.** Bị loại: gắn bộ test vào Docker CLI và cách đặt tên container, vốn không ổn định khi máy chạy nhiều stack Supabase local cùng lúc (đã gặp thật ở Phase 2 — xem WORKLOG Entry 004).
+(c) **Bỏ hẳn fixture, chỉ test qua UI.** Bị loại thẳng: `docs/06 §10` nguyên tắc 2 nói rõ test qua UI không chứng minh được RLS.
+
+**Impact:** `supabase/migrations/0001`, `0002` (comment giải thích); `docs/02 §11 CẢNH BÁO 4`; `docs/08 §2.2` và `§2.4`; `tests/integration/setup.ts`; `.env.example` và `.env.local` (thêm `SUPABASE_DB_URL`); `package.json` (thêm `pg`, `@types/pg`).
+**Status:** **APPROVED** (technical, có thể veto)
 
 ---
 

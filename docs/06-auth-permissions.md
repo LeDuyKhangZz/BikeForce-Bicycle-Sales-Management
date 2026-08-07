@@ -1,5 +1,5 @@
 # 06 — Xác thực & Phân quyền (Auth & Permissions)
-> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 2 (đã triển khai và kiểm chứng) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -8,7 +8,23 @@
 
 Tài liệu này trả lời đúng 6 yêu cầu của Master Spec §50: **permission matrix**, **auth flow**, **route protection**, **server protection**, **RLS**, **inactive account**, **session expiration** — cộng thêm mô hình 4 lớp phòng thủ, danh sách kịch bản tấn công IDOR và cách kiểm thử.
 
-**Trạng thái thực tế:** repository hiện chỉ có 3 file markdown. **Chưa có bất kỳ dòng code nào, chưa có Supabase project, chưa có migration.** Mọi tên file, tên hàm, tên policy trong tài liệu này là **đề xuất, chưa triển khai** — sẽ được hiện thực hoá ở Phase 1 (foundation) và Phase 2 (Database & Auth). Không có build/typecheck/lint/test nào đã chạy.
+**Trạng thái thực tế (cập nhật Phase 2, 2026-08-07):** phần lớn tài liệu này **đã được triển khai và kiểm chứng thật**.
+
+| Hạng mục | Trạng thái | Nơi triển khai |
+|---|---|---|
+| Lớp 1 — middleware refresh cookie + guard route/role | ✅ Đã có | `middleware.ts` |
+| Lớp 2 — layout guard theo route group | ✅ Đã có | `app/(sales)/layout.tsx`, `app/(admin)/layout.tsx`, `features/auth/queries.ts` |
+| Lớp 3 — Server Action tự validate Zod + auth | ✅ Đã có cho auth | `features/auth/actions.ts`, `lib/validation/auth.ts` |
+| Lớp 4 — RLS policy | ✅ **Đã chạy thật** | `supabase/migrations/0004_rls_policies.sql` |
+| §3.1 Đăng nhập (UC-01) | ✅ Đã có + kiểm chứng trên trình duyệt | `app/(auth)/login/page.tsx`, `features/auth/login-form.tsx` |
+| §3.2 Đăng xuất (UC-02) | ✅ Đã có, có bước xác nhận | `features/auth/sign-out-button.tsx` |
+| §3.3 Tạo tài khoản Sales (UC-17) | ⏳ **Phase 10** — chỉ trigger `handle_new_user()` đã sẵn sàng và đã test | — |
+| §8 Tài khoản bị vô hiệu hoá | ✅ Đã có cả 3 thời điểm, đã kiểm chứng 6/6 | `signInAction`, `middleware.ts`, RLS |
+| §10 Kịch bản IDOR 1–7 | ✅ Kịch bản 3, 4, 5, 6 đã có test tự động | `tests/rls/**` |
+
+**Đã chạy thật:** `npm run build` exit 0 · `npm run typecheck` exit 0 · `npm run lint` exit 0 · `npm test` **80/80 PASS** (14 unit + 52 integration/DB + 14 RLS) · kiểm chứng luồng auth trên Chromium **32/32 PASS** ở 375px và 1440px · kiểm chứng tài khoản inactive **6/6 PASS**.
+
+**Chưa triển khai:** §3.3 luồng Admin tạo tài khoản (Phase 10), §11.1 chính sách mật khẩu trên dashboard (Phase 12), và cơ chế buộc đổi mật khẩu lần đầu (vẫn **chưa chốt** — xem §3.3 ghi chú 6).
 
 Liên quan trực tiếp:
 - FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-023, FR-030, FR-031, FR-032

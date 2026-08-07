@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 1 (đã hoàn tất) | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 2 (còn 1 mục chờ người dùng) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,11 +10,16 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 1 — Foundation: ĐÃ HOÀN TẤT (2026-08-07).**
+**PHASE 2 — Database & Auth: 13/14 mục xong (2026-08-07).**
 
-Baseline đã chạy thật và xanh: build / typecheck / lint đều exit 0, UI đã kiểm tra ở 375px và
-1440px. **Việc kế tiếp là PHASE 2 — Database & Auth**, bắt đầu bằng bước người dùng tự tạo
-Supabase project trên dashboard.
+Schema đã chạy thật trên Supabase local (Postgres 17.6.1.156), tầng auth đầy đủ và đã kiểm chứng
+trên trình duyệt. Kết quả thật: `build` / `typecheck` / `lint` đều exit 0 · `npm test` **80/80 PASS**
+(14 unit + 40 integration + 26 RLS) · kiểm chứng luồng auth **32/32 PASS** · tài khoản inactive
+**6/6 PASS**.
+
+**Mục duy nhất còn lại: người dùng tự tạo Supabase project trên cloud** (region Singapore) —
+hướng dẫn từng cú bấm ở `docs/09-deployment.md §3.0`. Sau đó: `supabase link` → `db push` →
+`gen types --linked`.
 
 *(Lịch sử: Phase 0 từng bị chặn bởi 9 OPEN QUESTION mức BLOCKING — ISSUE-001; đã gỡ ở Entry 002.)*
 
@@ -377,6 +382,112 @@ KET QUA: PASS
 - **Nợ kỹ thuật đã biết, đúng kế hoạch:** chưa có `vitest.config.ts`, chưa có `middleware.ts`, `types/database.types.ts` mới là placeholder rỗng.
 
 **Next:** Vào **PHASE 2 — Database & Auth**. Việc đầu tiên **cần người dùng thao tác tay**: tạo Supabase project region Singapore trên dashboard, tắt signup công khai, rồi copy 3 giá trị vào `.env.local`. Người dùng đã yêu cầu **hướng dẫn chi tiết từng bước bấm** ở khúc này. Sau đó mới viết `supabase/migrations/0001_init_enums_profiles.sql`.
+
+---
+
+### Entry 004
+
+**Date:** 2026-08-07
+**Phase:** PHASE 2 — Database & Auth
+
+**Completed:**
+
+1. **Dựng Supabase local bằng Docker và chạy schema THẬT** (DEC-022). `npx supabase init` + `supabase start` (Postgres **17.6.1.156**, Supabase CLI 2.111.0). Cả 5 migration apply thành công qua `supabase db reset`.
+2. **Viết đủ 5 migration** `0001_init_enums_profiles.sql` → `0005_indexes.sql`, bám sát `docs/02 §7` và `docs/06 §6`. **Ba khác biệt có chủ đích so với bản đề xuất Phase 0**, tất cả đã ghi vào tài liệu:
+   - `citext` cài vào schema `extensions` ⇒ kiểu cột là `extensions.citext`. Đã kiểm chứng operator `=` resolve được dưới role `authenticated`, nên **không** phải dùng phương án dự phòng `lower(email)`.
+   - `enable` + `force row level security` đặt **trong chính migration tạo bảng** (`0001`, `0002`) thay vì gom ở `0004`. Nhờ vậy không có thời điểm nào bảng tồn tại mà chưa bật RLS; `0004` chỉ còn policy vì policy phụ thuộc hàm của `0003`. Đây là cách dung hoà giữa `AGENTS.md §7` ("cùng file với create table") và bố cục 5 file mà `PROJECT_CHECKLIST` quy định.
+   - `service_role` **không** được cấp DML — xem mục *Decisions* (DEC-031).
+3. **Viết `supabase/seed.sql`** (LOCAL ONLY): 4 tài khoản qua `auth.users` + `auth.identities`, 22 báo cáo phủ đủ EXCEEDED / NEAR / MISSED / PENDING, một ngày `target = 0` (BR-015), một báo cáo biên thẻ ảnh 9:16 (tuyến 300 ký tự, ghi chú **đúng 1000 ký tự** có dấu, doanh thu 12 chữ số), và một tên **42 ký tự có dấu**.
+4. **Generate `types/database.types.ts` thật** (259 dòng) từ schema, ghi đè placeholder rỗng của Phase 1.
+5. **Dựng tầng auth đầy đủ** đúng layering của `AGENTS.md §1.2`:
+   - `lib/auth/routes.ts` + `lib/auth/messages.ts` — **hàm thuần**, không I/O, unit test được không cần database.
+   - `lib/validation/auth.ts` — `signInSchema`, dùng chung cho form client và Server Action.
+   - `services/profiles.ts` — data access thuần, nhận supabase client làm tham số, `select` tường minh cột.
+   - `features/auth/queries.ts` — `requireProfile` / `requireRole` / `requireAdmin`. **Đặt ở `features/` chứ không phải `lib/auth/`** vì chúng chạm database qua `services/`, mà `AGENTS.md §1.2` cấm `lib/` import `services/`.
+   - `features/auth/actions.ts` — `signInAction`, `signOutAction`.
+6. **`middleware.ts`** — refresh cookie + guard route/role, viết đúng 3 quy tắc chống lỗi kinh điển của `docs/06 §5.2`.
+7. **`/login` + guard 2 route group + `app/page.tsx` phân luồng theo role**, kèm đủ `loading` / `error` / `not-found` cho cả `(sales)` và `(admin)`. Hai trang `/sales/today` và `/admin` là **trang tối thiểu của Phase 2**, đã ghi rõ trong chính file rằng FR-007 và FR-024 thuộc Phase 3 và Phase 8.
+8. **Dựng bộ test đầu tiên của dự án** — `vitest.config.mts` với 3 project (`unit`, `integration`, `rls`) và 8 file test.
+
+**Files Changed:** 30 file **tạo mới**, 8 file **sửa**, 7 file **xoá**.
+
+*Tạo mới — database (6):* `supabase/migrations/0001…0005.sql`, `supabase/seed.sql`
+*Tạo mới — cấu hình (3):* `supabase/config.toml`, `supabase/.gitignore`, `vitest.config.mts`
+*Tạo mới — lib/services/types (5):* `lib/auth/routes.ts`, `lib/auth/messages.ts`, `lib/validation/auth.ts`, `services/profiles.ts`, `types/action-result.ts`
+*Tạo mới — features (4):* `features/auth/{queries,actions,login-form,sign-out-button}`
+*Tạo mới — app (10):* `middleware.ts`, `app/(auth)/login/page.tsx`, `app/(sales)/{layout,loading,error,not-found}.tsx`, `app/(sales)/sales/today/page.tsx`, `app/(admin)/{layout,loading,error,not-found}.tsx`, `app/(admin)/admin/page.tsx`
+*Tạo mới — test (9):* `lib/auth/routes.test.ts`, `tests/integration/{setup,daily-reports.constraints,daily-reports.triggers,profiles.triggers,db-functions}`, `tests/rls/{setup,daily-reports.rls,profiles.rls,anon.rls}`
+*Sửa:* `app/page.tsx`, `package.json`, `package-lock.json`, `eslint.config.mjs`, `.env.example`, `types/database.types.ts`, và 4 tài liệu (`docs/02`, `docs/06`, `docs/08`, `docs/09`, `docs/11`, `docs/12`)
+*Xoá:* 7 file `.gitkeep` ở các thư mục nay đã có file thật
+
+**Tests:**
+
+**Build / Typecheck / Lint / Test — ĐÃ CHẠY THẬT, cả 4 exit 0.** Nguyên văn:
+
+```
+typecheck exit=0                       (tsc --noEmit)
+lint exit=0                            (eslint — 0 error, 0 warning)
+
+> vitest run
+ Test Files  8 passed (8)
+      Tests  80 passed (80)
+   Duration  19.09s
+test exit=0
+
+> next build
+▲ Next.js 16.3.0 (Turbopack)
+✓ Compiled successfully in 6.3s
+✓ Generating static pages using 7 workers (6/6) in 2.9s
+Route (app)
+┌ ƒ /          ├ ○ /_not-found   ├ ƒ /admin   ├ ƒ /login   └ ƒ /sales/today
+ƒ Proxy (Middleware)
+build exit=0
+```
+
+Phân bố 80 test: **14 unit** (`lib/auth/routes.test.ts`) · **40 integration** · **26 RLS**.
+
+**Kiểm chứng luồng auth trên trình duyệt thật — ĐÃ CHẠY, 32/32 PASS.** Chromium trên server production (`next build` + `next start`), viewport 375×812 và 1440×900. Những khẳng định đáng kể nhất:
+
+```
+PASS  FR-004: chưa đăng nhập vào /sales/today → /login?next=%2Fsales%2Ftoday
+PASS  [login-375] không cuộn ngang — scrollW=375 clientW=375
+PASS  [login-375] không touch target < 44px
+PASS  [login-375] input hiển thị ≥ 48px và font ≥ 16px — [{"h":48,"fs":"16px"},{"h":48,"fs":"16px"}]
+PASS  chống user enumeration: sai mật khẩu và email không tồn tại cho CÙNG một câu
+PASS  validate on blur: "Email không đúng định dạng." hiện ngay dưới field
+PASS  FR-004: Sales vào /admin → về /sales/today (không lộ 403)
+PASS  FR-004: Admin vào /sales/today → về /admin
+PASS  chống open redirect: ?next=https://evil.example/steal bị bỏ qua
+PASS  FR-003: sau đăng xuất, /sales/today lại bị chặn
+```
+
+**Kiểm chứng tài khoản bị vô hiệu hoá — ĐÃ CHẠY, 6/6 PASS**, gồm cả tình huống bị tắt **giữa phiên**: request kế tiếp bị đưa về `/login?reason=deactivated` kèm **đúng câu** quy định ở `docs/06 §8.3`.
+
+**Kiểm chứng schema bằng SQL trực tiếp — ĐÃ CHẠY:** `relrowsecurity = true` và `relforcerowsecurity = true` cho **mọi** bảng trong `public`; 6 policy đúng như thiết kế; `vn_today()` khớp `Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Ho_Chi_Minh'})`.
+
+**Chưa chạy — không được diễn giải thành pass:** `EXPLAIN ANALYZE` để xác minh InitPlan và index (Phase 11, NFR-002); Playwright E2E (`playwright.config.ts` và `e2e/*.spec.ts` vẫn chưa tồn tại); a11y `@axe-core/playwright`; Lighthouse. Hai script kiểm chứng trình duyệt ở trên là **công cụ dùng một lần, đã xoá**, không phải bộ hồi quy.
+
+**Errors:** Gặp **5 vấn đề thật**, tất cả đã xử lý:
+
+1. **Tôi đã đoán sai về CHECK constraint.** Tôi cho rằng Postgres từ chối hàm không IMMUTABLE trong CHECK và đã gỡ `ck_report_not_future` khỏi `0002`, thay bằng một ghi chú viện dẫn "ISSUE-009/DEC-031" **chưa hề tồn tại**. Chạy thử thật thì `CREATE TABLE` với `check (d <= (now() at time zone 'Asia/Ho_Chi_Minh')::date)` **thành công**. `docs/02` đúng, tôi sai. Đã khôi phục CHECK và xoá ghi chú bịa. Bài học: kiểm chứng trước khi viết kết luận vào file.
+2. **Truy vấn trúng nhầm database của dự án khác.** Lệnh `docker ps --filter name=supabase_db | Select -First 1` trả về container của `cq-tntt-manager` (máy đang chạy **3 stack Supabase local**), khiến bảng grant đọc được là của một hệ thống quản lý trường học. Suýt dẫn tới kết luận sai. Ghi thành **ISSUE-010**; bộ test nay kết nối bằng `SUPABASE_DB_URL` tường minh + có chặn an toàn chỉ-cho-phép-localhost.
+3. **`service_role` nhận `42501 permission denied` trên cả hai bảng** khi dựng fixture. Nguyên nhân gốc hoá ra là một phát hiện có giá trị chứ không phải lỗi — xem *Decisions*, DEC-031.
+4. **ESLint lint cả `supabase/.temp/**`** — bundle edge-runtime đã minify do `supabase start` sinh ra, cho 158 error rác. Xử lý bằng `globalIgnores`, **không** hạ rule nào.
+5. **Vite cảnh báo `ESM syntax in a file loaded as CommonJS` cho `vitest.config.ts`**, kèm thông báo `configLoader: 'native'` sẽ thành mặc định ở major sau. Đổi tên thành **`vitest.config.mts`** — dứt điểm, và không phải đặt `"type": "module"` cho cả dự án (việc đó sẽ đụng `next.config.ts` và `postcss.config.mjs`).
+
+**Decisions:**
+
+- **DEC-031 (MỚI, APPROVED)** — `service_role` **không được cấp DML** trên `profiles` và `daily_reports`; tầng test dùng kết nối Postgres trực tiếp qua `SUPABASE_DB_URL` (thêm devDependency `pg@8.22.0` + `@types/pg@8.20.4`).
+  Lý do là một **đính chính cho chính tài liệu dự án**: `docs/02 §11 CẢNH BÁO 4` từng viết *"không có cơ chế database nào cứu được nếu kỷ luật này bị phá"*. Sai. **`rolbypassrls` không vượt qua `GRANT`** — hai cơ chế độc lập. Vì migration chỉ `grant` cho `authenticated`, `service_role` không chạm được hai bảng nghiệp vụ, nên **DEC-005 nay được database ép** thay vì chỉ dựa vào code review. Không ảnh hưởng UC-17/18/19 vì `auth.admin.*` đi qua GoTrue và schema `auth`. Đã khoá bằng test.
+- **DEC-006 — bổ sung "KẾT LUẬN PHASE 2"**: rủi ro của `docs/02 §11 CẢNH BÁO 2` **không xảy ra**. `postgres` (owner của bảng và của cả 7 function) có `rolbypassrls = true`, nên `force row level security` không làm `handle_new_user()` bị chặn và không làm đệ quy `42P17` quay lại. **Giữ nguyên `enable` + `force`**; hai lối thoát (A) và (B) không dùng tới nhưng vẫn giữ trong tài liệu làm dự phòng.
+- **ISSUE-009 (MỚI, P3, OPEN)** — Next.js 16.3 deprecate quy ước `middleware.ts`, khuyến nghị `proxy.ts`. **Cố ý hoãn**: 5 tài liệu điều khiển đang gọi tên `middleware.ts`, đổi giữa phase mà không sweep hết là tạo mâu thuẫn docs ↔ code. Điều kiện kích hoạt và trình tự migrate đã ghi trong issue.
+- **ISSUE-010 (MỚI, P3, OPEN)** — nhiều stack Supabase local cùng chạy trên máy phát triển.
+
+**Remaining:** Thuộc Phase 2, **một mục duy nhất**: tạo Supabase project **trên cloud** — bước người dùng phải tự bấm, đang thực hiện. Kèm theo đó là 3 việc phái sinh: `supabase link --project-ref <ref>` → `supabase db push` → chạy lại `supabase gen types typescript --linked`.
+
+Nợ kỹ thuật đã biết, đúng kế hoạch: chưa có `playwright.config.ts`, chưa có `e2e/*.spec.ts`, chưa chạy `EXPLAIN ANALYZE` (Phase 11); thân hàm `lib/kpi|currency|date` vẫn `throw` (Phase 5); cơ chế buộc đổi mật khẩu lần đầu vẫn **chưa chốt** (`docs/06 §3.3` ghi chú 6 — phải quyết trước Phase 10 và ghi thành DEC mới).
+
+**Next:** Sau khi người dùng tạo xong Supabase project cloud: `supabase link` → `db push` → `gen types --linked` → chạy lại đủ 4 lệnh chất lượng → rồi vào **PHASE 3 — Morning Report**, bắt đầu bằng `lib/validation/report.ts` và `features/report-morning/`. Lệnh chính xác ở `SESSION_CHECKPOINT.md § Next Exact Steps`.
 
 ---
 

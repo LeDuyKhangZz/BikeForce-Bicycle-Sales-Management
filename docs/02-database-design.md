@@ -1,22 +1,28 @@
 # 02 — Database Design
 
-> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 2 (schema đã chạy thật) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
 
 ## 0. Trạng thái thực thi — đọc trước
 
-| Hạng mục | Trạng thái thật |
+| Hạng mục | Trạng thái thật (cập nhật Phase 2, 2026-08-07) |
 |---|---|
-| Supabase project | **Chưa tạo** |
-| `supabase/migrations/*.sql` | **Chưa tồn tại trong repository** |
-| Migration đã chạy | **Không có migration nào được chạy** |
-| Build / typecheck / lint / test | `N/A` — chưa có source code |
+| Supabase project **local** | ✅ **Đã chạy** — Supabase CLI 2.111.0 + Docker, Postgres **17.6.1.156** |
+| Supabase project **cloud** | ⏳ **Người dùng đang tạo** (region Singapore) — runbook ở `docs/09-deployment.md` |
+| `supabase/migrations/*.sql` | ✅ **Đã tồn tại**: `0001_init_enums_profiles.sql` … `0005_indexes.sql` |
+| Migration đã chạy | ✅ **Cả 5 file apply thành công** bằng `supabase db reset` |
+| `supabase/seed.sql` | ✅ Đã có, chạy được — 4 tài khoản + 22 báo cáo mẫu. **LOCAL ONLY** |
+| `types/database.types.ts` | ✅ **Generate thật** từ schema (259 dòng), không còn là placeholder |
+| Integration + RLS test | ✅ **66/66 PASS** (`npm run test:db`) |
+| Build / typecheck / lint | ✅ exit 0 / exit 0 / exit 0 (0 error, 0 warning) |
 
-Toàn bộ SQL trong tài liệu này là **ĐỀ XUẤT — chưa chạy**, nhưng **đã hết blocker nghiệp vụ**: người dùng đã trả lời đủ 17/17 OPEN QUESTION ngày 2026-08-07 (ISSUE-001 đã CLOSED). Không được coi bất kỳ đoạn nào là "đã kiểm chứng trên database thật".
+**SQL trong tài liệu này KHÔNG còn là đề xuất** — nó đã chạy trên Postgres thật và có bộ test khoá lại. Ba điểm dưới đây khác so với bản đề xuất Phase 0 và **bản trong `supabase/migrations/` mới là bản có thẩm quyền**:
 
-Schema chốt cuối cùng chỉ được viết vào `supabase/migrations/` ở **PHASE 2 — Database & Auth**, sau khi OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-12, OQ-13 (và OQ-03, OQ-11) có câu trả lời.
+1. **`citext` cài vào schema `extensions`**, nên kiểu cột là `extensions.citext` (§7.1). Đã kiểm chứng operator `=` resolve được dưới role `authenticated`.
+2. **`enable` + `force row level security` nằm ngay trong migration tạo bảng** (`0001`, `0002`), không phải ở `0004` — nhờ vậy không có thời điểm nào bảng tồn tại mà chưa bật RLS. `0004` chỉ chứa **policy**, vì policy phụ thuộc các hàm của `0003`.
+3. **`service_role` không được cấp DML** trên cả hai bảng — xem `DEC-031` và §11 CẢNH BÁO 4 đã cập nhật.
 
 ---
 
@@ -211,11 +217,12 @@ Một dòng cho mỗi (Sales × ngày nghiệp vụ). Dòng được **tạo** b
 
 ---
 
-## 7. SQL DDL — ĐỀ XUẤT, CHƯA CHẠY (đã hết blocker nghiệp vụ)
+## 7. SQL DDL — ĐÃ TRIỂN KHAI VÀ ĐÃ CHẠY THẬT
 
-> **ĐỀ XUẤT — chưa chạy.** Nghiệp vụ đã chốt xong (17/17 OQ đã trả lời), nên nội dung dưới đây là bản dùng được cho Phase 2; vẫn phải chạy thật và test trước khi coi là đúng.
-> Không copy các file này vào `supabase/migrations/` cho tới khi OQ-01, OQ-02, OQ-04, OQ-05, OQ-08, OQ-09, OQ-12, OQ-13 (và OQ-03, OQ-11) được trả lời. Đây là ISSUE-001, mức P1.
-> Đường dẫn đích khi được duyệt: `supabase/migrations/` (đẩy bằng `supabase db push`, không sửa schema bằng tay trên Supabase Dashboard).
+> ✅ **Đã chạy** trên Supabase local (Postgres 17.6.1.156) ngày 2026-08-07, cả 5 file apply thành công.
+> ⚠ **Bản có thẩm quyền là các file trong `supabase/migrations/`**, không phải các khối SQL dưới đây. Mục này giữ lại để giải thích **vì sao** từng ràng buộc tồn tại; nếu hai bên lệch nhau thì file migration đúng, và tài liệu phải được sửa cho khớp (`CLAUDE.md §9`).
+> Ba khác biệt đã biết so với bản đề xuất Phase 0 được liệt kê ở §0.
+> Đẩy lên cloud bằng `supabase db push` — **không** sửa schema bằng tay trên Dashboard. Migration chỉ tiến tới; muốn lùi phải viết migration mới.
 
 ### 7.1 `supabase/migrations/0001_init_enums_profiles.sql`
 
@@ -877,6 +884,25 @@ Postgres trả `numeric` cho `sum(bigint)`. PostgREST/`supabase-js` serialize `n
 >
 > - **(A)** Bỏ `force row level security` riêng cho `profiles`, giữ `enable`. Chi phí thực tế thấp: FORCE chỉ ảnh hưởng **owner**, mà owner không phải là role mà PostgREST dùng — đường dữ liệu của ứng dụng luôn là `authenticated`/`anon` và vẫn bị `enable` chặn đầy đủ.
 > - **(B)** Đưa `role` vào custom JWT claim qua Auth Hook và bỏ hẳn truy vấn `profiles` trong policy. Nhanh hơn nữa, nhưng claim bị "cũ" cho tới khi token refresh — **nguy hiểm ngay sau khi Admin deactivate một tài khoản** (BR-009), nên phải kèm chính sách JWT expiry ngắn. Đây cũng là mitigation ghi ở ISSUE-005.
+>
+> ### ✅ KẾT LUẬN PHASE 2 — RỦI RO KHÔNG XẢY RA, KHÔNG DÙNG LỐI THOÁT NÀO
+>
+> Đã chạy thật đúng hai kịch bản mà cảnh báo này yêu cầu (2026-08-07, Postgres 17.6.1.156):
+>
+> ```text
+>     rolname          | rolsuper | rolbypassrls
+> ---------------------+----------+--------------
+>  anon                | f        | f
+>  authenticated       | f        | f
+>  postgres            | f        | t     ← owner của profiles VÀ của 7 function
+>  service_role        | f        | t
+>  supabase_admin      | t        | t
+>  supabase_auth_admin | f        | f
+> ```
+>
+> Vì `postgres` **có `rolbypassrls`**, `FORCE` không áp lên nó. Hệ quả: `is_admin()` không đệ quy, và `handle_new_user()` INSERT được vào `profiles` dù bảng **không có INSERT policy nào**. Cả hai đã được khoá bằng test tự động (`tests/integration/db-functions.test.ts`, `tests/integration/daily-reports.constraints.test.ts`).
+>
+> **Giữ nguyên `enable` + `force` trên cả hai bảng.** Lối thoát (A) và (B) **không được dùng**, nhưng vẫn giữ nguyên trong tài liệu làm phương án dự phòng nếu Supabase đổi quyền của role `postgres`. Chi tiết đầy đủ: `docs/11 § DEC-006 — KẾT LUẬN PHASE 2`.
 
 > ### CẢNH BÁO 3 — `(select public.is_admin())` chứ không phải `public.is_admin()`
 >
@@ -890,7 +916,9 @@ Postgres trả `numeric` cho `sum(bigint)`. PostgREST/`supabase-js` serialize `n
 
 > ### CẢNH BÁO 4 — bốn cái bẫy nhỏ hơn nhưng vẫn đủ gây sự cố
 >
-> - **`service_role` vẫn đi vòng qua RLS.** `service_role` có `BYPASSRLS`, nên `force row level security` **không** chặn được nó. Đây chính xác là lý do DEC-005 giới hạn service key chỉ cho `auth.admin.*` và cấm dùng nó để đọc/ghi `daily_reports`. Không có cơ chế database nào cứu được nếu kỷ luật này bị phá — chỉ có code review và bước grep bundle trong CI (NFR-005).
+> - **`service_role` vẫn đi vòng qua RLS — nhưng KHÔNG đi vòng qua GRANT.**
+>   `service_role` có `BYPASSRLS`, nên `force row level security` **không** chặn được nó. Đây chính xác là lý do DEC-005 giới hạn service key chỉ cho `auth.admin.*`.
+>   **✅ ĐÍNH CHÍNH PHASE 2 (DEC-031):** câu gốc ở đây từng viết *"không có cơ chế database nào cứu được nếu kỷ luật này bị phá"* — **điều đó SAI**. `rolbypassrls` và `GRANT` là hai cơ chế độc lập: bỏ qua policy không có nghĩa là bỏ qua quyền bảng. Vì `0001`/`0002` chỉ `grant` DML cho `authenticated`, `service_role` **không có `select/insert/update/delete`** trên `profiles` và `daily_reports`, và nhận thẳng `42501 permission denied for table` nếu thử. DEC-005 vì vậy **được database ép**, không chỉ dựa vào code review. Đã đo bằng `information_schema.role_table_grants` và khoá bằng test `tests/integration/db-functions.test.ts`. Bước grep bundle trong CI (NFR-005) vẫn giữ, vì nó chặn một rủi ro khác: **rò rỉ key**, không phải lạm dụng key.
 > - **Bảng quên bật RLS là bảng công khai.** Trên Supabase, một bảng trong schema `public` mà không `enable row level security` sẽ đọc/ghi được qua PostgREST bằng anon key. Test NFR-004 phải khẳng định `relrowsecurity = true` cho **mọi** bảng trong `public`, chứ không chỉ cho hai bảng đã biết.
 > - **RLS không phân biệt cột.** Xem §9 — đó là lý do `guard_profile_self_update()` tồn tại. Đừng gỡ trigger đó vì "policy đã đủ rồi".
 > - **`citext` và schema `extensions`.** Supabase khuyến nghị cài extension vào schema `extensions`. Nếu `citext` nằm ở đó, kiểu cột phải viết `extensions.citext` hoặc `extensions` phải nằm trong `search_path`. Phương án dự phòng nếu vướng: `email text` + `create unique index on profiles (lower(email))`, tương đương về mặt nghiệp vụ — nếu phải dùng, ghi thành DEC mới.

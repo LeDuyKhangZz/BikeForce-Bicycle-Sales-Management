@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 2 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -25,10 +25,21 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-07, sau Phase 1):** repository **đã có** `package.json` và source code
-nền tảng. Baseline đã chạy thật và xanh: `npm run build` exit 0, `npm run typecheck` exit 0,
-`npm run lint` exit 0 (0 error, 0 warning). **Chưa có test runner nào chạy** — Vitest và Playwright
-đã cài nhưng chưa có file test nào, nên mọi mục cần "test liên quan pass" vẫn để `[ ]`.
+**Tình trạng hôm nay (2026-08-07, sau Phase 2):** repository đã có schema chạy thật trên Supabase
+local, tầng auth đầy đủ, và **bộ test đầu tiên của dự án**. Kết quả thật của lần chạy cuối:
+
+| Lệnh | Kết quả |
+|---|---|
+| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, 6/6 static pages) |
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
+| `npm test` | ✅ **80 passed / 80** — 8 test file, 3 project (`unit`, `integration`, `rls`) |
+| Kiểm chứng auth trên Chromium | ✅ **32/32 PASS** ở 375px và 1440px |
+| Kiểm chứng tài khoản `is_active=false` | ✅ **6/6 PASS** |
+
+**Playwright E2E vẫn `N/A`** — chưa có `playwright.config.ts`, chưa có file `e2e/*.spec.ts` nào. Các
+kiểm chứng trình duyệt ở trên chạy bằng script dùng-một-lần (đã xoá, không commit), **không phải**
+bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ---
 
@@ -81,20 +92,37 @@ nền tảng. Baseline đã chạy thật và xanh: `npm run build` exit 0, `npm
 
 ## Phase 2 — Database & Auth
 
+> **Trạng thái 2026-08-07:** 13/14 mục `[x]`. Mục duy nhất còn `[ ]` là tạo Supabase project **trên cloud** — bước người dùng phải tự bấm, đang thực hiện.
+> Toàn bộ schema đã chạy thật trên **Supabase local** (Postgres 17.6.1.156, DEC-022) và có bộ test khoá lại: `npm run test:db` → **66/66 PASS**.
+
 - [ ] Tạo Supabase project region Singapore; bật email/password provider; **tắt** signup công khai — FR-006, BR-012
-- [ ] Migration `0001_init_enums_profiles.sql`: enum `user_role`, `report_status`, bảng `public.profiles` đầy đủ CHECK và UNIQUE — BR-025
-- [ ] Migration `0002_daily_reports.sql`: bảng `public.daily_reports` + `uq_daily_reports_sales_date`, `ck_report_not_future`, `ck_completed_requires_actuals`, `ck_morning_has_no_evening_ts` — BR-001, BR-006, BR-007, BR-016, BR-017, BR-018
-- [ ] Migration `0003_functions_triggers.sql`: `set_updated_at`, `handle_new_user`, `guard_profile_self_update`, `guard_report_transition`, `vn_today`, `is_admin`, `is_active_sales` — BR-005, BR-008, DEC-006
-- [ ] Migration `0004_rls_policies.sql`: `enable row level security` + `force row level security` trên cả 2 bảng, deny-by-default, không cấp DELETE — NFR-004, BR-003, BR-013, BR-019, BR-020, BR-021
-- [ ] Migration `0005_indexes.sql`: `idx_daily_reports_date_status`, `idx_daily_reports_sales_date_desc`, `idx_profiles_role_active` — NFR-002, NFR-015
-- [ ] `supabase/seed.sql` chỉ dùng local (1 admin + 3 sales + ~20 report mẫu), không seed production
-- [ ] Sinh `types/database.types.ts` bằng `supabase gen types typescript --linked` và commit
-- [ ] Trang `/login` + Server Action đăng nhập bằng email + mật khẩu — FR-001, UC-01
-- [ ] `middleware.ts` refresh session cookie và chặn route theo role — FR-002, FR-004
-- [ ] Đăng xuất và xoá session cookie — FR-003, UC-02
-- [ ] Tài khoản `is_active = false` không đăng nhập được và hiển thị thông báo rõ ràng — FR-005, BR-009
-- [ ] `layout.tsx` server-side kiểm tra role cho `(sales)` và `(admin)` (defense in depth cùng middleware) — DEC-004
-- [ ] RLS test suite chạy bằng JWT thật của `salesA` / `salesB` / `admin`, xác nhận cross-user đọc/ghi đều bị chặn
+      → ⏳ **Đang chờ người dùng.** Hướng dẫn từng cú bấm: `docs/09-deployment.md §3.0`. Local đã có tương đương và đã dùng để kiểm chứng toàn bộ
+- [x] Migration `0001_init_enums_profiles.sql`: enum `user_role`, `report_status`, bảng `public.profiles` đầy đủ CHECK và UNIQUE — BR-025
+      → `citext` cài vào schema `extensions`; RLS `enable` + `force` bật ngay trong file này; `service_role` cố ý không được cấp DML (DEC-031)
+- [x] Migration `0002_daily_reports.sql`: bảng `public.daily_reports` + `uq_daily_reports_sales_date`, `ck_report_not_future`, `ck_completed_requires_actuals`, `ck_morning_has_no_evening_ts` — BR-001, BR-006, BR-007, BR-016, BR-017, BR-018
+      → 20 cột, 16 constraint. `ck_report_not_future` dùng `now()` (STABLE) trong CHECK — **đã kiểm chứng Postgres chấp nhận**
+- [x] Migration `0003_functions_triggers.sql`: `set_updated_at`, `handle_new_user`, `guard_profile_self_update`, `guard_report_transition`, `vn_today`, `is_admin`, `is_active_sales` — BR-005, BR-008, DEC-006
+      → 7/7 function + 6 trigger. `is_admin`/`is_active_sales` đã kiểm chứng `stable` + `security definer` + `search_path` cố định
+- [x] Migration `0004_rls_policies.sql`: `enable row level security` + `force row level security` trên cả 2 bảng, deny-by-default, không cấp DELETE — NFR-004, BR-003, BR-013, BR-019, BR-020, BR-021
+      → 6 policy. `enable`/`force` nằm ở `0001`/`0002` (không có cửa sổ nào bảng chưa bật RLS); file này chỉ chứa policy vì policy phụ thuộc hàm của `0003`
+- [x] Migration `0005_indexes.sql`: `idx_daily_reports_date_status`, `idx_daily_reports_sales_date_desc`, `idx_profiles_role_active` — NFR-002, NFR-015
+      → **Chưa** chạy `EXPLAIN ANALYZE` — việc đó là Phase 11, không được coi là đã đo
+- [x] `supabase/seed.sql` chỉ dùng local (1 admin + 3 sales + ~20 report mẫu), không seed production
+      → 4 tài khoản + **22 báo cáo**, phủ EXCEEDED/NEAR/MISSED/PENDING, `target=0`, ghi chú 1000 ký tự, tên 42 ký tự có dấu
+- [x] Sinh `types/database.types.ts` bằng `supabase gen types typescript --linked` và commit
+      → Sinh bằng `--local` (259 dòng) vì project cloud chưa có. **Phải chạy lại bằng `--linked` ngay sau khi `supabase link`** — cùng schema nên nội dung dự kiến không đổi, nhưng vẫn phải xác nhận
+- [x] Trang `/login` + Server Action đăng nhập bằng email + mật khẩu — FR-001, UC-01
+      → Kiểm chứng trên Chromium: chống user enumeration (sai mật khẩu và email không tồn tại cho **cùng một câu**), validate on blur bằng chính Zod schema của server, chống open redirect ở `?next=`
+- [x] `middleware.ts` refresh session cookie và chặn route theo role — FR-002, FR-004
+      → Kiểm chứng: chưa đăng nhập → `/login?next=`; Sales vào `/admin` → về `/sales/today`; Admin vào `/sales/today` → về `/admin`; đã có phiên mà vào `/login` hoặc `/` → về dashboard đúng vai. ⚠ ISSUE-009: Next 16.3 deprecate tên `middleware.ts`
+- [x] Đăng xuất và xoá session cookie — FR-003, UC-02
+      → Có bước xác nhận inline; sau khi đăng xuất, mở lại `/sales/today` bị chặn ⇒ cookie đã mất thật
+- [x] Tài khoản `is_active = false` không đăng nhập được và hiển thị thông báo rõ ràng — FR-005, BR-009
+      → **6/6 PASS**, gồm cả tình huống bị vô hiệu hoá **giữa phiên** → `/login?reason=deactivated` kèm đúng câu của `docs/06 §8.3`
+- [x] `layout.tsx` server-side kiểm tra role cho `(sales)` và `(admin)` (defense in depth cùng middleware) — DEC-004
+      → `requireRole()` ở `features/auth/queries.ts`; mỗi group có đủ `loading.tsx` / `error.tsx` / `not-found.tsx`
+- [x] RLS test suite chạy bằng JWT thật của `salesA` / `salesB` / `admin`, xác nhận cross-user đọc/ghi đều bị chặn
+      → **26 test RLS** bằng JWT thật + `anon`, gọi thẳng PostgREST không qua UI. Phủ đủ 4/7 kịch bản IDOR của `docs/06 §10` (kịch bản 3, 4, 5, 6); kịch bản 1, 2, 7 thuộc Phase 6/11 vì cần route ảnh và E2E
 
 ## Phase 3 — Morning Report
 

@@ -79,8 +79,10 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-006 | P3 | **CLOSED** | Chưa có khái niệm ngày nghỉ → cảnh báo "chưa báo cáo" có thể tính cả người nghỉ. **Chủ nghiệp vụ xác nhận 2026-08-07: không xử lý gì thêm ở v1** | Phase 8 | OQ-08, AF-02, AF-15, FR-033, UC-20 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; là điều kiện tiên quyết nếu cho phép sửa sau khi `COMPLETED` | Phase 4+ (điều kiện) | OQ-04, OQ-05, BR-019, BR-020, AF-12 |
 | ISSUE-008 | P3 | OPEN | `docs/01` mâu thuẫn nội bộ về khi nào `AchievementResult.percent = null` | Phase 5 | BR-015, DEC-025, OQ-11 |
+| ISSUE-009 | P3 | OPEN | Next.js 16.3 **deprecate** quy ước file `middleware.ts`, khuyến nghị đổi tên thành `proxy.ts` | Phase 2 → khi nâng Next major | DEC-004, FR-002, FR-004 |
+| ISSUE-010 | P3 | OPEN | Máy phát triển chạy **nhiều stack Supabase local cùng lúc** → chọn nhầm container/port là chuyện đã xảy ra thật | Phase 2, Phase 11 | DEC-022, DEC-031 |
 
-Tổng: **5 OPEN** (0 × P1, 2 × P2, 3 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
+Tổng: **7 OPEN** (0 × P1, 2 × P2, 5 × P3), **0 FIXING**, **0 VERIFY**, **3 CLOSED** (ISSUE-001, ISSUE-004, ISSUE-006).
 
 ---
 
@@ -453,6 +455,92 @@ Kế hoạch kiểm chứng (**chưa chạy** — Phase 5):
 - `docs/01-business-analysis.md` chỉ còn **một** phát biểu về `percent: null`, khớp với bảng 4 dòng.
 - Unit test `calculateAchievement` phủ đủ 4 dòng của bảng, trong đó có `actual = null` → `status = 'PENDING'`, `display = '—'`.
 - Không test nào cho ra `NaN` / `Infinity` (BR-015).
+
+---
+
+### ISSUE-009
+
+**Severity: P3**
+**Status: OPEN**
+
+**Module:**
+`middleware.ts` (gốc dự án). Liên quan: DEC-004, FR-002, FR-004, Phase 2.
+
+**Description:**
+Next.js 16.3.0 **deprecate quy ước file `middleware.ts`** và khuyến nghị đổi tên thành `proxy.ts`. Mỗi lần `npm run build` đều in cảnh báo:
+
+```text
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+```
+
+Trong bản build, layer này đã được liệt kê dưới tên mới: `ƒ Proxy (Middleware)`.
+
+**Expected:**
+Build sạch, không có cảnh báo deprecation; và tên file trong repo khớp với tên mà framework khuyến nghị.
+
+**Actual:**
+Build **exit 0 và chạy đúng** — cảnh báo, không phải lỗi. Toàn bộ 32 kiểm chứng luồng auth trên trình duyệt thật đều PASS với `middleware.ts`.
+
+**Root Cause:**
+Next.js 16 đổi tên quy ước để phản ánh đúng vai trò (proxy cạnh request) và tách khỏi kỳ vọng "middleware kiểu Express". Đây là thay đổi tên, **không** đổi ngữ nghĩa.
+
+**Fix:**
+**Cố ý HOÃN, không sửa ở Phase 2.** Lý do:
+
+1. Cả 17 tài liệu điều khiển đều gọi tên `middleware.ts` — `CLAUDE.md §6`, `AGENTS.md §6`, `docs/04`, `docs/06 §5.2` (bảng route protection và ba lỗi kinh điển), `PROJECT_CHECKLIST.md § Phase 2`. Đổi tên file giữa Phase 2 mà không sweep hết là tạo ra mâu thuẫn docs ↔ code, đúng thứ `CLAUDE.md §9` cấm.
+2. Cảnh báo không ảnh hưởng chức năng và không ảnh hưởng người dùng cuối.
+
+**Điều kiện kích hoạt:** khi nâng Next lên major tiếp theo (17.x), **hoặc** khi cảnh báo chuyển thành lỗi. Khi đó chạy `npx @next/codemod@canary middleware-to-proxy .` **và** cập nhật đồng bộ 5 tài liệu nêu ở mục 1, kèm một `DEC` mới.
+
+**Verification:**
+Kế hoạch kiểm chứng (**chưa chạy** — hoãn theo điều kiện trên):
+- `npm run build` không còn dòng cảnh báo nào.
+- Chạy lại đủ bộ kiểm chứng luồng auth (chưa đăng nhập → `/login?next=`, sai vai → dashboard đúng vai, đăng xuất, `is_active=false` giữa phiên) và tất cả phải PASS như hiện tại.
+- `grep -r "middleware.ts" docs/ *.md` không còn kết quả lạc hậu.
+
+---
+
+### ISSUE-010
+
+**Severity: P3**
+**Status: OPEN**
+
+**Module:**
+Môi trường phát triển cục bộ (Supabase CLI + Docker). Liên quan: DEC-022, DEC-031, Phase 2, Phase 11.
+
+**Description:**
+Máy phát triển đang chạy **ba stack Supabase local cùng lúc**, mỗi stack một bộ cổng riêng:
+
+| Project | Kong (API) | Postgres |
+|---|---:|---:|
+| **BikeForce** | 54321 | **54322** |
+| `cq-tntt-manager` | 54421 | 54422 |
+| `Polymind_Chinese` | 55321 | 55322 |
+
+Mọi lệnh chọn container theo kiểu `docker ps --filter name=supabase_db` rồi lấy phần tử đầu tiên đều **không xác định** — thứ tự trả về của Docker không có bảo đảm.
+
+**Expected:**
+Mọi thao tác kiểm chứng schema phải chạm đúng database của BikeForce.
+
+**Actual:**
+**Đã xảy ra thật ngày 2026-08-07.** Một truy vấn kiểm tra `information_schema.role_table_grants` đã trúng container `supabase_db_cq-tntt-manager` và trả về bảng của một dự án hoàn toàn khác (`students`, `classes`, `committees`, …), suýt dẫn tới kết luận sai về quyền của `service_role` trên `public.profiles`. Phát hiện được vì kết quả có những bảng không hề tồn tại trong BikeForce.
+
+**Root Cause:**
+Lọc container theo tiền tố tên chung `supabase_db` thay vì theo tên đầy đủ của project, cộng với việc `docker ps` không bảo đảm thứ tự.
+
+**Fix:**
+Mitigation **đã áp dụng** ở Phase 2:
+
+1. Bộ test **không** dùng `docker exec` — nó kết nối bằng `SUPABASE_DB_URL` đọc từ `.env.local`, tức là địa chỉ và cổng tường minh.
+2. `tests/integration/setup.ts` có **chặn an toàn**: nếu `NEXT_PUBLIC_SUPABASE_URL` hoặc `SUPABASE_DB_URL` không trỏ `127.0.0.1`/`localhost` thì ném lỗi ngay, không chạy tiếp (DEC-022 — không bao giờ test trên production).
+3. Quy tắc thao tác tay: luôn lấy cổng từ `npx supabase status` chạy **trong thư mục dự án**, hoặc gọi `docker exec` bằng **tên container đầy đủ** `supabase_db_BikeForce_Bicycle_Sales_Management_Syste`.
+
+**Verification:**
+Đã kiểm chứng 2026-08-07: sau khi chuyển sang tên container đầy đủ, truy vấn `information_schema.role_table_grants` trên schema `public` chỉ trả về đúng **2 bảng** (`profiles`, `daily_reports`) thay vì 50+ bảng của dự án khác. Bộ test `npm run test:db` chạy qua `SUPABASE_DB_URL` cho **66/66 PASS**.
+
+Còn để `OPEN` vì mitigation là **quy ước thao tác**, không phải hàng rào kỹ thuật đầy đủ: một lệnh `docker exec` viết ẩu trong tương lai vẫn có thể trúng nhầm container.
 
 ---
 
