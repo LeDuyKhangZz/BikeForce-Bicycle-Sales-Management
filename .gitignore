@@ -1,0 +1,71 @@
+# ---------------------------------------------------------------------------
+# BikeForce — .gitignore
+# Tạo TRƯỚC commit đầu tiên (DEC-027, DEC-028).
+# Quy tắc tuyệt đối: không bao giờ commit secret. Nếu một file .env lọt vào
+# lịch sử git thì coi như secret đã lộ, phải rotate key chứ không chỉ xoá file.
+# ---------------------------------------------------------------------------
+
+# Secrets & environment ------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# Dependencies ---------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js --------------------------------------------------------------------
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+
+# Vercel ---------------------------------------------------------------------
+.vercel/
+
+# Supabase (local dev) -------------------------------------------------------
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# Testing --------------------------------------------------------------------
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.vitest/
+
+# TypeScript / build caches --------------------------------------------------
+*.tsbuildinfo
+.eslintcache
+
+# Logs -----------------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editors --------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+
+# OS -------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Tạm --------------------------------------------------------------------
+*.tmp
+.cache/

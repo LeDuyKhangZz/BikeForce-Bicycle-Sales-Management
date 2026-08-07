@@ -1,0 +1,653 @@
+# 05 — UI/UX Design
+
+> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
+> Đáp ứng Master Spec §3, §4, §28, §33, §49.
+
+---
+
+## 1. Nguồn: skill ui-ux-pro-max — những gì đã thực sự chạy
+
+Master Spec §3 yêu cầu tải và **thực sự nghiên cứu** `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git`, và nói rõ "Không được clone repository chỉ để cho có". Dưới đây là những gì đã chạy thật, để bất kỳ ai cũng kiểm chứng lại được.
+
+Repo được clone (`--depth 1`) vào thư mục scratchpad của phiên làm việc. Công cụ tìm kiếm của skill là một script Python (`.claude/skills/ui-ux-pro-max/scripts/search.py`), chạy bằng Python 3.13.2.
+
+| # | Lệnh đã chạy | Dùng để quyết định gì |
+|---|---|---|
+| 1 | `--design-system --density 7 --motion 2 --variance 3 -p "BikeForce"` với query `"internal field sales performance reporting dashboard mobile-first professional data-dense"` | Lần thử đầu — kết quả bị bác bỏ, xem §1.1 |
+| 2 | `--design-system --density 8 --motion 2 --variance 2` với query `"b2b saas admin dashboard data table kpi metrics enterprise clean utility"` | Thử lại với từ khoá khác — vẫn ra cùng style sai, xem §1.1 |
+| 3 | `--domain product "field sales daily report productivity tool internal"` | Xác định loại sản phẩm gần nhất: **Productivity Tool** (style chính: Flat Design + Micro-interactions; dashboard style: Drill-Down Analytics; palette focus: *Clear hierarchy + functional colors*) |
+| 4 | `--domain style "clean professional utility dashboard neutral corporate"` | **Nguồn của style cuối cùng** — xem §2 |
+| 5 | `--domain color "dashboard analytics professional blue trust status green amber red"` | Palette gốc (§4) |
+| 6 | `--domain typography "dashboard data numbers tabular readable sans neutral"` | Font (§3) |
+| 7 | `--domain ux "mobile form input validation touch target error empty loading state"` | 14 rule về form/touch/state (§8, §12) |
+| 8 | `--domain ux "navigation bottom nav hierarchy back accessibility contrast focus keyboard"` | 10 rule về điều hướng/a11y (§10, §11) |
+| 9 | `--stack nextjs "server component form action image data fetching bundle"` | Rendering strategy — đã dùng ở `docs/04-system-architecture.md §6` |
+
+Ngoài ra đã đọc **toàn văn** hai file tham chiếu của skill: `references/quick-reference.md` (đủ 10 nhóm rule, ~98 guideline) và `references/pro-rules.md` (Pre-Delivery Checklist).
+
+### 1.1 Bác bỏ kết quả tự động của công cụ — nói thẳng, không giấu
+
+Bộ sinh `--design-system` được chạy **hai lần** với hai bộ từ khoá khác hẳn nhau, và **cả hai lần** đều trả về cùng một style:
+
+```
+Style: Exaggerated Minimalism
+Keywords: Bold minimalism, oversized typography, high contrast, negative space, statement design
+Best For: Fashion, architecture, portfolios, agency landing pages, luxury brands, editorial
+Key Effects: font-size: clamp(3rem, 10vw, 12rem), font-weight: 900, letter-spacing: -0.05em, massive whitespace
+Pattern: Real-Time / Operations Landing
+Sections: 1. Hero  2. Key metrics  3. How it works  4. CTA (Start trial / Contact)
+```
+
+Đây là ngôn ngữ thị giác cho một **trang giới thiệu sản phẩm**, không phải cho một công cụ nhập liệu mà nhân viên Sales dùng một tay khi đang đứng ở đại lý. Ba dấu hiệu sai loại rất rõ:
+
+1. `Best For` liệt kê thời trang, kiến trúc, portfolio, thương hiệu xa xỉ, editorial — không có một mục nào là công cụ nội bộ.
+2. `Key Effects` đề xuất chữ tới `12rem` và `font-weight: 900`. Màn hình đối chiếu của BikeForce cần **bốn hàng số liệu đọc được cùng lúc**, không cần một con chữ chiếm nửa màn hình.
+3. `Pattern` là "Landing" với section "How it works" và CTA "Start trial / Contact" — BikeForce không có landing page, không có người lạ ghé thăm, không có trial.
+
+Chính skill có quy tắc `style-match` ("Match style to product type") và hướng dẫn xử lý ở mục *Tips*: **"Can't decide on style/color → Re-run `--design-system` with different keywords"**. Đã chạy lại (lệnh #2), vẫn ra kết quả cũ. Theo đúng tinh thần đó, chuyển sang tra trực tiếp `--domain style` (lệnh #4) và lấy kết quả xếp hạng 1 làm nền.
+
+> **Ghi nhận trung thực:** design system cuối cùng của BikeForce **không** phải là output trực tiếp của `--design-system`. Nó được ghép từ các kết quả `--domain style` / `--domain color` / `--domain typography` / `--domain ux` của cùng skill, cộng với một bước kiểm định contrast độc lập (§4). Quyết định này được ghi thành **DEC-012**.
+
+---
+
+## 2. Design direction (Master Spec §49 — *design direction*)
+
+### 2.1 Ba nguồn được ghép lại
+
+| Thành phần | Lấy từ | Đóng góp gì cho BikeForce |
+|---|---|---|
+| **Swiss Modernism 2.0** *(nền)* | `--domain style` kết quả 1 | Lưới 12 cột, spacing toán học 8px, phân cấp bằng kích thước + khoảng trắng chứ không bằng màu, **một** màu nhấn duy nhất, không trang trí. Chỉ số của skill: `Accessibility: WCAG AAA`, `Performance: ⚡ Excellent`, `Tailwind 10/10`, `Complexity: Low`. |
+| **Executive Dashboard** *(khối KPI)* | `--domain style` kết quả 4 | Tối đa 4–6 thẻ KPI lớn, chỉ số hiển thị 24–48px, đèn giao thông xanh/vàng/đỏ, "một màn hình nhìn hết", mobile rút gọn. Áp dụng cho `/sales/today` và `/admin`. |
+| **Flat Design** *(cảm giác tương tác)* | `--domain style` kết quả 3, khớp với `--domain product` kết quả 1 | Không gradient, không đổ bóng nặng, chuyển cảnh 150–200ms, màu đặc, icon dẫn dắt. Bảng màu giới hạn 4–6 màu chức năng. |
+
+### 2.2 Những gì đã cân nhắc và bác bỏ
+
+| Bác bỏ | Xếp hạng của công cụ | Lý do bác bỏ |
+|---|---|---|
+| **Exaggerated Minimalism** | Output của `--design-system` | Sai loại sản phẩm — xem §1.1. |
+| **Bento Box Grid** | `--domain style` #2 | Card kích thước lệch nhau (1x1, 2x1, 2x2) là điểm mạnh cho trang marketing, nhưng bảng đối chiếu của BikeForce có **đúng 4 chỉ tiêu ngang hàng nhau**. Cho chúng kích thước khác nhau tạo ra một thứ tự quan trọng giả, làm mắt phải dừng lại suy nghĩ thay vì quét thẳng. |
+| **Glassmorphism** | `--domain style` #6 | Chính dữ liệu của skill gắn cờ `Performance: ⚠ Good` và `Accessibility: ⚠ Ensure 4.5:1`. Thêm nữa, nền mờ giảm tương phản — hỏng đúng bối cảnh sử dụng thật là **ngoài nắng**. |
+| **GSAP scroll choreography** | Snippet đính kèm design system | Dial motion đặt 2/10 và Master Spec §4 nói "Không animation dư thừa". ~70KB JS đổi lấy 0 giá trị nghiệp vụ — **DEC-015**. |
+
+### 2.3 Tính cách thị giác cần đạt (Master Spec §4)
+
+Hiện đại · chuyên nghiệp · mạnh mẽ · gọn · dễ đọc · mang cảm giác **Field Sales / Sales Performance**.
+
+Cách thể hiện cụ thể, không nói chung chung:
+- "Mạnh mẽ" thể hiện bằng **số to và tương phản cao**, không bằng màu loè loẹt hay đổ bóng.
+- "Chuyên nghiệp" thể hiện bằng **nhịp spacing đều 8px** và căn cột số thẳng hàng, không bằng hiệu ứng.
+- "Gọn" nghĩa là mỗi màn hình có **đúng một hành động chính**, phần còn lại là thông tin.
+- Liên tưởng ngành xe đạp được xử lý **rất tiết chế**: chỉ ở logo/wordmark và thẻ ảnh chia sẻ. Không dùng icon bánh xe làm hoạ tiết nền, không dùng hình xe đạp trang trí trong form nhập liệu.
+
+---
+
+## 3. Typography (Master Spec §49 — *typography*)
+
+### 3.1 Quyết định font và lý do đi khác công cụ
+
+Kết quả `--domain typography` xếp hạng 1 là cặp **"Dashboard Data" = Fira Code (heading) + Fira Sans (body)**. **Không chọn.** Chọn kết quả xếp hạng 4: **"Minimal Swiss" = Inter, một họ font duy nhất** (`Best For: Dashboards, admin panels, documentation, enterprise apps, design systems`) — **DEC-013**.
+
+Ba lý do:
+
+1. **Payload.** Một họ font thay vì hai giảm khoảng một nửa dung lượng font phải tải. Sales dùng mạng di động ngoài thị trường; quy tắc `font-loading` và `font-preload` (skill §3 Performance) đều chỉ về hướng này, và nó phục vụ trực tiếp NFR-001.
+2. **Tiếng Việt.** Inter có bộ dấu tiếng Việt đầy đủ, đã được kiểm chứng rộng rãi — quan trọng vì toàn bộ giao diện là tiếng Việt và chữ có dấu bị vỡ là lỗi rất dễ lọt.
+3. **Mục đích của font mono đã có cách khác đạt được.** Lý do duy nhất khiến cặp Mono+Sans được đề xuất là **căn thẳng cột số**. Quy tắc `number-tabular` của chính skill nói rõ: *"Use tabular/monospaced figures for data columns, prices, and timers to prevent layout shift"*. `font-variant-numeric: tabular-nums` của Inter đạt đúng mục đích đó mà không tốn thêm một họ font.
+
+**Phương án dự phòng đã ghi nhận:** nếu font nhúng cho thẻ ảnh 9:16 (DEC-010) gặp vấn đề hiển thị dấu, chuyển sang **Be Vietnam Pro** — font thiết kế riêng cho tiếng Việt.
+
+### 3.2 Cấu hình
+
+```ts
+// app/layout.tsx — ĐỀ XUẤT, chưa triển khai
+import { Inter } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin', 'vietnamese'],   // 'vietnamese' là BẮT BUỘC
+  display: 'swap',                     // rule font-loading — không để FOIT
+  variable: '--font-sans',
+})
+```
+
+```css
+/* app/globals.css */
+:root { --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+body  { font-family: var(--font-sans); }
+
+/* Mọi số liệu: KPI, bảng đối chiếu, tiền, %, ngày */
+.tabular { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+```
+
+### 3.3 Type scale
+
+Thang từ quy tắc `font-scale` ("Use consistent modular scale, e.g. 12 14 16 18 24 32"), mở rộng thêm 20/40 cho số KPI:
+
+| Token | px | rem | Line-height | Weight | Dùng cho |
+|---|---:|---|---|---|---|
+| `text-xs` | 12 | 0.75 | 1.5 | 400/500 | Helper text, nhãn phụ, timestamp. **Không dùng cho nội dung chính.** |
+| `text-sm` | 14 | 0.875 | 1.5 | 400/500/600 | Nhãn form, nội dung trong bảng, badge, nút phụ |
+| `text-base` | 16 | 1 | 1.5 | 400 | **Body. Mức tối thiểu cho mọi `<input>` trên mobile.** |
+| `text-lg` | 18 | 1.125 | 1.4 | 500/600 | Tiêu đề card, nhãn chỉ tiêu trong bảng đối chiếu |
+| `text-xl` | 20 | 1.25 | 1.35 | 600 | Tiêu đề section |
+| `text-2xl` | 24 | 1.5 | 1.3 | 600/700 | Tiêu đề trang (h1 trên mobile) |
+| `text-3xl` | 32 | 2 | 1.25 | 700 | Số KPI trên mobile |
+| `text-4xl` | 40 | 2.5 | 1.2 | 700 | Số KPI trên desktop, số lớn trên thẻ ảnh |
+
+**Quy tắc bắt buộc:**
+- `readable-font-size` — **mọi `<input>`, `<select>`, `<textarea>` phải `font-size: 16px`**. Dưới 16px iOS Safari tự phóng to trang khi focus, làm layout nhảy và người dùng phải zoom ra thủ công. Đây không phải chuyện thẩm mỹ.
+- `line-height` — body 1.5, heading 1.2–1.35.
+- `line-length-control` — mobile 35–60 ký tự/dòng, desktop 60–75. Ghi chú cuối ngày và text dài dùng `max-w-prose`.
+- `weight-hierarchy` — heading 600–700, body 400, nhãn 500. Không dùng weight 900 (đó là di sản của style đã bị bác bỏ).
+- `truncation-strategy` — **ưu tiên xuống dòng hơn cắt chữ**. Chỉ cắt bằng `line-clamp` ở danh sách, và luôn có đường dẫn xem đầy đủ.
+- `letter-spacing` — giữ mặc định cho body. Chỉ siết `-0.02em` cho `text-3xl`/`text-4xl`.
+
+---
+
+## 4. Color (Master Spec §49 — *color*)
+
+### 4.1 Nguyên tắc: mọi tỉ lệ dưới đây đã được TÍNH, không ước lượng
+
+Palette nền lấy từ `--domain color` kết quả 1 ("Analytics Dashboard"). Nhưng palette do công cụ sinh ra là **điểm khởi đầu**, không phải bản kiểm định. Toàn bộ cặp màu đã được tính lại bằng công thức relative luminance của WCAG 2.x, và **những giá trị không đạt đã bị thay** — **DEC-014**. NFR-007 yêu cầu WCAG 2.2 AA thật, không phải "trông có vẻ đủ tương phản".
+
+### 4.2 Token chính (light theme)
+
+| Token | Hex | Dùng cho | Contrast đã đo |
+|---|---|---|---|
+| `--color-background` | `#F8FAFC` | Nền app | — |
+| `--color-card` | `#FFFFFF` | Bề mặt card, bảng, form | — |
+| `--color-foreground` | `#0F172A` | Chữ chính | trên nền **17.06:1 · AAA** |
+| `--color-heading` | `#1E3A8A` | Riêng tiêu đề | trên nền **9.90:1 · AAA** |
+| `--color-muted-foreground` | `#64748B` | Chữ phụ, helper text | trên nền **4.55:1 · AA** · trên card **4.76:1 · AA** |
+| `--color-primary` | `#1E40AF` | Nút chính, nav active, link | chữ trắng trên nó **8.72:1 · AAA** |
+| `--color-primary-hover` | `#1D4ED8` | Hover/active của nút chính | trên card **6.70:1 · AA** |
+| `--color-secondary` | `#3B82F6` | Nhấn phụ, chuỗi dữ liệu 2 | chỉ dùng cho đồ hoạ, **không dùng làm chữ trên nền sáng** |
+| `--color-accent` | `#D97706` | **Nền** CTA amber | chữ trắng trên nó **3.19:1** → chỉ hợp lệ với chữ ≥18.66px bold |
+| `--color-accent-text` | `#B45309` | **Chữ** amber trên nền sáng | trên card **5.02:1 · AA** |
+| `--color-success` | `#15803D` | Nền success có chữ trắng | chữ trắng trên nó **5.02:1 · AA** |
+| `--color-warning` | `#B45309` | Nền warning có chữ trắng | chữ trắng trên nó **5.02:1 · AA** |
+| `--color-destructive` | `#B91C1C` | Nền nguy hiểm có chữ trắng | chữ trắng trên nó **6.47:1 · AA** |
+| `--color-border` | `#E2E8F0` | Đường kẻ **trang trí** | 1.23:1 — chỉ trang trí, **không bao giờ** làm viền của control |
+| `--color-input-border` | `#64748B` | Viền của **control tương tác** | trên card **4.76:1** — vượt ngưỡng WCAG 1.4.11 (≥3:1) |
+| `--color-ring` | `#1D4ED8` | Focus ring, 2px + offset 2px | **6.70:1** |
+
+### 4.3 Những giá trị đã bị loại vì đo không đạt
+
+Ghi lại để không ai vô tình đưa chúng trở lại:
+
+| Giá trị bị loại | Định dùng cho | Đo được | Vì sao trượt |
+|---|---|---:|---|
+| `#D97706` | Chữ amber trên nền trắng | **3.19:1** | Dưới 4.5:1 của AA cho chữ thường. Vẫn dùng được làm **nền**. |
+| `#16A34A` | Nền success có chữ trắng | **3.30:1** | Dưới 4.5:1. Thay bằng `#15803D`. |
+| `#DBEAFE` | Viền (palette gốc đề xuất) | **1.22:1** | Dưới 3:1 của WCAG 1.4.11 cho ranh giới control. |
+| `#94A3B8` | Viền input | **2.56:1** | Vẫn dưới 3:1. Phải dùng `#64748B`. |
+| `#E2E8F0` làm viền input | Viền input | **1.23:1** | Được giữ lại **chỉ** cho đường kẻ trang trí. |
+
+### 4.4 Badge trạng thái achievement
+
+Bốn trạng thái này do `getAchievementStatus()` trả về (BR-023) — **giao diện không tự quyết ngưỡng**.
+
+| Trạng thái | Điều kiện | Nền | Chữ | Contrast | Icon (Lucide) | Nhãn |
+|---|---|---|---|---:|---|---|
+| `EXCEEDED` | `≥ 100%` | `#DCFCE7` | `#166534` | **6.49:1** | `TrendingUp` | Vượt mục tiêu |
+| `NEAR` | `80% – 99.99%` | `#FEF3C7` | `#92400E` | **6.37:1** | `Minus` | Gần đạt |
+| `MISSED` | `< 80%` | `#FEE2E2` | `#991B1B` | **6.80:1** | `TrendingDown` | Chưa đạt |
+| `PENDING` | chưa có actual | `#F1F5F9` | `#334155` | **9.45:1** | `Clock` | Chờ số liệu |
+| *(info)* | trung tính | `#DBEAFE` | `#1E40AF` | **7.15:1** | `Info` | — |
+
+> **Quy tắc `color-not-only` — bắt buộc.** Mỗi badge phải có **icon + chữ**, không bao giờ chỉ có màu. Khoảng 8% nam giới bị mù màu đỏ-lục; một đội Sales 25 người thì gần như chắc chắn có người không phân biệt được nền xanh với nền đỏ. Ngoài ra ảnh chụp màn hình gửi qua Zalo có thể bị nén màu.
+
+### 4.5 Token cho thẻ ảnh chia sẻ 9:16 (dark cố định)
+
+Đây **không phải** dark mode của app (v1 không có dark mode — DEC-016). Đây là bảng màu riêng của một tấm ảnh, chọn nền tối vì ảnh sẽ nằm giữa dòng tin nhắn Zalo và cần nổi bật.
+
+| Vai trò | Hex | Trên `#0B1220` |
+|---|---|---:|
+| Nền thẻ | `#0B1220` | — |
+| Chữ chính | `#FFFFFF` | **18.72:1 · AAA** |
+| Chữ phụ | `#CBD5E1` | **12.61:1 · AAA** |
+| Nhãn/chú thích | `#94A3B8` | **7.30:1 · AAA** |
+| Thương hiệu / nhấn | `#FBBF24` | **11.22:1 · AAA** |
+| Vượt mục tiêu | `#4ADE80` | **10.74:1 · AAA** |
+| Chưa đạt | `#F87171` | **6.77:1 · AA** |
+| Thông tin | `#60A5FA` | **7.36:1 · AAA** |
+
+> **Lưu ý kỹ thuật cho Phase 6:** thẻ ảnh render bằng Satori (DEC-010) nên bảng màu này phải viết bằng **hex thuần**, không dùng `oklch()` mà Tailwind v4 sinh ra, và không dùng biến CSS.
+
+---
+
+## 5. Spacing, lưới, breakpoint (Master Spec §49 — *spacing*, *responsive*)
+
+### 5.1 Thang spacing
+
+Quy tắc `spacing-scale` (4/8px) — nhịp bắt buộc, không có giá trị lẻ:
+
+`4 · 8 · 12 · 16 · 24 · 32 · 48 · 64`
+
+| Cấp | Giá trị | Dùng cho |
+|---|---|---|
+| Trong component | 4, 8 | Icon–chữ, chip, badge |
+| Trong card | 12, 16 | Padding card, khoảng cách field |
+| Giữa section | 24, 32 | Khoảng cách giữa các khối |
+| Giữa vùng lớn | 48, 64 | Đầu/cuối trang, giữa các nhóm lớn (desktop) |
+
+### 5.2 Breakpoint
+
+Quy tắc `breakpoint-consistency` — **375 / 768 / 1024 / 1440**, thiết kế từ 375 đi lên (`mobile-first`).
+
+| Breakpoint | Từ | Thay đổi bố cục |
+|---|---|---|
+| *(mặc định)* | 375px | Một cột. Bottom nav. Bảng đối chiếu = 4 card. Admin list = card. |
+| `md` | 768px | Bảng đối chiếu chuyển sang `<table>` thật (DEC-019). Admin list chuyển sang `<table>` có `aria-sort`. KPI 2 cột. |
+| `lg` | 1024px | Bottom nav **ẩn**, sidebar trái xuất hiện (`adaptive-navigation`). KPI 3–4 cột. |
+| `xl` | 1440px | Container tối đa. Tăng gutter ngang. |
+
+Container: `max-w-md` (448px) cho form Sales — dài hơn nữa thì mắt phải đi ngang quá nhiều; `max-w-7xl` cho trang Admin nhiều dữ liệu.
+
+### 5.3 Quy tắc bố cục bắt buộc
+
+- `horizontal-scroll` — **không có cuộn ngang ở bất kỳ đâu trên mobile**. Đây là lý do tồn tại của DEC-019.
+- `viewport-units` — dùng `min-h-dvh`, **không** `100vh` (thanh địa chỉ mobile làm `100vh` sai).
+- `viewport-meta` — `width=device-width, initial-scale=1`. **Không bao giờ** `user-scalable=no` hay `maximum-scale=1`.
+- `safe-area-awareness` — bottom nav và sticky CTA bar phải có `padding-bottom: env(safe-area-inset-bottom)`.
+- `fixed-element-offset` — nội dung trang phải có `padding-bottom` bù chiều cao thanh cố định (`pb-20` với nav `h-16`), nếu không mục cuối danh sách bị che.
+- `z-index-management` — thang cố định: `0` nội dung · `10` sticky header · `20` bottom nav / sticky CTA · `40` dropdown · `100` dialog + scrim · `1000` toast.
+- `orientation-support` — form vẫn dùng được ở landscape; sticky CTA không được chiếm quá 25% chiều cao khi bàn phím mở.
+
+---
+
+## 6. Component specs (Master Spec §49 — *form*, *card*, *button*, *status*)
+
+> Tất cả là **đề xuất, chưa triển khai**. Kích thước tính bằng px.
+
+### 6.1 Button
+
+| Biến thể | Nền | Chữ | Viền | Dùng khi |
+|---|---|---|---|---|
+| `primary` | `#1E40AF` | `#FFFFFF` | — | Hành động chính duy nhất của màn hình |
+| `secondary` | `#FFFFFF` | `#1E40AF` | 1px `#64748B` | Hành động phụ |
+| `ghost` | trong suốt | `#0F172A` | — | Huỷ, quay lại |
+| `destructive` | `#B91C1C` | `#FFFFFF` | — | Vô hiệu hoá tài khoản, hành động không hoàn tác |
+
+- Kích thước: `h-12` (48px) full-width trên mobile; `h-10` (40px) cho nút phụ trên desktop. **Vùng chạm không bao giờ dưới 44×44** (`touch-target-size`).
+- Radius 8px. `cursor-pointer` (`cursor-pointer` rule). `touch-action: manipulation` để bỏ độ trễ 300ms (`tap-delay`).
+- **Trạng thái:** `hover` đổi sang `--color-primary-hover` trong 150ms · `active` `scale(0.98)` (`scale-feedback`, không đổi layout bounds) · `focus-visible` ring 2px `#1D4ED8` offset 2px (`focus-states` — **không bao giờ** `outline: none` mà không thay thế) · `disabled` opacity 0.45 + `cursor-not-allowed` + thuộc tính `disabled` thật (`disabled-states`) · `loading` disabled + spinner + chữ đổi thành "Đang lưu…" (`loading-buttons`, `submit-feedback`).
+- `destructive-emphasis` — nút nguy hiểm phải **tách khỏi** nút chính về mặt không gian, không đặt cạnh nhau.
+- `primary-action` — **mỗi màn hình chỉ một** nút primary.
+
+### 6.2 Input / NumberInput / CurrencyInput / Textarea
+
+- `min-h-[48px]`, `font-size: 16px` (bắt buộc, §3.3), padding `12px 16px`, radius 8px, viền 1px `#64748B`.
+- **Label luôn hiện phía trên**, 14px weight 500 (`input-labels` — placeholder **không được** thay label).
+- Trường bắt buộc có dấu `*` (`required-indicators`).
+- Helper text 12px `#64748B` **luôn hiển thị**, không chỉ trong placeholder (`input-helper-text`).
+- Lỗi hiện **ngay dưới field**, 14px `#B91C1C`, có `role="alert"` (`error-placement`, `aria-live-errors`), kèm icon cảnh báo (`color-not-only`).
+- Focus: ring 2px `#1D4ED8`, viền đổi sang `#1D4ED8`.
+- **NumberInput:** `inputMode="numeric"` `pattern="[0-9]*"` (`input-type-keyboard` — gọi bàn phím số trên mobile), `enterKeyHint="next"`, không dùng `type="number"` để tránh cuộn chuột làm đổi giá trị và tránh spinner khó chạm.
+- **CurrencyInput:** gõ số thuần; khi `blur` hiển thị phân nhóm nghìn (`125.000.000`); giá trị gửi đi là **số nguyên** (BR-010, DEC-008). Có 3 chip cộng nhanh `+1tr` `+5tr` `+10tr` — giảm số lần gõ trên bàn phím số điện thoại (NFR-008: ≤6 chạm).
+- **Textarea:** `min-h-[96px]`, có bộ đếm ký tự khi còn dưới 100 ký tự cuối (giới hạn 1000 — BR-018).
+- `inline-validation` — kiểm tra khi **blur**, không kiểm tra theo từng phím gõ (báo lỗi khi người dùng mới gõ được một ký tự là gây khó chịu).
+- `autofill-support` — `autocomplete="email"` / `"current-password"` ở form đăng nhập.
+- `password-toggle` — ô mật khẩu có nút hiện/ẩn, nút đó phải có `aria-label`.
+
+### 6.3 Card
+
+`bg-white` · viền 1px `#E2E8F0` · radius 12px · padding 16px (mobile) / 24px (desktop) · **không đổ bóng** (Swiss/Flat — phân tách bằng viền). Card bấm được thì có `hover:border-[#64748B]` và toàn bộ card là vùng chạm.
+
+### 6.4 StatTile (thẻ KPI)
+
+```
+┌────────────────────────────┐
+│ ▸ Doanh thu          [icon]│  ← nhãn 14px #64748B + icon 20px
+│                            │
+│ 125.000.000 ₫              │  ← 32px mobile / 40px desktop, weight 700, tabular-nums
+│                            │
+│ Mục tiêu 150.000.000 ₫     │  ← 14px #64748B
+│ ┌──────────────────┐       │
+│ │ ▲ 83,3% Gần đạt  │       │  ← badge §4.4, có icon + chữ
+│ └──────────────────┘       │
+└────────────────────────────┘
+```
+Tối đa **6** thẻ một màn hình (Executive Dashboard: "KPIs 4-6 maximum"). Số dùng `tabular-nums`. Tiền dài xuống dòng chứ không cắt (`truncation-strategy`).
+
+### 6.5 ComparisonRow — thành phần quan trọng nhất của sản phẩm
+
+Xem §7 để biết bố cục hai chế độ.
+
+### 6.6 BottomNav item
+
+`h-16` tổng chiều cao · mỗi mục tối thiểu 44×44 · icon 24px **và** nhãn 12px (`nav-label-icon` — icon-only làm giảm khả năng khám phá) · mục đang active dùng màu `#1E40AF` + weight 600 + gạch chỉ báo trên (`nav-state-active`) · `aria-current="page"`.
+
+### 6.7 Toast
+
+Góc dưới (mobile: phía trên bottom nav), tự đóng sau 4 giây (`toast-dismiss`: 3–5s), `aria-live="polite"`, **không cướp focus** (`toast-accessibility`). Toast lỗi **không** tự đóng và có nút "Thử lại" (`error-recovery`).
+
+### 6.8 Skeleton · EmptyState · ErrorState
+
+- **Skeleton:** hiện khi tải quá 300ms (`loading-states`, `progressive-loading`). Khối skeleton phải đúng kích thước nội dung thật để không gây layout shift (`content-jumping`).
+- **EmptyState:** icon 48px + tiêu đề + một câu giải thích + **một CTA**. Không bao giờ để trắng (`empty-states`).
+- **ErrorState:** nói rõ chuyện gì xảy ra + việc cần làm (`error-clarity`: nêu nguyên nhân **và** cách sửa) + nút "Thử lại".
+
+### 6.9 Dialog
+
+Chỉ dùng để **xác nhận hành động nguy hiểm** (`confirmation-dialogs`), không dùng làm điều hướng (`modal-vs-navigation`). Scrim đen 50% (`scrim` 40–60%). Có nút đóng rõ ràng + đóng bằng `Esc` (`modal-escape`). Focus bị bẫy trong dialog khi mở và trả về nút kích hoạt khi đóng.
+
+---
+
+## 7. Bảng đối chiếu — hai chế độ hiển thị (DEC-019)
+
+Đây là màn hình Sales nhìn nhiều nhất, nên không được thoả hiệp.
+
+### 7.1 Mobile (< 768px) — 4 card xếp dọc
+
+```
+┌──────────────────────────────────────┐
+│ Viếng thăm                           │
+│ Cam kết  8 điểm   →   Thực đạt  10   │
+│ ┌───────────────────┐                │
+│ │ ▲ 125,0%  Vượt MT │                │
+│ └───────────────────┘                │
+├──────────────────────────────────────┤
+│ Doanh số                             │
+│ Cam kết  5 xe     →   Thực đạt  4    │
+│ ┌───────────────────┐                │
+│ │ ▼ 80,0%  Gần đạt  │                │
+│ └───────────────────┘                │
+├──────────────────────────────────────┤
+│ Doanh thu                            │
+│ Cam kết  150.000.000 ₫               │
+│ Thực đạt 125.000.000 ₫               │  ← tiền dài thì xuống dòng, KHÔNG cắt
+│ ┌───────────────────┐                │
+│ │ ▼ 83,3%  Gần đạt  │                │
+│ └───────────────────┘                │
+├──────────────────────────────────────┤
+│ Khách hàng                           │
+│ Cam kết  12       →   Thực đạt  12   │
+│ ┌───────────────────┐                │
+│ │ ▲ 100,0% Vượt MT  │                │
+│ └───────────────────┘                │
+└──────────────────────────────────────┘
+```
+
+### 7.2 Từ 768px — bảng thật
+
+```
+┌────────────┬──────────────────┬──────────────────┬────────────────────┐
+│ Chỉ tiêu   │     Cam kết sáng │         Thực đạt │         Hoàn thành │
+├────────────┼──────────────────┼──────────────────┼────────────────────┤
+│ Viếng thăm │          8 điểm  │         10 điểm  │  ▲ 125,0% Vượt MT  │
+│ Doanh số   │            5 xe  │            4 xe  │  ▼  80,0% Gần đạt  │
+│ Doanh thu  │  150.000.000 ₫   │  125.000.000 ₫   │  ▼  83,3% Gần đạt  │
+│ Khách hàng │              12  │              12  │  ▲ 100,0% Vượt MT  │
+└────────────┴──────────────────┴──────────────────┴────────────────────┘
+```
+Cột số căn phải, `tabular-nums`. `<caption>` mô tả bảng cho screen reader.
+
+### 7.3 Ba tình huống hiển thị bắt buộc xử lý đúng
+
+| Tình huống | Hiển thị | Nguồn |
+|---|---|---|
+| Chưa có số liệu cuối ngày | Cột "Thực đạt" là `—`, badge `PENDING` "Chờ số liệu" | BR-023 |
+| Vượt xa mục tiêu | `1.250,0%` — hiện đầy đủ, **không cắt về 100%** | BR-004 |
+| `target = 0` và `actual > 0` | Ô % hiện `—` kèm nhãn "Vượt kế hoạch". **Không bao giờ** `NaN` hay `∞` | BR-015 · **chờ OQ-11** |
+
+---
+
+## 8. Nguyên tắc form mobile (Master Spec §4, §30)
+
+1. **Một field một hàng.** Không ghép hai ô trên cùng một dòng ở mobile — ngón tay không chính xác bằng chuột.
+2. **Nhóm theo ý nghĩa** (`field-grouping`): "Kế hoạch tuyến" (tuyến + mục đích) rồi "Chỉ tiêu" (4 con số).
+3. **Sticky action bar** ở đáy: nền trắng, viền trên 1px, `padding-bottom: env(safe-area-inset-bottom)`, chứa đúng một nút primary full-width.
+4. **Chống mất dữ liệu** (Master Spec §30):
+   - Disable nút khi đang gửi, chống double-submit.
+   - Toast thành công; lỗi hiện rõ.
+   - **Khi request thất bại: giữ nguyên toàn bộ dữ liệu form, không reset.**
+   - Cảnh báo `beforeunload` khi rời trang lúc form đang có thay đổi chưa lưu (`sheet-dismiss-confirm`).
+   - Draft localStorage (FR-035, `form-autosave`) — **server vẫn là nguồn sự thật duy nhất**, draft chỉ để khôi phục lúc mở lại.
+5. **Khi submit lỗi nhiều field:** hiện summary ở đầu form có link neo tới từng field (`error-summary`) **và** tự focus field lỗi đầu tiên (`focus-management`).
+6. **Tự động điền họ tên** từ profile, không cho sửa trong form báo cáo (FR-009).
+7. **Ngày báo cáo** hiển thị read-only, do server tính (BR-005) — `read-only-distinction`: trạng thái chỉ-đọc phải trông khác trạng thái disabled.
+
+---
+
+## 9. Page inventory (Master Spec §49 — *page inventory*)
+
+| Route | Role | Mục đích | Component chính | Loading | Empty | Error | Mobile → Desktop |
+|---|---|---|---|---|---|---|---|
+| `/` | any | Redirect theo role | — | spinner | — | về `/login` | như nhau |
+| `/login` | public | UC-01 | LoginForm | nút loading | — | lỗi dưới form + banner | 1 cột canh giữa, `max-w-sm` |
+| `/sales/today` | SALES | UC-03, FR-007 | TodayStatusCard, StatTile, CTA chính | skeleton card | "Chưa có báo cáo hôm nay" + CTA tạo | ErrorState + Thử lại | 1 cột → 2–3 cột KPI |
+| `/sales/today/morning` | SALES | UC-04, UC-05 | MorningReportForm | skeleton form | — | lỗi theo field + banner | 1 cột `max-w-md`, sticky CTA |
+| `/sales/today/evening` | SALES | UC-06 | CommitmentRecap + EveningReportForm | skeleton | — | như trên | như trên |
+| `/sales/history` | SALES | UC-09, FR-021 | MonthFilter, ReportListItem, Pagination | skeleton list | "Tháng này chưa có báo cáo" | ErrorState | card → bảng từ 768px |
+| `/sales/reports/[id]` | SALES | UC-10, UC-07, UC-08 | ReportDetail, ComparisonTable, ShareButton | skeleton | — | 404 nếu không phải của mình | card → bảng từ 768px |
+| `/sales/account` | SALES | UC-11 | ProfileCard, ChangePasswordForm, LogoutButton | skeleton | — | lỗi theo field | 1 cột |
+| `/admin` | ADMIN | UC-12, UC-20 | 12 StatTile + AlertList | skeleton từng khối (stream) | "Chưa Sales nào báo cáo hôm nay" | ErrorState từng khối | 1 → 2 → 4 cột |
+| `/admin/reports` | ADMIN | UC-13, FR-025 | FilterBar, ReportTable/Card, Pagination, ExportCsv | skeleton | "Không có báo cáo khớp bộ lọc" + nút xoá lọc | ErrorState | card → `<table>` có `aria-sort` |
+| `/admin/reports/[id]` | ADMIN | UC-14 | ReportDetail, ComparisonTable | skeleton | — | 404 | như `/sales/reports/[id]` |
+| `/admin/analytics` | ADMIN | UC-15, FR-028 | MonthPicker, SummaryTable, TrendChart *(SHOULD)* | skeleton | "Tháng này chưa có dữ liệu" | ErrorState | 1 cột → 2 cột |
+| `/admin/sales` | ADMIN | UC-16, FR-029 | SalesTable, SearchBox, CreateButton | skeleton | "Chưa có Sales nào" + CTA tạo | ErrorState | card → `<table>` |
+| `/admin/sales/new` | ADMIN | UC-17 | CreateSalesForm | — | — | lỗi theo field (email trùng, mã NV trùng) | `max-w-md` |
+| `/admin/sales/[id]` | ADMIN | UC-18, UC-19, UC-16 | ProfileForm, ActiveToggle, PerformanceCard, HistoryList | skeleton | "Sales này chưa có báo cáo" | 404 | 1 cột → 2 cột |
+| `/admin/account` | ADMIN | UC-11 | như `/sales/account` | — | — | — | 1 cột |
+| `/api/reports/[id]/share-image` | SALES(own) + ADMIN | UC-08, FR-018 | *(trả PNG, không phải trang)* | — | — | 403/404 dạng JSON | — |
+
+Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
+
+---
+
+## 10. Điều hướng (Master Spec §28 · DEC-018)
+
+### 10.1 Cấu trúc
+
+| | Mobile (< 1024px) | Desktop (≥ 1024px) |
+|---|---|---|
+| **Sales** | Bottom tab 3 mục: **Hôm nay** (`Home`) · **Lịch sử** (`History`) · **Tài khoản** (`User`) | Sidebar trái cố định, cùng 3 mục |
+| **Admin** | Bottom tab 4 mục: **Tổng quan** (`LayoutDashboard`) · **Báo cáo** (`FileText`) · **Sales** (`Users`) · **Tài khoản** (`User`) | Sidebar trái cố định, cùng 4 mục |
+
+**Không bao giờ hiển thị đồng thời bottom nav và sidebar** (`avoid-mixed-patterns`).
+
+### 10.2 Quy tắc áp dụng
+
+| Rule | Áp dụng |
+|---|---|
+| `bottom-nav-limit` | Tối đa 5 — BikeForce dùng 3 và 4 ✓ |
+| `bottom-nav-top-level` | Bottom nav **chỉ** cho màn hình cấp cao nhất. `/sales/today/morning` không phải một tab. |
+| `nav-label-icon` | Mỗi mục có icon **và** nhãn chữ |
+| `nav-state-active` | Mục hiện tại: màu primary + weight 600 + chỉ báo + `aria-current="page"` |
+| `adaptive-navigation` | ≥1024px chuyển sidebar |
+| `back-behavior` · `back-stack-integrity` | Trang con có nút Back thật; không bao giờ reset stack hay nhảy về home bất ngờ |
+| `state-preservation` | Quay lại `/sales/history` hay `/admin/reports` phải khôi phục tháng đang lọc, trang đang xem và vị trí cuộn |
+| `deep-linking` | Mọi màn hình quan trọng có URL riêng, chia sẻ và bookmark được |
+| `persistent-nav` | Điều hướng chính luôn tới được từ trang sâu |
+| `destructive-nav-separation` | Đăng xuất nằm ở `/…/account`, tách khỏi các mục điều hướng thường |
+| `focus-on-route-change` | Sau khi chuyển trang, focus chuyển về vùng nội dung chính |
+| `skip-links` | Có link "Bỏ qua điều hướng" cho người dùng bàn phím |
+
+---
+
+## 11. Accessibility (Master Spec §49 — *accessibility* · NFR-007)
+
+Mục tiêu: **WCAG 2.2 mức AA** cho toàn bộ ứng dụng.
+
+| Nhóm | Rule | BikeForce đáp ứng thế nào |
+|---|---|---|
+| **Tương phản** | `color-contrast`, `color-accessible-pairs`, `contrast-feedback` | Toàn bộ §4 đã đo. Chữ ≥4.5:1, ranh giới control ≥3:1. Cặp không đạt đã bị loại và ghi lại. |
+| | `color-not-only` | Mọi badge có icon + chữ (§4.4). Không có thông tin nào chỉ truyền bằng màu. |
+| **Bàn phím** | `keyboard-nav` | Thứ tự Tab khớp thứ tự thị giác. Không có bẫy focus ngoài dialog. |
+| | `focus-states` | Ring 2px `#1D4ED8` offset 2px. Cấm `outline: none` không thay thế. |
+| | `skip-links` | Link "Bỏ qua điều hướng" đầu mỗi trang. |
+| **Cấu trúc** | `heading-hierarchy` | h1 → h2 → h3 tuần tự, không nhảy cấp, không dùng heading để tạo kiểu chữ. |
+| | `focus-on-route-change` | Chuyển focus về `<main>` sau khi đổi route. |
+| **Form** | `form-labels`, `input-labels` | `<label for>` thật cho mọi input. Placeholder không thay label. |
+| | `aria-live-errors` | Lỗi field có `role="alert"`. |
+| | `error-summary`, `focus-management` | Summary có link neo + tự focus field lỗi đầu tiên. |
+| **Chạm** | `touch-target-size` | ≥44×44 cho mọi phần tử bấm được; input 48px. |
+| | `touch-spacing` | Khoảng cách ≥8px giữa các vùng chạm liền kề. |
+| **Icon** | `aria-labels` | Nút chỉ có icon phải có `aria-label`. |
+| | `no-emoji-icons` | **Chỉ dùng Lucide SVG**. Tuyệt đối không dùng emoji làm icon. |
+| **Chuyển động** | `reduced-motion` | `@media (prefers-reduced-motion: reduce)` tắt mọi transition. |
+| **Chữ** | `dynamic-type` | Dùng `rem`, layout không vỡ khi phóng chữ hệ thống. Không dùng chiều cao cố định cho khối chứa chữ. |
+| | `readable-font-size` | Body ≥16px trên mobile. |
+| **Zoom** | `viewport-meta` | Không bao giờ chặn zoom. |
+| **Bảng** | `sortable-table`, `data-table` | Bảng Admin có `aria-sort`. Nếu thêm biểu đồ (FR-037) thì **bắt buộc** có bảng số liệu tương đương. |
+| **Toast** | `toast-accessibility` | `aria-live="polite"`, không cướp focus. |
+
+### 11.1 Pre-Delivery Checklist (phỏng theo `references/pro-rules.md` của skill, chỉnh cho web)
+
+Chạy trước khi đóng bất kỳ phase nào có UI:
+
+- [ ] Đã kiểm tra ở **375px** và ở landscape
+- [ ] Đã kiểm tra với `prefers-reduced-motion` bật
+- [ ] Đã kiểm tra với cỡ chữ hệ thống lớn nhất — không có chữ bị cắt, không vỡ layout
+- [ ] Mọi vùng chạm ≥44×44, không có nội dung nào bị safe-area che
+- [ ] Không có emoji nào được dùng làm icon
+- [ ] Icon cùng một bộ (Lucide), cùng độ dày nét, cùng thang kích thước
+- [ ] Trạng thái nhấn không làm dịch chuyển layout
+- [ ] Chỉ dùng semantic color token, không có hex viết thẳng trong component
+- [ ] Mọi phần tử bấm được có phản hồi nhấn trong 100ms
+- [ ] Micro-interaction nằm trong 150–300ms
+- [ ] Trạng thái disabled nhìn rõ là disabled và thật sự không bấm được
+- [ ] Thứ tự đọc của screen reader khớp thứ tự thị giác
+- [ ] Chữ chính ≥4.5:1, chữ phụ ≥3:1 — **đã đo, không ước lượng**
+- [ ] Đường kẻ và trạng thái tương tác đều nhìn thấy được
+- [ ] Nội dung cuộn không bị thanh cố định che
+- [ ] Nhịp spacing 4/8px được giữ đúng
+- [ ] Mọi ảnh/icon có nghĩa đều có nhãn trợ năng
+- [ ] Field có label, helper text và thông báo lỗi rõ ràng
+- [ ] Không có thông tin nào chỉ truyền bằng màu
+- [ ] `axe` không báo lỗi mức serious/critical
+
+---
+
+## 12. Trạng thái màn hình (Master Spec §33 — đủ 9 trạng thái bắt buộc)
+
+| # | Trạng thái | Xuất hiện ở đâu | Người dùng thấy gì |
+|---|---|---|---|
+| 1 | **Loading** | Mọi trang có dữ liệu | Skeleton đúng kích thước nội dung thật, hiện sau 300ms |
+| 2 | **Skeleton** | Danh sách, KPI, bảng | Khối xám bo góc, không có animation nhấp nháy gây khó chịu |
+| 3 | **Empty — chưa có báo cáo** | `/sales/today` | Icon + "Hôm nay bạn chưa tạo báo cáo đầu ngày" + nút **Tạo báo cáo đầu ngày** |
+| 4 | **Empty — tháng không có báo cáo** | `/sales/history`, `/admin/analytics` | "Tháng MM/YYYY chưa có báo cáo nào" + nút chuyển sang tháng khác |
+| 5 | **Auth expired** | Bất kỳ đâu | Banner "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." + nút Đăng nhập. **Dữ liệu form được giữ nguyên**, không reset |
+| 6 | **Save failure** | Form đầu ngày / cuối ngày | Toast lỗi không tự tắt + thông báo nêu nguyên nhân và cách xử lý + nút **Thử lại**. **Form giữ nguyên toàn bộ dữ liệu** (Master Spec §12) |
+| 7 | **Export failure** | `/sales/reports/[id]` | "Không tạo được ảnh báo cáo" + nguyên nhân + nút Thử lại. Báo cáo đã lưu **không** bị ảnh hưởng |
+| 8 | **Unauthorized** | Route sai role | Chuyển hướng về dashboard đúng role kèm thông báo "Bạn không có quyền truy cập trang này" |
+| 9 | **404** | ID không tồn tại, hoặc báo cáo của người khác | "Không tìm thấy báo cáo" + nút quay lại. **Không** tiết lộ rằng báo cáo đó tồn tại nhưng thuộc người khác (chống dò ID) |
+
+Bổ sung ngoài Master Spec:
+
+| # | Trạng thái | Ghi chú |
+|---|---|---|
+| 10 | **Offline** | Banner "Mất kết nối mạng"; nút Lưu chuyển sang trạng thái chờ; draft localStorage giữ dữ liệu |
+| 11 | **Tài khoản bị vô hiệu hoá giữa phiên** | Đăng xuất bắt buộc + "Tài khoản của bạn đã bị vô hiệu hoá. Liên hệ quản lý." |
+| 12 | **Đang gửi** | Nút disabled + spinner + "Đang lưu…", chống double-submit |
+| 13 | **Lưu thành công** | Toast xanh "Đã lưu báo cáo" + nút Xuất ảnh **mới được** enable (BR-002) |
+
+---
+
+## 13. Motion (DEC-015)
+
+Dial motion **2/10 — Subtle**.
+
+| Quy tắc | Áp dụng |
+|---|---|
+| `duration-timing` | 150–200ms cho micro-interaction; tối đa 250ms cho mở dialog |
+| `transform-performance` | **Chỉ** animate `transform` và `opacity`. Không animate `width`/`height`/`top`/`left` |
+| `easing` | `ease-out` khi vào, `ease-in` khi ra |
+| `exit-faster-than-enter` | Thời gian ra ≈ 60–70% thời gian vào |
+| `excessive-motion` | Tối đa 1–2 phần tử chuyển động mỗi màn hình |
+| `motion-meaning` | Mỗi chuyển động phải diễn tả một quan hệ nhân–quả. Không có animation trang trí |
+| `layout-shift-avoid` | Chuyển động không được gây reflow |
+| `reduced-motion` | `@media (prefers-reduced-motion: reduce)` → `transition: none` |
+
+Danh sách đầy đủ những chỗ có chuyển động: nút (màu + scale 0.98 khi nhấn), toast (trượt vào 8px + fade), dialog (fade + scale 0.98→1), skeleton (fade khi thay bằng nội dung thật), bottom nav (đổi màu mục active). **Hết.** Không có gì khác được phép có animation mà không giải trình trong PR.
+
+---
+
+## 14. Thẻ ảnh chia sẻ 9:16 — bố cục (Master Spec §13)
+
+Kích thước cố định **1080 × 1920**, nền `#0B1220`, render server-side bằng Satori (DEC-010). Component: `features/report-share/DailyReportShareCard.tsx`.
+
+```
+┌──────────────────────────────────────┐ 1080 × 1920
+│                                      │
+│   BIKEFORCE                          │  wordmark, #FBBF24, 48px, weight 700
+│   DAILY SALES REPORT                 │  #94A3B8, 28px, letter-spacing rộng
+│  ──────────────────────────────────  │  đường kẻ 2px #1E3A8A
+│                                      │
+│   Thứ Sáu, 07/08/2026                │  #CBD5E1, 36px
+│                                      │
+│   NGUYỄN VĂN A                       │  #FFFFFF, 56px, weight 700
+│   NV-0042                            │  #94A3B8, 28px
+│                                      │
+│   Tuyến: Quận 1 → Quận 3             │  #CBD5E1, 32px, xuống dòng tối đa 2 dòng
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │ CHỈ TIÊU   CAM KẾT  THỰC  ĐẠT  │  │  header #94A3B8, 26px
+│  ├────────────────────────────────┤  │
+│  │ Viếng thăm      8     10  125% │  │  giá trị #FFFFFF 36px
+│  │ Doanh số        5      4   80% │  │  % vượt → #4ADE80
+│  │ Doanh thu    150tr  125tr  83% │  │  % chưa đạt → #F87171
+│  │ Khách hàng     12     12  100% │  │
+│  └────────────────────────────────┘  │
+│                                      │
+│   DOANH THU THỰC ĐẠT                 │  #94A3B8, 28px
+│   125.000.000 ₫                      │  #FFFFFF, 64px, weight 700
+│                                      │
+│   Ghi chú                            │  #94A3B8, 26px
+│   Khách hẹn lại tuần sau, đang…      │  #CBD5E1, 30px, tối đa 4 dòng
+│                                      │
+│  ──────────────────────────────────  │
+│   BikeForce · Bicycle Sales System   │  #94A3B8, 24px, canh giữa
+└──────────────────────────────────────┘
+```
+
+**Ràng buộc bắt buộc kiểm thử ở Phase 6** (Master Spec §13):
+- Tên dài 40+ ký tự → xuống dòng, không cắt chữ.
+- Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có dấu `…`.
+- Ghi chú 1000 ký tự → cắt ở 4 dòng, có dấu `…`.
+- Doanh thu 12 chữ số → vẫn nằm trong khung. Trong bảng dùng dạng rút gọn (`150tr`), số đầy đủ đặt ở khối "Doanh thu thực đạt".
+- Achievement 4 chữ số (`1.250,0%`) → hiển thị đủ.
+- `target = 0` → hiện `—`, không hiện `∞`/`NaN` (BR-015).
+- **Dấu tiếng Việt đầy đủ**: `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` phải render đúng — đây là rủi ro số một của font nhúng (ISSUE-002).
+- Satori không hỗ trợ CSS Grid — bố cục trên phải dựng hoàn toàn bằng flexbox, và mọi phần tử có nhiều con phải khai báo `display: flex`.
+
+---
+
+## 15. PWA (Master Spec §29 · DEC-024)
+
+Chỉ manifest + icon + `display: standalone` để Sales "Thêm vào màn hình chính". **Không** service worker, **không** offline sync ở v1. Icon 192/512 maskable. `theme-color` = `#1E40AF`.
+
+---
+
+## 16. Dark mode
+
+**Không có ở v1** — DEC-016. Ứng dụng chỉ có light theme. Thẻ ảnh 9:16 nền tối là quyết định thiết kế riêng của tấm ảnh, không phải theme.
+
+Điều này được ghi ra thành **quyết định** để không bị hiểu nhầm là nợ kỹ thuật bị bỏ quên. Nếu sau này làm dark mode, phải đo lại **toàn bộ** bảng contrast ở §4 cho theme tối — quy tắc `color-dark-mode` nói rõ dark mode dùng biến thể nhạt/giảm bão hoà chứ **không phải đảo ngược màu**.
+
+---
+
+## OPEN QUESTIONS
+
+Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Những câu ảnh hưởng trực tiếp tới tài liệu này:
+
+| ID | Câu hỏi (rút gọn) | Đề xuất mặc định | Đổi gì ở UI |
+|---|---|---|---|
+| **OQ-01** | "Mục tiêu viếng thăm" là số điểm hay mục đích chuyến đi? | Cả hai: `target_visit_points` (số) + `visit_purpose` (text) | Nếu bỏ phần số thì bảng đối chiếu (§7) chỉ còn **3 dòng** thay vì 4, và form đầu ngày bớt một ô số |
+| **OQ-02** | "Đã viếng thăm" là con số hay tuyến thực tế? | Cả hai: `actual_visit_points` + `actual_route` | Tương tự OQ-01 cho form cuối ngày |
+| **OQ-11** | `target = 0` thì ô % hiển thị gì? | `actual=0` → 100%; `actual>0` → `—` + "Vượt kế hoạch" | Quyết định nội dung ô "Hoàn thành" ở §7.3 và trên thẻ ảnh §14 |
+| OQ-07 | Tuyến nhập tự do hay chọn từ danh sách? | Tự do + gợi ý 5 tuyến gần nhất | Đổi `Input` thành `Combobox`/`Select` ở form đầu ngày |
+| OQ-09 | KPI do Sales tự cam kết hay Admin giao? | Sales tự cam kết | Nếu Admin giao thì form đầu ngày trở thành **read-only** với Sales, và cần một màn hình mới cho Admin |
+
+---
+
+## Tài liệu liên quan
+
+| Nội dung | Tài liệu chủ |
+|---|---|
+| Route đầy đủ, ranh giới client/server, cấu trúc thư mục | `docs/04-system-architecture.md` |
+| Luồng màn hình và luồng lỗi end-to-end | `docs/03-workflow.md` |
+| Chữ ký Server Action, thông báo lỗi cho người dùng | `docs/07-api-data-flow.md` |
+| Test viewport mobile và test accessibility | `docs/08-testing-strategy.md` |
+| Trạng thái APPROVED/PROPOSED của DEC-012..DEC-019 | `docs/11-decisions.md` |
+| Rủi ro ISSUE-002 (Satori), ISSUE-003 (Zalo webview) | `docs/12-known-issues.md` |

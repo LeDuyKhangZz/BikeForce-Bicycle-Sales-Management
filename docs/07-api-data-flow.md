@@ -1,0 +1,397 @@
+# 07 — API & Data Flow
+
+> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
+> Đáp ứng Master Spec §51.
+
+---
+
+## 1. Phạm vi và nguyên tắc
+
+BikeForce **không có REST API riêng cho CRUD báo cáo** (DEC-003). Toàn bộ đường dữ liệu gồm đúng ba loại:
+
+| Loại | Số lượng | Chạy ở đâu | Chịu RLS? | Dùng khi |
+|---|---:|---|---|---|
+| **Server Action** | 10 | Vercel Node runtime | Có (dùng server client) | Mọi thao tác **ghi** |
+| **Route Handler** | 1 | Vercel Node runtime | Có | Chỉ khi phải trả **binary** (ảnh PNG) |
+| **Query function** (`services/`) | 9 | Gọi từ Server Component | Có | Mọi thao tác **đọc** |
+
+### 1.1 Bốn quy tắc bất di bất dịch
+
+> **QUY TẮC 1 — Mọi hàm ghi tự kiểm tra auth + role + quyền sở hữu.**
+> Không hàm nào được giả định "layout đã chặn rồi nên chắc là đúng role". Server Action là **endpoint công khai** — bất kỳ ai cũng gọi được bằng một HTTP request thủ công. Đây là guideline `Validate Server Action input` mà skill ui-ux-pro-max trả về cho stack `nextjs` ở mức `Severity: High`, và là NFR-006.
+
+> **QUY TẮC 2 — Không bao giờ tin `sales_id` từ client.**
+> `sales_id` **luôn** lấy từ `auth.uid()` phía server. Không có Server Action nào nhận `sales_id` làm tham số. Điều này chặn hoàn toàn lớp tấn công "sửa payload để ghi vào báo cáo người khác" ngay cả khi RLS có sai sót.
+
+> **QUY TẮC 3 — Không bao giờ tin `report_date` từ client.**
+> Ngày nghiệp vụ do server tính bằng `getVietnamToday()` (BR-005, DEC-009). Đồng hồ máy client có thể sai hoặc bị cố tình đổi để tạo báo cáo cho ngày khác.
+
+> **QUY TẮC 4 — Không ném lỗi Postgres thô ra client.**
+> Server Action bắt lỗi, ghi log chi tiết ở server, và trả về `ActionResult` với một mã lỗi ứng dụng cùng thông báo tiếng Việt an toàn (NFR-014). Thông báo lỗi database có thể lộ tên bảng, tên constraint và cấu trúc schema.
+
+### 1.2 Hợp đồng trả về dùng chung
+
+```ts
+// lib/types/action-result.ts — ĐỀ XUẤT, chưa triển khai
+export type ActionResult<T = void> =
+  | { ok: true;  data: T }
+  | { ok: false; code: ErrorCode; message: string; fieldErrors?: Record<string, string> }
+```
+
+Discriminated union, không phải `{ success, error, data }` lỏng lẻo — TypeScript bắt buộc kiểm tra `ok` trước khi chạm vào `data`, nên không thể quên xử lý nhánh lỗi.
+
+`fieldErrors` chỉ có khi `code === 'VALIDATION_FAILED'`, khoá là tên field để UI gắn lỗi ngay dưới đúng ô (`error-placement`) và focus ô lỗi đầu tiên (`focus-management`).
+
+### 1.3 Khung xử lý chung của mọi Server Action
+
+```ts
+// ĐỀ XUẤT, chưa triển khai — mọi Server Action đi đúng 7 bước này
+'use server'
+
+export async function someAction(input: unknown): Promise<ActionResult<T>> {
+  // 1. Xác thực — chưa đăng nhập thì dừng ngay
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return fail('UNAUTHENTICATED')
+
+  // 2. Lấy profile: role + is_active (BR-009)
+  const profile = await getMyProfile(supabase)
+  if (!profile?.is_active) return fail('INACTIVE_ACCOUNT')
+
+  // 3. Kiểm tra role
+  if (profile.role !== 'SALES') return fail('FORBIDDEN')
+
+  // 4. Validate bằng CÙNG Zod schema mà client dùng
+  const parsed = someSchema.safeParse(input)
+  if (!parsed.success) return failValidation(parsed.error)
+
+  // 5. Dữ liệu do server quyết định — không nhận từ client
+  const reportDate = getVietnamToday()
+
+  // 6. Ghi qua services/, dưới RLS
+  try { ... } catch (e) { logServer(e); return mapDbError(e) }
+
+  // 7. revalidatePath + trả kết quả
+  revalidatePath('/sales/today')
+  return { ok: true, data }
+}
+```
+
+**Bước 1–3 là thừa về mặt lý thuyết** vì RLS đã chặn ở database. Chúng vẫn tồn tại vì: (a) cho ra thông báo lỗi tử tế thay vì "0 rows affected" khó hiểu; (b) là lớp phòng thủ nếu một policy bị viết sai; (c) tránh một round-trip database vô ích.
+
+---
+
+## 2. Sơ đồ luồng dữ liệu
+
+### 2.1 Kiểu tóm tắt của Master Spec §51
+
+```text
+MorningReportForm
+→ Zod (morningReportSchema, client)
+→ saveMorningReport()
+→ Zod (cùng schema, server)
+→ auth + role + is_active
+→ services/reports.insertMorningReport()
+→ Supabase (RLS: reports_insert_own_today)
+→ daily_reports
+→ revalidatePath('/sales/today')
+```
+
+```text
+EveningReportForm
+→ Zod (eveningReportSchema)
+→ saveEveningReport()
+→ kiểm tra status hiện tại = MORNING_SUBMITTED (BR-007, BR-008)
+→ services/reports.completeReport()
+→ Supabase (RLS: reports_update_own_open)
+→ daily_reports.status = COMPLETED
+→ UI enable nút Xuất ảnh (BR-002)
+```
+
+```text
+ShareButton
+→ fetch('/api/reports/[id]/share-image')
+→ Route Handler: auth → RLS đọc report → kiểm tra status = COMPLETED
+→ ImageResponse 1080×1920 (Satori)
+→ blob
+→ navigator.share({ files }) hoặc <a download>
+```
+
+### 2.2 Danh sách Admin — lọc và phân trang phía server
+
+```mermaid
+flowchart TD
+    U["Admin đổi bộ lọc"] --> URL["Cập nhật searchParams<br/>?month=2026-08&salesId=…&status=…&page=2"]
+    URL --> RSC["Server Component đọc searchParams"]
+    RSC --> SVC["services/reports.getAdminReports"]
+    SVC --> Q["Supabase query:<br/>select cột cụ thể<br/>+ eq/gte/lte theo filter<br/>+ range phân trang<br/>+ count exact"]
+    Q --> IDX["Index idx_daily_reports_date_status"]
+    IDX --> DB[("daily_reports<br/>dưới RLS")]
+    DB --> RSC2["Trả đúng 1 trang dữ liệu"]
+    RSC2 --> UI["Render bảng + Pagination"]
+```
+
+**Vì sao lọc luôn ở server, không bao giờ ở client** (NFR-002): tải toàn bộ báo cáo về trình duyệt rồi lọc bằng JavaScript nghĩa là (a) truyền dữ liệu của **mọi** Sales về máy một người — dữ liệu vẫn nằm trong bộ nhớ trình duyệt kể cả khi UI không hiển thị; (b) tốn băng thông trên mạng di động; (c) không dùng được index; (d) chậm dần theo thời gian một cách âm thầm. Bộ lọc nằm trong URL để `state-preservation` hoạt động — quay lại là khôi phục đúng bộ lọc.
+
+---
+
+## 3. Catalogue — Server Actions
+
+> Tất cả là **đề xuất, chưa triển khai**. Đường dẫn file theo cấu trúc đã chốt ở `docs/04-system-architecture.md §5`.
+
+### 3.1 `signIn`
+
+| Mục | Nội dung |
+|---|---|
+| **Loại** | Server Action |
+| **File** | `features/auth/actions.ts` |
+| **Input** | `{ email: string; password: string }` |
+| **Zod** | `z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1) })` |
+| **Validation** | Định dạng email; mật khẩu không rỗng. **Không** tiết lộ email có tồn tại hay không |
+| **Permission** | Public |
+| **Database** | `supabase.auth.signInWithPassword()`; sau đó đọc `profiles` lấy `role` + `is_active` |
+| **Output** | `ActionResult<{ role: 'ADMIN' \| 'SALES' }>` → UI redirect `/admin` hoặc `/sales/today` |
+| **Errors** | `INVALID_CREDENTIALS` → "Email hoặc mật khẩu không đúng." (dùng chung cho cả sai email lẫn sai mật khẩu, chống dò tài khoản) · `INACTIVE_ACCOUNT` → "Tài khoản đã bị vô hiệu hoá. Vui lòng liên hệ quản lý." **và phải `signOut()` ngay** (BR-009) · `VALIDATION_FAILED` |
+| **Revalidate** | — (redirect) |
+
+### 3.2 `signOut`
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/auth/actions.ts` |
+| **Input** | — |
+| **Permission** | Đã đăng nhập |
+| **Database** | `supabase.auth.signOut()` → xoá cookie phiên |
+| **Output** | `ActionResult<void>` → redirect `/login` |
+| **Errors** | Kể cả lỗi vẫn xoá cookie và redirect — không để người dùng mắc kẹt |
+
+### 3.3 `changePassword`
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/auth/actions.ts` |
+| **Input** | `{ currentPassword: string; newPassword: string; confirmPassword: string }` |
+| **Zod** | `newPassword` ≥ 8 ký tự, có chữ và số; `confirmPassword` phải khớp (`.refine`) |
+| **Permission** | Đã đăng nhập + `is_active` |
+| **Database** | Xác minh mật khẩu cũ bằng `signInWithPassword` (Supabase không có API verify riêng), rồi `supabase.auth.updateUser({ password })` |
+| **Output** | `ActionResult<void>` + toast "Đã đổi mật khẩu" |
+| **Errors** | `INVALID_CREDENTIALS` → "Mật khẩu hiện tại không đúng." · `VALIDATION_FAILED` với `fieldErrors` |
+| **Revalidate** | — |
+
+### 3.4 `updateOwnProfile`
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/auth/actions.ts` |
+| **Input** | `{ fullName: string; phone?: string }` |
+| **Zod** | `fullName` trim 1–100; `phone` khớp `/^[0-9+ ]{8,15}$/` hoặc bỏ trống |
+| **Permission** | Đã đăng nhập + `is_active`. Chỉ sửa được **chính mình** |
+| **Database** | `update profiles set full_name, phone where id = auth.uid()` — RLS `profiles_update_self` |
+| **Output** | `ActionResult<Profile>` |
+| **Errors** | `VALIDATION_FAILED` · `FORBIDDEN` nếu payload cố chèn `role`/`is_active`/`email` — trigger `guard_profile_self_update()` chặn ở DB, action cũng chỉ chọn đúng 2 field để ghi |
+| **Revalidate** | `/sales/account`, `/admin/account` |
+
+### 3.5 `saveMorningReport` — UC-04
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/report-morning/actions.ts` |
+| **Input** | `{ plannedRoute, visitPurpose?, targetVisitPoints, targetSalesQuantity, targetRevenue, targetCustomerVisits }` — **không có** `salesId`, **không có** `reportDate` (QUY TẮC 2, 3) |
+| **Zod** | `morningReportSchema` trong `lib/validation/` — dùng chung client + server. Ràng buộc khớp đúng bảng ở `docs/04 §7` |
+| **Validation** | Số nguyên ≥ 0, trong trần (BR-006, BR-017); `plannedRoute` 1–300 ký tự; từ chối `NaN`/`Infinity`/số âm/chuỗi rác |
+| **Permission** | Đã đăng nhập + `role = 'SALES'` + `is_active` |
+| **Database** | `insert into daily_reports (sales_id = auth.uid(), report_date = vn_today(), status = 'MORNING_SUBMITTED', …)` — RLS `reports_insert_own_today` |
+| **Output** | `ActionResult<{ reportId: string }>` |
+| **Errors** | `DUPLICATE_REPORT` (Postgres `23505`) → "Hôm nay bạn đã có báo cáo rồi. Hãy mở báo cáo hiện có." + link (BR-001) · `VALIDATION_FAILED` · `FORBIDDEN` · `INACTIVE_ACCOUNT` · `NETWORK` |
+| **Revalidate** | `revalidatePath('/sales/today')` |
+| **Ghi chú** | Lỗi `23505` là đường phòng thủ **thật sự** cho tình huống hai tab bấm Lưu cùng lúc — không thể chặn ở tầng ứng dụng |
+
+### 3.6 `updateMorningReport` — UC-05
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/report-morning/actions.ts` |
+| **Input** | `{ reportId, ...morningFields }` |
+| **Permission** | Chủ báo cáo + `is_active` + `status = 'MORNING_SUBMITTED'` (BR-019) |
+| **Database** | `update daily_reports set … where id = $1` — RLS `reports_update_own_open` |
+| **Output** | `ActionResult<void>` |
+| **Errors** | `REPORT_NOT_FOUND` (0 row — có thể do không phải chủ, hoặc đã `COMPLETED`; **không phân biệt trong thông báo** để chống dò) · `REPORT_LOCKED` → "Báo cáo đã hoàn tất nên không sửa được." |
+| **Revalidate** | `/sales/today`, `/sales/reports/[id]` |
+| **Phụ thuộc** | **OQ-04** — nếu cho phép sửa sau khi `COMPLETED` thì điều kiện `status` bị bỏ và cần thêm audit log |
+
+### 3.7 `saveEveningReport` — UC-06
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/report-evening/actions.ts` |
+| **Input** | `{ reportId, actualRoute?, actualVisitPoints, actualSalesQuantity, actualRevenue, actualCustomerVisits, eveningNote? }` |
+| **Zod** | `eveningReportSchema`; `eveningNote` ≤ 1000 ký tự (BR-018) |
+| **Permission** | Chủ báo cáo + `is_active` + `status = 'MORNING_SUBMITTED'` (BR-007) |
+| **Database** | `update daily_reports set actual_* , evening_note, evening_submitted_at = now(), status = 'COMPLETED' where id = $1` |
+| **Output** | `ActionResult<{ reportId: string; status: 'COMPLETED' }>` — **UI chỉ enable nút Xuất ảnh khi nhận được `status: 'COMPLETED'` từ đây** (BR-002) |
+| **Errors** | `REPORT_NOT_FOUND` · `NO_MORNING_REPORT` → "Chưa có báo cáo đầu ngày cho hôm nay." · `REPORT_LOCKED` · `VALIDATION_FAILED` · `NETWORK` → "Không lưu được. Kiểm tra kết nối rồi thử lại." — **form giữ nguyên dữ liệu** |
+| **Revalidate** | `/sales/today`, `/sales/reports/[id]`, `/sales/history` |
+
+> **Điểm quan trọng nhất của cả tài liệu này:** trạng thái enable của nút Xuất ảnh **phải** bắt nguồn từ giá trị `status` mà server trả về sau khi ghi thành công. Không được suy ra từ "form đã điền đủ", không được suy ra từ state phía client. Master Spec §12 nói thẳng: *"Nút Export không được enable chỉ vì form 'trông có vẻ đầy đủ'."*
+
+### 3.8 `createSalesAccount` — UC-17
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/admin-sales-management/actions.ts` — **nơi duy nhất** được import `lib/supabase/admin.ts` (DEC-005) |
+| **Input** | `{ email, fullName, phone?, employeeCode?, temporaryPassword }` |
+| **Zod** | email hợp lệ; `fullName` 1–100; `temporaryPassword` ≥ 8 |
+| **Permission** | `role = 'ADMIN'` + `is_active` — **kiểm tra bằng server client trước**, rồi mới chạm tới admin client |
+| **Database** | `adminClient.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name, phone, employee_code, role: 'SALES' } })` → trigger `handle_new_user()` tạo dòng `profiles` |
+| **Output** | `ActionResult<{ userId: string }>` |
+| **Errors** | `EMAIL_EXISTS` → "Email này đã được sử dụng." · `EMPLOYEE_CODE_EXISTS` (`23505` trên `employee_code`) → "Mã nhân viên đã tồn tại." · `FORBIDDEN` |
+| **Revalidate** | `/admin/sales` |
+| **Bảo mật** | Mật khẩu tạm **không bao giờ** được ghi log. Nếu `createUser` thành công nhưng trigger lỗi thì phải xoá user vừa tạo để không còn `auth.users` mồ côi không có `profiles` |
+
+### 3.9 `updateSalesProfile` — UC-18
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/admin-sales-management/actions.ts` |
+| **Input** | `{ profileId, fullName, phone?, employeeCode? }` |
+| **Permission** | `role = 'ADMIN'` + `is_active` |
+| **Database** | `update profiles … where id = $1` — RLS `profiles_update_admin` |
+| **Output** | `ActionResult<Profile>` |
+| **Errors** | `EMPLOYEE_CODE_EXISTS` · `PROFILE_NOT_FOUND` · `FORBIDDEN` |
+| **Revalidate** | `/admin/sales`, `/admin/sales/[id]` |
+| **Ghi chú** | Đổi `email` phải đi qua `auth.admin.updateUserById` **và** cập nhật `profiles.email` trong cùng một thao tác, nếu không hai nơi lệch nhau (BR-025). Cân nhắc **không** cho đổi email ở v1 |
+
+### 3.10 `setSalesActiveStatus` — UC-19
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `features/admin-sales-management/actions.ts` |
+| **Input** | `{ profileId: string; isActive: boolean }` |
+| **Permission** | `role = 'ADMIN'` + `is_active` |
+| **Validation** | **Admin không được tự vô hiệu hoá chính mình** — chặn khoá hệ thống. Cân nhắc chặn luôn việc vô hiệu hoá Admin cuối cùng còn active |
+| **Database** | `update profiles set is_active = $2 where id = $1` |
+| **Output** | `ActionResult<void>` |
+| **Errors** | `FORBIDDEN` · `CANNOT_DEACTIVATE_SELF` → "Bạn không thể tự vô hiệu hoá tài khoản của mình." |
+| **Revalidate** | `/admin/sales`, `/admin/sales/[id]`, `/admin` |
+| **Ghi chú** | Vô hiệu hoá **không** xoá dữ liệu. Báo cáo cũ vẫn còn và vẫn tính vào thống kê lịch sử. Phiên đang hoạt động của người bị khoá sẽ bị middleware phát hiện ở request tiếp theo và ép đăng xuất |
+
+---
+
+## 4. Catalogue — Route Handler
+
+### 4.1 `GET /api/reports/[id]/share-image` — UC-08, FR-018
+
+| Mục | Nội dung |
+|---|---|
+| **File** | `app/api/reports/[id]/share-image/route.ts` |
+| **Runtime** | Node (cần đọc file font bằng `fs` cho Satori) |
+| **Input** | Path param `id` (uuid). Không nhận query param nào ảnh hưởng nội dung |
+| **Validation** | `id` phải là uuid hợp lệ — nếu không, trả 404 luôn, không truy vấn database |
+| **Permission** | 1) Có phiên đăng nhập, nếu không → **401**. 2) Đọc report qua **server client** — RLS `reports_select_own_or_admin` tự chặn: Sales chỉ thấy của mình, Admin thấy tất cả (BR-003, BR-022). 3) Nếu 0 row → **404**. 4) Nếu `status !== 'COMPLETED'` → **403** (BR-002) |
+| **Database** | Một truy vấn `select` join `profiles` lấy `full_name`, `employee_code` — chọn đúng cột cần, không `select *` |
+| **Output** | `ImageResponse` PNG 1080×1920. Header: `Content-Type: image/png`, `Content-Disposition: attachment; filename="BikeForce_Report_Nguyen-Van-A_2026-08-07.png"` (FR-019, tên đã bỏ dấu và thay khoảng trắng bằng `-`), `Cache-Control: private, no-store` |
+| **Errors** | `401` chưa đăng nhập · `404` không tồn tại **hoặc** không có quyền (**cố tình không phân biệt** để chống dò ID) · `403` báo cáo chưa hoàn tất · `500` lỗi render — log chi tiết ở server, client chỉ nhận JSON `{ code, message }` |
+| **Ghi chú bảo mật** | Đây là bề mặt tấn công IDOR rõ ràng nhất của hệ thống. Nó được bảo vệ bởi **cả** RLS **và** kiểm tra tường minh trong handler. Test bảo mật bắt buộc: Sales A gọi route với `id` của báo cáo Sales B → phải nhận **404**, không phải ảnh |
+
+---
+
+## 5. Catalogue — Query functions (`services/`)
+
+Nguyên tắc chung cho mọi hàm dưới đây: **nhận `supabase` client làm tham số** (không tự tạo — để test được và để không bao giờ lỡ tay dùng service-role client), **chọn đúng cột cần** (không `select *`), **luôn phân trang** với danh sách, và **không quyết định quyền** (quyền là việc của RLS + Server Action).
+
+| Hàm | Input | Truy vấn | Index dùng | Output | Lỗi |
+|---|---|---|---|---|---|
+| `getMyProfile` | `supabase` | `select id, full_name, email, phone, employee_code, role, is_active from profiles where id = auth.uid()` | PK | `Profile \| null` | `null` nếu chưa có profile (trigger lỗi) |
+| `getMyTodayReport` | `supabase` | `select * from daily_reports where sales_id = auth.uid() and report_date = <vn_today>` | `uq_daily_reports_sales_date` | `Report \| null` | — |
+| `getMyReports` | `supabase, month: 'YYYY-MM', page` | `where sales_id = auth.uid() and report_date between from and to`, `order by report_date desc`, `range(offset, offset+19)`, `count: 'exact'` | `idx_daily_reports_sales_date_desc` | `{ rows: Report[]; total: number }` | — |
+| `getReportById` | `supabase, id` | `select …, profiles(full_name, employee_code) where id = $1` | PK | `ReportWithSales \| null` | `null` = không tồn tại **hoặc** không có quyền (RLS) — gọi `notFound()` |
+| `getAdminTodayOverview` | `supabase, date` | Ba truy vấn gộp: (a) `count profiles where role='SALES' and is_active`; (b) `count daily_reports where report_date = $1 group by status`; (c) `sum` 8 cột target/actual cùng ngày | `idx_profiles_role_active`, `idx_daily_reports_date_status` | 12 chỉ số của FR-024 | — |
+| `getAdminReports` | `supabase, filters, page` | `where` động theo `date` / `dateFrom+dateTo` / `month` / `salesId` / `status` / `search` (ilike trên `profiles.full_name`), `order by report_date desc, full_name`, `range`, `count: 'exact'` | `idx_daily_reports_date_status` | `{ rows; total }` | — |
+| `getAdminMonthlyAnalytics` | `supabase, month` | `sum` 8 cột target/actual trong khoảng tháng, `count` báo cáo, `count distinct sales_id`; tuỳ chọn `group by report_date` cho biểu đồ trend (FR-037) | `idx_daily_reports_date_status` | Tổng hợp tháng | — |
+| `getSalesPerformance` | `supabase, from, to` | `group by sales_id` với `sum` các cột, `count` ngày đạt KPI (BR-024), join `profiles` | `idx_daily_reports_date_status` | `SalesPerformanceRow[]` | — |
+| `getSalesList` | `supabase, filters, page` | `select … from profiles where role='SALES'` + lọc `is_active` + `ilike` tên/email/mã NV, phân trang | `idx_profiles_role_active` | `{ rows; total }` | — |
+| `getMissingReportAlerts` | `supabase, date` | Anti-join: Sales active **chưa có** dòng `daily_reports` ngày đó; và Sales có dòng nhưng `status = 'MORNING_SUBMITTED'` | `idx_profiles_role_active`, `idx_daily_reports_date_status` | `{ noReport: Profile[]; notCompleted: Profile[] }` | — |
+
+**Về `%` hoàn thành:** không có hàm nào trong bảng trên trả về phần trăm. Mọi truy vấn chỉ trả **số thô**; phần trăm được tính ở tầng trình bày bằng `lib/kpi.ts` (BR-011, DEC-007). Điều này đảm bảo màn hình đối chiếu và thẻ ảnh 9:16 không bao giờ ra hai con số khác nhau.
+
+---
+
+## 6. Bảng ánh xạ mã lỗi
+
+### 6.1 Lỗi từ Postgres / Supabase
+
+| Mã | Nghĩa | Xảy ra khi | Mã ứng dụng | Thông báo cho người dùng |
+|---|---|---|---|---|
+| `23505` | unique violation | Trùng `(sales_id, report_date)`; trùng `employee_code`; trùng `email` | `DUPLICATE_REPORT` / `EMPLOYEE_CODE_EXISTS` / `EMAIL_EXISTS` | "Hôm nay bạn đã có báo cáo rồi." / "Mã nhân viên đã tồn tại." / "Email này đã được sử dụng." |
+| `23514` | check violation | Số âm, vượt trần, `report_date` tương lai, `COMPLETED` mà thiếu actual | `VALIDATION_FAILED` | "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại các ô đã nhập." — **kèm log server để tìm ra lỗ thủng ở Zod**, vì lẽ ra lớp 2 đã phải bắt được |
+| `23503` | foreign key violation | `sales_id` không tồn tại trong `profiles` | `FORBIDDEN` | "Không thực hiện được thao tác này." |
+| `42501` | insufficient privilege | Thiếu `GRANT` | `FORBIDDEN` | "Bạn không có quyền thực hiện thao tác này." |
+| `PGRST116` | 0 rows với `.single()` | RLS chặn, hoặc bản ghi không tồn tại | `REPORT_NOT_FOUND` / `PROFILE_NOT_FOUND` | "Không tìm thấy báo cáo." |
+| *(0 rows affected trên UPDATE)* | RLS `USING` không khớp | Không phải chủ, hoặc đã `COMPLETED` | `REPORT_LOCKED` | "Báo cáo đã hoàn tất nên không sửa được." |
+
+> **Lưu ý về `23514`:** nếu constraint của database bắt được lỗi mà Zod không bắt được, đó là **bug của lớp validation**, phải ghi vào `docs/12-known-issues.md`. Người dùng lẽ ra không bao giờ nên thấy lỗi này.
+
+### 6.2 Mã lỗi ứng dụng
+
+| Mã | HTTP tương đương | Thông báo tiếng Việt | Form có reset không? |
+|---|---|---|---|
+| `UNAUTHENTICATED` | 401 | "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." | **Không** — giữ nguyên dữ liệu |
+| `FORBIDDEN` | 403 | "Bạn không có quyền thực hiện thao tác này." | **Không** |
+| `INACTIVE_ACCOUNT` | 403 | "Tài khoản đã bị vô hiệu hoá. Vui lòng liên hệ quản lý." | **Không** |
+| `INVALID_CREDENTIALS` | 401 | "Email hoặc mật khẩu không đúng." | Giữ email, xoá mật khẩu |
+| `VALIDATION_FAILED` | 422 | *(dùng `fieldErrors`, hiện dưới từng ô)* | **Không** |
+| `DUPLICATE_REPORT` | 409 | "Hôm nay bạn đã có báo cáo rồi. Hãy mở báo cáo hiện có." | **Không** — kèm link tới báo cáo đó |
+| `REPORT_NOT_FOUND` | 404 | "Không tìm thấy báo cáo." | — |
+| `REPORT_LOCKED` | 409 | "Báo cáo đã hoàn tất nên không sửa được." | **Không** |
+| `NO_MORNING_REPORT` | 409 | "Chưa có báo cáo đầu ngày cho hôm nay." | **Không** |
+| `NOT_COMPLETED` | 403 | "Chỉ xuất ảnh được sau khi hoàn tất báo cáo cuối ngày." | — |
+| `EMAIL_EXISTS` | 409 | "Email này đã được sử dụng." | **Không** |
+| `EMPLOYEE_CODE_EXISTS` | 409 | "Mã nhân viên đã tồn tại." | **Không** |
+| `CANNOT_DEACTIVATE_SELF` | 400 | "Bạn không thể tự vô hiệu hoá tài khoản của mình." | — |
+| `NETWORK` | — | "Không lưu được. Kiểm tra kết nối rồi thử lại." | **Không** |
+| `UNKNOWN` | 500 | "Đã có lỗi xảy ra. Vui lòng thử lại." | **Không** |
+
+> **Quy tắc chung, không có ngoại lệ:** với mọi lỗi trong bảng trên, form **giữ nguyên toàn bộ dữ liệu người dùng đã nhập** (Master Spec §12, §30). Bắt Sales gõ lại 6 con số sau một lần mất sóng là cách nhanh nhất để họ bỏ dùng hệ thống.
+
+---
+
+## 7. Chống double-submit và race condition
+
+| Tình huống | Cơ chế chặn | Tầng |
+|---|---|---|
+| Người dùng bấm Lưu hai lần liên tiếp | Nút `disabled` khi đang gửi (`loading-buttons`) | Client (UX) |
+| Hai tab cùng bấm Lưu báo cáo sáng | `UNIQUE(sales_id, report_date)` → tab thứ hai nhận `23505` | **Database** |
+| Hai tab cùng bấm Lưu báo cáo cuối ngày | RLS `USING status = 'MORNING_SUBMITTED'` → tab thứ hai khớp 0 row | **Database** |
+| Cố quay lui `COMPLETED → MORNING_SUBMITTED` | Trigger `guard_report_transition()` | **Database** |
+| Đổi ngày lúc 00:00 khi form đang mở | Server tự tính `report_date` khi submit, không dùng ngày lúc mở form | Server |
+
+Ba dòng đánh dấu **Database** là những dòng duy nhất thật sự chặn được — cơ chế phía client chỉ giảm tần suất.
+
+---
+
+## OPEN QUESTIONS
+
+Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Những câu ảnh hưởng trực tiếp tới tài liệu này:
+
+| ID | Câu hỏi (rút gọn) | Đề xuất mặc định | Đổi gì ở đây |
+|---|---|---|---|
+| **OQ-04** | Sửa được báo cáo sau khi `COMPLETED` không? | Không | Nếu "có" → sinh thêm action `updateEveningReport`, và §3.6 bỏ điều kiện `status`; bắt buộc thêm audit log |
+| **OQ-05** | Admin sửa báo cáo Sales không? | Không | Nếu "có" → sinh thêm action `adminUpdateReport` (hiện **không tồn tại**), thêm policy UPDATE cho admin, bắt buộc audit log |
+| **OQ-12** | Nhập bù ngày cũ / có cut-off giờ không? | Chỉ đúng ngày hôm nay | Nếu cho nhập bù → `saveMorningReport` phải **nhận** `reportDate`, phá vỡ QUY TẮC 3 và cần một cơ chế xác thực ngày khác |
+| **OQ-13** | Có xoá báo cáo không? | Không | Nếu "có" → sinh thêm action `deleteReport`/`softDeleteReport` và **mọi** query function ở §5 phải thêm điều kiện `deleted_at is null` |
+| **OQ-01/02** | Viếng thăm là số hay text? | Cả hai | Đổi trực tiếp Zod schema và payload của §3.5 và §3.7 |
+| OQ-09 | KPI do ai đặt? | Sales tự cam kết | Nếu Admin giao → `saveMorningReport` **biến mất** khỏi phía Sales, thay bằng một action mới của Admin ghi vào bảng `targets` |
+
+---
+
+## Tài liệu liên quan
+
+| Nội dung | Tài liệu chủ |
+|---|---|
+| Định nghĩa cột, CHECK, index, nội dung RLS policy | `docs/02-database-design.md` |
+| Sequence diagram end-to-end + luồng lỗi đầy đủ | `docs/03-workflow.md` |
+| Ba Supabase client, ba lớp validation, xử lý secret | `docs/04-system-architecture.md` |
+| Thông báo lỗi hiển thị ra sao trên giao diện | `docs/05-ui-ux-design.md` §12 |
+| Ma trận quyền và kịch bản tấn công | `docs/06-auth-permissions.md` |
+| Test case cho từng mã lỗi | `docs/08-testing-strategy.md` |
