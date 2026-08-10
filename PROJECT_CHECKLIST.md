@@ -395,6 +395,12 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
 
 ### 13b. CÒN LẠI — chưa làm, làm sau khi deploy xong
 
+- [ ] **Quét MỌI cặp nền × chữ thực tế chồng nhau trong DOM** — bài học ISSUE-018, ưu tiên số 1.
+      Đo token so với `card`/`background` là **chưa đủ**: `text-primary` trên `bg-status-info-bg`
+      từng cho **4,32:1** mà không bảng nào bắt được, vì hai token ấy nằm ở hai dòng khác nhau của
+      `docs/05 §4.2` và `§4.4`. Cách làm: liệt kê từng tổ hợp `bg-*` × `text-*` có thật trong
+      `app/`, `components/`, `features/`, rồi đo từng cặp. Chỗ nào ghép chéo cặp thì sửa hoặc ghi
+      lý do. Đây là loại lỗi **chỉ hiện ở một bề rộng** nên rất dễ lọt
 - [ ] **Soát 98 guideline của skill trên 18 route**, ưu tiên `mobile-375` và `desktop-1440`. Ra bảng
       **ĐẠT / KHÔNG ĐẠT / KHÔNG ÁP DỤNG** cho từng mục, không viết "đã kiểm tra" chung chung
 - [ ] Chạy `python <skill>/scripts/search.py "<từ khoá>" --domain ux` cho từng nhóm CRITICAL trước
