@@ -89,8 +89,10 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-016 | **P1** | **CLOSED** | **MỚI** — file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module, `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra". **build / typecheck / lint / 724 unit test đều XANH** — chỉ E2E bắt được. Sửa bằng **DEC-045** | Phase 10, Phase 11 | DEC-045, UC-17, FR-030, FR-023 |
 | ISSUE-017 | P3 | OPEN | **MỚI** — `notFound()` trên route có `loading.tsx` trả **200** kèm giao diện "Không tìm thấy" thay vì 404, do response đã stream. **Cố ý không sửa** — tính không-phân-biệt-được của BR-003 vẫn đúng, và route API vẫn trả mã thật | Phase 7, Phase 9, Phase 10 | BR-003, BR-022, DEC-039, ISSUE-015 |
 | ISSUE-018 | P2 | **CLOSED** | **MỚI** — nav active ở sidebar ghép `text-primary` lên `bg-status-info-bg` (hai cặp khác nhau) ⇒ sau DEC-046 đo được **4,32:1**, làm đỏ **9 lượt quét axe** ở `desktop-1440`. Lỗi có từ Phase 7, chỉ **lộ ra** khi đổi màu. Sửa bằng cặp đúng (**7,99:1**) | Phase 7, Phase 12 | DEC-046, NFR-007, ISSUE-016 |
+| ISSUE-019 | P2 | OPEN | **MỚI** — function Vercel chạy ở **`iad1` (Mỹ)** còn DB ở **Singapore**. Đo được **~230 ms/lượt gọi DB** (`/login` 0,46s vs API-không-DB 0,23s). Sửa: Settings → Functions → Region = `sin1` → **Redeploy** | Phase 12 | NFR-001, docs/09 §13 Bước 5.5 |
+| ISSUE-020 | P3 | OPEN | **MỚI** — `Minimum password length` trên cloud **vẫn là 6**, DEC-041 yêu cầu 8. Zod đã ép 8 ở tầng app nên chỉ hở với ai gọi thẳng GoTrue API cho **chính mình**. **Người dùng chấp nhận rủi ro 2026-08-10** | Phase 12 | DEC-041 |
 
-Tổng: **7 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 5 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
+Tổng: **9 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 6 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
 
 ---
 
@@ -1004,6 +1006,72 @@ Dùng đúng cặp `bg-status-info-bg` + `text-status-info-fg` cho nhánh sideba
 2. **Không có 30 lượt quét axe của Phase 11 thì lỗi này ra thẳng production.** Nó chỉ hiện ở ≥1024px, mà người viết code thường nhìn ở một bề rộng. Đây là lần thứ hai bộ E2E bắt được thứ mà build/typecheck/lint/toàn bộ unit test đều bỏ qua — lần đầu là ISSUE-016.
 
 **Phòng ngừa:** đã ghi cảnh báo tại chỗ trong `components/ui/badge.tsx` (bảng `TONE_CLASS`) và trong `features/navigation/main-nav.tsx`, cấm ghép `text-` của cặp này lên `bg-` của cặp khác.
+---
+
+### ISSUE-019
+
+**Severity: P2**
+**Status: OPEN — cần một thao tác trên Vercel Dashboard, không phải lỗi code**
+
+**Module:**
+Cấu hình Vercel (Settings → Functions → Region). Liên quan: NFR-001, `docs/09 §13` Bước 5.5, Phase 12.
+
+**Description:**
+Serverless function của bản deploy production đang chạy ở **`iad1` (Washington DC, Mỹ)** trong khi database Supabase nằm ở **`ap-southeast-1` (Singapore)**. Mỗi lượt gọi database vì thế phải đi vòng nửa vòng trái đất.
+
+**Đã đo trên production ngày 2026-08-10, không phải suy đoán:**
+
+Header `x-vercel-id` có dạng `<edge>::<function>::<id>`:
+
+```
+X-Vercel-Id: hkg1::iad1::d82tz-1786348187688-273b5317134e
+             ^^^^  ^^^^
+             edge  function  <- Ở MỸ
+```
+
+| Loại request | TTFB (3 lượt) | Ghi chú |
+|---|---|---|
+| `/icons/icon-192.png` (tĩnh) | 0,263 · 0,243 · 0,248 s | không chạm function |
+| `/manifest.webmanifest` (tĩnh) | 0,243 · 0,239 · 0,232 s | không chạm function |
+| `/api/admin/reports/export` → 401 | 0,229 · 0,235 · 0,234 s | có chạy function, **không** chạm DB |
+| `/login` (SSR + **1** lần `getUser()`) | 0,472 · 0,464 · 0,453 s | **có** chạm DB |
+
+**Chênh lệch ~230 ms giữa hai dòng cuối là chi phí của ĐÚNG MỘT lượt đi-về giữa function (Mỹ) và database (Singapore).** Hai dòng đó khác nhau đúng một điều: có gọi Supabase hay không.
+
+**Vì sao đáng sửa:** mỗi màn hình gọi database nhiều hơn một lần — `/admin` gọi 5 RPC tổng hợp, các màn hình Sales gọi 1–3 truy vấn. Chi phí này **nhân lên theo số lượt gọi tuần tự**, và NFR-001 đặt ngưỡng **LCP < 2,5s trên 4G** cho người dùng dùng điện thoại ngoài thị trường — nơi độ trễ mạng vốn đã cao.
+
+**Fix:** Vercel → project → **Settings** → **Functions** → **Function Region** → chọn **Singapore (`sin1`)** → **Save** → vào tab **Deployments**, bản mới nhất → `···` → **Redeploy** (đổi region **không** tự áp dụng cho bản đã build).
+
+**Kiểm chứng sau khi sửa:** `curl -s -D - -o /dev/null <url>/login | grep -i x-vercel-id` → phần giữa phải là `sin1`. Và TTFB của `/login` phải tụt về xấp xỉ mức của route API 401 (~0,24 s), vì lúc đó lượt đi-về tới database chỉ còn trong cùng vùng.
+
+---
+
+### ISSUE-020
+
+**Severity: P3**
+**Status: OPEN — người dùng CHẤP NHẬN rủi ro ngày 2026-08-10 ("kệ nó đi, không quan trọng")**
+
+**Module:**
+Supabase Dashboard → Authentication → Password → `Minimum password length`. Liên quan: DEC-041, Phase 12.
+
+**Description:**
+DEC-041 chốt mật khẩu tối thiểu **8** ký tự. `lib/validation/account.ts` **đã ép đủ 8** ở tầng ứng dụng (Zod), nhưng cài đặt tương ứng trên Supabase Dashboard **vẫn là 6** — lớp phòng thủ thứ hai chưa được dựng.
+
+**Đã đo hai lần bằng hai đường độc lập (2026-08-10):**
+
+| Phép thử | Kết quả |
+|---|---|
+| `POST /auth/v1/admin/users` với mật khẩu `abc123` | **thành công** — user được tạo (đã xoá ngay) |
+| `PUT /auth/v1/user` đổi mật khẩu của một user thật thành `abc123` — đường **chắc chắn** đi qua chính sách | **HTTP 200, chấp nhận** |
+
+Cả hai user thử nghiệm đã được dọn sạch; sau đó `auth.users` trở lại đúng số user thật.
+
+**Ảnh hưởng thật sự — có giới hạn:**
+Mọi đường đặt mật khẩu **trong sản phẩm** đều đi qua Zod nên vẫn đủ 8: Admin tạo tài khoản (UC-17) sinh mật khẩu tạm ngẫu nhiên, và Sales đổi mật khẩu (UC-11) bị `passwordSchema` chặn. Lỗ hổng chỉ mở với ai gọi **thẳng GoTrue API** bằng anon key, bỏ qua giao diện — tức người đã có tài khoản và cố ý tự đặt mật khẩu yếu **cho chính mình**. Không có đường leo thang quyền, không ảnh hưởng người dùng khác.
+
+**Fix (1 phút, khi nào muốn):** Supabase → **Authentication** → **Sign In / Providers** → mục **Password** → **Minimum password length** = `8` → **Save**. **Không** bật `Password Requirements` — DEC-041 cố ý không bắt quy tắc thành phần.
+
+**Điều kiện phải làm ngay (không được chấp nhận rủi ro nữa):** nếu v1 mở thêm bất kỳ đường đặt mật khẩu nào **không đi qua Zod** — ví dụ bật "forgot password" của Supabase, hoặc dùng magic link — thì tầng ứng dụng không còn che được nữa và cài đặt này trở thành lớp bảo vệ duy nhất.
 ---
 
 ## OPEN QUESTIONS

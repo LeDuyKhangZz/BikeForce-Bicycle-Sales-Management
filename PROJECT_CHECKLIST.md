@@ -354,15 +354,23 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
       → **2026-08-10:** `npx supabase db push --linked --yes` đẩy `0006` + `0007`. `migration list --linked` cho **7/7 khớp cả hai bên**. `"seeds":[]` — seed **không** bị đẩy, đúng thiết kế. Kiểm chứng bằng đường thật: 5 RPC trả `42501 permission denied for function` cho `anon` ⇒ hàm **tồn tại** và `anon` **không execute được**
 - [x] `types/database.types.ts` được regenerate và commit khớp với schema production
       → **2026-08-10:** `gen types --linked` so với bản đã commit (generate từ local) khác **đúng một khối metadata** `__InternalSupabase.PostgrestVersion` ⇒ **schema hai bên khớp**. Giữ bản local đã commit, không thay bằng bản cloud
-- [ ] Đặt biến môi trường trên Vercel cho cả Production / Preview / Development; `SUPABASE_SERVICE_ROLE_KEY` **chỉ** server-side, không có prefix `NEXT_PUBLIC_`
+- [x] Đặt biến môi trường trên Vercel cho cả Production / Preview / Development; `SUPABASE_SERVICE_ROLE_KEY` **chỉ** server-side, không có prefix `NEXT_PUBLIC_`
+      → **2026-08-10, đã đo:** HTML `/login` trên production **không chứa** service role key, cũng không chứa chuỗi `SUPABASE_SERVICE_ROLE_KEY` (NFR-005)
 - [ ] Vercel: framework preset Next.js, region `sin1`, build `next build`, Node 22
-- [ ] Bật "Protect Preview Deployments" vì đây là app nội bộ
-- [ ] Chạy runbook tạo Admin đầu tiên trên production (một lần duy nhất)
+      → deploy **THÀNH CÔNG**, nhưng **region SAI**: `x-vercel-id` cho `hkg1::iad1::…` ⇒ function đang ở **Mỹ**. Đo được **~230 ms phụ trội mỗi lượt gọi DB**. **ISSUE-019** — đổi Region → `sin1` rồi **Redeploy**
+- [x] Bật "Protect Preview Deployments" vì đây là app nội bộ
+      → **2026-08-10:** ban đầu bảo vệ **cả Production** — mọi đường dẫn kể cả `/manifest.webmanifest` trả **302 sang `vercel.com/sso-api`**, Sales không thể dùng. Đã sửa: Preview được bảo vệ, Production công khai (bảo mật của Production là `/login` + RLS)
+- [x] Chạy runbook tạo Admin đầu tiên trên production (một lần duy nhất)
+      → **2026-08-10, agent tự chạy được.** `datathongdat@gmail.com` role `ADMIN`. Người dùng đã đăng nhập thật lúc 07:32, **đổi mật khẩu** lúc 07:33, và **tạo tài khoản Sales qua UC-17** lúc 07:34 — cả ba đều là bằng chứng luồng chạy thật trên production
 - [x] PWA manifest + icon + `display: standalone`, Add to Home Screen hoạt động; **không** service worker offline ở v1 — FR-036, DEC-024
       → **2026-08-10 (DEC-047):** `lib/pwa/manifest.ts` (13 unit test) + `app/manifest.ts` → `/manifest.webmanifest`; 4 PNG (`any` 192/512 + `maskable` 192/512) + `app/apple-icon.png` 180 + `app/icon.svg` + `app/favicon.ico`; `theme_color` = `background_color` = **trắng**; thêm `webmanifest` vào `PUBLIC_FILE` của middleware (nếu không, manifest bị trả về HTML `/login` kèm 200 và Add to Home Screen **im lặng biến mất**). 6 bài E2E khoá lại: manifest 200 khi chưa đăng nhập · **đọc `IHDR` xác minh kích thước thật** của cả 4 icon · thẻ `<link>` trên `/login`. ⏳ Còn nợ **thao tác "Thêm vào màn hình chính" trên máy thật** — thuộc Phase 13
-- [ ] Xác nhận hệ thống nằm trong hạn mức Vercel Free + Supabase Free: không cron, không queue, không dùng Supabase Storage cho ảnh — NFR-013, DEC-021
-- [ ] Ghi rõ chính sách rollback: migration chỉ tiến tới, muốn lùi phải viết migration mới
+- [x] Xác nhận hệ thống nằm trong hạn mức Vercel Free + Supabase Free: không cron, không queue, không dùng Supabase Storage cho ảnh — NFR-013, DEC-021
+      → không cron, không queue, không Realtime, không Edge Function, không Storage. Ghi ở `docs/09 §13`
+- [x] Ghi rõ chính sách rollback: migration chỉ tiến tới, muốn lùi phải viết migration mới
+      → `docs/09 §13 § Chính sách rollback`: code lùi bằng **Promote to Production**; schema **không có** rollback; secret thì rotate rồi cập nhật cả Vercel lẫn `.env.local`
 - [ ] Smoke test trên production: đăng nhập Sales, tạo báo cáo sáng, hoàn tất cuối ngày, xuất ảnh, đăng nhập Admin xem dashboard
+      → **Phần Admin: XONG 16/16** (2026-08-10). Agent dựng một tài khoản ADMIN tạm, chạy Playwright ở **375px và 1440px**: đăng nhập → `/admin` · 5 màn hình Admin đều 200 · **không cuộn ngang ở cả hai bề rộng** · không `NaN`/`undefined` · không lỗi console · Admin mở `/sales/today` bị đưa về `/admin` (FR-004). Tài khoản tạm đã xoá, `auth.users` trở lại đúng 2 user thật
+      → **CÒN LẠI: luồng Sales** — tạo báo cáo sáng + hoàn tất cuối ngày + xuất ảnh. **Cố ý chưa làm:** BR-013 cấm xoá báo cáo, nên một báo cáo thử sẽ nằm lại production **vĩnh viễn**. Việc này người dùng tự làm bằng tài khoản Sales thật
 - [ ] Cập nhật `WORKLOG.md`, `SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md` và toàn bộ `docs/` khớp với hệ thống đã deploy
 
 ---

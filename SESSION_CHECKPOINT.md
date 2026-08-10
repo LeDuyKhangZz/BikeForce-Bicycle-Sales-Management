@@ -14,6 +14,14 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 Phase 0, 1, 2, **3**, **4**, 5, **7**, **8**, **9**, **10** đã đóng đủ. Phase 6 còn 1 mục cần **thiết
 bị thật**; Phase 11 còn 2 mục cũng cần thiết bị thật.
 
+**🚀 ĐÃ LÊN PRODUCTION — `https://bike-force-bicycle-sales-management.vercel.app`** (2026-08-10).
+Smoke test Admin **16/16 PASS** ở 375px và 1440px. Người dùng đã đăng nhập thật, đổi mật khẩu, và
+tạo tài khoản Sales qua UC-17 ngay trên bản deploy.
+
+**Việc còn lại đáng giá nhất: ISSUE-019** — function Vercel đang chạy ở **`iad1` (Mỹ)** còn database
+ở Singapore, đo được **~230 ms phụ trội mỗi lượt gọi DB**. Sửa: Settings → Functions → Region =
+`sin1` → **Redeploy**. **Đo Lighthouse SAU khi sửa**, không phải trước.
+
 **Current Task:** **PHASE 12 — Deployment Preparation.** ✅ **Mục CODE cuối cùng đã xong** — PWA
 manifest + icon (FR-036, DEC-047). Phần còn lại của Phase 12 **không còn dòng code nào**, chỉ là
 thao tác Dashboard/Vercel của người dùng: `docs/09 §13` — **runbook 8 bước, từng cú bấm**.

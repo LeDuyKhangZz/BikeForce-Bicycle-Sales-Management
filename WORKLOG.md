@@ -1445,6 +1445,84 @@ rủi ro tại chỗ, đã ghi ở `Errors` mục 4.
 Bước 5 — Vercel.
 ---
 
+### Entry 014
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 12 — Deployment Preparation` — **ĐÃ LÊN PRODUCTION**
+
+**Completed:**
+
+**Production sống:** `https://bike-force-bicycle-sales-management.vercel.app`
+
+Người dùng làm phần Dashboard/Vercel; agent đo lại toàn bộ bằng công cụ.
+
+**Smoke test Admin — 16/16 PASS trên production**, chạy bằng Playwright ở **375px và 1440px**, dùng
+một tài khoản ADMIN **tạm do agent dựng rồi tự xoá** (không đụng tài khoản thật): đăng nhập →
+`/admin` · cả 5 màn hình Admin trả 200 · **cuộn ngang 0px ở cả hai bề rộng** · không `NaN`/`Infinity`/
+`undefined` · không lỗi console · Admin mở `/sales/today` bị đưa về `/admin` (FR-004). Dọn xong,
+`auth.users` trở lại đúng 2 user thật, `profiles` 2 dòng, `daily_reports` 0 dòng.
+
+**Bằng chứng luồng thật của chính người dùng** (đọc từ `auth.users`): đăng nhập lúc **07:32:15**,
+**đổi mật khẩu** lúc 07:33:16, **tạo tài khoản Sales qua UC-17** lúc 07:34:19, tài khoản đó đăng
+nhập được lúc 07:34:59.
+
+**Kiểm chứng khác trên production:** 8/8 tài nguyên PWA trả 200 · **kích thước icon đọc từ khối
+`IHDR`** đúng 192/512/180 · manifest `display: standalone`, 4 icon, `theme_color` trắng · hai route
+`/api/*` trả **401 JSON** không redirect (DEC-039 đứng vững ngoài production) · HTML `/login`
+**không chứa** service role key (NFR-005) · logo SVG cam và dấu tiếng Việt hiện đúng.
+
+**Files Changed:** `docs/12-known-issues.md` (ISSUE-019, ISSUE-020) · `PROJECT_CHECKLIST.md`
+(tick 6 mục Phase 12) · `SESSION_CHECKPOINT.md` · `WORKLOG.md`. **Không có thay đổi code.**
+
+**Tests:** xem `Completed`. Toàn bộ đo trên **production thật**, không phải local.
+
+**Errors:**
+
+1. **ISSUE-019 (P2) — function chạy sai vùng.** `x-vercel-id` = `hkg1::iad1::…`; định dạng là
+   `<edge>::<function>::<id>` nên **function đang ở Washington DC** còn database ở Singapore.
+   Đo được: request tĩnh và request API-không-chạm-DB đều ~**0,23 s**; `/login` (SSR + **đúng một**
+   lần `getUser()`) là ~**0,46 s**. Hai dòng đó khác nhau **đúng một điều** — có gọi Supabase hay
+   không — nên **~230 ms là chi phí của một lượt đi-về Mỹ↔Singapore**. `/admin` gọi 5 RPC nên chi
+   phí nhân lên. Cách sửa: Settings → Functions → Region = `sin1` → **Redeploy**.
+2. **Deployment Protection ban đầu bảo vệ CẢ Production.** Mọi đường dẫn — kể cả
+   `/manifest.webmanifest` và `/icon.svg` — trả **302 sang `vercel.com/sso-api`**. Sales không có
+   tài khoản Vercel thì không dùng được app, và "Thêm vào màn hình chính" cũng hỏng vì manifest bị
+   chặn. Người dùng đã sửa. **Điều đáng ghi lại:** lỗi này *không* thể phát hiện bằng cách mở
+   trình duyệt của chính chủ sở hữu Vercel — họ đã đăng nhập SSO nên thấy trang bình thường. Chỉ
+   `curl` trần mới lộ ra.
+3. **Smoke test đầu tiên đỏ vì tưởng là lỗi, hoá ra là đúng thiết kế.** Đăng nhập bằng mật khẩu tạm
+   trong `.env.admin-bootstrap` nhận "Email hoặc mật khẩu không đúng". Trước khi kết luận là lỗi
+   production, đã đo hai đầu: gọi thẳng GoTrue từ máy local **cũng** hỏng ⇒ không phải lỗi Vercel;
+   rồi đọc `auth.users.updated_at` thì thấy người dùng **đã đổi mật khẩu lúc 07:33** đúng như hướng
+   dẫn. **Bài học: khi một phép kiểm đỏ, đo tiếp một tầng nữa trước khi gọi tên nguyên nhân** —
+   cùng bài học đã ghi ở Phase 6 mục "đo lại bằng công cụ không tự đi theo redirect".
+4. **ISSUE-020 (P3) — `Minimum password length` trên cloud vẫn là 6.** Đo hai lần bằng hai đường
+   độc lập. Người dùng **chấp nhận rủi ro** ngày 2026-08-10. Đã ghi rõ điều kiện phải làm ngay:
+   nếu sau này mở bất kỳ đường đặt mật khẩu nào **không đi qua Zod** (forgot-password, magic link)
+   thì cài đặt này trở thành lớp bảo vệ duy nhất.
+5. **Hai user thử nghiệm đã được tạo và xoá trên production** trong lúc đo ISSUE-020, cộng một tài
+   khoản ADMIN tạm cho smoke test. **Không tạo báo cáo nào** — BR-013 cấm xoá báo cáo nên một dòng
+   dữ liệu thử sẽ nằm lại vĩnh viễn. Đã xác minh sau khi dọn: `daily_reports` vẫn **0 dòng**.
+
+**Decisions:** None — không có quyết định kiến trúc mới.
+
+**Remaining:**
+
+- **ISSUE-019** — đổi Function Region sang `sin1` rồi **Redeploy**. Đây là việc còn lại **đáng giá
+  nhất**, ảnh hưởng trực tiếp NFR-001.
+- **Luồng Sales trên production** — tạo báo cáo sáng, hoàn tất cuối ngày, xuất ảnh. **Cố ý để người
+  dùng tự làm bằng tài khoản Sales thật**, vì báo cáo thử không xoá được (BR-013).
+- **ISSUE-003** — kiểm ảnh 9:16 trong Zalo trên điện thoại thật. Nay đã có link công khai.
+- **Lighthouse mobile** (NFR-001) — **nên đo SAU khi sửa ISSUE-019**, đo trước thì con số phản ánh
+  độ trễ xuyên Thái Bình Dương chứ không phản ánh chất lượng ứng dụng.
+- **Xoá `.env.admin-bootstrap`** — mật khẩu trong đó đã hết hiệu lực từ 07:33.
+- Toàn bộ **Phase 13**.
+
+**Next:** Vercel → Settings → Functions → Region = `sin1` → Redeploy → xác minh
+`x-vercel-id` phần giữa thành `sin1` và TTFB của `/login` tụt về ~0,24 s.
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần
