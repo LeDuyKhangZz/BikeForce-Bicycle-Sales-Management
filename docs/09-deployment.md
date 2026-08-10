@@ -767,7 +767,11 @@ Danh sách OPEN QUESTION đầy đủ (OQ-01 … OQ-17) nằm ở **`docs/01-bus
 
 ## §12 — CẬP NHẬT PHASE 7–11 (2026-08-10): đẩy migration 0006 + 0007 lên cloud
 
-> ⏳ **Hai migration mới ĐÃ chạy trên local nhưng CHƯA đẩy lên cloud.** Ứng dụng deploy lên Vercel sẽ **hỏng ở toàn bộ khu vực Admin** cho tới khi làm xong bước này — mọi màn hình Admin gọi RPC, mà cloud chưa có hàm nào.
+> ✅ **ĐÃ LÀM XONG ngày 2026-08-10** bằng Cách 1 (`npx supabase db push --linked`). Cloud nay có **7/7
+> migration**; cả 5 hàm `admin_*` đã tồn tại và `anon` không execute được hàm nào — kết quả kiểm
+> chứng đầy đủ ở `docs/02 § CẬP NHẬT PHASE 8–11 §F`.
+>
+> **Mục này giữ lại làm runbook** cho lần đẩy migration tiếp theo và cho môi trường mới.
 
 ### 12.1 — Kiểm trước khi đẩy (30 giây)
 

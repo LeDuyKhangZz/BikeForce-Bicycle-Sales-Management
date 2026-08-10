@@ -14,8 +14,9 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 Phase 0, 1, 2, **3**, **4**, 5, **7**, **8**, **9**, **10** đã đóng đủ. Phase 6 còn 1 mục cần **thiết
 bị thật**; Phase 11 còn 2 mục cũng cần thiết bị thật.
 
-**Current Task:** **Bắt đầu PHASE 12 — Deployment Preparation.** Việc đầu tiên và bắt buộc là **đẩy
-migration 0006 + 0007 lên Supabase cloud** — xem `docs/09 §12`, có hướng dẫn từng bước bấm.
+**Current Task:** **PHASE 12 — Deployment Preparation, đang làm.** ✅ Migration đã đẩy xong lên cloud
+(7/7, ngày 2026-08-10). Việc kế tiếp: đặt **Minimum password length = 8** trên Dashboard (DEC-041),
+**rotate service role key** (ISSUE-011), rồi **runbook tạo Admin đầu tiên** — cloud chưa có user nào.
 
 > ✅ **Phiên 2026-08-10 gộp năm phase: 7 → 8 → 9 → 10 → 11.** Toàn bộ **18 route của v1 nay chạy
 > thật**. Chi tiết ở `WORKLOG.md` Entry 010.
@@ -56,13 +57,21 @@ migration 0006 + 0007 lên Supabase cloud** — xem `docs/09 §12`, có hướng
 
 | Migration | Local | Cloud `rnmywhwanpxmipqducqu` |
 |---|---|---|
-| `0001` … `0005` | ✅ | ✅ đã push (2026-08-07) |
-| `0006_admin_aggregates.sql` | ✅ | ⏳ **CHƯA PUSH** |
-| `0007_admin_daily_trend.sql` | ✅ | ⏳ **CHƯA PUSH** |
+| `0001` … `0007` | ✅ | ✅ **7/7 đã push** — `0006` + `0007` đẩy ngày 2026-08-10 |
 
-> ⚠ **Hệ quả: deploy lên Vercel bây giờ thì TOÀN BỘ khu vực Admin hỏng** — mọi màn hình Admin gọi
-> RPC, mà cloud chưa có hàm nào. Hướng dẫn từng bước bấm ở **`docs/09 §12`** (hai cách: CLI hoặc dán
-> SQL trên Dashboard, kèm hai câu kiểm để xác nhận đủ 5 hàm và `anon` không execute được).
+**Đã kiểm chứng thật trên cloud sau khi đẩy (2026-08-10):**
+
+| Phép kiểm | Kết quả |
+|---|---|
+| `npx supabase migration list --linked` | **7/7** khớp cả `local` lẫn `remote` |
+| Gọi cả 5 RPC qua REST bằng `anon` | **`42501 permission denied for function`** — hàm **tồn tại** và `anon` **không execute được** |
+| `gen types --linked` so với bản đã commit | khác **đúng một khối metadata** ⇒ **schema hai bên khớp** |
+| `POST /auth/v1/signup` | **`422`** — tự đăng ký vẫn tắt (BR-012) |
+| `anon` đọc `profiles` / `daily_reports` | **`401` + `42501`** — deny-by-default còn nguyên |
+
+> ⚠ **Seed KHÔNG được đẩy** (`"seeds":[]`) — đúng thiết kế. **Cloud chưa có user nào**, nên bước kế
+> tiếp bắt buộc là **runbook tạo Admin đầu tiên** (`docs/09 §10`), nếu không sẽ không đăng nhập được
+> vào bản deploy.
 
 > ⏳ **Hai việc chờ người dùng, KHÔNG chặn code:**
 > 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
@@ -671,18 +680,25 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 **PHASE 12 — Deployment Preparation. Làm đúng thứ tự này:**
 
-3. **Đẩy migration 0006 + 0007 lên cloud.** `docs/09 §12` có đủ hai cách và các câu SQL kiểm chứng.
-   Cách nhanh: `npx supabase db push --linked` (sẽ hỏi mật khẩu database). Nếu không nhập được mật
-   khẩu thì dán SQL trên Dashboard theo `§12.3` — **đã ghi từng bước bấm**.
-   **Kiểm xong phải thấy đủ 5 hàm** `admin_*` và `anon` **không** execute được hàm nào.
+3. ~~**Đẩy migration 0006 + 0007 lên cloud.**~~ ✅ **XONG 2026-08-10** bằng
+   `npx supabase db push --linked --yes` (mật khẩu lấy từ `SUPABASE_DB_PASSWORD` trong `.env.local`,
+   truyền qua biến môi trường nên không cần TTY). Cloud nay **7/7 migration**, cả 5 hàm `admin_*` tồn
+   tại, `anon` không execute được hàm nào, schema hai bên khớp. **Không làm lại.**
 4. **Đặt `Minimum password length = 8`** trên Supabase Dashboard → Authentication → Password, cho
    khớp `PASSWORD_MIN_LENGTH` ở `lib/validation/account.ts` (**DEC-041**). Không bật yêu cầu chữ
    hoa/chữ số/ký tự đặc biệt. Xác nhận **Enable email signup vẫn TẮT** (BR-012, FR-006).
 5. **Rotate service role key (ISSUE-011, P1).** Dashboard → Project Settings → API Keys → mục secret
    → **`Generate new secret key`**. **Đóng `.env.local` trong VS Code trước khi dán** giá trị mới,
    hoặc dán bằng terminal — nếu không, IDE lại tự đưa key vào ngữ cảnh hội thoại đúng như lần trước.
-6. **Regenerate `types/database.types.ts` từ cloud** sau khi push, rồi so với bản `--local`: hai bên
-   phải chỉ khác đúng một khối metadata. Lệch nhiều hơn nghĩa là push chưa xong.
+6. ~~**Regenerate `types/database.types.ts` từ cloud** rồi so với bản `--local`.~~ ✅ **XONG
+   2026-08-10** — khác **đúng một khối metadata** (`__InternalSupabase.PostgrestVersion`), nghĩa là
+   schema hai bên khớp. Bản đã commit (generate từ local) **dùng được cho production**, không cần
+   commit lại bản cloud.
+
+6b. **Runbook tạo Admin đầu tiên — LÀM SỚM, trước khi test bản deploy.** Seed **không** được đẩy nên
+   **cloud chưa có user nào**; không làm bước này thì không đăng nhập được vào bản deploy. `docs/09
+   §10`: tạo user trên Dashboard → `update public.profiles set role = 'ADMIN' where email = '<email>';`
+   **một lần duy nhất**.
 7. **Vercel** — `docs/09 §12.5`: framework Next.js, region `sin1`, Node 22, ba biến môi trường
    (**không** thêm `SUPABASE_DB_URL`), bật "Protect Preview Deployments".
 8. **Chạy runbook tạo Admin đầu tiên trên production** — `docs/09 §10`: tạo user trên Dashboard rồi

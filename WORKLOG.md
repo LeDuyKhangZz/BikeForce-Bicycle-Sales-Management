@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 11 đã đóng (12/14 — còn Lighthouse và ma trận thử tay, cả hai cần thiết bị thật) | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: 12 — Deployment Preparation (đã đẩy migration lên cloud) | Last updated: 2026-08-10
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -48,7 +48,7 @@ cloud** (`docs/09 §12`) · toàn bộ Phase 12.
 - [x] Phase 9 — Admin Reports & Filters *(gồm cả FR-037 mức SHOULD — DEC-044)*
 - [x] Phase 10 — Sales Management
 - [ ] Phase 11 — Testing & Security *(12/14 — E2E + a11y + EXPLAIN đã chạy thật; còn Lighthouse và ma trận thử tay, cả hai cần thiết bị thật)*
-- [ ] Phase 12 — Deployment Preparation
+- [ ] Phase 12 — Deployment Preparation *(đang làm — migration đã đẩy lên cloud 7/7 ngày 2026-08-10)*
 
 > Ghi chú về dấu `[x]` của Phase 0: đánh dấu này chỉ có nghĩa "**deliverable tài liệu của Phase 0
 > đã tạo đủ**". Điều kiện đóng phase hoàn toàn (bao gồm "OPEN QUESTION mức BLOCKING đã được trả
@@ -1189,6 +1189,75 @@ Ba câu đã hỏi người dùng đầu phiên và đều được trả lời:
 - **Toàn bộ Phase 12** (Deployment) chưa bắt đầu.
 
 **Next:** **PHASE 12 — Deployment Preparation.** Bước đầu tiên và bắt buộc: **đẩy migration 0006 + 0007 lên Supabase cloud** theo `docs/09 §12` (có cả hai cách: `npx supabase db push --linked`, hoặc dán SQL trên Dashboard kèm hai câu kiểm để xác nhận đủ 5 hàm và `anon` không execute được). Rồi đặt **Minimum password length = 8** trên Dashboard cho khớp DEC-041, rotate service role key (ISSUE-011), sau đó mới tới Vercel. Sau khi có link công khai thì kiểm ngay ISSUE-003 trên điện thoại thật — đó là thứ duy nhất còn chặn Phase 6 đóng hoàn toàn.
+
+---
+
+### Entry 011
+
+**Date:** 2026-08-10
+
+**Phase:** PHASE 12 — Deployment Preparation *(bắt đầu)*
+
+**Completed:**
+
+**Đẩy migration `0006` + `0007` lên Supabase cloud `rnmywhwanpxmipqducqu`.** Người dùng yêu cầu agent
+làm giúp và chỉ chỗ lấy mật khẩu (`SUPABASE_DB_PASSWORD` trong `.env.local`).
+
+Thứ tự đã làm — **kiểm trước, dry-run, rồi mới đẩy**:
+
+1. `cat supabase/.temp/project-ref` → xác nhận đang link đúng `rnmywhwanpxmipqducqu`.
+2. `npx supabase migration list --linked` → `0001`…`0005` có cả hai bên, `0006`/`0007` chỉ có `local`.
+3. `npx supabase db push --linked --dry-run` → đúng **hai** file, `"seeds":[]`, `"roles":[]`.
+4. `npx supabase db push --linked --yes` → `Applying migration 0006…` → `Applying migration 0007…` → `Finished`.
+5. `npx supabase migration list --linked` → **7/7 khớp cả hai bên**.
+
+**Kiểm chứng sau khi đẩy — đo bằng ĐƯỜNG DỮ LIỆU THẬT của ứng dụng, không chỉ tin output của CLI:**
+
+| Phép kiểm | Kết quả |
+|---|---|
+| Gọi cả 5 RPC `admin_*` qua REST bằng khoá **`anon`** | **`42501 permission denied for function <tên>`** cho cả 5 |
+| `supabase gen types typescript --linked` so với bản đã commit | khác **đúng một khối metadata** `__InternalSupabase.PostgrestVersion` |
+| `POST /auth/v1/signup` bằng `anon` | **`422`** — tự đăng ký vẫn tắt (BR-012, FR-006) |
+| `GET /rest/v1/profiles` và `/daily_reports` bằng `anon` | **`401` + `42501 permission denied for table`** |
+
+Phép kiểm thứ nhất là phép kiểm **có giá trị nhất**, và lý do đáng ghi lại: `42501` chứng minh **hai
+điều cùng lúc** — hàm **tồn tại** trên cloud (nếu thiếu thì PostgREST trả `PGRST202 Could not find the
+function`), **và** `anon` không execute được. Một câu `select proname from pg_proc` chỉ chứng minh
+được điều thứ nhất, và lại cần quyền kết nối trực tiếp vào database.
+
+**Files Changed:** `docs/02-database-design.md` (bảng trạng thái cloud + bảng kiểm chứng) ·
+`docs/09-deployment.md` (§12 đánh dấu đã làm, giữ lại làm runbook) · `SESSION_CHECKPOINT.md` ·
+`PROJECT_CHECKLIST.md` (tick 3 mục Phase 12) · `CLAUDE.md` · `WORKLOG.md`. **Không có thay đổi code
+nào.**
+
+**Tests:** `npm run typecheck` ✅ exit 0 · `npm run lint` ✅ exit 0 · `npm test` ✅ **729/729** ·
+`npm run build` ✅ exit 0, 18 route. Không có gì thay đổi so với Entry 010 — phiên này chỉ đụng
+database cloud và tài liệu.
+
+**Errors:**
+
+1. **Một giả định cũ của dự án hoá ra SAI, theo hướng có lợi.** `SESSION_CHECKPOINT.md` và `docs/09`
+   đều ghi rằng agent **không** đẩy migration được vì `supabase db push` hỏi mật khẩu mà môi trường
+   không có TTY — suy ra từ việc `git push` thật sự không chạy được. Thực tế: `db push` **đọc được
+   mật khẩu từ biến môi trường `SUPABASE_DB_PASSWORD`**, và cờ `--yes` bỏ qua câu hỏi xác nhận. Nên
+   nó chạy được hoàn toàn từ agent. **Bài học:** hai công cụ khác nhau có hai cơ chế nhập bí mật khác
+   nhau — đừng suy giới hạn của công cụ này sang công cụ kia mà không thử.
+2. **Mật khẩu không bao giờ được in ra.** Đọc bằng `Select-String` rồi gán thẳng vào `$env:`, và mọi
+   lệnh kiểm tra chỉ in **độ dài** chứ không in giá trị. Cùng kỷ luật đã sinh ra ISSUE-011.
+
+**Decisions:** None — không có quyết định mới. Mọi thứ đi theo `docs/09 §12` đã viết ở Entry 010.
+
+**Remaining:**
+
+- **Cloud CHƯA CÓ USER NÀO** — seed cố ý không được đẩy. **Phải chạy runbook tạo Admin đầu tiên**
+  (`docs/09 §10`) trước khi test bản deploy, nếu không sẽ không đăng nhập được.
+- Đặt **Minimum password length = 8** trên Dashboard cho khớp DEC-041.
+- **Rotate service role key** (ISSUE-011, P1).
+- Vercel · PWA manifest · smoke test production · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
+
+**Next:** **Đặt `Minimum password length = 8`** trên Supabase Dashboard → Authentication → Password
+(DEC-041), **rotate service role key** (ISSUE-011), rồi **chạy runbook tạo Admin đầu tiên** theo
+`docs/09 §10`. Sau đó mới cấu hình Vercel theo `docs/09 §12.5` và chạy smoke test `§12.6`.
 
 ---
 

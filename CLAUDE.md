@@ -25,19 +25,19 @@
 | Source code | **ĐẦY ĐỦ v1.** Next.js 16.3.0 App Router · **18 route chạy thật** · **7 migration** trên local · luồng báo cáo ngày hai nửa · KPI engine · ảnh 9:16 · **lịch sử báo cáo** · **toàn bộ khu vực Admin** (dashboard 12 chỉ số, 7 chiều lọc, phân tích tháng + biểu đồ trend, quản lý tài khoản, xuất CSV) · bộ test **729 case** + **99 bài E2E** |
 | Git | Nhánh `main`, remote `origin` → GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). **`git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
 | Supabase **local** | ✅ Chạy thật — Docker + CLI 2.111.0, Postgres 17.6. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
-| Supabase **cloud** | ⚠ **`rnmywhwanpxmipqducqu` mới có 5/7 migration.** `0006` và `0007` **CHƯA push** ⇒ deploy bây giờ thì **toàn bộ khu vực Admin hỏng**. Hướng dẫn từng bước bấm: `docs/09 §12` |
+| Supabase **cloud** | ✅ **`rnmywhwanpxmipqducqu` đủ 7/7 migration** (`0006` + `0007` đẩy ngày 2026-08-10). Đã kiểm thật: 5 hàm `admin_*` tồn tại, `anon` không execute được, signup vẫn tắt (`422`), schema khớp local. ⚠ **Seed KHÔNG được đẩy ⇒ cloud chưa có user nào** — phải chạy runbook tạo Admin đầu tiên (`docs/09 §10`) |
 | Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-10): cả 3 exit 0, lint 0 error 0 warning, build ra **18 route** |
 | Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **729/729** (542 unit + 54 integration + 133 RLS), 23,8 giây. Coverage `lib/**`: stmt 99% · branch 99,28%→**98,69%** · func **100%** · lines **99,4%** |
 | E2E / a11y | ✅ **PASS thật**: `npm run e2e` → **99/99** trên 3 project, gồm **30 lượt quét axe, 0 vi phạm serious/critical** |
 | Lighthouse | ❌ **N/A — chưa chạy.** Không được ghi PASS |
 | Chặn tiến độ | ✅ **Không còn chốt chặn nào.** **18/18 OQ** đã trả lời; **45 DEC** và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** **Phase 12 (Deployment Preparation) là việc kế tiếp**, và bước đầu tiên **bắt buộc** là **đẩy migration `0006` + `0007` lên Supabase cloud** — `docs/09 §12` có hướng dẫn từng bước bấm, cả hai cách (CLI và dán SQL trên Dashboard), kèm câu SQL kiểm chứng. **Không code thêm màn hình nào**: 18/18 route của v1 đã chạy thật và có test. Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
+**Hệ quả trực tiếp:** **Đang ở Phase 12 (Deployment Preparation).** Migration đã đẩy xong lên cloud (7/7). Việc kế tiếp: đặt `Minimum password length = 8` trên Dashboard (DEC-041) · rotate service role key (ISSUE-011) · **chạy runbook tạo Admin đầu tiên** vì cloud chưa có user nào (`docs/09 §10`) · rồi mới tới Vercel. **Không code thêm màn hình nào**: 18/18 route của v1 đã chạy thật và có test. Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
 
 > ⚠ **BÀI HỌC CỦA PHIÊN 2026-08-10, ĐỌC TRƯỚC KHI TIN BẤT KỲ TÀI LIỆU NÀO:** phiên trước đó đã viết khoảng **7.000 dòng code Phase 7–10 mà không cập nhật một dòng tài liệu nào**, nên checkpoint ghi "Phase 7 chưa bắt đầu" trong khi code đã có đủ và đang xanh. **Luôn đo trạng thái thật bằng công cụ** (`git status`, `npm test`, `npm run build`) trước khi tin checkpoint — đúng như §4 của chính file này yêu cầu. Lần này tài liệu đã đồng bộ đầy đủ.
 
 > ⏳ **Ba việc chờ người dùng hoặc chờ thiết bị thật, KHÔNG chặn việc code:**
-> 1. **Đẩy `0006` + `0007` lên cloud** — cần mật khẩu database, agent không nhập được.
+> 1. ~~Đẩy `0006` + `0007` lên cloud~~ — ✅ **XONG 2026-08-10.** Tại đây có một điều đáng nhớ: `supabase db push` **chạy được từ agent** nếu truyền mật khẩu qua biến môi trường `SUPABASE_DB_PASSWORD` cộng cờ `--yes` — khác `git push`, nó không cần TTY.
 > 2. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
 > 3. **Kiểm ảnh 9:16 trong Zalo trên điện thoại thật** (ISSUE-003) + **Lighthouse** — cần link công khai ⇒ chờ deploy Vercel.
 >

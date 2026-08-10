@@ -348,9 +348,12 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
 
 ## Phase 12 — Deployment Preparation
 
-- [ ] Tạo Supabase project production region Singapore; bật email/password; **tắt** "Enable email signups"; tắt email confirmation cho tài khoản do Admin tạo — BR-012
-- [ ] Đẩy toàn bộ migration bằng `supabase db push`; **không** sửa schema bằng tay trên dashboard
-- [ ] `types/database.types.ts` được regenerate và commit khớp với schema production
+- [x] Tạo Supabase project production region Singapore; bật email/password; **tắt** "Enable email signups"; tắt email confirmation cho tài khoản do Admin tạo — BR-012
+      → `rnmywhwanpxmipqducqu`, region **`ap-southeast-1`** (Singapore). **Đo lại 2026-08-10:** `POST /auth/v1/signup` → **`422`**. Email confirmation cho tài khoản Admin tạo được bỏ qua bằng `email_confirm: true` trong `auth.admin.createUser`
+- [x] Đẩy toàn bộ migration bằng `supabase db push`; **không** sửa schema bằng tay trên dashboard
+      → **2026-08-10:** `npx supabase db push --linked --yes` đẩy `0006` + `0007`. `migration list --linked` cho **7/7 khớp cả hai bên**. `"seeds":[]` — seed **không** bị đẩy, đúng thiết kế. Kiểm chứng bằng đường thật: 5 RPC trả `42501 permission denied for function` cho `anon` ⇒ hàm **tồn tại** và `anon` **không execute được**
+- [x] `types/database.types.ts` được regenerate và commit khớp với schema production
+      → **2026-08-10:** `gen types --linked` so với bản đã commit (generate từ local) khác **đúng một khối metadata** `__InternalSupabase.PostgrestVersion` ⇒ **schema hai bên khớp**. Giữ bản local đã commit, không thay bằng bản cloud
 - [ ] Đặt biến môi trường trên Vercel cho cả Production / Preview / Development; `SUPABASE_SERVICE_ROLE_KEY` **chỉ** server-side, không có prefix `NEXT_PUBLIC_`
 - [ ] Vercel: framework preset Next.js, region `sin1`, build `next build`, Node 22
 - [ ] Bật "Protect Preview Deployments" vì đây là app nội bộ

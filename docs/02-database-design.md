@@ -1232,5 +1232,17 @@ Limit (actual rows=20 loops=1)
 | Migration | Local | Cloud `rnmywhwanpxmipqducqu` |
 |---|---|---|
 | `0001` … `0005` | ✅ đã apply | ✅ đã `db push` (2026-08-07) |
-| `0006_admin_aggregates.sql` | ✅ đã apply | ⏳ **CHƯA push** — xem `docs/09 §12` |
-| `0007_admin_daily_trend.sql` | ✅ đã apply | ⏳ **CHƯA push** — xem `docs/09 §12` |
+| `0006_admin_aggregates.sql` | ✅ đã apply | ✅ **đã `db push` 2026-08-10** |
+| `0007_admin_daily_trend.sql` | ✅ đã apply | ✅ **đã `db push` 2026-08-10** |
+
+**Kiểm chứng thật sau khi đẩy (2026-08-10), đo bằng đường dữ liệu thật của ứng dụng:**
+
+| Phép kiểm | Kết quả |
+|---|---|
+| `npx supabase migration list --linked` | **7/7** migration khớp cả `local` lẫn `remote` |
+| Gọi cả 5 RPC qua REST bằng khoá **`anon`** | **`42501 permission denied for function <tên>`** — chứng minh **hai điều cùng lúc**: hàm **tồn tại** trên cloud (nếu thiếu, PostgREST trả `PGRST202 Could not find the function`), và `anon` **không execute được** hàm nào |
+| `supabase gen types typescript --linked` so với bản đã commit | Khác **đúng một khối metadata** (`__InternalSupabase.PostgrestVersion`) — **schema hai bên khớp** |
+| `POST /auth/v1/signup` bằng `anon` | **`422`** — tự đăng ký vẫn tắt (BR-012, FR-006) |
+| `GET /rest/v1/{profiles,daily_reports}` bằng `anon` | **`401` + `42501 permission denied for table`** — deny-by-default còn nguyên |
+
+⚠ **Seed KHÔNG được đẩy** (`"seeds":[]` trong kết quả `db push`) — đúng thiết kế, `supabase/seed.sql` là **LOCAL ONLY**. Cloud vì vậy **chưa có user nào**; tài khoản Admin đầu tiên phải tạo theo runbook `docs/09 §10`.
