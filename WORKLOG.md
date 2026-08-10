@@ -1523,6 +1523,75 @@ nhập được lúc 07:34:59.
 `x-vercel-id` phần giữa thành `sin1` và TTFB của `/login` tụt về ~0,24 s.
 ---
 
+### Entry 015
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 12` — sửa hiệu năng production + `PHASE 13` — nhận yêu cầu mới
+
+**Completed:**
+
+1. **ISSUE-019 — sửa vùng chạy bằng CODE, không cần bấm Dashboard.**
+   `export const preferredRegion = 'sin1'` ở `app/layout.tsx` + **cả hai** route handler (route
+   segment config **không lan** xuống Route Handler). Xác minh bằng
+   `.next/server/functions-config-manifest.json`: **18/18 route** mang `["sin1"]` — đọc manifest chứ
+   không tin giả định về việc cấu hình có lan hay không.
+2. **Sửa một bài E2E có race + vá một lỗ XANH OAN.** Thêm `waitForContent()` vào `e2e/helpers.ts`
+   (chờ `aria-busy="true"` biến mất) và gọi nó **bên trong** `expectNoBrokenNumbers()`.
+3. **Ghi toàn bộ yêu cầu mới của người dùng vào `PROJECT_CHECKLIST.md § 13c`** kèm **mô tả nguyên văn
+   4 ảnh chú thích tay** (không lưu được ảnh thành file — agent không có công cụ ghi ảnh từ hội thoại
+   ra đĩa, nên mô tả chữ là bản ghi chính thức).
+4. **Mở `OQ-19`** trong `docs/01` cho phần đổi nghĩa Doanh số/Doanh thu.
+
+**Files Changed:** `app/layout.tsx` · `app/api/reports/[id]/share-image/route.tsx` ·
+`app/api/admin/reports/export/route.ts` · `features/auth/queries.ts` (thêm rồi **gỡ** `cache()`, giữ
+lại 30 dòng ghi chú) · `e2e/helpers.ts` · `e2e/security.spec.ts` · `docs/01` (OQ-19) ·
+`docs/12` (ISSUE-019 → FIXING, ISSUE-021 MỚI) · `PROJECT_CHECKLIST.md` (§13c) · `WORKLOG.md`.
+
+**Tests:** typecheck ✅ · lint ✅ · build ✅ · `npm test` ✅ **742/742** ·
+`npm run e2e` ✅ **111/111 trong 4,1 phút** *(sau khi gỡ `cache()`)*.
+
+**Errors:**
+
+1. **`cache()` trên đường xác thực làm ĐĂNG NHẬP TREO — đã gỡ (ISSUE-021).**
+   Bọc `getCurrentProfile` bằng `cache()` của React để gộp 4 lượt gọi mạng còn 2. E2E rớt
+   **111 → 109 → 105**, luôn đỏ ở `signIn` hết giờ 20 giây. Ảnh chụp lúc đỏ cho thấy form kẹt ở
+   **"Đang đăng nhập…"** với ô nhập **disabled** ⇒ Server Action **không trả về** — đây chính là chi
+   tiết loại bỏ giả thuyết "rate limit GoTrue", vì rate limit trả lỗi ngay chứ không treo.
+   Cơ chế: `signInAction` kết thúc bằng `redirect()` nên Next render trang đích **trong cùng request
+   POST**; trang đích gọi `requireRole()` → hàm vừa bọc; `cache()` ghi nhớ **promise**, promise dính
+   vào render pass bị huỷ thì không bao giờ settle. **Gỡ ra ⇒ 111/111 và nhanh hơn 1,1 phút so với
+   TRƯỚC khi bọc** — bằng chứng phụ cho việc trước đó có bài đang chờ promise treo.
+
+2. **Sai lầm về QUY TRÌNH, nghiêm trọng hơn lỗi kỹ thuật.** Lượt E2E đầu tiên sau khi bọc `cache()`
+   báo `84 passed`. Tôi diễn giải thành *"27 bài kia là did-not-run, không phải regression"*, rồi
+   chạy riêng một nhóm thấy xanh và **coi như đã loại trừ**. Kết luận đó **sai**, và chỉ lộ ra sau
+   hai lượt chạy đầy đủ nữa. **Với lỗi không tất định, một lượt xanh không chứng minh được gì —
+   phải so TỈ LỆ qua nhiều lượt.**
+
+3. **`--repeat-each` KHÔNG dùng được cho `sales-flow.spec.ts`.** BR-001 chỉ cho một báo cáo mỗi ngày
+   và BR-019 khoá vĩnh viễn, nên lượt lặp thứ 2–3 tất yếu đỏ **dù code hoàn toàn đúng**. Đã ghi ở
+   `DO NOT REDO` từ Phase 11 nhưng vẫn suýt đọc nhầm kết quả. Lặp được với các spec **chỉ đọc**.
+
+4. **Comment khối `/* */` chứa `**/` làm vỡ file.** Viết `app/api/**/route.ts` trong JSDoc thì cụm
+   `*/` đóng comment sớm ⇒ 3 lỗi cú pháp TypeScript. Diễn đạt lại, đừng viết glob có `**/` trong
+   comment khối.
+
+**Decisions:** None — không có DEC mới. Việc gỡ `cache()` là đánh giá rủi ro tại chỗ, ghi đầy đủ ở
+`ISSUE-021` và trong chính `features/auth/queries.ts`.
+
+**Remaining:**
+
+- Xác minh `x-vercel-id` phần giữa đã thành `sin1` trên production sau khi Vercel deploy xong, rồi
+  chuyển ISSUE-019 sang `CLOSED`.
+- **OQ-19 đang chờ người dùng trả lời** — chặn migration `0008` và mọi thay đổi `lib/kpi.ts`.
+- Toàn bộ Phase 13 (nay **16 mục**), ISSUE-003, Lighthouse, luồng Sales trên production.
+- Xoá `.env.admin-bootstrap`.
+
+**Next:** push → chờ Vercel deploy → chạy lại phép đo TTFB và so với mốc trước khi sửa
+(tĩnh ~0,23 s · `/login` ~0,46 s). Kỳ vọng `/login` tụt về xấp xỉ 0,24 s.
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần

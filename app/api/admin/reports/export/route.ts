@@ -42,6 +42,12 @@ import { CSV_EXPORT_MAX_ROWS, getAdminReportsForExport } from '@/services/report
  */
 
 export const runtime = 'nodejs';
+/**
+ * Cùng vùng với database Singapore — ISSUE-019. Route segment config KHÔNG lan
+ * từ `app/layout.tsx` xuống Route Handler, nên phải khai lại ở đây.
+ */
+export const preferredRegion = 'sin1';
+
 
 export async function GET(request: NextRequest) {
   const profile = await getCurrentProfile();

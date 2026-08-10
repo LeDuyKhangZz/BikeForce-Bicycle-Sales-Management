@@ -424,6 +424,121 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
       mở ra **không có thanh địa chỉ**, splash trắng liền mạch — nợ từ Phase 12
 - [ ] Kiểm `prefers-reduced-motion` và cỡ chữ hệ thống lớn nhất (`dynamic-type`) không vỡ bố cục
 
+### 13c. YÊU CẦU MỚI CỦA NGƯỜI DÙNG — ghi ngày 2026-08-10, kèm 4 ảnh chú thích tay
+
+> ⚠ **ĐỌC MỤC NÀY TRƯỚC KHI SỬA BẤT KỲ DÒNG NÀO.** Sáu yêu cầu dưới đây **không cùng hạng**:
+> hai cái là giao diện thuần, một cái là đổi nhãn, còn **ba cái đụng thẳng vào business rule đã
+> `APPROVED` và vào schema database** — chúng cần **migration `0008`** và **DEC mới**, không được
+> sửa lén (CLAUDE.md §6, §11).
+>
+> ⚠ **Bốn ảnh chú thích tay KHÔNG lưu được thành file** — agent không có công cụ ghi ảnh từ hội
+> thoại ra đĩa. Vì vậy mỗi ảnh được **mô tả lại nguyên văn** dưới đây; đó là bản ghi chính thức.
+
+#### Ảnh 1 — form báo cáo đầu ngày (`/sales/today/morning`)
+
+Thấy trong ảnh, theo thứ tự từ trên xuống: dòng gợi ý *"Ví dụ: Quận 1 → Quận 3 → Bình Thạnh."* ·
+ô **"Mục đích chuyến đi"** với helper *"Không bắt buộc. Tối đa 300 ký tự."* · ô **"Mục tiêu điểm
+viếng thăm \*"** helper *"Số điểm dự kiến ghé trong ngày. Tối đa 1.000."* · ô **"Mục tiêu doanh số \*"**
+helper *"Số xe dự kiến bán trong ngày. Tối đa 10.000."*
+
+**Chú thích tay:** một gạch đỏ ngang **xuyên qua ô "Mục đích chuyến đi"** ⇒ **BỎ HẲN trường này**.
+
+#### Ảnh 2 — cận cảnh ô "Mục tiêu điểm viếng thăm"
+
+Helper hiện tại: *"Số điểm dự kiến ghé trong ngày. Tối đa 1.000."*
+**Chú thích tay:** gạch bỏ cụm *"Tối đa 1.000."*, viết đè bằng mực đỏ: **"Tối thiểu 10"**.
+
+#### Ảnh 3 — `/sales/today` sau khi đã cam kết sáng
+
+Thứ tự khối **hiện tại**: card trạng thái ("Lê Duy Khang" · badge "Đã cam kết") → **"Cam kết và thực
+đạt"** (bảng 4 chỉ tiêu: Viếng thăm 10 điểm · Doanh số 50 xe · Doanh thu 5.000.000 ₫ · Khách hàng
+10 khách, cột "Thực đạt" đều là `—`, badge "Chờ số liệu") → **"Tuyến và ghi chú"** (Tuyến kế hoạch:
+*Bến Tre* · Mục đích chuyến đi: *test*).
+
+**Chú thích tay:** một mũi tên đỏ dài khoanh tròn khối **"Tuyến và ghi chú"** và kéo nó **LÊN TRÊN**,
+đặt **trước** khối "Cam kết và thực đạt".
+
+#### Ảnh 4 — `/admin/sales/[id]`, khối "Hiệu suất Tháng 08/2026"
+
+Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50 xe (20,0% Chưa đạt) · Doanh thu
+5.000.000 ₫ / 5.000.000 ₫ (100,0% Vượt mục tiêu) · **Khách hàng** 10 khách / 10 khách (100,0%).
+
+**Chú thích tay:** viết thêm mực đỏ chữ **"đã gặp"** ngay sau chữ "Khách hàng" ⇒ nhãn phải thành
+**"Khách hàng đã gặp"**.
+
+---
+
+#### Nhóm A — giao diện thuần, làm được ngay, KHÔNG đụng nghiệp vụ
+
+- [ ] **Thêm hiệu ứng loading cho thao tác của người dùng.** Dự án đã có `loading.tsx` cho điều
+      hướng, nhưng người dùng nói "chưa có hiệu ứng loading" ⇒ ý là **phản hồi khi bấm**: nút submit
+      đang chờ, chuyển trang, nộp form. Kiểm cả `useActionState` `isPending` đã hiển thị đủ rõ chưa.
+      Bộ luật ui-ux-pro-max gọi đây là `loading-buttons` và `tap-feedback-speed` (phản hồi < 100 ms).
+- [ ] **Nút Đăng xuất ở góc trên bên phải.**
+      ⚠ Hiện tại **cố ý không có** — Phase 7 và Phase 8 đã chuyển Đăng xuất vào `/sales/account` và
+      `/admin/account`, lý do ghi ngay trong `app/(sales)/layout.tsx`: *"giờ đã có tab Tài khoản thì
+      để thêm một nút đăng xuất ở header là hai đường tới cùng một hành động, và nó chiếm mất chỗ
+      của tên người dùng trên màn hình 375px"*. Người dùng nay yêu cầu ngược lại ⇒ **được**, nhưng
+      phải **giải quyết đúng vấn đề bề rộng 375px** đã nêu (đừng đẩy tên người dùng bị cắt), và
+      **xoá ghi chú cũ** trong hai layout để tài liệu không mâu thuẫn code.
+- [ ] **Ảnh 3 — đưa "Tuyến và ghi chú" lên TRƯỚC "Cam kết và thực đạt"** ở `/sales/today`.
+      Chỉ là đổi thứ tự hai khối trong `app/(sales)/sales/today/page.tsx`. Kiểm lại cả
+      `/sales/reports/[id]` để hai màn hình không lệch thứ tự nhau.
+
+#### Nhóm B — đổi nhãn, một dòng nhưng phải sửa ĐÚNG CHỖ
+
+- [ ] **Ảnh 4 — "Khách hàng" → "Khách hàng đã gặp".**
+      Sửa ở **`lib/reports/metric-rows.ts`** — nguồn DUY NHẤT của "4 chỉ tiêu là gì". Sửa một chỗ là
+      đổi đồng loạt: bảng đối chiếu web, thẻ ảnh 9:16, phân tích tháng, biểu đồ trend, cột CSV.
+      **Đừng sửa rải rác trong component.** Có unit test khoá nhãn — cập nhật test cùng lúc.
+      Cân nhắc đơn vị hiển thị: hiện là `10 khách`; "khách hàng đã gặp" thì `10 khách` vẫn đọc được.
+
+#### Nhóm C — ⚠ THAY ĐỔI BUSINESS RULE + SCHEMA. Cần DEC mới + migration `0008`
+
+> Ba mục dưới đây **mâu thuẫn với quyết định đã `APPROVED`**. Người dùng đã yêu cầu trực tiếp nên
+> chúng hợp lệ, **nhưng quy trình bắt buộc là**: viết `DEC-048`/`DEC-049`/`DEC-050` nêu rõ thay thế
+> điều gì → cập nhật `docs/01` (FR/BR) và `docs/02` (schema) → viết migration `0008_*.sql` → sửa
+> code → sửa test. **Migration chỉ tiến tới** (AGENTS.md §13); không sửa file `0001`–`0007`.
+
+- [ ] **Ảnh 1 — BỎ trường "Mục đích chuyến đi" (`visit_purpose`).**
+      **Mâu thuẫn:** OQ-01/OQ-02 → **DEC-029 (APPROVED)** chốt *"giữ **cả hai**: cột số bắt buộc +
+      cột text tuỳ chọn"*. Bỏ `visit_purpose` là lật đúng nửa sau của DEC-029.
+      **Đụng tới:** cột `visit_purpose` trên `daily_reports` · `morningReportSchema` ·
+      `morning-report-form.tsx` · `report-notes.tsx` · thẻ ảnh 9:16 · CSV xuất của Admin ·
+      `/sales/reports/[id]` · `/admin/reports/[id]` · test của cả 4 tầng.
+      **Quyết định phải chốt trước khi code:** xoá cột hẳn, hay giữ cột và chỉ bỏ khỏi giao diện?
+      Dữ liệu cũ đã nhập (production đang có một báo cáo ghi `test`) sẽ mất nếu drop cột — mà
+      **BR-013 cấm xoá dữ liệu báo cáo**. Nghiêng về **giữ cột, bỏ khỏi form và khỏi mọi chỗ hiển
+      thị**, ghi rõ lý do trong DEC.
+- [ ] **Ảnh 2 — "Mục tiêu điểm viếng thăm": TỐI THIỂU 10, không phải tối đa 1.000.**
+      **Đụng tới:** CHECK constraint trên `daily_reports` · hằng số miền giá trị trong
+      `lib/validation/report.ts` · helper text · unit test biên (bảng biên `docs/08 §3.1`).
+      **Phải hỏi lại người dùng:** *"tối thiểu 10"* là **thay** giới hạn trên hay **thêm** giới hạn
+      dưới? Nếu bỏ hẳn trần thì một lỗi gõ phím (`10000`) sẽ vào thẳng database và làm hỏng mọi phép
+      tổng hợp của Admin. **Đề xuất: giữ trần, thêm sàn** — `>= 10 và <= 1.000`, helper ghi
+      *"Tối thiểu 10 điểm."*
+- [ ] **Ảnh 1 — ĐỔI NGHĨA "Doanh số" và "Doanh thu", cả hai thành TIỀN.**
+      Yêu cầu nguyên văn: *"Doanh số là doanh số bán hàng trong ngày (cho nhập số tiền), doanh thu là
+      doanh thu công nợ khách hàng (cho nhập số tiền)"*.
+      **Đây là thay đổi NẶNG NHẤT trong ba mục.** Mâu thuẫn:
+      **OQ-03 + BR-006 (APPROVED)** — *"Doanh số = **số lượng xe** (integer)"*;
+      **OQ-14 (APPROVED)** — *"Doanh thu = giá trị đơn hàng chốt trong ngày"* (nay đổi thành **thu
+      hồi công nợ**, một khái niệm hoàn toàn khác).
+      **Đụng tới:** kiểu cột `target_sales_quantity` / `actual_sales_quantity` **`integer` → `bigint`
+      VND** (migration + chuyển đổi dữ liệu cũ) · `lib/kpi.ts` bảng đơn vị (`xe` → tiền) ·
+      `formatMetricValue` · `formatCompactVND` trên thẻ ảnh · `CurrencyField` thay ô số thường ·
+      chip cộng nhanh · CSV · 5 hàm SQL aggregate của `0006`/`0007` (cộng tiền chứ không cộng cái) ·
+      **toàn bộ bài test có số liệu mẫu**.
+      **Ba câu phải hỏi người dùng TRƯỚC khi động vào code — ghi thành `OQ-19`:**
+      1. **Số lượng xe bán ra có còn được theo dõi nữa không?** Nếu còn thì thành chỉ tiêu **thứ 5**
+         (phá "4 chỉ tiêu" của BR-024 và của `metric-rows.ts`); nếu bỏ hẳn thì đội Sales xe đạp
+         không còn số liệu nào đếm xe.
+      2. **"Doanh thu công nợ" là tiền THU HỒI được trong ngày, hay là công nợ CÒN LẠI?** Hai cái
+         ngược nhau về ý nghĩa "đạt/không đạt": thu hồi càng nhiều càng tốt, công nợ còn lại càng ít
+         càng tốt — và BR-014 (`actual/target × 100`) chỉ đúng với vế thứ nhất.
+      3. **Dữ liệu cũ trên production xử lý sao?** Đang có một báo cáo với `sales_quantity = 50 xe`.
+         Đọc nó thành `50 ₫` là sai; migration phải quyết định rõ (đặt `NULL`, hay giữ nguyên và ghi
+         chú, hay chuyển đổi theo một quy tắc do người dùng chốt).
 ---
 
 ## OPEN QUESTIONS

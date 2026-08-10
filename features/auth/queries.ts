@@ -26,7 +26,37 @@ import type { Database } from '@/types/database.types';
  * `lib/auth/` chỉ giữ phần thuần tuý (`routes.ts`, `messages.ts`).
  */
 
-/** Hồ sơ của phiên hiện tại, hoặc `null` nếu chưa đăng nhập / hồ sơ đã mất. */
+/**
+ * Hồ sơ của phiên hiện tại, hoặc `null` nếu chưa đăng nhập / hồ sơ đã mất.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  ⛔ ĐÃ THỬ BỌC `cache()` CỦA REACT VÀ ĐÃ PHẢI GỠ RA — ISSUE-021
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Hàm này tốn **hai lượt đi-về mạng** (`getUser()` xác minh chữ ký JWT ở máy
+ *  chủ Auth, rồi `getSessionProfile()` truy vấn database), và mô hình 4 lớp gọi
+ *  nó **hai lần mỗi trang** — một ở `layout.tsx`, một ở `page.tsx`. Bọc
+ *  `cache()` để gộp bốn lượt còn hai là ý tưởng đúng về nguyên tắc.
+ *
+ *  **Nhưng nó làm ĐĂNG NHẬP TREO, không tất định.** Đo thật ngày 2026-08-10:
+ *  bộ E2E rớt từ 111/111 xuống 109/111 rồi 105/111 qua các lượt chạy, luôn ở
+ *  cùng một chỗ — `signIn` hết giờ 20 giây, form kẹt ở "Đang đăng nhập…" với
+ *  các ô bị disabled, tức **Server Action không bao giờ trả về** (rate limit
+ *  thì trả lỗi ngay chứ không treo).
+ *
+ *  Cơ chế: `signInAction` kết thúc bằng `redirect()`, nên Next **render trang
+ *  đích ngay trong cùng request POST**. Trang đích gọi `requireRole()` →
+ *  chính hàm này. `cache()` ghi nhớ **promise**, và khi promise ấy dính vào một
+ *  render pass bị huỷ thì lần `await` sau không bao giờ settle.
+ *
+ *  **ĐỪNG THỬ LẠI** nếu chỉ có ý tưởng mà không có cách đo. Muốn gộp lượt gọi
+ *  thì phải tránh đúng đường `action → redirect → render`: ví dụ chỉ memo hoá
+ *  cho nhánh `requireProfile()` và để `/login` cùng `app/page.tsx` dùng bản
+ *  không memo. Và bắt buộc chạy `npm run e2e` **nhiều lượt** — một lượt xanh
+ *  không chứng minh được gì với lỗi không tất định.
+ *
+ *  Phần thắng lớn về hiệu năng nằm ở chỗ khác và đã lấy được: `preferredRegion`
+ *  (ISSUE-019) giảm chi phí **mỗi** lượt từ ~230 ms xuống cùng vùng với database.
+ */
 export async function getCurrentProfile(): Promise<SessionProfile | null> {
   const supabase = await createClient();
 

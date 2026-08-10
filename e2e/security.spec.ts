@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 import { E2E_ADMIN_EMAIL, E2E_DONE_SALES_EMAIL } from './accounts';
 import { E2E_PASSWORD, loadE2eEnv } from './env';
-import { signIn } from './helpers';
+import { signIn, waitForContent } from './helpers';
 
 /**
  * E2E — BẢO MẬT (`PROJECT_CHECKLIST.md § Phase 11`).
@@ -64,13 +64,18 @@ test.describe('BR-003 / BR-022 — Sales không đọc được dữ liệu củ
   test('id không tồn tại và id của người khác KHÔNG phân biệt được', async ({ page }) => {
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
+    // `waitForContent` là BẮT BUỘC ở đây: route group có `loading.tsx` nên Next
+    // stream phần vỏ ra trước, và đọc `innerText` ngay sau `goto()` sẽ bắt được
+    // "Đang tải…" thay vì nội dung thật. Đã làm bài này đỏ oan một lần.
     const unknown = await page.goto('/sales/reports/00000000-0000-4000-8000-000000000000');
     const unknownStatus = unknown?.status();
+    await waitForContent(page);
     const unknownText = await page.innerText('body');
 
     // Một `id` có thật nhưng KHÔNG thuộc về tài khoản đang đăng nhập.
     const other = await page.goto('/sales/reports/11111111-1111-4111-8111-111111111111');
     const otherStatus = other?.status();
+    await waitForContent(page);
     const otherText = await page.innerText('body');
 
     expect(unknownStatus).toBe(otherStatus);

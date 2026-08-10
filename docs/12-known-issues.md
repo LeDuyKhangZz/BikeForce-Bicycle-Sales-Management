@@ -89,10 +89,11 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-016 | **P1** | **CLOSED** | **MỚI** — file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module, `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra". **build / typecheck / lint / 724 unit test đều XANH** — chỉ E2E bắt được. Sửa bằng **DEC-045** | Phase 10, Phase 11 | DEC-045, UC-17, FR-030, FR-023 |
 | ISSUE-017 | P3 | OPEN | **MỚI** — `notFound()` trên route có `loading.tsx` trả **200** kèm giao diện "Không tìm thấy" thay vì 404, do response đã stream. **Cố ý không sửa** — tính không-phân-biệt-được của BR-003 vẫn đúng, và route API vẫn trả mã thật | Phase 7, Phase 9, Phase 10 | BR-003, BR-022, DEC-039, ISSUE-015 |
 | ISSUE-018 | P2 | **CLOSED** | **MỚI** — nav active ở sidebar ghép `text-primary` lên `bg-status-info-bg` (hai cặp khác nhau) ⇒ sau DEC-046 đo được **4,32:1**, làm đỏ **9 lượt quét axe** ở `desktop-1440`. Lỗi có từ Phase 7, chỉ **lộ ra** khi đổi màu. Sửa bằng cặp đúng (**7,99:1**) | Phase 7, Phase 12 | DEC-046, NFR-007, ISSUE-016 |
-| ISSUE-019 | P2 | OPEN | **MỚI** — function Vercel chạy ở **`iad1` (Mỹ)** còn DB ở **Singapore**. Đo được **~230 ms/lượt gọi DB** (`/login` 0,46s vs API-không-DB 0,23s). Sửa: Settings → Functions → Region = `sin1` → **Redeploy** | Phase 12 | NFR-001, docs/09 §13 Bước 5.5 |
+| ISSUE-019 | P2 | **FIXING** | function Vercel chạy ở **`iad1` (Mỹ)** còn DB ở **Singapore** ⇒ **~230 ms/lượt gọi DB**. **Sửa bằng CODE** ngày 2026-08-10: `preferredRegion = 'sin1'` ở root layout + 2 route handler; manifest build xác nhận **18/18 route**. Chờ xác minh `x-vercel-id` trên production sau deploy | Phase 12 | NFR-001, ISSUE-021 |
 | ISSUE-020 | P3 | OPEN | **MỚI** — `Minimum password length` trên cloud **vẫn là 6**, DEC-041 yêu cầu 8. Zod đã ép 8 ở tầng app nên chỉ hở với ai gọi thẳng GoTrue API cho **chính mình**. **Người dùng chấp nhận rủi ro 2026-08-10** | Phase 12 | DEC-041 |
+| ISSUE-021 | P3 | OPEN | **MỚI** — `getCurrentProfile()` bị gọi **2 lần/trang** (layout + page), mỗi lần **2 lượt mạng** ⇒ **4 lượt** chỉ để hỏi "ai đây". **Đã THỬ `cache()` và phải GỠ**: nó làm **đăng nhập treo** không tất định (E2E 111→109→105, gỡ ra về **111/111**). Đọc issue trước khi thử lại | Phase 2, Phase 12 | NFR-001, ISSUE-019, DEC-004 |
 
-Tổng: **9 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 6 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
+Tổng: **9 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 7 × P3), **1 FIXING** (ISSUE-019), **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
 
 ---
 
@@ -1072,6 +1073,54 @@ Mọi đường đặt mật khẩu **trong sản phẩm** đều đi qua Zod n�
 **Fix (1 phút, khi nào muốn):** Supabase → **Authentication** → **Sign In / Providers** → mục **Password** → **Minimum password length** = `8` → **Save**. **Không** bật `Password Requirements` — DEC-041 cố ý không bắt quy tắc thành phần.
 
 **Điều kiện phải làm ngay (không được chấp nhận rủi ro nữa):** nếu v1 mở thêm bất kỳ đường đặt mật khẩu nào **không đi qua Zod** — ví dụ bật "forgot password" của Supabase, hoặc dùng magic link — thì tầng ứng dụng không còn che được nữa và cài đặt này trở thành lớp bảo vệ duy nhất.
+---
+
+### ISSUE-021
+
+**Severity: P3**
+**Status: OPEN — đã THỬ sửa bằng `cache()` ngày 2026-08-10 và phải GỠ RA. Chi phí còn nguyên nhưng đã nhỏ đi nhiều sau ISSUE-019**
+
+**Module:**
+`features/auth/queries.ts` → `getCurrentProfile()`. Liên quan: NFR-001, DEC-004, ISSUE-019, `docs/06 §5.3`, Phase 2 (nơi hàm ra đời), Phase 12.
+
+**Description:**
+`getCurrentProfile()` tốn **hai lượt đi-về mạng**: `getUser()` gọi máy chủ Auth xác minh chữ ký JWT, rồi `getSessionProfile()` truy vấn database.
+
+Mô hình 4 lớp của `docs/06 §5.3` **cố ý** gọi nó **hai lần** mỗi lần render — một lần ở `app/(sales|admin)/layout.tsx`, một lần nữa ở chính `page.tsx`. Tổng: **bốn lượt đi-về tuần tự** chỉ để trả lời "người này là ai", trước khi truy vấn dữ liệu thật bắt đầu.
+
+**Vì sao chỉ lộ ra ở production:** trên máy local database nằm trong Docker cùng máy, mỗi lượt ~1 ms ⇒ bốn lượt là 4 ms, không ai thấy. Trước khi sửa ISSUE-019 mỗi lượt tốn ~230 ms ⇒ riêng phần xác thực ngốn **~0,9 s**.
+
+---
+
+#### ⛔ ĐÃ THỬ `cache()` CỦA REACT — HỎNG, ĐÃ GỠ. Đây là phần quan trọng nhất của issue này.
+
+Bọc `getCurrentProfile` bằng `cache()` để gộp bốn lượt còn hai. **Nó làm ĐĂNG NHẬP TREO, không tất định.**
+
+| Lượt chạy `npm run e2e` | Kết quả | Thời gian |
+|---|---|---|
+| Trước khi bọc | **111/111** | 5,2 phút |
+| Sau khi bọc, lượt 1 | 109/111 | 6,0 phút |
+| Sau khi bọc, lượt 2 (chạy sạch) | **105/111** | 6,6 phút |
+| **Sau khi GỠ RA** | **111/111** | **4,1 phút** |
+
+Mọi bài đỏ đều rơi vào **cùng một chỗ**: helper `signIn()` hết giờ 20 giây. Ảnh chụp lúc đỏ cho thấy form kẹt ở **"Đang đăng nhập…"**, hai ô nhập **disabled** ⇒ **Server Action không bao giờ trả về**. Đây chính là điểm loại bỏ giả thuyết "rate limit của GoTrue": rate limit **trả lỗi ngay**, nó không treo.
+
+**Cơ chế:** `signInAction` kết thúc bằng `redirect()`, nên Next **render trang đích ngay trong cùng request POST**. Trang đích gọi `requireRole()` → chính hàm này. `cache()` ghi nhớ **promise**; khi promise ấy dính vào một render pass bị huỷ thì lần `await` sau không bao giờ settle.
+
+**Bằng chứng phụ, khá thuyết phục:** sau khi gỡ, bộ E2E không những xanh trở lại mà còn **nhanh hơn 1,1 phút so với trước khi bọc** — đúng dấu hiệu của việc trước đó có bài đang chờ promise treo cho tới lúc hết giờ.
+
+**Điều kiện nếu ai đó muốn thử lại — đọc kỹ trước khi động tay:**
+1. **Phải tránh đường `action → redirect → render`.** Ví dụ: chỉ memo hoá cho nhánh `requireProfile()`, để `/login`, `app/page.tsx` và route handler CSV dùng bản không memo.
+2. **Phải chạy `npm run e2e` NHIỀU LƯỢT.** Một lượt xanh **không chứng minh được gì** với lỗi không tất định — chính sai lầm này đã suýt cho `cache()` lọt qua cổng chất lượng.
+3. Phần thắng lớn về hiệu năng **đã lấy được ở chỗ khác** (ISSUE-019 giảm mỗi lượt từ ~230 ms xuống cùng vùng database), nên phần còn lại của issue này **không đáng đánh đổi rủi ro treo đăng nhập**.
+
+---
+
+**Bài học rút ra, ghi để không lặp lại:**
+
+1. **Defense-in-depth nhân số lượt gọi mạng lên theo số lớp.** Khi thiết kế một guard chạy ở nhiều lớp, phải quyết định ngay từ đầu là nó có memo hoá theo request hay không — cái giá không hiện ra ở local mà chỉ hiện ra ở production.
+2. **Với lỗi không tất định, "chạy lại thấy xanh" KHÔNG phải bằng chứng.** Phải so **tỉ lệ qua nhiều lượt**. Lượt E2E đầu tiên sau khi bọc `cache()` báo `84 passed` và đã bị diễn giải nhầm thành "phần lớn là did-not-run, không phải regression" — kết luận đó sai, và chỉ lộ ra khi chạy thêm hai lượt nữa.
+3. **Trạng thái giao diện lúc đỏ là dữ liệu chẩn đoán, không phải rác.** Chính chi tiết "nút còn ghi *Đang đăng nhập…* và ô nhập bị disabled" mới phân biệt được **treo** với **bị từ chối** — hai nguyên nhân hoàn toàn khác nhau.
 ---
 
 ## OPEN QUESTIONS

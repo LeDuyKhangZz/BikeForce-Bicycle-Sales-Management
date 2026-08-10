@@ -715,13 +715,18 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 
 ---
 
-## OPEN QUESTIONS — **ĐÃ TRẢ LỜI ĐỦ 18/18 (OQ-01…OQ-17 ngày 2026-08-07 · OQ-18 ngày 2026-08-10)**
+## OPEN QUESTIONS — **18/19 đã trả lời · ⚠ OQ-19 ĐANG CHỜ (mở 2026-08-10)**
 
 > **Đây là DANH SÁCH ĐẦY ĐỦ DUY NHẤT của toàn dự án.** Mọi tài liệu khác (`docs/02` … `docs/12`, `CLAUDE.md`, `AGENTS.md`) chỉ liệt kê các `OQ-xx` liên quan trực tiếp tới nó và **trỏ ngược về mục này**. Không được tạo `OQ` mới ở tài liệu khác.
 
 > ✅ **Ngày 2026-08-07, người dùng đã trả lời đủ 17/17 câu hỏi ban đầu.** Phase 2 và Phase 3 đều hết blocker nghiệp vụ. Các câu trả lời dưới đây là **business decision đã được xác nhận** — theo Master Spec §66 chúng đứng ở mức ưu tiên sự thật **cao nhất**, và theo Master Spec §71 **không được tự ý thay đổi**.
 
-> ✅ **OQ-18 đã được trả lời ngày 2026-08-10** — phương án **(a)**, ghi thành **DEC-043**. **Không còn câu hỏi nghiệp vụ nào đang chờ trả lời.** Chi tiết ở cuối mục này và ở `docs/12 § ISSUE-013` (→ CLOSED).
+> ✅ **OQ-18 đã được trả lời ngày 2026-08-10** — phương án **(a)**, ghi thành **DEC-043**. Chi tiết ở cuối mục này và ở `docs/12 § ISSUE-013` (→ CLOSED).
+>
+> ⚠ **OQ-19 MỞ ngày 2026-08-10 và ĐANG CHỜ TRẢ LỜI.** Người dùng yêu cầu đổi nghĩa hai chỉ tiêu tiền
+> tệ. Yêu cầu này **lật OQ-03 và OQ-14** — hai câu đã `APPROVED` từ 2026-08-07 — nên **không được
+> tự suy diễn**. Chi tiết ngay dưới đây. Chừng nào chưa có câu trả lời thì **không viết migration
+> `0008`** và không sửa `lib/kpi.ts`.
 
 | ID | Câu hỏi | **CÂU TRẢ LỜI CHÍNH THỨC** | Ràng buộc sinh ra |
 |---|---|---|---|
@@ -742,6 +747,40 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 | OQ-15 | Sales có chia khu vực / team / vùng không? | **Chưa chia ở v1** | DEC-030 · thêm `profiles.team` sau này vẫn rẻ |
 | OQ-16 | Có cần role thứ ba không? | **KHÔNG. Chỉ 2 role**: `ADMIN`, `SALES` | DEC-030 · enum `user_role` giữ 2 giá trị |
 | OQ-17 | "Ngày đạt KPI" là đạt cả 4 chỉ tiêu hay chỉ doanh thu? | **Đạt cả 4 chỉ tiêu ≥ 100%** | **BR-024 APPROVED** · `lib/kpi`, AF-06 |
+
+---
+
+### OQ-19 — ⚠ ĐANG CHỜ TRẢ LỜI (mở 2026-08-10, Phase 13)
+
+**Bối cảnh.** Ngày 2026-08-10 người dùng yêu cầu, kèm ảnh chú thích tay (mô tả đầy đủ ở
+`PROJECT_CHECKLIST.md § Phase 13c`):
+
+> *"mục tiêu doanh số và mục tiêu doanh thu đang chưa đúng ý tôi. Doanh số là doanh số bán hàng
+> trong ngày (cho nhập số tiền), doanh thu là doanh thu công nợ khách hàng (cho nhập số tiền)"*
+
+**Điều này lật hai câu đã `APPROVED`:**
+
+| Đã chốt 2026-08-07 | Nay yêu cầu |
+|---|---|
+| **OQ-03 / BR-006** — Doanh số = **số lượng xe** (`integer`) | Doanh số = **số tiền** bán hàng trong ngày |
+| **OQ-14** — Doanh thu = **giá trị đơn hàng chốt trong ngày** | Doanh thu = **tiền công nợ khách hàng** |
+
+**Ba câu hỏi phải trả lời trước khi viết một dòng code nào:**
+
+| # | Câu hỏi | Vì sao không tự đoán được |
+|---|---|---|
+| **19a** | **Số lượng xe bán ra có còn được theo dõi không?** | Nếu **còn** thì thành chỉ tiêu **thứ 5**, phá vỡ "đạt cả **4** chỉ tiêu" của **BR-024** và cấu trúc `lib/reports/metric-rows.ts`. Nếu **bỏ** thì một đội bán xe đạp không còn số liệu nào đếm xe — đó là mất mát nghiệp vụ, phải do người dùng chấp nhận chứ không phải agent quyết |
+| **19b** | **"Doanh thu công nợ" là tiền THU HỒI ĐƯỢC trong ngày, hay CÔNG NỢ CÒN LẠI?** | Hai cái **ngược chiều nhau** về ý nghĩa đạt/không đạt: thu hồi càng nhiều càng tốt, còn lại càng ít càng tốt. **BR-014** (`achievement = actual / target × 100`) chỉ đúng với vế thứ nhất; vế thứ hai cần công thức đảo, tức một BR mới |
+| **19c** | **Dữ liệu đã có trên production xử lý ra sao?** | Production đang có một báo cáo `sales_quantity = 50` (nghĩa cũ: 50 **xe**). Sau khi đổi kiểu cột, đọc nó thành `50 ₫` là **sai dữ liệu**. Mà **BR-013 cấm xoá báo cáo**. Migration phải chọn: đặt `NULL`, giữ nguyên kèm ghi chú, hay quy đổi theo một quy tắc do người dùng chốt |
+
+**Đề xuất mặc định** *(chỉ là đề xuất — cần người dùng xác nhận, không tự áp dụng)*:
+19a → **bỏ** đếm xe, giữ đúng 4 chỉ tiêu · 19b → **tiền thu hồi được trong ngày**, giữ nguyên BR-014
+· 19c → đặt `NULL` cho các dòng có trước migration và ghi rõ mốc thời gian trong DEC.
+
+**Chặn cái gì:** migration `0008`, `lib/kpi.ts` (bảng đơn vị), `lib/validation/report.ts`,
+5 hàm SQL aggregate của `0006`/`0007`, thẻ ảnh 9:16, CSV, và **toàn bộ bài test có số liệu mẫu**.
+Hai yêu cầu còn lại của nhóm C (bỏ `visit_purpose`, sàn 10 cho điểm viếng thăm) **không** bị OQ-19
+chặn và làm độc lập được.
 
 ### OQ-18 — ✅ ĐÃ TRẢ LỜI (phát sinh 2026-08-07 ở Phase 3 · trả lời 2026-08-10)
 

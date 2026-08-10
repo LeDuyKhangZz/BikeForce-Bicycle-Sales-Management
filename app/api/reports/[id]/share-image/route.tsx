@@ -39,6 +39,12 @@ export const runtime = 'nodejs';
 
 /** Nội dung phụ thuộc cookie phiên và dữ liệu sống ⇒ không được prerender. */
 export const dynamic = 'force-dynamic';
+/**
+ * Cùng vùng với database Singapore — ISSUE-019. Route segment config KHÔNG lan
+ * từ `app/layout.tsx` xuống Route Handler, nên phải khai lại ở đây.
+ */
+export const preferredRegion = 'sin1';
+
 
 const SHARE_IMAGE_WIDTH = 1080;
 const SHARE_IMAGE_HEIGHT = 1920;
