@@ -319,14 +319,18 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** đặt kính mờ (`backdrop-blur`) lên khối có chữ đọc lâu — chỉ header và bottom nav (DEC-053).
 - ❌ **Không** dùng cam logo làm nền nút ngoài "Xuất ảnh báo cáo"; chữ trắng trên cam là **2,19:1**, bị cấm tuyệt đối.
 - ❌ **Không** xoá `e2e/ui-quality.spec.ts` như các bộ soát dùng-một-lần trước — nó là hàng rào chống trôi tương phản của DEC-053.
-- ❌ **Không** kết luận "giao diện đạt" chỉ vì bốn nhóm luật đo được đều xanh. **"Không vi phạm" ≠ "đẹp"** — muốn biết đẹp hay không thì **chụp ảnh ra và nhìn** (bài học DEC-053).
+- ❌ **Không** kết luận "giao diện đạt" chỉ vì bốn nhóm luật đo được đều xanh. **"Không vi phạm" ≠ "đẹp"** — muốn biết đẹp hay không thì **chụp ảnh ra và nhìn** (bài học DEC-053, và DEC-054 đã phải học lại: hai lỗi thật của phiên đó — chữ hiệu 1:1 và nút gãy hai dòng — **không phép đo nào bắt được**).
+- ❌ **Không** đưa opacity vào chữ trên cột thương hiệu của `/login` — `text-white/85` đo được **4,21:1**, trượt AA. Dùng `text-white` đặc, phân cấp bằng cỡ và độ đậm (DEC-054).
+- ❌ **Không** đặt `BrandLockup` lên nền đậm bằng `className="text-white"` — class bên trong là `text-heading` và nó thắng. Phải dùng `tone="inverse"` (DEC-054).
+- ❌ **Không** gỡ `agentRules: false` khỏi `next.config.ts` — gỡ ra là để `next dev` ghi đè vào `AGENTS.md`, một tài liệu điều khiển (ISSUE-025).
+- ❌ **Không** kiểm chứng UI bằng `next dev` trên máy hiện tại — nó trả `403` cho một chunk lõi nên trang **không hydrate**, mọi nút client chết trong khi giao diện trông bình thường. Dùng `next build` + `next start` (ISSUE-026).
 
 ---
 
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-052` (decision) · `ISSUE-001..ISSUE-023` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-054` (decision) · `ISSUE-001..ISSUE-026` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
 > **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy

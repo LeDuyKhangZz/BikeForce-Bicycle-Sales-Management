@@ -96,9 +96,11 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-022 | P3 | OPEN | **MỚI 2026-08-10** — `gen types --local` đỏ vì `SUPABASE_DB_PASSWORD` của **cloud** lọt vào môi trường. Có cách đi vòng chắc chắn; ⚠ phải chuyển hướng `stderr`, nếu không dòng tiến trình bị ghi vào chính file types |
 | ISSUE-023 | P3 | OPEN | **MỚI 2026-08-10** — một bài E2E CSV-403 đỏ đúng một lần trong lượt chạy kéo dài **2,8 giờ** vì máy quá tải. Đã đo tỉ lệ: **82 lượt xanh liên tiếp** sau đó ⇒ **flake**, không phải hồi quy. Không sửa gì |
 
-| ISSUE-024 | P3 | OPEN | **MỚI 2026-08-10** — Docker Desktop chết ở tầng control plane sau nhiều giờ tải nặng (`docker version` → **500**). Làm **34 bài E2E đỏ** cùng lúc và **rất dễ chẩn đoán nhầm thành hồi quy**. Chạy `docker version` TRƯỚC khi đọc diff |
+| ISSUE-024 | P3 | OPEN | **MỚI 2026-08-10** — Docker Desktop chết ở tầng control plane sau nhiều giờ tải nặng (`docker version` → **500**). Làm **34 bài E2E đỏ** cùng lúc và **rất dễ chẩn đoán nhầm thành hồi quy**. Chạy `docker version` TRƯỚC khi đọc diff. ⚠ **ĐÃ TÁI DIỄN cùng ngày** ở lượt E2E của DEC-054 — lần này `com.docker.service` ở trạng thái **Stopped** và **agent KHÔNG khởi động lại được** (cần quyền admin) ⇒ phải nhờ người dùng |
+| ISSUE-025 | P3 | **CLOSED** | **MỚI 2026-08-10** — `next dev` của Next 16 **tự ghi thêm** khối `<!-- BEGIN:nextjs-agent-rules -->` vào cuối `AGENTS.md`, tức tài liệu điều khiển của dự án bị sửa mỗi lần chạy dev. Đã đóng bằng **`agentRules: false`** trong `next.config.ts` |
+| ISSUE-026 | P3 | OPEN | **MỚI 2026-08-10** — `next dev` (Turbopack) trả **403** cho `_next/static/chunks/node_modules_next_dist_*.js` trên máy này ⇒ **trang KHÔNG hydrate**, mọi nút client "chết" trong khi giao diện trông hoàn toàn bình thường. `curl` cùng URL trả **200**. Cách đi vòng: kiểm chứng UI bằng `next build` + `next start` (đúng cách bộ E2E làm) |
 
-Tổng: **13 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 10 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
+Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **12 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, **ISSUE-025**).
 
 ---
 
@@ -1249,6 +1251,90 @@ docker version      # 500 ⇒ môi trường hỏng, DỪNG, đừng sửa code
 ⚠ **PowerShell 5.1 không có toán tử `&&`** — chuỗi lệnh khắc phục phải tách thành từng dòng, hoặc dùng `;`. Người dùng đã vấp đúng chỗ này khi chạy `sleep 8 && docker restart …`.
 
 **Phòng ngừa:** không chạy hai lượt Playwright song song (ISSUE-023), và nếu một phiên đã chạy quá nhiều lượt E2E thì restart Docker **trước** lượt xác nhận cuối thay vì sau khi nó đỏ.
+
+---
+
+### ISSUE-025
+
+**Severity: P3**
+**Status: CLOSED** — đóng ngày `2026-08-10`, xem mục Verification
+
+**Module:**
+`next.config.ts`, `AGENTS.md`. Ảnh hưởng: mọi phiên có chạy `npm run dev`.
+
+**Description:**
+Next.js 16 có tính năng "agent files": `next dev` **tự ghi thêm** một khối vào cuối `AGENTS.md`
+mỗi lần khởi động, và in ra dòng `✓ Generated AGENTS.md for AI agents`.
+
+```
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+…
+<!-- END:nextjs-agent-rules -->
+```
+
+Nội dung khối đó tự nó vô hại. Vấn đề nằm ở chỗ khác: với dự án này `AGENTS.md` là **tài liệu điều
+khiển** (`CLAUDE.md §7a`) — nguồn quy tắc kỹ thuật mà mọi phiên phải đọc trước khi viết code. Để một
+công cụ tự ghi vào đó nghĩa là:
+
+- cứ chạy `npm run dev` là working tree bẩn thêm một file, và người ta dần quen tay `git checkout`
+  hoặc commit kèm mà không đọc;
+- tài liệu mang nội dung **không ai duyệt**, tiếng Anh, chen giữa bộ quy tắc tiếng Việt đã chốt;
+- chính khối đó khuyên "committing it with your work keeps the tree clean" — tức là mời gọi đưa nội
+  dung không duyệt vào lịch sử Git.
+
+**Phát hiện thế nào:** `git status` sau lần `npm run dev` đầu tiên của phiên cho thấy `M AGENTS.md`
+trong khi phiên chưa hề chạm tới file đó.
+
+**Fix:**
+`agentRules: false` trong `next.config.ts`, kèm chú thích giải thích vì sao. Nội dung Next muốn thêm
+không mất đi — nó vẫn nằm ở `node_modules/next/dist/docs/` và đọc trực tiếp được khi cần.
+
+**Verification:**
+`git checkout -- AGENTS.md` rồi chạy lại `next dev`; `git status` sạch, và dòng
+`✓ Generated AGENTS.md` không còn xuất hiện trong log. `npm run typecheck` vẫn xanh (khoá
+`agentRules` hợp lệ trong `NextConfig` của 16.3.0).
+
+---
+
+### ISSUE-026
+
+**Severity: P3**
+**Status: OPEN — lỗi môi trường, không phải lỗi sản phẩm**
+
+**Module:**
+`next dev` (Turbopack) trên máy phát triển hiện tại. Ảnh hưởng: **mọi lần kiểm chứng UI bằng dev
+server**.
+
+**Description:**
+Trên máy này, `next dev` trả **403** cho một chunk lõi của chính Next:
+
+```
+GET /_next/static/chunks/node_modules_next_dist_20wefz_._.js → 403
+```
+
+**Hệ quả nguy hiểm hơn bản thân con số 403: trang KHÔNG hydrate.** Giao diện trông hoàn toàn bình
+thường — CSS đủ, chữ đủ, ảnh đủ — nhưng **không một `onClick` nào chạy**. Cụ thể trong phiên
+2026-08-10: nút Đăng xuất bấm không mở panel, nút hiện mật khẩu bấm không đổi `type`.
+
+**Vì sao RẤT dễ chẩn đoán nhầm thành lỗi code:**
+
+| Dấu hiệu | Điều dễ kết luận sai | Sự thật |
+|---|---|---|
+| Trang render đẹp, đúng bố cục mới | "phần render ổn, vậy lỗi ở `useState`" | Cả cây React client chưa hề khởi động |
+| **Đăng nhập vẫn chạy được** | "JS chạy bình thường mà" | Server Action có progressive enhancement — `<form action={…}>` POST được **không cần JS** |
+| `curl` cùng URL trả **200** | "chunk vẫn phục vụ tốt" | Chỉ trình duyệt mới nhận 403 |
+| Xoá `.next` rồi chạy lại | "chắc do cache" | **Không đổi** — vẫn 403 |
+
+**Cách phân biệt trong 10 giây:** mở một control **thuần client** (nút hiện mật khẩu ở `/login`) và
+xem `type` của ô có đổi không. Không đổi ⇒ chưa hydrate ⇒ **đừng sửa code**.
+
+**Cách đi vòng (đã dùng thật):** kiểm chứng UI bằng `next build` + `next start` — đúng cách
+`playwright.config.ts` dựng server cho bộ E2E. Trên bản đó hydration chạy đúng ngay lần đầu.
+
+**Chưa làm:** truy nguyên gốc rễ. Nghi ngờ liên quan tới việc thư mục dự án nằm trong **OneDrive**
+(khoá file) hoặc tới việc hai `next dev` từng cùng chạy trên một `.next`. Chưa xác minh, và **không
+chặn tiến độ** vì đã có cách đi vòng chắc chắn.
 
 ---
 

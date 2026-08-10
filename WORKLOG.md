@@ -1862,6 +1862,83 @@ DEC-046**.
 **Remaining:** xem `Remaining` của Entry 016; thêm: nhìn lại ở **1440px** bằng mắt người (đã đo máy).
 
 **Next:** chạy `npm run e2e` đầy đủ rồi commit.
+
+---
+
+### Entry 019
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 13b` — thiết kế lại `/login` và khu vực Đăng xuất (**DEC-054**)
+
+**Trigger:** người dùng gửi **hai ảnh chụp bản deploy** kèm yêu cầu nguyên văn: *"trang đăng nhập và
+chỗ hiện nút đăng xuất quá xấu, sử dụng skill uiux promax thiết kế lại giao diện cho đẹp hơn ưu tiên
+điện thoại và laptop"*. Cả hai màn hình đó **đều đã xanh** ở mọi phép đo của 13b và 13d.
+
+**Completed:**
+
+1. **`/login` chia đôi từ `lg`.** Cột trái là mặt thương hiệu (nền `heading`, headline, ba gạch đầu
+   dòng), cột phải là form. Dưới `lg` cột trái **biến mất hoàn toàn** — không thu nhỏ, không xếp
+   chồng, để 375px không phải cuộn qua gì trước khi thấy ô Email.
+2. **Đăng xuất ở header: dải ngang toàn màn hình ⇒ popover `w-72` neo vào nút**, có mũi nhọn, kèm
+   Esc / chạm-ra-ngoài / quản lý focus — ba thứ bản cũ không có thứ nào.
+3. **Nút hiện/ẩn mật khẩu**, banner lỗi có icon, thẻ form có vạch màu ở mép trên.
+4. **`SignOutSubmit` (MỚI)** gộp nút gửi của hai chỗ xác nhận — trước đây chỉ bản header có
+   `useFormStatus()`.
+5. **`agentRules: false`** (`next.config.ts`) — đóng **ISSUE-025**.
+
+**Files Changed:** `app/(auth)/login/page.tsx` · `features/auth/login-form.tsx` ·
+`features/auth/header-sign-out.tsx` · `features/auth/sign-out-button.tsx` ·
+`features/auth/sign-out-submit.tsx` (**tạo mới**) · `components/ui/brand-mark.tsx` ·
+`app/globals.css` · `app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` · `next.config.ts` ·
+`docs/05 §13.4 + §17` · `docs/11` (DEC-054) · `docs/12` (ISSUE-024 tái diễn, ISSUE-025, ISSUE-026) ·
+`PROJECT_CHECKLIST.md §13e` · `SESSION_CHECKPOINT.md` · `WORKLOG.md`.
+
+**Tests:** typecheck ✅ · lint ✅ (0 error 0 warning) · `next build` ✅ · `npm test` ✅ **745/745** ·
+**`npm run e2e` ✅ 121 passed / 5 skipped / 0 failed, 6,0 phút** · **kiểm chứng bằng MẮT** ✅ 7 màn
+hình × 2 bề rộng trên `next build` + `next start`.
+
+*(5 skipped = `ui-quality` ở `zalo-like`, cố ý bỏ vì trùng viewport với `mobile-375`.)*
+
+⚠ Đây là **lượt E2E THỨ HAI**. Lượt đầu bị huỷ giữa chừng vì Docker chết — xem Errors 3.
+
+**Errors:**
+
+1. **Chữ hiệu logo 1:1 — chữ biến mất hoàn toàn.** Bản đầu gọi `<BrandLockup className="text-white" />`
+   trên nền `heading`, nhưng class bên trong là `text-heading` nên nó thắng: **#0B4A76 trên #0B4A76**.
+   **Không một phép đo tự động nào bắt được**, vì WCAG miễn trừ logotype khỏi ngưỡng tương phản nên
+   bộ đo của `ui-quality` cũng bỏ qua. Chỉ lộ ra khi **chụp ảnh ra và nhìn**. Sửa bằng
+   `BrandLockup tone='inverse'`.
+2. **Nút "Đăng xuất" gãy hai dòng** trong popover xếp `grid-cols-2` (ô 128px). Nới bề rộng panel
+   không cứu được vì nhãn lúc đang gửi còn dài hơn ("Đang đăng xuất…"). Sửa bằng **xếp dọc**, mỗi
+   nút tràn hết bề rộng — không nhãn nào gãy ở bất kỳ độ dài nào. Cũng chỉ thấy được bằng mắt.
+3. **ISSUE-024 TÁI DIỄN giữa lượt `npm run e2e`.** 75 bài đầu xanh, rồi mọi bài từ 76 trở đi đỏ với
+   cùng một triệu chứng `signIn` hết giờ 45s. `docker version` → **500**; `com.docker.service` ở
+   trạng thái **Stopped**, và `Start-Service` từ agent bị từ chối vì đòi quyền admin. Lượt E2E đó bị
+   **huỷ bỏ, không tính**. Docker hồi phục sau đó và **lượt chạy lại xanh đủ 121/121** trên đúng cây
+   mã ấy ⇒ **xác nhận 100% là lỗi môi trường, không phải hồi quy**.
+   ⚠ Bẫy đi kèm: lượt chạy lại đỏ ngay ở dòng đầu với `http://127.0.0.1:3100 is already used` — tiến
+   trình `next start` của lượt trước **vẫn giữ cổng** dù `TaskStop` đã kết thúc lệnh bọc ngoài. Phải
+   giải phóng cổng 3100 bằng tay trước khi chạy lại.
+4. **ISSUE-026 — `next dev` trả 403 cho một chunk lõi ⇒ trang không hydrate.** Đã đốt một vòng chẩn
+   đoán: popover bấm không mở, nút hiện mật khẩu bấm không đổi `type`, trong khi giao diện trông
+   hoàn toàn bình thường. Đánh lừa thêm một nấc vì **đăng nhập vẫn chạy** — Server Action có
+   progressive enhancement nên `<form>` POST được mà không cần JS. Xoá `.next` không đổi; `curl`
+   cùng URL trả 200. Cách đi vòng: kiểm chứng UI trên `next build` + `next start`.
+5. **`next dev` sửa `AGENTS.md`** — bắt được nhờ `git status` chứ không nhờ đọc log. Đóng bằng
+   `agentRules: false` (ISSUE-025).
+
+**Decisions:** **DEC-054** (`/login` chia đôi · Đăng xuất thành popover · tone `inverse` cho lockup).
+
+**Remaining:**
+- **commit + `git push`** — quality gate đã xanh đủ.
+- Nhìn lại bằng mắt trên **điện thoại thật** sau khi deploy.
+- Ba mục cũ không đổi: rotate service role key (ISSUE-011) · Zalo trên máy thật (ISSUE-003) ·
+  Lighthouse.
+
+**Next:** commit Entry 019 / DEC-054 rồi `git push`; sau khi Vercel build xong thì mở `/login` trên
+**điện thoại thật** xem lại bằng mắt.
+
 ---
 
 ## Quy ước ghi worklog

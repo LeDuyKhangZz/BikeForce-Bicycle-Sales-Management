@@ -482,6 +482,43 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
 - [ ] Thao tác **"Thêm vào màn hình chính" trên máy thật** (Chrome Android + Safari iOS): icon đúng,
       mở ra **không có thanh địa chỉ**, splash trắng liền mạch — nợ từ Phase 12. **Cần thiết bị thật**
 
+### 13e. `/login` CHIA ĐÔI · ĐĂNG XUẤT THÀNH POPOVER — DEC-054 (2026-08-10)
+
+> **Vì sao có mục này:** sau 13d, người dùng gửi **hai ảnh chụp bản deploy** kèm yêu cầu *"trang đăng
+> nhập và chỗ hiện nút đăng xuất quá xấu, thiết kế lại giao diện cho đẹp hơn, ưu tiên điện thoại và
+> laptop"*. Cả hai màn hình đó đều **đã xanh** ở mọi phép đo của 13b/13d — lại một lần nữa xác nhận
+> *"không vi phạm" ≠ "đẹp"*.
+
+- [x] **`/login` chia đôi từ `lg`**: cột trái là mặt thương hiệu (nền `heading`, headline, **ba** gạch
+      đầu dòng soi được về chức năng v1), cột phải là form. Dưới `lg` cột trái **biến mất hoàn toàn**
+      — không thu nhỏ, không xếp chồng, để 375px không phải cuộn qua gì trước khi thấy ô Email
+- [x] **Sửa lỗi chữ hiệu logo 1:1** — `BrandLockup` có `tone='inverse'`. Bản đầu để `text-heading`
+      #0B4A76 trên nền #0B4A76 ⇒ **chữ biến mất hoàn toàn**; không phép đo nào bắt được vì WCAG miễn
+      trừ logotype. **Chỉ lộ ra khi chụp ảnh ra nhìn**
+- [x] **Thẻ form có vạch màu `h-1.5`** ở mép trên (`primary → secondary → accent`), bo `rounded-xl`,
+      `shadow-lg`
+- [x] **Nút hiện/ẩn mật khẩu** — `type="button"`, `aria-label` đổi theo trạng thái, `aria-pressed`,
+      vùng chạm **52×52px**, mặc định luôn ẩn
+- [x] **Banner lỗi/lý do có ICON**, không chỉ có màu (rule `color-only`)
+- [x] **Đăng xuất ở header: dải ngang toàn màn hình ⇒ popover `w-72` neo vào nút**, có mũi nhọn.
+      Kèm **Esc đóng · chạm ra ngoài đóng · focus vào Huỷ khi mở, trả về nút khi đóng**
+- [x] **Hai nút của popover xếp DỌC** — bản `grid-cols-2` làm chữ "Đăng xuất" **gãy hai dòng**, và
+      nới bề rộng không cứu được vì nhãn lúc gửi còn dài hơn ("Đang đăng xuất…")
+- [x] **`SignOutSubmit` (MỚI)** — nút gửi dùng chung, chấm dứt việc bản header có `useFormStatus()`
+      còn bản `/…/account` thì không
+- [x] **Khối xác nhận ở `/…/account`** thành khối có viền + nền cảnh báo nhạt, thay hàng trần ba mảnh
+      rời (câu hỏi · nút đỏ · chữ "Huỷ" trông như liên kết)
+- [x] **Logo header vào ô bo góc `bg-accent/15`** ở cả hai route group
+- [x] **`agentRules: false`** trong `next.config.ts` — Next 16 tự chèn khối `nextjs-agent-rules` vào
+      cuối `AGENTS.md` mỗi lần `next dev` chạy, mà `AGENTS.md` là **tài liệu điều khiển**
+- [x] **Kiểm chứng bằng MẮT**: chụp **7 màn hình × 2 bề rộng** (375 / 1440) trên bản `next build` +
+      `next start`, nhìn từng ảnh. **Bắt được 2 lỗi thật** mà không phép đo nào thấy: chữ hiệu 1:1 và
+      nút gãy hai dòng
+- [x] **Quality gate**: typecheck ✅ · lint ✅ (0 error 0 warning) · build ✅ · `npm test` **745/745** ·
+      `npm run e2e` **121 passed / 5 skipped / 0 failed** (gồm quét axe `/login` và hàng rào DEC-053
+      ở cả `mobile-375` lẫn `desktop-1440`). ⚠ Lượt E2E **đầu** bị huỷ vì Docker chết giữa chừng
+      (ISSUE-024 tái diễn); lượt chạy lại trên **đúng cây mã ấy** xanh đủ
+
 ### 13c. YÊU CẦU MỚI CỦA NGƯỜI DÙNG — ghi ngày 2026-08-10, kèm 4 ảnh chú thích tay
 
 > ⚠ **ĐỌC MỤC NÀY TRƯỚC KHI SỬA BẤT KỲ DÒNG NÀO.** Sáu yêu cầu dưới đây **không cùng hạng**:

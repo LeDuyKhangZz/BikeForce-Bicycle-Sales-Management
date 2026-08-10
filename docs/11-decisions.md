@@ -1294,6 +1294,101 @@ vì BR-001 + BR-019 biến một tài khoản Sales thành **tài nguyên dùng 
 
 ---
 
+## DEC-054 — `/login` bố cục chia đôi từ 1024px · Đăng xuất thành popover neo vào nút
+
+**Date:** 2026-08-10
+**Trigger:** Người dùng xem bản deploy và nói thẳng: *"trang đăng nhập và chỗ hiện nút đăng xuất quá
+xấu, thiết kế lại giao diện cho đẹp hơn, ưu tiên điện thoại và laptop."* Đây là **đánh giá bằng mắt**,
+không phải một phép đo trượt ngưỡng — và đó chính là loại tín hiệu mà bốn nhóm luật đo được của
+DEC-053 **không thể** phát hiện (bài học đã ghi ở cuối DEC-053: *"không vi phạm" ≠ "đẹp"*).
+
+**Decision:** Sáu thay đổi, tất cả nằm ở tầng trình bày. **Không đụng** một business rule, một token
+màu (DEC-046), hay một luồng dữ liệu nào.
+
+### 1. `/login` — một cột ở mọi bề rộng ⇒ **chia đôi từ `lg`**
+
+| Bề rộng | Bố cục |
+|---|---|
+| < 1024px | **Một cột `max-w-md` canh giữa** — y như cũ, chỉ đẹp hơn. Cột thương hiệu **không tồn tại**, không thu nhỏ, không xếp chồng |
+| ≥ 1024px | **Hai cột**: trái là mặt thương hiệu nền `heading`, phải là form |
+
+Vì sao phải sửa: ở 1440px bản cũ để **~1.100px khoảng trắng chết** hai bên một thẻ 448px. Mắt đọc ra
+"biểu mẫu bị bỏ quên giữa trang", không phải "màn hình mở đầu của một sản phẩm".
+
+Vì sao cột trái **biến mất hẳn** dưới 1024px chứ không xếp chồng lên trên form: bắt Sales cuộn qua
+một khối giới thiệu trước khi thấy ô Email là phản tác dụng trực tiếp với mobile-first
+(CLAUDE.md §3 điều 9). Nội dung ba gạch đầu dòng ở cột trái phải soi được về **chức năng đã có
+trong v1** — không được hứa thứ sản phẩm không giao (Master Spec §71).
+
+### 2. Chữ hiệu logo có tone **`inverse`**
+
+`BrandLockup` nhận `tone: 'brand' | 'inverse'`. Nền đậm dùng `inverse` (chữ **trắng**); hình xe
+**giữ nguyên màu cam** ở cả hai tone vì đó là bản sắc logo gốc, và cam #E9A04F trên #0B4A76 đo được
+**4,30:1** — vượt ngưỡng 3:1 của WCAG 1.4.11 cho đồ hoạ.
+
+> ⚠ **Đây là một lỗi ĐÃ XẢY RA THẬT ở bản đầu của chính DEC này.** Cột trái ban đầu gọi
+> `<BrandLockup className="text-white" />`, nhưng `class` bên trong là `text-heading` nên nó thắng:
+> chữ **#0B4A76 trên nền #0B4A76 — tỉ lệ 1:1, chữ biến mất hoàn toàn**. Không một phép đo tự động
+> nào của dự án bắt được, vì WCAG **miễn trừ logotype** khỏi ngưỡng tương phản nên bộ đo cũng bỏ
+> qua nó. Nó chỉ lộ ra khi **chụp ảnh ra và nhìn**. Đây là lần thứ hai bài học đó phải trả giá.
+
+### 3. Nút **hiện/ẩn mật khẩu**
+
+Sales gõ mật khẩu một ngón, ngoài nắng, trên bàn phím ảo 375px. Không có nút hiện thì cách duy nhất
+để sửa một ký tự gõ nhầm là xoá sạch gõ lại. Ràng buộc: `type="button"`, `aria-label` đổi theo trạng
+thái + `aria-pressed`, vùng chạm **52×52px**, mặc định **luôn ẩn** và không nhớ trạng thái.
+
+### 4. Xác nhận Đăng xuất ở header: **dải ngang toàn màn hình ⇒ thẻ neo vào nút**
+
+Bản cũ là `absolute inset-x-0` chạy hết bề rộng. Ở 1440px câu hỏi nằm mãi bên trái còn hai nút nằm
+mãi bên phải, cách nhau cả nghìn pixel — mắt không nối chúng thành một câu hỏi, và nó che mất dòng
+đầu của nội dung như một thanh lỗi hệ thống.
+
+Nay là popover `w-72` neo dưới đúng cái nút vừa bấm, có mũi nhọn chỉ lên nút. Kèm ba thứ một popover
+buộc phải có mà bản cũ không có: **Esc đóng**, **chạm ra ngoài đóng**, **focus vào panel khi mở và
+trả về nút khi đóng**. Focus đặt ở nút **Huỷ** — mở panel rồi gõ Enter theo quán tính thì kết quả
+phải là "không có gì xảy ra".
+
+**Hai nút xếp DỌC, không phải hai cột.** Bản đầu xếp `grid-cols-2`; chụp ảnh ra thì chữ "Đăng xuất"
+**gãy làm hai dòng** trong ô 128px, và nới bề rộng panel cũng không cứu được vì nhãn lúc đang gửi
+còn dài hơn ("Đang đăng xuất…"). Xếp dọc thì không nhãn nào gãy, ở bất kỳ độ dài nào.
+
+### 5. `SignOutSubmit` — một nút gửi dùng chung cho **cả hai** chỗ xác nhận
+
+Trước đây bản ở header có trạng thái `useFormStatus()`, bản ở `/…/account` **không có**. Gộp về
+`features/auth/sign-out-submit.tsx` để hai chỗ không bao giờ lệch nhau nữa.
+
+Ở `/…/account` khối xác nhận vẫn là **khối tại chỗ**, KHÔNG phải popover: nút ở đó nằm trong dòng
+chảy của trang nên đẩy nội dung xuống là hành vi đúng và rẻ nhất — không có lớp nổi nào phải quản lý
+focus, phím Esc hay bấm-ra-ngoài.
+
+### 6. Logo trong header ngồi trong một ô bo góc `bg-accent/15`
+
+Cân được khối lượng thị giác của nút Đăng xuất ở đầu kia hàng. Nền chỉ 15% nên không sinh cặp
+nền×chữ mới nào phải đo (bài học ISSUE-018).
+
+**Alternatives rejected:**
+- *Đổi bảng màu cho "tươi hơn"* — cấm tuyệt đối, DEC-046 do người dùng chốt theo logo.
+- *Xếp chồng cột thương hiệu lên trên form ở mobile* — xem lý do ở mục 1.
+- *Dùng `window.confirm()` cho đăng xuất* — đã bác từ Phase 2 (NFR-009, webview Zalo).
+- *Ẩn nhãn nút thành icon-only ở mọi bề rộng để tránh gãy chữ* — mất chữ là mất nghĩa; xếp dọc giải
+  quyết triệt để hơn mà không mất gì.
+
+**Impact:** `app/(auth)/login/page.tsx` · `features/auth/login-form.tsx` ·
+`features/auth/header-sign-out.tsx` · `features/auth/sign-out-button.tsx` ·
+**`features/auth/sign-out-submit.tsx` (MỚI)** · `components/ui/brand-mark.tsx` ·
+`app/globals.css` (`@utility auth-brand-aura`) · `app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` ·
+`docs/05 §13.4 + §17` · `next.config.ts` (ISSUE-025).
+
+**Tương phản đã ĐO trên cột thương hiệu** (không ước lượng): chữ trắng trên `heading` #0B4A76 =
+**8,66:1**; chỗ sáng nhất của vệt sáng xanh (alpha 0,55 chồng lên `heading` ⇒ #1E72A7) =
+**5,21:1**. Vì vậy cột trái dùng `text-white` **đặc** ở mọi dòng chữ và phân cấp bằng cỡ/độ đậm —
+`text-white/85` đo được chỉ **4,21:1**, trượt AA. **Đừng đưa opacity vào chữ trên nền đó.**
+
+**Status:** APPROVED (design, theo yêu cầu trực tiếp của người dùng)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

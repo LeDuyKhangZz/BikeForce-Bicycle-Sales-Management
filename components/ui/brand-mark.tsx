@@ -66,6 +66,21 @@ export function BrandMark({ decorative = false, className }: Props) {
 type LockupProps = {
   /** `sm` cho header/sidebar, `lg` cho màn hình đăng nhập. */
   size?: 'sm' | 'lg';
+  /**
+   * `brand` — chữ hiệu XANH, dùng trên mọi nền sáng (mặc định).
+   * `inverse` — chữ hiệu TRẮNG, chỉ dùng trên nền đậm.
+   *
+   * PHASE 13b (DEC-054): cột thương hiệu của `/login` có nền `heading`
+   * (#0B4A76). Chữ hiệu xanh #0B4A76 đặt lên đó là **1:1** — chữ biến mất hoàn
+   * toàn. Đây là lỗi đã xảy ra thật và chỉ lộ ra khi CHỤP ẢNH NHÌN, không một
+   * phép đo tự động nào của dự án bắt được (logotype được WCAG miễn trừ khỏi
+   * ngưỡng tương phản, nên bộ đo cũng bỏ qua nó).
+   *
+   * ⚠ Hình xe GIỮ NGUYÊN màu cam ở cả hai tone — đó là bản sắc của logo gốc, và
+   * cam #E9A04F trên #0B4A76 đo được **4,30:1**, vượt ngưỡng 3:1 của WCAG
+   * 1.4.11 cho đồ hoạ.
+   */
+  tone?: 'brand' | 'inverse';
   className?: string;
 };
 
@@ -76,7 +91,7 @@ type LockupProps = {
  * (DEC-044): chữ trong SVG bị phóng to theo viewBox và không ăn theo cỡ chữ hệ
  * thống mà người dùng đã chỉnh (`dynamic-type`).
  */
-export function BrandLockup({ size = 'sm', className }: LockupProps) {
+export function BrandLockup({ size = 'sm', tone = 'brand', className }: LockupProps) {
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
       <BrandMark
@@ -85,7 +100,8 @@ export function BrandLockup({ size = 'sm', className }: LockupProps) {
       />
       <span
         className={cn(
-          'font-bold tracking-tight text-heading',
+          'font-bold tracking-tight',
+          tone === 'inverse' ? 'text-white' : 'text-heading',
           size === 'lg' ? 'text-3xl' : 'text-base',
         )}
       >

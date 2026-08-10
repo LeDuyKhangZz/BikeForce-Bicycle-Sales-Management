@@ -239,6 +239,27 @@ textarea {
   font-feature-settings: "tnum" 1;
 }
 
+/*
+  Hai vệt sáng của CỘT THƯƠNG HIỆU ở `/login` — PHASE 13b (DEC-054).
+
+  Vì sao nằm ở đây chứ không phải một class `bg-[radial-gradient(...)]` trong
+  component: AGENTS.md §10 cấm hardcode màu trong component, và gradient nhiều
+  chặng viết bằng arbitrary value của Tailwind thì không ai đọc lại được.
+
+  Hai màu là ĐÚNG hai token đã có, viết ở dạng rgba để đặt được alpha:
+    • rgba(46,147,208)  = --color-secondary #2E93D0
+    • rgba(233,160,79)  = --color-accent    #E9A04F
+
+  ⚠ CƯỜNG ĐỘ ĐÃ ĐO, ĐỪNG NÂNG. Vệt xanh 0,55 chồng lên nền `heading` (#0B4A76)
+  cho ra #1E72A7, chữ TRẮNG trên đó còn **5,21:1** — vừa đủ AA. Nâng alpha lên
+  là kéo tỉ lệ đó xuống dưới ngưỡng ở đúng chỗ mắt không nhận ra.
+*/
+@utility auth-brand-aura {
+  background-image:
+    radial-gradient(78% 62% at 8% 0%, rgba(46, 147, 208, 0.55), transparent 62%),
+    radial-gradient(58% 52% at 100% 100%, rgba(233, 160, 79, 0.26), transparent 60%);
+}
+
 /* --------------------------------------------------------------------------
    Motion — chỉ transform và opacity, 150–200ms (DEC-015: không thư viện animation)
    -------------------------------------------------------------------------- */

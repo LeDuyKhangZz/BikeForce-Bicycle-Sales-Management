@@ -53,8 +53,19 @@ export default async function SalesLayout({ children }: { children: ReactNode })
       <header className="sticky top-0 z-30 border-b border-border/70 bg-card/85 shadow-xs supports-backdrop-filter:backdrop-blur-lg">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-2.5">
           {/* Chỉ hiện dưới 1024px: từ 1024px trở lên sidebar đã mang logo đầy đủ,
-              để cả hai là gắn thương hiệu hai lần trên cùng một khung nhìn. */}
-          <BrandMark decorative className="w-10 shrink-0 text-accent lg:hidden" />
+              để cả hai là gắn thương hiệu hai lần trên cùng một khung nhìn.
+
+              PHASE 13b (DEC-054) — logo ngồi trong một ô bo góc nền cam RẤT nhạt
+              thay vì trôi tự do cạnh chữ. Nó cho hình một chỗ đứng rõ ràng và
+              cân được khối lượng thị giác của nút Đăng xuất ở đầu kia hàng, nên
+              thanh header đọc ra "có bố cục" chứ không phải "ba thứ xếp cạnh
+              nhau". Nền chỉ 15% nên không sinh cặp màu nào phải đo tương phản. */}
+          <span
+            aria-hidden="true"
+            className="grid size-11 shrink-0 place-items-center rounded-md bg-accent/15 lg:hidden"
+          >
+            <BrandMark decorative className="w-7 text-accent" />
+          </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               BikeForce · Sales

@@ -29,8 +29,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <header className="sticky top-0 z-30 border-b border-border/70 bg-card/85 shadow-xs supports-backdrop-filter:backdrop-blur-lg">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-2.5">
           {/* Xem ghi chú ở `app/(sales)/layout.tsx` — ẩn từ 1024px vì sidebar
-              đã mang logo đầy đủ. */}
-          <BrandMark decorative className="w-10 shrink-0 text-accent lg:hidden" />
+              đã mang logo đầy đủ, và ô bo góc nền cam nhạt là PHASE 13b
+              (DEC-054). Hai group phải giống hệt nhau ở khoản này. */}
+          <span
+            aria-hidden="true"
+            className="grid size-11 shrink-0 place-items-center rounded-md bg-accent/15 lg:hidden"
+          >
+            <BrandMark decorative className="w-7 text-accent" />
+          </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               BikeForce · Quản trị

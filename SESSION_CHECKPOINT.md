@@ -1,6 +1,38 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **13 — gần đóng** (còn 2 mục cần **mắt người** / **thiết bị thật**) | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: **13b — XONG, quality gate xanh đủ, CHỜ COMMIT** | Last updated: 2026-08-10
+
+---
+
+## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 019 — DEC-054)
+
+**Phiên trước đã đóng đủ quality gate. Việc duy nhất còn lại là `git commit` + `git push`.**
+
+| Cổng chất lượng | Kết quả thật |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npx next build` | ✅ 18 route |
+| `npm test` | ✅ **745/745** |
+| `npm run e2e` | ✅ **121 passed / 5 skipped / 0 failed**, 6,0 phút |
+| **Nhìn tận mắt** | ✅ 7 màn hình × 2 bề rộng (375 / 1440), trên `next build` + `next start` |
+
+⚠ **Lượt E2E ĐẦU của phiên đó đã bị huỷ vì Docker chết giữa chừng (ISSUE-024 tái diễn)** — 75 bài
+xanh rồi đỏ hàng loạt với `signIn` hết giờ 45s. Lượt chạy lại trên **đúng cây mã ấy** xanh đủ. Bài
+học không đổi: **`docker version` trước, đọc diff sau.**
+
+⚠ **Bẫy khi chạy lại E2E:** tiến trình `next start` của lượt trước **vẫn giữ cổng 3100** dù lệnh bọc
+ngoài đã bị kết thúc ⇒ lượt mới đỏ ngay dòng đầu với `127.0.0.1:3100 is already used`. Giải phóng
+cổng trước:
+
+```powershell
+Get-NetTCPConnection -LocalPort 3100 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+⚠ **Đừng kiểm chứng UI bằng `next dev` trên máy này** — **ISSUE-026**: nó trả `403` cho một chunk
+lõi nên trang **không hydrate**; giao diện trông bình thường nhưng mọi nút client chết, và nó đánh
+lừa thêm một nấc vì **đăng nhập vẫn chạy** (Server Action có progressive enhancement). Dùng
+`next build` + `next start`.
 
 ---
 
@@ -730,6 +762,25 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
+### ✅ VIỆC SỐ 0 — COMMIT PHIÊN DEC-054 (chưa làm)
+
+Toàn bộ Phase 13b nằm trong working tree và **đã qua đủ quality gate** (bảng ở đầu file).
+Không cần chạy lại gì trước khi commit.
+
+```bash
+git add -A
+git commit -m "feat(ui): thiet ke lai /login va khu vuc Dang xuat — DEC-054"
+git push
+```
+
+⚠ `git push` từ agent **chỉ chạy khi credential còn cache**. Hết cache thì nhờ người dùng push, và
+luôn xác minh bằng `git ls-remote origin refs/heads/main` chứ đừng tin dòng "Everything up-to-date".
+
+Sau khi Vercel build xong: mở `/login` trên **điện thoại thật** và nhìn lại bằng mắt — phần duy nhất
+của DEC-054 chưa được kiểm trên thiết bị thật.
+
+---
+
 **LÀM ĐÚNG BA VIỆC NÀY TRƯỚC, THEO THỨ TỰ — cập nhật cuối phiên Entry 016:**
 
 > ✅ **Ba việc kỹ thuật đầu tiên ĐÃ XONG ngày 2026-08-10:** commit + `git push` (`356f9dd`) ·
@@ -832,7 +883,31 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 
 ## DO NOT REDO
 
-**Từ phiên THIẾT KẾ LẠI GIAO DIỆN (MỚI NHẤT — DEC-053, 2026-08-10):**
+**Từ phiên `/login` + Đăng xuất (MỚI NHẤT — DEC-054, 2026-08-10):**
+
+- **Cột thương hiệu của `/login` dùng `text-white` ĐẶC ở mọi dòng chữ.** `text-white/85` trên chỗ
+  sáng nhất của vệt sáng đo được **4,21:1 — TRƯỢT AA**. Phân cấp bằng **cỡ và độ đậm**, đừng "làm
+  mềm" chữ phụ bằng opacity. Số đã đo, không phải ước lượng.
+- **Nền cột đó là HAI LỚP: `bg-heading` đặc + một `div` phủ mang `auth-brand-aura`.** Đừng gộp
+  gradient thẳng vào phần tử chứa chữ — mọi phép đo tương phản leo cây tổ tiên tìm màu nền đầu tiên
+  **không trong suốt**, gộp vào là phép đo đọc trúng nền của cha và cho số sai (ISSUE-018).
+- **Cột thương hiệu BIẾN MẤT dưới `lg`, không thu nhỏ và không xếp chồng lên form.** Bắt Sales cuộn
+  qua một khối giới thiệu trước khi thấy ô Email là phản tác dụng trực tiếp với mobile-first.
+- **`BrandLockup` trên nền đậm PHẢI dùng `tone="inverse"`, không phải `className="text-white"`** —
+  class bên trong là `text-heading` và nó thắng. Đã sập một lần: chữ #0B4A76 trên nền #0B4A76,
+  **tỉ lệ 1:1, chữ biến mất hoàn toàn**, và **không phép đo nào bắt được** vì WCAG miễn trừ logotype.
+- **Hai nút của popover Đăng xuất xếp DỌC, không phải hai cột.** `grid-cols-2` làm chữ "Đăng xuất"
+  gãy hai dòng; nới bề rộng panel không cứu được vì nhãn lúc gửi còn dài hơn ("Đang đăng xuất…").
+- **`w-72` của popover không phải số tuỳ tiện** — ở 375px nó còn dư đúng 71px bên trái. Nới thêm là
+  đi dần tới tràn ngang (NFR-003).
+- **Xác nhận ở `/…/account` CỐ Ý là khối tại chỗ, KHÔNG phải popover.** Nút ở đó nằm trong dòng chảy
+  trang nên không cần lớp nổi, không phải quản lý focus / Esc / bấm-ra-ngoài.
+- **`agentRules: false` trong `next.config.ts` là CỐ Ý** (ISSUE-025) — gỡ ra là để `next dev` ghi đè
+  vào `AGENTS.md`, một tài liệu điều khiển, mỗi lần chạy.
+- **Đừng kiểm chứng UI bằng `next dev` trên máy này** (ISSUE-026) — trang không hydrate, và nó đánh
+  lừa rất giỏi vì đăng nhập vẫn chạy (Server Action có progressive enhancement).
+
+**Từ phiên THIẾT KẾ LẠI GIAO DIỆN (DEC-053, 2026-08-10):**
 
 - **Bảng màu DEC-046 KHÔNG bị đụng.** DEC-053 chỉ thêm **chiều sâu, bo góc, chuyển động**. Đừng
   "sửa lại màu cho tươi" — người dùng đã chốt giữ đúng tone logo, và vấn đề chưa bao giờ ở màu.

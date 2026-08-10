@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { LogIn } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, LogIn } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,23 @@ type FieldName = 'email' | 'password';
  * Validate phía client dùng **chính** `signInSchema` của Server Action — một
  * nguồn, không hai bản (AGENTS.md §9). Client validate chỉ để UX; server luôn
  * validate lại.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 13b (DEC-054) — NÚT HIỆN MẬT KHẨU
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Sales gõ mật khẩu bằng một ngón, ngoài nắng, trên bàn phím ảo 375px — nơi
+ *  gõ nhầm là chuyện thường và không có cách nào kiểm tra lại. Không có nút
+ *  hiện, cách duy nhất để sửa là xoá sạch rồi gõ lại từ đầu.
+ *
+ *  Ba ràng buộc bắt buộc, cả ba đều đã làm ở dưới:
+ *    • `type="button"` — quên thì nó submit form (chính là lý do `Button` của
+ *      dự án mặc định `type="button"`);
+ *    • `aria-label` đổi theo trạng thái + `aria-pressed` — nút chỉ có icon thì
+ *      screen reader không có gì để đọc (rule `aria-labels`, mức CRITICAL);
+ *    • vùng chạm 44×44px thật, nằm TRONG ô nhập nhưng KHÔNG đè lên chữ — ô có
+ *      `pr-14` đúng bằng chỗ nút chiếm.
+ *
+ *  Mặc định LUÔN là ẩn. Nút này không bao giờ được nhớ trạng thái sang lần sau.
  */
 export function LoginForm({ nextPath }: Props) {
   const [state, formAction, isPending] = useActionState<SignInState, FormData>(
@@ -33,6 +50,7 @@ export function LoginForm({ nextPath }: Props) {
     null,
   );
   const [clientErrors, setClientErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const [showPassword, setShowPassword] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
@@ -59,15 +77,18 @@ export function LoginForm({ nextPath }: Props) {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-6" noValidate>
+    <form action={formAction} className="flex flex-col gap-5" noValidate>
       {nextPath && <input type="hidden" name="next" value={nextPath} />}
 
+      {/* Lỗi cấp form có ICON, không chỉ có màu đỏ — rule `color-only`: trạng
+          thái không bao giờ được truyền đạt bằng riêng màu sắc. */}
       {formError && (
         <p
           role="alert"
-          className="rounded-lg border border-destructive bg-card px-3 py-3 text-sm text-destructive"
+          className="flex items-start gap-2.5 rounded-md border border-destructive/40 bg-status-missed-bg px-3.5 py-3 text-sm font-medium text-status-missed-fg"
         >
-          {formError}
+          <AlertCircle aria-hidden="true" className="mt-0.5 size-4.5 shrink-0" />
+          <span>{formError}</span>
         </p>
       )}
 
@@ -85,6 +106,7 @@ export function LoginForm({ nextPath }: Props) {
           enterKeyHint="next"
           autoCapitalize="none"
           spellCheck={false}
+          placeholder="ten@congty.com"
           required
           disabled={isPending}
           invalid={Boolean(errorFor('email'))}
@@ -102,19 +124,37 @@ export function LoginForm({ nextPath }: Props) {
         <Label htmlFor="password" required>
           Mật khẩu
         </Label>
-        <Input
-          ref={passwordRef}
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          enterKeyHint="go"
-          required
-          disabled={isPending}
-          invalid={Boolean(errorFor('password'))}
-          aria-describedby={errorFor('password') ? 'password-error' : undefined}
-          onBlur={(event) => validateOnBlur('password', event.currentTarget.value)}
-        />
+        <div className="relative">
+          <Input
+            ref={passwordRef}
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            enterKeyHint="go"
+            required
+            disabled={isPending}
+            invalid={Boolean(errorFor('password'))}
+            aria-describedby={errorFor('password') ? 'password-error' : undefined}
+            onBlur={(event) => validateOnBlur('password', event.currentTarget.value)}
+            className="pr-14"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((previous) => !previous)}
+            disabled={isPending}
+            aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+            aria-pressed={showPassword}
+            aria-controls="password"
+            className="absolute inset-y-0 right-0 grid w-13 place-items-center rounded-r-md text-muted-foreground transition-colors duration-200 ease-out-soft hover:text-foreground disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {showPassword ? (
+              <EyeOff aria-hidden="true" className="size-5" />
+            ) : (
+              <Eye aria-hidden="true" className="size-5" />
+            )}
+          </button>
+        </div>
         {errorFor('password') && (
           <p id="password-error" role="alert" className="text-sm text-destructive">
             {errorFor('password')}
@@ -123,7 +163,7 @@ export function LoginForm({ nextPath }: Props) {
       </div>
 
       {/* Disable khi đang gửi để chống double submit (rule loading-buttons). */}
-      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending}>
+      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending} className="mt-1">
         <LogIn aria-hidden="true" className="size-5" />
         {isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
       </Button>

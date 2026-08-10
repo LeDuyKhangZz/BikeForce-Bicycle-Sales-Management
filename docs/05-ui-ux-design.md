@@ -445,7 +445,7 @@ Cả ba chuỗi trên do **`lib/kpi.ts` sinh sẵn** (`display`), không compone
 | Route | Role | Mục đích | Component chính | Loading | Empty | Error | Mobile → Desktop |
 |---|---|---|---|---|---|---|---|
 | `/` | any | Redirect theo role | — | spinner | — | về `/login` | như nhau |
-| `/login` | public | UC-01 | LoginForm | nút loading | — | lỗi dưới form + banner | 1 cột canh giữa, `max-w-sm` |
+| `/login` | public | UC-01 | LoginForm | nút loading | — | lỗi dưới form + banner | **1 cột `max-w-md` canh giữa → CHIA ĐÔI từ `lg`** (DEC-054, §17) |
 | `/sales/today` | SALES | UC-03, FR-007 | ✅ **ĐÃ DỰNG (Phase 3)** — badge trạng thái, `CommitmentSummary`, đúng 1 CTA chính | skeleton card | "Chưa có báo cáo hôm nay" + CTA tạo | ErrorState + Thử lại | 1 cột → 2–3 cột KPI |
 | `/sales/today/morning` | SALES | UC-04, UC-05 | ✅ **ĐÃ DỰNG (Phase 3)** — `MorningReportForm` | skeleton form | — | lỗi theo field + banner | 1 cột `max-w-md`, sticky CTA |
 | `/sales/today/evening` | SALES | UC-06 | ⚠ **TRANG TỐI THIỂU (Phase 3)** — mới có guard vai + BR-007 + `CommitmentSummary` (FR-013). `EveningReportForm` là **Phase 4** | skeleton | — | như trên | như trên |
@@ -822,16 +822,25 @@ vị khi DEC-050 đổi doanh số sang tiền.
 
 ### 13.4 Đăng xuất ở header — và cách giải bề rộng 375px
 
+> ⚠ **Mục này đã được DEC-054 sửa một phần** — xem **§17.2** cho bản hiện hành của bước xác nhận.
+> Phần dưới đây vẫn đúng về *nút bấm*; phần *panel xác nhận* thì không còn.
+
 Nút nằm **góc trên bên phải** của cả hai route group, cạnh bản ở `/…/account` (giữ nguyên).
 
 | Bề rộng | Hiển thị | Vì sao |
 |---|---|---|
-| < 640px | **chỉ icon** + `aria-label="Đăng xuất"` | chiếm 44px thay vì ~120px, không bóp tên người dùng |
-| ≥ 640px | icon + chữ "Đăng xuất" | đã có chỗ |
+| < `sm` (**375px**) | **chỉ icon** + `aria-label="Đăng xuất"` | chiếm 44px thay vì ~120px, không bóp tên người dùng |
+| ≥ `sm` (**375px**) | icon + chữ "Đăng xuất" | đã có chỗ |
+
+⚠ Ghi chú cũ ghi ngưỡng là **640px** — **sai**. Dự án khai lại `--breakpoint-sm: 375px` (§ token), nên
+`hidden sm:inline` bật chữ ngay từ 375px. Nghĩa là **mọi điện thoại phổ biến đều thấy chữ**; chỉ máy
+hẹp hơn 375px mới rơi về icon-only. Con số 640px là mặc định của Tailwind, không phải của dự án này.
 
 Khối tên có `min-w-0` + `truncate`, nút có `shrink-0` ⇒ tên dài cắt bằng "…" thay vì đẩy nút ra khỏi
-màn hình. Panel xác nhận định vị `absolute top-full` **dưới** thanh header nên không bao giờ làm vỡ
-hàng ngang. `<header>` vì vậy phải có `relative`.
+màn hình.
+
+~~Panel xác nhận định vị `absolute top-full` **dưới** thanh header~~ — **hết hiệu lực từ DEC-054**,
+xem §17.2.
 
 ### 13.5 Phản hồi khi chạm — `tap-feedback-speed` < 100 ms
 
@@ -956,3 +965,92 @@ Ba ràng buộc không được phá:
 bẫy đã sập một lần — mở `<details>`, đi vào nhánh có dữ liệu, dùng tài khoản vào
 được form, và **xuất bộ đếm** để "0 vi phạm" có mẫu số. **Gỡ điều nào cũng là mù
 lại.**
+
+---
+
+## 17. CẬP NHẬT PHASE 13b (2026-08-10) — `/login` chia đôi · Đăng xuất thành popover
+
+> Nguồn: **DEC-054**. Kích hoạt bởi **đánh giá bằng MẮT của người dùng** trên bản deploy, không phải
+> bởi một phép đo trượt ngưỡng — đúng loại tín hiệu mà §14 (bốn nhóm luật đo được) **không thể** phát
+> hiện. Đây là lần thứ hai bài học *"không vi phạm" ≠ "đẹp"* phải trả giá.
+
+### 17.1 `/login` — bố cục theo bề rộng
+
+| Bề rộng | Bố cục |
+|---|---|
+| **< 1024px** | Một cột `max-w-md` canh giữa: lockup logo `lg` → tagline → banner lý do (nếu có) → thẻ form → dòng "không cho tự đăng ký". Cột thương hiệu **KHÔNG tồn tại** |
+| **≥ 1024px** | `lg:grid lg:grid-cols-[1.05fr_1fr]` (`xl:grid-cols-[1.2fr_1fr]`). Trái = mặt thương hiệu, phải = form. Lockup ở cột phải bị `lg:hidden` để không gắn thương hiệu hai lần trên một khung nhìn |
+
+**Cột thương hiệu chứa gì:** lockup `tone="inverse"` → headline `text-4xl` → **ba** gạch đầu dòng
+(icon trong ô `bg-white/15`) → dòng chân "Ứng dụng nội bộ · Tài khoản do Admin cấp". Hình xe cỡ
+`w-104` ở góc dưới phải làm hoa văn, `text-white/8`.
+
+⚠ Ba gạch đầu dòng phải soi được về **chức năng đã có trong v1** (cam kết sáng · đối chiếu tối · xuất
+ảnh 9:16). Trang đăng nhập **không được hứa** thứ sản phẩm không giao — Master Spec §71.
+
+**Nền cột trái = HAI LỚP, không phải một.** `bg-heading` là nền **đặc**; hai vệt sáng nằm ở một `div`
+phủ riêng mang `@utility auth-brand-aura`. Tách hai lớp là bắt buộc: mọi phép đo tương phản (axe và
+bộ đo của `e2e/ui-quality.spec.ts`) **leo cây tổ tiên tìm màu nền đầu tiên không trong suốt**, nên
+đặt gradient thẳng lên phần tử chứa chữ sẽ khiến phép đo đọc trúng nền của cha và cho số sai
+(ISSUE-018).
+
+**Tương phản đã ĐO trên cột trái:**
+
+| Cặp | Tỉ lệ | Kết luận |
+|---|---|---|
+| trắng trên `heading` #0B4A76 | **8,66:1** | AAA |
+| trắng trên chỗ sáng nhất của vệt xanh (#1E72A7) | **5,21:1** | AA ✓ |
+| **`text-white/85`** trên chỗ sáng nhất | **4,21:1** | ❌ **TRƯỢT AA** |
+| cam logo #E9A04F trên `heading` | **4,30:1** | ✓ (đồ hoạ cần ≥ 3:1) |
+
+➜ **Cột trái dùng `text-white` ĐẶC ở mọi dòng chữ.** Phân cấp bằng **cỡ và độ đậm**, không bằng
+opacity. Đừng "làm mềm" chữ phụ bằng `/70`, `/80`, `/85` — cả ba đều trượt.
+
+**Thẻ form** có vạch màu `h-1.5` chuyển sắc `primary → secondary → accent` ở mép trên. Thuần trang
+trí, không phải đo. Đây là chi tiết rẻ nhất mà đổi được nhiều nhất: mặt trắng bo góc có một vệt màu
+thương hiệu đọc ra "có thiết kế", mặt trắng trơn đọc ra "hộp thoại hệ thống".
+
+**Nút hiện/ẩn mật khẩu** — `type="button"`, `aria-label` đổi theo trạng thái + `aria-pressed`, vùng
+chạm **52×52px** (`w-13`), ô nhập có `pr-14` đúng bằng chỗ nút chiếm nên không bao giờ đè lên chữ.
+Mặc định **luôn ẩn**, không nhớ trạng thái sang lần sau.
+
+### 17.2 Xác nhận Đăng xuất — hai hình thức, theo NGỮ CẢNH của nút
+
+| Nơi | Hình thức | Vì sao |
+|---|---|---|
+| **Header** (`HeaderSignOut`) | **Popover `w-72` neo dưới nút**, có mũi nhọn chỉ lên nút | Nút nằm trên thanh dính, không có chỗ nở ra. Neo vào nút làm quan hệ nguyên nhân–kết quả thành thứ **nhìn thấy được** |
+| **`/…/account`** (`SignOutButton`) | **Khối tại chỗ**, đẩy nội dung xuống | Nút nằm trong dòng chảy trang ⇒ không cần lớp nổi, không phải quản lý focus / Esc / bấm-ra-ngoài |
+
+**Popover bắt buộc có đủ ba thứ** (bản cũ — dải `absolute inset-x-0` — không có thứ nào):
+**Esc đóng** · **chạm ra ngoài đóng** (`pointerdown`, không phải `click`) · **focus vào panel khi mở,
+trả về nút khi đóng**. Focus đặt ở nút **Huỷ**: mở panel rồi gõ Enter theo quán tính thì kết quả
+phải là "không có gì xảy ra".
+
+**Hai nút xếp DỌC, mỗi nút tràn hết bề rộng.** Bản đầu xếp `grid-cols-2` và chữ "Đăng xuất" **gãy làm
+hai dòng** trong ô 128px; nới bề rộng panel không cứu được vì nhãn lúc đang gửi còn dài hơn
+("Đang đăng xuất…"). Thứ tự "hành động trước, Huỷ sau" là quy ước action sheet của cả iOS lẫn
+Android — và đường thoát không hề khó với tới vì Esc, chạm-ra-ngoài và chính nút Huỷ đều huỷ.
+
+⚠ `w-72` = 288px **không phải số tuỳ tiện**: ở 375px mép phải của nút cách mép màn hình đúng 16px
+(`px-4` của header), nên panel còn dư 71px bên trái ⇒ không bao giờ tràn ngang (NFR-003).
+
+**`SignOutSubmit`** (`features/auth/sign-out-submit.tsx`) là nút gửi dùng chung cho **cả hai** chỗ.
+Trước DEC-054, bản header có `useFormStatus()` còn bản `/…/account` **không có** — gộp về một nơi để
+hai chỗ không bao giờ lệch nhau nữa. Nó phải là component **con** của `<form>`, nếu không
+`useFormStatus()` luôn trả `pending: false`.
+
+### 17.3 Logo trong header ngồi trong một ô
+
+`<span class="grid size-11 place-items-center rounded-md bg-accent/15">` bọc `BrandMark w-7`, ở **cả
+hai** route group. Nó cho hình một chỗ đứng rõ ràng và cân được khối lượng thị giác của nút Đăng xuất
+ở đầu kia hàng. Nền 15% nên **không sinh cặp nền×chữ mới nào phải đo** (ISSUE-018).
+
+### 17.4 `BrandLockup` có tone — và cái bẫy đã sập
+
+`tone: 'brand' | 'inverse'`. `inverse` chỉ đổi **chữ hiệu** sang trắng; **hình xe giữ nguyên màu cam**
+ở cả hai tone vì đó là bản sắc logo gốc.
+
+> ⚠ Bản đầu của DEC-054 gọi `<BrandLockup className="text-white" />` trên nền `heading`. Class bên
+> trong là `text-heading` nên nó thắng: **chữ #0B4A76 trên nền #0B4A76 — 1:1, biến mất hoàn toàn.**
+> Không phép đo tự động nào bắt được, vì **WCAG miễn trừ logotype** khỏi ngưỡng tương phản nên bộ đo
+> cũng bỏ qua. Nó chỉ lộ ra khi **chụp ảnh ra và nhìn**.
