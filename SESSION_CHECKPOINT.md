@@ -831,7 +831,50 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 
 ## DO NOT REDO
 
-**Từ phiên PHASE 13 (MỚI NHẤT — Entry 016, 2026-08-10) — đọc TRƯỚC mọi mục khác:**
+**Từ phiên THIẾT KẾ LẠI GIAO DIỆN (MỚI NHẤT — DEC-053, 2026-08-10):**
+
+- **Bảng màu DEC-046 KHÔNG bị đụng.** DEC-053 chỉ thêm **chiều sâu, bo góc, chuyển động**. Đừng
+  "sửa lại màu cho tươi" — người dùng đã chốt giữ đúng tone logo, và vấn đề chưa bao giờ ở màu.
+- **`Card` tách lớp bằng BÓNG, không phải viền.** Viền `--color-border` chỉ **1,22:1** so với nền;
+  ngoài nắng gần như không thấy. Đừng đổi ngược lại thành `border` đậm.
+- **Kính mờ CHỈ cho header và bottom nav** — hai nơi không có nội dung đọc lâu. Đặt lên khối chữ là
+  tụt tương phản, đúng thứ NFR-007 cấm. Luôn kèm `supports-backdrop-filter:`.
+- **Cam logo làm nền nút CHỈ ở "Xuất ảnh báo cáo"** (`variant="accent"`, chữ TỐI 8,17:1). Luật
+  `primary-action` cho đúng MỘT CTA chính mỗi màn hình. Chữ trắng trên cam là **2,19:1 — CẤM**.
+- **`ProgressBar` không tự tính và không tự quyết ngưỡng.** `percent = null` vẽ **máng vân chéo**,
+  KHÔNG vẽ thanh 0% — 0% nói sai rằng người dùng chưa làm được gì. Chiều dài chặn ở 100% là giới hạn
+  của HÌNH VẼ, không phải clamp dữ liệu (BR-004 vẫn cho `1.250,0%` ở badge).
+- **Traffic-light của ô chỉ số Admin là VẠCH bên trái**, không bọc con số trong mảng màu — vạch là đồ
+  hoạ nên chịu ngưỡng 3:1, và **không sinh thêm cặp nền×chữ nào** phải đo lại (bài học ISSUE-018).
+- **`e2e/ui-quality.spec.ts` ĐƯỢC COMMIT — đừng xoá như các bộ soát dùng-một-lần trước.** Lý do:
+  `bg-card/85` trông y hệt `bg-card` cho tới khi đo. Trong đó có **bốn cái bẫy đã sập một lần**; gỡ
+  điều nào cũng là mù lại.
+- **MỖI SPEC CÓ GHI BÁO CÁO PHẢI CÓ SALES RIÊNG — không chỉ mỗi project.** `ui-quality.spec.ts` dùng
+  `uiSalesEmail(project)`, `sales-flow.spec.ts` dùng `flowSalesEmail(project)`. Bản đầu gộp chung và
+  **xanh khi chạy riêng, đỏ ở cả 3 project khi chạy đầy đủ**: spec chạy trước đưa tài khoản lên
+  `COMPLETED`, BR-019 khoá vĩnh viễn, form không mở được nữa. Đây là bản mở rộng của cảnh báo
+  "mỗi project một Sales riêng" có từ Phase 11.
+- **Chạy riêng một bài rồi thấy xanh KHÔNG chứng minh bài test đúng.** Chỉ một lượt `npm run e2e`
+  **đầy đủ** mới lộ ra va chạm trạng thái giữa các spec.
+- **Bài soát giao diện: tối đa ~5 route mỗi bài, timeout 240 giây.** Phép đo quét cả cây DOM và gọi
+  `getComputedStyle` cho từng phần tử; ở `desktop-1440` chi phí gần **gấp đôi** vì DEC-019 render cả
+  hai nhánh (thẻ + `<table>`) cùng lúc. Bài 8 route đã hết giờ thật ở 180 giây.
+- **Bài soát đỏ thì ĐỌC ẢNH CHỤP LÚC ĐỎ TRƯỚC.** Trang render bình thường + `Test timeout exceeded`
+  ⇒ **test hết giờ**, sửa ngân sách. Trang render sai / có `findings` ⇒ **giao diện sai**, sửa giao
+  diện. Hai nguyên nhân, hai cách sửa hoàn toàn khác nhau.
+- **`ui-quality` CỐ Ý bỏ qua ở `zalo-like`** — project đó cùng viewport 375×812 với `mobile-375`,
+  chỉ khác `userAgent`, mà bốn luật đo đều là hàm của bề rộng và CSS. Chạy ở đó là đo lại y hệt.
+  **Đừng "bật lại cho đủ ba project".**
+- **Ngưỡng chờ `signIn` là 45 giây** (nâng từ 20). Lý do đầy đủ ở `e2e/helpers.ts` và `docs/08 §13.8`.
+  ⚠ **Cần nâng tiếp thì ĐỪNG NÂNG — hãy sửa ISSUE-021.** Ngưỡng này là chỗ chi phí đó lộ ra.
+- **Thêm một bài E2E NẶNG thì phải hỏi "project nào thật sự cho thêm thông tin?".** Chạy mọi bài
+  trên mọi project không phải kỹ lưỡng — nó đánh đổi độ tin cậy của cả bộ lấy lượt chạy trùng lặp.
+  12 bài soát thêm vào đã làm **đỏ oan hai bài KHÁC** đúng theo cơ chế đó.
+- **Bài học lớn nhất của phiên:** *"không vi phạm"* và *"đẹp"* là **hai câu hỏi khác nhau**. Bốn
+  nhóm luật đo được (tương phản/cỡ chạm/tràn ngang/cỡ chữ) không bao giờ trả lời được câu thứ hai.
+  **Muốn biết giao diện có đẹp không thì phải CHỤP ẢNH RA VÀ NHÌN.**
+
+**Từ phiên PHASE 13 (Entry 016, 2026-08-10):**
 
 - **`SALES_QUANTITY` KHÔNG CÒN TỒN TẠI.** Khoá chỉ tiêu là **`SALES_AMOUNT`**, đọc từ cặp cột
   **`target_sales_amount` / `actual_sales_amount`**. Cột `*_sales_quantity` vẫn nằm trong database

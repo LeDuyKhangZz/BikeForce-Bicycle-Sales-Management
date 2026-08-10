@@ -442,7 +442,43 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
 - [x] Quyết định về biến thể nút `accent` → **KHÔNG thêm.** Luật `primary-action` chỉ cho **một** CTA
       chính mỗi màn hình; thêm một biến thể nút nổi bật thứ hai là mời gọi vi phạm chính luật đó.
       Cam vẫn giữ đúng vai trò logo + nền
-- [ ] **Xem tận mắt** ở 375px và 1440px — *đã đo bằng máy toàn bộ, nhưng chưa nhìn bằng mắt người*
+- [x] **Xem tận mắt** ở 375px — ✅ **2026-08-10.** Chụp toàn bộ 10 màn hình rồi **mở ra nhìn**, và
+      kết luận thẳng: giao diện lúc đó **phẳng, không có nhịp thị giác, màu cam thương hiệu gần như
+      không xuất hiện**. Đó là điều mà 4 nhóm luật đo được (tương phản/cỡ chạm/tràn ngang/cỡ chữ)
+      **không thể phát hiện** — chúng trả lời "có vi phạm không", không trả lời "có đẹp không"
+
+### 13d. THIẾT KẾ LẠI GIAO DIỆN — DEC-053 (2026-08-10)
+
+> **Vì sao có mục này:** sau khi 13b báo "0 vi phạm", người dùng phản hồi *"tôi chẳng thấy giao diện
+> thay đổi gì hết, vẫn xấu i chang"*. Phản hồi đó **đúng**. 13b chỉ **đo tuân thủ** chứ chưa **thiết
+> kế**; báo cáo kết quả đo như thể đã trả lời câu hỏi thẩm mỹ là một lỗi thật của phiên trước.
+>
+> Hướng đi tra từ skill, không tự nghĩ: product type *CRM & Client Management* →
+> **Flat + Minimalism** (nền, đã có) + **Soft UI Evolution + Micro-interactions** (lớp còn thiếu).
+> Style đó ghi rõ *WCAG AA+, bo 8–12px, chuyển động 200–300ms* ⇒ **cộng thêm** vào DEC-012/DEC-046,
+> không thay thế. **Bảng màu logo giữ nguyên tuyệt đối.**
+
+- [x] **Ba nhóm token MỚI** trong `app/globals.css`: chiều sâu (`--shadow-*`, mỗi bậc **hai lớp**,
+      cộng `--shadow-brand` mang màu thương hiệu) · bo góc (`--radius-*`, 10/14/18/24px + pill) ·
+      chuyển động (`--ease-out-soft`, `rise-in`, `shimmer`). **Không đụng một token màu nào**
+- [x] **`Card`** tách lớp bằng **bóng mềm** thay vì viền mảnh — viền cũ chỉ **1,22:1** so với nền,
+      ngoài nắng gần như không thấy, và đó là nguyên nhân gốc của cảm giác "một mảng trắng phẳng"
+- [x] **`Button`**: chuyển sắc nhẹ + bóng thương hiệu, bóng **xẹp** khi nhấn · biến thể **`accent`**
+      (cam logo, chữ TỐI 8,17:1) dùng **đúng một chỗ**: nút "Xuất ảnh báo cáo"
+- [x] **`Input`/`Textarea`**: cao **52px** (từ 48px), nền **chìm**, **bật trắng + vòng sáng** khi
+      focus. Ô nhập trắng-trên-trắng cũ trông như khối chữ chỉ đọc, không "mời gõ"
+- [x] **`ProgressBar` (MỚI)** — thanh đọc-nhanh cho từng chỉ tiêu. **Thay đổi có ích nhất cho người
+      dùng thật**: Sales không còn phải tự so `90.000.000 ₫` với `100.000.000 ₫` trong đầu
+- [x] **`Skeleton`** đổi sang shimmer quét ngang — nhấp nháy độ mờ đọc ra như "hỏng"
+- [x] **Header dính trên + kính mờ** · **bottom nav kính mờ + gạch chỉ báo** ở tab đang mở
+- [x] **Ô chỉ số Admin**: con số **lên trước và to hẳn**, traffic-light thành **vạch màu bên trái**
+      thay vì bọc con số trong mảng màu
+- [x] **`/login`** — form vào thẻ nổi trên nền chuyển sắc thương hiệu
+- [x] **`e2e/ui-quality.spec.ts` — hàng rào tự động, ĐƯỢC COMMIT.** Khác mọi bộ soát dùng-một-lần
+      của Phase 2–6, vì `bg-card/85` trông y hệt `bg-card` cho tới khi đo. Chạy ở **mobile-375 và
+      desktop-1440**, mang theo **bốn cái bẫy đã sập một lần** (mở `<details>` · đi vào nhánh có dữ
+      liệu · dùng tài khoản vào được form · xuất **bộ đếm** để "0 vi phạm" có mẫu số)
+- [x] **Kiểm chứng lại sau khi đổi**: quét lại toàn bộ ở hai bề rộng — **0 vi phạm** cả bốn nhóm luật
 - [ ] Thao tác **"Thêm vào màn hình chính" trên máy thật** (Chrome Android + Safari iOS): icon đúng,
       mở ra **không có thanh địa chỉ**, splash trắng liền mạch — nợ từ Phase 12. **Cần thiết bị thật**
 

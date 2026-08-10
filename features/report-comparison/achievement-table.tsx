@@ -1,9 +1,10 @@
 import { Card, CardTitle } from '@/components/ui/card';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { calculateAchievement, formatMetricValue } from '@/lib/kpi';
 import { KPI_METRIC_ROWS } from '@/lib/reports/metric-rows';
 import type { DailyReport } from '@/services/reports';
 
-import { AchievementBadge } from './achievement-badge';
+import { AchievementBadge, STATUS_TONE } from './achievement-badge';
 
 /**
  * Bảng đối chiếu **Cam kết sáng ↔ Thực đạt ↔ Hoàn thành** cho cả 4 chỉ tiêu —
@@ -50,8 +51,17 @@ export function AchievementTable({ report }: Props) {
       {/* ── < 768px: 4 card xếp dọc ─────────────────────────────────────── */}
       <ul className="flex flex-col gap-3 md:hidden">
         {rows.map((row) => (
-          <li key={row.label} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-            <p className="text-base font-semibold text-heading">{row.label}</p>
+          <li
+            key={row.label}
+            className="flex flex-col gap-2.5 rounded-md border border-border bg-background/60 p-3"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-base font-semibold text-heading">{row.label}</p>
+              <AchievementBadge result={row.result} />
+            </div>
+
+            {/* PHASE 13 (DEC-053) — thanh đọc-nhanh, xem `components/ui/progress-bar.tsx`. */}
+            <ProgressBar percent={row.result.percent} tone={STATUS_TONE[row.result.status]} />
 
             <dl className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-0.5">
@@ -68,10 +78,6 @@ export function AchievementTable({ report }: Props) {
                 </dd>
               </div>
             </dl>
-
-            <div className="flex">
-              <AchievementBadge result={row.result} />
-            </div>
           </li>
         ))}
       </ul>
@@ -110,8 +116,15 @@ export function AchievementTable({ report }: Props) {
                 {row.actualText}
               </td>
               <td className="py-3 pl-3">
-                <div className="flex justify-end">
+                <div className="flex flex-col items-end gap-1.5">
                   <AchievementBadge result={row.result} />
+                  {/* Thanh đọc-nhanh cũng có ở bản desktop — cùng ngôn ngữ thị
+                      giác với bản mobile, chỉ hẹp hơn cho vừa cột. */}
+                  <ProgressBar
+                    percent={row.result.percent}
+                    tone={STATUS_TONE[row.result.status]}
+                    className="w-28"
+                  />
                 </div>
               </td>
             </tr>

@@ -1233,3 +1233,75 @@ hiện, và đó là "xanh oan".
 
 **Đừng chạy bộ soát giao diện song song với `npm run e2e`** — cả hai tự `next build` + `next start`
 và tranh nhau CPU lẫn cùng một database local.
+
+### 13.5 Quy tắc cấp tài khoản E2E — mở rộng sau một lần sập thật
+
+> **Mỗi spec CÓ GHI báo cáo phải có Sales của RIÊNG nó — không chỉ mỗi project.**
+
+Phase 11 đã ghi "mỗi project Playwright có Sales riêng". Phase 13 cho thấy câu đó **chưa đủ rộng**:
+`ui-quality.spec.ts` dùng lại `flowSalesEmail` của `sales-flow.spec.ts` và **xanh khi chạy riêng, đỏ
+ở cả ba project khi chạy `npm run e2e` đầy đủ**. Spec kia chạy trước, đưa tài khoản lên `COMPLETED`,
+rồi **BR-019 khoá vĩnh viễn** ⇒ `/sales/today/morning` bị đá về `/sales/today`.
+
+Nguyên nhân gốc là hai business rule, không phải cấu hình Playwright: **BR-001** cho đúng một báo cáo
+mỗi Sales mỗi ngày, và **BR-019** khoá vĩnh viễn sau khi hoàn tất. Nghĩa là một tài khoản Sales là
+**tài nguyên dùng một lần trong ngày**.
+
+Danh mục hiện tại (`e2e/accounts.ts`):
+
+| Hằng số | Ai dùng | Trạng thái đầu lượt |
+|---|---|---|
+| `E2E_ADMIN_EMAIL` | mọi spec Admin | ADMIN, chỉ đọc |
+| `E2E_DONE_SALES_EMAIL` | mọi spec cần một báo cáo đã hoàn tất | `COMPLETED`, **chỉ đọc** |
+| `flowSalesEmail(project)` | **chỉ** `sales-flow.spec.ts` | chưa báo cáo |
+| `uiSalesEmail(project)` | **chỉ** `ui-quality.spec.ts` | chưa báo cáo |
+| `createdSalesEmail(project)` | `admin-flow.spec.ts` (UC-17) | chưa tồn tại |
+
+**Hệ quả cho spec mới:** thêm một spec có ghi báo cáo thì phải cấp thêm một hằng số email, tạo trong
+`seedE2eFixture()` và dọn trong `tearDownE2eFixture()`. Dùng lại của spec khác sẽ cho ra đúng kiểu
+lỗi khó nhất: **xanh khi chạy riêng, đỏ khi chạy đầy đủ** — và thứ tự spec quyết định ai đỏ.
+
+### 13.6 Ngân sách thời gian của bài soát giao diện
+
+Phép đo của `ui-quality.spec.ts` **tự nó nặng**: mỗi route quét toàn bộ cây DOM và gọi
+`getComputedStyle` cho từng phần tử. Ở `desktop-1440` chi phí gần **gấp đôi** bản mobile, vì DEC-019
+render **cả hai** nhánh cùng lúc (thẻ cho < 768px **và** `<table>` từ 768px) — bản bị ẩn vẫn nằm
+trong DOM và vẫn được duyệt.
+
+Vì vậy: **tối đa ~5 route mỗi bài, `test.setTimeout(240_000)`**. Bài 8 route đã hết giờ thật ở 180
+giây. Chia nhỏ còn một lợi ích thứ hai: khi đỏ thì biết ngay cụm nào, không phải dò cả tám.
+
+⚠ **Khi một bài soát đỏ, ĐỌC ẢNH CHỤP LÚC ĐỎ TRƯỚC KHI SỬA CODE.** Nó phân biệt được ngay hai
+nguyên nhân dẫn tới hai cách sửa hoàn toàn khác nhau:
+- trang render **bình thường** + `Test timeout ... exceeded` ⇒ **test hết giờ**, sửa ngân sách;
+- trang render **sai** hoặc danh sách `findings` khác rỗng ⇒ **giao diện sai**, sửa giao diện.
+
+### 13.7 `ui-quality` KHÔNG chạy ở `zalo-like` — và vì sao đó là quyết định đúng
+
+`zalo-like` có **đúng cùng viewport 375×812** với `mobile-375`; nó khác duy nhất ở `userAgent`. Bốn
+luật mà bài soát đo — tương phản, cỡ chạm, tràn ngang, cỡ chữ — đều là hàm của **bề rộng và CSS**,
+**không** hàm của UA. Chạy thêm ở đó là đo lại y hệt: **không thêm một bit thông tin nào**.
+
+Và chi phí đó **không vô hại**. Khi bộ E2E tăng từ 111 lên 123 bài, 12 bài soát nặng chiếm máy đủ để
+đẩy đường đăng nhập — vốn tốn **bốn lượt đi-về tuần tự** (ISSUE-021) — vượt ngưỡng chờ, làm **đỏ oan
+hai bài KHÁC** trong `sales-flow` và `security`.
+
+Giá trị riêng của `zalo-like` nằm ở **hành vi suy theo UA** (Web Share API, quyền tải file), và
+`security.spec.ts` + `sales-flow.spec.ts` vẫn chạy đủ ở đó.
+
+**Quy tắc chung:** thêm một bài E2E nặng thì phải hỏi *"project nào thật sự cho thêm thông tin?"* —
+chạy mọi bài trên mọi project không phải là kỹ lưỡng, mà là đánh đổi độ tin cậy của cả bộ lấy số
+lượt chạy trùng lặp.
+
+### 13.8 Ngưỡng chờ `signIn` = 45 giây (nâng từ 20 ở Phase 13)
+
+20 giây được chọn khi bộ E2E còn 99 bài. Chi phí thật của đường đăng nhập đã được đo và ghi ở
+**ISSUE-021**: `signInAction` kết thúc bằng `redirect()` nên Next render **trang đích ngay trong cùng
+request POST**, và trang đó gọi `getCurrentProfile()` hai lần (layout + page) × hai lượt đi-về =
+**bốn lượt tuần tự** trước khi Server Action trả về.
+
+Nâng ngưỡng là **làm phép đo khớp với chi phí đã biết**, không phải giấu lỗi: một Server Action treo
+hẳn (ca `cache()` của ISSUE-021) vẫn không bao giờ trả về nên bài test vẫn đỏ, chỉ muộn hơn 25 giây.
+
+⚠ **Nếu một ngày cần nâng tiếp thì ĐỪNG NÂNG — hãy sửa ISSUE-021.** Ngưỡng này là chỗ chi phí đó lộ
+ra; nới mãi là tự bịt cái đồng hồ duy nhất đang đo nó.

@@ -1,5 +1,6 @@
 import { Card, CardTitle } from '@/components/ui/card';
-import { AchievementBadge } from '@/features/report-comparison/achievement-badge';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { AchievementBadge, STATUS_TONE } from '@/features/report-comparison/achievement-badge';
 import type { AdminOverview } from '@/lib/reports/admin-overview';
 import { cn } from '@/lib/utils';
 
@@ -32,12 +33,21 @@ type Props = {
   overview: AdminOverview;
 };
 
-/** Nền/chữ đã ĐO contrast — cùng bảng token với `components/ui/badge.tsx`. */
-const TONE_CLASS = {
-  success: 'bg-status-exceeded-bg text-status-exceeded-fg',
-  warning: 'bg-status-near-bg text-status-near-fg',
-  danger: 'bg-status-missed-bg text-status-missed-fg',
-  neutral: 'bg-status-pending-bg text-status-pending-fg',
+/**
+ * Vạch traffic-light bên trái ô — PHASE 13 (DEC-053).
+ *
+ * Cố ý dùng token **nền đặc** (`success` / `warning` / `destructive`) chứ không
+ * dùng cặp `status-*-bg`: đây là một vạch ĐỒ HOẠ, không có chữ nằm trên nó, nên
+ * nó chịu ngưỡng 3:1 của WCAG 1.4.11 chứ không phải 4,5:1. Cả bốn màu đều vượt.
+ *
+ * Bảng cặp nền×chữ (`TONE_CLASS` cũ) đã bị gỡ cùng lúc — không còn chỗ nào đặt
+ * chữ lên nền trạng thái ở màn hình này nữa.
+ */
+const TONE_ACCENT_CLASS = {
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-destructive',
+  neutral: 'bg-muted-foreground',
 } as const;
 
 export function OverviewTiles({ overview }: Props) {
@@ -49,21 +59,35 @@ export function OverviewTiles({ overview }: Props) {
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {overview.headcountTiles.map((tile) => (
             <li key={tile.key}>
-              <Card className="flex h-full flex-col gap-1">
-                <p className="text-sm text-muted-foreground">{tile.label}</p>
-                <p
-                  className={cn(
-                    'tabular text-3xl font-bold text-heading',
-                    // Traffic-light: màu chỉ là lớp thứ hai — con số và dòng
-                    // `hint` bên dưới mới là thứ mang nghĩa (rule color-not-only).
-                    tile.tone !== null && 'w-fit rounded-lg px-2',
-                    tile.tone !== null && TONE_CLASS[tile.tone],
-                  )}
-                >
+              {/*
+                PHASE 13 (DEC-053) — ô chỉ số đổi trật tự đọc.
+
+                Bản cũ: nhãn xám nhỏ ở trên, con số ở dưới, và khi có
+                traffic-light thì con số bị bọc trong một mảng màu — trông như
+                một cái badge bị lạc chỗ chứ không như một chỉ số.
+
+                Bản mới: **con số lên trước và to hẳn** (đó là thứ Admin mở app
+                để xem), nhãn xuống dưới, còn traffic-light chuyển thành một
+                **vạch màu bên trái ô**. Vạch không tranh chỗ với chữ, không sinh
+                thêm cặp nền×chữ nào phải đo lại tương phản, và vẫn đọc được
+                trạng thái từ khoảng cách xa hơn hẳn.
+              */}
+              <Card className="relative flex h-full flex-col gap-0.5 overflow-hidden pl-4">
+                {tile.tone !== null && (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'absolute inset-y-0 left-0 w-1.5',
+                      TONE_ACCENT_CLASS[tile.tone],
+                    )}
+                  />
+                )}
+                <p className="tabular text-4xl leading-none font-bold tracking-tight text-heading">
                   {tile.value}
                 </p>
+                <p className="text-sm font-medium text-foreground">{tile.label}</p>
                 {tile.hint !== null && (
-                  <p className="text-xs break-words text-muted-foreground">{tile.hint}</p>
+                  <p className="mt-0.5 text-xs break-words text-muted-foreground">{tile.hint}</p>
                 )}
               </Card>
             </li>
@@ -77,8 +101,16 @@ export function OverviewTiles({ overview }: Props) {
         {/* ── < 768px: card xếp dọc (DEC-019 — cấm cuộn ngang) ───────────── */}
         <ul className="flex flex-col gap-3 md:hidden">
           {overview.metricRows.map((row) => (
-            <li key={row.metric} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-              <p className="text-base font-semibold text-heading">{row.label}</p>
+            <li
+              key={row.metric}
+              className="flex flex-col gap-2.5 rounded-md border border-border bg-background/60 p-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-base font-semibold text-heading">{row.label}</p>
+                <AchievementBadge result={row.result} />
+              </div>
+
+              <ProgressBar percent={row.result.percent} tone={STATUS_TONE[row.result.status]} />
 
               <dl className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-0.5">
@@ -94,10 +126,6 @@ export function OverviewTiles({ overview }: Props) {
                   </dd>
                 </div>
               </dl>
-
-              <div className="flex">
-                <AchievementBadge result={row.result} />
-              </div>
             </li>
           ))}
         </ul>
@@ -136,8 +164,13 @@ export function OverviewTiles({ overview }: Props) {
                   {row.actualText}
                 </td>
                 <td className="py-3 pl-3">
-                  <div className="flex justify-end">
+                  <div className="flex flex-col items-end gap-1.5">
                     <AchievementBadge result={row.result} />
+                    <ProgressBar
+                      percent={row.result.percent}
+                      tone={STATUS_TONE[row.result.status]}
+                      className="w-28"
+                    />
                   </div>
                 </td>
               </tr>

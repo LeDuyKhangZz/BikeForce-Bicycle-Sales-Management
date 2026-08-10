@@ -10,6 +10,7 @@ import {
   E2E_PROJECTS,
   createdSalesEmail,
   flowSalesEmail,
+  uiSalesEmail,
 } from './accounts';
 import { E2E_PASSWORD, loadE2eEnv } from './env';
 
@@ -124,8 +125,14 @@ export async function seedE2eFixture(): Promise<void> {
   await sql("update public.profiles set role = 'ADMIN' where id = $1", [admin.id]);
 
   // Sales "luồng" của từng project — cố ý KHÔNG có báo cáo nào hôm nay.
+  //
+  // ⚠ `uiSalesEmail` là tài khoản THỨ HAI, riêng cho `ui-quality.spec.ts`. Không
+  // gộp với `flowSalesEmail`: cả hai spec đều GHI một báo cáo, mà BR-001 chỉ cho
+  // một báo cáo mỗi ngày và BR-019 khoá vĩnh viễn sau khi hoàn tất. Dùng chung
+  // thì spec chạy sau luôn đỏ — đã xảy ra thật, xem chú thích ở `accounts.ts`.
   for (const project of E2E_PROJECTS) {
     await createUser(flowSalesEmail(project), `E2E Luồng ${project}`, `E2E-${project.slice(0, 6)}`);
+    await createUser(uiSalesEmail(project), `E2E Giao Diện ${project}`, `E2E-UI-${project.slice(0, 3)}`);
     await deleteUserByEmail(createdSalesEmail(project));
   }
 
@@ -185,6 +192,7 @@ export async function tearDownE2eFixture(): Promise<void> {
     E2E_ADMIN_EMAIL,
     E2E_DONE_SALES_EMAIL,
     ...E2E_PROJECTS.map(flowSalesEmail),
+    ...E2E_PROJECTS.map(uiSalesEmail),
     ...E2E_PROJECTS.map(createdSalesEmail),
   ];
 

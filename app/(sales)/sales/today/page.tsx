@@ -62,10 +62,12 @@ export default async function SalesTodayPage({ searchParams }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-heading">Hôm nay</h1>
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-3xl font-bold tracking-tight text-heading">Hôm nay</h1>
         {/* BR-005 — ngày nghiệp vụ theo Asia/Ho_Chi_Minh, do server tính. */}
-        <p className="tabular text-sm text-muted-foreground">{formatVietnamDate(today)}</p>
+        <p className="tabular text-sm font-medium text-muted-foreground">
+          {formatVietnamDate(today)}
+        </p>
       </div>
 
       {savedMessage && (
@@ -78,15 +80,37 @@ export default async function SalesTodayPage({ searchParams }: Props) {
         </p>
       )}
 
-      <Card className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">{profile.full_name}</CardTitle>
-          {/* Trạng thái không bao giờ chỉ bằng màu — luôn icon + chữ. */}
-          <Badge tone={view.statusTone} icon={<StateIcon aria-hidden="true" className="size-4" />}>
-            {view.statusLabel}
-          </Badge>
+      {/*
+        PHASE 13 (DEC-053) — thẻ trạng thái thành KHỐI DẪN của trang.
+
+        Đây là thứ Sales nhìn đầu tiên mỗi sáng, nên nó phải trả lời "hôm nay tôi
+        đang ở đâu" trong một cái liếc. Bản cũ là một card trắng y hệt ba card
+        bên dưới — không có gì nói rằng nó quan trọng hơn.
+
+        Nền chuyển sắc xanh thương hiệu + icon lớn trong vòng tròn tạo phân cấp
+        bằng ĐỘ NỔI, không bằng cách phóng to chữ. Chữ vẫn nằm trên nền sáng nên
+        mọi tỉ lệ tương phản của DEC-046 giữ nguyên hiệu lực.
+      */}
+      <Card className="relative overflow-hidden border-primary/15 bg-linear-135 from-status-info-bg via-card to-card">
+        <div className="flex items-start gap-3.5">
+          <span className="grid size-12 shrink-0 place-items-center rounded-md bg-card text-primary shadow-sm">
+            <StateIcon aria-hidden="true" className="size-6" />
+          </span>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-base">{profile.full_name}</CardTitle>
+              {/*
+                Trạng thái không bao giờ chỉ bằng màu. Ở đây icon đã được nâng
+                lên khối tròn 48px bên trái — to hơn và dễ thấy hơn hẳn icon
+                16px nhét trong badge — nên badge chỉ còn giữ phần CHỮ. Cả hai
+                lớp (icon + chữ) vẫn đủ, đúng `color-not-only`.
+              */}
+              <Badge tone={view.statusTone}>{view.statusLabel}</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">{view.statusDescription}</p>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">{view.statusDescription}</p>
       </Card>
 
       {report === null ? (
@@ -153,6 +177,9 @@ export default async function SalesTodayPage({ searchParams }: Props) {
           chỉ bật ở nhánh COMPLETED, mà nhánh đó luôn có báo cáo) nhưng TypeScript
           cần nó để thu hẹp kiểu — và nó rẻ hơn một dấu `!`.
         */}
+        {/* Nút Xuất ảnh dùng biến thể `accent` (cam logo) — xem lý do ở
+            `components/ui/button.tsx`: đây là hành động "khoe kết quả", cố ý
+            khác màu với CTA chính để không tranh chỗ với nó. */}
         {report !== null && view.canExportImage && (
           <ShareImageButton
             reportId={report.id}

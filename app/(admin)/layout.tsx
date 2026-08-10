@@ -25,21 +25,28 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
-      <header className="relative border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3">
+      {/* Header dính trên + kính mờ — xem giải thích ở `app/(sales)/layout.tsx`. */}
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-card/85 shadow-xs supports-backdrop-filter:backdrop-blur-lg">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-2.5">
           {/* Xem ghi chú ở `app/(sales)/layout.tsx` — ẩn từ 1024px vì sidebar
               đã mang logo đầy đủ. */}
-          <BrandMark decorative className="w-9 shrink-0 text-accent lg:hidden" />
+          <BrandMark decorative className="w-10 shrink-0 text-accent lg:hidden" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-muted-foreground">BikeForce · Quản trị</p>
-            <p className="truncate text-base font-semibold text-heading">{profile.full_name}</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              BikeForce · Quản trị
+            </p>
+            <p className="truncate text-base font-semibold tracking-tight text-heading">
+              {profile.full_name}
+            </p>
           </div>
           <HeaderSignOut />
         </div>
       </header>
 
-      {/* `pb-24` chừa chỗ cho bottom nav (rule fixed-element-offset). */}
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 pb-24">{children}</main>
+      {/* `pb-28` chừa chỗ cho bottom nav (rule fixed-element-offset). */}
+      <main className="mx-auto w-full max-w-5xl flex-1 animate-rise-in px-4 py-5 pb-28">
+        {children}
+      </main>
 
       <MainNav items={ADMIN_NAV_ITEMS} label="Điều hướng Quản trị" />
     </div>

@@ -38,7 +38,12 @@ export function Badge({ tone = 'neutral', icon, className, children, ...props }:
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium',
+        // PHASE 13 (DEC-053) — `font-semibold` + viền cùng tông (`currentColor`
+        // ở 18%) làm badge đọc ra một "chip" thật thay vì một mảng màu nhạt.
+        // Dùng `currentColor` nên KHÔNG sinh thêm cặp nền×chữ nào phải đo lại
+        // tương phản — viền luôn là chính màu chữ của cặp đó (bài học ISSUE-018).
+        'inline-flex items-center gap-1.5 rounded-pill border border-current/18 px-2.5 py-1',
+        'text-sm font-semibold',
         TONE_CLASS[tone],
         className,
       )}

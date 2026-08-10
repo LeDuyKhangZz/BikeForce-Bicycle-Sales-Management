@@ -122,13 +122,16 @@ export function ShareImageButton({ reportId, fileName }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <Button
-        variant="secondary"
-        size="lg"
-        onClick={handleExport}
-        disabled={isBusy}
-        aria-busy={isBusy}
-      >
+      {/*
+        PHASE 13 (DEC-053) — biến thể `accent` (cam logo, chữ TỐI 8,17:1).
+
+        Đây là nơi DUY NHẤT trong sản phẩm dùng màu cam làm nền nút, và có lý do:
+        xuất ảnh là hành động "khoe kết quả sau khi đã xong việc", khác hẳn về
+        bản chất với CTA điều hướng. Luật `primary-action` chỉ cho MỘT CTA chính
+        mỗi màn hình — cam ở đây không tranh chỗ với nút xanh, nó nói một câu
+        khác. Chữ trắng trên cam chỉ 2,19:1 nên BỊ CẤM (DEC-046).
+      */}
+      <Button variant="accent" size="lg" onClick={handleExport} disabled={isBusy} aria-busy={isBusy}>
         <ImageIcon aria-hidden="true" className="size-5" />
         {isBusy ? 'Đang tạo ảnh…' : 'Xuất ảnh báo cáo'}
       </Button>

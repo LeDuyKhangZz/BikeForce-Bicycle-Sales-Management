@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { BrandLockup } from '@/components/ui/brand-mark';
+import { Card } from '@/components/ui/card';
 import { LoginForm } from '@/features/auth/login-form';
 import { getCurrentProfile } from '@/features/auth/queries';
 import { messageForLoginReason } from '@/lib/auth/messages';
@@ -38,15 +39,23 @@ export default async function LoginPage({ searchParams }: Props) {
   const reasonMessage = messageForLoginReason(firstValue(params.reason));
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-4 py-10">
-      <header className="flex flex-col gap-3">
+    /*
+      PHASE 13 (DEC-053) — trang đăng nhập là bộ mặt đầu tiên của sản phẩm.
+
+      Bản cũ đặt logo, chữ và form trực tiếp lên nền trang, nên nó đọc ra như
+      một biểu mẫu nội bộ. Nay form nằm trong một **thẻ nổi có bóng** trên nền
+      chuyển sắc thương hiệu — cùng ngôn ngữ với phần còn lại của app, và tự nói
+      "đây là một sản phẩm" trước khi người dùng gõ ký tự đầu tiên.
+    */
+    <main className="mx-auto flex min-h-dvh w-full max-w-md animate-rise-in flex-col justify-center gap-6 px-4 py-10">
+      <header className="flex flex-col items-center gap-3 text-center">
         {/* Logo đứng riêng một dòng, hình cam + chữ xanh đúng logo gốc (DEC-046).
             `<h1>` bọc lấy lockup để cấp bậc heading vẫn là h1 → không phá
             `heading-hierarchy`. */}
         <h1>
           <BrandLockup size="lg" />
         </h1>
-        <p className="text-base text-muted-foreground">
+        <p className="text-base text-balance text-muted-foreground">
           Báo cáo hiệu suất bán hàng hằng ngày. Đăng nhập bằng tài khoản do Admin cấp.
         </p>
       </header>
@@ -54,20 +63,22 @@ export default async function LoginPage({ searchParams }: Props) {
       {reasonMessage && (
         <p
           role="alert"
-          className="rounded-lg border border-warning bg-card px-3 py-3 text-sm text-warning"
+          className="rounded-md border border-warning bg-status-near-bg px-3.5 py-3 text-sm font-medium text-status-near-fg"
         >
           {reasonMessage}
         </p>
       )}
 
-      <LoginForm nextPath={nextPath} />
+      <Card className="p-5 shadow-lg sm:p-6">
+        <LoginForm nextPath={nextPath} />
+      </Card>
 
       {/*
         BR-012 / FR-006: KHÔNG có self-registration. Không render link "Đăng ký",
         và signup cũng đã bị tắt ở tầng cấu hình Supabase Auth — tắt ở frontend
         là không đủ vì endpoint /auth/v1/signup vẫn mở với anon key.
       */}
-      <p className="text-sm text-muted-foreground">
+      <p className="text-center text-sm text-balance text-muted-foreground">
         Chưa có tài khoản? Hệ thống không cho tự đăng ký — vui lòng liên hệ Admin.
       </p>
     </main>

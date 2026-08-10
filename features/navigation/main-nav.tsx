@@ -67,7 +67,12 @@ export function MainNav({ items, label }: Props) {
       <nav
         aria-label={label}
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card lg:hidden',
+          'fixed inset-x-0 bottom-0 z-40 border-t border-border/70 lg:hidden',
+          // PHASE 13 (DEC-053) — kính mờ + bóng hắt LÊN. Thanh nav đục hoàn toàn
+          // cắt trang thành hai mảnh rời; nền mờ giữ cảm giác nội dung chạy tiếp
+          // xuống dưới nó. `supports-` để trình duyệt không hỗ trợ vẫn có nền đặc
+          // — KHÔNG bao giờ để chữ nằm trên nền trong suốt.
+          'bg-card/85 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] supports-backdrop-filter:backdrop-blur-lg',
           // Vùng cử chỉ của iOS/Android nằm dưới đáy màn hình thật — không trừ
           // ra thì mục cuối bị hệ điều hành nuốt mất phần chạm.
           'pb-[env(safe-area-inset-bottom)]',
@@ -123,7 +128,9 @@ function NavLink({ item, isActive, layout }: NavLinkProps) {
       // giá trị hợp lệ nhưng nhiều screen reader vẫn đọc thành "current".
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-2 rounded-lg font-medium transition-colors duration-150',
+        'relative flex items-center gap-2 rounded-md font-medium',
+        'transition-[color,background-color,transform] duration-200 ease-out-soft',
+        'active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none',
         // 44px là sàn tuyệt đối của vùng chạm (rule touch-target-size).
         layout === 'tab'
           ? 'min-h-14 flex-col justify-center gap-1 px-2 py-2 text-xs'
@@ -146,7 +153,25 @@ function NavLink({ item, isActive, layout }: NavLinkProps) {
         layout === 'sidebar' && !isActive && 'hover:bg-background',
       )}
     >
-      <Icon aria-hidden="true" className={layout === 'tab' ? 'size-5' : 'size-4'} />
+      {/*
+        PHASE 13 (DEC-053) — GẠCH CHỈ BÁO ở cạnh trên của tab đang mở.
+
+        Trạng thái active của bottom nav trước đây chỉ đổi màu chữ; ở bề rộng
+        375px với ba mục màu xám giống nhau, mắt phải dừng lại mới nhận ra mình
+        đang ở đâu. Một gạch ngắn phía trên là chỉ báo mà mọi app điện thoại đều
+        dùng, và nó thoả `nav-state-active` bằng HÌNH DẠNG chứ không thêm một
+        cách hiểu-bằng-màu nào nữa (rule `color-not-only`).
+      */}
+      {isActive && layout === 'tab' && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-4 top-0 h-1 rounded-b-pill bg-primary"
+        />
+      )}
+      <Icon
+        aria-hidden="true"
+        className={cn(layout === 'tab' ? 'size-5' : 'size-4', isActive && 'scale-110')}
+      />
       <span className={cn(isActive && 'font-semibold')}>{item.label}</span>
     </Link>
   );

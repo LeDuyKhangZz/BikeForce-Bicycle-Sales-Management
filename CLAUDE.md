@@ -315,6 +315,11 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** tự triển khai mục trong `docs/10-future-roadmap.md`.
 - ❌ **Không** rewrite lại bộ tài liệu Phase 0 từ đầu — chỉ cập nhật (xem `DO NOT REDO` trong checkpoint).
 - ❌ **Không** dùng `<table>` cuộn ngang trên mobile, không dùng emoji làm icon, không thêm animation ngoài transform/opacity 150–300ms.
+- ❌ **Không** đổi bảng màu DEC-046 để "cho tươi hơn" — người dùng đã chốt giữ đúng tone logo. Lớp thẩm mỹ nằm ở **DEC-053** (chiều sâu / bo góc / chuyển động), không ở màu.
+- ❌ **Không** đặt kính mờ (`backdrop-blur`) lên khối có chữ đọc lâu — chỉ header và bottom nav (DEC-053).
+- ❌ **Không** dùng cam logo làm nền nút ngoài "Xuất ảnh báo cáo"; chữ trắng trên cam là **2,19:1**, bị cấm tuyệt đối.
+- ❌ **Không** xoá `e2e/ui-quality.spec.ts` như các bộ soát dùng-một-lần trước — nó là hàng rào chống trôi tương phản của DEC-053.
+- ❌ **Không** kết luận "giao diện đạt" chỉ vì bốn nhóm luật đo được đều xanh. **"Không vi phạm" ≠ "đẹp"** — muốn biết đẹp hay không thì **chụp ảnh ra và nhìn** (bài học DEC-053).
 
 ---
 

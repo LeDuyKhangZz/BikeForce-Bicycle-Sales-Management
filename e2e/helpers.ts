@@ -17,6 +17,33 @@ import { E2E_PASSWORD } from './env';
  *     `innerText`, và `expectNoBrokenNumbers()` dưới đây làm đúng vậy.
  */
 
+/**
+ * Ngưỡng chờ đăng nhập — **45 giây**, nâng từ 20 ở PHASE 13.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO NÂNG, VÀ VÌ SAO ĐÂY KHÔNG PHẢI "GIẤU LỖI ĐI"
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Chi phí thật của đường đăng nhập đã được đo và ghi thành **ISSUE-021**:
+ *  `signInAction` kết thúc bằng `redirect()`, nên Next render **trang đích ngay
+ *  trong cùng request POST**, và trang đó gọi `getCurrentProfile()` hai lần
+ *  (layout + page) × hai lượt đi-về mỗi lần = **bốn lượt tuần tự** trước khi
+ *  Server Action trả về. Nút vì vậy còn ghi "Đang đăng nhập…" suốt quãng đó.
+ *
+ *  20 giây được chọn khi bộ E2E còn 99 bài. Bộ này nay **123 bài trên 3 project**
+ *  chạy tuần tự trên cùng một máy và cùng một Supabase local — tức nền tải nặng
+ *  hơn hẳn. Với ngưỡng cũ, **những bài đỏ đều là bài KHÁC nhau ở mỗi lượt** và
+ *  ảnh chụp luôn cho thấy form kẹt ở "Đang đăng nhập…" — dấu hiệu của **chậm**,
+ *  không phải của **sai**.
+ *
+ *  Nâng ngưỡng là làm cho phép đo khớp với chi phí đã biết. Nó **không** che
+ *  được lỗi thật: một Server Action treo hẳn (như ca `cache()` của ISSUE-021)
+ *  vẫn không bao giờ trả về, nên bài test vẫn đỏ — chỉ muộn hơn 25 giây.
+ *
+ *  ⚠ Nếu một ngày cần nâng tiếp, **đừng nâng** — hãy sửa ISSUE-021 thay vì nới
+ *  thêm. Ngưỡng này là chỗ chi phí đó lộ ra.
+ */
+const SIGN_IN_TIMEOUT_MS = 45_000;
+
 export async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.locator('input[name="email"]').fill(email);
@@ -24,7 +51,7 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await page.getByRole('button', { name: 'Đăng nhập' }).click();
 
   // Đăng nhập thành công ⇒ rời khỏi /login. Chờ chính điều đó, không chờ mạng.
-  await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
+  await expect(page).not.toHaveURL(/\/login/, { timeout: SIGN_IN_TIMEOUT_MS });
 }
 
 export async function signOut(page: Page): Promise<void> {

@@ -20,11 +20,14 @@ export function Textarea({ invalid, className, ...props }: Props) {
     <textarea
       aria-invalid={invalid || undefined}
       className={cn(
-        'min-h-24 w-full resize-y rounded-lg border bg-card px-3 py-3 text-base text-foreground',
+        // PHASE 13 (DEC-053) — cùng ngôn ngữ với `Input`: nền chìm, bật trắng
+        // khi focus. Xem giải thích đầy đủ ở `components/ui/input.tsx`.
+        'min-h-24 w-full resize-y rounded-md border bg-background px-3.5 py-3 text-base text-foreground',
         'placeholder:text-muted-foreground',
-        'transition-colors duration-150',
+        'transition-[background-color,border-color,box-shadow] duration-200 ease-out-soft',
+        'focus:bg-card focus:shadow-brand-sm',
         'disabled:cursor-not-allowed disabled:opacity-45',
-        invalid ? 'border-destructive' : 'border-input-border',
+        invalid ? 'border-destructive bg-status-missed-bg/40' : 'border-input-border/70',
         className,
       )}
       {...props}

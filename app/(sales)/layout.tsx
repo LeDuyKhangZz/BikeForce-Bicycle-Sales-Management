@@ -39,20 +39,39 @@ export default async function SalesLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
-      <header className="relative border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
+      {/*
+        PHASE 13 (DEC-053) — header DÍNH TRÊN + kính mờ.
+
+        Trước đây header cuộn đi mất, nên khi Sales cuộn xuống giữa bảng số liệu
+        thì không còn gì neo lại "mình là ai, đang ở app nào". Dính trên giữ
+        thương hiệu và danh tính luôn hiện diện mà chỉ tốn 60px.
+
+        `bg-card/85` + `backdrop-blur` cho cảm giác nội dung trôi BÊN DƯỚI kính
+        thay vì bị một dải đặc cắt ngang. `supports-backdrop-filter:` để trình
+        duyệt không hỗ trợ vẫn nhận nền đục — không bao giờ để chữ trên nền trong.
+      */}
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-card/85 shadow-xs supports-backdrop-filter:backdrop-blur-lg">
+        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-2.5">
           {/* Chỉ hiện dưới 1024px: từ 1024px trở lên sidebar đã mang logo đầy đủ,
               để cả hai là gắn thương hiệu hai lần trên cùng một khung nhìn. */}
-          <BrandMark decorative className="w-9 shrink-0 text-accent lg:hidden" />
+          <BrandMark decorative className="w-10 shrink-0 text-accent lg:hidden" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-muted-foreground">BikeForce · Sales</p>
-            <p className="truncate text-base font-semibold text-heading">{profile.full_name}</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              BikeForce · Sales
+            </p>
+            <p className="truncate text-base font-semibold tracking-tight text-heading">
+              {profile.full_name}
+            </p>
           </div>
           <HeaderSignOut />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-24">{children}</main>
+      {/* `animate-rise-in` — nội dung trôi lên nhẹ khi vào trang. Đây là phản hồi
+          "trang đã tới nơi" mà `LinkSpinner` bắt đầu ở đầu bên kia của cú chạm. */}
+      <main className="mx-auto w-full max-w-3xl flex-1 animate-rise-in px-4 py-5 pb-28">
+        {children}
+      </main>
 
       <MainNav items={SALES_NAV_ITEMS} label="Điều hướng Sales" />
     </div>

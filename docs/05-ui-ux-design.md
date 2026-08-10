@@ -868,3 +868,91 @@ ba cột số kiểu `100.000.000.000 ₫` không có cách kê chữ nào vừa
 | `reduced-motion` | đã có quy tắc toàn cục sẵn |
 
 **Bảng màu DEC-046 không phải sửa token nào.**
+
+---
+
+## CẬP NHẬT PHASE 13 — DEC-053: lớp SOFT UI EVOLUTION
+
+> Bảng màu DEC-046 **giữ nguyên tuyệt đối**. Mục này chỉ mô tả ba nhóm token
+> **mới** — chiều sâu, bo góc, chuyển động — cùng cách chúng được dùng.
+
+### 14.1 Vì sao có mục này
+
+Phase 13b đo tuân thủ và kết luận "0 vi phạm". Điều đó đúng, nhưng **"không vi
+phạm" và "đẹp" là hai câu hỏi khác nhau**. Giao diện lúc đó phẳng vì nó thiếu
+đúng ba thứ mà bảng token chưa từng có: bóng đổ, thang bo góc, và chuyển động.
+
+Hướng đi lấy từ `ui-ux-pro-max` cho product type gần nhất (*CRM & Client
+Management*): **Flat + Minimalism** làm nền — dự án đã có — cộng **Soft UI
+Evolution + Micro-interactions** làm lớp hoàn thiện.
+
+### 14.2 Thang chiều sâu — mỗi bậc HAI lớp
+
+| Token | Dùng ở đâu |
+|---|---|
+| `--shadow-xs` | header dính trên · nút `secondary` |
+| `--shadow-sm` | **mọi `Card`** — thay cho viền mảnh |
+| `--shadow-md` | card khi trỏ vào · nút khi hover |
+| `--shadow-lg` | thẻ đăng nhập |
+| `--shadow-brand` / `-sm` | **chỉ** nút `primary` và vòng sáng khi focus ô nhập |
+
+Một lớp bóng duy nhất cho ra hiệu ứng "dán tem"; hai lớp (gần + xa) mới ra được
+cảm giác vật thể nâng lên. Bóng pha **xanh** (`rgba(15,23,42,…)` — chính
+`--color-foreground`) vì nền trang `#F4F7FA` đã ngả xanh; bóng đen thuần trên nền
+đó cho ra viền xám bẩn.
+
+⚠ **Viền `--color-border` chỉ còn là lớp phụ.** Nó là 1,22:1 so với nền — ngoài
+nắng gần như không thấy. Việc tách lớp nay do **bóng** đảm nhiệm; viền chỉ giúp
+khi người dùng bật chế độ tương phản cao của hệ điều hành.
+
+### 14.3 Bo góc và chuyển động
+
+`--radius-sm/md/lg/xl` = 10/14/18/24px, `--radius-pill` cho badge và chip. Skill
+khuyến nghị 8–12px; dự án lấy cận trên vì màn hình chính là điện thoại, nơi góc
+bo lớn đọc ra "mềm" hơn.
+
+Đúng **hai** `@keyframes` cho cả dự án — `rise-in` (nội dung vào trang) và
+`shimmer` (skeleton). Cả hai chỉ chạm `transform`/`opacity` nên không sinh reflow.
+`prefers-reduced-motion` đã có quy tắc toàn cục; các chỗ chuyển động thêm
+`motion-reduce:` tường minh.
+
+### 14.4 `ProgressBar` — thay đổi có ích nhất cho người dùng thật
+
+Sales **không mạnh về công nghệ**. Bản cũ bắt họ đọc `90.000.000 ₫` cạnh
+`100.000.000 ₫` rồi tự so trong đầu — mỗi ngày, bốn lần, trên màn hình 375px.
+Một thanh dài ngắn trả lời câu đó trong một phần tư giây. Con số vẫn giữ nguyên
+bên cạnh; thanh chỉ là lớp đọc nhanh.
+
+Ba ràng buộc không được phá:
+1. **Không tự tính, không tự quyết ngưỡng** — `percent` từ `calculateAchievement()`,
+   `tone` từ `getAchievementStatus()` (BR-023). Thanh chỉ VẼ.
+2. **`percent = null` vẽ máng có vân chéo, KHÔNG vẽ thanh 0%** — 0% nói sai rằng
+   người dùng chưa làm được gì. Áp cho cả hai ca: chưa có số liệu (PENDING) và
+   `target = 0 && actual > 0` (BR-015).
+3. **Chiều dài chặn ở 100%** dù `percent` lớn hơn (BR-004 cho phép `1.250,0%`).
+   Đây là giới hạn của **hình vẽ**, không phải clamp dữ liệu — con số vượt đã
+   hiện đầy đủ ở badge bên cạnh.
+
+`aria-hidden` vì mọi thông tin ở đây đã có dạng chữ ngay cạnh.
+
+### 14.5 Ba quy tắc mới về màu, đọc trước khi thêm bề mặt
+
+1. **Kính mờ CHỈ cho header và bottom nav.** Đó là hai nơi không có nội dung đọc
+   lâu. Kính mờ dưới một khối chữ làm tụt tương phản đúng thứ NFR-007 cấm. Luôn
+   kèm `supports-backdrop-filter:` để trình duyệt không hỗ trợ vẫn nhận nền đục.
+2. **Cam logo làm nền nút CHỈ ở "Xuất ảnh báo cáo"** (biến thể `accent`). Luật
+   `primary-action` cho đúng một CTA chính mỗi màn hình; cam ở đây nói một câu
+   khác ("khoe kết quả"), không tranh chỗ với nút xanh. Chữ trên nền cam là chữ
+   **TỐI** (8,17:1) — chữ trắng chỉ 2,19:1 và **BỊ CẤM**.
+3. **Traffic-light của ô chỉ số Admin là VẠCH bên trái**, không phải nền bọc con
+   số. Vạch là đồ hoạ không có chữ nằm trên nên chịu ngưỡng 3:1 của WCAG 1.4.11,
+   và nó **không sinh thêm cặp nền×chữ nào phải đo lại** — bài học ISSUE-018.
+
+### 14.6 Hàng rào tự động
+
+`e2e/ui-quality.spec.ts` **được commit** (khác mọi bộ soát dùng-một-lần trước
+đó): `bg-card/85` trông y hệt `bg-card` cho tới khi đo, nên đây đúng loại thay
+đổi làm tỉ lệ tương phản trôi đi mà không ai nhận ra. Bài test mang theo bốn cái
+bẫy đã sập một lần — mở `<details>`, đi vào nhánh có dữ liệu, dùng tài khoản vào
+được form, và **xuất bộ đếm** để "0 vi phạm" có mẫu số. **Gỡ điều nào cũng là mù
+lại.**

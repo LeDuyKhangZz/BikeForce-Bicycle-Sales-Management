@@ -1216,6 +1216,84 @@ dành cho thẻ ảnh 9:16, và bảng này tồn tại để cho **con số ch�
 
 ---
 
+## DEC-053 — Soft UI Evolution: thêm CHIỀU SÂU, BO GÓC, CHUYỂN ĐỘNG (giữ nguyên bảng màu DEC-046)
+
+**Date:** 2026-08-10
+**Decision:** Áp một lớp ngôn ngữ thị giác lên toàn bộ sản phẩm. **Không đụng một token MÀU nào của
+DEC-046** — chỉ thêm ba nhóm token mà bản cũ hoàn toàn không có, và đó chính là lý do giao diện đọc
+ra "phẳng".
+
+| Nhóm token mới | Nội dung |
+|---|---|
+| Chiều sâu | `--shadow-xs/sm/md/lg` (mỗi bậc **hai lớp**) + `--shadow-brand`/`--shadow-brand-sm` mang màu thương hiệu |
+| Bo góc | `--radius-sm/md/lg/xl/pill` — 10/14/18/24px |
+| Chuyển động | `--ease-out-soft`, `--ease-spring`, `--animate-rise-in`, `--animate-shimmer` |
+
+Thay đổi trên từng lớp:
+
+1. **`Card`** — tách lớp bằng **bóng mềm** thay vì viền mảnh. Viền cũ `#E3E9F0` chỉ **1,22:1** so với
+   nền, nghĩa là ngoài nắng ranh giới card gần như không nhìn thấy và cả trang đọc ra một mảng trắng.
+2. **`Button`** — chuyển sắc nhẹ + **bóng mang màu thương hiệu**, bóng **xẹp xuống** khi nhấn. Thêm
+   biến thể **`accent`** (cam logo, chữ TỐI 8,17:1).
+3. **`Input`/`Textarea`** — cao **52px** (từ 48px), nền **chìm** một bậc, **bật trắng + vòng sáng**
+   khi focus. Ô nhập cũ trắng-trên-trắng trông như khối chữ chỉ đọc.
+4. **`ProgressBar` (MỚI)** — thanh đọc-nhanh cho từng chỉ tiêu.
+5. **`Skeleton`** — shimmer quét ngang thay cho nhấp nháy độ mờ.
+6. **Header** — dính trên + kính mờ. **Bottom nav** — kính mờ + **gạch chỉ báo** ở tab đang mở.
+7. **`/login`** — form vào trong thẻ nổi trên nền chuyển sắc thương hiệu.
+8. **Ô chỉ số Admin** — **con số lên trước và to hẳn**, traffic-light chuyển thành **vạch màu bên
+   trái ô** thay vì bọc con số trong một mảng màu.
+
+**Reason:** Người dùng nói thẳng sau Phase 13: *"tôi chẳng thấy giao diện thay đổi gì hết, vẫn xấu i
+chang"*. Phản hồi đó **đúng**. Phase 13b trước đó chỉ **ĐO TUÂN THỦ** (tương phản, cỡ chạm, tràn
+ngang) và kết luận "0 vi phạm" — nhưng *"không vi phạm"* và *"đẹp"* là hai câu hỏi khác nhau, và
+việc đo cái thứ nhất rồi báo cáo như thể đã trả lời cái thứ hai là một lỗi thật của phiên trước.
+
+Hướng đi **không tự nghĩ ra**: tra `ui-ux-pro-max` cho product type gần nhất — *CRM & Client
+Management* → **Flat + Minimalism** (nền, đã có sẵn) + **Soft UI Evolution + Micro-interactions**
+(lớp còn thiếu). Bản thân style đó ghi rõ *"WCAG AA+, bóng mềm hơn flat nhưng rõ hơn neumorphism,
+bo 8–12px, chuyển động 200–300ms"* — tức nó **cộng thêm** vào DEC-012/DEC-046 chứ không thay thế.
+
+Vì sao bóng pha **xanh** (`rgba(15,23,42,…)`, chính là `--color-foreground`) chứ không đen thuần: nền
+trang `#F4F7FA` đã ngả xanh, nên bóng đen thuần cho ra viền xám bẩn.
+
+**Alternatives:**
+*(a)* Đổi bảng màu cho "tươi hơn" — **bị loại thẳng**: người dùng chốt *"đúng theo tone màu tôi đã
+yêu cầu"*, và DEC-046 đã đo contrast cho từng cặp. Vấn đề chưa bao giờ nằm ở màu.
+*(b)* Glassmorphism / Dark Mode như skill gợi cho "IoT Dashboard" — bị loại: DEC-016 chốt v1 không
+dark mode, và kính mờ toàn trang làm tụt tương phản đúng thứ NFR-007 cấm. Kính mờ vì vậy **chỉ** dùng
+cho header và bottom nav, nơi không có nội dung đọc lâu.
+*(c)* Thêm thư viện animation — bị loại: DEC-015 cấm, và toàn bộ chuyển động ở đây là hai
+`@keyframes` chỉ chạm `transform`/`opacity`.
+
+**Kiểm chứng — bắt buộc, vì thay đổi này đụng độ mờ và chuyển sắc trên gần như mọi bề mặt:**
+`e2e/ui-quality.spec.ts` (**MỚI, ĐƯỢC COMMIT**) đo trên DOM đã render ở cả `mobile-375` lẫn
+`desktop-1440`: `color-contrast` trên **cặp thực tế chồng nhau** · `touch-target-size` ·
+`readable-font-size` · `horizontal-scroll` · `dynamic-type` ở 150%.
+
+⚠ Bài test đó **cố ý được commit**, khác mọi bộ soát dùng-một-lần của Phase 2–6: `bg-card/85` trông y
+hệt `bg-card` cho tới khi đo, nên đây đúng loại thay đổi làm tỉ lệ tương phản trôi đi mà không ai
+nhận ra. Nó cũng mang theo **bốn cái bẫy đã sập một lần** (mở `<details>`, đi vào nhánh có dữ liệu,
+dùng tài khoản vào được form, xuất bộ đếm để chống "xanh oan") — gỡ bất kỳ điều nào là mù lại.
+
+**Impact:** `app/globals.css` · `components/ui/{card,button,input,textarea,badge,skeleton}.tsx` ·
+`components/ui/progress-bar.tsx` (MỚI) · `features/report-comparison/{achievement-table,achievement-badge}.tsx` ·
+`features/admin-dashboard/overview-tiles.tsx` · `features/navigation/main-nav.tsx` ·
+`features/report-share/share-image-button.tsx` · `app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` ·
+`app/(sales)/sales/today/page.tsx` · `app/(auth)/login/page.tsx` · `e2e/ui-quality.spec.ts` (MỚI) ·
+`e2e/accounts.ts` + `e2e/fixtures.ts` (thêm `uiSalesEmail`) · `docs/05 §14` · `docs/08 §13.5`.
+
+⚠ **Một hệ quả không lường trước, đáng ghi lại:** bài `ui-quality` ban đầu dùng chung tài khoản Sales
+với `sales-flow.spec.ts` và **xanh khi chạy riêng, đỏ ở cả ba project khi chạy `npm run e2e` đầy
+đủ** — spec kia chạy trước, đưa tài khoản lên `COMPLETED`, rồi BR-019 khoá vĩnh viễn. Bài học mở
+rộng quy tắc cũ của Phase 11: **mỗi spec CÓ GHI báo cáo phải có Sales riêng, không chỉ mỗi project**,
+vì BR-001 + BR-019 biến một tài khoản Sales thành **tài nguyên dùng một lần trong ngày**
+(`docs/08 §13.5`).
+
+**Status:** APPROVED (technical)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

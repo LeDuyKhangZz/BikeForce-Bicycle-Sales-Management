@@ -1751,6 +1751,96 @@ Bộ soát giao diện: **~2.400 cặp màu** đo trên DOM đã render, **0 vi 
 **Next:** người dùng xác nhận Vercel build xong `356f9dd`, mở `/admin` kiểm 12 chỉ số.
 ---
 
+### Entry 018
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 13` — thiết kế lại giao diện (DEC-053)
+
+**Completed:**
+
+1. **Chụp toàn bộ 10 màn hình ở 375px rồi MỞ RA NHÌN** — bước mà Entry 016 đã bỏ qua. Kết luận
+   thẳng: phẳng, không nhịp thị giác, cam thương hiệu gần như không xuất hiện.
+2. **Tra hướng thiết kế từ skill thay vì tự nghĩ:** product type *CRM & Client Management* →
+   **Flat + Minimalism** (nền, đã có) + **Soft UI Evolution + Micro-interactions** (lớp còn thiếu).
+   Style đó ghi rõ *WCAG AA+, bo 8–12px, 200–300ms* ⇒ cộng thêm vào DEC-012/046, không thay thế.
+3. **Ba nhóm token mới** — chiều sâu (bóng hai lớp + bóng thương hiệu), bo góc, chuyển động.
+   **Không đụng một token màu nào.**
+4. **Viết lại 6 primitive + thêm `ProgressBar`**, chỉnh header/bottom nav/login/ô chỉ số Admin.
+5. **`e2e/ui-quality.spec.ts` — hàng rào tự động ĐƯỢC COMMIT**, chạy ở mobile-375 và desktop-1440.
+
+**Files Changed:** `app/globals.css` · `components/ui/{card,button,input,textarea,badge,skeleton}.tsx` ·
+`components/ui/progress-bar.tsx` (**tạo mới**) · `features/report-comparison/{achievement-table,achievement-badge}.tsx` ·
+`features/admin-dashboard/overview-tiles.tsx` · `features/navigation/main-nav.tsx` ·
+`features/report-share/share-image-button.tsx` · `app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` ·
+`app/(sales)/sales/today/page.tsx` · `app/(auth)/login/page.tsx` ·
+`e2e/ui-quality.spec.ts` (**tạo mới**) · `docs/05 §14` · `docs/11` (DEC-053) ·
+`PROJECT_CHECKLIST.md §13d` · `SESSION_CHECKPOINT.md` · `WORKLOG.md`.
+
+**Tests:** typecheck ✅ · lint ✅ · build ✅ · `npm test` ✅ **745/745** ·
+`e2e/ui-quality.spec.ts` ✅ **8/8** ở hai bề rộng, **0 vi phạm** cả bốn nhóm luật sau khi đổi ·
+`npm run e2e` đầy đủ (3 project, gồm 12 bài `ui-quality` mới) — kết quả ghi ở dòng cuối mục này.
+
+**Errors:**
+
+1. **LỖI QUY TRÌNH, nghiêm trọng hơn mọi lỗi kỹ thuật của phiên.** Entry 016 đo bốn nhóm luật, thấy
+   "0 vi phạm", rồi **báo cáo như thể đã trả lời câu hỏi thẩm mỹ**. Người dùng phản hồi *"tôi chẳng
+   thấy giao diện thay đổi gì hết, vẫn xấu i chang"* — và họ **đúng**.
+
+   **"Không vi phạm" và "đẹp" là hai câu hỏi khác nhau.** Tương phản, cỡ chạm, tràn ngang, cỡ chữ —
+   bốn thứ đó đo được bằng máy và đều đạt, trong khi giao diện vẫn thiếu **chiều sâu, nhịp thị giác
+   và sự hiện diện của thương hiệu** — ba thứ không có luật nào bắt được.
+
+   **Quy tắc rút ra, đã ghi vào `DO NOT REDO`:** muốn biết giao diện có đẹp không thì **phải chụp ảnh
+   ra và nhìn**. Bộ đo là điều kiện CẦN, không bao giờ là điều kiện ĐỦ.
+2. **`AA_NORMAL` khai rồi không dùng** — lint bắt được. Ngưỡng thật nằm ngay trong hàm đo (`isLarge ?
+   3 : 4.5`); một hằng số thứ hai ở ngoài chỉ là chỗ để lệch nhau.
+3. **Bài `ui-quality` mới XANH khi chạy riêng, ĐỎ ở cả 3 project khi chạy `npm run e2e` đầy đủ.**
+   Nguyên nhân: nó dùng chung `flowSalesEmail` với `sales-flow.spec.ts`. Spec kia chạy trước, đưa tài
+   khoản lên `COMPLETED`, rồi **BR-019 khoá vĩnh viễn** ⇒ `/sales/today/morning` bị đá về
+   `/sales/today` và ô `planned_route` không bao giờ xuất hiện.
+
+   Đây **đúng cái bẫy mà `DO NOT REDO` đã cảnh báo từ Phase 11** ("mỗi project một Sales riêng"),
+   chỉ khác một bậc: bài học thật rộng hơn câu chữ cũ — **mỗi SPEC CÓ GHI báo cáo phải có Sales
+   riêng, không chỉ mỗi project**. Đã thêm `uiSalesEmail(project)` và ghi lý do vào `accounts.ts`.
+
+   Và nó tái khẳng định điều Entry 015 đã rút ra theo chiều ngược lại: **chạy riêng một bài rồi thấy
+   xanh KHÔNG chứng minh được gì** — lần đó là để bác bỏ "đã xanh là hết lỗi", lần này là để bác bỏ
+   "chạy riêng xanh nghĩa là bài test đúng".
+4. **Bài Admin của `ui-quality` HẾT GIỜ ở 180 giây, chỉ ở `desktop-1440`.** Đọc ảnh chụp lúc đỏ thì
+   thấy `/admin/account` render hoàn toàn bình thường ⇒ **không phải vi phạm giao diện, mà là phép đo
+   tự nó quá nặng**: mỗi route quét toàn bộ cây DOM và gọi `getComputedStyle` cho từng phần tử, mà ở
+   1440px thì DEC-019 render **cả hai** nhánh (thẻ + `<table>`) nên số phần tử gần gấp đôi bản mobile.
+   Đã tách bài 8-route thành **hai bài 4–5 route** và nới lên 240 giây. Chia đôi còn giúp khoanh vùng
+   nhanh hơn khi đỏ: biết ngay là nhóm "danh sách" hay nhóm "phân tích tháng".
+
+   **Quy tắc rút ra:** đọc **ảnh chụp lúc đỏ** trước khi sửa code. Ở đây nó phân biệt được ngay
+   "giao diện sai" với "test hết giờ" — hai nguyên nhân dẫn tới hai cách sửa hoàn toàn khác nhau.
+5. **Bộ soát mới TUY XANH nhưng làm ĐỎ OAN hai bài KHÁC** (`sales-flow FR-023` và `security BR-003`,
+   đều `desktop-1440`, đều mang dấu vân tay "Đang đăng nhập…" của ISSUE-021). Nguyên nhân là **tải
+   máy**, không phải logic: bộ E2E vừa tăng từ 111 lên 123 bài, và 12 bài thêm vào đều nặng (quét cả
+   cây DOM, `getComputedStyle` từng phần tử).
+
+   Sửa **đúng hai nguyên nhân đo được**, không nới bừa:
+   - **Bỏ `ui-quality` ở `zalo-like`.** Project đó có **đúng cùng viewport 375×812** với
+     `mobile-375`, chỉ khác `userAgent`; mà bốn luật bài này đo đều là hàm của **bề rộng và CSS**,
+     không hàm của UA. Chạy ở đó là đo lại y hệt — **không thêm một bit thông tin nào** mà tốn gấp
+     rưỡi thời gian. Giá trị riêng của `zalo-like` (hành vi suy theo UA) vẫn được `security.spec.ts`
+     và `sales-flow.spec.ts` phủ đủ.
+   - **Nâng ngưỡng `signIn` từ 20 lên 45 giây.** 20 giây được chọn khi bộ E2E còn 99 bài. Chi phí
+     thật của đường đăng nhập đã đo và ghi ở **ISSUE-021** (bốn lượt đi-về tuần tự). Nâng ngưỡng là
+     làm phép đo khớp với chi phí đã biết; nó **không** che được lỗi thật, vì một Server Action treo
+     hẳn thì vẫn không bao giờ trả về. Đã ghi ngay trong `helpers.ts`: **lần sau đừng nâng tiếp —
+     hãy sửa ISSUE-021.**
+
+**Decisions:** **DEC-053** — Soft UI Evolution: thêm chiều sâu/bo góc/chuyển động, **giữ nguyên
+DEC-046**.
+
+**Remaining:** xem `Remaining` của Entry 016; thêm: nhìn lại ở **1440px** bằng mắt người (đã đo máy).
+
+**Next:** chạy `npm run e2e` đầy đủ rồi commit.
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần

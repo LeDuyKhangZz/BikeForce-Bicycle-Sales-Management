@@ -18,7 +18,12 @@ import { achievementLabel, type AchievementResult, type AchievementStatus } from
 
 type Tone = 'success' | 'warning' | 'danger' | 'neutral';
 
-const STATUS_TONE: Record<AchievementStatus, Tone> = {
+/**
+ * Ánh xạ trạng thái → tone. **Export** từ PHASE 13 để `ProgressBar` tô cùng
+ * một màu với badge đứng ngay cạnh nó — hai thứ nói về cùng một chỉ tiêu mà
+ * lệch màu thì người dùng sẽ tưởng đó là hai thông tin khác nhau.
+ */
+export const STATUS_TONE: Record<AchievementStatus, Tone> = {
   EXCEEDED: 'success',
   NEAR: 'warning',
   MISSED: 'danger',

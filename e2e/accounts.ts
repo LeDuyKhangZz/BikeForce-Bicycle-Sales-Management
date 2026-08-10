@@ -23,6 +23,22 @@ export const E2E_DONE_SALES_NAME = 'E2E Đã Hoàn Tất';
 /** Sales của project `p` — mỗi lượt chạy bắt đầu từ trạng thái "chưa báo cáo". */
 export const flowSalesEmail = (project: E2eProject): string => `flow-${project}@${E2E_DOMAIN}`;
 
+/**
+ * Sales RIÊNG của `ui-quality.spec.ts` — **không được dùng chung với
+ * `flowSalesEmail`**, dù cả hai đều bắt đầu ở trạng thái "chưa báo cáo".
+ *
+ * ⚠ Đây là cái bẫy đã sập thật: bản đầu của `ui-quality.spec.ts` dùng lại
+ * `flowSalesEmail`, và nó **xanh khi chạy riêng, đỏ ở cả 3 project khi chạy
+ * `npm run e2e` đầy đủ**. Lý do: `sales-flow.spec.ts` chạy trước và đưa tài
+ * khoản đó lên `COMPLETED`, rồi **BR-019 khoá vĩnh viễn** nên `/sales/today/morning`
+ * bị đá về `/sales/today` — ô `planned_route` không bao giờ xuất hiện.
+ *
+ * BR-001 (một báo cáo mỗi ngày) cộng BR-019 nghĩa là **mỗi spec cần ghi báo cáo
+ * phải có Sales của riêng nó**, không chỉ mỗi project. Đây chính là điều mà
+ * `SESSION_CHECKPOINT.md § DO NOT REDO` đã cảnh báo từ Phase 11.
+ */
+export const uiSalesEmail = (project: E2eProject): string => `ui-${project}@${E2E_DOMAIN}`;
+
 /** Email mà kịch bản UC-17 tạo mới — riêng theo project để không đụng nhau. */
 export const createdSalesEmail = (project: E2eProject): string => `new-${project}@${E2E_DOMAIN}`;
 
