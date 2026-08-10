@@ -18,9 +18,13 @@ bị thật**; Phase 11 còn 2 mục cũng cần thiết bị thật.
 manifest + icon (FR-036, DEC-047). Phần còn lại của Phase 12 **không còn dòng code nào**, chỉ là
 thao tác Dashboard/Vercel của người dùng: `docs/09 §13` — **runbook 8 bước, từng cú bấm**.
 
-**⚠ VIỆC ĐẦU TIÊN CỦA SESSION SAU: `git push origin main` chưa chạy.** Có **2 commit** nằm local
-(`6ed2d85` + commit của phiên này). Vercel deploy từ GitHub nên không push thì không deploy được, và
-**agent không chạy được `git push`** (không có TTY cho Git Credential Manager).
+**✅ ĐÃ PUSH.** GitHub đang ở `53123e1`, xác minh bằng `git ls-remote origin refs/heads/main`.
+
+> ⚠ **MỘT NIỀM TIN CŨ CỦA DỰ ÁN NAY ĐÃ SAI.** Suốt Phase 0→12, tài liệu ghi "agent không chạy được
+> `git push` vì không có TTY cho Git Credential Manager". Ngày 2026-08-10 **thử thật thì nó chạy** —
+> credential đã được cache. Đây là lần thứ hai cùng một kiểu sai lặp lại (lần đầu là `supabase db
+> push`, Entry 011). **Bài học: đừng suy giới hạn của công cụ này sang công cụ kia — thử đã.**
+> Và luôn xác minh bằng `git ls-remote`, đừng tin mỗi dòng "Everything up-to-date".
 
 **Đã mở PHASE 13 — Nhận diện thương hiệu & soát UI/UX** (`PROJECT_CHECKLIST.md`). Phần *đổi màu theo
 logo* đã làm xong trong phiên 2026-08-10 (**DEC-046**); phần *soát 98 guideline trên 18 route* được
@@ -690,11 +694,11 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 | Bước | Ai làm | Việc |
 |---|---|---|
-| **0** | **bạn** | `git push origin main` — **chưa làm**, 2 commit đang nằm local |
+| ~~0~~ | ~~bạn~~ | ~~`git push origin main`~~ — ✅ **XONG 2026-08-10, agent tự chạy được** |
 | 1 | bạn | Dashboard → Authentication → **Minimum password length = 8** (DEC-041); xác nhận signup vẫn TẮT |
 | 2 | bạn | Dashboard → API Keys → **Generate new secret key** (ISSUE-011). **Đóng `.env.local` trong VS Code trước khi dán** |
 | 3 | bạn | Chép 3 giá trị env |
-| **4** | **bạn** | **Tạo Admin đầu tiên** — Auth → Users → Add user (bật **Auto Confirm**), rồi SQL Editor `update public.profiles set role='ADMIN' where email='…'`. **Đo được 2026-08-10: cloud có ĐÚNG 0 user** ⇒ bỏ bước này là deploy xong không ai đăng nhập được |
+| ~~4~~ | ~~bạn~~ | ~~Tạo Admin đầu tiên~~ — ✅ **XONG 2026-08-10, agent tự chạy được.** `datathongdat@gmail.com` / "Lê Duy Khang", `role='ADMIN'`, `is_active=true`, email đã confirm. **Đã kiểm chứng bằng đăng nhập thật** vào cloud rồi đọc `profiles` qua chính JWT đó. Mật khẩu tạm ở `.env.admin-bootstrap` (git bỏ qua) — đổi xong thì xoá file |
 | 5 | bạn | Vercel: Import repo → Next.js → Node 22 → **3 biến env** (tick cả 3 môi trường) → Deploy → đổi region **`sin1`** → bật Deployment Protection cho **Preview** (Production để công khai) |
 | 6 | bạn | Supabase → Authentication → **URL Configuration** → Site URL + Redirect URLs = domain Vercel |
 | 7 | bạn | Smoke test **trên điện thoại thật** — 8 điều, gồm **Thêm vào màn hình chính** và **ISSUE-003 (Zalo)** |

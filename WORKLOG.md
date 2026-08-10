@@ -1371,6 +1371,80 @@ thứ tự. Việc đầu tiên không được bỏ qua là **Bước 4 — t�
 đang có **đúng 0 user**, không làm bước này thì deploy xong không ai đăng nhập được.
 ---
 
+### Entry 013
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 12 — Deployment Preparation` (thực thi)
+
+**Completed:**
+
+Thực thi runbook `docs/09 §13`, phần nào chạy được bằng CLI thì agent làm hết.
+
+1. **BƯỚC 0 — `git push origin main` CHẠY ĐƯỢC.** GitHub nay ở `53123e1`.
+2. **BƯỚC 4 — tạo Admin đầu tiên trên cloud, XONG.** `datathongdat@gmail.com` · "Lê Duy Khang" ·
+   `role='ADMIN'` · `is_active=true` · email đã confirm. Mật khẩu tạm 144-bit sinh ngẫu nhiên, ghi
+   **thẳng ra `.env.admin-bootstrap`** (bị `.gitignore` chặn), **không in ra terminal**.
+3. **Kiểm chứng cloud bằng đường thật** — xem `Tests`.
+
+**Files Changed:** `SESSION_CHECKPOINT.md` · `docs/09-deployment.md` (§13 Bước 0 và Bước 4 đánh dấu
+XONG + ghi lại đường kết nối database cloud) · `WORKLOG.md`. **Không có thay đổi code.**
+Sinh ra ngoài repo: `.env.admin-bootstrap` (không commit).
+
+**Tests:**
+
+| Phép kiểm | Kết quả |
+|---|---|
+| `git ls-remote origin refs/heads/main` | `53123e1…` — **đúng commit vừa đẩy** |
+| `GET /auth/v1/admin/users` trước khi chạy | **0 user** |
+| `POST /auth/v1/admin/users` | **201**, `email_confirmed_at` có |
+| `update public.profiles set role='ADMIN'` | **1 dòng** |
+| `select ... where role='ADMIN'` | **1 dòng**, `is_active=true` |
+| `POST /auth/v1/token?grant_type=password` | **200**, nhận `access_token` |
+| `GET /rest/v1/profiles` bằng **chính JWT đó** (qua RLS thật) | trả đúng 1 dòng `ADMIN` |
+| `GET /auth/v1/settings` | `disable_signup = true` ✅ (BR-012) |
+
+Phép kiểm áp chót là phép kiểm **có giá trị nhất**: nó chứng minh **cả chuỗi** — user tồn tại, mật
+khẩu đúng, email đã confirm, trigger đã tạo profile, quyền đã nâng, **và RLS cho chính chủ đọc được
+hồ sơ của mình** — bằng đúng đường mà ứng dụng sẽ đi, chứ không phải bằng `service_role` vượt rào.
+
+**Errors:**
+
+1. **Niềm tin "agent không `git push` được" là SAI.** Ghi trong `CLAUDE.md` và `SESSION_CHECKPOINT.md`
+   suốt từ Phase 0. Thử thật thì chạy — credential đã được Git Credential Manager cache. Đây là lần
+   **thứ hai** cùng một kiểu sai (lần đầu: `supabase db push`, Entry 011). **Bài học lặp lại lần hai
+   thì phải thành quy tắc: đừng suy giới hạn của công cụ này sang công cụ kia — thử đã.**
+2. **`Everything up-to-date` không chứng minh gì.** Dòng đó cũng xuất hiện khi ref `origin/main` ở
+   local bị cũ. Phải hỏi thẳng remote bằng `git ls-remote`.
+3. **`db.<ref>.supabase.co` không phân giải được (`ENOTFOUND`).** Free tier không còn IPv4 trực tiếp.
+   Đường đi được là pooler `aws-0-ap-southeast-1.pooler.supabase.com:5432`, user `postgres.<ref>`.
+   `aws-1-...` trả `XX000`. Script đã thử lần lượt 3 ứng viên nên tự tìm ra đường đúng.
+4. **CỐ Ý KHÔNG chạy `supabase config push`** dù nó đặt được `minimum_password_length` bằng CLI.
+   `supabase/config.toml` là cấu hình cho **local dev**: nó có `enable_signup = true` và
+   `site_url = "http://127.0.0.1:3000"`. Đẩy nguyên khối lên cloud sẽ **BẬT LẠI self-registration
+   trên production** — phá thẳng BR-012/FR-006 — và trỏ Site URL về localhost. CLI **không có
+   `--dry-run`**. Đổi 1 cài đặt mà đánh cược cả khối cấu hình auth của production là không đáng;
+   để người dùng bấm 3 cái trên Dashboard.
+5. **`python` in ra stdout cp1252 nên ném `UnicodeEncodeError` với ký tự `✓`.** Ghi lại: script vá
+   tài liệu phải in ASCII, nội dung ghi file thì vẫn UTF-8 bình thường.
+
+**Decisions:** None — không có quyết định kiến trúc mới. Việc không dùng `config push` là đánh giá
+rủi ro tại chỗ, đã ghi ở `Errors` mục 4.
+
+**Remaining:**
+
+- **Vercel** — chỉ người dùng làm được (không có `VERCEL_TOKEN`): import repo · 3 biến môi trường ·
+  region `sin1` · Deployment Protection cho Preview.
+- **Minimum password length = 8** trên Dashboard (DEC-041) — xem `Errors` mục 4.
+- **Rotate service role key** (ISSUE-011) — phải do người dùng làm, vì giá trị mới không được đi qua
+  transcript và họ phải tự dán vào Vercel.
+- Sau khi có link: Site URL · smoke test · Lighthouse · ISSUE-003 (Zalo).
+- **Đổi mật khẩu Admin rồi xoá `.env.admin-bootstrap`.**
+
+**Next:** Người dùng làm `docs/09 §13` **Bước 1, 2, 3, 5, 6** (Bước 0 và 4 đã xong). Trọng tâm là
+Bước 5 — Vercel.
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần
