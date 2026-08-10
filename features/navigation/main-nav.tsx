@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import { BrandLockup } from '@/components/ui/brand-mark';
 import { cn } from '@/lib/utils';
 import { activeNavKey, type NavItem, type NavKey } from '@/lib/navigation/nav-items';
 
@@ -86,7 +87,7 @@ export function MainNav({ items, label }: Props) {
         aria-label={label}
         className="fixed inset-y-0 left-0 z-40 hidden w-56 border-r border-border bg-card px-3 py-6 lg:block"
       >
-        <p className="px-3 pb-4 text-sm font-semibold tracking-tight text-heading">BikeForce</p>
+        <BrandLockup className="px-3 pb-4" />
         <ul className="flex flex-col gap-1">
           {items.map((item) => (
             <li key={item.key}>
@@ -127,8 +128,21 @@ function NavLink({ item, isActive, layout }: NavLinkProps) {
         layout === 'tab'
           ? 'min-h-14 flex-col justify-center gap-1 px-2 py-2 text-xs'
           : 'min-h-11 px-3 py-2 text-sm',
-        isActive ? 'text-primary' : 'text-muted-foreground',
-        layout === 'sidebar' && isActive && 'bg-status-info-bg',
+        /*
+         * ⚠ Mục đang sáng ở SIDEBAR phải dùng ĐÚNG CẶP `status-info-bg` +
+         * `status-info-fg` (7,99:1), KHÔNG được ghép `text-primary` lên
+         * `bg-status-info-bg`.
+         *
+         * Đó là hai token thuộc hai cặp khác nhau, và phép ghép chéo ấy chỉ
+         * "may mà đạt" với bảng màu chàm cũ. Sau DEC-046 nó đo được **4,32:1**
+         * — thiếu 0,18 so với AA — và làm đỏ 9 lượt quét axe ở `desktop-1440`
+         * (bottom tab của mobile không dính vì nó không có nền).
+         *
+         * Ở dạng tab (không có nền) thì `text-primary` trên card là 5,04:1, đạt.
+         */
+        isActive && layout === 'sidebar' && 'bg-status-info-bg text-status-info-fg',
+        isActive && layout === 'tab' && 'text-primary',
+        !isActive && 'text-muted-foreground',
         layout === 'sidebar' && !isActive && 'hover:bg-background',
       )}
     >

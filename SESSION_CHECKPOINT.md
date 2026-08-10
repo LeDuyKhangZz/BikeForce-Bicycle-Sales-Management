@@ -14,9 +14,17 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 Phase 0, 1, 2, **3**, **4**, 5, **7**, **8**, **9**, **10** đã đóng đủ. Phase 6 còn 1 mục cần **thiết
 bị thật**; Phase 11 còn 2 mục cũng cần thiết bị thật.
 
-**Current Task:** **PHASE 12 — Deployment Preparation, đang làm.** ✅ Migration đã đẩy xong lên cloud
-(7/7, ngày 2026-08-10). Việc kế tiếp: đặt **Minimum password length = 8** trên Dashboard (DEC-041),
-**rotate service role key** (ISSUE-011), rồi **runbook tạo Admin đầu tiên** — cloud chưa có user nào.
+**Current Task:** **PHASE 12 — Deployment Preparation.** ✅ **Mục CODE cuối cùng đã xong** — PWA
+manifest + icon (FR-036, DEC-047). Phần còn lại của Phase 12 **không còn dòng code nào**, chỉ là
+thao tác Dashboard/Vercel của người dùng: `docs/09 §13` — **runbook 8 bước, từng cú bấm**.
+
+**⚠ VIỆC ĐẦU TIÊN CỦA SESSION SAU: `git push origin main` chưa chạy.** Có **2 commit** nằm local
+(`6ed2d85` + commit của phiên này). Vercel deploy từ GitHub nên không push thì không deploy được, và
+**agent không chạy được `git push`** (không có TTY cho Git Credential Manager).
+
+**Đã mở PHASE 13 — Nhận diện thương hiệu & soát UI/UX** (`PROJECT_CHECKLIST.md`). Phần *đổi màu theo
+logo* đã làm xong trong phiên 2026-08-10 (**DEC-046**); phần *soát 98 guideline trên 18 route* được
+cất lại đó theo yêu cầu "deploy trước".
 
 > ✅ **Phiên 2026-08-10 gộp năm phase: 7 → 8 → 9 → 10 → 11.** Toàn bộ **18 route của v1 nay chạy
 > thật**. Chi tiết ở `WORKLOG.md` Entry 010.
@@ -542,15 +550,15 @@ thứ hai — URL không phải localhost thì ném lỗi ngay.
 
 | Loại | Trạng thái |
 |---|---|
-| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, **18 route**) |
+| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, **18 route nghiệp vụ + 3 route metadata**: `/manifest.webmanifest`, `/icon.svg`, `/apple-icon.png`) |
 | **Typecheck** | ✅ `npm run typecheck` → **exit 0** |
 | **Lint** | ✅ `npm run lint` → **exit 0**, 0 error 0 warning |
-| **Unit** | ✅ **542 passed** — 14 file, gồm `reports/trend-chart` **17** và `reports/metric-rows` **5** (MỚI) |
-| **Integration (DB)** | ✅ **54 passed** — 5 file, gồm **`indexes` 14 (MỚI — `EXPLAIN ANALYZE`)** |
-| **RLS** | ✅ **133 passed** — 9 file, gồm 4 file mới cho toàn bộ khu vực Admin và lịch sử |
-| **Tổng `npm test`** | ✅ **729 passed / 729**, 29 test file, 23,8 giây |
-| **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** |
-| **E2E (Playwright)** | ✅ **99 passed / 99** — 3 project (`mobile-375`, `desktop-1440`, `zalo-like`) × 33 bài, 4,4 phút |
+| **Unit** | ✅ **555 passed** — 16 file, gồm **`pwa/manifest` 13 (MỚI)** |
+| **Integration (DB)** | ✅ **54 passed** — 5 file, gồm **`indexes` 14 (`EXPLAIN ANALYZE`)** |
+| **RLS** | ✅ **133 passed** — 9 file, phủ toàn bộ khu vực Admin và lịch sử |
+| **Tổng `npm test`** | ✅ **742 passed / 742** |
+| **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** *(đo trước khi thêm `lib/pwa/`)* |
+| **E2E (Playwright)** | ✅ **111 passed / 111** — 3 project × 37 bài, 5,2 phút. **Đã chạy lại SAU khi đổi bảng màu DEC-046** |
 | **A11y (axe-core)** | ✅ **30 lượt quét** (10 màn hình × 3 project) — **0 vi phạm serious/critical** (NFR-007) |
 | **EXPLAIN ANALYZE / InitPlan** | ✅ **ĐÃ ĐO** — `is_admin()` là InitPlan, mọi truy vấn list đi qua index. **ISSUE-005 CLOSED** |
 | **Bảo mật (E2E)** | ✅ IDOR · 401/403 JSON cho `/api/*` · CSV Sales→403 Admin→200 + `no-store` · PNG **1080×1920** đọc từ `IHDR` · **service role key không có trong HTML** |
@@ -678,7 +686,21 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
    `.env.test.local`, tự dựng và tự dọn tài khoản `@e2e.bikeforce.test`. Kỳ vọng **99 passed**,
    khoảng 4,5 phút. Chỉ chạy một project: `npx playwright test --project=mobile-375`.
 
-**PHASE 12 — Deployment Preparation. Làm đúng thứ tự này:**
+**PHASE 12 — làm theo `docs/09 §13` (runbook 8 bước, từng cú bấm). Tóm tắt thứ tự:**
+
+| Bước | Ai làm | Việc |
+|---|---|---|
+| **0** | **bạn** | `git push origin main` — **chưa làm**, 2 commit đang nằm local |
+| 1 | bạn | Dashboard → Authentication → **Minimum password length = 8** (DEC-041); xác nhận signup vẫn TẮT |
+| 2 | bạn | Dashboard → API Keys → **Generate new secret key** (ISSUE-011). **Đóng `.env.local` trong VS Code trước khi dán** |
+| 3 | bạn | Chép 3 giá trị env |
+| **4** | **bạn** | **Tạo Admin đầu tiên** — Auth → Users → Add user (bật **Auto Confirm**), rồi SQL Editor `update public.profiles set role='ADMIN' where email='…'`. **Đo được 2026-08-10: cloud có ĐÚNG 0 user** ⇒ bỏ bước này là deploy xong không ai đăng nhập được |
+| 5 | bạn | Vercel: Import repo → Next.js → Node 22 → **3 biến env** (tick cả 3 môi trường) → Deploy → đổi region **`sin1`** → bật Deployment Protection cho **Preview** (Production để công khai) |
+| 6 | bạn | Supabase → Authentication → **URL Configuration** → Site URL + Redirect URLs = domain Vercel |
+| 7 | bạn | Smoke test **trên điện thoại thật** — 8 điều, gồm **Thêm vào màn hình chính** và **ISSUE-003 (Zalo)** |
+| 8 | bạn | Lighthouse mobile (NFR-001), rồi ghi `WORKLOG.md` |
+
+**Chi tiết cũ, giữ lại làm tham chiếu:**
 
 3. ~~**Đẩy migration 0006 + 0007 lên cloud.**~~ ✅ **XONG 2026-08-10** bằng
    `npx supabase db push --linked --yes` (mật khẩu lấy từ `SUPABASE_DB_PASSWORD` trong `.env.local`,
@@ -724,7 +746,32 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 ## DO NOT REDO
 
 
-**Từ Phase 7–11 (mới nhất — 2026-08-10):**
+**Từ phiên PWA + đổi màu theo logo (mới nhất — 2026-08-10):**
+
+- **Bảng màu nay lấy từ LOGO — DEC-046.** `--color-primary` là **`#1273B8`** (azure), **không** còn
+  là chàm `#1E40AF`. Cam logo `--color-accent` = **`#E9A04F`**. Đừng "khôi phục" bảng cũ; DEC-014
+  vẫn còn hiệu lực về **phương pháp**, chỉ bảng **giá trị** bị thay.
+- **Cam logo `#E9A04F` chỉ 2,19:1 trên trắng.** Nó **CẤM** làm chữ và làm đồ hoạ mang nghĩa. Chỉ
+  hợp lệ làm **nền** (chữ tối trên nó, 8,17:1) và làm **chính hình logo**. Muốn chữ màu cam thì dùng
+  `--color-accent-text` (`#97580B`, 5,65:1).
+- **ĐỪNG ghép `text-` của cặp này lên `bg-` của cặp khác** — ISSUE-018. Ghép `text-primary` lên
+  `bg-status-info-bg` cho ra **4,32:1** và làm đỏ 9 lượt quét axe ở `desktop-1440`. Mỗi dòng trong
+  `TONE_CLASS` của `components/ui/badge.tsx` là **một cặp trọn vẹn**.
+- **Đo token so với `card`/`background` là CHƯA ĐỦ** — phải đo cả những cặp **thực tế chồng lên nhau
+  trong DOM**. Đây là bài học của ISSUE-018.
+- **`components/ui/brand-mark.tsx` có toạ độ SINH RA từ cùng nguồn với bộ icon.** Đừng sửa tay `d=`;
+  sửa ở trình sinh rồi xuất lại cả bộ, nếu không logo web và icon màn hình chính sẽ lệch hình.
+- **`app/manifest.ts` + 3 file icon KHÔNG phải Route Handler thứ ba** (DEC-047). Thấy 3 route lạ
+  trong bảng `next build` thì đó là **metadata route**, DEC-042 vẫn nguyên vẹn.
+- **`webmanifest` trong `PUBLIC_FILE` của `middleware.ts` là BẮT BUỘC.** Bỏ đi thì manifest bị trả
+  về HTML `/login` kèm **200**, và "Thêm vào màn hình chính" **im lặng biến mất**. Có bài E2E khoá.
+- **`theme_color` = `background_color` = TRẮNG là CỐ Ý** (DEC-047). Đừng đổi sang xanh thương hiệu.
+- **Skill `ui-ux-pro-max` đã tải về** `~/.claude/skills/ui-ux-pro-max` (v2.13.0). Dùng
+  `references/quick-reference.md` + `references/pro-rules.md`. ⚠ **`--design-system` của nó khớp
+  NHẦM** cho sản phẩm này (trả về "Newsletter / Content First" + bảng màu **đỏ** + font Atkinson) —
+  **chỉ dùng phần checklist**, đừng dùng phần sinh design system.
+
+**Từ Phase 7–11 (2026-08-10):**
 
 - **Toàn bộ Phase 7, 8, 9, 10 ĐÃ XONG và có test.** 18 route đều chạy thật. **Đừng dựng lại** bất kỳ
   màn hình nào vì checkpoint cũ ghi "chưa bắt đầu" — checkpoint đó đã lỗi thời và đã được sửa.

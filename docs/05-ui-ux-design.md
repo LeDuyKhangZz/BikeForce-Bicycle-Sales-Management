@@ -147,28 +147,31 @@ Thang từ quy tắc `font-scale` ("Use consistent modular scale, e.g. 12 14 16 
 
 ### 4.1 Nguyên tắc: mọi tỉ lệ dưới đây đã được TÍNH, không ước lượng
 
-Palette nền lấy từ `--domain color` kết quả 1 ("Analytics Dashboard"). Nhưng palette do công cụ sinh ra là **điểm khởi đầu**, không phải bản kiểm định. Toàn bộ cặp màu đã được tính lại bằng công thức relative luminance của WCAG 2.x, và **những giá trị không đạt đã bị thay** — **DEC-014**. NFR-007 yêu cầu WCAG 2.2 AA thật, không phải "trông có vẻ đủ tương phản".
+**Bảng màu hiện hành lấy từ LOGO CHÍNH THỨC — DEC-046** (thay bảng giá trị của DEC-014, giữ nguyên *phương pháp* của nó). Logo: xe đạp **cam** trên nền **trắng**, chữ hiệu **xanh dương** ⇒ **trắng chủ đạo, cam và xanh dương là màu phụ**.
+
+Toàn bộ cặp màu được tính bằng công thức relative luminance của WCAG 2.x, và **những giá trị không đạt đã bị chỉnh độ sáng** — giữ đúng sắc của logo, chỉ đủ để qua ngưỡng. NFR-007 yêu cầu WCAG 2.2 AA thật, không phải "trông có vẻ đủ tương phản", và **không** được nới để chiều màu thương hiệu.
 
 ### 4.2 Token chính (light theme)
 
 | Token | Hex | Dùng cho | Contrast đã đo |
 |---|---|---|---|
-| `--color-background` | `#F8FAFC` | Nền app | — |
+| `--color-background` | `#F4F7FA` | Nền app — một hơi xanh thương hiệu | card trên nó **1.08:1** — đủ để hover `secondary`/`ghost` nhìn thấy được |
 | `--color-card` | `#FFFFFF` | Bề mặt card, bảng, form | — |
-| `--color-foreground` | `#0F172A` | Chữ chính | trên nền **17.06:1 · AAA** |
-| `--color-heading` | `#1E3A8A` | Riêng tiêu đề | trên nền **9.90:1 · AAA** |
-| `--color-muted-foreground` | `#64748B` | Chữ phụ, helper text | trên nền **4.55:1 · AA** · trên card **4.76:1 · AA** |
-| `--color-primary` | `#1E40AF` | Nút chính, nav active, link | chữ trắng trên nó **8.72:1 · AAA** |
-| `--color-primary-hover` | `#1D4ED8` | Hover/active của nút chính | trên card **6.70:1 · AA** |
-| `--color-secondary` | `#3B82F6` | Nhấn phụ, chuỗi dữ liệu 2 | chỉ dùng cho đồ hoạ, **không dùng làm chữ trên nền sáng** |
-| `--color-accent` | `#D97706` | **Nền** CTA amber | chữ trắng trên nó **3.19:1** → chỉ hợp lệ với chữ ≥18.66px bold |
-| `--color-accent-text` | `#B45309` | **Chữ** amber trên nền sáng | trên card **5.02:1 · AA** |
+| `--color-foreground` | `#0F172A` | Chữ chính | trên nền **16.60:1** · trên card **17.85:1 · AAA** |
+| `--color-heading` | `#0B4A76` | Riêng tiêu đề — xanh logo đậm | trên nền **8.66:1** · trên card **9.31:1 · AAA** |
+| `--color-muted-foreground` | `#566A7B` | Chữ phụ, helper text | trên nền **5.22:1** · trên card **5.61:1 · AA** |
+| `--color-primary` | `#1273B8` | Nút chính, nav active, link | chữ trắng trên nó **5.04:1 · AA** · làm chữ trên card **5.04:1 · AA** |
+| `--color-primary-hover` | `#0F5F98` | Hover/active của nút chính | chữ trắng trên nó **6.75:1 · AA** |
+| `--color-secondary` | `#2E93D0` | Nhấn phụ, chuỗi dữ liệu 2 | trên card **3.39:1** — đủ WCAG 1.4.11 cho **đồ hoạ**, **không** dùng làm chữ |
+| `--color-accent` | `#E9A04F` | **Nền** CTA cam + **chính hình logo** | `foreground` trên nó **8.17:1 · AAA**. Chữ **trắng** trên nó chỉ **2.19:1 ⇒ CẤM** |
+| `--color-accent-hover` | `#D98324` | Hover của CTA cam | `foreground` trên nó **6.14:1 · AA** |
+| `--color-accent-text` | `#97580B` | **Chữ** cam trên nền sáng | trên nền **5.26:1** · trên card **5.65:1 · AA** |
 | `--color-success` | `#15803D` | Nền success có chữ trắng | chữ trắng trên nó **5.02:1 · AA** |
-| `--color-warning` | `#B45309` | Nền warning có chữ trắng | chữ trắng trên nó **5.02:1 · AA** |
-| `--color-destructive` | `#B91C1C` | Nền nguy hiểm có chữ trắng | chữ trắng trên nó **6.47:1 · AA** |
-| `--color-border` | `#E2E8F0` | Đường kẻ **trang trí** | 1.23:1 — chỉ trang trí, **không bao giờ** làm viền của control |
-| `--color-input-border` | `#64748B` | Viền của **control tương tác** | trên card **4.76:1** — vượt ngưỡng WCAG 1.4.11 (≥3:1) |
-| `--color-ring` | `#1D4ED8` | Focus ring, 2px + offset 2px | **6.70:1** |
+| `--color-warning` | `#B45309` | Nền warning có chữ trắng | chữ trắng trên nó **5.02:1** · làm chữ trên nền **4.67:1 · AA** |
+| `--color-destructive` | `#B91C1C` | Nền nguy hiểm có chữ trắng | chữ trắng trên nó **6.47:1** · làm chữ trên nền **6.02:1 · AA** |
+| `--color-border` | `#E3E9F0` | Đường kẻ **trang trí** | **1.22:1** — chỉ trang trí, **không bao giờ** làm viền của control |
+| `--color-input-border` | `#64748B` | Viền của **control tương tác** | trên card **4.76:1** · trên nền **4.43:1** — vượt ngưỡng WCAG 1.4.11 (≥3:1) |
+| `--color-ring` | `#0F5F98` | Focus ring, 2px + offset 2px | trên card **6.75:1** · trên nền **6.28:1** |
 
 ### 4.3 Những giá trị đã bị loại vì đo không đạt
 
@@ -176,11 +179,14 @@ Ghi lại để không ai vô tình đưa chúng trở lại:
 
 | Giá trị bị loại | Định dùng cho | Đo được | Vì sao trượt |
 |---|---|---:|---|
-| `#D97706` | Chữ amber trên nền trắng | **3.19:1** | Dưới 4.5:1 của AA cho chữ thường. Vẫn dùng được làm **nền**. |
+| **cam logo `#E9A04F`** | **Chữ** hoặc **đồ hoạ mang nghĩa** trên trắng | **2.19:1** | Trượt cả AA (4.5) lẫn ngưỡng đồ hoạ (3.0). Chỉ hợp lệ làm **nền** và làm **chính hình logo** — WCAG miễn trừ logotype (DEC-046) |
+| **chữ trắng trên cam logo** | Chữ của CTA cam | **2.19:1** | CTA cam phải dùng chữ tối `#0F172A` (**8.17:1**) |
+| **xanh logo `#197DC3`** | `--color-primary` | **4.41:1** | Thiếu **0.09** so với AA. Dùng bản tối hơn 4%: `#1273B8` (**5.04:1**) |
+| `#D97706` | Chữ amber trên nền trắng | **3.19:1** | Dưới 4.5:1 của AA cho chữ thường (giá trị cũ của DEC-014) |
 | `#16A34A` | Nền success có chữ trắng | **3.30:1** | Dưới 4.5:1. Thay bằng `#15803D`. |
 | `#DBEAFE` | Viền (palette gốc đề xuất) | **1.22:1** | Dưới 3:1 của WCAG 1.4.11 cho ranh giới control. |
 | `#94A3B8` | Viền input | **2.56:1** | Vẫn dưới 3:1. Phải dùng `#64748B`. |
-| `#E2E8F0` làm viền input | Viền input | **1.23:1** | Được giữ lại **chỉ** cho đường kẻ trang trí. |
+| `#E3E9F0` làm viền input | Viền input | **1.22:1** | Được giữ lại **chỉ** cho đường kẻ trang trí. |
 
 ### 4.4 Badge trạng thái achievement
 
@@ -192,7 +198,7 @@ Bốn trạng thái này do `getAchievementStatus()` trả về (BR-023) — **g
 | `NEAR` | `80% – 99.99%` | `#FEF3C7` | `#92400E` | **6.37:1** | `Minus` | Gần đạt |
 | `MISSED` | `< 80%` | `#FEE2E2` | `#991B1B` | **6.80:1** | `TrendingDown` | Chưa đạt |
 | `PENDING` | chưa có actual | `#F1F5F9` | `#334155` | **9.45:1** | `Clock` | Chờ số liệu |
-| *(info)* | trung tính | `#DBEAFE` | `#1E40AF` | **7.15:1** | `Info` | — |
+| *(info)* | trung tính | `#E0F0FB` | `#0B4A76` | **7.99:1** | `Info` | — |
 
 > **Quy tắc `color-not-only` — bắt buộc.** Mỗi badge phải có **icon + chữ**, không bao giờ chỉ có màu. Khoảng 8% nam giới bị mù màu đỏ-lục; một đội Sales 25 người thì gần như chắc chắn có người không phân biệt được nền xanh với nền đỏ. Ngoài ra ảnh chụp màn hình gửi qua Zalo có thể bị nén màu.
 
@@ -656,9 +662,23 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 
 ---
 
-## 15. PWA (Master Spec §29 · DEC-024)
+## 15. PWA (Master Spec §29 · DEC-024 · DEC-047)
 
-Chỉ manifest + icon + `display: standalone` để Sales "Thêm vào màn hình chính". **Không** service worker, **không** offline sync ở v1. Icon 192/512 maskable. `theme-color` = `#1E40AF`.
+Chỉ manifest + icon + `display: standalone` để Sales "Thêm vào màn hình chính". **Không** service worker, **không** offline sync ở v1.
+
+**Đã triển khai (2026-08-10) — `lib/pwa/manifest.ts` là nguồn duy nhất, có 13 unit test khoá lại:**
+
+| File | Kích thước | `purpose` | Vai trò |
+|---|---|---|---|
+| `public/icons/icon-192.png` · `icon-512.png` | 192 · 512 | `any` | icon thường của manifest |
+| `public/icons/icon-maskable-192.png` · `icon-maskable-512.png` | 192 · 512 | `maskable` | nội dung nằm gọn trong vòng an toàn 80% |
+| `app/apple-icon.png` | 180 | — | **iOS bỏ qua manifest** — thiếu file này thì iPhone lấy ảnh chụp màn hình làm icon |
+| `app/icon.svg` | vector | — | favicon hiện đại **và** bản vector gốc của hình logo |
+| `app/favicon.ico` | 32 | — | favicon dự phòng cho trình duyệt cũ |
+
+- **`theme_color` = `background_color` = `#FFFFFF`** (DEC-047), **không** phải xanh thương hiệu: thanh trạng thái nối liền header trắng của app, và màn hình chờ trùng nền trắng của icon.
+- Hình icon là **chiếc xe đạp của logo, màu cam `#E9A04F` trên nền trắng** — sinh ra từ cùng bộ toạ độ với `components/ui/brand-mark.tsx` nên logo trên web và icon màn hình chính không thể lệch hình (DEC-046).
+- **`/manifest.webmanifest` phải đọc được khi chưa đăng nhập** — trình duyệt tải nó không kèm cookie. Đã thêm `webmanifest` vào `PUBLIC_FILE` của `middleware.ts`, có bài E2E khoá lại (`e2e/pwa.spec.ts`).
 
 ---
 

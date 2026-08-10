@@ -88,8 +88,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-015 | **P1** | **CLOSED** | **MỚI** — middleware redirect **mọi** đường dẫn chưa đăng nhập về `/login`, kể cả `/api/*`. `fetch()` tự đi theo redirect ⇒ nút "Xuất ảnh" nhận HTML kèm `status 200` và lưu nó thành file `.png` hỏng. Đã sửa bằng **DEC-039** | Phase 6 | DEC-004, DEC-011, DEC-039, FR-020, NFR-014 |
 | ISSUE-016 | **P1** | **CLOSED** | **MỚI** — file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module, `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra". **build / typecheck / lint / 724 unit test đều XANH** — chỉ E2E bắt được. Sửa bằng **DEC-045** | Phase 10, Phase 11 | DEC-045, UC-17, FR-030, FR-023 |
 | ISSUE-017 | P3 | OPEN | **MỚI** — `notFound()` trên route có `loading.tsx` trả **200** kèm giao diện "Không tìm thấy" thay vì 404, do response đã stream. **Cố ý không sửa** — tính không-phân-biệt-được của BR-003 vẫn đúng, và route API vẫn trả mã thật | Phase 7, Phase 9, Phase 10 | BR-003, BR-022, DEC-039, ISSUE-015 |
+| ISSUE-018 | P2 | **CLOSED** | **MỚI** — nav active ở sidebar ghép `text-primary` lên `bg-status-info-bg` (hai cặp khác nhau) ⇒ sau DEC-046 đo được **4,32:1**, làm đỏ **9 lượt quét axe** ở `desktop-1440`. Lỗi có từ Phase 7, chỉ **lộ ra** khi đổi màu. Sửa bằng cặp đúng (**7,99:1**) | Phase 7, Phase 12 | DEC-046, NFR-007, ISSUE-016 |
 
-Tổng: **7 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 5 × P3), **0 FIXING**, **0 VERIFY**, **10 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016).
+Tổng: **7 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 5 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
 
 ---
 
@@ -967,6 +968,42 @@ Quy tắc chung: **không để trống trường nào**. Nếu chưa biết, vi
 5. Cập nhật kèm theo: bảng Index ở §4, mục `## Known Issues` trong `SESSION_CHECKPOINT.md`, và entry ngày tương ứng trong `WORKLOG.md`.
 6. Nếu issue tái phát: giữ nguyên ID, chuyển về `FIXING`, và **thêm** một dòng lịch sử vào entry (ngày tái phát + bối cảnh) thay vì tạo ID mới.
 
+---
+
+### ISSUE-018
+
+**Severity: P2**
+**Status: CLOSED — phát hiện và sửa trong cùng phiên 2026-08-10**
+
+**Module:**
+`features/navigation/main-nav.tsx` (mục điều hướng đang sáng ở **sidebar**). Liên quan: DEC-046, DEC-014, NFR-007, `docs/05 §4.2` và `§4.4`, Phase 7 (nơi lỗi ra đời), Phase 13.
+
+**Description:**
+Mục nav đang sáng ở sidebar ghép `text-primary` lên `bg-status-info-bg` — **hai token thuộc hai cặp nền/chữ khác nhau**. `docs/05 §4.4` định nghĩa `status-info-bg` đi cùng `status-info-fg`; `text-primary` được đo trên `card` và `background`, **không** trên nền badge.
+
+Sau khi DEC-046 đổi `--color-primary` từ chàm `#1E40AF` sang azure `#1273B8`, phép ghép đó đo được **4,32:1** — thiếu **0,18** so với ngưỡng AA 4,5:1 — và làm **đỏ 9 lượt quét axe** ở project `desktop-1440`.
+
+**Đã đo, không phải suy đoán (2026-08-10, `@axe-core/playwright` 4.12):**
+
+| Cặp màu | Ngữ cảnh | Đo được | Kết luận |
+|---|---|---:|---|
+| `#1273B8` trên `#E0F0FB` | nav active ở **sidebar** (≥1024px) | **4,32:1** | **Trượt** AA — 9 bài đỏ |
+| `#1273B8` trên `#FFFFFF` | nav active ở **bottom tab** (<1024px) | **5,04:1** | Đạt — mobile **không** dính |
+| `#0B4A76` trên `#E0F0FB` | cặp đúng của `status-info` | **7,99:1** | Đạt AAA — bản sửa |
+| `#1E40AF` trên `#DBEAFE` | phép ghép chéo **cũ**, trước DEC-046 | ~8,7:1 | "May mà đạt" |
+
+**Nguyên nhân gốc — điểm đáng ghi lại nhất:**
+Phép ghép chéo này **đã sai về nguyên tắc từ Phase 7**, không phải do DEC-046 tạo ra. Nó chỉ không bị bắt vì màu chàm cũ đủ tối để vô tình vượt ngưỡng trên mọi nền nhạt. **Đổi bảng màu không tạo ra lỗi mới — nó làm LỘ một lỗi có sẵn.**
+
+**Fix (đã áp dụng):**
+Dùng đúng cặp `bg-status-info-bg` + `text-status-info-fg` cho nhánh sidebar; nhánh bottom tab giữ `text-primary` vì nó nằm trên nền card trắng và đo được 5,04:1. Xác minh: chạy lại `a11y.spec.ts` + `pwa.spec.ts` trên `desktop-1440` → **14/14 pass**, rồi full `npm run e2e` → **111/111**.
+
+**Hai bài học đưa thẳng vào quy trình:**
+
+1. **Đo token so với `card`/`background` là CHƯA ĐỦ.** Phải đo cả những cặp **thực tế chồng lên nhau trong DOM**. Một bảng màu "toàn bộ đạt AA" vẫn có thể sinh ra cặp trượt ngay khi hai token được ghép lại.
+2. **Không có 30 lượt quét axe của Phase 11 thì lỗi này ra thẳng production.** Nó chỉ hiện ở ≥1024px, mà người viết code thường nhìn ở một bề rộng. Đây là lần thứ hai bộ E2E bắt được thứ mà build/typecheck/lint/toàn bộ unit test đều bỏ qua — lần đầu là ISSUE-016.
+
+**Phòng ngừa:** đã ghi cảnh báo tại chỗ trong `components/ui/badge.tsx` (bảng `TONE_CLASS`) và trong `features/navigation/main-nav.tsx`, cấm ghép `text-` của cặp này lên `bg-` của cặp khác.
 ---
 
 ## OPEN QUESTIONS

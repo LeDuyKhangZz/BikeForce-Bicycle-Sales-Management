@@ -3,16 +3,30 @@
 /* ==========================================================================
    BikeForce — Design tokens
    Nguồn: docs/05-ui-ux-design.md · DEC-012 (Swiss Modernism 2.0),
-   DEC-013 (font Inter), DEC-014 (bảng màu đã ĐO contrast), DEC-016 (không dark mode v1).
+   DEC-013 (font Inter), DEC-046 (bảng màu LẤY TỪ LOGO, đã ĐO contrast),
+   DEC-016 (không dark mode v1).
 
-   MỌI tỉ lệ contrast ghi dưới đây là số ĐÃ TÍNH bằng công thức relative
-   luminance của WCAG 2.x, không phải ước lượng bằng mắt (NFR-007).
+   ─────────────────────────────────────────────────────────────────────────
+    BẢNG MÀU LẤY TỪ LOGO CHÍNH THỨC — DEC-046 (thay DEC-014)
+   ─────────────────────────────────────────────────────────────────────────
+   Logo: xe đạp CAM trên nền TRẮNG, chữ hiệu XANH DƯƠNG.
+     • cam logo  #E9A04F — trên trắng chỉ  2,19:1 ⇒ KHÔNG BAO GIỜ làm chữ,
+                            KHÔNG BAO GIỜ làm đồ hoạ mang nghĩa. Chỉ làm NỀN
+                            (chữ tối trên nó) và làm chính hình logo (WCAG
+                            miễn trừ logotype).
+     • xanh logo #197DC3 — trên trắng      4,41:1 ⇒ THIẾU 0,09 so với ngưỡng AA.
+                            Vì vậy `--color-primary` là bản tối hơn 4%
+                            (#1273B8, 5,04:1) — mắt thường không phân biệt được
+                            với xanh logo, nhưng đọc được với mọi người.
+
+   MỌI tỉ lệ dưới đây là số ĐÃ ĐO bằng công thức relative luminance của
+   WCAG 2.x, không phải ước lượng bằng mắt (NFR-007).
 
    Quy tắc dùng màu (AGENTS.md §10):
      • Component CHỈ dùng semantic token, KHÔNG hardcode hex.
        Ngoại lệ duy nhất: thẻ share 9:16 dùng bảng hex dark cố định vì Satori.
      • Viền của control tương tác dùng --color-input-border (#64748B, 4.76:1),
-       KHÔNG dùng --color-border (#E2E8F0, 1.23:1 — chỉ là dải trang trí).
+       KHÔNG dùng --color-border (#E3E9F0, 1.22:1 — chỉ là dải trang trí).
      • Trạng thái không bao giờ chỉ bằng màu — badge luôn có icon + text.
    ========================================================================== */
 
@@ -20,34 +34,39 @@
   /* --- Font (DEC-013 — chỉ Inter, một họ font duy nhất) -------------------- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  /* --- Bề mặt ------------------------------------------------------------ */
-  --color-background: #f8fafc;
+  /* --- Bề mặt: TRẮNG là chủ đạo (DEC-046) --------------------------------- */
+  /* Nội dung nằm trên card TRẮNG thật; nền trang chỉ là một hơi xanh thương
+     hiệu để card nổi lên và để hover của nút `secondary`/`ghost` nhìn thấy được
+     (hai trạng thái đó dùng `hover:bg-background`). */
+  --color-background: #f4f7fa; /* card trên nó 1.08:1 — đủ tách lớp, vẫn đọc là trắng */
   --color-card: #ffffff;
 
   /* --- Chữ --------------------------------------------------------------- */
-  --color-foreground: #0f172a; /* trên nền 17.06:1 · AAA */
-  --color-heading: #1e3a8a; /* trên nền  9.90:1 · AAA */
-  --color-muted-foreground: #64748b; /* trên nền 4.55:1 · trên card 4.76:1 · AA */
+  --color-foreground: #0f172a; /* trên nền 16.60:1 · trên card 17.85:1 · AAA */
+  --color-heading: #0b4a76; /* xanh logo đậm — trên nền 8.66:1 · card 9.31:1 · AAA */
+  --color-muted-foreground: #566a7b; /* trên nền 5.22:1 · trên card 5.61:1 · AA */
 
-  /* --- Thương hiệu / hành động ------------------------------------------- */
-  --color-primary: #1e40af; /* chữ trắng trên nó 8.72:1 · AAA */
-  --color-primary-hover: #1d4ed8; /* trên card 6.70:1 · AA */
-  --color-secondary: #3b82f6; /* CHỈ cho đồ hoạ — không dùng làm chữ trên nền sáng */
+  /* --- Thương hiệu / hành động (xanh dương của logo) ---------------------- */
+  --color-primary: #1273b8; /* chữ trắng trên nó 5.04:1 · AA · làm chữ trên card 5.04:1 */
+  --color-primary-hover: #0f5f98; /* chữ trắng trên nó 6.75:1 · AA */
+  --color-secondary: #2e93d0; /* CHỈ đồ hoạ — trên card 3.39:1, đủ WCAG 1.4.11 (≥3:1) */
 
-  /* --- Amber: nền và chữ là HAI màu khác nhau ----------------------------- */
-  --color-accent: #d97706; /* NỀN CTA amber. Chữ trắng trên nó chỉ 3.19:1
-                              → chỉ hợp lệ với chữ ≥18.66px bold */
-  --color-accent-text: #b45309; /* CHỮ amber trên nền sáng — trên card 5.02:1 · AA */
+  /* --- Cam của logo: NỀN và CHỮ là HAI màu khác nhau ---------------------- */
+  --color-accent: #e9a04f; /* CHÍNH XÁC cam logo. NỀN, chữ TỐI trên nó:
+                              foreground trên nó 8.17:1 · AAA.
+                              Chữ trắng trên nó chỉ 2.19:1 ⇒ CẤM */
+  --color-accent-hover: #d98324; /* foreground trên nó 6.14:1 · AA */
+  --color-accent-text: #97580b; /* CHỮ cam trên nền sáng — nền 5.26:1 · card 5.65:1 · AA */
 
   /* --- Trạng thái (đều là NỀN có chữ trắng) ------------------------------- */
   --color-success: #15803d; /* chữ trắng trên nó 5.02:1 · AA */
-  --color-warning: #b45309; /* chữ trắng trên nó 5.02:1 · AA */
-  --color-destructive: #b91c1c; /* chữ trắng trên nó 6.47:1 · AA */
+  --color-warning: #b45309; /* chữ trắng trên nó 5.02:1 · làm chữ trên nền 4.67:1 · AA */
+  --color-destructive: #b91c1c; /* chữ trắng trên nó 6.47:1 · làm chữ trên nền 6.02:1 · AA */
 
   /* --- Đường kẻ và focus -------------------------------------------------- */
-  --color-border: #e2e8f0; /* 1.23:1 — CHỈ trang trí, KHÔNG bao giờ làm viền control */
-  --color-input-border: #64748b; /* trên card 4.76:1 — vượt ngưỡng WCAG 1.4.11 (≥3:1) */
-  --color-ring: #1d4ed8; /* focus ring 2px + offset 2px — 6.70:1 */
+  --color-border: #e3e9f0; /* 1.22:1 — CHỈ trang trí, KHÔNG bao giờ làm viền control */
+  --color-input-border: #64748b; /* trên card 4.76:1 · trên nền 4.43:1 — vượt ≥3:1 */
+  --color-ring: #0f5f98; /* focus ring 2px + offset 2px — card 6.75:1 · nền 6.28:1 */
 
   /* --- Badge trạng thái achievement (BR-023 — do getAchievementStatus quyết định) */
   --color-status-exceeded-bg: #dcfce7;
@@ -58,8 +77,8 @@
   --color-status-missed-fg: #991b1b; /* 6.80:1 */
   --color-status-pending-bg: #f1f5f9;
   --color-status-pending-fg: #334155; /* 9.45:1 */
-  --color-status-info-bg: #dbeafe;
-  --color-status-info-fg: #1e40af; /* 7.15:1 */
+  --color-status-info-bg: #e0f0fb; /* xanh logo rất nhạt */
+  --color-status-info-fg: #0b4a76; /* 7.99:1 · AAA */
 
   /* --- Type scale (docs/05 §3.3) ----------------------------------------- */
   --text-xs: 0.75rem; /* 12px — helper text, KHÔNG dùng cho nội dung chính */

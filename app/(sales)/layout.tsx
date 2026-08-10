@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { BrandMark } from '@/components/ui/brand-mark';
 import { MainNav } from '@/features/navigation/main-nav';
 import { requireRole } from '@/features/auth/queries';
 import { SALES_NAV_ITEMS } from '@/lib/navigation/nav-items';
@@ -31,6 +32,9 @@ export default async function SalesLayout({ children }: { children: ReactNode })
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
+          {/* Chỉ hiện dưới 1024px: từ 1024px trở lên sidebar đã mang logo đầy đủ,
+              để cả hai là gắn thương hiệu hai lần trên cùng một khung nhìn. */}
+          <BrandMark decorative className="w-9 text-accent lg:hidden" />
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">BikeForce · Sales</p>
             <p className="truncate text-base font-semibold text-heading">{profile.full_name}</p>

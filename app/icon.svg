@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="BikeForce">
+  <title>BikeForce</title>
+  <rect width="512" height="512" fill="#FFFFFF" />
+  <g fill="none" stroke="#E9A04F" stroke-width="34.27" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M243.66 273.81 A89.75 89.75 0 1 1 195.23 219.17" />
+    <path d="M377.36 214.24 A89.75 89.75 0 1 1 313.37 220.8" />
+    <path d="M158.09 300.88 L337.59 141.77" />
+    <path d="M337.59 141.77 L353.91 300.88" />
+    <path d="M337.59 141.77 L374.31 121.37" />
+    <circle cx="158.09" cy="300.88" r="16.32" fill="#E9A04F" stroke="none" />
+    <circle cx="353.91" cy="300.88" r="16.32" fill="#E9A04F" stroke="none" />
+  </g>
+</svg>

@@ -1261,6 +1261,116 @@ database cloud và tài liệu.
 
 ---
 
+### Entry 012
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 12 — Deployment Preparation` (mục PWA) + mở `PHASE 13 — Nhận diện thương hiệu & soát UI/UX`
+
+**Completed:**
+
+Phiên này làm ba việc, theo đúng thứ tự người dùng yêu cầu giữa chừng.
+
+**(1) FR-036 — PWA manifest + icon (mục code cuối cùng của Phase 12).**
+
+| File | Vai trò |
+|---|---|
+| `lib/pwa/manifest.ts` | Nguồn DUY NHẤT của nội dung manifest. Ở `lib/` chứ không ở `app/` vì project `unit` của Vitest **chỉ quét `lib/**`** — đặt ở đây thì các ràng buộc của FR-036 được khoá bằng test thay vì nằm trong một file cấu hình không ai kiểm |
+| `lib/pwa/manifest.test.ts` | **13 test**: `display === 'standalone'` · đủ 192/512 cho cả `any` lẫn `maskable` · hai purpose là **hai file khác nhau** · mọi `src` tuyệt đối · `short_name ≤ 12` ký tự · không khai trường nào ngụ ý offline (DEC-024) · không khoá `orientation` |
+| `app/manifest.ts` | Adapter 3 dòng → `/manifest.webmanifest` |
+| `public/icons/icon-{192,512}.png` · `icon-maskable-{192,512}.png` | 4 icon, `purpose` tách đôi |
+| `app/apple-icon.png` (180) · `app/icon.svg` · `app/favicon.ico` (32) | 3 icon theo quy ước file của Next |
+| `e2e/pwa.spec.ts` | **4 bài × 3 project = 12** |
+| `middleware.ts` | thêm `webmanifest` vào `PUBLIC_FILE` |
+
+**(2) DEC-046 — dựng lại bảng màu từ LOGO CHÍNH THỨC.** Người dùng gửi logo giữa phiên (xe đạp
+**cam** trên nền **trắng**, chữ hiệu **xanh dương**) và yêu cầu tone màu trang web khớp logo:
+trắng chủ đạo, cam và xanh là màu phụ. Đã thay **12 token** trong `app/globals.css`, thêm
+`components/ui/brand-mark.tsx` (`BrandMark` + `BrandLockup`), gắn logo vào `/login` · header hai
+route group (ẩn từ 1024px) · sidebar.
+
+**(3) Tải và dùng thật skill `ui-ux-pro-max`.** Người dùng yêu cầu tải skill về để soát thiết kế.
+`git clone` từ `github.com/nextlevelbuilder/ui-ux-pro-max-skill` vào `~/.claude/skills/ui-ux-pro-max`
+(v2.13.0) — **chạy được**. Phần *soát toàn hệ thống* được cất sang **Phase 13** theo yêu cầu
+"tập trung deploy trước".
+
+**(4) Runbook deploy từng cú bấm** — `docs/09 §13`, 8 bước, kèm bảng trạng thái cloud **đo thật**.
+
+**Files Changed:**
+
+*Mới:* `lib/pwa/manifest.ts` · `lib/pwa/manifest.test.ts` · `app/manifest.ts` ·
+`components/ui/brand-mark.tsx` · `e2e/pwa.spec.ts` · `app/icon.svg` · `app/apple-icon.png` ·
+`app/favicon.ico` · `public/icons/` (4 PNG).
+
+*Sửa:* `app/globals.css` (12 token) · `app/layout.tsx` · `app/(auth)/login/page.tsx` ·
+`app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` · `features/navigation/main-nav.tsx` ·
+`components/ui/badge.tsx` (chú thích) · `middleware.ts`.
+
+*Tài liệu:* `docs/05 §4.1–§4.4, §15` · `docs/09 §13` (MỚI) · `docs/11` (DEC-046, DEC-047) ·
+`docs/12` (ISSUE-018) · `PROJECT_CHECKLIST.md` (tick PWA + mở Phase 13) · `SESSION_CHECKPOINT.md`.
+
+**Tests:** `npm run typecheck` ✅ exit 0 · `npm run lint` ✅ exit 0, 0 warning ·
+`npm test` ✅ **742/742** (unit **555** — thêm 13 bài PWA · integration 54 · rls 133) ·
+`npm run build` ✅ exit 0, **18 route nghiệp vụ + 3 route metadata** ·
+`npm run e2e` ✅ **111/111** trên 3 project (33 + 4 bài PWA, mỗi project), gồm **30 lượt quét axe**.
+
+**Errors:**
+
+1. **Bảng màu mới làm ĐỎ 9 lượt quét axe ở `desktop-1440` — và chỉ ở đó.** Nguyên nhân đo được:
+   `#1273b8` trên `#e0f0fb` = **4,32:1**, thiếu **0,18** so với AA. Đó là mục nav đang sáng ở
+   **sidebar**, nơi `features/navigation/main-nav.tsx` ghép `text-primary` lên `bg-status-info-bg` —
+   **hai token thuộc hai cặp khác nhau**. Bottom tab của mobile không dính vì nó không có nền.
+
+   **Bài học đáng ghi lại nhất của phiên:** phép ghép chéo đó đã tồn tại từ Phase 7 và **luôn sai về
+   nguyên tắc**; nó chỉ "may mà đạt" vì chàm `#1E40AF` cũ đủ tối (8,72:1). Đổi màu không tạo ra lỗi
+   mới — nó **làm lộ** một lỗi có sẵn. Sửa bằng cách dùng đúng cặp `bg-status-info-bg` +
+   `text-status-info-fg` (**7,99:1**).
+
+   Hai hệ quả về quy trình: **(a)** đo contrast của token so với `card`/`background` là **chưa đủ** —
+   phải đo cả những cặp *thực tế bị chồng lên nhau trong DOM*; **(b)** không có 30 lượt quét axe của
+   Phase 11 thì lỗi này ra thẳng production, vì nó chỉ hiện ở ≥1024px và người viết code thì hay nhìn
+   ở một bề rộng.
+
+2. **`--design-system` của skill `ui-ux-pro-max` khớp NHẦM cho sản phẩm này.** Với truy vấn
+   "internal daily sales reporting field team mobile-first white orange blue" nó trả về pattern
+   **"Newsletter / Content First"**, bảng màu **đỏ** (`#DC2626`) và font **Atkinson Hyperlegible** —
+   cả ba đều mâu thuẫn với DEC-012/013 và với logo. **Phần dùng được là 98 UX guideline +
+   Pre-Delivery Checklist**, không phải phần sinh design system. Đã ghi vào Phase 13 để session sau
+   không mất công lần nữa.
+
+3. **Suýt bỏ sót một cái bẫy im lặng của manifest.** Trình duyệt tải `/manifest.webmanifest` bằng
+   request **không kèm cookie**, nên nếu để nó đi qua nhánh xác thực thì middleware luôn thấy "chưa
+   đăng nhập" và trả HTML của `/login` kèm **`status = 200`** — không lỗi nào hiện ra, chỉ là nút
+   "Thêm vào màn hình chính" lặng lẽ không bao giờ xuất hiện. Cùng họ với ISSUE-015. Đã thêm
+   `webmanifest` vào `PUBLIC_FILE` và khoá bằng bài E2E gọi với `maxRedirects: 0`.
+
+4. **Heredoc `bash` vỡ khi ghi tài liệu dài có backtick và dấu nháy.** Đã chuyển sang ghi ra file
+   trung gian rồi `cat >>`. Ghi lại để không thử lại cách cũ.
+
+**Decisions:**
+
+- **DEC-046** — bảng màu lấy từ logo chính thức, thay **bảng giá trị** của DEC-014 (giữ nguyên
+  *phương pháp* của DEC-014). Nguyên tắc: **giữ đúng sắc của logo, chỉ chỉnh độ sáng vừa đủ để đạt
+  ngưỡng**. Cam logo `#E9A04F` chỉ **2,19:1** trên trắng ⇒ **cấm** làm chữ và đồ hoạ mang nghĩa, chỉ
+  làm nền (chữ tối trên nó, **8,17:1**) và làm chính hình logo (WCAG miễn trừ logotype). Xanh logo
+  `#197DC3` thiếu **0,09** so với AA ⇒ `--color-primary` là bản tối hơn 4% (`#1273B8`, **5,04:1**).
+- **DEC-047** — `app/manifest.ts` và 3 file icon là **metadata route**, **không** phải Route Handler
+  thứ ba; DEC-042 vẫn nguyên vẹn. Kèm 4 điểm chốt: `theme_color` = `background_color` = **trắng** ·
+  `maskable` là file riêng · `apple-icon.png` bắt buộc vì **iOS bỏ qua manifest** · manifest phải
+  đọc được khi chưa đăng nhập.
+
+**Remaining:**
+
+- **Toàn bộ Phase 13** — soát 98 guideline trên 18 route ở 375px và 1440px. Bảng màu mới **mới chỉ
+  được chứng minh bằng số đo và axe, CHƯA từng được nhìn bằng mắt**.
+- Phase 12 còn: 4 bước Dashboard/Vercel của người dùng (`docs/09 §13` Bước 0–6), smoke test
+  production, Lighthouse, ISSUE-003.
+
+**Next:** Người dùng chạy `git push origin main`, rồi làm `docs/09 §13` **Bước 1 → Bước 7** theo đúng
+thứ tự. Việc đầu tiên không được bỏ qua là **Bước 4 — tạo Admin đầu tiên**: đã đo và xác nhận cloud
+đang có **đúng 0 user**, không làm bước này thì deploy xong không ai đăng nhập được.
+---
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần

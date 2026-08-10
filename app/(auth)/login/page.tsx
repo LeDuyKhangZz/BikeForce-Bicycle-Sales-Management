@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import { BrandLockup } from '@/components/ui/brand-mark';
 import { LoginForm } from '@/features/auth/login-form';
 import { getCurrentProfile } from '@/features/auth/queries';
 import { messageForLoginReason } from '@/lib/auth/messages';
@@ -38,8 +39,13 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-4 py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-heading">BikeForce</h1>
+      <header className="flex flex-col gap-3">
+        {/* Logo đứng riêng một dòng, hình cam + chữ xanh đúng logo gốc (DEC-046).
+            `<h1>` bọc lấy lockup để cấp bậc heading vẫn là h1 → không phá
+            `heading-hierarchy`. */}
+        <h1>
+          <BrandLockup size="lg" />
+        </h1>
         <p className="text-base text-muted-foreground">
           Báo cáo hiệu suất bán hàng hằng ngày. Đăng nhập bằng tài khoản do Admin cấp.
         </p>

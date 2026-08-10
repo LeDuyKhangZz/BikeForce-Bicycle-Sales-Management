@@ -30,8 +30,22 @@ import type { Database } from '@/types/database.types';
  * và nó vẫn dùng **anon key**, vẫn chịu RLS.
  */
 
-/** Tài nguyên tĩnh — không cần phiên, không cần refresh cookie. */
-const PUBLIC_FILE = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|avif|woff|woff2|ttf|otf|txt|xml|json)$/i;
+/**
+ * Tài nguyên tĩnh — không cần phiên, không cần refresh cookie.
+ *
+ * ⚠ `webmanifest` là BẮT BUỘC, không phải cho đủ bộ (FR-036). Trình duyệt tải
+ * `/manifest.webmanifest` bằng một request **không kèm cookie** (`crossorigin`
+ * mặc định là `anonymous`), nên nếu nó đi qua nhánh xác thực thì middleware
+ * luôn thấy "chưa đăng nhập" và trả về HTML của `/login` kèm `status = 200`.
+ * Trình duyệt không báo lỗi gì — nó chỉ lặng lẽ **không** hiện "Thêm vào màn
+ * hình chính", đúng kiểu hỏng của ISSUE-015. Có bài E2E khoá lại ở
+ * `e2e/security.spec.ts`.
+ *
+ * Ba file icon theo quy ước của Next (`/favicon.ico`, `/icon.svg`,
+ * `/apple-icon.png`) đã nằm trong danh sách đuôi sẵn có.
+ */
+const PUBLIC_FILE =
+  /\.(?:svg|png|jpg|jpeg|gif|webp|ico|avif|woff|woff2|ttf|otf|txt|xml|json|webmanifest)$/i;
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

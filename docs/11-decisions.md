@@ -903,6 +903,120 @@ Ngưỡng mới là **8** chứ không phải 7 để còn một chạm dự ph�
 
 ---
 
+## DEC-046 — Bảng màu lấy từ LOGO CHÍNH THỨC (thay bảng màu của DEC-014)
+
+**Date:** 2026-08-10
+**Decision:** Bảng màu của ứng dụng được dựng lại từ **logo chính thức** do người dùng cung cấp
+(xe đạp **cam** trên nền **trắng**, chữ hiệu **xanh dương**): **trắng chủ đạo, cam và xanh dương là
+màu phụ**. Cụ thể:
+
+| Token | Trước (DEC-014) | Sau (DEC-046) | Đo được |
+|---|---|---|---|
+| `--color-background` | `#F8FAFC` | `#F4F7FA` | card trên nó **1,08:1** — đủ tách lớp để hover của nút `secondary`/`ghost` nhìn thấy được |
+| `--color-heading` | `#1E3A8A` (chàm) | `#0B4A76` (xanh logo đậm) | nền **8,66:1** · card **9,31:1** · AAA |
+| `--color-primary` | `#1E40AF` (chàm) | `#1273B8` | chữ trắng trên nó **5,04:1** · AA |
+| `--color-primary-hover` | `#1D4ED8` | `#0F5F98` | chữ trắng trên nó **6,75:1** · AA |
+| `--color-secondary` | `#3B82F6` | `#2E93D0` | trên card **3,39:1** — đủ WCAG 1.4.11 cho đồ hoạ |
+| `--color-accent` | `#D97706` | **`#E9A04F`** (cam logo nguyên bản) | `foreground` trên nó **8,17:1** · AAA |
+| `--color-accent-hover` | *(chưa có)* | `#D98324` | `foreground` trên nó **6,14:1** · AA |
+| `--color-accent-text` | `#B45309` | `#97580B` | nền **5,26:1** · card **5,65:1** · AA |
+| `--color-muted-foreground` | `#64748B` | `#566A7B` | nền **5,22:1** · card **5,61:1** · AA |
+| `--color-ring` | `#1D4ED8` | `#0F5F98` | card **6,75:1** · nền **6,28:1** |
+| `--color-border` | `#E2E8F0` | `#E3E9F0` | **1,22:1** — vẫn CHỈ trang trí |
+| `--color-status-info-bg/fg` | `#DBEAFE` / `#1E40AF` | `#E0F0FB` / `#0B4A76` | **7,99:1** · AAA |
+
+**Hai màu của logo KHÔNG dùng được nguyên bản, và đây là lý do đo được:**
+
+| Cặp màu | Tỉ lệ | Kết luận |
+|---|---:|---|
+| cam logo `#E9A04F` trên trắng | **2,19:1** | **Trượt** cả AA (4,5) lẫn ngưỡng đồ hoạ (3,0) ⇒ **cấm** làm chữ và làm đồ hoạ mang nghĩa. Chỉ được làm **nền** (chữ tối trên nó) và làm **chính hình logo** — WCAG 1.4.3/1.4.11 miễn trừ logotype |
+| xanh logo `#197DC3` trên trắng | **4,41:1** | Thiếu đúng **0,09** so với ngưỡng AA ⇒ `--color-primary` là bản tối hơn 4% (`#1273B8`, **5,04:1**). Chênh lệch mắt thường không phân biệt được |
+| trắng trên cam logo | 2,19:1 | **Cấm tuyệt đối** — CTA cam phải dùng chữ tối `#0F172A` (8,17:1) |
+
+**Reason:** Người dùng yêu cầu tone màu trang web khớp logo. Nhưng NFR-007 (WCAG 2.2 AA) là ràng
+buộc cứng và **không** được nới để chiều màu thương hiệu — nên nguyên tắc áp dụng là: **giữ đúng
+sắc (hue) của logo, chỉ chỉnh độ sáng vừa đủ để đạt ngưỡng**, và tách vai trò "màu nền" khỏi "màu
+chữ" đúng như DEC-014 đã làm với amber. Toàn bộ số liệu ở hai bảng trên được tính bằng công thức
+relative luminance của WCAG 2.x, không ước lượng bằng mắt.
+
+**Kèm theo quyết định này:** logo được dựng thành **SVG inline** (`components/ui/brand-mark.tsx`),
+không phải file ảnh. Toạ độ SVG được **sinh ra từ cùng bộ hằng số** dựng `app/icon.svg` và bốn file
+`public/icons/*.png`, nên logo trên web và icon màn hình chính không thể lệch hình. Logo xuất hiện ở
+ba chỗ: màn hình `/login` (lockup lớn), header của cả hai route group (chỉ dưới 1024px), và sidebar
+từ 1024px.
+
+**Alternatives:**
+*(a)* Dùng nguyên hai màu logo — **bị loại**: chữ 2,19:1 là không đọc được ngoài nắng, đúng bối cảnh
+Sales dùng điện thoại ngoài thị trường, và sẽ làm đỏ 30 lượt quét axe của Phase 11.
+*(b)* Giữ DEC-014, chỉ thêm logo — **bị loại**: chàm `#1E40AF` cạnh cam logo là hai sắc lệch nhau,
+người dùng đã nêu rõ đây là điều cần sửa.
+*(c)* Nhúng file ảnh logo gốc (PNG) — **bị loại**: nét vỡ khi phóng to, không đổi màu theo ngữ cảnh
+được, và tốn thêm một request mạng trên 4G (NFR-001).
+
+**Impact:** `app/globals.css`, `components/ui/brand-mark.tsx` (MỚI), `app/(auth)/login/page.tsx`,
+`app/(sales)/layout.tsx`, `app/(admin)/layout.tsx`, `features/navigation/main-nav.tsx`,
+`app/icon.svg` + `app/apple-icon.png` + `app/favicon.ico` + `public/icons/*` (MỚI),
+`lib/pwa/manifest.ts`, `docs/05-ui-ux-design.md §4` và `§15`.
+
+**Hệ quả với DEC-014:** DEC-014 **KHÔNG bị xoá** — phương pháp của nó (đo contrast thật, tách màu
+nền khỏi màu chữ) vẫn là luật. Chỉ **bảng giá trị** của nó bị thay. Đọc DEC-014 để hiểu *vì sao* làm
+như vậy, đọc DEC-046 để biết *giá trị hiện hành*.
+
+**Status:** APPROVED (do người dùng yêu cầu trực tiếp ngày 2026-08-10)
+
+---
+
+## DEC-047 — PWA: `app/manifest.ts` là metadata route, KHÔNG phải Route Handler thứ ba
+
+**Date:** 2026-08-10
+**Decision:** FR-036 được triển khai bằng **file quy ước metadata của Next**, không phải bằng Route
+Handler:
+
+| File | Vai trò |
+|---|---|
+| `app/manifest.ts` | phục vụ tại `/manifest.webmanifest`; nội dung nằm ở `lib/pwa/manifest.ts` |
+| `app/favicon.ico` · `app/icon.svg` · `app/apple-icon.png` | ba icon theo quy ước — Next tự chèn thẻ `<link>` |
+| `public/icons/icon-{192,512}.png` | `purpose: 'any'` |
+| `public/icons/icon-maskable-{192,512}.png` | `purpose: 'maskable'` |
+
+Bốn điểm được chốt kèm:
+
+1. **`theme_color` và `background_color` đều là TRẮNG** (`#FFFFFF`), không phải xanh thương hiệu —
+   thanh trạng thái nối liền header trắng của app, và màn hình chờ trùng nền trắng của icon nên icon
+   không hiện ra như một ô vuông dán lên nền khác màu.
+2. **Bản `maskable` là FILE RIÊNG, không dùng chung với bản `any`.** Vùng an toàn 80% của maskable
+   buộc nét vẽ nhỏ hơn hẳn; khai một file `"any maskable"` thì hoặc Android cắt mất bánh xe, hoặc
+   trình duyệt hiện icon thừa lề.
+3. **`apple-icon.png` là bắt buộc, không phải cho đủ bộ.** iOS **bỏ qua manifest** khi "Thêm vào màn
+   hình chính" — thiếu file này thì iPhone lấy ảnh chụp màn hình trang làm icon.
+4. **`/manifest.webmanifest` phải đọc được khi CHƯA đăng nhập.** Trình duyệt tải nó bằng request
+   **không kèm cookie**, nên nếu để nó đi qua nhánh xác thực thì middleware luôn thấy "chưa đăng
+   nhập" và trả HTML của `/login` kèm `status = 200`; trình duyệt không báo lỗi gì, chỉ lặng lẽ
+   **không** hiện "Thêm vào màn hình chính". Vì vậy `webmanifest` được thêm vào `PUBLIC_FILE` của
+   `middleware.ts`.
+
+**Reason:** DEC-042 chốt rằng v1 chỉ có **hai** Route Handler. Ba route mới xuất hiện trong bảng
+`next build` (`/manifest.webmanifest`, `/icon.svg`, `/apple-icon.png`) **không** phá quyết định đó:
+chúng là metadata tĩnh, không chạm database, không chạm phiên, không trả dữ liệu nghiệp vụ. Ghi
+thành DEC riêng để session sau không đọc bảng route rồi kết luận DEC-042 đã bị vi phạm.
+
+Điểm 4 là họ hàng trực tiếp của **ISSUE-015** (middleware redirect route `/api/*`) — cùng một kiểu
+hỏng: một request máy-gọi-máy bị trả về HTML kèm mã 200. Vì vậy nó được khoá bằng bài E2E chứ không
+chỉ bằng unit test.
+
+**Alternatives:**
+*(a)* File tĩnh `public/manifest.webmanifest` + thẻ `<link>` viết tay — bỏ được một route, nhưng mất
+kiểm tra kiểu và tách nội dung manifest ra khỏi `lib/` nơi unit test với tới được.
+*(b)* Một file `"any maskable"` duy nhất — xem điểm 2.
+*(c)* `theme_color` xanh thương hiệu — xem điểm 1.
+
+**Impact:** `lib/pwa/manifest.ts` (MỚI) + `lib/pwa/manifest.test.ts` (MỚI, 13 test), `app/manifest.ts`
+(MỚI), `app/layout.tsx`, `middleware.ts`, `e2e/pwa.spec.ts` (MỚI), `docs/05 §15`, `docs/09`.
+
+**Status:** APPROVED (technical)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

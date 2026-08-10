@@ -19,13 +19,19 @@ type Props = Omit<ComponentProps<'span'>, 'children'> & {
   children: ReactNode;
 };
 
-/** Cặp nền/chữ đã ĐO contrast — docs/05 §4.4, DEC-014. */
+/**
+ * Cặp nền/chữ đã ĐO contrast — docs/05 §4.4, DEC-046.
+ *
+ * ⚠ Mỗi dòng là MỘT CẶP. Đừng lấy `bg-` của dòng này ghép với `text-` của dòng
+ * khác, và đừng ghép `text-primary` lên các nền này — phép ghép chéo đó đã làm
+ * đỏ 9 lượt quét axe ở `desktop-1440` sau DEC-046 (xem `features/navigation/main-nav.tsx`).
+ */
 const TONE_CLASS: Record<Tone, string> = {
   success: 'bg-status-exceeded-bg text-status-exceeded-fg', // 6.49:1
   warning: 'bg-status-near-bg text-status-near-fg', // 6.37:1
   danger: 'bg-status-missed-bg text-status-missed-fg', // 6.80:1
   neutral: 'bg-status-pending-bg text-status-pending-fg', // 9.45:1
-  info: 'bg-status-info-bg text-status-info-fg', // 7.15:1
+  info: 'bg-status-info-bg text-status-info-fg', // 7.99:1
 };
 
 export function Badge({ tone = 'neutral', icon, className, children, ...props }: Props) {

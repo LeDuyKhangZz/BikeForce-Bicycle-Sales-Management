@@ -867,3 +867,264 @@ Ba biến bắt buộc, thêm ở **Project Settings → Environment Variables**
 3. `/admin/reports` → bấm **Xuất CSV**, file tải về mở được bằng Excel, dấu tiếng Việt đúng.
 4. Đăng nhập một tài khoản Sales → `/sales/today` → hoàn tất một báo cáo → bấm **Xuất ảnh**, ảnh tải về mở được và **đúng 1080×1920**.
 5. **Mở chính link đó bằng điện thoại thật, trong Zalo** — đây là ISSUE-003, mục cuối cùng còn nợ của Phase 6. Kiểm đủ ba đường ra: share sheet có Zalo không · `<a download>` có lưu được không · ảnh mở ra có đúng dấu tiếng Việt không.
+
+---
+
+## §13 — RUNBOOK DEPLOY THẬT, TỪNG CÚ BẤM (2026-08-10)
+
+> Viết cho một người **chưa từng deploy** làm theo mà không phải đoán. Làm **đúng thứ tự** — bước
+> sau phụ thuộc bước trước. Chỗ nào có lệnh CLI thì agent chạy được; chỗ nào phải bấm trên Dashboard
+> thì chỉ có bạn làm được, và đã ghi rõ bấm vào đâu.
+>
+> **Trạng thái đã ĐO ngày 2026-08-10, không phải phỏng đoán:**
+>
+> | Hạng mục | Kết quả đo |
+> |---|---|
+> | `npx supabase migration list --linked` | **7/7** khớp cả `local` lẫn `remote` |
+> | Số user trên cloud (`GET /auth/v1/admin/users`) | **0** ⇒ **bắt buộc** chạy Bước 4 |
+> | `service_role` đọc `profiles` | **`42501 permission denied`** — đúng thiết kế DEC-031 ⇒ việc phong ADMIN **phải** làm bằng SQL Editor |
+> | `.env*` trong git | chỉ có `.env.example` ⇒ **không có secret nào bị commit** |
+
+---
+
+### BƯỚC 0 — Đẩy code lên GitHub (bạn làm, 30 giây)
+
+Vercel deploy **từ GitHub**, nên code phải nằm trên đó trước. Agent không chạy được `git push`
+(môi trường không có TTY cho Git Credential Manager), nên bước này bạn tự chạy:
+
+```bash
+git push origin main
+```
+
+Kiểm: mở `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` → commit mới nhất phải
+hiện ở đầu trang.
+
+---
+
+### BƯỚC 1 — Đặt độ dài mật khẩu tối thiểu (Dashboard, 1 phút)
+
+Cho khớp `PASSWORD_MIN_LENGTH = 8` ở `lib/validation/account.ts` — **DEC-041**.
+
+1. Mở https://supabase.com/dashboard → chọn project **`rnmywhwanpxmipqducqu`**.
+2. Menu trái → **Authentication**.
+3. Trong menu con → **Sign In / Providers** (một số bản gọi là **Policies** hoặc **Passwords**).
+4. Tìm ô **Minimum password length** → sửa thành **`8`**.
+5. **KHÔNG** bật `Password Requirements` (chữ hoa / chữ số / ký tự đặc biệt) — DEC-041 cố ý không
+   bắt quy tắc thành phần.
+6. Bấm **Save**.
+
+**Kiểm ngay tại chỗ:** cùng trang đó, mục **Email** → **Allow new users to sign up** phải đang **TẮT**
+(BR-012, FR-006). Nếu đang bật thì tắt rồi Save.
+
+---
+
+### BƯỚC 2 — Đổi service role key (Dashboard, 2 phút) — ISSUE-011, mức P1
+
+Key hiện tại đã lọt vào transcript hội thoại nên **phải coi như đã lộ**.
+
+1. Dashboard → **Project Settings** (bánh răng dưới cùng menu trái) → **API Keys**.
+2. Xuống mục **Secret keys** (hoặc **service_role**).
+3. Bấm **Generate new secret key** → xác nhận.
+4. **Sao chép giá trị mới ngay** — nó chỉ hiện đầy đủ một lần.
+
+⚠ **TRƯỚC KHI DÁN vào `.env.local`: đóng tab `.env.local` trong VS Code.** IDE đang mở file nào thì
+tự đưa nội dung file đó vào ngữ cảnh hội thoại — đó **chính xác** là cách ISSUE-011 đã xảy ra lần
+trước. An toàn nhất là dán bằng terminal:
+
+```bash
+notepad .env.local
+```
+
+Sửa đúng dòng `SUPABASE_SERVICE_ROLE_KEY=`, lưu, đóng. Key mới còn được dán lần thứ hai vào Vercel ở
+Bước 5 — cứ giữ trong clipboard.
+
+---
+
+### BƯỚC 3 — Lấy 3 giá trị sẽ dán vào Vercel (Dashboard, 1 phút)
+
+Dashboard → **Project Settings** → **API**. Chép ra một chỗ tạm:
+
+| Cần lấy | Nằm ở đâu | Giá trị của project này |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | mục **Project URL** | `https://rnmywhwanpxmipqducqu.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | mục **Publishable key** / **anon public** | *(chép từ Dashboard)* |
+| `SUPABASE_SERVICE_ROLE_KEY` | key **mới** vừa tạo ở Bước 2 | *(đang trong clipboard)* |
+
+⚠ **KHÔNG** thêm `SUPABASE_DB_URL` và `SUPABASE_DB_PASSWORD` vào Vercel. Hai biến đó chỉ phục vụ bộ
+test và CLI trên máy bạn; ứng dụng **không bao giờ** đọc chúng (DEC-022, DEC-031).
+
+---
+
+### BƯỚC 4 — Tạo tài khoản Admin đầu tiên (Dashboard, 3 phút) — BẮT BUỘC
+
+**Đo được ngày 2026-08-10: cloud đang có ĐÚNG 0 user.** Seed cố ý không được đẩy lên cloud. Không
+làm bước này thì deploy xong **không ai đăng nhập được**, kể cả bạn.
+
+Đây là bài toán con-gà-quả-trứng: chỉ Admin mới tạo được tài khoản (BR-012), nhưng ban đầu chưa có
+Admin nào. Làm **đúng một lần trong đời dự án**:
+
+1. Dashboard → **Authentication** → **Users** → nút **Add user** → **Create new user**.
+2. Điền:
+   - **Email**: email thật của bạn (đây sẽ là tài khoản Admin).
+   - **Password**: một mật khẩu mạnh **≥ 8 ký tự**, tự nhớ lấy.
+   - **Auto Confirm User**: **BẬT**. Bắt buộc — v1 không cấu hình SMTP nên không có mail xác nhận
+     nào được gửi; không bật thì tài khoản kẹt ở trạng thái chưa xác nhận và không đăng nhập được.
+3. Bấm **Create user**. Trigger `handle_new_user()` tự tạo dòng tương ứng trong `public.profiles`
+   với `role = 'SALES'` (theo mặc định của cột).
+4. Menu trái → **SQL Editor** → **New query** → dán **đúng một câu** này, thay email thật vào:
+
+```sql
+update public.profiles
+set role = 'ADMIN'
+where email = 'email-that-cua-ban@example.com';
+```
+
+Bấm **Run**. Kỳ vọng: `Success. 1 row(s) affected` — nếu ra `0 rows` là gõ sai email.
+
+5. Kiểm lại bằng câu thứ hai:
+
+```sql
+select id, email, full_name, role, is_active
+from public.profiles
+where role = 'ADMIN';
+```
+
+Kỳ vọng: **đúng một dòng**, `is_active = true`.
+
+> **Vì sao phải chạy SQL tay chứ không có màn hình "tạo admin":** bất kỳ endpoint nào có khả năng tự
+> phong ADMIN đều là một đường leo thang đặc quyền tồn tại vĩnh viễn trong sản phẩm, chỉ để phục vụ
+> một thao tác chạy một lần. Và `service_role` **cố ý không có quyền** ghi `profiles` (DEC-031) —
+> đã đo lại ngày 2026-08-10, nó trả `42501 permission denied`. SQL Editor chạy dưới vai `postgres`
+> nên đi qua được; đây là ngoại lệ hợp lệ **duy nhất** của luật "không sửa DB bằng tay" (§4.1).
+>
+> **Ghi vào `WORKLOG.md`:** ngày giờ thực hiện + email tài khoản admin. **Không ghi mật khẩu.**
+
+---
+
+### BƯỚC 5 — Tạo project trên Vercel (10 phút)
+
+**5.1 — Đăng nhập và import**
+
+1. Mở https://vercel.com → **Continue with GitHub** (đăng nhập bằng chính tài khoản GitHub đang chứa
+   repo).
+2. Màn hình chính → nút **Add New...** (góc trên phải) → **Project**.
+3. Danh sách repo hiện ra → tìm **`BikeForce-Bicycle-Sales-Management`** → bấm **Import**.
+   - Không thấy repo? Bấm **Adjust GitHub App Permissions** → cấp quyền cho repo đó → quay lại.
+
+**5.2 — Màn hình "Configure Project"**
+
+| Ô | Đặt gì | Ghi chú |
+|---|---|---|
+| **Project Name** | `bikeforce` | quyết định domain `bikeforce.vercel.app` |
+| **Framework Preset** | **Next.js** | Vercel tự nhận, chỉ cần xác nhận |
+| **Root Directory** | `./` | repo không có thư mục con |
+| **Build Command** | *(để trống / mặc định)* | mặc định là `next build`, đúng rồi |
+| **Output Directory** | *(để trống)* | Next.js tự lo |
+| **Install Command** | *(để trống)* | mặc định `npm install` |
+| **Node.js Version** | **22.x** | `package.json` khai `engines.node >= 22` |
+
+**5.3 — Environment Variables (làm NGAY tại màn hình này, TRƯỚC khi bấm Deploy)**
+
+Mở khối **Environment Variables**, thêm **ba** biến. Với mỗi biến: gõ **Key**, dán **Value**, và
+đảm bảo **cả ba** môi trường `Production` / `Preview` / `Development` đều được tick:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL        = https://rnmywhwanpxmipqducqu.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY   = <anon key ở Bước 3>
+SUPABASE_SERVICE_ROLE_KEY       = <secret key MỚI ở Bước 2>
+```
+
+⚠ Kiểm lại bằng mắt: `SUPABASE_SERVICE_ROLE_KEY` **không** có tiền tố `NEXT_PUBLIC_`. Đặt sai tiền
+tố là đưa khoá bypass toàn bộ RLS vào bundle mà **mọi người dùng tải về được** — hỏng ở mức không
+cứu được bằng cách nào khác ngoài rotate lại.
+
+**5.4 — Deploy**
+
+Bấm **Deploy**. Lần đầu mất khoảng **2–4 phút**. Xong sẽ hiện màn hình chúc mừng kèm link dạng
+`https://bikeforce-xxxx.vercel.app`.
+
+Build **đỏ**? Mở tab **Building** đọc log:
+
+- `Missing environment variable ...` → thiếu biến ở 5.3.
+- `Module not found` → thiếu commit; quay lại Bước 0.
+- Cảnh báo `middleware-to-proxy` là **bình thường** (ISSUE-009), không phải lỗi.
+
+**5.5 — Đặt region về Singapore (sau khi deploy lần đầu)**
+
+1. Vào project → tab **Settings** → mục **Functions** (bản mới: **Functions** → **Function Region**).
+2. Đổi **Region** thành **Singapore — `sin1`**.
+3. **Save**, rồi vào tab **Deployments** → deployment mới nhất → menu `···` → **Redeploy** để region
+   mới có hiệu lực.
+
+> Vì sao quan trọng: database Supabase nằm ở `ap-southeast-1` (Singapore). Để hàm chạy ở Mỹ thì mỗi
+> truy vấn phải đi vòng nửa vòng trái đất — cộng khoảng **200–300 ms** cho **mỗi** request, đúng thứ
+> NFR-001 (LCP < 2,5s trên 4G) không chịu nổi.
+
+**5.6 — Bảo vệ bản Preview**
+
+Đây là app **nội bộ**, không được để bản preview mở công khai.
+
+1. **Settings** → **Deployment Protection**.
+2. Bật **Vercel Authentication** cho **Preview Deployments** (chỉ người trong team Vercel mới xem được).
+3. **Production** thì **để công khai** — Sales phải vào được từ điện thoại mà không có tài khoản
+   Vercel. Bảo mật của Production là `/login` + RLS, không phải tường của Vercel.
+
+---
+
+### BƯỚC 6 — Trỏ Supabase về domain thật (Dashboard, 1 phút)
+
+1. Chép link production của Vercel (ví dụ `https://bikeforce.vercel.app`).
+2. Supabase Dashboard → **Authentication** → **URL Configuration**.
+3. **Site URL** → dán link đó.
+4. **Redirect URLs** → **Add URL** → dán `https://bikeforce.vercel.app/**`.
+5. **Save**.
+
+*(Tuỳ chọn, nên làm cho về sau)* Vercel → **Settings → Environment Variables** → thêm
+`NEXT_PUBLIC_SITE_URL = https://bikeforce.vercel.app`. Hiện `getSiteUrl()` chưa có nơi gọi trong code
+v1, nhưng đặt sẵn thì sau này không phải nhớ lại.
+
+---
+
+### BƯỚC 7 — Smoke test trên production (10 phút, làm trên ĐIỆN THOẠI THẬT)
+
+Mở link production. Làm đủ **8** điều, đánh dấu từng cái:
+
+| # | Việc | Kỳ vọng |
+|---|---|---|
+| 1 | Mở `/login` | Hiện logo xe đạp **cam** + chữ **BikeForce** xanh, không lỗi font tiếng Việt |
+| 2 | Đăng nhập bằng Admin ở Bước 4 | Vào thẳng `/admin` |
+| 3 | Xem `/admin` | **12 chỉ số hiện số thật**, không ô nào trống hay `NaN`. Đội mới nên phần lớn là `0` — đúng, không phải lỗi |
+| 4 | `/admin/sales` → **Tạo tài khoản Sales** | Mật khẩu tạm hiện **đúng một lần** — chép lại ngay |
+| 5 | Đăng xuất, đăng nhập bằng Sales vừa tạo | Vào `/sales/today`, hiện "Chưa báo cáo" |
+| 6 | Tạo báo cáo sáng → hoàn tất báo cáo tối | Bảng đối chiếu hiện `%`, nút **Xuất ảnh** xuất hiện |
+| 7 | Bấm **Xuất ảnh** | Tải về file PNG, mở ra đúng khổ dọc, **đủ dấu tiếng Việt** |
+| 8 | Trình duyệt → menu → **Thêm vào màn hình chính** | Icon **xe đạp cam trên nền trắng**; mở từ icon ra **không có thanh địa chỉ** |
+
+**Còn một việc chỉ làm được ở đây — ISSUE-003:** gửi chính link đó vào một cuộc trò chuyện Zalo, mở
+bằng trình duyệt trong Zalo, rồi bấm **Xuất ảnh**. Kiểm đủ ba đường ra: share sheet có Zalo không ·
+`<a download>` có lưu được không · ảnh mở ra có đúng dấu tiếng Việt không. Đây là mục cuối cùng còn
+nợ của Phase 6, và **project `zalo-like` của Playwright không thay thế được** — nó chỉ đội một
+`userAgent` khác, không tái hiện giới hạn API thật của webview.
+
+---
+
+### BƯỚC 8 — Sau khi chạy được
+
+- Chạy **Lighthouse** trên link production (Chrome DevTools → tab Lighthouse → chế độ **Mobile**).
+  Mục tiêu NFR-001: **Performance ≥ 90**, **LCP < 2,5s**. Đây là mục còn nợ của Phase 11.
+- Ghi vào `WORKLOG.md`: ngày deploy, link production, email tài khoản Admin (**không ghi mật khẩu**).
+- Tick các mục Phase 12 trong `PROJECT_CHECKLIST.md`.
+
+### Chính sách rollback (NFR-013)
+
+| Loại | Cách lùi |
+|---|---|
+| **Code** | Vercel → **Deployments** → chọn bản chạy tốt trước đó → `···` → **Promote to Production**. Tức thì, không cần build lại |
+| **Schema** | **KHÔNG có rollback.** Migration chỉ tiến tới (§4.1, AGENTS.md §13). Muốn lùi thì viết `0008_*.sql` mới mô tả phép lùi |
+| **Secret** | Rotate lại trên Supabase Dashboard rồi cập nhật ở **cả** Vercel **và** `.env.local` |
+
+### Hạn mức Free — vì sao hệ thống nằm gọn (NFR-013)
+
+Không cron, không queue, không Realtime, không Edge Function, **không dùng Supabase Storage** cho ảnh
+(DEC-021 — ảnh 9:16 stream thẳng từ Route Handler, không lưu file nào). Đội vài chục Sales, mỗi người
+2 lần ghi/ngày ⇒ vài trăm request/ngày, cách rất xa trần của Vercel Free và Supabase Free.

@@ -358,11 +358,57 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
 - [ ] Vercel: framework preset Next.js, region `sin1`, build `next build`, Node 22
 - [ ] Bật "Protect Preview Deployments" vì đây là app nội bộ
 - [ ] Chạy runbook tạo Admin đầu tiên trên production (một lần duy nhất)
-- [ ] PWA manifest + icon + `display: standalone`, Add to Home Screen hoạt động; **không** service worker offline ở v1 — FR-036, DEC-024
+- [x] PWA manifest + icon + `display: standalone`, Add to Home Screen hoạt động; **không** service worker offline ở v1 — FR-036, DEC-024
+      → **2026-08-10 (DEC-047):** `lib/pwa/manifest.ts` (13 unit test) + `app/manifest.ts` → `/manifest.webmanifest`; 4 PNG (`any` 192/512 + `maskable` 192/512) + `app/apple-icon.png` 180 + `app/icon.svg` + `app/favicon.ico`; `theme_color` = `background_color` = **trắng**; thêm `webmanifest` vào `PUBLIC_FILE` của middleware (nếu không, manifest bị trả về HTML `/login` kèm 200 và Add to Home Screen **im lặng biến mất**). 6 bài E2E khoá lại: manifest 200 khi chưa đăng nhập · **đọc `IHDR` xác minh kích thước thật** của cả 4 icon · thẻ `<link>` trên `/login`. ⏳ Còn nợ **thao tác "Thêm vào màn hình chính" trên máy thật** — thuộc Phase 13
 - [ ] Xác nhận hệ thống nằm trong hạn mức Vercel Free + Supabase Free: không cron, không queue, không dùng Supabase Storage cho ảnh — NFR-013, DEC-021
 - [ ] Ghi rõ chính sách rollback: migration chỉ tiến tới, muốn lùi phải viết migration mới
 - [ ] Smoke test trên production: đăng nhập Sales, tạo báo cáo sáng, hoàn tất cuối ngày, xuất ảnh, đăng nhập Admin xem dashboard
 - [ ] Cập nhật `WORKLOG.md`, `SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md` và toàn bộ `docs/` khớp với hệ thống đã deploy
+
+---
+
+## Phase 13 — Nhận diện thương hiệu & soát UI/UX (MỞ 2026-08-10)
+
+> **Vì sao có phase này:** ngày 2026-08-10 người dùng cung cấp **logo chính thức** (xe đạp cam,
+> chữ hiệu xanh, nền trắng) và yêu cầu đưa tone màu trang web về đúng logo, rồi soát lại toàn bộ
+> thiết kế bằng skill `ui-ux-pro-max` — **ưu tiên cực cao cho điện thoại và laptop**. Phần *đổi màu*
+> đã làm xong ngay trong phiên; phần *soát toàn hệ thống* được cất lại đây để **deploy đi trước**.
+>
+> Skill `ui-ux-pro-max` đã được **tải thật** về `~/.claude/skills/ui-ux-pro-max`
+> (github.com/nextlevelbuilder/ui-ux-pro-max-skill, v2.13.0). Hai file cần đọc khi làm phase này:
+> `.claude/skills/ui-ux-pro-max/references/quick-reference.md` (98 guideline, §1–§3 là CRITICAL/HIGH)
+> và `references/pro-rules.md` (Pre-Delivery Checklist chuẩn).
+> ⚠ **`--design-system` của skill khớp NHẦM cho sản phẩm này** — nó trả về pattern
+> "Newsletter / Content First" kèm bảng màu **đỏ** và font Atkinson Hyperlegible. Đừng dùng phần đó:
+> màu đã do người dùng chốt (DEC-046), font đã chốt từ DEC-013. **Chỉ dùng phần checklist.**
+
+### 13a. Đã XONG trong phiên 2026-08-10
+
+- [x] Đo contrast thật cho hai màu logo → phát hiện cam `#E9A04F` chỉ **2,19:1** và xanh `#197DC3`
+      thiếu **0,09** so với AA → chốt quy tắc "giữ sắc, chỉnh độ sáng" — **DEC-046**
+- [x] Thay 12 token trong `app/globals.css`; toàn bộ cặp màu **đạt AA/AAA khi đo**
+- [x] `components/ui/brand-mark.tsx` — logo SVG inline (`BrandMark` + `BrandLockup`), toạ độ sinh
+      cùng nguồn với bộ icon nên **không thể lệch hình**
+- [x] Gắn logo vào 3 chỗ: `/login` (lockup lớn) · header hai route group (ẩn từ 1024px) · sidebar
+- [x] Bộ icon PWA vẽ lại theo hình xe của logo (cam trên trắng)
+- [x] `docs/05 §4.1–§4.4` và `§15` viết lại theo bảng màu mới
+
+### 13b. CÒN LẠI — chưa làm, làm sau khi deploy xong
+
+- [ ] **Soát 98 guideline của skill trên 18 route**, ưu tiên `mobile-375` và `desktop-1440`. Ra bảng
+      **ĐẠT / KHÔNG ĐẠT / KHÔNG ÁP DỤNG** cho từng mục, không viết "đã kiểm tra" chung chung
+- [ ] Chạy `python <skill>/scripts/search.py "<từ khoá>" --domain ux` cho từng nhóm CRITICAL trước
+- [ ] **Xem tận mắt** 18 route ở 375px và 1440px sau khi đổi màu — bảng màu mới **chưa từng được
+      nhìn bằng mắt**, mới chỉ được chứng minh bằng số đo và 30 lượt quét axe
+- [ ] Đối chiếu `pro-rules.md § Pre-Delivery Checklist` — đặc biệt: `press-feedback`,
+      `state-clarity`, `elevation-consistent`, `line-length-control`, `truncation-strategy`
+- [ ] Quyết định có đưa cam logo vào thẻ ảnh 9:16 không (`docs/05 §4.5` đang dùng `#FBBF24`;
+      trên nền `#0B1220` cả hai đều AAA nên **không phải lỗi**, chỉ là lựa chọn nhận diện)
+- [ ] Cân nhắc thêm biến thể nút `accent` (nền cam + chữ tối, **8,17:1**) — hiện token
+      `--color-accent` mới chỉ dùng cho logo, chưa có CTA nào dùng
+- [ ] Thao tác **"Thêm vào màn hình chính" trên máy thật** (Chrome Android + Safari iOS): icon đúng,
+      mở ra **không có thanh địa chỉ**, splash trắng liền mạch — nợ từ Phase 12
+- [ ] Kiểm `prefers-reduced-motion` và cỡ chữ hệ thống lớn nhất (`dynamic-type`) không vỡ bố cục
 
 ---
 
