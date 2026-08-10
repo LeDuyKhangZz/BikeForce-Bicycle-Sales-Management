@@ -30,20 +30,30 @@ type DailyReportRow = Database['public']['Tables']['daily_reports']['Row'];
  */
 type TargetColumn =
   | 'target_visit_points'
-  | 'target_sales_quantity'
+  | 'target_sales_amount'
   | 'target_revenue'
   | 'target_customer_visits';
 
 type ActualColumn =
   | 'actual_visit_points'
-  | 'actual_sales_quantity'
+  | 'actual_sales_amount'
   | 'actual_revenue'
   | 'actual_customer_visits';
 
 export type KpiMetricRow = {
   readonly metric: KpiMetric;
-  /** Nhãn hiển thị — tiếng Việt, dùng chung cho web và ảnh. */
+  /** Nhãn ĐẦY ĐỦ — dùng ở mọi nơi có chỗ: bảng đối chiếu web, Admin, CSV. */
   readonly label: string;
+  /**
+   * Nhãn RÚT GỌN cho khung có bề rộng cố định — hiện chỉ thẻ ảnh 9:16 (`docs/05
+   * §14`) dùng tới. Thêm ở PHASE 13 vì DEC-050 kéo dài hai nhãn ("Doanh thu công
+   * nợ", "Khách hàng đã gặp") quá cột nhãn của thẻ ảnh, và Satori KHÔNG có cơ chế
+   * đo chữ để tự thu nhỏ.
+   *
+   * Vẫn nằm ở đây chứ không ở component: nếu để component tự cắt chuỗi thì web và
+   * ảnh sẽ nói hai cái tên khác nhau — đúng thứ file này sinh ra để chặn.
+   */
+  readonly shortLabel: string;
   readonly targetColumn: TargetColumn;
   readonly actualColumn: ActualColumn;
 };
@@ -58,24 +68,28 @@ const ROW_BY_METRIC = {
   VISIT_POINTS: {
     metric: 'VISIT_POINTS',
     label: 'Viếng thăm',
+    shortLabel: 'Viếng thăm',
     targetColumn: 'target_visit_points',
     actualColumn: 'actual_visit_points',
   },
-  SALES_QUANTITY: {
-    metric: 'SALES_QUANTITY',
+  SALES_AMOUNT: {
+    metric: 'SALES_AMOUNT',
     label: 'Doanh số',
-    targetColumn: 'target_sales_quantity',
-    actualColumn: 'actual_sales_quantity',
+    shortLabel: 'Doanh số',
+    targetColumn: 'target_sales_amount',
+    actualColumn: 'actual_sales_amount',
   },
   REVENUE: {
     metric: 'REVENUE',
-    label: 'Doanh thu',
+    label: 'Doanh thu công nợ',
+    shortLabel: 'Công nợ',
     targetColumn: 'target_revenue',
     actualColumn: 'actual_revenue',
   },
   CUSTOMER_VISITS: {
     metric: 'CUSTOMER_VISITS',
-    label: 'Khách hàng',
+    label: 'Khách hàng đã gặp',
+    shortLabel: 'Khách hàng',
     targetColumn: 'target_customer_visits',
     actualColumn: 'actual_customer_visits',
   },
@@ -92,7 +106,7 @@ const ROW_BY_METRIC = {
  */
 export const KPI_METRIC_ROWS: readonly KpiMetricRow[] = [
   ROW_BY_METRIC.VISIT_POINTS,
-  ROW_BY_METRIC.SALES_QUANTITY,
+  ROW_BY_METRIC.SALES_AMOUNT,
   ROW_BY_METRIC.REVENUE,
   ROW_BY_METRIC.CUSTOMER_VISITS,
 ];

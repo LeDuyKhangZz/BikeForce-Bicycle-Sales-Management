@@ -122,8 +122,8 @@ beforeAll(async () => {
     await sql(
       `insert into public.daily_reports (
          sales_id, report_date, status, planned_route, visit_purpose,
-         target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
-         actual_route, actual_visit_points, actual_sales_quantity, actual_revenue,
+         target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
+         actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
          actual_customer_visits, evening_submitted_at
        )
        select
@@ -132,10 +132,12 @@ beforeAll(async () => {
          case when (extract(day from d)::int % 2) = 0 then 'COMPLETED' else 'MORNING_SUBMITTED' end::public.report_status,
          'Tuyen ' || to_char(d, 'DD/MM'),
          'Cham soc dai ly',
-         3, 5, 100000000, 8,
+         -- 12 chứ không phải 3: BR-026 đặt sàn 10 cho mục tiêu điểm viếng thăm
+         -- (DEC-049). Doanh số là TIỀN từ DEC-050.
+         12, 80000000, 100000000, 8,
          case when (extract(day from d)::int % 2) = 0 then 'Tuyen thuc te' end,
          case when (extract(day from d)::int % 2) = 0 then 4 end,
-         case when (extract(day from d)::int % 2) = 0 then 6 end,
+         case when (extract(day from d)::int % 2) = 0 then 60000000 end,
          case when (extract(day from d)::int % 2) = 0 then 120000000 end,
          case when (extract(day from d)::int % 2) = 0 then 9 end,
          case when (extract(day from d)::int % 2) = 0 then d end
@@ -176,7 +178,7 @@ describe('FR-021 · /sales/history — lịch sử của MỘT Sales, phân tran
   const HISTORY_QUERY = `
     select id, report_date, status,
            target_visit_points, actual_visit_points,
-           target_sales_quantity, actual_sales_quantity,
+           target_sales_amount, actual_sales_amount,
            target_revenue, actual_revenue,
            target_customer_visits, actual_customer_visits
       from public.daily_reports

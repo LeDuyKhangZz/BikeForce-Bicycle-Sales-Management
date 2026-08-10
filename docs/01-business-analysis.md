@@ -304,7 +304,7 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đ�
 | BR-003 | Sales không đọc được báo cáo của Sales khác | RLS + server | APPROVED (Spec §24) |
 | BR-004 | Achievement được phép > 100%, **không clamp** | `lib/kpi` | APPROVED (Spec §9) |
 | BR-005 | `report_date` là ngày nghiệp vụ tại `Asia/Ho_Chi_Minh`, không phải UTC | server + DB `vn_today()` | APPROVED (Spec §27) |
-| BR-006 | Doanh số & SL khách & điểm viếng thăm là **integer ≥ 0**; doanh thu là **bigint VND ≥ 0** | Zod + DB CHECK | APPROVED (Spec §7,§8,§25) |
+| BR-006 | ~~Doanh số~~ SL khách & điểm viếng thăm là **integer ≥ 0**; **doanh số VÀ doanh thu công nợ** là **bigint VND ≥ 0** | Zod + DB CHECK | **APPROVED — SỬA 2026-08-10 bởi DEC-050** (OQ-19a) |
 | BR-007 | Không thể nhập báo cáo cuối ngày nếu chưa có báo cáo đầu ngày cùng ngày | server + DB CHECK trạng thái | APPROVED (suy ra từ Spec §8) |
 | BR-008 | Vòng đời trạng thái: `(none) → MORNING_SUBMITTED → COMPLETED`. Không nhảy bước, không quay lui | server + DB trigger | APPROVED (Spec §10) |
 | BR-009 | Tài khoản `is_active = false` không đăng nhập và không thao tác được | middleware + RLS | APPROVED (Spec §6) |
@@ -324,6 +324,7 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đ�
 | BR-023 | Trạng thái hiển thị achievement: ≥100% "Vượt mục tiêu", 80–99.99% "Gần đạt", <80% "Chưa đạt", chưa có actual → "Chờ số liệu" | `lib/kpi` `getAchievementStatus()` | APPROVED (technical) |
 | BR-024 | "Ngày đạt KPI" = ngày có **cả 4** chỉ tiêu ≥ 100% | `lib/kpi` | **APPROVED** (OQ-17) |
 | BR-025 | Email của profile phải khớp email trong `auth.users`, unique toàn hệ thống | DB unique + trigger | APPROVED (technical) |
+| **BR-026** | **Mục tiêu** điểm viếng thăm phải nằm trong **[10, 1000]**. Sàn 10 **không** áp cho `actual_visit_points` — đi được ít hơn cam kết là kết quả thật, không phải dữ liệu sai | `ck_target_visit_points` (0008, `not valid`) + Zod `MIN_TARGET_VISIT_POINTS` | **APPROVED 2026-08-10** (DEC-049) |
 
 ### 8.1 Logic tập trung bắt buộc (Master Spec §9)
 
@@ -715,7 +716,7 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 
 ---
 
-## OPEN QUESTIONS — **18/19 đã trả lời · ⚠ OQ-19 ĐANG CHỜ (mở 2026-08-10)**
+## OPEN QUESTIONS — ✅ **ĐÃ ĐÓNG ĐỦ 19/19** (OQ-01…17 ngày 2026-08-07 · OQ-18 và OQ-19 ngày 2026-08-10)
 
 > **Đây là DANH SÁCH ĐẦY ĐỦ DUY NHẤT của toàn dự án.** Mọi tài liệu khác (`docs/02` … `docs/12`, `CLAUDE.md`, `AGENTS.md`) chỉ liệt kê các `OQ-xx` liên quan trực tiếp tới nó và **trỏ ngược về mục này**. Không được tạo `OQ` mới ở tài liệu khác.
 
@@ -723,10 +724,11 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 
 > ✅ **OQ-18 đã được trả lời ngày 2026-08-10** — phương án **(a)**, ghi thành **DEC-043**. Chi tiết ở cuối mục này và ở `docs/12 § ISSUE-013` (→ CLOSED).
 >
-> ⚠ **OQ-19 MỞ ngày 2026-08-10 và ĐANG CHỜ TRẢ LỜI.** Người dùng yêu cầu đổi nghĩa hai chỉ tiêu tiền
-> tệ. Yêu cầu này **lật OQ-03 và OQ-14** — hai câu đã `APPROVED` từ 2026-08-07 — nên **không được
-> tự suy diễn**. Chi tiết ngay dưới đây. Chừng nào chưa có câu trả lời thì **không viết migration
-> `0008`** và không sửa `lib/kpi.ts`.
+> ✅ **OQ-19 mở VÀ được trả lời cùng ngày 2026-08-10** — đủ **3/3** câu, ghi thành **DEC-050**. Nó
+> **lật OQ-03 và OQ-14** (hai câu đã `APPROVED` từ 2026-08-07), nên bắt buộc phải có DEC mới chứ
+> không được sửa lén. Migration `0008` và `lib/kpi.ts` đã được sửa **sau khi** có câu trả lời.
+>
+> **Không còn câu hỏi nghiệp vụ nào đang chờ.**
 
 | ID | Câu hỏi | **CÂU TRẢ LỜI CHÍNH THỨC** | Ràng buộc sinh ra |
 |---|---|---|---|
@@ -750,7 +752,26 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 
 ---
 
-### OQ-19 — ⚠ ĐANG CHỜ TRẢ LỜI (mở 2026-08-10, Phase 13)
+### OQ-19 — ✅ ĐÃ TRẢ LỜI (mở và trả lời cùng ngày 2026-08-10, Phase 13)
+
+| # | Câu hỏi | **CÂU TRẢ LỜI CHÍNH THỨC** | Ràng buộc sinh ra |
+|---|---|---|---|
+| **19a** | Số lượng xe bán ra có còn theo dõi không? | **BỎ HẲN.** Không thành chỉ tiêu thứ 5 | **BR-006 sửa** · BR-024 giữ nguyên "cả **4** chỉ tiêu" · `metric-rows.ts` giữ 4 dòng |
+| **19b** | "Doanh thu công nợ" là thu hồi được hay còn lại? | **Tiền công nợ THU HỒI ĐƯỢC trong ngày** | **BR-014 giữ nguyên** — không cần công thức đảo, không cần BR mới |
+| **19c** | Dữ liệu cũ trên production xử lý sao? | **Đặt `null`** cho các dòng có trước migration `0008` | Cặp cột MỚI `*_sales_amount`; cột cũ thành **di sản**, không xoá (BR-013) |
+
+**Đã triển khai 2026-08-10 — `DEC-050`.** Bốn chỉ tiêu nay là:
+`Viếng thăm` (điểm) · `Doanh số` (**VND**) · `Doanh thu công nợ` (**VND**) · `Khách hàng đã gặp` (khách).
+Đơn vị `xe` **không còn tồn tại** ở bất kỳ đâu trong dự án.
+
+> ⚠ Một điểm KHÔNG được suy rộng: phương án "`null` cho dòng cũ" chỉ áp cho **doanh số**, chỗ kiểu dữ
+> liệu thật sự đổi (đếm → tiền). Cột `*_revenue` **giữ nguyên giá trị**; các dòng trước 2026-08-10 vì
+> vậy mang nghĩa cũ "giá trị đơn hàng chốt trong ngày" — đã ghi vào `comment on column`.
+
+<details>
+<summary>Bối cảnh gốc của câu hỏi (giữ lại làm bản ghi lịch sử)</summary>
+
+
 
 **Bối cảnh.** Ngày 2026-08-10 người dùng yêu cầu, kèm ảnh chú thích tay (mô tả đầy đủ ở
 `PROJECT_CHECKLIST.md § Phase 13c`):
@@ -781,6 +802,10 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 5 hàm SQL aggregate của `0006`/`0007`, thẻ ảnh 9:16, CSV, và **toàn bộ bài test có số liệu mẫu**.
 Hai yêu cầu còn lại của nhóm C (bỏ `visit_purpose`, sàn 10 cho điểm viếng thăm) **không** bị OQ-19
 chặn và làm độc lập được.
+
+</details>
+
+**Đề xuất mặc định ở trên đã được người dùng chọn nguyên vẹn cả ba câu** — xem bảng câu trả lời đầu mục.
 
 ### OQ-18 — ✅ ĐÃ TRẢ LỜI (phát sinh 2026-08-07 ở Phase 3 · trả lời 2026-08-10)
 

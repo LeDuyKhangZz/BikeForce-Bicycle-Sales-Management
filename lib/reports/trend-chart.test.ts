@@ -29,7 +29,7 @@ const point = (date: string, target: number, actual: number): TrendPoint => ({
 describe('parseTrendMetric', () => {
   it('nhận đúng bốn chỉ tiêu hợp lệ', () => {
     expect(parseTrendMetric('VISIT_POINTS')).toBe('VISIT_POINTS');
-    expect(parseTrendMetric('SALES_QUANTITY')).toBe('SALES_QUANTITY');
+    expect(parseTrendMetric('SALES_AMOUNT')).toBe('SALES_AMOUNT');
     expect(parseTrendMetric('REVENUE')).toBe('REVENUE');
     expect(parseTrendMetric('CUSTOMER_VISITS')).toBe('CUSTOMER_VISITS');
   });
@@ -64,7 +64,7 @@ describe('buildTrendChart — hình học', () => {
   ];
 
   it('mỗi ngày cho đúng một cột, giữ nguyên thứ tự', () => {
-    const model = buildTrendChart(points, 'SALES_QUANTITY');
+    const model = buildTrendChart(points, 'SALES_AMOUNT');
 
     expect(model.bars).toHaveLength(3);
     expect(model.bars.map((bar) => bar.date)).toEqual([
@@ -83,13 +83,13 @@ describe('buildTrendChart — hình học', () => {
   it('đỉnh vùng vẽ lấy theo giá trị lớn nhất của CẢ cam kết lẫn thực đạt', () => {
     // Ngày 3 vượt kế hoạch (BR-004 không clamp) — nếu chỉ lấy max theo cam kết
     // thì cột đó sẽ tràn ra ngoài khung.
-    const model = buildTrendChart(points, 'SALES_QUANTITY');
+    const model = buildTrendChart(points, 'SALES_AMOUNT');
 
     expect(model.maxValue).toBe(120);
   });
 
   it('không cột nào tràn ra ngoài vùng vẽ, kể cả khi vượt 100%', () => {
-    const model = buildTrendChart(points, 'SALES_QUANTITY');
+    const model = buildTrendChart(points, 'SALES_AMOUNT');
 
     for (const bar of model.bars) {
       expect(bar.y).toBeGreaterThanOrEqual(0);
@@ -100,7 +100,7 @@ describe('buildTrendChart — hình học', () => {
   });
 
   it('cột thực đạt hẹp hơn và nằm giữa khung cam kết', () => {
-    const model = buildTrendChart(points, 'SALES_QUANTITY');
+    const model = buildTrendChart(points, 'SALES_AMOUNT');
     const bar = model.bars[0];
 
     expect(bar).toBeDefined();
@@ -114,7 +114,7 @@ describe('buildTrendChart — hình học', () => {
   });
 
   it('giá trị lớn hơn cho cột cao hơn — cột không mọc ngược', () => {
-    const model = buildTrendChart(points, 'SALES_QUANTITY');
+    const model = buildTrendChart(points, 'SALES_AMOUNT');
     const [first, , third] = model.bars;
 
     expect(first).toBeDefined();

@@ -87,8 +87,10 @@ export default async function SalesReportDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <AchievementTable report={report} />
+      {/* PHASE 13 — cùng thứ tự với `/sales/today`: tuyến trước, bảng số sau.
+          Hai màn hình trình bày CÙNG một báo cáo nên không được lệch bố cục. */}
       <ReportNotes report={report} />
+      <AchievementTable report={report} />
 
       {isCompleted ? (
         <ShareImageButton

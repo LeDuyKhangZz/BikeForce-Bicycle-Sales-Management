@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       daily_reports: {
@@ -14,6 +39,7 @@ export type Database = {
           actual_customer_visits: number | null
           actual_revenue: number | null
           actual_route: string | null
+          actual_sales_amount: number | null
           actual_sales_quantity: number | null
           actual_visit_points: number | null
           created_at: string
@@ -27,7 +53,8 @@ export type Database = {
           status: Database["public"]["Enums"]["report_status"]
           target_customer_visits: number
           target_revenue: number
-          target_sales_quantity: number
+          target_sales_amount: number | null
+          target_sales_quantity: number | null
           target_visit_points: number
           updated_at: string
           visit_purpose: string | null
@@ -36,6 +63,7 @@ export type Database = {
           actual_customer_visits?: number | null
           actual_revenue?: number | null
           actual_route?: string | null
+          actual_sales_amount?: number | null
           actual_sales_quantity?: number | null
           actual_visit_points?: number | null
           created_at?: string
@@ -49,7 +77,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["report_status"]
           target_customer_visits: number
           target_revenue: number
-          target_sales_quantity: number
+          target_sales_amount?: number | null
+          target_sales_quantity?: number | null
           target_visit_points: number
           updated_at?: string
           visit_purpose?: string | null
@@ -58,6 +87,7 @@ export type Database = {
           actual_customer_visits?: number | null
           actual_revenue?: number | null
           actual_route?: string | null
+          actual_sales_amount?: number | null
           actual_sales_quantity?: number | null
           actual_visit_points?: number | null
           created_at?: string
@@ -71,7 +101,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["report_status"]
           target_customer_visits?: number
           target_revenue?: number
-          target_sales_quantity?: number
+          target_sales_amount?: number | null
+          target_sales_quantity?: number | null
           target_visit_points?: number
           updated_at?: string
           visit_purpose?: string | null
@@ -132,13 +163,13 @@ export type Database = {
         Returns: {
           actual_customer_visits: number
           actual_revenue: number
-          actual_sales_quantity: number
+          actual_sales_amount: number
           actual_visit_points: number
           report_count: number
           report_date: string
           target_customer_visits: number
           target_revenue: number
-          target_sales_quantity: number
+          target_sales_amount: number
           target_visit_points: number
         }[]
       }
@@ -156,13 +187,13 @@ export type Database = {
         Returns: {
           actual_customer_visits: number
           actual_revenue: number
-          actual_sales_quantity: number
+          actual_sales_amount: number
           actual_visit_points: number
           report_count: number
           sales_count: number
           target_customer_visits: number
           target_revenue: number
-          target_sales_quantity: number
+          target_sales_amount: number
           target_visit_points: number
         }[]
       }
@@ -171,7 +202,7 @@ export type Database = {
         Returns: {
           actual_customer_visits: number
           actual_revenue: number
-          actual_sales_quantity: number
+          actual_sales_amount: number
           actual_visit_points: number
           employee_code: string
           full_name: string
@@ -181,7 +212,7 @@ export type Database = {
           sales_id: string
           target_customer_visits: number
           target_revenue: number
-          target_sales_quantity: number
+          target_sales_amount: number
           target_visit_points: number
         }[]
       }
@@ -191,14 +222,14 @@ export type Database = {
           active_sales_count: number
           actual_customer_visits: number
           actual_revenue: number
-          actual_sales_quantity: number
+          actual_sales_amount: number
           actual_visit_points: number
           completed_count: number
           morning_submitted_count: number
           no_report_count: number
           target_customer_visits: number
           target_revenue: number
-          target_sales_quantity: number
+          target_sales_amount: number
           target_visit_points: number
         }[]
       }
@@ -334,6 +365,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       report_status: ["MORNING_SUBMITTED", "COMPLETED"],

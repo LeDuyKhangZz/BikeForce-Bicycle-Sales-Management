@@ -22,7 +22,7 @@ let reportId = '';
 
 const COMPLETE_SQL = `
   update public.daily_reports
-     set status = 'COMPLETED', actual_visit_points = 4, actual_sales_quantity = 6,
+     set status = 'COMPLETED', actual_visit_points = 4, actual_sales_amount = 6,
          actual_revenue = 120000000, actual_customer_visits = 9,
          evening_submitted_at = now()
    where id = $1`;
@@ -55,7 +55,7 @@ describe('guard_report_transition()', () => {
     const error = await expectSqlError(
       `update public.daily_reports
           set status = 'MORNING_SUBMITTED', actual_visit_points = null,
-              actual_sales_quantity = null, actual_revenue = null,
+              actual_sales_amount = null, actual_revenue = null,
               actual_customer_visits = null, evening_submitted_at = null
         where id = $1`,
       [reportId],

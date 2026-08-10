@@ -48,7 +48,8 @@ cloud** (`docs/09 §12`) · toàn bộ Phase 12.
 - [x] Phase 9 — Admin Reports & Filters *(gồm cả FR-037 mức SHOULD — DEC-044)*
 - [x] Phase 10 — Sales Management
 - [ ] Phase 11 — Testing & Security *(12/14 — E2E + a11y + EXPLAIN đã chạy thật; còn Lighthouse và ma trận thử tay, cả hai cần thiết bị thật)*
-- [ ] Phase 12 — Deployment Preparation *(đang làm — migration đã đẩy lên cloud 7/7 ngày 2026-08-10)*
+- [ ] Phase 12 — Deployment Preparation *(đang làm — migration đã đẩy lên cloud 7/7 ngày 2026-08-10; ⚠ **cloud nay thiếu `0008`**)*
+- [ ] Phase 13 — Nhận diện thương hiệu & soát UI/UX *(13a ✅ · 13b ✅ trừ 2 mục cần **mắt người** và **thiết bị thật** · 13c ✅ đủ 3 nhóm A/B/C)*
 
 > Ghi chú về dấu `[x]` của Phase 0: đánh dấu này chỉ có nghĩa "**deliverable tài liệu của Phase 0
 > đã tạo đủ**". Điều kiện đóng phase hoàn toàn (bao gồm "OPEN QUESTION mức BLOCKING đã được trả
@@ -1606,6 +1607,105 @@ chứng minh được — và may là đã đo trước khi đi báo là đã s�
 
 **Next:** push → chờ Vercel deploy → chạy lại phép đo TTFB và so với mốc trước khi sửa
 (tĩnh ~0,23 s · `/login` ~0,46 s). Kỳ vọng `/login` tụt về xấp xỉ 0,24 s.
+---
+
+### Entry 016
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 13 — Nhận diện thương hiệu & soát UI/UX` (13b + toàn bộ 13c)
+
+**Completed:**
+
+1. **Gom câu hỏi chặn và hỏi MỘT LƯỢT đầu phiên** — OQ-19 (3 câu) + cách xử lý `visit_purpose`.
+   Người dùng chọn nguyên vẹn cả bốn đề xuất mặc định. Nhờ vậy phần còn lại của phiên không phải
+   dừng lại lần nào nữa.
+2. **`0008_sales_amount_and_visit_floor.sql`** — migration thứ **8**, chạy thật trên local:
+   - thêm cặp cột `target_sales_amount` / `actual_sales_amount` (`bigint` VND);
+   - `alter column target_sales_quantity drop not null` → cột cũ thành **di sản**, dữ liệu ở lại;
+   - 5 `comment on column` ghi rõ cột nào mang nghĩa cũ, từ mốc nào (BR-013);
+   - `ck_target_visit_points` thành `between 10 and 1000` — **BR-026**;
+   - dựng lại **4 hàm aggregate** theo cột mới.
+3. **Ba DEC nghiệp vụ + hai DEC kỹ thuật:** DEC-048 (bỏ `visit_purpose` khỏi UI, giữ cột) ·
+   DEC-049 (BR-026 sàn 10) · DEC-050 (doanh số → tiền, doanh thu → công nợ thu hồi) ·
+   DEC-051 (Đăng xuất về header + phản hồi khi chạm) · DEC-052 (bảng trend đổi sang thẻ ở mobile).
+4. **`KpiMetric.SALES_QUANTITY` → `SALES_AMOUNT`** trên **33 file**. Đơn vị `xe` **biến mất khỏi
+   toàn dự án**. `lib/kpi.ts` có `isMoneyMetric()` viết dạng **type predicate** để nhánh `else` thu
+   hẹp được kiểu — không cần một phép ép kiểu nào.
+5. **Nhóm A + B của `§13c`** — xem `PROJECT_CHECKLIST.md`, đã tick đủ.
+6. **Soát UI/UX bằng bộ đo Playwright dùng-một-lần** trên **20 URL × 2 bề rộng**, bốn nhóm luật
+   CRITICAL/HIGH. **Tìm ra 1 lỗi thật** (tràn ngang 116px) và **0 vi phạm** ba nhóm còn lại.
+
+**Files Changed:** `supabase/migrations/0008_*.sql` (**tạo mới**) · `supabase/seed.sql` ·
+`types/database.types.ts` (generate lại) · `lib/{kpi,validation/report}.ts` ·
+`lib/reports/{metric-rows,share-card}.ts` · `components/ui/link-spinner.tsx` (**tạo mới**) ·
+`features/auth/header-sign-out.tsx` (**tạo mới**) · `features/report-morning/{actions,morning-report-form,commitment-summary}` ·
+`features/report-evening/evening-report-form.tsx` · `features/report-comparison/report-notes.tsx` ·
+`features/admin-analytics/daily-trend-chart.tsx` · `app/(sales)/layout.tsx` · `app/(admin)/layout.tsx` ·
+`app/(sales)/sales/today/{page,morning/page}.tsx` · `app/(sales)/sales/reports/[id]/page.tsx` ·
+`app/(admin)/admin/reports/[id]/page.tsx` · `tests/` (7 file) · `e2e/` (4 file) ·
+`docs/01`, `docs/02`, `docs/11` (DEC-048…052), `docs/12` (ISSUE-022, ISSUE-023) ·
+`PROJECT_CHECKLIST.md` · `WORKLOG.md` · `SESSION_CHECKPOINT.md` · `CLAUDE.md`.
+**Đã xoá:** `e2e/zz-ui-audit.spec.ts` — công cụ dùng một lần, **không commit** (thông lệ Phase 2–6).
+
+**Tests:** typecheck ✅ · lint ✅ 0 error 0 warning · build ✅ **18 route nghiệp vụ + 3 metadata** ·
+`npm test` ✅ **745/745** (unit 555 · integration 57 · rls 133) · `npm run e2e` ✅ **111/111**.
+Bộ soát giao diện: **~2.400 cặp màu** đo trên DOM đã render, **0 vi phạm**, tỉ lệ thấp nhất
+**4,68:1**; **0** phần tử tương tác dưới 44px; `dynamic-type` ở **150%** không vỡ bố cục.
+
+**Errors:**
+
+1. **`0006`/`0007` phải `drop function` rồi `create`, KHÔNG `create or replace`.** Postgres từ chối
+   đổi **tên cột** trong `returns table (...)` của một hàm đang tồn tại. `drop function` cuốn theo
+   mọi `GRANT`, nên phải cấp lại đủ — thiếu bước đó thì `authenticated` mất quyền execute và toàn bộ
+   khu vực Admin chết lặng lẽ.
+2. **`gen types --local` đỏ vì mật khẩu của CLOUD lọt vào môi trường** → **ISSUE-022**. Và lần sửa
+   đầu tiên còn gộp `stderr` vào `stdout`, ghi thẳng dòng `Connecting to db 5432` vào đầu
+   `types/database.types.ts` — TypeScript báo hàng chục lỗi cú pháp ở dòng 1, trông hoàn toàn không
+   liên quan tới nguyên nhân thật.
+3. **Phép thay thế hàng loạt nuốt mất tên CŨ trong chính chú thích vừa viết.** Câu
+   *"`SALES_AMOUNT` thay cho `SALES_QUANTITY`"* bị đổi thành *"`SALES_AMOUNT` thay cho
+   `SALES_AMOUNT`"*. **Bài học: chú thích giải thích một lần đổi tên phải được viết SAU khi đổi tên
+   xong**, hoặc diễn đạt không chứa chuỗi bị thay.
+4. **Chuỗi tiền dùng NO-BREAK SPACE `U+00A0`.** Sửa assertion bằng space thường cho ra
+   `expected '5 ₫' to be '5 ₫'` — hai chuỗi nhìn y hệt. `docs/08 §3.3` đã cảnh báo, vẫn dính.
+5. **Lượt soát giao diện ĐẦU TIÊN báo "0 phát hiện" một cách SAI.** Hai nguyên nhân độc lập, cả hai
+   đều là dạng **xanh oan**:
+   - `<details>` đang **đóng** ⇒ bảng gây tràn không tham gia layout;
+   - tài khoản dùng để soát đã `COMPLETED` ⇒ BR-019 **đá nó khỏi cả hai form nhập**, nên hai màn
+     hình quan trọng nhất với Sales chưa hề được đo.
+   Dấu hiệu làm lộ ra điều thứ hai: `/sales/today` và `/sales/today/morning` cho ra **cùng một con
+   số đếm**. Từ đó thêm bộ đếm (`interactive=… contrastPairs=… minRatio=…`) vào mọi trang —
+   **"0 phát hiện" chỉ có nghĩa khi biết mẫu số**.
+6. **E2E đỏ 1 bài ở HAI lượt khác nhau, và là HAI bài khác nhau** — cả hai lượt đều khi máy đang
+   chạy song song nhiều lượt Playwright (lượt đầu mất **2,8 giờ** thay vì 4 phút). Không kết luận
+   vội, làm đủ ba bước:
+   - chạy lại riêng từng bài → xanh (nhưng **chưa chứng minh được gì**);
+   - `--repeat-each` trên spec **chỉ đọc** → **81/81** và **6/6**;
+   - **một lượt `npm run e2e` đầy đủ, không tranh tài nguyên → 111/111 trong 4,0 phút.**
+
+   Bài thứ hai đỏ với ảnh chụp *"Đang đăng nhập…" + ô nhập disabled* — đúng dấu vân tay của
+   **ISSUE-021** (Server Action chưa trả về), tức chi phí xác thực đã biết thỉnh thoảng chạm trần
+   chờ 20 giây. Ghi thành **ISSUE-023**, đồng thời **loại trừ** giả thuyết "nút Đăng xuất mới gây
+   treo": lượt sạch **sau khi** thêm nút vẫn 111/111. Đúng bài học Entry 015 — *một lượt xanh không
+   chứng minh được gì, phải so TỈ LỆ*.
+7. **Sửa `services/reports.ts` SAU khi một lượt E2E đã bắt đầu** ⇒ lượt đó đang kiểm cây mã cũ.
+   Phải chạy lại toàn bộ gate trên đúng cây mã sắp commit. **Đừng sửa code khi quality gate đang
+   chạy** — kết quả trả về sẽ nói về một thứ khác với thứ mình đang định giao.
+
+**Decisions:** DEC-048 · DEC-049 · DEC-050 · DEC-051 · DEC-052. **BR-026** là business rule **MỚI**
+— dãy `BR` vốn ĐÓNG, mở thêm ID này là do người dùng yêu cầu trực tiếp (ảnh 2 của `§13c`).
+
+**Remaining:**
+
+- ⚠ **Cloud đang thiếu `0008`** — phải `supabase db push` trước lần deploy kế tiếp, nếu không bản
+  production sẽ gọi `admin_*` với tên cột không tồn tại.
+- **Xem tận mắt** ở 375px/1440px (đã đo đủ bằng máy, chưa nhìn bằng mắt người).
+- "Thêm vào màn hình chính" trên máy thật · ISSUE-003 (Zalo) · Lighthouse · ISSUE-011 (rotate key).
+- Xoá `.env.admin-bootstrap`.
+
+**Next:** `npx supabase db push --linked --yes` để đẩy `0008` lên cloud (mật khẩu qua biến môi
+trường `SUPABASE_DB_PASSWORD`, không cần TTY), rồi `git push origin main`.
 ---
 
 ## Quy ước ghi worklog

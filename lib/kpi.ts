@@ -1,7 +1,7 @@
 /**
  * Nguồn DUY NHẤT của công thức KPI (NFR-012, AGENTS.md §9). Không component,
  * service, Server Action hay route ảnh nào được tự tính lại `actual / target × 100`,
- * và cũng không nơi nào được tự ghép đơn vị (`xe` / `điểm` / `khách` / `₫`).
+ * và cũng không nơi nào được tự ghép đơn vị (`điểm` / `khách` / `₫`).
  *
  * ─────────────────────────────────────────────────────────────────────────
  *  TRẠNG THÁI: ĐÃ TRIỂN KHAI ở PHASE 5 (2026-08-07).
@@ -20,7 +20,7 @@
  *       ┌ target > 0             → percent = actual/target×100 → '83,3%'
  *       ├ target = 0, actual = 0 → percent = 100               → '100,0%'  EXCEEDED
  *       ├ target = 0, actual > 0 → percent = null → số vượt tuyệt đối có dấu
- *       │                          cộng + đơn vị ('+3 xe', '+3.000.000 ₫'),
+ *       │                          cộng + đơn vị ('+3 điểm', '+3.000.000 ₫'),
  *       │                          nhãn "Vượt kế hoạch", EXCEEDED
  *       └ chưa có actual         → percent = null → '—'                    PENDING
  *   • BR-023  — ngưỡng ≥100 / 80–99.99 / <80 / chưa có actual. Giao diện KHÔNG
@@ -43,8 +43,26 @@ export type AchievementStatus = 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING';
  * Bốn chỉ tiêu của một báo cáo ngày. Tên khoá bám đúng hậu tố cột trong
  * `daily_reports` (`target_visit_points` / `actual_visit_points` → `VISIT_POINTS`)
  * để không ai phải tra bảng ánh xạ khi đọc code.
+ *
+ * ⚠ `SALES_AMOUNT` thay cho khoá cũ `SALES_QUANTITY` từ **PHASE 13 (DEC-050)**:
+ * "Doanh số" nay là **số tiền** bán hàng trong ngày chứ không còn là số lượng xe,
+ * và nó đọc từ cặp cột MỚI `target_sales_amount` / `actual_sales_amount`. Cặp cột
+ * cũ (hậu tố `_sales_quantity`) vẫn nằm trong database nhưng là **di sản** —
+ * không code nào ở tầng này được đọc nó nữa.
  */
-export type KpiMetric = 'VISIT_POINTS' | 'SALES_QUANTITY' | 'REVENUE' | 'CUSTOMER_VISITS';
+export type KpiMetric = 'VISIT_POINTS' | 'SALES_AMOUNT' | 'REVENUE' | 'CUSTOMER_VISITS';
+
+/** Hai chỉ tiêu đo bằng TIỀN — chúng đi đường `formatCurrencyVND` (DEC-050). */
+type MoneyMetric = 'SALES_AMOUNT' | 'REVENUE';
+
+/**
+ * Viết dạng **type predicate** chứ không phải `Set.has()`: chỉ predicate mới thu
+ * hẹp được kiểu ở nhánh `else`, nhờ đó `METRIC_UNIT[metric]` bên dưới tra bảng
+ * an toàn mà KHÔNG cần một phép ép kiểu nào (NFR-012, AGENTS.md §3).
+ */
+function isMoneyMetric(metric: KpiMetric): metric is MoneyMetric {
+  return metric === 'SALES_AMOUNT' || metric === 'REVENUE';
+}
 
 export type AchievementResult = {
   /**
@@ -55,7 +73,7 @@ export type AchievementResult = {
    */
   percent: number | null;
   status: AchievementStatus;
-  /** Chuỗi ĐÃ format sẵn để render thẳng: '83,3%' | '100,0%' | '+3 xe' | '—'. */
+  /** Chuỗi ĐÃ format sẵn để render thẳng: '83,3%' | '100,0%' | '+3 điểm' | '—'. */
   display: string;
   /**
    * Số vượt tuyệt đối THÔ, chỉ khác `null` ở đúng ca `target = 0 && actual > 0`
@@ -68,10 +86,9 @@ export type AchievementResult = {
 /** Hiển thị khi không có số liệu. Trùng quy ước `'—'` của `lib/currency.ts`. */
 const EMPTY_DISPLAY = '—';
 
-/** Đơn vị hiển thị theo từng chỉ tiêu — DEC-025. `REVENUE` đi đường riêng. */
-const METRIC_UNIT: Record<Exclude<KpiMetric, 'REVENUE'>, string> = {
+/** Đơn vị hiển thị của hai chỉ tiêu ĐẾM — DEC-025. Hai chỉ tiêu tiền đi đường riêng. */
+const METRIC_UNIT: Record<Exclude<KpiMetric, 'SALES_AMOUNT' | 'REVENUE'>, string> = {
   VISIT_POINTS: 'điểm',
-  SALES_QUANTITY: 'xe',
   CUSTOMER_VISITS: 'khách',
 };
 
@@ -110,7 +127,8 @@ function isUsableNumber(value: number): boolean {
 }
 
 /**
- * `8` + `VISIT_POINTS` → `'8 điểm'` · `150000000` + `REVENUE` → `'150.000.000 ₫'`.
+ * `8` + `VISIT_POINTS` → `'8 điểm'` · `150000000` + `SALES_AMOUNT` hoặc `REVENUE`
+ * → `'150.000.000 ₫'`.
  *
  * Đây là nơi DUY NHẤT biết chỉ tiêu nào đi với đơn vị nào (DEC-025). Bảng đối
  * chiếu, thẻ ảnh 9:16 và màn hình Admin đều phải gọi hàm này thay vì tự ghép
@@ -122,15 +140,16 @@ function isUsableNumber(value: number): boolean {
  */
 export function formatMetricValue(value: number | null, metric: KpiMetric): string {
   if (value === null || !isUsableNumber(value)) return EMPTY_DISPLAY;
-  if (metric === 'REVENUE') return formatCurrencyVND(value);
+  if (isMoneyMetric(metric)) return formatCurrencyVND(value);
   return `${formatThousands(value)} ${METRIC_UNIT[metric]}`;
 }
 
 /**
  * Bản RÚT GỌN của `formatMetricValue()` — thêm ở PHASE 6 cho thẻ ảnh 9:16.
  *
- * `150000000` + `REVENUE` → `'150tr'`; ba chỉ tiêu còn lại **không đổi** vì trần
- * của chúng chỉ 4 chữ số (`MAX_SALES_QUANTITY = 10.000`) nên đã vừa khung sẵn.
+ * `150000000` + `REVENUE` (hoặc `SALES_AMOUNT`) → `'150tr'`; hai chỉ tiêu ĐẾM còn
+ * lại **không đổi** vì trần của chúng chỉ 4 chữ số (`MAX_VISIT_POINTS = 1.000`,
+ * `MAX_CUSTOMER_VISITS = 1.000`) nên đã vừa khung sẵn.
  *
  * Vì sao là một hàm riêng chứ không phải một tham số `compact` của
  * `formatMetricValue()`: chỗ gọi nhiều nhất vẫn là bảng đối chiếu trên web, nơi
@@ -142,7 +161,7 @@ export function formatMetricValue(value: number | null, metric: KpiMetric): stri
  */
 export function formatMetricValueCompact(value: number | null, metric: KpiMetric): string {
   if (value === null || !isUsableNumber(value)) return EMPTY_DISPLAY;
-  if (metric === 'REVENUE') return formatCompactVND(value);
+  if (isMoneyMetric(metric)) return formatCompactVND(value);
   return formatMetricValue(value, metric);
 }
 
@@ -173,7 +192,7 @@ const PENDING_RESULT: AchievementResult = {
  * `actual / target × 100` theo BR-014, KHÔNG clamp (BR-004).
  *
  * `metric` chỉ dùng cho đúng một việc: dựng chuỗi số vượt tuyệt đối của ca
- * `target = 0 && actual > 0` (`'+3 xe'`, `'+3.000.000 ₫'`). Nó không tham gia
+ * `target = 0 && actual > 0` (`'+3 điểm'`, `'+3.000.000 ₫'`). Nó không tham gia
  * vào phép tính nào.
  *
  * Đầu vào không dùng được (không hữu hạn, âm) trả về `PENDING` + `'—'` thay vì
@@ -181,11 +200,14 @@ const PENDING_RESULT: AchievementResult = {
  * còn một trang lỗi thì không.
  */
 export function calculateAchievement(
-  target: number,
+  target: number | null,
   actual: number | null,
   metric: KpiMetric,
 ): AchievementResult {
-  if (!isUsableNumber(target)) return PENDING_RESULT;
+  // `target` nhận `null` từ PHASE 13: các báo cáo có TRƯỚC migration 0008 mang
+  // `null` ở `target_sales_amount` (DEC-050, OQ-19c). Chúng phải hiện '—' chứ
+  // không được làm sập màn hình lịch sử — cùng triết lý với DEC-033.
+  if (target === null || !isUsableNumber(target)) return PENDING_RESULT;
   if (actual === null || !isUsableNumber(actual)) return PENDING_RESULT;
 
   if (target === 0) {

@@ -5,6 +5,7 @@ import { CalendarPlus, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
+import { LinkSpinner } from '@/components/ui/link-spinner';
 import { requireRole } from '@/features/auth/queries';
 import { AchievementTable } from '@/features/report-comparison/achievement-table';
 import { ReportNotes } from '@/features/report-comparison/report-notes';
@@ -101,13 +102,20 @@ export default async function SalesTodayPage({ searchParams }: Props) {
       ) : (
         <>
           {/*
-            Phase 5 — bảng đối chiếu thay cho danh sách cam kết một cột của
-            Phase 3. Ở trạng thái `MORNING_SUBMITTED`, cột "Thực đạt" là `'—'`
+            PHASE 13 — "Tuyến và ghi chú" đứng TRƯỚC "Cam kết và thực đạt".
+            Người dùng yêu cầu trực tiếp (ảnh 3, `PROJECT_CHECKLIST.md §13c`), và
+            nó cũng đúng thứ tự công việc thật: buổi sáng Sales cần thấy ngay
+            mình định đi đâu, còn bảng số chỉ có nghĩa sau khi đã ra thị trường.
+
+            ⚠ `/sales/reports/[id]` PHẢI giữ đúng thứ tự này — hai màn hình cùng
+            trình bày một báo cáo, lệch thứ tự là bắt người dùng học hai bố cục.
+
+            Phase 5 — ở trạng thái `MORNING_SUBMITTED`, cột "Thực đạt" là `'—'`
             và badge là "Chờ số liệu" (`docs/05 §7.3` dòng 1) — đó là hành vi
             đúng, không phải dữ liệu thiếu.
           */}
-          <AchievementTable report={report} />
           <ReportNotes report={report} />
+          <AchievementTable report={report} />
         </>
       )}
 
@@ -115,8 +123,14 @@ export default async function SalesTodayPage({ searchParams }: Props) {
       {view.state === 'COMPLETED' && <DiscardEveningDraft today={today} />}
 
       <div className="flex flex-col gap-3">
+        {/*
+          PHASE 13 — `LinkSpinner` cho phản hồi < 100 ms khi chạm (nhóm A).
+          `loading.tsx` chỉ hiện SAU khi Next bắt đầu render trang đích; quãng
+          trước đó trên 4G là khoảng lặng khiến người dùng bấm lại lần hai.
+        */}
         <Link href={view.primaryCta.href} className={buttonClassName({ size: 'lg' })}>
           {view.primaryCta.label}
+          <LinkSpinner />
         </Link>
 
         {view.secondaryCta && (
@@ -125,6 +139,7 @@ export default async function SalesTodayPage({ searchParams }: Props) {
             className={buttonClassName({ variant: 'secondary', size: 'lg' })}
           >
             {view.secondaryCta.label}
+            <LinkSpinner />
           </Link>
         )}
 

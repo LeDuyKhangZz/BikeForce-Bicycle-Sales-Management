@@ -9,8 +9,8 @@ import { CurrencyField } from '@/components/ui/currency-field';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { formatCurrencyVND } from '@/lib/currency';
 import { useReportDraft } from '@/lib/hooks/use-report-draft';
+import { formatMetricValue } from '@/lib/kpi';
 import { eveningDraftKey } from '@/lib/reports/draft-keys';
 import {
   MAX_EVENING_NOTE_LENGTH,
@@ -23,7 +23,7 @@ import { saveEveningReport, type EveningReportState } from './actions';
 /** Sáu ô của form, tất cả giữ dưới dạng CHUỖI đúng như người dùng gõ. */
 export type EveningFormValues = {
   actual_visit_points: string;
-  actual_sales_quantity: string;
+  actual_sales_amount: string;
   actual_revenue: string;
   actual_customer_visits: string;
   actual_route: string;
@@ -41,7 +41,11 @@ type FieldName = keyof EveningFormValues;
  */
 export type MorningCommitment = {
   target_visit_points: number;
-  target_sales_quantity: number;
+  /**
+   * `null` ở các báo cáo có TRƯỚC migration 0008 (DEC-050, OQ-19c). Câu nhắc
+   * "Cam kết sáng: …" khi đó hiện `'—'` thay vì một con số bịa.
+   */
+  target_sales_amount: number | null;
   target_revenue: number;
   target_customer_visits: number;
 };
@@ -54,7 +58,15 @@ type Props = {
   initialValues: EveningFormValues;
 };
 
-/** Ba ô số nguyên. Doanh thu có component riêng vì cần phân nhóm nghìn. */
+/**
+ * Ô ĐẾM duy nhất ở nửa trên của form. Hai ô TIỀN (doanh số, doanh thu công nợ)
+ * dùng `CurrencyField` từ PHASE 13 — DEC-050.
+ *
+ * `commitmentOf` gọi `formatMetricValue()` chứ KHÔNG tự ghép đơn vị: bảng đơn vị
+ * chỉ được tồn tại ở `lib/kpi.ts` (AGENTS.md §9). Bản trước đây tự viết
+ * `${c.target_sales_amount} xe` và đó đúng là chỗ đã nói sai đơn vị khi DEC-050
+ * đổi doanh số sang tiền.
+ */
 const COUNT_FIELDS: ReadonlyArray<{
   name: FieldName;
   label: string;
@@ -64,13 +76,7 @@ const COUNT_FIELDS: ReadonlyArray<{
   {
     name: 'actual_visit_points',
     label: 'Số điểm đã viếng thăm',
-    commitmentOf: (c) => `${c.target_visit_points} điểm`,
-    enterKeyHint: 'next',
-  },
-  {
-    name: 'actual_sales_quantity',
-    label: 'Doanh số thực đạt',
-    commitmentOf: (c) => `${c.target_sales_quantity} xe`,
+    commitmentOf: (c) => formatMetricValue(c.target_visit_points, 'VISIT_POINTS'),
     enterKeyHint: 'next',
   },
 ];
@@ -219,10 +225,21 @@ export function EveningReportForm({ reportId, today, commitment, initialValues }
       ))}
 
       <CurrencyField
+        id="actual_sales_amount"
+        label="Doanh số thực đạt"
+        value={values.actual_sales_amount}
+        helperText={`Cam kết sáng: ${formatMetricValue(commitment.target_sales_amount, 'SALES_AMOUNT')}.`}
+        error={errorFor('actual_sales_amount')}
+        disabled={isBusy}
+        onChange={(value) => updateField('actual_sales_amount', value)}
+        onBlur={(value) => validateOnBlur('actual_sales_amount', value)}
+      />
+
+      <CurrencyField
         id="actual_revenue"
-        label="Doanh thu thực đạt"
+        label="Doanh thu công nợ thực đạt"
         value={values.actual_revenue}
-        helperText={`Cam kết sáng: ${formatCurrencyVND(commitment.target_revenue)}.`}
+        helperText={`Cam kết sáng: ${formatMetricValue(commitment.target_revenue, 'REVENUE')}.`}
         error={errorFor('actual_revenue')}
         disabled={isBusy}
         onChange={(value) => updateField('actual_revenue', value)}
@@ -234,7 +251,7 @@ export function EveningReportForm({ reportId, today, commitment, initialValues }
         label="Số khách hàng đã gặp"
         required
         error={errorFor('actual_customer_visits')}
-        helperText={`Cam kết sáng: ${commitment.target_customer_visits} khách.`}
+        helperText={`Cam kết sáng: ${formatMetricValue(commitment.target_customer_visits, 'CUSTOMER_VISITS')}.`}
       >
         <Input
           id="actual_customer_visits"

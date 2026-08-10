@@ -34,11 +34,14 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await page.getByRole('link', { name: 'Tạo báo cáo đầu ngày' }).click();
     await expect(page).toHaveURL(/\/sales\/today\/morning/);
 
-    /* ── 3. Cam kết sáng — 5 trường bắt buộc của FR-008 ────────────────────── */
+    /* ── 3. Cam kết sáng — 5 trường bắt buộc của FR-008 ────────────────────────
+       PHASE 13: "Mục đích chuyến đi" ĐÃ BỊ GỠ (DEC-048) · điểm viếng thăm có
+       sàn 10 (BR-026, DEC-049) · doanh số nhập TIỀN (DEC-050).                */
+    await expect(page.locator('[name="visit_purpose"]')).toHaveCount(0);
+
     await fillField(page, 'planned_route', 'Quận 1 → Quận 3 → Bình Thạnh');
-    await fillField(page, 'visit_purpose', 'Chăm sóc đại lý');
-    await fillField(page, 'target_visit_points', '5');
-    await fillField(page, 'target_sales_quantity', '10');
+    await fillField(page, 'target_visit_points', '12');
+    await fillField(page, 'target_sales_amount', '80000000');
     await fillField(page, 'target_revenue', '100000000');
     await fillField(page, 'target_customer_visits', '12');
 
@@ -53,9 +56,10 @@ test.describe('Luồng Sales đầu-cuối', () => {
     /* ── 5. UC-05 — sửa cam kết sáng, form phải prefill đúng ───────────────── */
     await page.getByRole('link', { name: 'Sửa cam kết sáng' }).click();
     await expect(page).toHaveURL(/\/sales\/today\/morning/);
-    await expect(page.locator('[name="target_sales_quantity"]')).toHaveValue('10');
+    // Prefill là số THÔ từ database (chưa qua `blur` nên chưa phân nhóm nghìn).
+    await expect(page.locator('[name="target_sales_amount"]')).toHaveValue('80000000');
 
-    await fillField(page, 'target_sales_quantity', '8');
+    await fillField(page, 'target_sales_amount', '60000000');
     await page.getByRole('button', { name: 'Lưu thay đổi' }).click();
 
     await expect(page).toHaveURL(/\/sales\/today(\?|$)/, { timeout: 20_000 });
@@ -67,11 +71,13 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await page.getByRole('link', { name: 'Hoàn thành báo cáo cuối ngày' }).click();
     await expect(page).toHaveURL(/\/sales\/today\/evening/);
 
-    // FR-013 — form tối phải nhắc lại cam kết sáng để đối chiếu.
-    await expect(visibleText(page, '8 xe')).toBeVisible();
+    // FR-013 — form tối phải nhắc lại cam kết sáng để đối chiếu. Dùng chỉ tiêu
+    // ĐẾM cho phép so sánh này: chuỗi tiền chứa NO-BREAK SPACE nên so bằng chuỗi
+    // gõ tay rất dễ đỏ oan (docs/08 §3.3).
+    await expect(visibleText(page, '12 điểm')).toBeVisible();
 
-    await fillField(page, 'actual_visit_points', '5');
-    await fillField(page, 'actual_sales_quantity', '10');
+    await fillField(page, 'actual_visit_points', '12');
+    await fillField(page, 'actual_sales_amount', '75000000');
     await fillField(page, 'actual_revenue', '125000000');
     await fillField(page, 'actual_customer_visits', '9');
     await fillField(page, 'actual_route', 'Quận 1 → Quận 3 → Quận 5');

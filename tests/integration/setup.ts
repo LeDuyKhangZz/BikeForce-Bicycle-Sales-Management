@@ -184,16 +184,24 @@ export type MorningOverrides = Partial<{
   planned_route: string;
   visit_purpose: string | null;
   target_visit_points: number;
-  target_sales_quantity: number;
+  target_sales_amount: number;
   target_revenue: number;
   target_customer_visits: number;
 }>;
 
+/**
+ * PHASE 13 — ba con số dưới đây phải khớp migration `0008`:
+ *   • `target_visit_points` ≥ **10** (BR-026, DEC-049) — trước đây là 3;
+ *   • `target_sales_amount` là **TIỀN** (DEC-050) — trước đây là 5 xe;
+ *   • `visit_purpose` vẫn ghi được vì cột còn nguyên, nhưng ứng dụng KHÔNG còn
+ *     ghi nó (DEC-048). Fixture cố ý vẫn ghi để các bài đọc dữ liệu cũ có dữ
+ *     liệu cũ thật mà kiểm.
+ */
 const MORNING_DEFAULTS = {
   planned_route: 'Quận 1 → Quận 3',
   visit_purpose: 'Chăm sóc đại lý',
-  target_visit_points: 3,
-  target_sales_quantity: 5,
+  target_visit_points: 12,
+  target_sales_amount: 80_000_000,
   target_revenue: 100_000_000,
   target_customer_visits: 8,
 };
@@ -219,7 +227,7 @@ export async function insertMorningReport(
   const result = await sql<{ id: string }>(
     `insert into public.daily_reports
        (sales_id, report_date, status, planned_route, visit_purpose,
-        target_visit_points, target_sales_quantity, target_revenue, target_customer_visits)
+        target_visit_points, target_sales_amount, target_revenue, target_customer_visits)
      values ($1, $2, 'MORNING_SUBMITTED', $3, $4, $5, $6, $7, $8)
      returning id`,
     [
@@ -228,7 +236,7 @@ export async function insertMorningReport(
       row.planned_route,
       row.visit_purpose,
       row.target_visit_points,
-      row.target_sales_quantity,
+      row.target_sales_amount,
       row.target_revenue,
       row.target_customer_visits,
     ],
@@ -245,7 +253,7 @@ export function eveningPayload() {
     status: 'COMPLETED' as const,
     actual_route: 'Quận 1 → Quận 3 → Quận 5',
     actual_visit_points: 4,
-    actual_sales_quantity: 6,
+    actual_sales_amount: 6,
     actual_revenue: 120_000_000,
     actual_customer_visits: 9,
     evening_note: 'Chốt thêm một đơn ngoài kế hoạch.',

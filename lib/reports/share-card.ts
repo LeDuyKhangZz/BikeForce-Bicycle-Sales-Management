@@ -113,7 +113,10 @@ export function buildShareCardModel(source: ShareCardSource): ShareCardModel {
     const actual = source[row.actualColumn];
 
     return {
-      label: row.label,
+      // `shortLabel` chứ không `label`: cột nhãn của thẻ ảnh có bề rộng CỐ ĐỊNH
+      // và Satori không đo được chữ để tự thu nhỏ. Từ PHASE 13, hai nhãn đầy đủ
+      // ("Doanh thu công nợ", "Khách hàng đã gặp") dài quá khung — DEC-050.
+      label: row.shortLabel,
       targetText: formatMetricValueCompact(target, row.metric),
       actualText: formatMetricValueCompact(actual, row.metric),
       achievement: calculateAchievement(target, actual, row.metric),

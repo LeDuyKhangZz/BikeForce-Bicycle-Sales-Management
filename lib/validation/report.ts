@@ -20,7 +20,8 @@
  * Nhờ vậy output của `safeParse` gắn thẳng vào `TablesInsert<'daily_reports'>`
  * mà không cần một tầng ánh xạ trung gian — tầng đó là nơi rất dễ gõ nhầm một
  * cột mà TypeScript không bắt được. `docs/08 §3.6` cũng khẳng định issue path
- * là `['target_sales_quantity']`.
+ * là `['target_sales_amount']` (trước PHASE 13 nó mang hậu tố `_sales_quantity` —
+ * đổi theo DEC-050).
  */
 import { z } from 'zod';
 
@@ -34,17 +35,34 @@ import { getVietnamToday, isValidVietnamDate } from '@/lib/date';
  * (docs/07 §6.1 — đó bị coi là bug của tầng validation).
  * ------------------------------------------------------------------------- */
 
-/** BR-017 — trần doanh thu 100 tỷ VND, biên INCLUSIVE. */
+/**
+ * BR-017 — trần tiền 100 tỷ VND, biên INCLUSIVE.
+ *
+ * Dùng chung cho CẢ HAI ô tiền (`*_sales_amount` và `*_revenue`) từ PHASE 13:
+ * `ck_target_sales_amount` của `0008` cố ý đặt cùng trần với `ck_target_revenue`,
+ * để hai ô tiền cạnh nhau trên cùng một form không có hai giới hạn khác nhau.
+ */
 export const MAX_REVENUE_VND = 100_000_000_000;
-/** BR-006 — `ck_target_sales_quantity`. */
-export const MAX_SALES_QUANTITY = 10_000;
-/** BR-006, DEC-029 — `ck_target_visit_points`. */
+/** BR-006 (sửa bởi DEC-050) — `ck_target_sales_amount`. Doanh số nay là TIỀN. */
+export const MAX_SALES_AMOUNT_VND = MAX_REVENUE_VND;
+/** BR-006, DEC-029 — `ck_target_visit_points`, cận trên. */
 export const MAX_VISIT_POINTS = 1_000;
+/**
+ * BR-026 (DEC-049) — `ck_target_visit_points`, cận DƯỚI. Chỉ áp cho **mục tiêu**;
+ * số điểm THỰC ĐẠT vẫn từ 0 vì đi được ít hơn cam kết là kết quả thật, không
+ * phải dữ liệu sai.
+ */
+export const MIN_TARGET_VISIT_POINTS = 10;
 /** BR-006 — `ck_target_customer_visits`. */
 export const MAX_CUSTOMER_VISITS = 1_000;
 /** `ck_planned_route_len` — đo sau `btrim`. */
 export const MAX_ROUTE_LENGTH = 300;
-/** `ck_visit_purpose_len`. */
+/**
+ * `ck_visit_purpose_len` — **DI SẢN** (DEC-048). Trường "Mục đích chuyến đi" đã
+ * bị gỡ khỏi form và khỏi mọi màn hình ở PHASE 13; hằng số giữ lại vì CHECK
+ * constraint tương ứng vẫn còn trong database cho dữ liệu đã nhập (BR-013).
+ * **Không dùng cho trường mới.**
+ */
 export const MAX_VISIT_PURPOSE_LENGTH = 300;
 /** BR-018 — `ck_evening_note_len`. Đo theo KÝ TỰ (`char_length`), không theo byte. */
 export const MAX_EVENING_NOTE_LENGTH = 1_000;
@@ -69,14 +87,26 @@ function coerceInteger(value: unknown): unknown {
   return parseCurrencyInput(trimmed) ?? value;
 }
 
-/** Một ô số nguyên bắt buộc, 0..max. */
-function integerField(max: number, label: string) {
+/**
+ * Một ô số nguyên bắt buộc, `min`..`max`.
+ *
+ * `min` mặc định 0 nên mọi lời gọi cũ giữ nguyên hành vi; chỉ mục tiêu điểm
+ * viếng thăm truyền `min = 10` (BR-026, DEC-049). Thông điệp của cận dưới phân
+ * biệt hai ca: 0 thì nói "không được là số âm", còn sàn thật thì nói rõ con số —
+ * "tối thiểu 10 điểm" hữu ích hơn nhiều so với "không được là số âm".
+ */
+function integerField(max: number, label: string, min = 0) {
+  const minMessage =
+    min === 0
+      ? `${label} không được là số âm.`
+      : `${label} tối thiểu ${min.toLocaleString('vi-VN')}.`;
+
   return z.preprocess(
     coerceInteger,
     z
       .number({ message: `Vui lòng nhập ${label} bằng số.` })
       .int({ message: `${label} phải là số nguyên.` })
-      .min(0, { message: `${label} không được là số âm.` })
+      .min(min, { message: minMessage })
       .max(max, { message: `${label} tối đa ${max.toLocaleString('vi-VN')}.` }),
   );
 }
@@ -113,12 +143,16 @@ export const morningReportSchema = z.object({
       message: `Tuyến ghé thăm tối đa ${MAX_ROUTE_LENGTH} ký tự.`,
     }),
 
-  // Optional (DEC-029, OQ-01).
-  visit_purpose: optionalTextField(MAX_VISIT_PURPOSE_LENGTH, 'Mục đích chuyến đi'),
-
-  target_visit_points: integerField(MAX_VISIT_POINTS, 'Mục tiêu điểm viếng thăm'),
-  target_sales_quantity: integerField(MAX_SALES_QUANTITY, 'Mục tiêu doanh số'),
-  target_revenue: integerField(MAX_REVENUE_VND, 'Mục tiêu doanh thu'),
+  // ⚠ `visit_purpose` ĐÃ BỊ GỠ ở PHASE 13 (DEC-048). Cột vẫn còn trong database
+  // để không xoá dữ liệu đã nhập (BR-013), nhưng schema này KHÔNG nhận nó nữa —
+  // nghĩa là dù client có cố gửi lên, Zod cũng strip đi và không gì được ghi.
+  target_visit_points: integerField(
+    MAX_VISIT_POINTS,
+    'Mục tiêu điểm viếng thăm',
+    MIN_TARGET_VISIT_POINTS,
+  ),
+  target_sales_amount: integerField(MAX_SALES_AMOUNT_VND, 'Mục tiêu doanh số'),
+  target_revenue: integerField(MAX_REVENUE_VND, 'Mục tiêu doanh thu công nợ'),
   target_customer_visits: integerField(MAX_CUSTOMER_VISITS, 'Mục tiêu số lượng khách hàng'),
 });
 
@@ -150,9 +184,12 @@ export type MorningReportInput = z.infer<typeof morningReportSchema>;
 export const eveningReportSchema = z.object({
   actual_route: optionalTextField(MAX_ROUTE_LENGTH, 'Tuyến thực tế'),
 
+  // Cận dưới của bốn ô này vẫn là 0 — kể cả điểm viếng thăm. BR-026 đặt sàn cho
+  // MỤC TIÊU, không cho KẾT QUẢ: một ngày mưa chỉ ghé được 3 điểm là số liệu
+  // thật và phải nhập được.
   actual_visit_points: integerField(MAX_VISIT_POINTS, 'Số điểm đã viếng thăm'),
-  actual_sales_quantity: integerField(MAX_SALES_QUANTITY, 'Doanh số thực đạt'),
-  actual_revenue: integerField(MAX_REVENUE_VND, 'Doanh thu thực đạt'),
+  actual_sales_amount: integerField(MAX_SALES_AMOUNT_VND, 'Doanh số thực đạt'),
+  actual_revenue: integerField(MAX_REVENUE_VND, 'Doanh thu công nợ thực đạt'),
   actual_customer_visits: integerField(MAX_CUSTOMER_VISITS, 'Số khách hàng đã gặp'),
 
   evening_note: optionalTextField(MAX_EVENING_NOTE_LENGTH, 'Ghi chú cuối ngày'),

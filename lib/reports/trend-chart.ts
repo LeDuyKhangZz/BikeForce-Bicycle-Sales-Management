@@ -135,7 +135,7 @@ export const DEFAULT_TREND_METRIC: KpiMetric = 'REVENUE';
 
 const TREND_METRICS: readonly KpiMetric[] = [
   'VISIT_POINTS',
-  'SALES_QUANTITY',
+  'SALES_AMOUNT',
   'REVENUE',
   'CUSTOMER_VISITS',
 ];

@@ -32,7 +32,7 @@ describe('anon — không có JWT', () => {
       report_date: '2026-01-01',
       planned_route: 'Tuyến giả mạo',
       target_visit_points: 1,
-      target_sales_quantity: 1,
+      target_sales_amount: 1,
       target_revenue: 1,
       target_customer_visits: 1,
     });

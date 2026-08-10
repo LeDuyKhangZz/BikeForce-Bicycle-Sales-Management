@@ -510,3 +510,50 @@ Ba màn hình dùng chung đúng phép tính đó: `/sales/history`, `/admin/rep
 1. **Xuất đúng tập đang filter**, không phải toàn bảng — cùng `parseAdminReportFilters()` với màn hình danh sách, nên hai bên không thể lệch nhau.
 2. **Có trần `CSV_EXPORT_MAX_ROWS`** — một Admin bấm xuất khi chưa lọc gì không được kéo cả năm dữ liệu vào bộ nhớ hàm serverless.
 3. **Escape đúng chuẩn CSV** (`lib/reports/csv.ts`, có unit test): trường chứa `,`, `"`, xuống dòng đều được bọc nháy kép và nhân đôi nháy bên trong. Tên cột chỉ tiêu đọc từ `lib/reports/metric-rows.ts` — cùng nguồn với bảng đối chiếu và thẻ ảnh.
+
+---
+
+## CẬP NHẬT PHASE 13 (2026-08-10) — hợp đồng dữ liệu sau DEC-048/049/050
+
+### 13.1 `morningReportSchema` — còn **5** khoá
+
+```
+planned_route · target_visit_points · target_sales_amount · target_revenue · target_customer_visits
+```
+
+- **`visit_purpose` đã bị GỠ** (DEC-048). Hai lớp chặn chồng nhau: `readMorningFormData()` không đọc
+  khoá đó khỏi `FormData`, **và** `z.object` strip nó nếu ai đó gửi tay — cùng cơ chế đang chặn
+  `sales_id` / `report_date` / `status` (QUY TẮC 2 & 3).
+- **`target_sales_amount` thay `target_sales_quantity`**, trần **100 tỷ VND** (dùng chung
+  `MAX_REVENUE_VND`), không còn trần 10.000.
+- **`target_visit_points` có SÀN 10** (BR-026). `integerField()` nay nhận tham số `min` (mặc định 0)
+  và đổi thông điệp theo ca: `min = 0` → *"không được là số âm"*, `min > 0` → *"tối thiểu 10"*.
+  Thông điệp thứ hai hữu ích hơn hẳn khi người dùng gõ `5`.
+- `docs/08 §3.6` nay khẳng định issue path là **`['target_sales_amount']`**.
+
+### 13.2 `eveningReportSchema`
+
+`actual_sales_amount` thay `actual_sales_quantity`, cùng trần tiền. **Cận dưới của cả bốn ô `actual_*`
+vẫn là 0** — kể cả điểm viếng thăm: BR-026 đặt sàn cho **MỤC TIÊU**, không cho **KẾT QUẢ**. Một ngày
+mưa chỉ ghé được 3 điểm là số liệu thật và phải nhập được, nếu không Sales sẽ buộc phải khai khống.
+
+### 13.3 Năm hàm RPC của Admin — tên cột trả về đã ĐỔI
+
+`admin_today_overview` · `admin_monthly_summary` · `admin_sales_performance` · `admin_daily_trend`
+nay trả `target_sales_amount` / `actual_sales_amount` thay cho cặp `*_sales_quantity`.
+`admin_missing_report_alerts` **không đổi** — nó không chạm cột nào bị ảnh hưởng.
+
+⚠ **Bắt buộc `drop function` rồi `create`, không `create or replace`:** Postgres từ chối đổi **tên
+cột** trong `returns table (...)` của một hàm đang tồn tại. Và `drop function` **cuốn theo mọi
+`GRANT`** — thiếu bước cấp lại thì `authenticated` mất quyền execute và toàn bộ khu vực Admin chết
+lặng lẽ (RLS vẫn đúng, chỉ là không gọi được hàm nào).
+
+### 13.4 Dữ liệu cũ đi qua tầng này thế nào
+
+`calculateAchievement()` nay nhận `target: number | null` và trả `PENDING` + `'—'` khi `null` — vì
+các báo cáo có **trước** migration `0008` mang `null` ở `target_sales_amount` (OQ-19c). Cùng triết lý
+với DEC-033: một ô "Hoàn thành" trống thì đọc được, còn một trang lỗi thì không.
+
+Hệ quả đã lường trước ở tầng SQL: những dòng đó **không** được đếm vào `kpi_achieved_days`, vì phép
+so sánh với `null` cho `null`. Đúng chủ ý — một ngày cũ chấm theo bộ chỉ tiêu cũ thì không thể tuyên
+bố là đạt theo bộ chỉ tiêu mới.

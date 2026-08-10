@@ -110,13 +110,17 @@ test.describe('FR-028 / FR-037 — phân tích tháng và biểu đồ trend', (
     const chart = page.getByRole('img', { name: /Biểu đồ cột/ });
     await expect(chart).toBeVisible();
 
-    /* ── Phương án data-table bắt buộc của Phase 9 ─────────────────────────── */
+    /* ── Phương án data-table bắt buộc của Phase 9 ─────────────────────────────
+       PHASE 13: khối này render HAI nhánh theo DEC-019 — danh sách thẻ ở
+       < 768px, `<table>` thật từ 768px. Trước đây nó là một `<table>` duy nhất
+       và **tràn ngang 116px ở 375px**. Vì vậy assert theo NỘI DUNG NHÌN THẤY
+       chứ không theo `role=table`: role đó cố ý không tồn tại ở mobile.        */
     await page.getByText('Xem số liệu dạng bảng').click();
-    await expect(page.getByRole('table', { name: /theo từng ngày/i })).toBeVisible();
+    await expect(visibleText(page, 'Hoàn thành')).toBeVisible();
 
     /* ── Đổi chỉ tiêu bằng URL, không bằng state client ────────────────────── */
     await page.getByRole('link', { name: 'Doanh số' }).click();
-    await expect(page).toHaveURL(/metric=SALES_QUANTITY/);
+    await expect(page).toHaveURL(/metric=SALES_AMOUNT/);
     await expect(page.getByRole('img', { name: /Biểu đồ cột doanh số/i })).toBeVisible();
 
     await expectNoBrokenNumbers(page);

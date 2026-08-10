@@ -92,7 +92,7 @@ describe('reports_insert_own_today', () => {
       ...morningPayload(fx.ids.salesA, fx.today),
       status: 'COMPLETED',
       actual_visit_points: 1,
-      actual_sales_quantity: 1,
+      actual_sales_amount: 1,
       actual_revenue: 1,
       actual_customer_visits: 1,
       evening_submitted_at: new Date().toISOString(),
@@ -180,7 +180,7 @@ describe('reports_update_own_open', () => {
       .update({
         status: 'COMPLETED',
         actual_visit_points: 4,
-        actual_sales_quantity: 6,
+        actual_sales_amount: 6,
         actual_revenue: 120_000_000,
         actual_customer_visits: 9,
         evening_submitted_at: new Date().toISOString(),

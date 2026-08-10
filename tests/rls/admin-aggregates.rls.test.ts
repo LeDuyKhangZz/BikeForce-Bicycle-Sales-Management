@@ -47,8 +47,8 @@ beforeAll(async () => {
     `update public.daily_reports
         set status = 'COMPLETED',
             actual_route = 'Tuyen thuc te',
-            actual_visit_points = 6,
-            actual_sales_quantity = 12,
+            actual_visit_points = 14,
+            actual_sales_amount = 90000000,
             actual_revenue = 150000000,
             actual_customer_visits = 15,
             evening_submitted_at = now()
@@ -70,7 +70,7 @@ describe('admin_today_overview — UC-12, FR-024, AF-01', () => {
     expect(overview.active_sales_count).toBeGreaterThanOrEqual(2);
     expect(overview.morning_submitted_count).toBeGreaterThanOrEqual(2);
     expect(overview.completed_count).toBeGreaterThanOrEqual(1);
-    expect(overview.actual_sales_quantity).toBeGreaterThanOrEqual(12);
+    expect(overview.actual_sales_amount).toBeGreaterThanOrEqual(12);
     expect(overview.actual_revenue).toBeGreaterThanOrEqual(150_000_000);
   });
 
@@ -224,7 +224,8 @@ describe('admin_sales_performance — UC-16, FR-029, AF-06', () => {
 
     expect(salesA).toBeDefined();
     expect(salesA?.report_count).toBe(1);
-    // Fixture: target 5/10/100tr/12 · actual 6/12/150tr/15 ⇒ đạt cả bốn.
+    // Fixture (PHASE 13): target 12 điểm / 80tr / 100tr / 8 khách ·
+    // actual 14 điểm / 90tr / 150tr / 15 khách ⇒ vượt cả bốn.
     expect(salesA?.kpi_achieved_days).toBe(1);
   });
 

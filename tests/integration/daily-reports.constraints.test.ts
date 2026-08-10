@@ -79,7 +79,7 @@ describe('vòng đời báo cáo', () => {
     await sql(
       `update public.daily_reports
           set status = 'COMPLETED', actual_route = $2, actual_visit_points = 4,
-              actual_sales_quantity = 6, actual_revenue = 120000000,
+              actual_sales_amount = 6, actual_revenue = 120000000,
               actual_customer_visits = 9, evening_note = $3, evening_submitted_at = now()
         where id = $1`,
       [id, 'Quận 1 → Quận 3 → Quận 5', 'Chốt thêm một đơn.'],
@@ -103,8 +103,8 @@ describe('UNIQUE (sales_id, report_date) — BR-001', () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
          (sales_id, report_date, planned_route, target_visit_points,
-          target_sales_quantity, target_revenue, target_customer_visits)
-       values ($1, $2, 'Tuyến trùng', 1, 1, 1, 1)`,
+          target_sales_amount, target_revenue, target_customer_visits)
+       values ($1, $2, 'Tuyến trùng', 12, 1, 1, 1)`,
       [salesA, today],
     );
 
@@ -132,7 +132,7 @@ describe('CHECK constraints', () => {
 
     const error = await expectSqlError(
       `update public.daily_reports
-          set status = 'COMPLETED', actual_visit_points = 4, actual_sales_quantity = 6,
+          set status = 'COMPLETED', actual_visit_points = 4, actual_sales_amount = 6,
               evening_submitted_at = now()
         where id = $1`,
       [id],
@@ -145,9 +145,9 @@ describe('CHECK constraints', () => {
   it('BR-008 — MORNING_SUBMITTED không được mang evening_submitted_at', async () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
-         (sales_id, report_date, planned_route, target_visit_points, target_sales_quantity,
+         (sales_id, report_date, planned_route, target_visit_points, target_sales_amount,
           target_revenue, target_customer_visits, evening_submitted_at)
-       values ($1, $2, 'Tuyến', 1, 1, 1, 1, now())`,
+       values ($1, $2, 'Tuyến', 12, 1, 1, 1, now())`,
       [salesA, today],
     );
 
@@ -158,9 +158,9 @@ describe('CHECK constraints', () => {
   it('BR-016 — ck_report_not_future chặn báo cáo cho ngày mai', async () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
-         (sales_id, report_date, planned_route, target_visit_points, target_sales_quantity,
+         (sales_id, report_date, planned_route, target_visit_points, target_sales_amount,
           target_revenue, target_customer_visits)
-       values ($1, public.vn_today() + 1, 'Tuyến tương lai', 1, 1, 1, 1)`,
+       values ($1, public.vn_today() + 1, 'Tuyến tương lai', 12, 1, 1, 1)`,
       [salesA],
     );
 
@@ -171,22 +171,22 @@ describe('CHECK constraints', () => {
   it('BR-006 — số âm bị chặn', async () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
-         (sales_id, report_date, planned_route, target_visit_points, target_sales_quantity,
+         (sales_id, report_date, planned_route, target_visit_points, target_sales_amount,
           target_revenue, target_customer_visits)
-       values ($1, $2, 'Tuyến', 1, -1, 1, 1)`,
+       values ($1, $2, 'Tuyến', 12, -1, 1, 1)`,
       [salesA, today],
     );
 
     expect(error.code).toBe('23514');
-    expect(error.constraint).toBe('ck_target_sales_quantity');
+    expect(error.constraint).toBe('ck_target_sales_amount');
   });
 
   it('BR-017 — doanh thu vượt trần 100 tỷ bị chặn, đúng trần thì hợp lệ (biên inclusive)', async () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
-         (sales_id, report_date, planned_route, target_visit_points, target_sales_quantity,
+         (sales_id, report_date, planned_route, target_visit_points, target_sales_amount,
           target_revenue, target_customer_visits)
-       values ($1, $2, 'Tuyến', 1, 1, 100000000001, 1)`,
+       values ($1, $2, 'Tuyến', 12, 1, 100000000001, 1)`,
       [salesA, today],
     );
     expect(error.constraint).toBe('ck_target_revenue');
@@ -201,7 +201,7 @@ describe('CHECK constraints', () => {
 
     const error = await expectSqlError(
       `update public.daily_reports
-          set status = 'COMPLETED', actual_visit_points = 1, actual_sales_quantity = 1,
+          set status = 'COMPLETED', actual_visit_points = 1, actual_sales_amount = 1,
               actual_revenue = 1, actual_customer_visits = 1,
               evening_note = repeat('a', 1001), evening_submitted_at = now()
         where id = $1`,
@@ -212,7 +212,7 @@ describe('CHECK constraints', () => {
     // Đo theo KÝ TỰ chứ không theo byte — 'ừ' chiếm 3 byte UTF-8.
     await sql(
       `update public.daily_reports
-          set status = 'COMPLETED', actual_visit_points = 1, actual_sales_quantity = 1,
+          set status = 'COMPLETED', actual_visit_points = 1, actual_sales_amount = 1,
               actual_revenue = 1, actual_customer_visits = 1,
               evening_note = repeat('ừ', 1000), evening_submitted_at = now()
         where id = $1`,
@@ -226,12 +226,78 @@ describe('CHECK constraints', () => {
     expect(rows[0]?.len).toBe(1000);
   });
 
+  /**
+   * PHASE 13 — hai ràng buộc mới của migration `0008`. Cả hai được thêm dạng
+   * `not valid`, nên bài test ở đây đang chứng minh đúng điều quan trọng nhất:
+   * `not valid` **vẫn ép đủ với dòng MỚI**, nó chỉ tha cho dòng đã có.
+   */
+  it('BR-026 — mục tiêu điểm viếng thăm dưới sàn 10 bị chặn (DEC-049)', async () => {
+    for (const belowFloor of [0, 1, 9]) {
+      const error = await expectSqlError(
+        `insert into public.daily_reports
+           (sales_id, report_date, planned_route, target_visit_points,
+            target_sales_amount, target_revenue, target_customer_visits)
+         values ($1, $2, 'Tuyến', $3, 1, 1, 1)`,
+        [salesA, today, belowFloor],
+      );
+      expect(error.code).toBe('23514');
+      expect(error.constraint).toBe('ck_target_visit_points');
+    }
+
+    // Biên inclusive: đúng 10 phải đi qua được.
+    await expect(
+      insertMorningReport(salesA, today, { target_visit_points: 10 }),
+    ).resolves.toBeTypeOf('string');
+  });
+
+  it('DEC-050 — cam kết sáng THIẾU doanh số tiền bị chặn', async () => {
+    const error = await expectSqlError(
+      `insert into public.daily_reports
+         (sales_id, report_date, planned_route, target_visit_points,
+          target_revenue, target_customer_visits)
+       values ($1, $2, 'Tuyến', 12, 1, 1)`,
+      [salesA, today],
+    );
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint).toBe('ck_target_sales_amount_required');
+  });
+
+  it('DEC-050 — COMPLETED đòi actual_sales_amount, KHÔNG còn đòi cột di sản', async () => {
+    const id = await insertMorningReport(salesA, today);
+
+    // Điền cột DI SẢN thay cho cột mới → vẫn phải bị chặn.
+    const error = await expectSqlError(
+      `update public.daily_reports
+          set status = 'COMPLETED', actual_visit_points = 4, actual_sales_quantity = 6,
+              actual_revenue = 1, actual_customer_visits = 9, evening_submitted_at = now()
+        where id = $1`,
+      [id],
+    );
+    expect(error.constraint).toBe('ck_completed_requires_actuals');
+
+    // Cùng câu lệnh nhưng dùng cột MỚI → hợp lệ.
+    await sql(
+      `update public.daily_reports
+          set status = 'COMPLETED', actual_visit_points = 4, actual_sales_amount = 60000000,
+              actual_revenue = 1, actual_customer_visits = 9, evening_submitted_at = now()
+        where id = $1`,
+      [id],
+    );
+
+    const { rows } = await sql<{ status: string }>(
+      'select status from public.daily_reports where id = $1',
+      [id],
+    );
+    expect(rows[0]?.status).toBe('COMPLETED');
+  });
+
   it('BR-018 — planned_route chỉ có khoảng trắng bị chặn (CHECK dùng btrim)', async () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
-         (sales_id, report_date, planned_route, target_visit_points, target_sales_quantity,
+         (sales_id, report_date, planned_route, target_visit_points, target_sales_amount,
           target_revenue, target_customer_visits)
-       values ($1, $2, '   ', 1, 1, 1, 1)`,
+       values ($1, $2, '   ', 12, 1, 1, 1)`,
       [salesA, today],
     );
     expect(error.constraint).toBe('ck_planned_route_len');
@@ -256,9 +322,9 @@ describe('Khoá ngoại — BR-013', () => {
   it('sales_id không tồn tại bị chặn bằng 23503', async () => {
     const error = await expectSqlError(
       `insert into public.daily_reports
-         (sales_id, report_date, planned_route, target_visit_points, target_sales_quantity,
+         (sales_id, report_date, planned_route, target_visit_points, target_sales_amount,
           target_revenue, target_customer_visits)
-       values (gen_random_uuid(), $1, 'Tuyến', 1, 1, 1, 1)`,
+       values (gen_random_uuid(), $1, 'Tuyến', 12, 1, 1, 1)`,
       [today],
     );
     expect(error.code).toBe('23503');

@@ -100,9 +100,8 @@ function toFormValues(report: DailyReport | null): MorningFormValues {
   if (report === null) {
     return {
       planned_route: '',
-      visit_purpose: '',
       target_visit_points: '',
-      target_sales_quantity: '',
+      target_sales_amount: '',
       target_revenue: '',
       target_customer_visits: '',
     };
@@ -110,9 +109,11 @@ function toFormValues(report: DailyReport | null): MorningFormValues {
 
   return {
     planned_route: report.planned_route,
-    visit_purpose: report.visit_purpose ?? '',
     target_visit_points: String(report.target_visit_points),
-    target_sales_quantity: String(report.target_sales_quantity),
+    // `?? ''` chứ không `String(...)`: các báo cáo có TRƯỚC migration 0008 mang
+    // `null` ở cột này (DEC-050, OQ-19c). `String(null)` sẽ đổ chữ "null" vào ô
+    // nhập — người dùng phải thấy ô TRỐNG và tự nhập lại.
+    target_sales_amount: report.target_sales_amount?.toString() ?? '',
     target_revenue: String(report.target_revenue),
     target_customer_visits: String(report.target_customer_visits),
   };

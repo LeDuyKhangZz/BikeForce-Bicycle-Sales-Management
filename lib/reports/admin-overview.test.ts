@@ -22,8 +22,8 @@ function makeSource(overrides: Partial<AdminOverviewSource> = {}): AdminOverview
     no_report_count: 1,
     target_visit_points: 25,
     actual_visit_points: 20,
-    target_sales_quantity: 50,
-    actual_sales_quantity: 55,
+    target_sales_amount: 50,
+    actual_sales_amount: 55,
     target_revenue: 500_000_000,
     actual_revenue: 400_000_000,
     target_customer_visits: 100,
@@ -115,7 +115,7 @@ describe('toAdminOverview — 4 dòng target vs actual (chỉ số 5…12)', () 
     const view = toAdminOverview(makeSource());
     expect(view.metricRows.map((row) => row.metric)).toEqual([
       'VISIT_POINTS',
-      'SALES_QUANTITY',
+      'SALES_AMOUNT',
       'REVENUE',
       'CUSTOMER_VISITS',
     ]);
@@ -128,9 +128,9 @@ describe('toAdminOverview — 4 dòng target vs actual (chỉ số 5…12)', () 
 
     expect(view.metricRows[1]?.result).toEqual(
       calculateAchievement(
-        source.target_sales_quantity,
-        source.actual_sales_quantity,
-        'SALES_QUANTITY',
+        source.target_sales_amount,
+        source.actual_sales_amount,
+        'SALES_AMOUNT',
       ),
     );
     expect(view.metricRows[2]?.result).toEqual(
@@ -141,7 +141,7 @@ describe('toAdminOverview — 4 dòng target vs actual (chỉ số 5…12)', () 
   it('đơn vị lấy từ formatMetricValue, không tự ghép chuỗi', () => {
     const view = toAdminOverview(makeSource());
     expect(view.metricRows[0]?.targetText).toBe('25 điểm');
-    expect(view.metricRows[1]?.actualText).toBe('55 xe');
+    expect(view.metricRows[1]?.actualText).toBe('55 ₫');
     // So với chính `formatCurrencyVND` chứ không với chuỗi viết tay: `Intl` dùng
     // khoảng trắng KHÔNG NGẮT (U+00A0) trước `₫`, gõ tay là ra một ký tự khác.
     expect(view.metricRows[2]?.targetText).toBe(formatCurrencyVND(500_000_000));
@@ -150,7 +150,7 @@ describe('toAdminOverview — 4 dòng target vs actual (chỉ số 5…12)', () 
 
   it('vượt chỉ tiêu KHÔNG bị cắt về 100% (BR-004)', () => {
     const view = toAdminOverview(
-      makeSource({ target_sales_quantity: 10, actual_sales_quantity: 125 }),
+      makeSource({ target_sales_amount: 10, actual_sales_amount: 125 }),
     );
     expect(view.metricRows[1]?.result.display).toBe('1.250,0%');
   });
@@ -162,9 +162,9 @@ describe('toAdminOverview — 4 dòng target vs actual (chỉ số 5…12)', () 
 
   it('BR-015 — cả đội target = 0 nhưng actual > 0 → số vượt tuyệt đối', () => {
     const view = toAdminOverview(
-      makeSource({ target_sales_quantity: 0, actual_sales_quantity: 7 }),
+      makeSource({ target_sales_amount: 0, actual_sales_amount: 7 }),
     );
-    expect(view.metricRows[1]?.result.display).toBe('+7 xe');
+    expect(view.metricRows[1]?.result.display).toBe('+7 ₫');
     expect(view.metricRows[1]?.result.percent).toBeNull();
   });
 
@@ -175,8 +175,8 @@ describe('toAdminOverview — 4 dòng target vs actual (chỉ số 5…12)', () 
           makeSource({
             target_visit_points: target,
             actual_visit_points: actual,
-            target_sales_quantity: target,
-            actual_sales_quantity: actual,
+            target_sales_amount: target,
+            actual_sales_amount: actual,
             target_revenue: target,
             actual_revenue: actual,
             target_customer_visits: target,

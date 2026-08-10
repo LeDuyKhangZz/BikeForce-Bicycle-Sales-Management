@@ -15,18 +15,22 @@ import { morningDraftKey } from '@/lib/reports/draft-keys';
 import { SALES_TODAY_PATH } from '@/lib/reports/today-cta';
 import {
   MAX_ROUTE_LENGTH,
-  MAX_VISIT_PURPOSE_LENGTH,
+  MIN_TARGET_VISIT_POINTS,
   morningReportSchema,
 } from '@/lib/validation/report';
 
 import { saveMorningReport, updateMorningReport, type MorningReportState } from './actions';
 
-/** Sáu ô của form, tất cả giữ dưới dạng CHUỖI đúng như người dùng gõ. */
+/**
+ * NĂM ô của form, tất cả giữ dưới dạng CHUỖI đúng như người dùng gõ.
+ *
+ * ⚠ `visit_purpose` đã bị GỠ ở PHASE 13 (DEC-048) — cột vẫn còn trong database
+ * cho dữ liệu cũ, nhưng form không nhập và không gửi nó nữa.
+ */
 export type MorningFormValues = {
   planned_route: string;
-  visit_purpose: string;
   target_visit_points: string;
-  target_sales_quantity: string;
+  target_sales_amount: string;
   target_revenue: string;
   target_customer_visits: string;
 };
@@ -42,17 +46,16 @@ type Props = {
   initialValues: MorningFormValues;
 };
 
-/** Ba ô số nguyên. Doanh thu có component riêng vì cần phân nhóm nghìn. */
+/**
+ * Ô đếm duy nhất còn lại ở nửa trên của form. Hai ô TIỀN (doanh số, doanh thu
+ * công nợ) dùng `CurrencyField` vì cần phân nhóm nghìn và chip cộng nhanh —
+ * DEC-050 chuyển "Mục tiêu doanh số" từ đếm xe sang nhập tiền.
+ */
 const COUNT_FIELDS: ReadonlyArray<{ name: FieldName; label: string; helper: string }> = [
   {
     name: 'target_visit_points',
     label: 'Mục tiêu điểm viếng thăm',
-    helper: 'Số điểm dự kiến ghé trong ngày. Tối đa 1.000.',
-  },
-  {
-    name: 'target_sales_quantity',
-    label: 'Mục tiêu doanh số',
-    helper: 'Số xe dự kiến bán trong ngày. Tối đa 10.000.',
+    helper: `Số điểm dự kiến ghé trong ngày. Tối thiểu ${MIN_TARGET_VISIT_POINTS}.`,
   },
 ];
 
@@ -214,28 +217,6 @@ export function MorningReportForm({ mode, reportId, today, initialValues }: Prop
         />
       </FormField>
 
-      <FormField
-        id="visit_purpose"
-        label="Mục đích chuyến đi"
-        error={errorFor('visit_purpose')}
-        helperText="Không bắt buộc. Tối đa 300 ký tự."
-      >
-        <Input
-          id="visit_purpose"
-          name="visit_purpose"
-          type="text"
-          maxLength={MAX_VISIT_PURPOSE_LENGTH}
-          enterKeyHint="next"
-          autoComplete="off"
-          disabled={isBusy}
-          invalid={Boolean(errorFor('visit_purpose'))}
-          aria-describedby={`visit_purpose-helper${errorFor('visit_purpose') ? ' visit_purpose-error' : ''}`}
-          value={values.visit_purpose}
-          onChange={(event) => updateField('visit_purpose', event.currentTarget.value)}
-          onBlur={(event) => validateOnBlur('visit_purpose', event.currentTarget.value)}
-        />
-      </FormField>
-
       {COUNT_FIELDS.map((field) => (
         <FormField
           key={field.name}
@@ -265,8 +246,20 @@ export function MorningReportForm({ mode, reportId, today, initialValues }: Prop
       ))}
 
       <CurrencyField
+        id="target_sales_amount"
+        label="Mục tiêu doanh số"
+        helperText="Tiền bán hàng dự kiến trong ngày. Đơn vị: đồng (₫)."
+        value={values.target_sales_amount}
+        error={errorFor('target_sales_amount')}
+        disabled={isBusy}
+        onChange={(value) => updateField('target_sales_amount', value)}
+        onBlur={(value) => validateOnBlur('target_sales_amount', value)}
+      />
+
+      <CurrencyField
         id="target_revenue"
-        label="Mục tiêu doanh thu"
+        label="Mục tiêu doanh thu công nợ"
+        helperText="Tiền công nợ dự kiến thu hồi trong ngày. Đơn vị: đồng (₫)."
         value={values.target_revenue}
         error={errorFor('target_revenue')}
         disabled={isBusy}

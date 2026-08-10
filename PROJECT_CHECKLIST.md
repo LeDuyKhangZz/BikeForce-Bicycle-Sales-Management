@@ -401,28 +401,50 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
 - [x] Bộ icon PWA vẽ lại theo hình xe của logo (cam trên trắng)
 - [x] `docs/05 §4.1–§4.4` và `§15` viết lại theo bảng màu mới
 
-### 13b. CÒN LẠI — chưa làm, làm sau khi deploy xong
+### 13b. Soát UI/UX — ✅ ĐÃ LÀM 2026-08-10 (trừ mục cần thiết bị thật)
 
-- [ ] **Quét MỌI cặp nền × chữ thực tế chồng nhau trong DOM** — bài học ISSUE-018, ưu tiên số 1.
-      Đo token so với `card`/`background` là **chưa đủ**: `text-primary` trên `bg-status-info-bg`
-      từng cho **4,32:1** mà không bảng nào bắt được, vì hai token ấy nằm ở hai dòng khác nhau của
-      `docs/05 §4.2` và `§4.4`. Cách làm: liệt kê từng tổ hợp `bg-*` × `text-*` có thật trong
-      `app/`, `components/`, `features/`, rồi đo từng cặp. Chỗ nào ghép chéo cặp thì sửa hoặc ghi
-      lý do. Đây là loại lỗi **chỉ hiện ở một bề rộng** nên rất dễ lọt
-- [ ] **Soát 98 guideline của skill trên 18 route**, ưu tiên `mobile-375` và `desktop-1440`. Ra bảng
-      **ĐẠT / KHÔNG ĐẠT / KHÔNG ÁP DỤNG** cho từng mục, không viết "đã kiểm tra" chung chung
-- [ ] Chạy `python <skill>/scripts/search.py "<từ khoá>" --domain ux` cho từng nhóm CRITICAL trước
-- [ ] **Xem tận mắt** 18 route ở 375px và 1440px sau khi đổi màu — bảng màu mới **chưa từng được
-      nhìn bằng mắt**, mới chỉ được chứng minh bằng số đo và 30 lượt quét axe
-- [ ] Đối chiếu `pro-rules.md § Pre-Delivery Checklist` — đặc biệt: `press-feedback`,
-      `state-clarity`, `elevation-consistent`, `line-length-control`, `truncation-strategy`
-- [ ] Quyết định có đưa cam logo vào thẻ ảnh 9:16 không (`docs/05 §4.5` đang dùng `#FBBF24`;
-      trên nền `#0B1220` cả hai đều AAA nên **không phải lỗi**, chỉ là lựa chọn nhận diện)
-- [ ] Cân nhắc thêm biến thể nút `accent` (nền cam + chữ tối, **8,17:1**) — hiện token
-      `--color-accent` mới chỉ dùng cho logo, chưa có CTA nào dùng
+> **Cách làm:** dựng một bộ soát Playwright **dùng-một-lần** (`e2e/zz-ui-audit.spec.ts`, đã xoá,
+> không commit — đúng thông lệ Phase 2–6) đo bằng MÁY trên **20 URL × 2 bề rộng**, gồm cả các URL
+> mang `?month=` để rơi vào nhánh CÓ dữ liệu. Bốn nhóm luật CRITICAL/HIGH được đo trực tiếp trên DOM
+> đã render, không phải đọc code đoán.
+
+- [x] **Quét MỌI cặp nền × chữ thực tế chồng nhau trong DOM** — bài học ISSUE-018
+      → **ĐẠT.** Đo `getComputedStyle` của từng phần tử CÓ text node riêng, nền lấy bằng cách **leo
+      cây tổ tiên** tới màu đầu tiên không trong suốt — tức đúng cặp mắt người nhìn thấy, không phải
+      cặp token trên giấy. **Tổng ~2.400 cặp**, **0 cặp dưới ngưỡng**; tỉ lệ thấp nhất toàn hệ thống
+      là **4,68:1** (ngưỡng AA là 4,5). Bảng màu DEC-046 giữ nguyên, không phải sửa token nào
+- [x] **Soát guideline của skill trên toàn bộ route** ở `mobile-375` và `desktop-1440` — bảng
+      ĐẠT/KHÔNG ĐẠT ở `WORKLOG.md` Entry 016. **Bắt được 1 lỗi THẬT**: `horizontal-scroll`
+- [x] Đọc `references/quick-reference.md` (10 nhóm) + `references/pro-rules.md` trước khi soát
+- [x] **`horizontal-scroll` (CRITICAL) — TÌM RA LỖI THẬT, đã sửa.** Bảng số liệu trong `<details>`
+      của biểu đồ trend **tràn ngang 116px ở 375px** sau khi DEC-050 đổi doanh số sang tiền. Sửa
+      bằng **DEC-052** (thẻ ở mobile, `<table>` từ 768px — đúng pattern DEC-019).
+      ⚠ **Bài học:** lượt soát ĐẦU TIÊN báo "0 phát hiện" vì `<details>` đang **đóng** — nội dung
+      gập lại không tham gia layout. **Soát bố cục phải mở mọi `<details>` trước khi đo**
+- [x] **`touch-target-size` (CRITICAL)** → **ĐẠT.** 9–60 phần tử tương tác mỗi trang, **0** phần tử
+      dưới 44px chiều cao
+- [x] **`readable-font-size`** → **ĐẠT.** Không `<input>` nào dưới 16px (iOS sẽ tự phóng to), không
+      chữ nào dưới 12px
+- [x] **Chứng minh phép đo có chạy, không "xanh oan".** Mỗi trang xuất kèm bộ đếm
+      (`interactive=… contrastPairs=… minRatio=…`). "0 phát hiện" chỉ có nghĩa khi biết mẫu số —
+      một selector gõ sai cũng cho 0 phát hiện
+- [x] **Đo cả FORM NHẬP.** Lượt đầu bỏ sót: tài khoản dùng để soát đã `COMPLETED` nên BR-019 đá nó
+      khỏi cả hai form, và hai route cho ra **cùng một con số đếm** — chính dấu hiệu đó làm lộ ra
+      chuyện này. Đã soát lại bằng tài khoản chưa báo cáo: form sáng **20**, form tối **21** phần
+      tử tương tác, **0 vi phạm**
+- [x] Kiểm `prefers-reduced-motion` và **`dynamic-type`**
+      → `prefers-reduced-motion` đã có sẵn quy tắc toàn cục trong `app/globals.css`; spinner mới
+      thêm `motion-reduce:animate-none`. `dynamic-type`: phóng `font-size` gốc lên **150%** rồi đo
+      lại — **bố cục không vỡ, không tràn ngang**
+- [x] Quyết định về cam logo trong thẻ ảnh 9:16 → **GIỮ `#FBBF24`.** Trên nền `#0B1220` cả hai đều
+      AAA nên không phải lỗi; đổi sang `#E9A04F` chỉ để "đồng bộ" sẽ buộc kiểm lại toàn bộ biên của
+      thẻ ảnh mà không được gì đo được
+- [x] Quyết định về biến thể nút `accent` → **KHÔNG thêm.** Luật `primary-action` chỉ cho **một** CTA
+      chính mỗi màn hình; thêm một biến thể nút nổi bật thứ hai là mời gọi vi phạm chính luật đó.
+      Cam vẫn giữ đúng vai trò logo + nền
+- [ ] **Xem tận mắt** ở 375px và 1440px — *đã đo bằng máy toàn bộ, nhưng chưa nhìn bằng mắt người*
 - [ ] Thao tác **"Thêm vào màn hình chính" trên máy thật** (Chrome Android + Safari iOS): icon đúng,
-      mở ra **không có thanh địa chỉ**, splash trắng liền mạch — nợ từ Phase 12
-- [ ] Kiểm `prefers-reduced-motion` và cỡ chữ hệ thống lớn nhất (`dynamic-type`) không vỡ bố cục
+      mở ra **không có thanh địa chỉ**, splash trắng liền mạch — nợ từ Phase 12. **Cần thiết bị thật**
 
 ### 13c. YÊU CẦU MỚI CỦA NGƯỜI DÙNG — ghi ngày 2026-08-10, kèm 4 ảnh chú thích tay
 
@@ -468,39 +490,52 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
 
 ---
 
-#### Nhóm A — giao diện thuần, làm được ngay, KHÔNG đụng nghiệp vụ
+#### Nhóm A — ✅ XONG 2026-08-10 (DEC-051)
 
-- [ ] **Thêm hiệu ứng loading cho thao tác của người dùng.** Dự án đã có `loading.tsx` cho điều
-      hướng, nhưng người dùng nói "chưa có hiệu ứng loading" ⇒ ý là **phản hồi khi bấm**: nút submit
-      đang chờ, chuyển trang, nộp form. Kiểm cả `useActionState` `isPending` đã hiển thị đủ rõ chưa.
-      Bộ luật ui-ux-pro-max gọi đây là `loading-buttons` và `tap-feedback-speed` (phản hồi < 100 ms).
-- [ ] **Nút Đăng xuất ở góc trên bên phải.**
+- [x] **Thêm hiệu ứng loading cho thao tác của người dùng.**
+      → **`components/ui/link-spinner.tsx` (MỚI)** dùng `useLinkStatus()` của Next, đặt **bên trong**
+      `<Link>`. `loading.tsx` chỉ hiện **sau khi** Next bắt đầu render trang đích; quãng từ lúc chạm
+      tới đó trên 4G là khoảng lặng khiến Sales bấm lại lần hai (`tap-feedback-speed` < 100 ms).
+      Nút Đăng xuất dùng `useFormStatus()` → khoá + "Đang đăng xuất…" (`loading-buttons`).
+      Hai form báo cáo **đã có sẵn** `isBusy` + `aria-busy` từ Phase 3/4 — kiểm lại, không sửa
+- [x] **Nút Đăng xuất ở góc trên bên phải.**
+      → Có ở **cả hai** route group. Vấn đề 375px nêu dưới đây được giải chứ không bỏ qua: dưới
+      640px nút **chỉ có icon** + `aria-label` (44px thay vì ~120px), `shrink-0`; khối tên có
+      `min-w-0` + `truncate`. Panel xác nhận rơi xuống **dưới** thanh header nên không vỡ hàng
+      ngang. Ghi chú cũ trong hai layout đã được **xoá và thay bằng lý do mới** để tài liệu không
+      mâu thuẫn code. Bản ở `/sales/account` + `/admin/account` **giữ nguyên**
       ⚠ Hiện tại **cố ý không có** — Phase 7 và Phase 8 đã chuyển Đăng xuất vào `/sales/account` và
       `/admin/account`, lý do ghi ngay trong `app/(sales)/layout.tsx`: *"giờ đã có tab Tài khoản thì
       để thêm một nút đăng xuất ở header là hai đường tới cùng một hành động, và nó chiếm mất chỗ
       của tên người dùng trên màn hình 375px"*. Người dùng nay yêu cầu ngược lại ⇒ **được**, nhưng
       phải **giải quyết đúng vấn đề bề rộng 375px** đã nêu (đừng đẩy tên người dùng bị cắt), và
       **xoá ghi chú cũ** trong hai layout để tài liệu không mâu thuẫn code.
-- [ ] **Ảnh 3 — đưa "Tuyến và ghi chú" lên TRƯỚC "Cam kết và thực đạt"** ở `/sales/today`.
-      Chỉ là đổi thứ tự hai khối trong `app/(sales)/sales/today/page.tsx`. Kiểm lại cả
-      `/sales/reports/[id]` để hai màn hình không lệch thứ tự nhau.
+- [x] **Ảnh 3 — đưa "Tuyến và ghi chú" lên TRƯỚC "Cam kết và thực đạt"** ở `/sales/today`.
+      → Đã đổi, và **đồng bộ luôn `/sales/reports/[id]` và `/admin/reports/[id]`** để ba màn hình
+      cùng trình bày một báo cáo không bắt người dùng học ba bố cục
 
-#### Nhóm B — đổi nhãn, một dòng nhưng phải sửa ĐÚNG CHỖ
+#### Nhóm B — ✅ XONG 2026-08-10
 
-- [ ] **Ảnh 4 — "Khách hàng" → "Khách hàng đã gặp".**
+- [x] **Ảnh 4 — "Khách hàng" → "Khách hàng đã gặp".**
+      → Sửa **đúng một chỗ**: `lib/reports/metric-rows.ts`. Đổi đồng loạt bảng đối chiếu web, phân
+      tích tháng, biểu đồ trend và cột CSV. Phát sinh thêm: `KpiMetricRow` có thêm **`shortLabel`**
+      cho thẻ ảnh 9:16 (cột nhãn bề rộng cố định, Satori không tự thu nhỏ chữ được) — nhãn rút gọn
+      vẫn nằm trong **cùng một nguồn duy nhất**, không phải component tự cắt chuỗi.
+      ⚠ Cũng phát hiện `commitment-summary.tsx` **viết cứng** bốn nhãn thay vì đọc `KPI_METRIC_ROWS`
+      — đã sửa; nếu không, màn hình đó sẽ âm thầm nói khác ba màn hình còn lại
       Sửa ở **`lib/reports/metric-rows.ts`** — nguồn DUY NHẤT của "4 chỉ tiêu là gì". Sửa một chỗ là
       đổi đồng loạt: bảng đối chiếu web, thẻ ảnh 9:16, phân tích tháng, biểu đồ trend, cột CSV.
       **Đừng sửa rải rác trong component.** Có unit test khoá nhãn — cập nhật test cùng lúc.
       Cân nhắc đơn vị hiển thị: hiện là `10 khách`; "khách hàng đã gặp" thì `10 khách` vẫn đọc được.
 
-#### Nhóm C — ⚠ THAY ĐỔI BUSINESS RULE + SCHEMA. Cần DEC mới + migration `0008`
+#### Nhóm C — ✅ XONG 2026-08-10 (DEC-048 · DEC-049 · DEC-050 · migration `0008`)
 
 > Ba mục dưới đây **mâu thuẫn với quyết định đã `APPROVED`**. Người dùng đã yêu cầu trực tiếp nên
 > chúng hợp lệ, **nhưng quy trình bắt buộc là**: viết `DEC-048`/`DEC-049`/`DEC-050` nêu rõ thay thế
 > điều gì → cập nhật `docs/01` (FR/BR) và `docs/02` (schema) → viết migration `0008_*.sql` → sửa
 > code → sửa test. **Migration chỉ tiến tới** (AGENTS.md §13); không sửa file `0001`–`0007`.
 
-- [ ] **Ảnh 1 — BỎ trường "Mục đích chuyến đi" (`visit_purpose`).**
+- [x] **Ảnh 1 — BỎ trường "Mục đích chuyến đi" (`visit_purpose`).** → **DEC-048.** Người dùng chọn **GIỮ CỘT, bỏ khỏi form và khỏi mọi chỗ hiển thị** (BR-013 cấm xoá dữ liệu). `0008` chỉ thêm `comment on column` đánh dấu DI SẢN, KHÔNG `drop column`.
       **Mâu thuẫn:** OQ-01/OQ-02 → **DEC-029 (APPROVED)** chốt *"giữ **cả hai**: cột số bắt buộc +
       cột text tuỳ chọn"*. Bỏ `visit_purpose` là lật đúng nửa sau của DEC-029.
       **Đụng tới:** cột `visit_purpose` trên `daily_reports` · `morningReportSchema` ·
@@ -510,14 +545,14 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
       Dữ liệu cũ đã nhập (production đang có một báo cáo ghi `test`) sẽ mất nếu drop cột — mà
       **BR-013 cấm xoá dữ liệu báo cáo**. Nghiêng về **giữ cột, bỏ khỏi form và khỏi mọi chỗ hiển
       thị**, ghi rõ lý do trong DEC.
-- [ ] **Ảnh 2 — "Mục tiêu điểm viếng thăm": TỐI THIỂU 10, không phải tối đa 1.000.**
+- [x] **Ảnh 2 — "Mục tiêu điểm viếng thăm": TỐI THIỂU 10.** → **BR-026 + DEC-049.** Chốt **giữ trần, thêm sàn** = `[10, 1000]`, và sàn **chỉ áp cho `target`** — `actual` vẫn từ 0 vì đi được ít hơn cam kết là kết quả thật.
       **Đụng tới:** CHECK constraint trên `daily_reports` · hằng số miền giá trị trong
       `lib/validation/report.ts` · helper text · unit test biên (bảng biên `docs/08 §3.1`).
       **Phải hỏi lại người dùng:** *"tối thiểu 10"* là **thay** giới hạn trên hay **thêm** giới hạn
       dưới? Nếu bỏ hẳn trần thì một lỗi gõ phím (`10000`) sẽ vào thẳng database và làm hỏng mọi phép
       tổng hợp của Admin. **Đề xuất: giữ trần, thêm sàn** — `>= 10 và <= 1.000`, helper ghi
       *"Tối thiểu 10 điểm."*
-- [ ] **Ảnh 1 — ĐỔI NGHĨA "Doanh số" và "Doanh thu", cả hai thành TIỀN.**
+- [x] **Ảnh 1 — ĐỔI NGHĨA "Doanh số" và "Doanh thu", cả hai thành TIỀN.** → **OQ-19 đã được trả lời đủ 3/3 và triển khai bằng DEC-050.** 19a: **bỏ hẳn** đếm xe, giữ đúng 4 chỉ tiêu · 19b: **tiền THU HỒI được**, BR-014 giữ nguyên · 19c: **`null`** cho dòng trước `0008`, bằng cách thêm **cặp cột MỚI** `*_sales_amount` chứ không đổi kiểu cột cũ.
       Yêu cầu nguyên văn: *"Doanh số là doanh số bán hàng trong ngày (cho nhập số tiền), doanh thu là
       doanh thu công nợ khách hàng (cho nhập số tiền)"*.
       **Đây là thay đổi NẶNG NHẤT trong ba mục.** Mâu thuẫn:

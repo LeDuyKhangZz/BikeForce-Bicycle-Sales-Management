@@ -776,3 +776,95 @@ Mọi bảng render **hai nhánh cùng lúc trong DOM**: card xếp dọc cho `<
 **Nhãn trục X giãn thưa:** tối đa 8 nhãn. Với 31 ngày thì hiện ngày 01, 05, 09, … — đủ để định vị mà không chồng chữ ở 375px.
 
 **Chọn chỉ tiêu:** bốn `<Link>` thật đổi `?metric=`, **không phải state client**. Đổi chỉ tiêu là đổi câu hỏi đang xem nên nó thuộc về URL: chia sẻ được, quay lại được bằng nút Back, và không cần một byte JavaScript nào.
+
+---
+
+## CẬP NHẬT PHASE 13 (2026-08-10) — nhãn chỉ tiêu, thứ tự khối, Đăng xuất, phản hồi khi chạm
+
+> Nguồn: **DEC-048** · **DEC-049** · **DEC-050** · **DEC-051** · **DEC-052** ·
+> `PROJECT_CHECKLIST.md §13`.
+
+### 13.1 Nhãn bốn chỉ tiêu — đổi ở ĐÚNG MỘT NƠI
+
+| Chỉ tiêu | Nhãn đầy đủ (web, Admin, CSV) | `shortLabel` (chỉ thẻ ảnh 9:16) | Đơn vị |
+|---|---|---|---|
+| `VISIT_POINTS` | Viếng thăm | Viếng thăm | `điểm` |
+| `SALES_AMOUNT` | Doanh số | Doanh số | **VND** |
+| `REVENUE` | **Doanh thu công nợ** | **Công nợ** | **VND** |
+| `CUSTOMER_VISITS` | **Khách hàng đã gặp** | Khách hàng | `khách` |
+
+`shortLabel` sinh ra vì cột nhãn của thẻ ảnh có **bề rộng cố định** và Satori **không đo được chữ**
+để tự thu nhỏ. Nó vẫn nằm trong `lib/reports/metric-rows.ts` — cùng một nguồn duy nhất — chứ không
+phải component tự cắt chuỗi.
+
+⚠ **Không component nào được viết cứng bốn nhãn này.** `commitment-summary.tsx` từng viết cứng và đã
+được sửa để đọc `KPI_METRIC_ROWS`; nếu không, màn hình đó sẽ âm thầm nói khác ba màn hình còn lại.
+
+### 13.2 Form cam kết đầu ngày — còn **5** trường
+
+Bỏ hẳn "Mục đích chuyến đi" (DEC-048). Thứ tự và kiểu ô:
+
+1. **Tuyến ghé thăm** — `<textarea>`
+2. **Mục tiêu điểm viếng thăm** — ô số, helper *"Số điểm dự kiến ghé trong ngày. **Tối thiểu 10**."*
+3. **Mục tiêu doanh số** — **`CurrencyField`** (chip cộng nhanh `+1tr/+5tr/+10tr`)
+4. **Mục tiêu doanh thu công nợ** — **`CurrencyField`**
+5. **Mục tiêu số lượng khách hàng** — ô số, `enterKeyHint="done"`
+
+Form cuối ngày đối xứng: hai ô tiền dùng `CurrencyField`, và câu nhắc *"Cam kết sáng: …"* gọi
+`formatMetricValue()` chứ **không tự ghép đơn vị** — bản cũ tự ghép và đó đúng là chỗ đã nói sai đơn
+vị khi DEC-050 đổi doanh số sang tiền.
+
+### 13.3 Thứ tự khối của một báo cáo — giống nhau ở **cả ba** màn hình
+
+`Tuyến và ghi chú` → `Cam kết và thực đạt`, áp cho `/sales/today`, `/sales/reports/[id]` và
+`/admin/reports/[id]`. Buổi sáng Sales cần thấy ngay mình định đi đâu; bảng số chỉ có nghĩa sau khi
+đã ra thị trường. Ba màn hình cùng trình bày một báo cáo thì không được bắt người dùng học ba bố cục.
+
+### 13.4 Đăng xuất ở header — và cách giải bề rộng 375px
+
+Nút nằm **góc trên bên phải** của cả hai route group, cạnh bản ở `/…/account` (giữ nguyên).
+
+| Bề rộng | Hiển thị | Vì sao |
+|---|---|---|
+| < 640px | **chỉ icon** + `aria-label="Đăng xuất"` | chiếm 44px thay vì ~120px, không bóp tên người dùng |
+| ≥ 640px | icon + chữ "Đăng xuất" | đã có chỗ |
+
+Khối tên có `min-w-0` + `truncate`, nút có `shrink-0` ⇒ tên dài cắt bằng "…" thay vì đẩy nút ra khỏi
+màn hình. Panel xác nhận định vị `absolute top-full` **dưới** thanh header nên không bao giờ làm vỡ
+hàng ngang. `<header>` vì vậy phải có `relative`.
+
+### 13.5 Phản hồi khi chạm — `tap-feedback-speed` < 100 ms
+
+`components/ui/link-spinner.tsx` dùng `useLinkStatus()` của Next và **phải nằm bên trong `<Link>`**
+(hợp đồng của hook — đặt ra ngoài thì `pending` mãi `false`, không có lỗi nào được ném ra).
+
+Dự án đã có `loading.tsx`, nhưng nó chỉ hiện **sau khi** Next bắt đầu render trang đích; quãng từ
+lúc chạm tới đó trên 4G là khoảng lặng khiến Sales bấm lại lần hai.
+
+Chuyển động là `rotate` thuần (transform) nên không phá luật "chỉ transform/opacity".
+`prefers-reduced-motion` đã có quy tắc toàn cục ở `app/globals.css`, cộng `motion-reduce:animate-none`
+trên chính spinner.
+
+### 13.6 Bảng số liệu của biểu đồ trend — hai nhánh theo DEC-019
+
+Thẻ ở `< 768px`, `<table>` thật từ `768px`. **Đo được thật:** bản một-bảng-cho-mọi-bề-rộng **tràn
+ngang 116px ở 375px** sau khi doanh số thành tiền — bốn cột gồm ngày kiểu "Chủ Nhật, 02/08/2026" và
+ba cột số kiểu `100.000.000.000 ₫` không có cách kê chữ nào vừa 375px.
+
+⚠ Lỗi này **không lộ ra** ở lượt soát đầu vì `<details>` đang đóng. **Soát bố cục phải mở mọi
+`<details>` trước khi đo.**
+
+### 13.7 Kết quả soát UI/UX bằng máy (13b)
+
+**20 URL × 2 bề rộng**, đo trên DOM đã render — không phải đọc code đoán:
+
+| Luật | Kết quả |
+|---|---|
+| `color-contrast` | **~2.400 cặp thực tế chồng nhau — 0 vi phạm.** Thấp nhất **4,68:1** (AA cần 4,5). Nền lấy bằng cách **leo cây tổ tiên** tới màu đầu tiên không trong suốt, tức đúng cặp mắt người thấy — bài học ISSUE-018 |
+| `touch-target-size` | **0** phần tử tương tác dưới 44px (9–60 phần tử mỗi trang) |
+| `readable-font-size` | **0** `<input>` dưới 16px · **0** chữ dưới 12px |
+| `horizontal-scroll` | **1 vi phạm** → đã sửa bằng DEC-052 |
+| `dynamic-type` | phóng cỡ chữ gốc lên **150%** — bố cục **không vỡ** |
+| `reduced-motion` | đã có quy tắc toàn cục sẵn |
+
+**Bảng màu DEC-046 không phải sửa token nào.**

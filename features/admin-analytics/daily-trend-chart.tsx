@@ -189,7 +189,54 @@ export function DailyTrendChart({ metric, metricLabel, monthLabel, points }: Pro
           Xem số liệu dạng bảng
         </summary>
         <div className="border-t border-border px-3 pb-3">
-          <table className="w-full border-collapse text-sm">
+          {/*
+            ── < 768px: DANH SÁCH THẺ, không phải bảng ───────────────────────
+            PHASE 13. Bản trước đây dùng một `<table>` duy nhất cho mọi bề rộng
+            và nó **tràn ngang 116px ở 375px** — vi phạm thẳng CLAUDE.md §11
+            ("không dùng `<table>` cuộn ngang trên mobile") và luật
+            `horizontal-scroll`. Lỗi lộ ra khi DEC-050 đổi doanh số sang tiền:
+            ba cột số kiểu `100.000.000.000 ₫` cạnh một cột ngày kiểu
+            "Chủ Nhật, 02/08/2026" không thể vừa 375px, và **không** cách kê
+            chữ nào cứu được — chỉ đổi bố cục mới cứu được.
+
+            Cách giải bám đúng DEC-019, tức pattern mà `AchievementTable` đã
+            dùng từ Phase 5: thẻ ở mobile, `<table>` thật từ 768px. Bảng vẫn ở
+            đây đầy đủ nên "phương án data-table" của FR-037 (yêu cầu a11y cho
+            biểu đồ) không mất đi ở bất kỳ bề rộng nào.
+          */}
+          <ul className="flex flex-col gap-2 pt-2 md:hidden">
+            {rows.map(({ bar, result }) => (
+              <li
+                key={bar.date}
+                className="flex flex-col gap-1 rounded-lg border border-border p-3"
+              >
+                <p className="tabular text-sm font-medium text-heading">
+                  {formatVietnamDate(bar.date)}
+                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">Cam kết</span>
+                  <span className="tabular text-sm break-words text-foreground">
+                    {formatMetricValue(bar.target, metric)}
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">Thực đạt</span>
+                  <span className="tabular text-sm break-words text-foreground">
+                    {formatMetricValue(bar.actual, metric)}
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">Hoàn thành</span>
+                  <span className="tabular text-sm font-semibold break-words text-foreground">
+                    {result.display}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* ── ≥ 768px: bảng thật ─────────────────────────────────────────── */}
+          <table className="hidden w-full border-collapse text-sm md:table">
             <caption className="sr-only">
               {metricLabel} theo từng ngày trong {monthLabel}: cam kết, thực đạt và mức hoàn thành
             </caption>

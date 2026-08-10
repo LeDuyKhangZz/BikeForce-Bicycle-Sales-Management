@@ -251,14 +251,14 @@ describe('listReportsByMonth() — UC-09, FR-021', () => {
       [
         'actual_customer_visits',
         'actual_revenue',
-        'actual_sales_quantity',
+        'actual_sales_amount',
         'actual_visit_points',
         'id',
         'report_date',
         'status',
         'target_customer_visits',
         'target_revenue',
-        'target_sales_quantity',
+        'target_sales_amount',
         'target_visit_points',
       ].sort(),
     );

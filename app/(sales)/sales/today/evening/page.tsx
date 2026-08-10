@@ -72,7 +72,7 @@ export default async function EveningReportPage() {
         today={today}
         commitment={{
           target_visit_points: report.target_visit_points,
-          target_sales_quantity: report.target_sales_quantity,
+          target_sales_amount: report.target_sales_amount,
           target_revenue: report.target_revenue,
           target_customer_visits: report.target_customer_visits,
         }}
@@ -93,7 +93,7 @@ export default async function EveningReportPage() {
  */
 const EMPTY_FORM_VALUES: EveningFormValues = {
   actual_visit_points: '',
-  actual_sales_quantity: '',
+  actual_sales_amount: '',
   actual_revenue: '',
   actual_customer_visits: '',
   actual_route: '',

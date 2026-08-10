@@ -20,6 +20,12 @@ type DailyReportRow = Database['public']['Tables']['daily_reports']['Row'];
 /**
  * Mọi cột NGHIỆP VỤ của một báo cáo. Cố ý bỏ `created_at` / `updated_at`: đó là
  * cột hạ tầng do trigger giữ, giao diện không dùng tới.
+ *
+ * ⚠ **Ba cột DI SẢN cố ý KHÔNG có ở đây** (PHASE 13): `visit_purpose` (DEC-048),
+ * `target_sales_quantity` và `actual_sales_quantity` (DEC-050). Chúng vẫn nằm
+ * trong database cùng dữ liệu đã nhập vì BR-013 cấm xoá, nhưng không màn hình
+ * nào đọc chúng nữa — kéo về là tốn băng thông cho dữ liệu không ai hiển thị
+ * (NFR-002). Muốn đối chiếu lịch sử thì truy vấn thẳng bằng SQL.
  */
 const REPORT_COLUMNS = [
   'id',
@@ -27,15 +33,14 @@ const REPORT_COLUMNS = [
   'report_date',
   'status',
   'planned_route',
-  'visit_purpose',
   'target_visit_points',
-  'target_sales_quantity',
+  'target_sales_amount',
   'target_revenue',
   'target_customer_visits',
   'morning_submitted_at',
   'actual_route',
   'actual_visit_points',
-  'actual_sales_quantity',
+  'actual_sales_amount',
   'actual_revenue',
   'actual_customer_visits',
   'evening_note',
@@ -61,11 +66,11 @@ const SHARE_REPORT_COLUMNS = [
   'planned_route',
   'actual_route',
   'target_visit_points',
-  'target_sales_quantity',
+  'target_sales_amount',
   'target_revenue',
   'target_customer_visits',
   'actual_visit_points',
-  'actual_sales_quantity',
+  'actual_sales_amount',
   'actual_revenue',
   'actual_customer_visits',
   'evening_note',
@@ -81,11 +86,11 @@ export type ShareReport = Pick<
   | 'planned_route'
   | 'actual_route'
   | 'target_visit_points'
-  | 'target_sales_quantity'
+  | 'target_sales_amount'
   | 'target_revenue'
   | 'target_customer_visits'
   | 'actual_visit_points'
-  | 'actual_sales_quantity'
+  | 'actual_sales_amount'
   | 'actual_revenue'
   | 'actual_customer_visits'
   | 'evening_note'
@@ -93,13 +98,17 @@ export type ShareReport = Pick<
   sales: Pick<Database['public']['Tables']['profiles']['Row'], 'full_name' | 'employee_code'>;
 };
 
-/** Đúng tập cột mà cam kết đầu ngày được phép ghi (UC-04, UC-05). */
+/**
+ * Đúng tập cột mà cam kết đầu ngày được phép ghi (UC-04, UC-05).
+ *
+ * ⚠ `visit_purpose` đã bị gỡ khỏi tập này ở PHASE 13 (DEC-048) — nghĩa là kể cả
+ * khi một payload lọt qua được Zod, TypeScript vẫn chặn việc ghi cột đó.
+ */
 export type MorningReportWrite = Pick<
   TablesInsert<'daily_reports'>,
   | 'planned_route'
-  | 'visit_purpose'
   | 'target_visit_points'
-  | 'target_sales_quantity'
+  | 'target_sales_amount'
   | 'target_revenue'
   | 'target_customer_visits'
 >;
@@ -109,7 +118,7 @@ export type EveningReportWrite = Pick<
   TablesInsert<'daily_reports'>,
   | 'actual_route'
   | 'actual_visit_points'
-  | 'actual_sales_quantity'
+  | 'actual_sales_amount'
   | 'actual_revenue'
   | 'actual_customer_visits'
   | 'evening_note'
@@ -241,11 +250,11 @@ const LIST_REPORT_COLUMNS = [
   'report_date',
   'status',
   'target_visit_points',
-  'target_sales_quantity',
+  'target_sales_amount',
   'target_revenue',
   'target_customer_visits',
   'actual_visit_points',
-  'actual_sales_quantity',
+  'actual_sales_amount',
   'actual_revenue',
   'actual_customer_visits',
 ].join(', ');
@@ -257,11 +266,11 @@ export type ReportListItem = Pick<
   | 'report_date'
   | 'status'
   | 'target_visit_points'
-  | 'target_sales_quantity'
+  | 'target_sales_amount'
   | 'target_revenue'
   | 'target_customer_visits'
   | 'actual_visit_points'
-  | 'actual_sales_quantity'
+  | 'actual_sales_amount'
   | 'actual_revenue'
   | 'actual_customer_visits'
 >;
@@ -418,11 +427,11 @@ const ADMIN_REPORT_COLUMNS = [
   'report_date',
   'status',
   'target_visit_points',
-  'target_sales_quantity',
+  'target_sales_amount',
   'target_revenue',
   'target_customer_visits',
   'actual_visit_points',
-  'actual_sales_quantity',
+  'actual_sales_amount',
   'actual_revenue',
   'actual_customer_visits',
   'sales:profiles!inner(full_name, employee_code)',

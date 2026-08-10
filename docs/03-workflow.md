@@ -1008,3 +1008,25 @@ Mọi hàm của `services/admin.ts` trả **giá trị an toàn khi lỗi** (s�
 **Ranh giới client/server không đổi.** Danh sách client component vẫn ngắn và vẫn chỉ là phần tương tác: form (báo cáo, tài khoản, tạo/sửa Sales), nút chia sẻ ảnh, nút bật/tắt `is_active`, bộ lọc có `<select>` tự submit, và thanh điều hướng. **Biểu đồ trend là Server Component** — nó chỉ là SVG tĩnh, không cần một byte JavaScript nào trên máy khách (DEC-044).
 
 **Một luật mới của tầng feature (DEC-045):** file `'use server'` chỉ được export **async function** và `export type`. Hằng số dùng chung nằm ở `lib/` — `lib/auth/messages.ts`, `lib/reports/messages.ts`, `lib/account/messages.ts`, `lib/admin/messages.ts`. Vi phạm luật này làm module ném lỗi **lúc chạy** trong khi build/typecheck/lint đều xanh (ISSUE-016).
+
+---
+
+## CẬP NHẬT PHASE 13 (2026-08-10) — luồng KHÔNG đổi, nội dung nhập thì đổi
+
+Toàn bộ workflow end-to-end và failure flow mô tả ở trên **vẫn đúng nguyên vẹn**: vòng đời
+`(none) → MORNING_SUBMITTED → COMPLETED` (BR-008), khoá vĩnh viễn khi hoàn tất (BR-019), chỉ nhập
+đúng ngày hôm nay (BR-021). Không có bước nào được thêm, bớt hay đảo.
+
+Bốn thứ **bên trong** các bước đó đã đổi:
+
+| Bước | Đổi gì | Nguồn |
+|---|---|---|
+| Cam kết đầu ngày (UC-04/05) | còn **5 trường** — bỏ "Mục đích chuyến đi" | DEC-048 |
+| Cam kết đầu ngày | "Mục tiêu doanh số" nhập **số tiền** (ô `CurrencyField`), không còn đếm xe | DEC-050 |
+| Cam kết đầu ngày | mục tiêu điểm viếng thăm có **sàn 10** | BR-026, DEC-049 |
+| Hoàn tất cuối ngày (UC-06) | "Doanh thu" nay là **công nợ khách hàng THU HỒI ĐƯỢC trong ngày** | DEC-050 |
+| Xem lại báo cáo | **"Tuyến và ghi chú" hiển thị TRƯỚC "Cam kết và thực đạt"** ở cả ba màn hình | DEC-051 |
+
+Một nhánh hiển thị **mới** cần biết khi đọc luồng: báo cáo tạo **trước** migration `0008` mang `null`
+ở doanh số, nên ô "Cam kết"/"Hoàn thành" của dòng đó hiện `'—'` thay vì một con số. Đây là trạng thái
+**hợp lệ và cố ý** (OQ-19c), không phải lỗi tải dữ liệu.

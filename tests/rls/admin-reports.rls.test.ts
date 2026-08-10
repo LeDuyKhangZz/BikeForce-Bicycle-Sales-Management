@@ -68,7 +68,7 @@ beforeAll(async () => {
   await sql(
     `update public.daily_reports
         set status = 'COMPLETED', actual_route = 'X',
-            actual_visit_points = 6, actual_sales_quantity = 12,
+            actual_visit_points = 6, actual_sales_amount = 12,
             actual_revenue = 150000000, actual_customer_visits = 15,
             evening_submitted_at = now()
       where sales_id = $1 and report_date = $2`,

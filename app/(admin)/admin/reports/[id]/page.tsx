@@ -92,8 +92,9 @@ export default async function AdminReportDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <AchievementTable report={report} />
+      {/* PHASE 13 — cùng thứ tự với hai màn hình phía Sales (ảnh 3). */}
       <ReportNotes report={report} />
+      <AchievementTable report={report} />
 
       <Card className="flex flex-col gap-2">
         <CardTitle className="text-base">Chỉ xem</CardTitle>

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import { MainNav } from '@/features/navigation/main-nav';
+import { HeaderSignOut } from '@/features/auth/header-sign-out';
 import { requireRole } from '@/features/auth/queries';
 import { SALES_NAV_ITEMS } from '@/lib/navigation/nav-items';
 
@@ -21,24 +22,33 @@ import { SALES_NAV_ITEMS } from '@/lib/navigation/nav-items';
  *      thì dòng cuối của danh sách bị che (rule `fixed-element-offset`).
  *    • `lg:pl-56` — đúng bề rộng sidebar.
  *
- *  Nút Đăng xuất **đã chuyển sang `/sales/account`** (FR-023, UC-11): giờ đã có
- *  tab Tài khoản thì để thêm một nút đăng xuất ở header là hai đường tới cùng
- *  một hành động, và nó chiếm mất chỗ của tên người dùng trên màn hình 375px.
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 13 — Đăng xuất quay lại header (nhóm A)
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Trước đây nút này CỐ Ý chỉ nằm ở `/sales/account`. Người dùng yêu cầu có nó ở
+ *  góc trên bên phải, nên ghi chú cũ đã được gỡ để tài liệu không mâu thuẫn code.
+ *  Vấn đề bề rộng 375px nêu trong ghi chú cũ vẫn được giải quyết tử tế — cách
+ *  giải nằm ở `features/auth/header-sign-out.tsx`. Bản ở `/sales/account` GIỮ
+ *  NGUYÊN: đó là nơi người dùng đã quen tìm, và nó không tốn gì.
+ *
+ *  `relative` trên `<header>` là bắt buộc: panel xác nhận định vị `absolute
+ *  top-full` theo chính thanh header này.
  */
 export default async function SalesLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole('SALES');
 
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
-      <header className="border-b border-border bg-card">
+      <header className="relative border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
           {/* Chỉ hiện dưới 1024px: từ 1024px trở lên sidebar đã mang logo đầy đủ,
               để cả hai là gắn thương hiệu hai lần trên cùng một khung nhìn. */}
-          <BrandMark decorative className="w-9 text-accent lg:hidden" />
-          <div className="min-w-0">
+          <BrandMark decorative className="w-9 shrink-0 text-accent lg:hidden" />
+          <div className="min-w-0 flex-1">
             <p className="text-sm text-muted-foreground">BikeForce · Sales</p>
             <p className="truncate text-base font-semibold text-heading">{profile.full_name}</p>
           </div>
+          <HeaderSignOut />
         </div>
       </header>
 

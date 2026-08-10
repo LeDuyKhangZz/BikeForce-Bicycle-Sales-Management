@@ -25,7 +25,7 @@ import {
 } from './kpi';
 
 /** Chỉ tiêu mặc định cho các case không quan tâm tới đơn vị. */
-const ANY: KpiMetric = 'SALES_QUANTITY';
+const ANY: KpiMetric = 'SALES_AMOUNT';
 
 describe('calculateAchievement — bảng case docs/08 §3.1', () => {
   const CASES: ReadonlyArray<
@@ -48,8 +48,8 @@ describe('calculateAchievement — bảng case docs/08 §3.1', () => {
       'target=0 & actual>0 → số vượt tuyệt đối, không NaN/Infinity (BR-015, DEC-025)',
       0,
       5,
-      'SALES_QUANTITY',
-      { percent: null, status: 'EXCEEDED', display: '+5 xe', surplus: 5 },
+      'SALES_AMOUNT',
+      { percent: null, status: 'EXCEEDED', display: '+5 ₫', surplus: 5 },
     ],
     [
       'actual > target → cho phép vượt 100%, không clamp (BR-004)',
@@ -141,7 +141,7 @@ describe('calculateAchievement — KHÔNG BAO GIỜ NaN / Infinity (Master Spec 
   const ACTUALS = [null, 0, 1, 7, 125, 99_999_999_999, -3, Number.NaN, Number.NEGATIVE_INFINITY];
   const METRICS: readonly KpiMetric[] = [
     'VISIT_POINTS',
-    'SALES_QUANTITY',
+    'SALES_AMOUNT',
     'REVENUE',
     'CUSTOMER_VISITS',
   ];
@@ -183,7 +183,7 @@ describe('calculateAchievement — KHÔNG BAO GIỜ NaN / Infinity (Master Spec 
 
 describe('calculateAchievement — số vượt tuyệt đối theo từng đơn vị (BR-015, DEC-025)', () => {
   const CASES: ReadonlyArray<readonly [metric: KpiMetric, actual: number, display: string]> = [
-    ['SALES_QUANTITY', 3, '+3 xe'],
+    ['SALES_AMOUNT', 3, '+3 ₫'],
     ['VISIT_POINTS', 2, '+2 điểm'],
     ['CUSTOMER_VISITS', 5, '+5 khách'],
     ['REVENUE', 3_000_000, '+3.000.000 ₫'],
@@ -247,12 +247,12 @@ describe('getAchievementStatus — ngưỡng BR-023, bảng case docs/08 §3.2',
 describe('formatMetricValue — đơn vị chỉ tồn tại một nơi (DEC-025, NFR-012)', () => {
   const CASES: ReadonlyArray<readonly [metric: KpiMetric, value: number, expected: string]> = [
     ['VISIT_POINTS', 8, '8 điểm'],
-    ['SALES_QUANTITY', 5, '5 xe'],
+    ['SALES_AMOUNT', 5, '5 ₫'],
     ['CUSTOMER_VISITS', 12, '12 khách'],
     ['REVENUE', 150_000_000, '150.000.000 ₫'],
-    ['SALES_QUANTITY', 0, '0 xe'],
+    ['SALES_AMOUNT', 0, '0 ₫'],
     ['REVENUE', 0, '0 ₫'],
-    ['SALES_QUANTITY', 1_500, '1.500 xe'],
+    ['SALES_AMOUNT', 1_500, '1.500 ₫'],
   ];
 
   it.each(CASES)('%s %d → %s', (metric, value, expected) => {
@@ -260,12 +260,12 @@ describe('formatMetricValue — đơn vị chỉ tồn tại một nơi (DEC-025
   });
 
   it('null → "—" cho ô "Thực đạt" khi chưa hoàn tất báo cáo cuối ngày', () => {
-    expect(formatMetricValue(null, 'SALES_QUANTITY')).toBe('—');
+    expect(formatMetricValue(null, 'SALES_AMOUNT')).toBe('—');
     expect(formatMetricValue(null, 'REVENUE')).toBe('—');
   });
 
   it('giá trị không dùng được trả "—", không ném lỗi (DEC-033)', () => {
-    expect(formatMetricValue(Number.NaN, 'SALES_QUANTITY')).toBe('—');
+    expect(formatMetricValue(Number.NaN, 'SALES_AMOUNT')).toBe('—');
     expect(formatMetricValue(-1, 'REVENUE')).toBe('—');
     expect(formatMetricValue(Number.POSITIVE_INFINITY, 'VISIT_POINTS')).toBe('—');
   });
@@ -318,21 +318,24 @@ describe('isKpiAchievedDay — BR-024 "cả 4 chỉ tiêu ≥ 100%"', () => {
 });
 
 describe('formatMetricValueCompact — bản rút gọn cho thẻ ảnh 9:16 (Phase 6)', () => {
-  it('CHỈ doanh thu đổi cách hiển thị', () => {
+  // PHASE 13 (DEC-050): doanh số nay cũng là TIỀN, nên nó rút gọn giống doanh thu.
+  it('CẢ HAI chỉ tiêu tiền đều đổi cách hiển thị', () => {
     expect(formatMetricValueCompact(150000000, 'REVENUE')).toBe('150tr');
     expect(formatMetricValueCompact(100000000000, 'REVENUE')).toBe('100tỷ');
+    expect(formatMetricValueCompact(150000000, 'SALES_AMOUNT')).toBe('150tr');
+    expect(formatMetricValueCompact(100000000000, 'SALES_AMOUNT')).toBe('100tỷ');
   });
 
-  it('ba chỉ tiêu còn lại giữ nguyên bản đầy đủ — trần của chúng chỉ 4 chữ số', () => {
-    for (const metric of ['VISIT_POINTS', 'SALES_QUANTITY', 'CUSTOMER_VISITS'] as const) {
+  it('hai chỉ tiêu ĐẾM giữ nguyên bản đầy đủ — trần của chúng chỉ 4 chữ số', () => {
+    for (const metric of ['VISIT_POINTS', 'CUSTOMER_VISITS'] as const) {
       expect(formatMetricValueCompact(1000, metric)).toBe(formatMetricValue(1000, metric));
     }
-    expect(formatMetricValueCompact(1000, 'SALES_QUANTITY')).toBe('1.000 xe');
+    expect(formatMetricValueCompact(1000, 'VISIT_POINTS')).toBe('1.000 điểm');
   });
 
   it('giữ nguyên quy ước "—" khi chưa có số liệu', () => {
     expect(formatMetricValueCompact(null, 'REVENUE')).toBe('—');
     expect(formatMetricValueCompact(Number.NaN, 'REVENUE')).toBe('—');
-    expect(formatMetricValueCompact(-1, 'SALES_QUANTITY')).toBe('—');
+    expect(formatMetricValueCompact(-1, 'SALES_AMOUNT')).toBe('—');
   });
 });

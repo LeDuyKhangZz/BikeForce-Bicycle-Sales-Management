@@ -37,11 +37,11 @@ const BASE: ShareCardSource = {
   actual_route: null,
   evening_note: null,
   target_visit_points: 8,
-  target_sales_quantity: 5,
+  target_sales_amount: 5,
   target_revenue: 150_000_000,
   target_customer_visits: 12,
   actual_visit_points: 10,
-  actual_sales_quantity: 4,
+  actual_sales_amount: 4,
   actual_revenue: 125_000_000,
   actual_customer_visits: 12,
   sales: { full_name: 'Nguyễn Văn A', employee_code: 'NV-0042' },
@@ -80,21 +80,23 @@ describe('buildShareCardModel — phần đầu thẻ (docs/05 §14)', () => {
 });
 
 describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
-  it('đúng bốn dòng, đúng thứ tự và nhãn của docs/05 §14', () => {
+  // Thẻ ảnh dùng `shortLabel` (DEC-050) vì cột nhãn có bề rộng cố định — nhãn
+  // đầy đủ "Doanh thu công nợ" / "Khách hàng đã gặp" chỉ hiện trên web.
+  it('đúng bốn dòng, đúng thứ tự và nhãn RÚT GỌN của docs/05 §14', () => {
     expect(build().metrics.map((row) => row.label)).toEqual([
       'Viếng thăm',
       'Doanh số',
-      'Doanh thu',
+      'Công nợ',
       'Khách hàng',
     ]);
   });
 
-  it('cột số dùng dạng RÚT GỌN cho tiền, đơn vị đầy đủ cho ba chỉ tiêu còn lại', () => {
-    const [visits, quantity, revenue, customers] = build().metrics;
+  it('cột số dùng dạng RÚT GỌN cho hai chỉ tiêu tiền, đơn vị đầy đủ cho hai chỉ tiêu đếm', () => {
+    const [visits, salesAmount, revenue, customers] = build().metrics;
 
     expect(visits?.targetText).toBe('8 điểm');
     expect(visits?.actualText).toBe('10 điểm');
-    expect(quantity?.actualText).toBe('4 xe');
+    expect(salesAmount?.actualText).toBe('4 ₫');
     expect(revenue?.targetText).toBe('150tr');
     expect(revenue?.actualText).toBe('125tr');
     expect(customers?.actualText).toBe('12 khách');
@@ -166,7 +168,7 @@ describe('Edge case bắt buộc của Phase 6', () => {
   });
 
   it('achievement 4 chữ số hiển thị đủ, KHÔNG clamp về 100% (BR-004)', () => {
-    const model = build({ target_sales_quantity: 8, actual_sales_quantity: 100 });
+    const model = build({ target_sales_amount: 8, actual_sales_amount: 100 });
     expect(model.metrics[1]?.achievement.display).toBe('1.250,0%');
   });
 
@@ -177,8 +179,8 @@ describe('Edge case bắt buộc của Phase 6', () => {
   });
 
   it('BR-015 nhánh 2 — target = 0 và actual > 0 → số vượt tuyệt đối có đơn vị', () => {
-    const model = build({ target_sales_quantity: 0, actual_sales_quantity: 3 });
-    expect(model.metrics[1]?.achievement.display).toBe('+3 xe');
+    const model = build({ target_sales_amount: 0, actual_sales_amount: 3 });
+    expect(model.metrics[1]?.achievement.display).toBe('+3 ₫');
     expect(model.metrics[1]?.achievement.surplus).toBe(3);
     expect(model.metrics[1]?.achievement.percent).toBeNull();
   });
@@ -191,11 +193,11 @@ describe('Edge case bắt buộc của Phase 6', () => {
       for (const actual of AWKWARD) {
         const model = build({
           target_visit_points: target,
-          target_sales_quantity: target,
+          target_sales_amount: target,
           target_revenue: target,
           target_customer_visits: target,
           actual_visit_points: actual,
-          actual_sales_quantity: actual,
+          actual_sales_amount: actual,
           actual_revenue: actual,
           actual_customer_visits: actual,
         });

@@ -12,7 +12,7 @@ import { KPI_METRIC_ROWS, kpiMetricRow } from '@/lib/reports/metric-rows';
 
 const ALL_METRICS: readonly KpiMetric[] = [
   'VISIT_POINTS',
-  'SALES_QUANTITY',
+  'SALES_AMOUNT',
   'REVENUE',
   'CUSTOMER_VISITS',
 ];
@@ -21,7 +21,7 @@ describe('KPI_METRIC_ROWS', () => {
   it('có đúng bốn dòng, đúng thứ tự docs/05 §7.1', () => {
     expect(KPI_METRIC_ROWS.map((row) => row.metric)).toEqual([
       'VISIT_POINTS',
-      'SALES_QUANTITY',
+      'SALES_AMOUNT',
       'REVENUE',
       'CUSTOMER_VISITS',
     ]);
@@ -52,7 +52,7 @@ describe('KPI_METRIC_ROWS', () => {
     expect(KPI_METRIC_ROWS.map((row) => row.actualColumn).sort()).toEqual([
       'actual_customer_visits',
       'actual_revenue',
-      'actual_sales_quantity',
+      'actual_sales_amount',
       'actual_visit_points',
     ]);
   });

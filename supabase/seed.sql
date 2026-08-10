@@ -83,9 +83,9 @@ update public.profiles
 insert into public.daily_reports (
   sales_id, report_date, status,
   planned_route, visit_purpose,
-  target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
+  target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
   morning_submitted_at,
-  actual_route, actual_visit_points, actual_sales_quantity, actual_revenue, actual_customer_visits,
+  actual_route, actual_visit_points, actual_sales_amount, actual_revenue, actual_customer_visits,
   evening_note, evening_submitted_at
 )
 select
@@ -95,21 +95,25 @@ select
   case s.n when 1 then 'Quận 1 → Quận 3 → Quận 5'
            when 2 then 'Thủ Đức → Bình Dương'
            else        'Tây Ninh → Củ Chi' end,
+  -- Cột DI SẢN (DEC-048): cố ý vẫn có dữ liệu ở nhóm báo cáo CŨ để kiểm chứng
+  -- rằng giao diện KHÔNG còn hiển thị nó ở bất kỳ đâu. Bốn báo cáo đặc biệt bên
+  -- dưới không ghi cột này nữa, đúng như ứng dụng từ Phase 13.
   'Chăm sóc đại lý và giới thiệu dòng xe mới',
-  s.n + 2,
-  4 + g.d,
+  -- BR-026 (DEC-049): mục tiêu điểm viếng thăm có SÀN 10.
+  10 + s.n + g.d,
+  (50000000 + g.d * 5000000)::bigint,
   (80000000 + g.d * 10000000)::bigint,
   6 + g.d,
   (now() - (g.d || ' days')::interval),
   case s.n when 1 then 'Quận 1 → Quận 3 (bỏ Quận 5 do kẹt xe)'
            when 2 then 'Thủ Đức → Bình Dương → Dĩ An'
            else        'Tây Ninh → Củ Chi' end,
-  s.n + 2,
+  10 + s.n + g.d,
   -- (s.n + g.d) % 3 = 0 → vượt · 1 → gần đạt (~85%) · 2 → chưa đạt (~60%)
   case (s.n + g.d) % 3
-    when 0 then 4 + g.d + 2
-    when 1 then floor((4 + g.d) * 0.85)::int
-    else        floor((4 + g.d) * 0.60)::int
+    when 0 then ((50000000 + g.d * 5000000) * 1.20)::bigint
+    when 1 then ((50000000 + g.d * 5000000) * 0.85)::bigint
+    else        ((50000000 + g.d * 5000000) * 0.60)::bigint
   end,
   case (s.n + g.d) % 3
     when 0 then ((80000000 + g.d * 10000000) * 1.20)::bigint
@@ -142,41 +146,44 @@ cross join generate_series(1, 6) as g(d);
 --     Dùng để test: badge PENDING (BR-023), CTA "Nhập thực đạt" trên
 --     /sales/today (FR-007), và alert "đã sáng nhưng chưa hoàn tất" (AF-02).
 insert into public.daily_reports (
-  sales_id, report_date, status, planned_route, visit_purpose,
-  target_visit_points, target_sales_quantity, target_revenue, target_customer_visits
+  sales_id, report_date, status, planned_route,
+  target_visit_points, target_sales_amount, target_revenue, target_customer_visits
 )
 select id, public.vn_today(), 'MORNING_SUBMITTED',
-       'Quận 7 → Nhà Bè', 'Mở rộng tệp đại lý khu Nam',
-       4, 8, 150000000::bigint, 10
+       'Quận 7 → Nhà Bè',
+       12, 90000000::bigint, 150000000::bigint, 10
 from public.profiles where email = 'sales.a@bikeforce.local';
 
 -- (b) HÔM NAY — sales.b đã hoàn tất đầy đủ. Dùng để test 12 chỉ số dashboard.
 insert into public.daily_reports (
-  sales_id, report_date, status, planned_route, visit_purpose,
-  target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
-  actual_route, actual_visit_points, actual_sales_quantity, actual_revenue,
+  sales_id, report_date, status, planned_route,
+  target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
+  actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
   actual_customer_visits, evening_note, evening_submitted_at
 )
 select id, public.vn_today(), 'COMPLETED',
-       'Gò Vấp → Tân Bình', 'Thu hồi công nợ và trưng bày sản phẩm',
-       3, 6, 120000000::bigint, 8,
-       'Gò Vấp → Tân Bình → Phú Nhuận', 4, 7, 138000000::bigint, 9,
+       'Gò Vấp → Tân Bình',
+       11, 70000000::bigint, 120000000::bigint, 8,
+       'Gò Vấp → Tân Bình → Phú Nhuận', 12, 82000000::bigint, 138000000::bigint, 9,
        'Đại lý Phú Nhuận đặt thêm 2 xe cho tuần sau.', now()
 from public.profiles where email = 'sales.b@bikeforce.local';
 
--- (c) BR-015 / DEC-025 — target = 0 ở CẢ 4 chỉ tiêu nhưng actual > 0.
---     Kỳ vọng hiển thị: percent = null + số vượt tuyệt đối (+2 điểm, +3 xe,
---     +5.000.000 ₫, +4 khách), nhãn "Vượt kế hoạch". KHÔNG BAO GIỜ NaN/∞.
+-- (c) BR-015 / DEC-025 — target = 0 ở BA chỉ tiêu nhưng actual > 0.
+--     Kỳ vọng hiển thị: percent = null + số vượt tuyệt đối
+--     (+3.000.000 ₫ doanh số, +5.000.000 ₫ doanh thu công nợ, +4 khách),
+--     nhãn "Vượt kế hoạch". KHÔNG BAO GIỜ NaN/∞.
+--     ⚠ `target_visit_points` KHÔNG thể là 0 nữa — BR-026 đặt sàn 10 (DEC-049).
+--     Dòng này vì vậy vừa phủ BR-015 (ba chỉ tiêu) vừa phủ MISSED (điểm viếng thăm).
 insert into public.daily_reports (
-  sales_id, report_date, status, planned_route, visit_purpose,
-  target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
-  actual_route, actual_visit_points, actual_sales_quantity, actual_revenue,
+  sales_id, report_date, status, planned_route,
+  target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
+  actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
   actual_customer_visits, evening_note, evening_submitted_at
 )
 select id, public.vn_today() - 7, 'COMPLETED',
-       'Ngày hỗ trợ hội chợ — không đặt chỉ tiêu', 'Trực gian hàng hội chợ',
-       0, 0, 0::bigint, 0,
-       'Gian hàng hội chợ Tân Bình', 2, 3, 5000000::bigint, 4,
+       'Ngày hỗ trợ hội chợ — không đặt chỉ tiêu doanh số',
+       10, 0::bigint, 0::bigint, 0,
+       'Gian hàng hội chợ Tân Bình', 2, 3000000::bigint, 5000000::bigint, 4,
        'Không đặt chỉ tiêu nhưng vẫn chốt được đơn tại gian hàng.', now() - interval '7 days'
 from public.profiles where email = 'sales.c@bikeforce.local';
 
@@ -184,17 +191,16 @@ from public.profiles where email = 'sales.c@bikeforce.local';
 --     doanh thu 12 chữ số (100.000.000.000 ₫ = trần BR-017),
 --     achievement 4 chữ số. Dùng ở Phase 6.
 insert into public.daily_reports (
-  sales_id, report_date, status, planned_route, visit_purpose,
-  target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
-  actual_route, actual_visit_points, actual_sales_quantity, actual_revenue,
+  sales_id, report_date, status, planned_route,
+  target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
+  actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
   actual_customer_visits, evening_note, evening_submitted_at
 )
 select id, public.vn_today() - 8, 'COMPLETED',
        rpad('Tuyến dài kiểm thử layout: Quận 1 → Quận 3 → Quận 5 → Quận 10 → Tân Bình → Gò Vấp → Bình Thạnh → Thủ Đức → Dĩ An → Biên Hoà → Long Thành → Nhơn Trạch → ', 300, 'x'),
-       'Kiểm thử biên độ dài chuỗi cho thẻ ảnh 9:16',
-       1, 1, 10000000::bigint, 1,
+       10, 8000000::bigint, 10000000::bigint, 1,
        rpad('Thực tế đã đi: Quận 1 → Quận 3 → Quận 5 → Quận 10 → Tân Bình → Gò Vấp → Bình Thạnh → Thủ Đức → Dĩ An → Biên Hoà → ', 300, 'y'),
-       9, 13, 100000000000::bigint, 12,
+       125, 99999999999::bigint, 100000000000::bigint, 12,
        rpad('Ghi chú kiểm thử biên 1000 ký tự với đầy đủ dấu tiếng Việt: ừ ẫ ợ ỹ đ ă â ê ô ơ ư. ', 1000, '.'),
        now() - interval '8 days'
 from public.profiles where email = 'sales.a@bikeforce.local';

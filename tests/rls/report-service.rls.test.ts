@@ -29,7 +29,7 @@ let fx: RlsFixture;
 const ACTUALS = {
   actual_route: 'Quận 1 → Quận 3 → Quận 5',
   actual_visit_points: 4,
-  actual_sales_quantity: 6,
+  actual_sales_amount: 6,
   actual_revenue: 120_000_000,
   actual_customer_visits: 9,
   evening_note: 'Chốt thêm một đơn ngoài kế hoạch.',
@@ -70,7 +70,10 @@ describe('completeEveningReport() — UC-06, FR-015', () => {
     expect(saved?.evening_submitted_at).not.toBeNull();
 
     // Các cột cam kết sáng KHÔNG bị đụng tới (docs/03 §11.3 kịch bản 1).
-    expect(saved).toMatchObject({ target_sales_quantity: 5, target_revenue: 100_000_000 });
+    expect(saved).toMatchObject({
+      target_sales_amount: 80_000_000,
+      target_revenue: 100_000_000,
+    });
   });
 
   it('BR-019 — lần hoàn tất THỨ HAI bị từ chối, báo cáo đã tự khoá', async () => {

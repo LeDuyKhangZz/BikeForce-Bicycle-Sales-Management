@@ -1017,6 +1017,205 @@ kiểm tra kiểu và tách nội dung manifest ra khỏi `lib/` nơi unit test 
 
 ---
 
+## DEC-048 — Bỏ trường "Mục đích chuyến đi" khỏi giao diện, GIỮ cột trong database
+
+**Date:** 2026-08-10
+**Decision:** Trường `visit_purpose` **không còn được nhập và không còn được hiển thị ở bất kỳ màn
+hình nào**. Cột `daily_reports.visit_purpose` **ở lại nguyên vẹn** cùng toàn bộ dữ liệu đã nhập.
+
+Cụ thể đã làm:
+
+| Nơi | Thay đổi |
+|---|---|
+| `morningReportSchema` | gỡ khoá `visit_purpose` ⇒ Zod **strip** nếu client cố gửi |
+| `readMorningFormData()` | không đọc khoá đó khỏi `FormData` nữa (lớp chặn thứ hai) |
+| `morning-report-form.tsx` | gỡ hẳn ô nhập — form còn **5 trường** |
+| `report-notes.tsx` · `commitment-summary.tsx` | gỡ dòng hiển thị |
+| `supabase/migrations/0008` | chỉ thêm `comment on column` đánh dấu **DI SẢN**, **không** `drop column` |
+
+**Reason:** Người dùng gạch đỏ trường này trên ảnh chú thích tay (ảnh 1, `PROJECT_CHECKLIST.md §13c`).
+Đây là **lật nửa sau của DEC-029** (đang `APPROVED`: "giữ **cả hai** — cột số bắt buộc + cột text tuỳ
+chọn"), nên bắt buộc phải có DEC mới chứ không được sửa lén (CLAUDE.md §6).
+
+Vì sao **giữ cột** thay vì `drop column`: **BR-013 cấm xoá dữ liệu báo cáo dưới mọi hình thức**, và
+production đang có dữ liệu thật trong cột này. `drop column` là xoá vĩnh viễn, mà migration chỉ tiến
+tới (AGENTS.md §13) nên không có đường lùi. Giữ cột tốn đúng một cột `text` nullable — rẻ hơn nhiều
+so với mất dữ liệu.
+
+**Alternatives:**
+*(a)* `drop column visit_purpose` — bị loại: xung đột thẳng với BR-013, và không hoàn tác được.
+*(b)* Giữ ô nhập nhưng ẩn bằng CSS — bị loại: dữ liệu vẫn bị ghi tiếp, và đó không phải điều người
+dùng yêu cầu.
+
+**Impact:** `lib/validation/report.ts`, `features/report-morning/{actions,morning-report-form,commitment-summary}`,
+`features/report-comparison/report-notes.tsx`, `supabase/migrations/0008`, `supabase/seed.sql`,
+`lib/validation/report.test.ts`, `e2e/sales-flow.spec.ts`, `docs/01`, `docs/02`, `docs/05`, `docs/07`.
+
+**Status:** APPROVED
+
+---
+
+## DEC-049 — BR-026: mục tiêu điểm viếng thăm có SÀN 10, giữ nguyên trần 1.000
+
+**Date:** 2026-08-10
+**Decision:** Sinh **BR-026** — `target_visit_points` phải nằm trong **[10, 1000]**. Sàn chỉ áp cho
+**MỤC TIÊU**; `actual_visit_points` giữ nguyên dải **[0, 1000]**.
+
+Enforce ở ba tầng, đúng thứ tự dự án vẫn làm:
+`ck_target_visit_points` (migration `0008`, dạng `not valid`) → `MIN_TARGET_VISIT_POINTS` trong
+`lib/validation/report.ts` → helper text *"Số điểm dự kiến ghé trong ngày. Tối thiểu 10."*
+
+**Reason:** Người dùng gạch cụm *"Tối đa 1.000."* và viết đè *"Tối thiểu 10"* (ảnh 2, `§13c`).
+
+Câu hỏi thật sự nằm ở chỗ khác: *"tối thiểu 10"* là **THAY** trần hay **THÊM** sàn? Chọn **thêm sàn,
+giữ trần**, vì bỏ trần nghĩa là một lần gõ thừa số 0 (`10000`) đi thẳng vào database và làm lệch mọi
+phép tổng hợp tháng của Admin — mà BR-013 thì cấm xoá báo cáo để sửa lại.
+
+Vì sao sàn **không** áp cho `actual`: đi được ít điểm hơn cam kết là **kết quả thật**, không phải dữ
+liệu sai. Một ngày mưa chỉ ghé được 3 điểm vẫn phải nhập được, nếu không Sales sẽ buộc phải khai
+khống cho đủ 10.
+
+**Alternatives:**
+*(a)* Thay trần bằng sàn (bỏ trần) — bị loại, lý do ở trên.
+*(b)* Áp sàn cho cả `actual` — bị loại: biến một kết quả xấu thành một lỗi nhập liệu.
+
+**Impact:** `supabase/migrations/0008`, `lib/validation/report.ts`,
+`features/report-morning/morning-report-form.tsx`, `supabase/seed.sql`, `tests/integration/*`,
+`tests/rls/*`, `e2e/*`, `docs/01` (BR-026), `docs/02`, `docs/05`, `docs/08`.
+
+**Status:** APPROVED
+
+---
+
+## DEC-050 — "Doanh số" thành TIỀN; "Doanh thu" thành công nợ THU HỒI (trả lời OQ-19)
+
+**Date:** 2026-08-10
+**Decision:** Hai chỉ tiêu đổi nghĩa, và bộ chỉ tiêu **vẫn đúng bốn** (BR-024 không đổi):
+
+| Chỉ tiêu | Nghĩa CŨ | Nghĩa MỚI | Cột đọc |
+|---|---|---|---|
+| Doanh số | **số lượng xe** (`integer`) | **số tiền bán hàng trong ngày** (VND) | `*_sales_amount` (**MỚI**) |
+| Doanh thu công nợ | giá trị đơn hàng chốt trong ngày | **tiền công nợ THU HỒI ĐƯỢC trong ngày** | `*_revenue` (giữ) |
+| Khách hàng đã gặp | nhãn "Khách hàng" | nhãn **"Khách hàng đã gặp"** | `*_customer_visits` (giữ) |
+
+Ba câu của OQ-19, người dùng đã trả lời ngày 2026-08-10:
+
+- **19a — số lượng xe:** **BỎ HẲN.** Không thành chỉ tiêu thứ 5. `BR-024` ("đạt cả **4**") và cấu
+  trúc `lib/reports/metric-rows.ts` vì vậy **không đổi**.
+- **19b — "doanh thu công nợ":** là **tiền THU HỒI ĐƯỢC**, càng nhiều càng tốt ⇒ **BR-014 giữ
+  nguyên** (`achievement = actual / target × 100`). Không cần công thức đảo, không cần BR mới.
+- **19c — dữ liệu cũ:** các dòng có **trước** migration `0008` mang **`null`** ở cột doanh số mới.
+
+Cách cài đặt và vì sao:
+
+1. **Thêm CẶP CỘT MỚI `target_sales_amount` / `actual_sales_amount` (bigint)** thay vì đổi kiểu cột
+   cũ. Nếu `alter column ... type bigint` trên `target_sales_quantity` thì con số `50` (nghĩa cũ: 50
+   **xe**) lập tức bị mọi màn hình đọc thành `50 ₫` — sai dữ liệu, mà lại **không phân biệt được**
+   với một báo cáo mới ghi đúng 50 ₫. Cột cũ ở lại làm **di sản** (BR-013), có `comment on column`.
+2. **`KpiMetric.SALES_QUANTITY` → `SALES_AMOUNT`**, và `lib/kpi.ts` có `isMoneyMetric()` — hai chỉ
+   tiêu tiền đi đường `formatCurrencyVND`, hai chỉ tiêu đếm giữ `điểm` / `khách`. Đơn vị `xe` **biến
+   mất khỏi toàn dự án**.
+3. **`KpiMetricRow` thêm `shortLabel`** cho thẻ ảnh 9:16: cột nhãn ở đó có bề rộng **cố định** và
+   Satori không đo được chữ để tự thu nhỏ, nên "Doanh thu công nợ" / "Khách hàng đã gặp" phải rút
+   thành "Công nợ" / "Khách hàng". Nhãn đầy đủ vẫn dùng ở mọi nơi khác.
+4. **Ba constraint của `0008` dùng `not valid`.** Dòng cũ không thể thoả điều kiện mới (chúng mang
+   `null` ở cột mới). `not valid` là cơ chế chuẩn của Postgres cho đúng việc này: **không** kiểm dòng
+   cũ, nhưng **ép đủ với mọi `insert`/`update` từ nay**. Đây **không** phải constraint bị tắt, và cố
+   ý **không** chạy `validate constraint` sau đó.
+5. **Hệ quả đã lường trước:** báo cáo có trước `0008` **không** được đếm vào `kpi_achieved_days`, vì
+   phép so sánh với `null` cho `null`. Đúng chủ ý — một ngày cũ chấm theo bộ chỉ tiêu cũ thì không
+   thể tuyên bố là đạt theo bộ chỉ tiêu mới.
+
+**Reason:** Yêu cầu trực tiếp của người dùng: *"Doanh số là doanh số bán hàng trong ngày (cho nhập số
+tiền), doanh thu là doanh thu công nợ khách hàng (cho nhập số tiền)"*. Việc này lật **OQ-03/BR-006**
+(doanh số = số lượng xe) và **OQ-14** (doanh thu = giá trị đơn hàng), cả hai đang `APPROVED`.
+
+**Alternatives:**
+*(a)* Giữ đếm xe thành chỉ tiêu thứ 5 — người dùng đã loại (19a). Nó sẽ kéo theo sửa BR-024, thẻ ảnh
+9:16 (đang vừa khít 4 dòng), 5 hàm SQL aggregate và toàn bộ CSV.
+*(b)* "Công nợ còn lại" thay vì "thu hồi được" — người dùng đã loại (19b). Nó cần công thức đảo, tức
+một BR mới, cộng đảo ngưỡng màu của BR-023.
+*(c)* Đổi kiểu cột cũ tại chỗ + quy đổi theo đơn giá trung bình — bị loại (19c): kết quả là số **ước
+lượng** nằm lẫn với số thật mà không cách nào phân biệt về sau.
+
+**⚠ Một điểm KHÔNG được suy rộng:** phương án "`null` cho dòng cũ" chỉ áp cho **doanh số**, là chỗ
+kiểu dữ liệu thật sự đổi (đếm → tiền). Cột `*_revenue` **giữ nguyên giá trị cũ** vì nó vẫn là một số
+tiền hợp lệ; điều đổi là *cách gọi tên*. Các dòng trước 2026-08-10 vì vậy mang nghĩa cũ "giá trị đơn
+hàng chốt trong ngày" — đã ghi vào `comment on column` để không ai đọc nhầm sau này.
+
+**Impact:** `supabase/migrations/0008` (4 hàm aggregate dựng lại), `supabase/seed.sql`,
+`types/database.types.ts`, `lib/kpi.ts`, `lib/reports/metric-rows.ts`, `lib/reports/share-card.ts`,
+`lib/validation/report.ts`, `services/{admin,reports}.ts`, `features/report-{morning,evening}/*`,
+`features/admin-*`, `app/(sales)/*`, toàn bộ `tests/`, `e2e/`, `docs/01`, `docs/02`, `docs/05`,
+`docs/07`, `docs/08`.
+
+**Status:** APPROVED
+
+---
+
+## DEC-051 — Đăng xuất quay lại header; phản hồi khi chạm cho điều hướng
+
+**Date:** 2026-08-10
+**Decision:** Ba thay đổi giao diện của Phase 13 nhóm A:
+
+1. **Nút Đăng xuất trở lại góc trên bên phải** của cả hai route group. Bản ở `/sales/account` và
+   `/admin/account` **giữ nguyên**. Vấn đề bề rộng 375px từng là lý do gỡ nó đi (Phase 7/8) được giải
+   bằng: dưới 640px nút **chỉ có icon** + `aria-label`, `shrink-0`; khối tên có `min-w-0` + `truncate`
+   nên tên dài cắt bằng "…" thay vì đẩy nút ra khỏi màn hình. Panel xác nhận rơi xuống **dưới** thanh
+   header (`absolute top-full`) nên không bao giờ làm vỡ hàng ngang.
+2. **`components/ui/link-spinner.tsx`** — vòng xoay dựa trên `useLinkStatus()` của Next, đặt **bên
+   trong** `<Link>`. Dự án đã có `loading.tsx`, nhưng nó chỉ hiện **sau khi** Next bắt đầu render
+   trang đích; quãng từ lúc chạm tới đó trên 4G là khoảng lặng khiến Sales bấm lại lần hai. Luật
+   `tap-feedback-speed` đòi phản hồi < 100 ms.
+3. **`/sales/today` đảo thứ tự**: "Tuyến và ghi chú" đứng **trước** "Cam kết và thực đạt"; hai trang
+   chi tiết báo cáo đồng bộ theo.
+
+**Reason:** Yêu cầu trực tiếp của người dùng (ảnh 3 + hai gạch đầu dòng ở `§13c`). Điểm 3 cũng đúng
+thứ tự công việc thật: buổi sáng Sales cần thấy mình định đi đâu, bảng số chỉ có nghĩa sau khi đã ra
+thị trường.
+
+**Alternatives:**
+*(a)* Nút Đăng xuất có chữ ở mọi bề rộng — bị loại: chiếm ~120px của 375px, đúng vấn đề cũ.
+*(b)* Thanh tiến trình toàn trang thay cho spinner theo từng link — bị loại: cần một provider client
+bọc toàn app, trong khi `useLinkStatus` cho đúng tín hiệu cần mà không thêm state toàn cục nào.
+
+**Impact:** `app/(sales)/layout.tsx`, `app/(admin)/layout.tsx`, `features/auth/header-sign-out.tsx`
+(MỚI), `components/ui/link-spinner.tsx` (MỚI), `app/(sales)/sales/today/page.tsx`,
+`app/(sales)/sales/reports/[id]/page.tsx`, `app/(admin)/admin/reports/[id]/page.tsx`, `docs/05`.
+
+**Status:** APPROVED (technical)
+
+---
+
+## DEC-052 — Bảng số liệu của biểu đồ trend đổi sang thẻ ở mobile (theo DEC-019)
+
+**Date:** 2026-08-10
+**Decision:** Bảng trong `<details>` "Xem số liệu dạng bảng" của `DailyTrendChart` nay render **hai
+nhánh** đúng như DEC-019: danh sách thẻ ở `< 768px`, `<table>` thật từ `768px`.
+
+**Reason:** **Đo được thật**, không phải phòng xa: sau khi DEC-050 đổi doanh số sang tiền, bảng này
+**tràn ngang 116px ở 375px**. Bốn cột — ngày kiểu "Chủ Nhật, 02/08/2026" cộng ba cột số kiểu
+`100.000.000.000 ₫` — không có cách kê chữ nào vừa được 375px. Đây là vi phạm thẳng CLAUDE.md §11
+("không dùng `<table>` cuộn ngang trên mobile") và luật `horizontal-scroll` (CRITICAL).
+
+Lỗi này **bài E2E bắt được trước**, rồi bộ soát giao diện của Phase 13 chỉ đích danh từng phần tử gây
+tràn. Nó **không thể** lộ ra ở lượt soát đầu tiên vì `<details>` đang đóng — nội dung gập lại không
+tham gia layout. Bài học ghi lại: **soát bố cục phải mở mọi `<details>` trước khi đo.**
+
+Phương án data-table bắt buộc của FR-037 (yêu cầu a11y cho biểu đồ) **không mất đi** ở bất kỳ bề rộng
+nào — chỉ đổi hình thức trình bày ở mobile.
+
+**Alternatives:**
+*(a)* `overflow-x: auto` quanh bảng — bị loại: CLAUDE.md §11 cấm đúng điều đó.
+*(b)* Rút gọn ngày và dùng `formatCompactVND` trong bảng — bị loại: `formatCompactVND` cố ý **chỉ**
+dành cho thẻ ảnh 9:16, và bảng này tồn tại để cho **con số chính xác**.
+
+**Impact:** `features/admin-analytics/daily-trend-chart.tsx`, `e2e/admin-flow.spec.ts`, `docs/05`.
+
+**Status:** APPROVED (technical)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

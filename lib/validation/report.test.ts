@@ -11,6 +11,8 @@ import {
   MAX_EVENING_NOTE_LENGTH,
   MAX_REVENUE_VND,
   MAX_ROUTE_LENGTH,
+  MAX_SALES_AMOUNT_VND,
+  MIN_TARGET_VISIT_POINTS,
   eveningReportSchema,
   morningReportSchema,
   reportDateSchema,
@@ -20,13 +22,17 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** Payload hợp lệ tối thiểu; từng case chỉ ghi đè đúng field đang kiểm. */
+/**
+ * Payload hợp lệ tối thiểu; từng case chỉ ghi đè đúng field đang kiểm.
+ *
+ * PHASE 13: không còn `visit_purpose` (DEC-048); `target_visit_points` phải ≥ 10
+ * (BR-026, DEC-049); `target_sales_amount` là TIỀN chứ không phải số xe (DEC-050).
+ */
 function validMorningInput(overrides: Record<string, unknown> = {}) {
   return {
     planned_route: 'Quận 1 → Quận 3 → Bình Thạnh',
-    visit_purpose: 'Chào hàng dòng xe city 2026',
-    target_visit_points: 8,
-    target_sales_quantity: 5,
+    target_visit_points: 12,
+    target_sales_amount: 90_000_000,
     target_revenue: 150_000_000,
     target_customer_visits: 12,
     ...overrides,
@@ -35,19 +41,22 @@ function validMorningInput(overrides: Record<string, unknown> = {}) {
 
 describe('morningReportSchema — miền giá trị số (BR-006, BR-017)', () => {
   it.each([
-    ['số âm ở target_sales_quantity', 'target_sales_quantity', -1],
+    ['số âm ở target_sales_amount', 'target_sales_amount', -1],
     ['số âm ở target_revenue', 'target_revenue', -1],
     ['số âm ở target_visit_points', 'target_visit_points', -1],
     ['NaN', 'target_revenue', Number.NaN],
     ['Infinity', 'target_revenue', Number.POSITIVE_INFINITY],
     ['-Infinity', 'target_revenue', Number.NEGATIVE_INFINITY],
-    ['số thập phân ở cột integer', 'target_sales_quantity', 1.5],
+    ['số thập phân ở cột integer', 'target_sales_amount', 1.5],
     ['chuỗi rác ở cột số', 'target_revenue', 'abc'],
     ['chuỗi số lẫn chữ', 'target_revenue', '12abc'],
     ['ký hiệu khoa học', 'target_revenue', '1e9'],
     ['doanh thu vượt trần BR-017', 'target_revenue', MAX_REVENUE_VND + 1],
-    ['target_sales_quantity > 10000', 'target_sales_quantity', 10_001],
+    ['doanh số vượt trần BR-017', 'target_sales_amount', MAX_SALES_AMOUNT_VND + 1],
     ['target_visit_points > 1000', 'target_visit_points', 1_001],
+    // BR-026 (DEC-049) — sàn 10 cho MỤC TIÊU điểm viếng thăm.
+    ['target_visit_points dưới sàn BR-026', 'target_visit_points', MIN_TARGET_VISIT_POINTS - 1],
+    ['target_visit_points = 0 (từng hợp lệ trước Phase 13)', 'target_visit_points', 0],
     ['target_customer_visits > 1000', 'target_customer_visits', 1_001],
   ])('từ chối %s', (_label, field, value) => {
     const result = morningReportSchema.safeParse(validMorningInput({ [field]: value }));
@@ -58,11 +67,13 @@ describe('morningReportSchema — miền giá trị số (BR-006, BR-017)', () =
   });
 
   it.each([
-    ['0 là giá trị hợp lệ — BR-006 nói ≥ 0, không phải > 0', 'target_sales_quantity', 0],
+    ['0 là giá trị hợp lệ — BR-006 nói ≥ 0, không phải > 0', 'target_sales_amount', 0],
     ['0 doanh thu cũng hợp lệ', 'target_revenue', 0],
     ['đúng trần doanh thu (biên inclusive)', 'target_revenue', MAX_REVENUE_VND],
-    ['đúng trần doanh số', 'target_sales_quantity', 10_000],
+    ['đúng trần doanh số (biên inclusive)', 'target_sales_amount', MAX_SALES_AMOUNT_VND],
     ['đúng trần điểm viếng thăm', 'target_visit_points', 1_000],
+    // Biên DƯỚI của BR-026 — inclusive, đúng 10 phải đi qua được.
+    ['đúng sàn điểm viếng thăm BR-026', 'target_visit_points', MIN_TARGET_VISIT_POINTS],
   ])('chấp nhận %s', (_label, field, value) => {
     const result = morningReportSchema.safeParse(validMorningInput({ [field]: value }));
     expect(result.success).toBe(true);
@@ -72,13 +83,13 @@ describe('morningReportSchema — miền giá trị số (BR-006, BR-017)', () =
     // Form gửi FormData nên mọi giá trị lên server đều là chuỗi. Một schema
     // gánh cả hai dạng — không có schema thứ hai để lệch nhau (AGENTS.md §9).
     const result = morningReportSchema.safeParse(
-      validMorningInput({ target_revenue: '150.000.000', target_sales_quantity: '5' }),
+      validMorningInput({ target_revenue: '150.000.000', target_sales_amount: '5' }),
     );
 
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.target_revenue).toBe(150_000_000);
-    expect(result.data.target_sales_quantity).toBe(5);
+    expect(result.data.target_sales_amount).toBe(5);
   });
 
   it('ô số để trống bị từ chối, không âm thầm thành 0', () => {
@@ -125,22 +136,21 @@ describe('morningReportSchema — trường văn bản', () => {
     expect(morningReportSchema.safeParse(input).success).toBe(true);
   });
 
+  /**
+   * DEC-048 — "Mục đích chuyến đi" đã bị gỡ ở PHASE 13. Cột `visit_purpose` vẫn
+   * còn trong database cho dữ liệu đã nhập (BR-013), nhưng schema KHÔNG nhận nó
+   * nữa. Hai bài dưới khoá đúng điều đó: gửi lên thì bị **strip**, không phải bị
+   * từ chối — hành vi mặc định của `z.object`, cùng cơ chế đang chặn `sales_id`.
+   */
   it.each([
-    ['bỏ trống', ''],
-    ['chỉ khoảng trắng', '   '],
-    ['null', null],
-    ['undefined', undefined],
-  ])('visit_purpose %s → null (cột nullable, không ghi chuỗi rỗng)', (_label, value) => {
+    ['chuỗi thường', 'Chào hàng dòng xe city 2026'],
+    ['chuỗi 301 ký tự (từng bị từ chối trước Phase 13)', 'a'.repeat(301)],
+  ])('strip visit_purpose %s — DEC-048', (_label, value) => {
     const result = morningReportSchema.safeParse(validMorningInput({ visit_purpose: value }));
 
     expect(result.success).toBe(true);
     if (!result.success) return;
-    expect(result.data.visit_purpose).toBeNull();
-  });
-
-  it('từ chối visit_purpose 301 ký tự', () => {
-    const input = validMorningInput({ visit_purpose: 'a'.repeat(301) });
-    expect(morningReportSchema.safeParse(input).success).toBe(false);
+    expect(result.data).not.toHaveProperty('visit_purpose');
   });
 });
 
@@ -176,7 +186,7 @@ describe('morningReportSchema — chất lượng thông báo lỗi', () => {
       validMorningInput({
         planned_route: '',
         target_revenue: -1,
-        target_sales_quantity: 10_001,
+        target_sales_amount: MAX_SALES_AMOUNT_VND + 1,
       }),
     );
 
@@ -185,7 +195,7 @@ describe('morningReportSchema — chất lượng thông báo lỗi', () => {
 
     const failedFields = new Set(result.error.issues.map((issue) => issue.path[0]));
     expect(failedFields).toEqual(
-      new Set(['planned_route', 'target_revenue', 'target_sales_quantity']),
+      new Set(['planned_route', 'target_revenue', 'target_sales_amount']),
     );
   });
 
@@ -211,7 +221,7 @@ function validEveningInput(overrides: Record<string, unknown> = {}) {
   return {
     actual_route: 'Quận 1 → Quận 3',
     actual_visit_points: 7,
-    actual_sales_quantity: 4,
+    actual_sales_amount: 80_000_000,
     actual_revenue: 120_000_000,
     actual_customer_visits: 10,
     evening_note: 'Khách hẹn quay lại cuối tuần.',
@@ -222,7 +232,7 @@ function validEveningInput(overrides: Record<string, unknown> = {}) {
 describe('eveningReportSchema — bốn chỉ số actual đều BẮT BUỘC (BR-007)', () => {
   it.each([
     'actual_visit_points',
-    'actual_sales_quantity',
+    'actual_sales_amount',
     'actual_revenue',
     'actual_customer_visits',
   ])('thiếu %s → từ chối, khớp `ck_completed_requires_actuals`', (field) => {
@@ -238,7 +248,7 @@ describe('eveningReportSchema — bốn chỉ số actual đều BẮT BUỘC (B
 
   it.each([
     'actual_visit_points',
-    'actual_sales_quantity',
+    'actual_sales_amount',
     'actual_revenue',
     'actual_customer_visits',
   ])('%s để trống trên form → từ chối, không âm thầm thành 0', (field) => {
@@ -247,7 +257,7 @@ describe('eveningReportSchema — bốn chỉ số actual đều BẮT BUỘC (B
 
   it.each([
     'actual_visit_points',
-    'actual_sales_quantity',
+    'actual_sales_amount',
     'actual_revenue',
     'actual_customer_visits',
   ])('%s = null bị từ chối (cột nullable ở DB nhưng COMPLETED thì không)', (field) => {
@@ -257,16 +267,16 @@ describe('eveningReportSchema — bốn chỉ số actual đều BẮT BUỘC (B
 
 describe('eveningReportSchema — miền giá trị số (BR-006, BR-017)', () => {
   it.each([
-    ['số âm ở actual_sales_quantity', 'actual_sales_quantity', -1],
+    ['số âm ở actual_sales_amount', 'actual_sales_amount', -1],
     ['số âm ở actual_revenue', 'actual_revenue', -1],
     ['NaN', 'actual_revenue', Number.NaN],
     ['Infinity', 'actual_revenue', Number.POSITIVE_INFINITY],
     ['-Infinity', 'actual_revenue', Number.NEGATIVE_INFINITY],
-    ['số thập phân ở cột integer', 'actual_sales_quantity', 1.5],
+    ['số thập phân ở cột integer', 'actual_sales_amount', 1.5],
     ['chuỗi rác ở cột số', 'actual_revenue', 'abc'],
     ['ký hiệu khoa học', 'actual_revenue', '1e9'],
     ['doanh thu vượt trần BR-017', 'actual_revenue', MAX_REVENUE_VND + 1],
-    ['actual_sales_quantity > 10000', 'actual_sales_quantity', 10_001],
+    ['doanh số vượt trần BR-017', 'actual_sales_amount', MAX_SALES_AMOUNT_VND + 1],
     ['actual_visit_points > 1000', 'actual_visit_points', 1_001],
     ['actual_customer_visits > 1000', 'actual_customer_visits', 1_001],
   ])('từ chối %s', (_label, field, value) => {
@@ -280,10 +290,10 @@ describe('eveningReportSchema — miền giá trị số (BR-006, BR-017)', () =
   it.each([
     // BR-004 — thực đạt được phép VƯỢT cam kết, và cam kết không nằm trong
     // schema này nên không có ràng buộc chéo nào chặn chuyện đó.
-    ['0 ở mọi chỉ số — một ngày không bán được xe nào vẫn phải báo cáo', 'actual_sales_quantity', 0],
+    ['0 ở mọi chỉ số — một ngày không bán được xe nào vẫn phải báo cáo', 'actual_sales_amount', 0],
     ['0 doanh thu', 'actual_revenue', 0],
     ['đúng trần doanh thu (biên inclusive)', 'actual_revenue', MAX_REVENUE_VND],
-    ['đúng trần doanh số', 'actual_sales_quantity', 10_000],
+    ['đúng trần doanh số', 'actual_sales_amount', 10_000],
     ['đúng trần điểm viếng thăm', 'actual_visit_points', 1_000],
   ])('chấp nhận %s', (_label, field, value) => {
     expect(eveningReportSchema.safeParse(validEveningInput({ [field]: value })).success).toBe(true);
@@ -291,13 +301,13 @@ describe('eveningReportSchema — miền giá trị số (BR-006, BR-017)', () =
 
   it('nhận chuỗi FormData đã phân nhóm nghìn', () => {
     const result = eveningReportSchema.safeParse(
-      validEveningInput({ actual_revenue: '120.000.000', actual_sales_quantity: '4' }),
+      validEveningInput({ actual_revenue: '120.000.000', actual_sales_amount: '4' }),
     );
 
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.actual_revenue).toBe(120_000_000);
-    expect(result.data.actual_sales_quantity).toBe(4);
+    expect(result.data.actual_sales_amount).toBe(4);
   });
 });
 
@@ -382,20 +392,20 @@ describe('eveningReportSchema — hợp đồng bảo mật (AGENTS.md §8, docs
     // xuống đúng bằng thực đạt ngay lúc chốt sổ. Đó là lý do UC-06 chỉ ghi
     // `actual_*` (BR-019).
     const result = eveningReportSchema.safeParse(
-      validEveningInput({ target_revenue: 1, target_sales_quantity: 1 }),
+      validEveningInput({ target_revenue: 1, target_sales_amount: 1 }),
     );
 
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data).not.toHaveProperty('target_revenue');
-    expect(result.data).not.toHaveProperty('target_sales_quantity');
+    expect(result.data).not.toHaveProperty('target_sales_amount');
   });
 
   it('báo lỗi cho TẤT CẢ field sai, không dừng ở field đầu (rule error-summary)', () => {
     const result = eveningReportSchema.safeParse(
       validEveningInput({
         actual_revenue: -1,
-        actual_sales_quantity: 10_001,
+        actual_sales_amount: MAX_SALES_AMOUNT_VND + 1,
         evening_note: 'a'.repeat(MAX_EVENING_NOTE_LENGTH + 1),
       }),
     );
@@ -405,7 +415,7 @@ describe('eveningReportSchema — hợp đồng bảo mật (AGENTS.md §8, docs
 
     const failedFields = new Set(result.error.issues.map((issue) => issue.path[0]));
     expect(failedFields).toEqual(
-      new Set(['actual_revenue', 'actual_sales_quantity', 'evening_note']),
+      new Set(['actual_revenue', 'actual_sales_amount', 'evening_note']),
     );
   });
 });

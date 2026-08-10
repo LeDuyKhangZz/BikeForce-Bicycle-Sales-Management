@@ -1,5 +1,25 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 11 | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: 13 | Last updated: 2026-08-10
+
+> ## ⚠ NGHIỆP VỤ ĐÃ ĐỔI Ở PHASE 13 — ĐỌC TRƯỚC KHI TIN BẤT KỲ MỤC NÀO BÊN DƯỚI
+>
+> Ngày 2026-08-10, **OQ-19 được trả lời** và sinh ra **DEC-048/049/050** + **BR-026**. Bốn chỉ tiêu
+> của một báo cáo ngày nay là:
+>
+> | Chỉ tiêu | Đơn vị | Cột |
+> |---|---|---|
+> | Viếng thăm | điểm — **mục tiêu ∈ [10, 1000]** (BR-026) | `*_visit_points` |
+> | **Doanh số** | **VND** *(trước là "số lượng xe")* | **`*_sales_amount`** (MỚI ở `0008`) |
+> | **Doanh thu công nợ** | **VND — tiền công nợ THU HỒI ĐƯỢC** *(trước là "giá trị đơn hàng")* | `*_revenue` |
+> | **Khách hàng đã gặp** | khách *(trước nhãn là "Khách hàng")* | `*_customer_visits` |
+>
+> **Hệ quả bắt buộc nhớ:**
+> - Khoá chỉ tiêu là **`SALES_AMOUNT`**, KHÔNG còn `SALES_QUANTITY`. Đơn vị `xe` **đã bị xoá khỏi
+>   toàn dự án**.
+> - **`visit_purpose` ("Mục đích chuyến đi") không còn được nhập và không còn hiển thị** (DEC-048).
+> - Ba cột `*_sales_quantity` và `visit_purpose` vẫn ở trong database nhưng là **DI SẢN** — giữ vì
+>   BR-013 cấm xoá dữ liệu, **không code nào được đọc chúng**.
+> - Chi tiết đầy đủ: `docs/11 § DEC-050` · `SESSION_CHECKPOINT.md § DO NOT REDO`.
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > **Đọc file này TRƯỚC, rồi đọc `SESSION_CHECKPOINT.md`.** Hai file đó đủ để bắt đầu làm việc.
@@ -21,7 +41,8 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 11 — Testing & Security: 12/14 mục** (2026-08-10). Phase 0, 1, 2, **3**, **4**, 5, **7**, **8**, **9**, **10** đã đóng đủ. Phase 6 còn 1 mục và Phase 11 còn 2 mục — **cả ba đều cần thiết bị thật**, không phải code |
+| Phase | **PHASE 13 — gần đóng** (2026-08-10). 13a ✅ · 13b ✅ (trừ 2 mục cần **mắt người** / **thiết bị thật**) · 13c ✅ **đủ ba nhóm A, B, C**. Phase 0…5, 7…10 đã đóng đủ; Phase 6 và 11 còn tổng 3 mục **đều cần thiết bị thật**. **Phase 12 còn một việc CODE-adjacent: đẩy `0008` lên cloud** |
+| ⚠ **Migration** | Local **8/8** · Cloud **7/8** — **`0008` CHƯA được đẩy**. Phải `supabase db push --linked --yes` **trước lần deploy kế tiếp**, nếu không production gọi `admin_*` với tên cột không tồn tại |
 | Source code | **ĐẦY ĐỦ v1.** Next.js 16.3.0 App Router · **18 route chạy thật** · **7 migration** trên local · luồng báo cáo ngày hai nửa · KPI engine · ảnh 9:16 · **lịch sử báo cáo** · **toàn bộ khu vực Admin** (dashboard 12 chỉ số, 7 chiều lọc, phân tích tháng + biểu đồ trend, quản lý tài khoản, xuất CSV) · bộ test **729 case** + **99 bài E2E** |
 | Git | Nhánh `main`, remote `origin` → GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). **`git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
 | Supabase **local** | ✅ Chạy thật — Docker + CLI 2.111.0, Postgres 17.6. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
@@ -285,6 +306,8 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** persist `%` achievement vào DB — luôn tính runtime trong `lib/kpi` (BR-011, DEC-007).
 - ❌ **Không** duplicate công thức KPI / format tiền / tính ngày ra ngoài `lib/`.
 - ❌ **Không** lưu tiền dưới dạng chuỗi đã format — `bigint` VND (BR-010, DEC-008).
+- ❌ **Không** đọc ba cột DI SẢN `visit_purpose`, `target_sales_quantity`, `actual_sales_quantity` (DEC-048, DEC-050). Chúng còn trong DB **chỉ** vì BR-013 cấm xoá dữ liệu.
+- ❌ **Không** dùng khoá `SALES_QUANTITY` hay đơn vị `xe` — cả hai đã bị xoá khỏi dự án (DEC-050).
 - ❌ **Không** dùng `new Date()` trực tiếp để suy ra ngày nghiệp vụ — phải qua `getVietnamToday()` (BR-005).
 - ❌ **Không** enable nút "Xuất ảnh" dựa trên trạng thái form; chỉ dựa trên báo cáo đã persist với `status = 'COMPLETED'` (BR-002).
 - ❌ **Không** tự ý thay đổi business rule đã `APPROVED` (toàn bộ BR-001…BR-025 đều đã APPROVED từ 2026-08-07). Muốn đổi: tạo `DEC` mới + hỏi người dùng.
@@ -298,7 +321,11 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-045` (decision) · `ISSUE-001..ISSUE-017` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-052` (decision) · `ISSUE-001..ISSUE-023` (issue) · `AF-01..AF-15` (admin feature proposal).
+
+> ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
+> **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy
+> nó làm tiền lệ để tự thêm `BR-027`.
 
 `UC`, `FR`, `NFR`, `BR`, `AF` là **dãy đóng** — không thêm ID mới nếu không có xác nhận của người dùng. `OQ`, `DEC`, `ISSUE` là **dãy mở**: cấp ID mới = số lớn nhất từng dùng + 1, **không bao giờ renumber, không tái sử dụng ID đã CLOSED**.
 
@@ -307,6 +334,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 | ID | Rule |
 |---|---|
 | BR-001 | Mỗi Sales tối đa **một** báo cáo cho một ngày nghiệp vụ — `UNIQUE(sales_id, report_date)` |
+| **BR-026** | **Mục tiêu** điểm viếng thăm ∈ **[10, 1000]**. Sàn **không** áp cho `actual_visit_points` |
 | BR-002 | Chỉ xuất ảnh **sau khi** báo cáo persist thành công và `status = 'COMPLETED'` |
 | BR-003 | Sales không đọc được báo cáo của Sales khác |
 | BR-004 | Achievement được phép **> 100%**, không clamp |
@@ -317,7 +345,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 | BR-014 | `achievement = actual / target × 100`, làm tròn 1 chữ số thập phân khi hiển thị |
 
 **Hàm dùng chung — tên đã chốt, không đặt tên khác, không viết lại:**
-`lib/kpi.ts` → `calculateAchievement(target, actual, metric)`, `getAchievementStatus()`, `formatMetricValue()`, `achievementLabel()`, `isKpiAchievedDay()` ·
+`lib/kpi.ts` → `calculateAchievement(target, actual, metric)` — ⚠ **`target` nay nhận `number | null`** vì báo cáo trước migration `0008` mang `null` ở doanh số (DEC-050) — `getAchievementStatus()`, `formatMetricValue()`, `formatMetricValueCompact()`, `achievementLabel()`, `isKpiAchievedDay()` ·
 `lib/currency.ts` → `formatCurrencyVND()`, `parseCurrencyInput()` ·
 `lib/date.ts` → `getVietnamToday()`, `formatVietnamDate()`, `isValidVietnamDate()` + **nhóm 5 hàm tháng** (`getVietnamMonthRange` — trả **`null`** khi sai định dạng, DEC-040 · `getVietnamCurrentMonth` · `formatVietnamMonth` · `shiftVietnamMonth` · `resolveVietnamMonth`) ·
 `lib/reports/metric-rows.ts` → `KPI_METRIC_ROWS`, `kpiMetricRow()` — nguồn **duy nhất** của “4 chỉ tiêu là gì” ·
@@ -336,7 +364,10 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 7. **Đang chờ người dùng (không chặn code):** đẩy migration `0006` + `0007` lên cloud (`docs/09 §12`) · rotate service role key (ISSUE-011) · kiểm Zalo trên thiết bị thật (ISSUE-003) · Lighthouse. ~~trả lời OQ-18~~ — ✅ **đã xong 2026-08-10 (DEC-043)**.
 8. ~~**Phase 6 — Xuất ảnh 9:16**~~ — ✅ **XONG 11/12 mục 2026-08-08.** Route Handler sinh PNG 1080×1920 bằng Satori, font Inter nhúng đủ dấu tiếng Việt, nút Xuất ảnh chạy thật với Web Share API + 2 fallback; **ISSUE-002 CLOSED** (không cần fallback `html-to-image`); phát sinh và đã sửa **ISSUE-015** bằng **DEC-039**; 44/44 phép kiểm trình duyệt. Mục còn lại: **kiểm Zalo trên thiết bị thật** (ISSUE-003) — cần điện thoại + link công khai.
 9. ~~**Phase 7 — Sales History**~~ · ~~**Phase 8 — Admin Dashboard**~~ · ~~**Phase 9 — Admin Reports & Filters**~~ · ~~**Phase 10 — Sales Management**~~ · ~~**Phase 11 — Testing & Security**~~ — ✅ **XONG 2026-08-10 trong một phiên.** 18/18 route chạy thật · 5 hàm SQL aggregate · bộ E2E 99/99 · 729 test. Chi tiết: `WORKLOG.md` Entry 010.
-10. **Phase 12 — Deployment Preparation (việc kế tiếp).** Bước đầu tiên bắt buộc: **đẩy migration `0006` + `0007` lên Supabase cloud** — `docs/09 §12`. Rồi đặt `Minimum password length = 8` (DEC-041), rotate service role key (ISSUE-011), sau đó mới tới Vercel. Chi tiết từng bước ở `SESSION_CHECKPOINT.md § Next Exact Steps`.
+10. ~~**Phase 12 — Deployment Preparation**~~ — ✅ **production đã sống** (`bike-force-bicycle-sales-management.vercel.app`), smoke test Admin 16/16.
+11. ~~**Phase 13 — Nhận diện thương hiệu & soát UI/UX**~~ — ✅ **XONG 2026-08-10** trừ hai mục cần **mắt người** và **thiết bị thật**. Chi tiết: `WORKLOG.md` Entry 016.
+12. **VIỆC KẾ TIẾP, theo đúng thứ tự** (chi tiết ở `SESSION_CHECKPOINT.md § Next Exact Steps`):
+    **(a)** commit + `git push origin main` · **(b)** ⚠ **đẩy migration `0008` lên cloud** — bắt buộc trước lần deploy kế tiếp · **(c)** rotate service role key (ISSUE-011) · **(d)** Lighthouse + ISSUE-003 trên thiết bị thật.
 
 **Những thứ đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
 
@@ -352,9 +383,12 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 
 ---
 
-## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG ĐỦ **18/18** (OQ-01…OQ-17 ngày 2026-08-07 · OQ-18 ngày 2026-08-10)
+## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG ĐỦ **19/19** (OQ-01…17 ngày 2026-08-07 · OQ-18 và **OQ-19** ngày 2026-08-10)
 
-Người dùng đã trả lời **đủ 18/18** câu — **tuyệt đối không hỏi lại**. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
+> ✅ **OQ-19 (Phase 13) đã được trả lời đủ 3/3** — bỏ hẳn đếm xe · "doanh thu công nợ" = tiền **THU
+> HỒI ĐƯỢC** · dòng có trước migration `0008` mang **`null`** ở doanh số. Ghi thành **DEC-050**.
+
+Người dùng đã trả lời **đủ 19/19** câu — **tuyệt đối không hỏi lại**. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
 
 > ✅ **OQ-18 ĐÃ ĐƯỢC TRẢ LỜI ngày 2026-08-10 — phương án (a):** NFR-008 nới từ "≤ 6 lần chạm" thành **"≤ 8 lần chạm"**, **giữ nguyên 5 trường bắt buộc** của FR-008 — ghi thành **DEC-043**. Con số đo được **7 chạm / 1,8 giây** nay **ĐẠT cả hai vế**; ISSUE-013 → **CLOSED**; Phase 3 đóng ở **14/14**. **Không sửa một dòng code nào.** **Không còn câu hỏi nghiệp vụ nào đang chờ.**
 
@@ -362,8 +396,8 @@ Mười quyết định nghiệp vụ mà mọi session sau phải nhớ:
 
 | Chủ đề | Quyết định đã chốt | BR / DEC |
 |---|---|---|
-| Viếng thăm | Giữ **cả hai**: cột số bắt buộc + cột text tuỳ chọn (`target_visit_points`+`visit_purpose`, `actual_visit_points`+`actual_route`) | DEC-029 |
-| Đơn vị | Doanh số = **số lượng xe** (integer). Doanh thu = **tiền VND** (bigint), nghĩa là **giá trị đơn hàng chốt trong ngày** | BR-006, BR-010 |
+| Viếng thăm | ~~Giữ cả hai~~ → **PHASE 13: `visit_purpose` đã bị gỡ khỏi giao diện** (DEC-048). Còn `target_visit_points` (**sàn 10** — BR-026) + `actual_visit_points` + `actual_route` | DEC-029 **sửa bởi DEC-048/049** |
+| Đơn vị | ~~Doanh số = số lượng xe~~ → **PHASE 13: Doanh số = TIỀN VND**; **Doanh thu = tiền công nợ THU HỒI ĐƯỢC trong ngày** | BR-006 **sửa bởi DEC-050**, BR-010 |
 | Sửa sau khi hoàn tất | **KHÔNG.** Khoá vĩnh viễn khi `status = 'COMPLETED'`, kể cả trong cùng ngày | BR-019, DEC-026 |
 | Admin sửa báo cáo | **KHÔNG.** Không tồn tại UPDATE policy nào cho Admin trên `daily_reports` | BR-020, DEC-026 |
 | Xoá báo cáo | **KHÔNG.** Không DELETE policy, không `GRANT DELETE`, **không** cột `deleted_at` | BR-013, DEC-026 |

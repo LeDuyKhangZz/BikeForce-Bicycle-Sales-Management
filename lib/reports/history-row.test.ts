@@ -12,14 +12,14 @@ import { achievedCountLabel, toHistoryRow, type HistoryRowSource } from './histo
 /** Cam kết sáng dùng chung: 5 điểm · 10 xe · 100tr · 20 khách. */
 const TARGETS = {
   target_visit_points: 5,
-  target_sales_quantity: 10,
+  target_sales_amount: 10,
   target_revenue: 100_000_000,
   target_customer_visits: 20,
 } as const;
 
 const PENDING_ACTUALS = {
   actual_visit_points: null,
-  actual_sales_quantity: null,
+  actual_sales_amount: null,
   actual_revenue: null,
   actual_customer_visits: null,
 } as const;
@@ -68,7 +68,7 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
       makeSource({
         status: 'COMPLETED',
         actual_visit_points: 5,
-        actual_sales_quantity: 12,
+        actual_sales_amount: 12,
         actual_revenue: 100_000_000,
         actual_customer_visits: 25,
       }),
@@ -86,7 +86,7 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
       makeSource({
         status: 'COMPLETED',
         actual_visit_points: 5,
-        actual_sales_quantity: 10,
+        actual_sales_amount: 10,
         actual_revenue: 99_000_000, // 99% — NEAR, không phải EXCEEDED
         actual_customer_visits: 20,
       }),
@@ -101,7 +101,7 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
       makeSource({
         status: 'COMPLETED',
         actual_visit_points: 0,
-        actual_sales_quantity: 0,
+        actual_sales_amount: 0,
         actual_revenue: 0,
         actual_customer_visits: 0,
       }),
@@ -118,7 +118,7 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
         status: 'COMPLETED',
         target_visit_points: 0,
         actual_visit_points: 3,
-        actual_sales_quantity: 10,
+        actual_sales_amount: 10,
         actual_revenue: 100_000_000,
         actual_customer_visits: 20,
       }),
@@ -135,7 +135,7 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
         status: 'COMPLETED',
         target_visit_points: 0,
         actual_visit_points: 0,
-        actual_sales_quantity: 10,
+        actual_sales_amount: 10,
         actual_revenue: 100_000_000,
         actual_customer_visits: 20,
       }),
@@ -153,7 +153,7 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
             status: 'COMPLETED',
             target_visit_points: target,
             actual_visit_points: actual,
-            actual_sales_quantity: actual,
+            actual_sales_amount: actual,
             actual_revenue: actual,
             actual_customer_visits: actual,
           }),

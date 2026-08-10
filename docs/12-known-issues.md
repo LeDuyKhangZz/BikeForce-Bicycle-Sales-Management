@@ -93,7 +93,10 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-020 | P3 | OPEN | **MỚI** — `Minimum password length` trên cloud **vẫn là 6**, DEC-041 yêu cầu 8. Zod đã ép 8 ở tầng app nên chỉ hở với ai gọi thẳng GoTrue API cho **chính mình**. **Người dùng chấp nhận rủi ro 2026-08-10** | Phase 12 | DEC-041 |
 | ISSUE-021 | P3 | OPEN | **MỚI** — `getCurrentProfile()` bị gọi **2 lần/trang** (layout + page), mỗi lần **2 lượt mạng** ⇒ **4 lượt** chỉ để hỏi "ai đây". **Đã THỬ `cache()` và phải GỠ**: nó làm **đăng nhập treo** không tất định (E2E 111→109→105, gỡ ra về **111/111**). Đọc issue trước khi thử lại | Phase 2, Phase 12 | NFR-001, ISSUE-019, DEC-004 |
 
-Tổng: **10 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 7 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
+| ISSUE-022 | P3 | OPEN | **MỚI 2026-08-10** — `gen types --local` đỏ vì `SUPABASE_DB_PASSWORD` của **cloud** lọt vào môi trường. Có cách đi vòng chắc chắn; ⚠ phải chuyển hướng `stderr`, nếu không dòng tiến trình bị ghi vào chính file types |
+| ISSUE-023 | P3 | OPEN | **MỚI 2026-08-10** — một bài E2E CSV-403 đỏ đúng một lần trong lượt chạy kéo dài **2,8 giờ** vì máy quá tải. Đã đo tỉ lệ: **82 lượt xanh liên tiếp** sau đó ⇒ **flake**, không phải hồi quy. Không sửa gì |
+
+Tổng: **12 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 9 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
 
 ---
 
@@ -1138,6 +1141,73 @@ Mọi bài đỏ đều rơi vào **cùng một chỗ**: helper `signIn()` hết
 1. **Defense-in-depth nhân số lượt gọi mạng lên theo số lớp.** Khi thiết kế một guard chạy ở nhiều lớp, phải quyết định ngay từ đầu là nó có memo hoá theo request hay không — cái giá không hiện ra ở local mà chỉ hiện ra ở production.
 2. **Với lỗi không tất định, "chạy lại thấy xanh" KHÔNG phải bằng chứng.** Phải so **tỉ lệ qua nhiều lượt**. Lượt E2E đầu tiên sau khi bọc `cache()` báo `84 passed` và đã bị diễn giải nhầm thành "phần lớn là did-not-run, không phải regression" — kết luận đó sai, và chỉ lộ ra khi chạy thêm hai lượt nữa.
 3. **Trạng thái giao diện lúc đỏ là dữ liệu chẩn đoán, không phải rác.** Chính chi tiết "nút còn ghi *Đang đăng nhập…* và ô nhập bị disabled" mới phân biệt được **treo** với **bị từ chối** — hai nguyên nhân hoàn toàn khác nhau.
+---
+
+### ISSUE-022
+
+**Severity: P3**
+**Status: OPEN — có cách đi vòng chắc chắn, chưa cần sửa gốc**
+
+**Module:**
+`npx supabase gen types typescript --local`. Liên quan: `package.json` script `db:types`, ISSUE-010, Phase 13.
+
+**Description:**
+Lệnh sinh types cho database **local** thất bại với `password authentication failed for user "postgres"`, dù `supabase db reset` ngay trước đó chạy hoàn toàn bình thường trên cùng stack.
+
+Nguyên nhân: biến `SUPABASE_DB_PASSWORD` — vốn được đặt cho **Supabase cloud** (dùng khi `db push`) — lọt vào môi trường của lệnh và được CLI dùng để nối tới **container local**, nơi mật khẩu là `postgres`. Lỗi hiện ra ở tầng kết nối nên rất dễ chẩn đoán nhầm sang ISSUE-010 ("chọn nhầm stack").
+
+**Cách đi vòng đã kiểm chứng (2026-08-10):**
+
+```bash
+SUPABASE_DB_PASSWORD=postgres npx supabase gen types typescript --local 2>/dev/null > types/database.types.ts
+```
+
+**Hai điều bắt buộc nhớ, cả hai đều đã cắn một lần trong phiên này:**
+
+1. **Phải chuyển hướng `stderr` đi chỗ khác.** CLI in tiến trình (`Connecting to db 5432`) ra `stderr`; gộp nó vào `stdout` sẽ ghi thẳng dòng chữ đó vào đầu `types/database.types.ts` và làm hỏng file — TypeScript báo hàng chục lỗi cú pháp ở dòng 1, trông không liên quan gì tới nguyên nhân thật.
+2. **Script `db:types` trong `package.json` truyền `--db-url` tường minh** nên **không** dính lỗi này. Chỉ dạng `--local` mới dính.
+
+**Fix gốc (khi nào muốn):** đổi tên biến cloud thành `SUPABASE_CLOUD_DB_PASSWORD` trong `.env.local` và truyền tường minh khi `db push`, để không còn biến nào tên trùng với thứ CLI tự đọc.
+
+---
+
+### ISSUE-023
+
+**Severity: P3**
+**Status: OPEN — đã đo tỉ lệ, kết luận là FLAKE do máy quá tải, KHÔNG phải hồi quy**
+
+**Module:**
+`e2e/security.spec.ts:123` — *"Sales gọi route xuất CSV → 403"*, project `zalo-like`. Liên quan: Phase 11, Phase 13, `WORKLOG.md` Entry 015 mục Errors 2.
+
+**Description:**
+Trong lượt chạy `npm run e2e` đầy đủ của Phase 13, đúng **một** bài đỏ: `110 passed / 1 failed`. Điểm bất thường quan trọng hơn con số: lượt đó mất **2,8 giờ** thay vì ~4 phút thường lệ, vì máy đang chạy song song nhiều lượt Playwright khác của phiên soát giao diện.
+
+**Đã đo tỉ lệ trước khi kết luận — đúng bài học Entry 015:**
+
+| Phép đo | Kết quả |
+|---|---|
+| Chạy riêng bài đó, `--project=zalo-like` | **1 passed** (25,7 s) |
+| `security.spec.ts --repeat-each=3`, cả **ba** project | **81 passed / 81** (1,9 phút) |
+
+Tổng cộng **82 lượt xanh liên tiếp** sau lần đỏ duy nhất. `security.spec.ts` là spec **chỉ đọc** nên `--repeat-each` dùng được ở đây — khác `sales-flow.spec.ts`, nơi BR-001 và BR-019 làm lượt lặp thứ hai tất yếu đỏ.
+
+**Lượt thứ hai, một bài KHÁC lại đỏ:** `admin-flow.spec.ts:178` — *"Admin KHÔNG vào được khu vực Sales"*, cũng `zalo-like`. Ảnh chụp lúc đỏ cho thấy form kẹt ở **"Đang đăng nhập…"** với ô nhập **disabled** — đúng dấu vân tay của **ISSUE-021**: Server Action chưa trả về, chứ không phải bị từ chối.
+
+Đây là **chi phí đã biết** của ISSUE-021 (bốn lượt đi-về xác thực tuần tự cho mỗi lần render) thỉnh thoảng chạm trần chờ 20 giây, chứ không phải một hồi quy mới:
+
+| Phép đo | Kết quả |
+|---|---|
+| Chạy riêng bài đó, `--repeat-each=6` | **6 passed / 6** |
+| **Một lượt `npm run e2e` ĐẦY ĐỦ, không tranh tài nguyên** | **111 passed / 111** trong **4,0 phút** |
+
+**Kết luận:** hai lần đỏ là **hai bài khác nhau**, cả hai đều xảy ra khi máy quá tải, và một lượt chạy sạch cho **111/111**. Đây là **flake**, không phải hồi quy. **Không sửa gì.**
+
+**Đã loại trừ giả thuyết "nút Đăng xuất mới ở header gây treo":** `HeaderSignOut` là client component không truy vấn gì; lượt chạy sạch **sau khi** thêm nó vẫn 111/111.
+
+**Điều kiện phải mở lại:** nếu bài này đỏ thêm một lần nữa trong một lượt chạy **không** bị tranh tài nguyên, thì giả thuyết "flake" bị bác và phải điều tra thật.
+
+**Bài học ghi lại:** đừng chạy bộ soát giao diện song song với `npm run e2e` — cả hai đều tự `next build` rồi `next start`, và tranh nhau đúng CPU lẫn cùng một database local.
+
 ---
 
 ## OPEN QUESTIONS

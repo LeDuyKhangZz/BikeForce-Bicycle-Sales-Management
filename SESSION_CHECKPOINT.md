@@ -1,6 +1,19 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 11 (12/14 — còn Lighthouse và ma trận thử tay) → sẵn sàng Phase 12 | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: **13 — gần đóng** (còn 2 mục cần **mắt người** / **thiết bị thật**) | Last updated: 2026-08-10
+
+---
+
+## ⚠ ĐỌC BA DÒNG NÀY TRƯỚC MỌI THỨ KHÁC (cập nhật cuối phiên 2026-08-10 — Entry 016)
+
+1. **Nghiệp vụ ĐÃ ĐỔI.** Doanh số nay là **TIỀN** (không còn đếm xe), doanh thu nay là **công nợ THU
+   HỒI ĐƯỢC**, nhãn khách hàng thành **"Khách hàng đã gặp"**, trường **"Mục đích chuyến đi" đã bị
+   gỡ**, mục tiêu điểm viếng thăm có **sàn 10**. Nguồn: **OQ-19 đã trả lời** + **DEC-048/049/050** +
+   **BR-026**. Đơn vị `xe` **không còn tồn tại** ở bất kỳ đâu trong dự án.
+2. **⚠ CLOUD ĐANG THIẾU MIGRATION `0008`.** Local có **8/8**, cloud mới **7/8**. **Đẩy trước khi
+   deploy lần kế tiếp**, nếu không production sẽ gọi `admin_*` với tên cột không tồn tại:
+   `npx supabase db push --linked --yes` (mật khẩu qua biến môi trường, **không cần TTY**).
+3. **Chưa `git push`.** Commit xong thì đẩy — `git push` **chạy được từ agent**, đã kiểm chứng.
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -22,11 +35,23 @@ tạo tài khoản Sales qua UC-17 ngay trên bản deploy.
 ở Singapore, đo được **~230 ms phụ trội mỗi lượt gọi DB**. Sửa: Settings → Functions → Region =
 `sin1` → **Redeploy**. **Đo Lighthouse SAU khi sửa**, không phải trước.
 
-**Current Task:** **PHASE 12 — Deployment Preparation.** ✅ **Mục CODE cuối cùng đã xong** — PWA
-manifest + icon (FR-036, DEC-047). Phần còn lại của Phase 12 **không còn dòng code nào**, chỉ là
-thao tác Dashboard/Vercel của người dùng: `docs/09 §13` — **runbook 8 bước, từng cú bấm**.
+**Current Task:** **PHASE 13 — Nhận diện thương hiệu & soát UI/UX.** 13a ✅ · **13b ✅** (trừ 2 mục
+cần mắt người / thiết bị thật) · **13c ✅ đủ ba nhóm A, B, C**. Không còn công việc code nào đang dở.
 
-**✅ ĐÃ PUSH.** GitHub đang ở `53123e1`, xác minh bằng `git ls-remote origin refs/heads/main`.
+**Phiên 2026-08-10 (Entry 016) làm được gì:**
+
+| Hạng mục | Trạng thái |
+|---|---|
+| **OQ-19** | ✅ **Đã trả lời đủ 3/3** — bỏ đếm xe · công nợ = tiền THU HỒI · `null` cho dòng cũ |
+| **Migration `0008`** | ✅ chạy thật trên local: cặp cột `*_sales_amount`, sàn 10 điểm viếng thăm, 4 hàm aggregate dựng lại |
+| **DEC-048 · 049 · 050 · 051 · 052** | ✅ ghi đủ ở `docs/11` |
+| **BR-026** | ✅ business rule **MỚI** — mục tiêu điểm viếng thăm ∈ `[10, 1000]` |
+| Nhóm A (`§13c`) | ✅ phản hồi khi chạm · Đăng xuất ở header · đảo thứ tự khối `/sales/today` |
+| Nhóm B (`§13c`) | ✅ "Khách hàng đã gặp" — sửa **đúng một chỗ** ở `metric-rows.ts` |
+| Soát UI/UX (13b) | ✅ đo máy **20 URL × 2 bề rộng**; **tìm ra 1 lỗi thật** (tràn ngang 116px), đã sửa bằng DEC-052 |
+| Quality gate | ✅ typecheck · lint · build · `npm test` **745/745** · `npm run e2e` **111/111** |
+
+**⚠ CHƯA PUSH.** GitHub vẫn ở `9935dff`; toàn bộ Phase 13 còn nằm trong working tree.
 
 > ⚠ **MỘT NIỀM TIN CŨ CỦA DỰ ÁN NAY ĐÃ SAI.** Suốt Phase 0→12, tài liệu ghi "agent không chạy được
 > `git push` vì không có TTY cho Git Credential Manager". Ngày 2026-08-10 **thử thật thì nó chạy** —
@@ -77,7 +102,8 @@ cất lại đó theo yêu cầu "deploy trước".
 
 | Migration | Local | Cloud `rnmywhwanpxmipqducqu` |
 |---|---|---|
-| `0001` … `0007` | ✅ | ✅ **7/7 đã push** — `0006` + `0007` đẩy ngày 2026-08-10 |
+| `0001` … `0007` | ✅ | ✅ **đã push** ngày 2026-08-10 |
+| **`0008`** | ✅ **đã apply + seed chạy sạch** | ❌ **CHƯA PUSH — việc số 2 ở `Next Exact Steps`** |
 
 **Đã kiểm chứng thật trên cloud sau khi đẩy (2026-08-10):**
 
@@ -565,12 +591,13 @@ thứ hai — URL không phải localhost thì ném lỗi ngay.
 | **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, **18 route nghiệp vụ + 3 route metadata**: `/manifest.webmanifest`, `/icon.svg`, `/apple-icon.png`) |
 | **Typecheck** | ✅ `npm run typecheck` → **exit 0** |
 | **Lint** | ✅ `npm run lint` → **exit 0**, 0 error 0 warning |
-| **Unit** | ✅ **555 passed** — 16 file, gồm **`pwa/manifest` 13 (MỚI)** |
-| **Integration (DB)** | ✅ **54 passed** — 5 file, gồm **`indexes` 14 (`EXPLAIN ANALYZE`)** |
+| **Unit** | ✅ **555 passed** — 16 file, gồm **`pwa/manifest` 13** |
+| **Integration (DB)** | ✅ **57 passed** — 5 file, gồm **`indexes` 14** + **3 bài MỚI khoá ràng buộc `0008`** (sàn BR-026 · cam kết sáng đòi doanh số tiền · `COMPLETED` đòi cột MỚI chứ không phải cột di sản) |
 | **RLS** | ✅ **133 passed** — 9 file, phủ toàn bộ khu vực Admin và lịch sử |
-| **Tổng `npm test`** | ✅ **742 passed / 742** |
+| **Tổng `npm test`** | ✅ **745 passed / 745** |
+| **Soát UI/UX (Phase 13b)** | ✅ **20 URL × 2 bề rộng**, đo trên DOM đã render: **~2.400 cặp màu — 0 vi phạm**, thấp nhất **4,68:1** · **0** phần tử tương tác < 44px · **0** input < 16px · `dynamic-type` **150%** không vỡ bố cục. **Tìm ra 1 lỗi thật** (tràn ngang 116px) → DEC-052 |
 | **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** *(đo trước khi thêm `lib/pwa/`)* |
-| **E2E (Playwright)** | ✅ **111 passed / 111** — 3 project × 37 bài, 5,2 phút. **Đã chạy lại SAU khi đổi bảng màu DEC-046** |
+| **E2E (Playwright)** | ✅ **111 passed / 111** — 3 project × 37 bài, **4,0 phút**. Đã chạy lại SAU toàn bộ thay đổi của Phase 13. ⚠ Trong phiên có **2 lượt đỏ 1 bài**, mỗi lượt một bài KHÁC nhau, đều khi máy đang chạy song song nhiều lượt Playwright — xem **ISSUE-023**; lượt sạch cho **111/111** |
 | **A11y (axe-core)** | ✅ **30 lượt quét** (10 màn hình × 3 project) — **0 vi phạm serious/critical** (NFR-007) |
 | **EXPLAIN ANALYZE / InitPlan** | ✅ **ĐÃ ĐO** — `is_admin()` là InitPlan, mọi truy vấn list đi qua index. **ISSUE-005 CLOSED** |
 | **Bảo mật (E2E)** | ✅ IDOR · 401/403 JSON cho `/api/*` · CSV Sales→403 Admin→200 + `no-store` · PNG **1080×1920** đọc từ `IHDR` · **service role key không có trong HTML** |
@@ -684,6 +711,37 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
+**LÀM ĐÚNG BA VIỆC NÀY TRƯỚC, THEO THỨ TỰ — cập nhật cuối phiên Entry 016:**
+
+```bash
+# 1. Commit toàn bộ Phase 13 (working tree đang bẩn)
+git add -A && git commit
+git push origin main            # chạy được từ agent, đã kiểm chứng
+
+# 2. ⚠ ĐẨY MIGRATION 0008 LÊN CLOUD — BẮT BUỘC TRƯỚC LẦN DEPLOY KẾ TIẾP
+#    Cloud đang 7/8. Thiếu bước này thì production gọi admin_* với tên cột
+#    không tồn tại và toàn bộ khu vực Admin sẽ lỗi.
+SUPABASE_DB_PASSWORD=<mật khẩu cloud> npx supabase db push --linked --yes
+npx supabase migration list --linked   # kỳ vọng 8/8 khớp cả local lẫn remote
+
+# 3. Xác minh trên cloud sau khi đẩy
+#    - 5 hàm admin_* vẫn tồn tại và anon vẫn KHÔNG execute được
+#    - báo cáo cũ trên production hiện '—' ở ô Doanh số (đúng OQ-19c), không phải NaN
+```
+
+**Sau đó là bốn việc cần NGƯỜI hoặc THIẾT BỊ THẬT (không phải code):**
+
+| # | Việc | Vì sao agent không làm được |
+|---|---|---|
+| 4 | **Xem tận mắt** 18 route ở 375px và 1440px | Đã đo đủ bằng máy; phần còn lại là thẩm mỹ, cần mắt người |
+| 5 | "Thêm vào màn hình chính" trên Chrome Android + Safari iOS | Cần điện thoại thật |
+| 6 | **ISSUE-003** — ảnh 9:16 trong Zalo | Cần điện thoại thật + link công khai |
+| 7 | **Lighthouse mobile** (NFR-001) · **ISSUE-011** rotate service role key | Cần bản deploy / Dashboard |
+
+**Việc dọn dẹp còn nợ:** xoá `.env.admin-bootstrap`.
+
+---
+
 > ✅ Phase 0, 1, 2, 3, 4, 5, 7, 8, 9, 10 đã đóng đủ. Phase 6 xong 11/12, Phase 11 xong 12/14 —
 > **bốn mục còn lại của cả hai phase đều cần thiết bị thật hoặc link công khai**, không phải code.
 > **Không làm lại bất cứ thứ gì trong danh sách trên.**
@@ -757,8 +815,38 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## DO NOT REDO
 
+**Từ phiên PHASE 13 (MỚI NHẤT — Entry 016, 2026-08-10) — đọc TRƯỚC mọi mục khác:**
 
-**Từ phiên PWA + đổi màu theo logo (mới nhất — 2026-08-10):**
+- **`SALES_QUANTITY` KHÔNG CÒN TỒN TẠI.** Khoá chỉ tiêu là **`SALES_AMOUNT`**, đọc từ cặp cột
+  **`target_sales_amount` / `actual_sales_amount`**. Cột `*_sales_quantity` vẫn nằm trong database
+  nhưng là **DI SẢN** — **không code nào được đọc nó**. Đơn vị `xe` đã bị xoá khỏi `lib/kpi.ts`.
+- **`visit_purpose` KHÔNG được hiển thị ở đâu nữa** (DEC-048), kể cả với báo cáo cũ đang có dữ liệu.
+  Đừng "khôi phục cho đủ thông tin" — đó chính là thứ người dùng yêu cầu bỏ. Cột giữ lại chỉ vì
+  BR-013 cấm xoá dữ liệu.
+- **Ba constraint của `0008` là `not valid` một cách CỐ Ý.** Chúng **không** kiểm dòng cũ (dòng cũ
+  mang `null` ở cột mới nên không thể thoả) nhưng **ép đủ với mọi `insert`/`update` mới** — có 3 bài
+  integration khoá lại. **Đừng chạy `validate constraint`**: nó sẽ đỏ, và đỏ là đúng.
+- **Sàn 10 của BR-026 chỉ áp cho `target_visit_points`.** `actual_visit_points` vẫn từ 0. Đi được ít
+  hơn cam kết là **kết quả thật**, không phải dữ liệu sai.
+- **Đổi tên cột trong `returns table (...)` bắt buộc `drop function` rồi `create`** — Postgres từ
+  chối `create or replace`. Và `drop function` **cuốn theo mọi `GRANT`**, phải cấp lại đủ.
+- **`gen types --local` cần `SUPABASE_DB_PASSWORD=postgres` và phải bỏ `stderr`** (ISSUE-022). Gộp
+  `stderr` vào file sẽ ghi dòng `Connecting to db 5432` vào đầu `types/database.types.ts`.
+- **Chuỗi tiền dùng NO-BREAK SPACE `U+00A0`.** Assertion gõ space thường cho ra
+  `expected '5 ₫' to be '5 ₫'` — hai chuỗi nhìn y hệt nhau.
+- **Soát bố cục PHẢI mở mọi `<details>` trước khi đo**, và **phải đo bằng tài khoản vào được form**.
+  Lượt soát đầu tiên báo "0 phát hiện" **sai** vì cả hai lý do đó. Luôn xuất kèm bộ đếm — "0 phát
+  hiện" chỉ có nghĩa khi biết mẫu số.
+- **Bảng số liệu của biểu đồ trend nay có HAI nhánh** (thẻ < 768px, `<table>` từ 768px — DEC-052).
+  Bài E2E vì vậy assert theo **nội dung nhìn thấy**, không theo `role=table`: role đó **cố ý không
+  tồn tại** ở mobile.
+- **`commitment-summary.tsx` nay đọc nhãn từ `KPI_METRIC_ROWS`**, không viết cứng. Đừng gõ lại bốn
+  chuỗi nhãn ở bất kỳ component nào.
+- **`KpiMetricRow.shortLabel` chỉ dành cho thẻ ảnh 9:16.** Web luôn dùng `label` đầy đủ.
+- **Đừng chạy bộ soát giao diện SONG SONG với `npm run e2e`** — cả hai tự `next build` + `next start`
+  và tranh nhau CPU lẫn database local; đã gây một lượt đỏ oan (ISSUE-023).
+
+**Từ phiên PWA + đổi màu theo logo (2026-08-10):**
 
 - **Bảng màu nay lấy từ LOGO — DEC-046.** `--color-primary` là **`#1273B8`** (azure), **không** còn
   là chàm `#1E40AF`. Cam logo `--color-accent` = **`#E9A04F`**. Đừng "khôi phục" bảng cũ; DEC-014

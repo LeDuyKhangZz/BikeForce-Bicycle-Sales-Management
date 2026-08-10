@@ -37,7 +37,7 @@ export function SalesPerformanceTable({ rows }: Props) {
     reportCount: row.report_count,
     kpiAchievedDays: row.kpi_achieved_days,
     href: `/admin/sales/${row.sales_id}`,
-    quantityText: formatMetricValue(row.actual_sales_quantity, 'SALES_QUANTITY'),
+    quantityText: formatMetricValue(row.actual_sales_amount, 'SALES_AMOUNT'),
     revenueText: formatMetricValue(row.actual_revenue, 'REVENUE'),
     visitText: formatMetricValue(row.actual_visit_points, 'VISIT_POINTS'),
     // "Achievement trung bình" của FR-029 = tổng thực đạt / tổng cam kết của

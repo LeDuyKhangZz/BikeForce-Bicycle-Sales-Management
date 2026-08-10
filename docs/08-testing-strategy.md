@@ -1167,3 +1167,69 @@ Trả **`null`**, không ném lỗi (**DEC-040**). Bài test khoá lại: tháng
 | Kiểm ảnh 9:16 trong Zalo trên thiết bị thật | ❌ `N/A — cần điện thoại thật + link công khai` (ISSUE-003) |
 
 Hai dòng này **không được diễn giải thành pass** dưới bất kỳ hình thức nào.
+
+---
+
+## CẬP NHẬT PHASE 13 (2026-08-10) — biên mới, và cách soát giao diện bằng MÁY
+
+### 13.1 Bảng biên đã đổi (thay các dòng tương ứng ở §3.1 và §3.6)
+
+| Trường | Biên CŨ | Biên MỚI | Nguồn |
+|---|---|---|---|
+| `target_visit_points` | `[0, 1000]` | **`[10, 1000]`** | BR-026, DEC-049 |
+| `actual_visit_points` | `[0, 1000]` | **không đổi** — sàn chỉ áp cho `target` | DEC-049 |
+| `target_sales_quantity` | `[0, 10_000]` | **cột DI SẢN, không còn test** | DEC-050 |
+| **`target_sales_amount`** | — | **`[0, 100_000_000_000]`** | DEC-050 |
+
+Case biên **bắt buộc** thêm ở `lib/validation/report.test.ts`: `9` bị từ chối · `10` được chấp nhận ·
+`0` **bị từ chối** (trước Phase 13 nó hợp lệ) · `visit_purpose` gửi lên thì bị **strip**, không phải
+bị từ chối.
+
+### 13.2 Ba bài integration khoá ràng buộc `not valid` của `0008`
+
+`tests/integration/daily-reports.constraints.test.ts` thêm ba bài, và điều chúng chứng minh mới là
+điểm chính: **`not valid` vẫn ép đủ với dòng MỚI**, nó chỉ tha cho dòng đã có.
+
+1. `target_visit_points ∈ {0, 1, 9}` → `23514` / `ck_target_visit_points`; đúng `10` thì qua.
+2. Cam kết sáng **thiếu** `target_sales_amount` → `ck_target_sales_amount_required`.
+3. `COMPLETED` mà chỉ điền cột **di sản** `actual_sales_quantity` → vẫn bị
+   `ck_completed_requires_actuals` chặn; điền cột **mới** thì qua. Đây là bài chứng minh
+   `0008` thật sự đã chuyển ràng buộc sang cột mới, không phải chỉ thêm cột.
+
+### 13.3 Soát giao diện bằng MÁY — cách làm, và bốn cái bẫy đã sập
+
+Bộ soát là **script dùng-một-lần, không commit** (đúng thông lệ Phase 2–6). Nó đo trực tiếp trên DOM
+đã render, không đọc code đoán: `horizontal-scroll` · `touch-target-size` · `readable-font-size` ·
+`color-contrast`.
+
+**Bốn điều bắt buộc làm, mỗi điều tương ứng một lần đo sai đã thật sự xảy ra:**
+
+1. **Đo cặp màu THỰC TẾ chồng nhau**, bằng cách leo cây tổ tiên tới màu nền đầu tiên không trong
+   suốt. Đo token so với `card`/`background` là **chưa đủ** — bài học ISSUE-018.
+2. **Mở mọi `<details>` trước khi đo.** Nội dung gập lại không tham gia layout; lượt đầu báo "0 phát
+   hiện" trong khi có một bảng tràn ngang 116px.
+3. **Đi vào cả nhánh CÓ DỮ LIỆU.** `/admin/analytics` không có `?month=` rơi vào empty state; phải
+   đo thêm URL của tháng mà fixture đã đổ dữ liệu.
+4. **Dùng tài khoản VÀO ĐƯỢC màn hình cần đo.** Tài khoản đã `COMPLETED` bị BR-019 đá khỏi cả hai
+   form nhập, nên hai màn hình quan trọng nhất với Sales **không hề được đo**. Dấu hiệu làm lộ ra:
+   hai route khác nhau cho ra **cùng một con số đếm**.
+
+**Và một luật chung rút ra:** mỗi trang phải xuất kèm **bộ đếm** (`interactive=… contrastPairs=…
+minRatio=…`). **"0 phát hiện" chỉ có nghĩa khi biết mẫu số** — một selector gõ sai cũng cho 0 phát
+hiện, và đó là "xanh oan".
+
+### 13.4 Khi một bài E2E đỏ — quy trình bắt buộc trước khi kết luận
+
+Đã dùng thật trong phiên này (ISSUE-023):
+
+1. **Đọc thời lượng lượt chạy trước.** Một lượt 2,8 giờ thay vì 4 phút nghĩa là máy đang tranh tài
+   nguyên — đó là dữ kiện, không phải nhiễu.
+2. **Chạy lại riêng bài đó.** Xanh ⇒ *chưa* kết luận được gì.
+3. **So TỈ LỆ qua nhiều lượt.** `--repeat-each` dùng được với spec **chỉ đọc**
+   (`security.spec.ts`, `admin-flow.spec.ts` phần đọc) nhưng **KHÔNG** dùng được với
+   `sales-flow.spec.ts` — BR-001 và BR-019 làm lượt lặp thứ hai tất yếu đỏ dù code đúng.
+4. **Đọc trạng thái giao diện lúc đỏ.** Form kẹt ở "Đang đăng nhập…" với ô nhập disabled nghĩa là
+   Server Action **chưa trả về** — khác hẳn bị từ chối. Đây là dấu vân tay của ISSUE-021.
+
+**Đừng chạy bộ soát giao diện song song với `npm run e2e`** — cả hai tự `next build` + `next start`
+và tranh nhau CPU lẫn cùng một database local.

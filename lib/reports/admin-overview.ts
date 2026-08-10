@@ -30,8 +30,8 @@ export type AdminOverviewSource = {
   no_report_count: number;
   target_visit_points: number;
   actual_visit_points: number;
-  target_sales_quantity: number;
-  actual_sales_quantity: number;
+  target_sales_amount: number;
+  actual_sales_amount: number;
   target_revenue: number;
   actual_revenue: number;
   target_customer_visits: number;

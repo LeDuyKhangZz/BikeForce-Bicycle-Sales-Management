@@ -56,13 +56,17 @@ function validationFailure(error: z.ZodError): Exclude<MorningReportState, null>
   };
 }
 
-/** Đọc đúng 6 ô của form; mọi khoá khác trong FormData bị bỏ qua. */
+/**
+ * Đọc đúng 5 ô của form; mọi khoá khác trong FormData bị bỏ qua.
+ *
+ * PHASE 13 — `visit_purpose` đã bị gỡ (DEC-048). Hai lớp chặn chồng nhau: hàm
+ * này không đọc nó, và `morningReportSchema` cũng strip nó nếu ai đó gửi tay.
+ */
 function readMorningFormData(formData: FormData): Record<string, unknown> {
   return {
     planned_route: formData.get('planned_route'),
-    visit_purpose: formData.get('visit_purpose'),
     target_visit_points: formData.get('target_visit_points'),
-    target_sales_quantity: formData.get('target_sales_quantity'),
+    target_sales_amount: formData.get('target_sales_amount'),
     target_revenue: formData.get('target_revenue'),
     target_customer_visits: formData.get('target_customer_visits'),
   };

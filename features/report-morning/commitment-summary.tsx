@@ -1,5 +1,6 @@
 import { Card, CardTitle } from '@/components/ui/card';
 import { formatMetricValue } from '@/lib/kpi';
+import { KPI_METRIC_ROWS } from '@/lib/reports/metric-rows';
 import type { DailyReport } from '@/services/reports';
 
 type Props = {
@@ -22,15 +23,14 @@ export function CommitmentSummary({ report }: Props) {
   // Đơn vị (`điểm` / `xe` / `khách` / `₫`) CHỈ tồn tại trong `formatMetricValue`
   // (NFR-012, DEC-038). Bản Phase 3 của khối này tự ghép `` `${n} điểm` `` nên
   // số từ 1.000 trở lên mất dấu phân nhóm nghìn — đã sửa ở Phase 6.
-  const rows: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'Điểm viếng thăm', value: formatMetricValue(report.target_visit_points, 'VISIT_POINTS') },
-    { label: 'Doanh số', value: formatMetricValue(report.target_sales_quantity, 'SALES_QUANTITY') },
-    { label: 'Doanh thu', value: formatMetricValue(report.target_revenue, 'REVENUE') },
-    {
-      label: 'Khách hàng',
-      value: formatMetricValue(report.target_customer_visits, 'CUSTOMER_VISITS'),
-    },
-  ];
+  // PHASE 13 — nhãn đọc từ `KPI_METRIC_ROWS` thay vì gõ tay bốn chuỗi. Bản cũ
+  // viết cứng 'Doanh thu' / 'Khách hàng', nên khi DEC-050 đổi nhãn thì màn hình
+  // này sẽ âm thầm nói khác bảng đối chiếu và thẻ ảnh. Đây đúng là loại lệch mà
+  // `lib/reports/metric-rows.ts` sinh ra để chặn (AGENTS.md §9).
+  const rows: ReadonlyArray<{ label: string; value: string }> = KPI_METRIC_ROWS.map((row) => ({
+    label: row.label,
+    value: formatMetricValue(report[row.targetColumn], row.metric),
+  }));
 
   return (
     <Card className="flex flex-col gap-3">
@@ -53,12 +53,7 @@ export function CommitmentSummary({ report }: Props) {
         <p className="text-sm break-words text-foreground">{report.planned_route}</p>
       </div>
 
-      {report.visit_purpose && (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">Mục đích chuyến đi</p>
-          <p className="text-sm break-words text-foreground">{report.visit_purpose}</p>
-        </div>
-      )}
+      {/* PHASE 13 — khối "Mục đích chuyến đi" đã bị gỡ (DEC-048). */}
     </Card>
   );
 }

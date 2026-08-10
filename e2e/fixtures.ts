@@ -136,12 +136,16 @@ export async function seedE2eFixture(): Promise<void> {
   await sql(
     `insert into public.daily_reports (
        sales_id, report_date, status, planned_route, visit_purpose,
-       target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
-       actual_route, actual_visit_points, actual_sales_quantity, actual_revenue,
+       target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
+       actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
        actual_customer_visits, evening_note, evening_submitted_at
+     -- PHASE 13: điểm viếng thăm ≥ 10 (BR-026) và doanh số là TIỀN (DEC-050).
+     -- Bốn cặp số cố ý cho bốn trạng thái khác nhau của BR-023:
+     --   15/12 = 125% EXCEEDED · 60tr/80tr = 75% MISSED
+     --   90tr/100tr = 90% NEAR · 10/10 = 100% EXCEEDED
      ) values ($1, $2, 'COMPLETED', 'Quận 1 → Quận 3', 'Chăm sóc đại lý',
-       4, 8, 100000000, 10,
-       'Quận 1 → Quận 3 → Quận 5', 5, 6, 90000000, 10,
+       12, 80000000, 100000000, 10,
+       'Quận 1 → Quận 3 → Quận 5', 15, 60000000, 90000000, 10,
        'Ghi chú có dấu tiếng Việt: ừ ẫ ợ ỹ đ Đ.', now())`,
     [done.id, today],
   );
@@ -154,8 +158,8 @@ export async function seedE2eFixture(): Promise<void> {
   await sql(
     `insert into public.daily_reports (
        sales_id, report_date, status, planned_route, visit_purpose,
-       target_visit_points, target_sales_quantity, target_revenue, target_customer_visits,
-       actual_route, actual_visit_points, actual_sales_quantity, actual_revenue,
+       target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
+       actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
        actual_customer_visits, evening_submitted_at
      )
      select $1,
@@ -163,9 +167,9 @@ export async function seedE2eFixture(): Promise<void> {
             'COMPLETED',
             'Tuyến ' || to_char(d, 'DD/MM'),
             'Chăm sóc đại lý',
-            4, 8, 100000000, 10,
+            12, 80000000, 100000000, 10,
             'Tuyến thực tế',
-            4, 8, 100000000, 10,
+            12, 80000000, 100000000, 10,
             d
        from generate_series(
               (date_trunc('month', $2::date) - interval '1 month')::date,

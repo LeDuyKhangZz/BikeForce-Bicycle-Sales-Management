@@ -74,7 +74,7 @@ function readEveningFormData(formData: FormData): Record<string, unknown> {
   return {
     actual_route: formData.get('actual_route'),
     actual_visit_points: formData.get('actual_visit_points'),
-    actual_sales_quantity: formData.get('actual_sales_quantity'),
+    actual_sales_amount: formData.get('actual_sales_amount'),
     actual_revenue: formData.get('actual_revenue'),
     actual_customer_visits: formData.get('actual_customer_visits'),
     evening_note: formData.get('evening_note'),
