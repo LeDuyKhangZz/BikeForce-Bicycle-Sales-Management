@@ -1580,10 +1580,26 @@ lại 30 dòng ghi chú) · `e2e/helpers.ts` · `e2e/security.spec.ts` · `docs/
 **Decisions:** None — không có DEC mới. Việc gỡ `cache()` là đánh giá rủi ro tại chỗ, ghi đầy đủ ở
 `ISSUE-021` và trong chính `features/auth/queries.ts`.
 
+**Đính chính ngay trong phiên — `preferredRegion` KHÔNG ăn thua (đo sau khi deploy):**
+
+Commit `9935dff` deploy **success** lên Production lúc 08:45. Đo lại: `x-vercel-id` vẫn
+`hkg1::iad1::…` qua **6/6 lượt**, TTFB `/login` vẫn **~0,46 s — không đổi một chút nào**. Nghĩa là
+khai `preferredRegion` trong code **không** đổi được vùng chạy, dù manifest build ghi đúng
+`["sin1"]` cho 18/18 route và deploy hoàn toàn thành công.
+
+Suy luận (**chưa xác minh trực tiếp**): Vercel chỉ áp dụng `preferredRegion` cho **Edge Runtime**;
+mọi route của dự án chạy **Node runtime** nên vùng do **cài đặt Project** quyết định và cài đặt đó
+thắng khai báo trong code. ⇒ **ISSUE-019 quay lại `OPEN`**, và cách sửa **chỉ có một**: Vercel →
+Settings → Functions → Region = `sin1` → **Redeploy**. Ba dòng `preferredRegion` được giữ lại nhưng
+chú thích tại chỗ đã ghi rõ là **không đủ**.
+
+**Bài học thứ ba của phiên, cùng họ với hai bài trên:** *"build ghi đúng cấu hình"* và *"deploy
+thành công"* **không chứng minh** cấu hình đó có hiệu lực. Chỉ phép đo trên chính production mới
+chứng minh được — và may là đã đo trước khi đi báo là đã sửa xong.
+
 **Remaining:**
 
-- Xác minh `x-vercel-id` phần giữa đã thành `sin1` trên production sau khi Vercel deploy xong, rồi
-  chuyển ISSUE-019 sang `CLOSED`.
+- **ISSUE-019 vẫn OPEN** — người dùng phải đổi Region trên Vercel Dashboard rồi Redeploy.
 - **OQ-19 đang chờ người dùng trả lời** — chặn migration `0008` và mọi thay đổi `lib/kpi.ts`.
 - Toàn bộ Phase 13 (nay **16 mục**), ISSUE-003, Lighthouse, luồng Sales trên production.
 - Xoá `.env.admin-bootstrap`.

@@ -89,11 +89,11 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-016 | **P1** | **CLOSED** | **MỚI** — file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module, `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra". **build / typecheck / lint / 724 unit test đều XANH** — chỉ E2E bắt được. Sửa bằng **DEC-045** | Phase 10, Phase 11 | DEC-045, UC-17, FR-030, FR-023 |
 | ISSUE-017 | P3 | OPEN | **MỚI** — `notFound()` trên route có `loading.tsx` trả **200** kèm giao diện "Không tìm thấy" thay vì 404, do response đã stream. **Cố ý không sửa** — tính không-phân-biệt-được của BR-003 vẫn đúng, và route API vẫn trả mã thật | Phase 7, Phase 9, Phase 10 | BR-003, BR-022, DEC-039, ISSUE-015 |
 | ISSUE-018 | P2 | **CLOSED** | **MỚI** — nav active ở sidebar ghép `text-primary` lên `bg-status-info-bg` (hai cặp khác nhau) ⇒ sau DEC-046 đo được **4,32:1**, làm đỏ **9 lượt quét axe** ở `desktop-1440`. Lỗi có từ Phase 7, chỉ **lộ ra** khi đổi màu. Sửa bằng cặp đúng (**7,99:1**) | Phase 7, Phase 12 | DEC-046, NFR-007, ISSUE-016 |
-| ISSUE-019 | P2 | **FIXING** | function Vercel chạy ở **`iad1` (Mỹ)** còn DB ở **Singapore** ⇒ **~230 ms/lượt gọi DB**. **Sửa bằng CODE** ngày 2026-08-10: `preferredRegion = 'sin1'` ở root layout + 2 route handler; manifest build xác nhận **18/18 route**. Chờ xác minh `x-vercel-id` trên production sau deploy | Phase 12 | NFR-001, ISSUE-021 |
+| ISSUE-019 | **P2** | OPEN | function Vercel chạy ở **`iad1` (Mỹ)** còn DB ở **Singapore** ⇒ **~230 ms/lượt gọi DB**. ⚠ **Sửa bằng code KHÔNG ăn thua** — khai `preferredRegion='sin1'` ở 3 nơi, manifest build đúng **18/18 route**, deploy thành công, nhưng `x-vercel-id` vẫn `iad1` qua **6/6 lượt đo** và TTFB không đổi. **Bắt buộc đổi trên Dashboard**: Settings → Functions → Region = `sin1` → **Redeploy** | Phase 12 | NFR-001, ISSUE-021 |
 | ISSUE-020 | P3 | OPEN | **MỚI** — `Minimum password length` trên cloud **vẫn là 6**, DEC-041 yêu cầu 8. Zod đã ép 8 ở tầng app nên chỉ hở với ai gọi thẳng GoTrue API cho **chính mình**. **Người dùng chấp nhận rủi ro 2026-08-10** | Phase 12 | DEC-041 |
 | ISSUE-021 | P3 | OPEN | **MỚI** — `getCurrentProfile()` bị gọi **2 lần/trang** (layout + page), mỗi lần **2 lượt mạng** ⇒ **4 lượt** chỉ để hỏi "ai đây". **Đã THỬ `cache()` và phải GỠ**: nó làm **đăng nhập treo** không tất định (E2E 111→109→105, gỡ ra về **111/111**). Đọc issue trước khi thử lại | Phase 2, Phase 12 | NFR-001, ISSUE-019, DEC-004 |
 
-Tổng: **9 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 7 × P3), **1 FIXING** (ISSUE-019), **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
+Tổng: **10 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 7 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
 
 ---
 
@@ -1040,6 +1040,23 @@ X-Vercel-Id: hkg1::iad1::d82tz-1786348187688-273b5317134e
 **Chênh lệch ~230 ms giữa hai dòng cuối là chi phí của ĐÚNG MỘT lượt đi-về giữa function (Mỹ) và database (Singapore).** Hai dòng đó khác nhau đúng một điều: có gọi Supabase hay không.
 
 **Vì sao đáng sửa:** mỗi màn hình gọi database nhiều hơn một lần — `/admin` gọi 5 RPC tổng hợp, các màn hình Sales gọi 1–3 truy vấn. Chi phí này **nhân lên theo số lượt gọi tuần tự**, và NFR-001 đặt ngưỡng **LCP < 2,5s trên 4G** cho người dùng dùng điện thoại ngoài thị trường — nơi độ trễ mạng vốn đã cao.
+
+**⚠ ĐÃ THỬ SỬA BẰNG CODE VÀ THẤT BẠI — đo ngày 2026-08-10, ghi để không ai mất công lần nữa:**
+
+Khai `export const preferredRegion = 'sin1'` ở `app/layout.tsx` **và** ở cả hai Route Handler. Kết quả từng bước:
+
+| Bước | Kết quả |
+|---|---|
+| `next build` sinh `.next/server/functions-config-manifest.json` | **18/18 route** mang `["sin1"]` ✅ |
+| Deploy lên Vercel (commit `9935dff`) | **success**, lên Production lúc 08:45 ✅ |
+| `x-vercel-id` trên production, 6 lượt | **`hkg1::iad1::…` cả 6 lượt** ❌ |
+| TTFB `/login` | **~0,46 s — KHÔNG ĐỔI** ❌ |
+
+Giải thích nhiều khả năng nhất (**chưa xác minh trực tiếp**, ghi rõ đây là suy luận): Vercel chỉ áp dụng `preferredRegion` cho **Edge Runtime**. Mọi route của dự án chạy **Node runtime** — page mặc định Node, hai Route Handler khai `runtime = 'nodejs'` tường minh — nên vùng chạy do **cài đặt Project** quyết định, và cài đặt đó **thắng** khai báo trong code.
+
+Ba dòng `preferredRegion` **được giữ lại** vì chúng khai báo ý định ngay trong repo và sẽ có tác dụng nếu sau này có route Edge, **nhưng chú thích tại chỗ đã ghi rõ là không đủ**. Đừng đọc ba dòng đó rồi tưởng issue này đã xong.
+
+**Fix — chỉ có một đường, và nó nằm trên Dashboard:**
 
 **Fix:** Vercel → project → **Settings** → **Functions** → **Function Region** → chọn **Singapore (`sin1`)** → **Save** → vào tab **Deployments**, bản mới nhất → `···` → **Redeploy** (đổi region **không** tự áp dụng cho bản đã build).
 

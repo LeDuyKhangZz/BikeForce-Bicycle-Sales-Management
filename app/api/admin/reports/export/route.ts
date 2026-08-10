@@ -43,8 +43,12 @@ import { CSV_EXPORT_MAX_ROWS, getAdminReportsForExport } from '@/services/report
 
 export const runtime = 'nodejs';
 /**
- * Cùng vùng với database Singapore — ISSUE-019. Route segment config KHÔNG lan
- * từ `app/layout.tsx` xuống Route Handler, nên phải khai lại ở đây.
+ * Cùng vùng với database Singapore — ISSUE-019.
+ *
+ * ⚠ **KHÔNG ĐỦ MỘT MÌNH** — đã đo trên production: khai `preferredRegion` ở cả
+ * ba nơi mà `x-vercel-id` vẫn trả `iad1`. Route này chạy Node runtime nên vùng
+ * do **Settings → Functions → Region** trên Vercel quyết định. Xem ghi chú đầy
+ * đủ ở `app/layout.tsx` và `docs/12 § ISSUE-019`.
  */
 export const preferredRegion = 'sin1';
 
