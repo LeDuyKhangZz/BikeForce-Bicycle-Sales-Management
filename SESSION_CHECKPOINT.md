@@ -10,10 +10,10 @@
    HỒI ĐƯỢC**, nhãn khách hàng thành **"Khách hàng đã gặp"**, trường **"Mục đích chuyến đi" đã bị
    gỡ**, mục tiêu điểm viếng thăm có **sàn 10**. Nguồn: **OQ-19 đã trả lời** + **DEC-048/049/050** +
    **BR-026**. Đơn vị `xe` **không còn tồn tại** ở bất kỳ đâu trong dự án.
-2. **⚠ CLOUD ĐANG THIẾU MIGRATION `0008`.** Local có **8/8**, cloud mới **7/8**. **Đẩy trước khi
-   deploy lần kế tiếp**, nếu không production sẽ gọi `admin_*` với tên cột không tồn tại:
-   `npx supabase db push --linked --yes` (mật khẩu qua biến môi trường, **không cần TTY**).
-3. **Chưa `git push`.** Commit xong thì đẩy — `git push` **chạy được từ agent**, đã kiểm chứng.
+2. ✅ **CLOUD ĐÃ ĐỦ `0008` — 8/8**, đẩy ngày 2026-08-10. Đã kiểm chứng thật (xem bảng dưới).
+3. ✅ **ĐÃ PUSH.** GitHub ở `356f9dd`, xác minh bằng `git ls-remote origin refs/heads/main`.
+   ⚠ **Việc còn lại của người dùng:** xác nhận Vercel đã build xong `356f9dd` rồi mở lại `/admin` —
+   bản deploy CŨ đọc `admin_*` theo tên cột cũ nên sẽ hiện số sai cho tới khi bản mới lên.
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -103,7 +103,25 @@ cất lại đó theo yêu cầu "deploy trước".
 | Migration | Local | Cloud `rnmywhwanpxmipqducqu` |
 |---|---|---|
 | `0001` … `0007` | ✅ | ✅ **đã push** ngày 2026-08-10 |
-| **`0008`** | ✅ **đã apply + seed chạy sạch** | ❌ **CHƯA PUSH — việc số 2 ở `Next Exact Steps`** |
+| **`0008`** | ✅ **đã apply + seed chạy sạch** | ✅ **ĐÃ PUSH ngày 2026-08-10 — cloud nay 8/8** |
+
+**Đã kiểm chứng thật trên cloud SAU khi đẩy `0008` (2026-08-10):**
+
+| Phép kiểm | Kết quả |
+|---|---|
+| `npx supabase migration list --linked` | **8/8** khớp cả `local` lẫn `remote` |
+| `gen types --linked` so với bản đã commit | khác **đúng một khối metadata** (`__InternalSupabase.PostgrestVersion`) ⇒ **schema hai bên khớp** |
+| **`has_function_privilege` cho cả 5 hàm `admin_*`** | `authenticated` = **`t`** · `anon` = **`f`** ⇒ **`drop function` KHÔNG làm mất GRANT** |
+| Gọi `admin_today_overview` qua REST bằng `anon` | **`42501 permission denied for function`** |
+| Dữ liệu production (1 báo cáo, `2026-08-10`) | `target_sales_quantity = 50` **còn nguyên** · `visit_purpose` **còn nguyên** · `target_sales_amount` = **`null`** ⇒ **đúng OQ-19c**, không mất dữ liệu nào |
+| `pg_constraint.convalidated` | 3 constraint mới = **`f`** (đúng thiết kế `not valid`) · 2 constraint dải giá trị = **`t`** |
+| `https://…vercel.app/login` | **200**, `x-vercel-id` = `hkg1::sin1::…` ⇒ function chạy ở **Singapore** (ISSUE-019 đã sửa) |
+
+> ⚠ **Thứ TỰ đã làm và rủi ro đi kèm — ghi lại để lần sau biết:** code được `git push` **trước**,
+> database migrate **sau**. Giữa hai mốc đó, nếu Vercel build xong trước thì bản deploy MỚI chạy trên
+> schema CŨ trong ít phút. Với app nội bộ một người dùng thì chấp nhận được, nhưng lần sau **nên
+> migrate database TRƯỚC rồi mới push code** — migration `0008` chỉ THÊM cột và dùng `not valid`, nên
+> nó tương thích ngược với code cũ, còn chiều ngược lại thì không.
 
 **Đã kiểm chứng thật trên cloud sau khi đẩy (2026-08-10):**
 
@@ -713,21 +731,19 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 **LÀM ĐÚNG BA VIỆC NÀY TRƯỚC, THEO THỨ TỰ — cập nhật cuối phiên Entry 016:**
 
-```bash
-# 1. Commit toàn bộ Phase 13 (working tree đang bẩn)
-git add -A && git commit
-git push origin main            # chạy được từ agent, đã kiểm chứng
+> ✅ **Ba việc kỹ thuật đầu tiên ĐÃ XONG ngày 2026-08-10:** commit + `git push` (`356f9dd`) ·
+> `supabase db push` đưa `0008` lên cloud (**8/8**) · xác minh đủ 7 phép kiểm (bảng ở
+> `Database State`). **Không làm lại.**
 
-# 2. ⚠ ĐẨY MIGRATION 0008 LÊN CLOUD — BẮT BUỘC TRƯỚC LẦN DEPLOY KẾ TIẾP
-#    Cloud đang 7/8. Thiếu bước này thì production gọi admin_* với tên cột
-#    không tồn tại và toàn bộ khu vực Admin sẽ lỗi.
-SUPABASE_DB_PASSWORD=<mật khẩu cloud> npx supabase db push --linked --yes
-npx supabase migration list --linked   # kỳ vọng 8/8 khớp cả local lẫn remote
+**VIỆC SỐ 1 CÒN LẠI — cần người dùng, làm ngay:**
 
-# 3. Xác minh trên cloud sau khi đẩy
-#    - 5 hàm admin_* vẫn tồn tại và anon vẫn KHÔNG execute được
-#    - báo cáo cũ trên production hiện '—' ở ô Doanh số (đúng OQ-19c), không phải NaN
-```
+Mở Vercel, xác nhận deployment của `356f9dd` đã **Ready**, rồi **mở lại `/admin`** và kiểm hai điều:
+- 12 chỉ số hiện số thật, **không** có `NaN` / `undefined`;
+- báo cáo ngày `2026-08-10` hiện **`—`** ở ô "Doanh số" — đó là **đúng** (OQ-19c: dòng có trước
+  `0008` mang `null`), **không phải lỗi**.
+
+Nếu Vercel chưa build xong thì bản deploy CŨ vẫn đang đọc `admin_*` theo tên cột cũ và sẽ hiện số
+sai — **Redeploy** là đủ, không phải sửa gì.
 
 **Sau đó là bốn việc cần NGƯỜI hoặc THIẾT BỊ THẬT (không phải code):**
 

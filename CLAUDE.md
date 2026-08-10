@@ -42,7 +42,7 @@
 | Hạng mục | Trạng thái |
 |---|---|
 | Phase | **PHASE 13 — gần đóng** (2026-08-10). 13a ✅ · 13b ✅ (trừ 2 mục cần **mắt người** / **thiết bị thật**) · 13c ✅ **đủ ba nhóm A, B, C**. Phase 0…5, 7…10 đã đóng đủ; Phase 6 và 11 còn tổng 3 mục **đều cần thiết bị thật**. **Phase 12 còn một việc CODE-adjacent: đẩy `0008` lên cloud** |
-| ⚠ **Migration** | Local **8/8** · Cloud **7/8** — **`0008` CHƯA được đẩy**. Phải `supabase db push --linked --yes` **trước lần deploy kế tiếp**, nếu không production gọi `admin_*` với tên cột không tồn tại |
+| Migration | ✅ Local **8/8** · Cloud **8/8** — `0008` đẩy ngày 2026-08-10, đã xác minh **7 phép kiểm** (GRANT, `anon` bị chặn, dữ liệu cũ còn nguyên, `convalidated`) — bảng đầy đủ ở `SESSION_CHECKPOINT.md § Database State` |
 | Source code | **ĐẦY ĐỦ v1.** Next.js 16.3.0 App Router · **18 route chạy thật** · **7 migration** trên local · luồng báo cáo ngày hai nửa · KPI engine · ảnh 9:16 · **lịch sử báo cáo** · **toàn bộ khu vực Admin** (dashboard 12 chỉ số, 7 chiều lọc, phân tích tháng + biểu đồ trend, quản lý tài khoản, xuất CSV) · bộ test **729 case** + **99 bài E2E** |
 | Git | Nhánh `main`, remote `origin` → GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). **`git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
 | Supabase **local** | ✅ Chạy thật — Docker + CLI 2.111.0, Postgres 17.6. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
@@ -366,8 +366,9 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 9. ~~**Phase 7 — Sales History**~~ · ~~**Phase 8 — Admin Dashboard**~~ · ~~**Phase 9 — Admin Reports & Filters**~~ · ~~**Phase 10 — Sales Management**~~ · ~~**Phase 11 — Testing & Security**~~ — ✅ **XONG 2026-08-10 trong một phiên.** 18/18 route chạy thật · 5 hàm SQL aggregate · bộ E2E 99/99 · 729 test. Chi tiết: `WORKLOG.md` Entry 010.
 10. ~~**Phase 12 — Deployment Preparation**~~ — ✅ **production đã sống** (`bike-force-bicycle-sales-management.vercel.app`), smoke test Admin 16/16.
 11. ~~**Phase 13 — Nhận diện thương hiệu & soát UI/UX**~~ — ✅ **XONG 2026-08-10** trừ hai mục cần **mắt người** và **thiết bị thật**. Chi tiết: `WORKLOG.md` Entry 016.
-12. **VIỆC KẾ TIẾP, theo đúng thứ tự** (chi tiết ở `SESSION_CHECKPOINT.md § Next Exact Steps`):
-    **(a)** commit + `git push origin main` · **(b)** ⚠ **đẩy migration `0008` lên cloud** — bắt buộc trước lần deploy kế tiếp · **(c)** rotate service role key (ISSUE-011) · **(d)** Lighthouse + ISSUE-003 trên thiết bị thật.
+12. ~~commit + push~~ ✅ `356f9dd` · ~~đẩy `0008` lên cloud~~ ✅ **8/8, đã xác minh**.
+13. **VIỆC KẾ TIẾP** (chi tiết ở `SESSION_CHECKPOINT.md § Next Exact Steps`):
+    **(a)** xác nhận Vercel build xong `356f9dd` rồi mở lại `/admin` · **(b)** rotate service role key (ISSUE-011) · **(c)** Lighthouse + ISSUE-003 trên thiết bị thật.
 
 **Những thứ đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
 

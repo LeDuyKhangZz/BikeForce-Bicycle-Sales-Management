@@ -1698,14 +1698,57 @@ Bộ soát giao diện: **~2.400 cặp màu** đo trên DOM đã render, **0 vi 
 
 **Remaining:**
 
-- ⚠ **Cloud đang thiếu `0008`** — phải `supabase db push` trước lần deploy kế tiếp, nếu không bản
-  production sẽ gọi `admin_*` với tên cột không tồn tại.
+- **Xác nhận Vercel đã build xong `356f9dd`** rồi mở lại `/admin` — bản deploy cũ đọc `admin_*` theo
+  tên cột cũ nên sẽ hiện số sai cho tới khi bản mới lên. **Redeploy là đủ, không phải sửa gì.**
 - **Xem tận mắt** ở 375px/1440px (đã đo đủ bằng máy, chưa nhìn bằng mắt người).
 - "Thêm vào màn hình chính" trên máy thật · ISSUE-003 (Zalo) · Lighthouse · ISSUE-011 (rotate key).
 - Xoá `.env.admin-bootstrap`.
 
-**Next:** `npx supabase db push --linked --yes` để đẩy `0008` lên cloud (mật khẩu qua biến môi
-trường `SUPABASE_DB_PASSWORD`, không cần TTY), rồi `git push origin main`.
+**Next:** mở Vercel → xác nhận deployment `356f9dd` **Ready** → mở `/admin` kiểm 12 chỉ số không có
+`NaN`, và báo cáo `2026-08-10` hiện `—` ở ô Doanh số (**đúng** OQ-19c, không phải lỗi).
+---
+
+### Entry 017
+
+**Date:** 2026-08-10
+
+**Phase:** `PHASE 12` — đẩy migration `0008` lên Supabase cloud
+
+**Completed:**
+
+1. **`npx supabase db push --linked --yes`** — cloud từ **7/8** lên **8/8**. Mật khẩu đọc từ
+   `.env.local` và truyền qua biến môi trường nên **không cần TTY**. `"seeds":[]` xác nhận seed
+   **không** bị đẩy, đúng thiết kế (DEC-022).
+2. **Xác minh đủ 7 phép kiểm trên cloud** — bảng đầy đủ ở `SESSION_CHECKPOINT.md § Database State`.
+   Ba phép quan trọng nhất:
+   - **`has_function_privilege` cho cả 5 hàm `admin_*`**: `authenticated` = `t`, `anon` = `f` ⇒
+     bước cấp lại GRANT sau `drop function` đã làm đúng. **Đây là rủi ro lớn nhất của `0008`** —
+     quên nó thì RLS vẫn đúng nhưng toàn bộ khu vực Admin chết lặng lẽ.
+   - **Gọi RPC bằng `anon` qua REST** → `42501 permission denied for function`.
+   - **Dữ liệu production còn nguyên**: `target_sales_quantity = 50` và `visit_purpose` vẫn ở đó,
+     `target_sales_amount` = `null` ⇒ đúng OQ-19c, **không mất một dòng nào** (BR-013).
+3. **`gen types --linked` so với bản đã commit** — khác **đúng một khối metadata** ⇒ schema hai bên
+   khớp. Không cần commit lại types.
+
+**Files Changed:** `SESSION_CHECKPOINT.md` · `CLAUDE.md` · `WORKLOG.md`. **Không file mã nguồn nào.**
+
+**Tests:** N/A — thao tác hạ tầng, không đổi mã nguồn. Bộ test của Entry 016 vẫn là bản có hiệu lực
+(745/745 + 111/111). Thay vào đó là **7 phép kiểm chạy thật trên cloud**, liệt kê ở mục 2.
+
+**Errors:**
+
+1. **Không kết nối được cloud bằng host `db.<ref>.supabase.co`** — phải đi qua **pooler**
+   (`aws-0-ap-southeast-1.pooler.supabase.com:5432`, user `postgres.<ref>`). Và mật khẩu phải được
+   **URL-encode** trước khi ghép vào chuỗi kết nối, nếu không ký tự đặc biệt sẽ cắt chuỗi.
+2. **Không xác minh được từ bên ngoài là Vercel đã deploy commit nào.** Header `x-vercel-id` chỉ cho
+   biết vùng chạy (`sin1` — ISSUE-019 đã sửa), không cho biết phiên bản. Đây là lý do việc "xác nhận
+   deployment" phải nằm ở phía người dùng chứ không thể tự khẳng định.
+
+**Decisions:** None.
+
+**Remaining:** xem `Remaining` của Entry 016 — mục "đẩy `0008`" nay đã xong.
+
+**Next:** người dùng xác nhận Vercel build xong `356f9dd`, mở `/admin` kiểm 12 chỉ số.
 ---
 
 ## Quy ước ghi worklog
