@@ -96,7 +96,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-022 | P3 | OPEN | **MỚI 2026-08-10** — `gen types --local` đỏ vì `SUPABASE_DB_PASSWORD` của **cloud** lọt vào môi trường. Có cách đi vòng chắc chắn; ⚠ phải chuyển hướng `stderr`, nếu không dòng tiến trình bị ghi vào chính file types |
 | ISSUE-023 | P3 | OPEN | **MỚI 2026-08-10** — một bài E2E CSV-403 đỏ đúng một lần trong lượt chạy kéo dài **2,8 giờ** vì máy quá tải. Đã đo tỉ lệ: **82 lượt xanh liên tiếp** sau đó ⇒ **flake**, không phải hồi quy. Không sửa gì |
 
-Tổng: **12 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 9 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
+| ISSUE-024 | P3 | OPEN | **MỚI 2026-08-10** — Docker Desktop chết ở tầng control plane sau nhiều giờ tải nặng (`docker version` → **500**). Làm **34 bài E2E đỏ** cùng lúc và **rất dễ chẩn đoán nhầm thành hồi quy**. Chạy `docker version` TRƯỚC khi đọc diff |
+
+Tổng: **13 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 10 × P3), **0 FIXING**, **0 VERIFY**, **11 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018).
 
 ---
 
@@ -1207,6 +1209,46 @@ Tổng cộng **82 lượt xanh liên tiếp** sau lần đỏ duy nhất. `secu
 **Điều kiện phải mở lại:** nếu bài này đỏ thêm một lần nữa trong một lượt chạy **không** bị tranh tài nguyên, thì giả thuyết "flake" bị bác và phải điều tra thật.
 
 **Bài học ghi lại:** đừng chạy bộ soát giao diện song song với `npm run e2e` — cả hai đều tự `next build` rồi `next start`, và tranh nhau đúng CPU lẫn cùng một database local.
+
+---
+
+### ISSUE-024
+
+**Severity: P3**
+**Status: OPEN — không phải bug của sản phẩm; ghi lại vì nó rất dễ bị chẩn đoán nhầm thành hồi quy**
+
+**Module:**
+Docker Desktop trên máy phát triển. Liên quan: ISSUE-010, ISSUE-012, ISSUE-023, toàn bộ `tests/integration`, `tests/rls`, `e2e/`.
+
+**Description:**
+Sau nhiều giờ chạy tải nặng trong một phiên (khoảng 8 lượt `npm run e2e` đầy đủ, mỗi lượt tự `next build` + `next start`, cộng một `supabase db reset`), **Docker Desktop chết ở tầng control plane**: mọi lệnh gọi Engine API trả `500 Internal Server Error`.
+
+```
+docker version → 500 Internal Server Error for API route .../v1.51/version
+docker info    → 500
+docker logs    → 500
+```
+
+**Vì sao RẤT dễ chẩn đoán nhầm:**
+
+| Dấu hiệu | Điều dễ kết luận sai | Sự thật |
+|---|---|---|
+| Cổng `54321`/`54322` **vẫn mở** | "Supabase vẫn sống, vậy là lỗi code" | Container còn bám cổng nhưng GoTrue không phục vụ được |
+| **34 bài E2E đỏ** cùng lúc | "vừa sửa gì đó gây hồi quy" | Cùng cây mã đó vài phút trước chạy `ui-quality` **10/10** và `npm test` **745/745** |
+| Toàn bộ bài đỏ nằm ở **`zalo-like`** | "lỗi riêng của project đó" | `zalo-like` chạy **cuối cùng** — stack chết giữa chừng rồi không hồi phục |
+| Mọi bài đỏ đều là **`signIn` hết giờ** | "ISSUE-021 nặng thêm" | Chỉ là hệ quả: không có GoTrue thì đăng nhập không bao giờ xong |
+
+**Cách phân biệt trong 5 giây — làm việc này TRƯỚC khi đọc diff:**
+
+```bash
+docker version      # 500 ⇒ môi trường hỏng, DỪNG, đừng sửa code
+```
+
+**Khắc phục (người dùng đã làm thật, 2026-08-10):** khởi động lại Docker Desktop → `npx supabase stop` → `npx supabase start` → **restart 3 container theo ISSUE-012**. Sau đó `npm test` trở lại **745/745** ngay.
+
+⚠ **PowerShell 5.1 không có toán tử `&&`** — chuỗi lệnh khắc phục phải tách thành từng dòng, hoặc dùng `;`. Người dùng đã vấp đúng chỗ này khi chạy `sleep 8 && docker restart …`.
+
+**Phòng ngừa:** không chạy hai lượt Playwright song song (ISSUE-023), và nếu một phiên đã chạy quá nhiều lượt E2E thì restart Docker **trước** lượt xác nhận cuối thay vì sau khi nó đỏ.
 
 ---
 

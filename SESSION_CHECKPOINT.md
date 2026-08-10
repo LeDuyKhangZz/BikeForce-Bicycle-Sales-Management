@@ -615,7 +615,8 @@ thứ hai — URL không phải localhost thì ném lỗi ngay.
 | **Tổng `npm test`** | ✅ **745 passed / 745** |
 | **Soát UI/UX (Phase 13b)** | ✅ **20 URL × 2 bề rộng**, đo trên DOM đã render: **~2.400 cặp màu — 0 vi phạm**, thấp nhất **4,68:1** · **0** phần tử tương tác < 44px · **0** input < 16px · `dynamic-type` **150%** không vỡ bố cục. **Tìm ra 1 lỗi thật** (tràn ngang 116px) → DEC-052 |
 | **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** *(đo trước khi thêm `lib/pwa/`)* |
-| **E2E (Playwright)** | ✅ **111 passed / 111** — 3 project × 37 bài, **4,0 phút**. Đã chạy lại SAU toàn bộ thay đổi của Phase 13. ⚠ Trong phiên có **2 lượt đỏ 1 bài**, mỗi lượt một bài KHÁC nhau, đều khi máy đang chạy song song nhiều lượt Playwright — xem **ISSUE-023**; lượt sạch cho **111/111** |
+| **E2E (Playwright)** | ✅ **121 passed / 5 skipped / 0 failed**, **4,4 phút** — chạy SAU toàn bộ Phase 13 **và** DEC-053, trên đúng cây mã đã commit (`b91ab6c`). *5 skipped = `ui-quality` ở `zalo-like`, **cố ý** vì trùng viewport với `mobile-375`.* ⚠ Trong phiên có vài lượt đỏ: 2 lượt do máy quá tải (**ISSUE-023**), 3 lượt do lỗi của chính bài `ui-quality` mới (đã sửa), và 1 lượt **34 bài đỏ do Docker Desktop chết** (**ISSUE-024**). **Không lượt nào là do giao diện.** |
+| **Hàng rào giao diện `e2e/ui-quality.spec.ts`** | ✅ **0 vi phạm** cả bốn nhóm luật ở `mobile-375` **và** `desktop-1440`: tương phản trên **cặp thực tế chồng nhau** · cỡ chạm ≥ 44px · không tràn ngang · cỡ chữ · cộng `dynamic-type` **150%** không vỡ bố cục |
 | **A11y (axe-core)** | ✅ **30 lượt quét** (10 màn hình × 3 project) — **0 vi phạm serious/critical** (NFR-007) |
 | **EXPLAIN ANALYZE / InitPlan** | ✅ **ĐÃ ĐO** — `is_admin()` là InitPlan, mọi truy vấn list đi qua index. **ISSUE-005 CLOSED** |
 | **Bảo mật (E2E)** | ✅ IDOR · 401/403 JSON cho `/api/*` · CSV Sales→403 Admin→200 + `no-store` · PNG **1080×1920** đọc từ `IHDR` · **service role key không có trong HTML** |
@@ -870,6 +871,12 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 - **Thêm một bài E2E NẶNG thì phải hỏi "project nào thật sự cho thêm thông tin?".** Chạy mọi bài
   trên mọi project không phải kỹ lưỡng — nó đánh đổi độ tin cậy của cả bộ lấy lượt chạy trùng lặp.
   12 bài soát thêm vào đã làm **đỏ oan hai bài KHÁC** đúng theo cơ chế đó.
+- **⚠ HÀNG CHỤC BÀI E2E ĐỎ CÙNG LÚC ⇒ CHẠY `docker version` TRƯỚC KHI ĐỌC DIFF (ISSUE-024).**
+  Docker Desktop đã chết thật ở tầng control plane sau nhiều giờ tải nặng: mọi lệnh gọi Engine API
+  trả **500**, trong khi cổng `54321`/`54322` **vẫn mở** nên trông y như Supabase còn sống. Kết quả:
+  **34 bài đỏ**, tất cả là `signIn` hết giờ, tất cả ở `zalo-like` (project chạy cuối). Cùng cây mã đó
+  vài phút trước cho `ui-quality` **10/10** và `npm test` **745/745**. Khắc phục: restart Docker →
+  `supabase stop`/`start` → **restart 3 container theo ISSUE-012**.
 - **Bài học lớn nhất của phiên:** *"không vi phạm"* và *"đẹp"* là **hai câu hỏi khác nhau**. Bốn
   nhóm luật đo được (tương phản/cỡ chạm/tràn ngang/cỡ chữ) không bao giờ trả lời được câu thứ hai.
   **Muốn biết giao diện có đẹp không thì phải CHỤP ẢNH RA VÀ NHÌN.**

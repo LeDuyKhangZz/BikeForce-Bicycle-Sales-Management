@@ -1778,8 +1778,11 @@ Bộ soát giao diện: **~2.400 cặp màu** đo trên DOM đã render, **0 vi 
 `PROJECT_CHECKLIST.md §13d` · `SESSION_CHECKPOINT.md` · `WORKLOG.md`.
 
 **Tests:** typecheck ✅ · lint ✅ · build ✅ · `npm test` ✅ **745/745** ·
-`e2e/ui-quality.spec.ts` ✅ **8/8** ở hai bề rộng, **0 vi phạm** cả bốn nhóm luật sau khi đổi ·
-`npm run e2e` đầy đủ (3 project, gồm 12 bài `ui-quality` mới) — kết quả ghi ở dòng cuối mục này.
+`e2e/ui-quality.spec.ts` ✅ **0 vi phạm** cả bốn nhóm luật sau khi đổi, ở cả `mobile-375` lẫn
+`desktop-1440` · **`npm run e2e` đầy đủ ✅ 121 passed / 5 skipped / 0 failed, 4,4 phút** — chạy trên
+môi trường đã dựng lại sau ISSUE-024, trên **đúng cây mã đã commit** (`b91ab6c`).
+
+*(5 skipped = `ui-quality` ở `zalo-like`, cố ý bỏ vì trùng viewport với `mobile-375` — xem Errors 5.)*
 
 **Errors:**
 
@@ -1832,6 +1835,26 @@ Bộ soát giao diện: **~2.400 cặp màu** đo trên DOM đã render, **0 vi 
      làm phép đo khớp với chi phí đã biết; nó **không** che được lỗi thật, vì một Server Action treo
      hẳn thì vẫn không bao giờ trả về. Đã ghi ngay trong `helpers.ts`: **lần sau đừng nâng tiếp —
      hãy sửa ISSUE-021.**
+
+6. **Lượt E2E xác nhận cuối đỏ 34 BÀI — và nguyên nhân là DOCKER DESKTOP CHẾT, không phải code
+   (ISSUE-024).** Mọi lệnh gọi Docker Engine API trả **500**, trong khi cổng `54321`/`54322` **vẫn
+   mở** nên nhìn qua tưởng Supabase còn sống.
+
+   Bốn dấu hiệu đều dẫn tới kết luận sai nếu đọc vội, và cả bốn đều có lời giải thích khác:
+   34 bài đỏ *(nhưng cùng cây mã đó vừa cho `ui-quality` 10/10 và `npm test` 745/745)* · toàn bộ nằm
+   ở `zalo-like` *(project chạy **cuối cùng** — stack chết giữa chừng)* · toàn bộ là `signIn` hết giờ
+   *(hệ quả, không có GoTrue thì đăng nhập không bao giờ xong)*.
+
+   **Quy tắc rút ra, đã ghi vào `DO NOT REDO`: hàng chục bài E2E đỏ cùng lúc thì chạy
+   `docker version` TRƯỚC KHI ĐỌC DIFF.** Năm giây đó phân biệt "môi trường hỏng" với "hồi quy" —
+   hai thứ dẫn tới hai việc hoàn toàn khác nhau. Đã DỪNG lượt chạy thay vì để nó đo tiếp trên môi
+   trường hỏng, vì mỗi bài đỏ nay tốn 45 giây và kết quả không có giá trị nào.
+
+7. **`git push` từ agent đỏ ở cuối phiên** — `could not read Username for 'https://github.com'`.
+   Credential cache của Git Credential Manager đã hết hạn, và máy không có `gh` CLI để đi đường
+   khác. **Hai lần push trước trong cùng phiên chạy được là nhờ cache còn hiệu lực** — nghĩa là
+   niềm tin "agent push được" đúng *có điều kiện*, không phải luôn đúng. Người dùng tự chạy
+   `git push origin main` và thành công.
 
 **Decisions:** **DEC-053** — Soft UI Evolution: thêm chiều sâu/bo góc/chuyển động, **giữ nguyên
 DEC-046**.
