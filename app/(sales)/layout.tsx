@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { SignOutButton } from '@/features/auth/sign-out-button';
+import { MainNav } from '@/features/navigation/main-nav';
 import { requireRole } from '@/features/auth/queries';
+import { SALES_NAV_ITEMS } from '@/lib/navigation/nav-items';
 
 /**
  * LỚP 2 — guard server-side cho toàn bộ route group `(sales)` (FR-004, DEC-004).
@@ -10,24 +11,36 @@ import { requireRole } from '@/features/auth/queries';
  * role sai mà layout vẫn render thì dữ liệu đã lộ trước khi RLS kịp chặn ở query
  * con (`docs/06 §5.3`).
  *
- * Bottom nav 3 mục của Sales (DEC-018) thuộc Phase 7 — chưa dựng ở đây.
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 7 — điều hướng chính (DEC-018)
+ * ─────────────────────────────────────────────────────────────────────────
+ *  `MainNav` là bottom tab 3 mục ở < 1024px và sidebar trái từ 1024px, không
+ *  bao giờ hiện cả hai. Vì vậy phần thân phải chừa chỗ theo đúng hai chiều:
+ *    • `pb-24` — bottom nav cao ~56px cộng `safe-area-inset-bottom`, không chừa
+ *      thì dòng cuối của danh sách bị che (rule `fixed-element-offset`).
+ *    • `lg:pl-56` — đúng bề rộng sidebar.
+ *
+ *  Nút Đăng xuất **đã chuyển sang `/sales/account`** (FR-023, UC-11): giờ đã có
+ *  tab Tài khoản thì để thêm một nút đăng xuất ở header là hai đường tới cùng
+ *  một hành động, và nó chiếm mất chỗ của tên người dùng trên màn hình 375px.
  */
 export default async function SalesLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole('SALES');
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">BikeForce · Sales</p>
             <p className="truncate text-base font-semibold text-heading">{profile.full_name}</p>
           </div>
-          <SignOutButton />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-20">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-24">{children}</main>
+
+      <MainNav items={SALES_NAV_ITEMS} label="Điều hướng Sales" />
     </div>
   );
 }

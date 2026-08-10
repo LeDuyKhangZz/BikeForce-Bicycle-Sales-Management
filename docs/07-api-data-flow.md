@@ -438,3 +438,75 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Nh�
 | Thông báo lỗi hiển thị ra sao trên giao diện | `docs/05-ui-ux-design.md` §12 |
 | Ma trận quyền và kịch bản tấn công | `docs/06-auth-permissions.md` |
 | Test case cho từng mã lỗi | `docs/08-testing-strategy.md` |
+
+---
+
+## CẬP NHẬT PHASE 7–11 (2026-08-10) — data flow của Sales History và toàn bộ khu vực Admin
+
+### A. Kiểm kê đầy đủ mọi đường ghi/đọc của v1
+
+**Server Actions (đường GHI duy nhất — DEC-003):**
+
+| Action | File | UC / FR | Ghi chú |
+|---|---|---|---|
+| `saveMorningReport` | `features/report-morning/actions.ts` | UC-04, FR-008 | trả `ActionResult` kèm `data.notice` (DEC-034) |
+| `updateMorningReport` | `features/report-morning/actions.ts` | UC-05, FR-011 | |
+| `saveEveningReport` | `features/report-evening/actions.ts` | UC-06, FR-013/014 | **tự `redirect()`**, chỉ trả về khi lỗi (DEC-037) |
+| `signInAction` / `signOutAction` | `features/auth/actions.ts` | UC-01, UC-02 | |
+| `changePasswordAction` | `features/account/actions.ts` | UC-11, FR-023 | không `redirect`, không `revalidatePath` — không có RSC nào đổi |
+| `createSalesAccount` | `features/admin-sales-management/actions.ts` | UC-17, FR-030 | **nơi DUY NHẤT dùng service role**, và chỉ cho `auth.admin.createUser` |
+| `updateSalesAccount` | `features/admin-sales-management/actions.ts` | UC-18, FR-031 | client **anon chịu RLS** — `profiles_update_admin` là thứ cho phép |
+| `toggleSalesActive` | `features/admin-sales-management/actions.ts` | UC-19, FR-032, BR-009 | như trên |
+
+**Route Handlers (đúng HAI cái, cả hai chỉ để TẢI FILE):**
+
+| Route | UC / FR | Trả về | Quyết định |
+|---|---|---|---|
+| `GET /api/reports/[id]/share-image` | UC-08, FR-018 | `image/png` 1080×1920 | Phase 6 |
+| `GET /api/admin/reports/export` | UC-21, FR-034, AF-09 | `text/csv` + `Content-Disposition` | **DEC-042** |
+
+Cả hai bắt buộc `Cache-Control: private, no-store`, và cả hai đứng sau **ba lớp**: middleware trả 401/403 **JSON** cho `/api/*` (DEC-039) → route tự kiểm role → RLS.
+
+**RPC đọc (Server Component gọi qua `services/admin.ts`):** năm hàm của migration 0006 + 0007 — xem `docs/02 § CẬP NHẬT PHASE 8–11`.
+
+### B. Quy tắc mới rút ra ở Phase 11 — hằng số KHÔNG nằm trong file `'use server'`
+
+Một file `'use server'` chỉ được export **async function** và `export type`. Export một object hằng số làm module ném lỗi **lúc chạy** trong khi build/typecheck/lint/unit test đều xanh (ISSUE-016, DEC-045).
+
+Vì vậy chuỗi thông báo của mọi feature đều nằm ở `lib/`:
+
+| File | Dùng bởi |
+|---|---|
+| `lib/auth/messages.ts` | `features/auth/` |
+| `lib/reports/messages.ts` | `features/report-morning/`, `features/report-evening/` |
+| `lib/account/messages.ts` | `features/account/` |
+| `lib/admin/messages.ts` | `features/admin-sales-management/` |
+
+### C. Chuẩn hoá `searchParams` — mọi bộ lọc đi qua một hàm thuần
+
+`searchParams` là **chuỗi bất kỳ người dùng gõ được vào URL**, nên không tầng nào được tin nó. Ba hàm thuần chịu trách nhiệm, tất cả đều có unit test và **không bao giờ ném lỗi**:
+
+| Hàm | File | Đầu vào rác cho ra |
+|---|---|---|
+| `parseAdminReportFilters()` | `lib/reports/admin-filters.ts` | bộ lọc rỗng / khoảng ngày mặc định; `?salesId=abc` bị chặn trước khi tới Postgres; ô tìm kiếm bị cắt ở trần độ dài |
+| `parsePageParam()` | `lib/reports/pagination.ts` | trang `1` |
+| `parseTrendMetric()` | `lib/reports/trend-chart.ts` | `REVENUE` |
+| `getVietnamMonthRange()` | `lib/date.ts` | **`null`** — DEC-040, buộc caller xử lý |
+
+Thứ tự ưu tiên khoảng ngày của Admin: `date` (một ngày) → `from`+`to` → `month`. Chọn ngày mới thì **bỏ** `month` cũ, nếu không người dùng nhận một kết quả rộng hơn thứ họ vừa chọn. Tên tham số thật: `date`, `from`, `to`, `month`, `salesId`, `status`, **`q`** (tìm theo tên Sales), `page`.
+
+### D. Phân trang — luôn server-side
+
+`REPORTS_PAGE_SIZE = 20`. Truy vấn dùng `.range(offset, offset + 19)` + `count: 'exact'`, **không** `select('*')`, và không bao giờ tải cả tập rồi cắt ở client (NFR-002). Số học phân trang tách ra `lib/reports/pagination.ts` vì lệch `±1` ở biên trang là loại lỗi không ném lỗi — nó chỉ âm thầm mất hoặc lặp một dòng.
+
+Ba màn hình dùng chung đúng phép tính đó: `/sales/history`, `/admin/reports`, `/admin/sales`.
+
+### E. Tìm kiếm theo tên Sales
+
+`ilike` trên bảng nhúng (`.ilike('sales.full_name', …)`), có escape ký tự `%` và `_` của người dùng, và có trần độ dài chuỗi. Chưa dùng `pg_trgm` GIN — với ≤ 200 Sales thì `ilike` trên vài trăm dòng rẻ hơn chi phí bảo trì index (đã ghi ở `docs/10-future-roadmap.md`).
+
+### F. Xuất CSV — ba điều bắt buộc
+
+1. **Xuất đúng tập đang filter**, không phải toàn bảng — cùng `parseAdminReportFilters()` với màn hình danh sách, nên hai bên không thể lệch nhau.
+2. **Có trần `CSV_EXPORT_MAX_ROWS`** — một Admin bấm xuất khi chưa lọc gì không được kéo cả năm dữ liệu vào bộ nhớ hàm serverless.
+3. **Escape đúng chuẩn CSV** (`lib/reports/csv.ts`, có unit test): trường chứa `,`, `"`, xuống dòng đều được bọc nháy kép và nhân đôi nháy bên trong. Tên cột chỉ tiêu đọc từ `lib/reports/metric-rows.ts` — cùng nguồn với bảng đối chiếu và thẻ ảnh.

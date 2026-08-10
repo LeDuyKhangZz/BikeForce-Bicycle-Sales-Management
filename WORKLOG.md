@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 6 (11/12 mục — còn 1 mục cần thiết bị thật) | Last updated: 2026-08-08
+> Status: ACTIVE | Phase: 11 đã đóng (12/14 — còn Lighthouse và ma trận thử tay, cả hai cần thiết bị thật) | Last updated: 2026-08-10
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,46 +10,44 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 6 — Xuất ảnh 9:16: 11/12 mục xong (2026-08-08).**
+**PHASE 7 → PHASE 11 ĐÃ XONG TRONG MỘT PHIÊN (2026-08-10).**
 
-**Sales nay xuất được ảnh PNG 9:16 để gửi Zalo.** `GET /api/reports/[id]/share-image` sinh ảnh
-**1080×1920** bằng Satori với font nhúng đủ dấu tiếng Việt, gác `status = 'COMPLETED'` (BR-002) và
-để RLS quyết định quyền trên từng `id` (BR-003, BR-022). **ISSUE-002 đã CLOSED** — Satori dựng được
-toàn bộ bố cục, không phải dùng fallback.
-Kết quả thật: `typecheck` / `build` / `lint` đều exit 0 · `npm test` **368/368 PASS** (đo với code
-cuối; sau đó thêm 2 unit test, `--project unit` cho **290/290**) · kiểm chứng trình duyệt **44/44**
-ở 375px và 1440px · đã **xem tận mắt** hai tấm ảnh xuất ra.
-Mục còn lại: kiểm tay trong **Zalo webview trên thiết bị thật** (ISSUE-003) — cần điện thoại thật.
+**Toàn bộ 18 route của v1 nay chạy thật.** Sales có lịch sử báo cáo, màn hình chi tiết và trang tài
+khoản; Admin có dashboard 12 chỉ số, danh sách toàn đội với 7 chiều lọc, phân tích tháng kèm **biểu
+đồ trend theo ngày**, quản lý tài khoản Sales, và xuất CSV. Aggregate làm bằng **5 hàm SQL** trong
+migration 0006 + 0007, `security invoker` để RLS vẫn là hàng rào thật.
 
-Phát sinh và đã xử lý trong phase: **ISSUE-015 (P1)** — middleware redirect route `/api/*` về
-`/login`, khiến `fetch()` nhận HTML kèm `status 200` và lưu thành file `.png` hỏng. Sửa bằng
-**DEC-039**.
+**Phase 11 dựng được bộ E2E thật đầu tiên của dự án** — `playwright.config.ts` với 3 project và 33
+bài, chạy **99/99**, trong đó 30 lượt quét axe không có vi phạm serious/critical. Nó **lập tức trả
+giá trị**: bắt được **ISSUE-016 (P1)** — một file `'use server'` export object hằng số làm
+`/admin/sales/new` sập ở runtime, trong khi typecheck, lint, build và 724 test đều xanh.
 
-**Mục duy nhất còn lại: E2E Playwright trên project `mobile-375`.** Luồng đã chạy thật trên
-Chromium, nhưng bằng script dùng-một-lần đã xoá — **không phải** bộ E2E hồi quy.
-`playwright.config.ts` thuộc **Phase 11**, nên mục này **để nguyên `[ ]`**.
+**Ba câu hỏi đã được người dùng trả lời đầu phiên:** xác nhận DEC-041 (chính sách mật khẩu, không ép
+đổi lần đầu) · OQ-18 → phương án **(a)**, NFR-008 nới thành ≤ 8 lần chạm (**DEC-043**) · FR-037 →
+**có làm**, vẽ bằng inline SVG (**DEC-044**).
 
-**Phase 3 vẫn còn 1 mục treo** (walkthrough NFR-008 — 7 chạm / 1,8 giây), **chờ người dùng chọn
-phương án ở OQ-18 / ISSUE-013**. Không chặn Phase 5.
+Kết quả thật: `typecheck` / `lint` / `build` exit 0 (**18 route**) · `npm test` **729/729** ·
+coverage `lib/**` **99% / 98,69% / 100% / 99,4%** · `npx playwright test` **99/99** ·
+14 bài `EXPLAIN ANALYZE` đóng **ISSUE-005**.
 
-*(Lịch sử: Phase 0 từng bị chặn bởi 9 OPEN QUESTION mức BLOCKING — ISSUE-001; đã gỡ ở Entry 002.)*
-
----
+**Nợ còn lại, tất cả đều cần thiết bị thật hoặc thao tác của người dùng:** kiểm Zalo trên điện thoại
+(ISSUE-003) · Lighthouse · rotate service role key (ISSUE-011) · **đẩy migration 0006 + 0007 lên
+cloud** (`docs/09 §12`) · toàn bộ Phase 12.
 
 ## Overall Progress
 
 - [x] Phase 0 — Discovery & Business Analysis
 - [x] Phase 1 — Foundation
 - [x] Phase 2 — Database & Auth
-- [ ] Phase 3 — Morning Report *(13/14 — chờ OQ-18)*
-- [ ] Phase 4 — Evening Report *(9/10 — mục cuối là E2E Playwright, thuộc Phase 11)*
+- [x] Phase 3 — Morning Report *(14/14 — đóng 2026-08-10 sau khi OQ-18 được trả lời, DEC-043)*
+- [x] Phase 4 — Evening Report *(10/10 — đóng 2026-08-10 khi bộ E2E có commit ra đời)*
 - [x] Phase 5 — KPI Engine
-- [ ] Phase 6 — 9:16 Image Export
-- [ ] Phase 7 — Sales History
-- [ ] Phase 8 — Admin Dashboard
-- [ ] Phase 9 — Admin Reports & Filters
-- [ ] Phase 10 — Sales Management
-- [ ] Phase 11 — Testing & Security
+- [ ] Phase 6 — 9:16 Image Export *(11/12 — chỉ còn kiểm Zalo trên **thiết bị thật**, ISSUE-003)*
+- [x] Phase 7 — Sales History
+- [x] Phase 8 — Admin Dashboard
+- [x] Phase 9 — Admin Reports & Filters *(gồm cả FR-037 mức SHOULD — DEC-044)*
+- [x] Phase 10 — Sales Management
+- [ ] Phase 11 — Testing & Security *(12/14 — E2E + a11y + EXPLAIN đã chạy thật; còn Lighthouse và ma trận thử tay, cả hai cần thiết bị thật)*
 - [ ] Phase 12 — Deployment Preparation
 
 > Ghi chú về dấu `[x]` của Phase 0: đánh dấu này chỉ có nghĩa "**deliverable tài liệu của Phase 0
@@ -1091,6 +1089,106 @@ rồi `services/reports.listReportsByMonth()` phân trang server-side bám
 `app/(sales)/sales/today/page.tsx` — cờ đó nay là thứ **duy nhất** còn lại trong file đó. Màn hình
 chi tiết dùng lại `AchievementTable` + `ReportNotes` + `ShareImageButton` **đã có sẵn**, không viết
 lại.
+
+---
+
+### Entry 010
+
+**Date:** 2026-08-10
+
+**Phase:** PHASE 7 — Sales History · PHASE 8 — Admin Dashboard · PHASE 9 — Admin Reports & Filters · PHASE 10 — Sales Management · PHASE 11 — Testing & Security *(gộp năm phase trong một phiên, theo yêu cầu của người dùng)*
+
+**Completed:**
+
+**0) Phát hiện lệch giữa tài liệu và source code — xử lý trước khi gõ dòng code nào.**
+`SESSION_CHECKPOINT.md` ghi "Phase 7 chưa bắt đầu", nhưng working tree có **58 file chưa commit, khoảng 7.000 dòng**, phủ gần hết Phase 7, 8, 9, 10. Không tài liệu nào được cập nhật, và code tham chiếu **DEC-040, DEC-041, DEC-042** trong khi `docs/11` mới có tới DEC-039. Theo CLAUDE.md §4, đã **dừng và đo trạng thái thật bằng công cụ** thay vì tin một bên: `typecheck` exit 0 · `lint` exit 0 · `npm test` **685/685** · `build` exit 0 ra **18 route**. Kết luận: code là thật và có test; thứ thiếu là **tài liệu**. Đã hỏi người dùng ba câu trước khi đi tiếp (xem `Decisions`).
+
+**1) FR-037 — biểu đồ trend theo ngày (mục SHOULD duy nhất còn trống của Phase 9).**
+- `supabase/migrations/0007_admin_daily_trend.sql` — RPC `admin_daily_trend(p_from, p_to)`, `security invoker`, guard InitPlan, chỉ `authenticated` được execute.
+- `lib/reports/trend-chart.ts` — toàn bộ hình học dưới dạng **hàm thuần**, **17 unit test** gồm một bài quét lưới 64 tổ hợp bệnh lý khoá bất biến "không bao giờ `NaN`/`Infinity`/chiều cao âm".
+- `features/admin-analytics/daily-trend-chart.tsx` — SVG viết tay, **không thêm dependency nào**, render trong Server Component.
+- `services/admin.getAdminDailyTrend()` + **8 test RLS** mới.
+- Bộ chuyển chỉ tiêu bằng **4 `<Link>` thật** đổi `?metric=`, không phải state client.
+
+**2) `tests/integration/indexes.test.ts` — tầng test MỚI: kế hoạch truy vấn.** 14 bài `EXPLAIN (ANALYZE)`. Trả lời dứt điểm ba câu hỏi bỏ ngỏ từ `0005_indexes.sql` và **đóng ISSUE-005** — xem `Errors` mục 3.
+
+**3) PHASE 11 — bộ E2E thật đầu tiên của dự án.** `playwright.config.ts` với 3 project (`mobile-375`, `desktop-1440`, `zalo-like`), `globalSetup`/`globalTeardown` tự dựng và dọn fixture, và 5 file trong `e2e/`: `sales-flow`, `admin-flow`, `security`, `a11y`, cộng hạ tầng (`env`, `accounts`, `fixtures`, `helpers`). **33 bài × 3 project = 99 bài, tất cả xanh.** Trong đó **30 lượt quét `@axe-core/playwright`** trên 10 màn hình: **0 vi phạm serious/critical** (NFR-007).
+
+**4) Sửa ISSUE-016 (P1) — bug thật do chính bộ E2E vừa dựng phát hiện.** Xem `Errors` mục 1.
+
+**5) Đóng nợ Phase 3 và Phase 4.** OQ-18 được trả lời (DEC-043) nên mục walkthrough NFR-008 tick được → **Phase 3 đóng 14/14**. Bộ E2E có commit làm mục cuối của Phase 4 tick được → **Phase 4 đóng 10/10**.
+
+**6) Đồng bộ lại toàn bộ tài liệu** — 6 quyết định mới, 2 issue mới, 2 issue đóng, và 9 file `docs/` được cập nhật theo ma trận Master Spec §62.
+
+**Files Changed:**
+
+*Tạo mới (17):* `supabase/migrations/0007_admin_daily_trend.sql` · `lib/reports/trend-chart.ts` + `.test.ts` · `lib/reports/metric-rows.test.ts` · `lib/account/messages.ts` · `lib/admin/messages.ts` · `features/admin-analytics/daily-trend-chart.tsx` · `tests/integration/indexes.test.ts` · `playwright.config.ts` · `e2e/env.ts` · `e2e/accounts.ts` · `e2e/fixtures.ts` · `e2e/helpers.ts` · `e2e/global-setup.ts` · `e2e/global-teardown.ts` · `e2e/sales-flow.spec.ts` · `e2e/admin-flow.spec.ts` · `e2e/security.spec.ts` · `e2e/a11y.spec.ts`
+
+*Sửa (9):* `lib/reports/metric-rows.ts` (thêm bảng tra toàn phần `kpiMetricRow()`) · `services/admin.ts` · `app/(admin)/admin/analytics/page.tsx` · `features/account/actions.ts` · `features/admin-sales-management/actions.ts` · `tests/integration/setup.ts` (thêm `inRollbackTransaction()`) · `tests/rls/admin-aggregates.rls.test.ts` · `types/database.types.ts` (regenerate) · `package.json`
+
+*Tài liệu (13):* `docs/01` … `docs/12` (9 file có nội dung mới) · `PROJECT_CHECKLIST.md` · `WORKLOG.md` · `SESSION_CHECKPOINT.md` · `CLAUDE.md` · `AGENTS.md`
+
+*Kèm theo, đã có sẵn từ phiên trước nhưng commit ở lần này (58 file):* toàn bộ Phase 7–10.
+
+**Tests:**
+
+| Lệnh | Kết quả THẬT |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
+| `npm run build` | ✅ exit 0 — **18 route** |
+| `npm test` | ✅ **729 passed / 729**, 29 test file, 23,8 giây |
+| `npx vitest run --project unit` | ✅ **542** |
+| `npx vitest run --project integration` | ✅ **54** |
+| `npx vitest run --project rls` | ✅ **133** |
+| `npx vitest run --project unit --coverage` | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** |
+| `npx playwright test` (3 project) | ✅ **99 passed / 99**, 4,4 phút |
+| Xem tận mắt biểu đồ trend ở 375px và 1440px | ✅ đã chụp và mở xem — phát hiện một lỗi thị giác thật, xem `Errors` mục 4 |
+
+Vẫn `N/A`, **không được đọc thành pass**: Lighthouse (chưa chạy) · kiểm ảnh 9:16 trong Zalo trên **thiết bị thật** (ISSUE-003).
+
+**Errors:**
+
+1. **ISSUE-016 (P1) — bộ E2E bắt được một bug mà bốn cửa kiểm khác bỏ lọt, ngay lượt chạy đầu tiên.**
+   `features/admin-sales-management/actions.ts` và `features/account/actions.ts` khai `'use server'` **và** export một object hằng số. Next ném ngay khi nạp module: *A "use server" file can only export async functions, found object.* Hậu quả: `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra" — **toàn bộ UC-17 không dùng được**.
+   Đáng ghi nhớ là **cách nó sống sót**: `typecheck` exit 0 (đây là quy định của framework, không phải của hệ thống kiểu), `lint` 0 error (không có rule), `build` exit 0 ra đủ 18 route (lỗi ở runtime, không phải lúc biên dịch), và **724 unit/integration/RLS test đều xanh** (không bài nào nạp một Server Action qua đúng đường của Next). Bốn cửa đó **không phát hiện được nhóm lỗi này về nguyên tắc**.
+   Sửa bằng **DEC-045**: hằng số chuyển sang `lib/account/messages.ts` và `lib/admin/messages.ts` — đúng khuôn `lib/auth/messages.ts` đã có từ Phase 2. **Phòng ngừa đã ghi thành luật:** bộ E2E phải chạm ít nhất một Server Action của mỗi feature.
+
+2. **Bốn bài E2E đỏ cùng lúc ở đúng project `desktop-1440`, trong khi giao diện hoàn toàn đúng.**
+   Nguyên nhân là hệ quả trực tiếp của DEC-019: mọi bảng render **hai nhánh cùng lúc trong DOM** (card `md:hidden` + `<table>` `hidden md:table`), nên mỗi con số xuất hiện hai lần, và ở 1440px thì bản đứng **trước** trong DOM chính là bản bị ẩn. `getByText(...).first()` vì thế luôn bắt trúng phần tử ẩn. Sửa bằng helper `visibleText()` dùng `filter({ visible: true })`, và ghi lại nguyên nhân ngay trong `e2e/helpers.ts` để lần sau không mất một vòng chẩn đoán nữa.
+
+3. **ISSUE-005 hoá ra là lo lắng thừa — nhưng chỉ biết được sau khi đo.**
+   Nghi vấn từ Phase 2: `is_admin()` có bị gọi **mỗi dòng** thay vì một lần cho cả câu lệnh không. Đo thật dưới vai `authenticated` với 2.700 dòng: `(select public.is_admin())` **được nâng thành InitPlan**, `actual rows=1 loops=1`. Đúng như DEC-006 dự đoán. **ISSUE-005 → CLOSED.**
+   Hai câu hỏi bỏ ngỏ khác trong `0005_indexes.sql` cũng có câu trả lời: `idx_daily_reports_sales_date_desc` **KHÔNG dư thừa** (nó thắng index unique cho truy vấn FR-021, và không có node `Sort`) — **đừng drop**; còn `idx_profiles_role_active` thì phủ được truy vấn, nhưng ở quy mô vài chục dòng planner chọn `Seq Scan` là **hợp lý**, nên bài test cố ý không khẳng định "planner luôn chọn index".
+   Hai bẫy đã tránh khi viết bộ này: (a) trên bảng 22 dòng của seed thì **mọi** truy vấn đều `Seq Scan`, nên phải tự sinh dữ liệu trước khi hỏi kế hoạch; (b) role `postgres` có `rolbypassrls` nên policy **không tham gia kế hoạch** — đo bằng vai đó sẽ "xanh" một cách vô nghĩa.
+
+4. **Biểu đồ trend bản đầu vỡ type scale ở 1440px — và chỉ ảnh chụp mới cho thấy.**
+   Bản đầu đặt nhãn ngày vào `<text>` trong SVG với viewBox cố định cộng `width: 100%`. Ở 375px trông vừa đẹp; ở 1440px SVG phóng to **2,7 lần**, chữ `font-size: 11` render thành khoảng 30px và biểu đồ cao 540px. **Không unit test nào bắt được** — hình học hoàn toàn đúng, chỉ có tỉ lệ hiển thị sai. Sửa bằng cách đưa mọi chữ ra HTML và cho SVG `preserveAspectRatio="none"` cộng chiều cao cố định bằng CSS; kéo theo `PLOT_LEFT = 0` để nhãn HTML khớp cột, và thêm một unit test khoá đúng ràng buộc đó. Đây là lần thứ hai dự án gặp bài học "phải render ra rồi nhìn tận mắt" (lần đầu là cắt chuỗi trên thẻ ảnh 9:16, Phase 6).
+
+5. **Ba lỗi nhỏ của chính bộ E2E, sửa test chứ không sửa code:** tham số tìm kiếm là `q` chứ không phải `search`; câu báo lỗi email trùng cố ý xuất hiện **hai** chỗ nên `getByText` vi phạm strict mode; và bài "404" chạy khi chưa đăng nhập nên middleware redirect về `/login` và Playwright đi theo redirect thấy `200` — **đúng cái bẫy ISSUE-015 đã ghi lại từ Phase 6**. Cộng một lỗi vòng đời: `globalSetup` đóng pool `pg` khiến `globalTeardown` không dọn được fixture, và Playwright chỉ báo "1 error was not a part of any test" — bộ test vẫn "xanh" trong khi tài khoản E2E nằm lại trong database.
+
+6. **ISSUE-017 (P3, OPEN có chủ đích) — `notFound()` trả 200 thay vì 404.** Trang nằm dưới route group có `loading.tsx` nên Next stream phần vỏ ra trước; tới lúc `notFound()` ném thì header đã gửi. Đã cân nhắc và **cố ý không sửa**: thứ BR-003 đòi hỏi là hai ca "không tồn tại" và "không có quyền" phải **không phân biệt được** — tính chất đó vẫn đúng và đã có E2E khoá; không có dữ liệu nào rò rỉ; và nơi mã trạng thái thực sự quan trọng (route API, nơi `fetch` phân nhánh) vẫn trả mã thật. Cách sửa duy nhất là bỏ `loading.tsx`, tức đánh đổi một mã trạng thái lấy trạng thái tải của **mọi** trang trong group.
+
+**Decisions:**
+
+- **DEC-040** — `getVietnamMonthRange()` trả `null` khi chuỗi tháng sai định dạng, không ném lỗi.
+- **DEC-041** — chính sách mật khẩu: tối thiểu 8 ký tự, không bắt quy tắc thành phần, **v1 không ép đổi mật khẩu lần đầu**. *(người dùng xác nhận)*
+- **DEC-042** — `GET /api/admin/reports/export` là Route Handler thứ hai và cuối cùng của v1.
+- **DEC-043** — **trả lời OQ-18**: NFR-008 nới thành **≤ 8 lần chạm**, giữ nguyên 5 trường bắt buộc. *(người dùng chọn phương án (a))*
+- **DEC-044** — FR-037 vẽ bằng SVG viết tay, không thêm thư viện biểu đồ. *(người dùng chọn)*
+- **DEC-045** — hằng số dùng chung không được nằm trong file `'use server'`.
+
+Ba câu đã hỏi người dùng đầu phiên và đều được trả lời: xác nhận DEC-041 · chọn phương án cho OQ-18 · có làm FR-037 hay không.
+
+**Remaining:**
+
+- **ISSUE-003** — kiểm ảnh 9:16 trong **Zalo trên thiết bị thật**. Cần điện thoại + link công khai ⇒ phải chờ deploy Vercel. Mục cuối cùng còn nợ của Phase 6.
+- **Lighthouse** và **ma trận thử tay Chrome/Safari mobile** (Phase 11) — cần thiết bị thật, cùng lý do.
+- **ISSUE-011 (P1)** — rotate service role key. Việc của người dùng, không chặn code.
+- **Migration 0006 và 0007 chưa đẩy lên cloud.** Khu vực Admin sẽ hỏng trên bản deploy cho tới khi làm xong — hướng dẫn từng bước bấm ở `docs/09 §12`.
+- **Toàn bộ Phase 12** (Deployment) chưa bắt đầu.
+
+**Next:** **PHASE 12 — Deployment Preparation.** Bước đầu tiên và bắt buộc: **đẩy migration 0006 + 0007 lên Supabase cloud** theo `docs/09 §12` (có cả hai cách: `npx supabase db push --linked`, hoặc dán SQL trên Dashboard kèm hai câu kiểm để xác nhận đủ 5 hàm và `anon` không execute được). Rồi đặt **Minimum password length = 8** trên Dashboard cho khớp DEC-041, rotate service role key (ISSUE-011), sau đó mới tới Vercel. Sau khi có link công khai thì kiểm ngay ISSUE-003 trên điện thoại thật — đó là thứ duy nhất còn chặn Phase 6 đóng hoàn toàn.
 
 ---
 

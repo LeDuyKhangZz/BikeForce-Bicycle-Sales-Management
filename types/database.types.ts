@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -7,11 +7,6 @@
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.15"
-  }
   public: {
     Tables: {
       daily_reports: {
@@ -132,6 +127,81 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_daily_trend: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          actual_customer_visits: number
+          actual_revenue: number
+          actual_sales_quantity: number
+          actual_visit_points: number
+          report_count: number
+          report_date: string
+          target_customer_visits: number
+          target_revenue: number
+          target_sales_quantity: number
+          target_visit_points: number
+        }[]
+      }
+      admin_missing_report_alerts: {
+        Args: { p_date: string }
+        Returns: {
+          alert_kind: string
+          employee_code: string
+          full_name: string
+          id: string
+        }[]
+      }
+      admin_monthly_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          actual_customer_visits: number
+          actual_revenue: number
+          actual_sales_quantity: number
+          actual_visit_points: number
+          report_count: number
+          sales_count: number
+          target_customer_visits: number
+          target_revenue: number
+          target_sales_quantity: number
+          target_visit_points: number
+        }[]
+      }
+      admin_sales_performance: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          actual_customer_visits: number
+          actual_revenue: number
+          actual_sales_quantity: number
+          actual_visit_points: number
+          employee_code: string
+          full_name: string
+          is_active: boolean
+          kpi_achieved_days: number
+          report_count: number
+          sales_id: string
+          target_customer_visits: number
+          target_revenue: number
+          target_sales_quantity: number
+          target_visit_points: number
+        }[]
+      }
+      admin_today_overview: {
+        Args: { p_date: string }
+        Returns: {
+          active_sales_count: number
+          actual_customer_visits: number
+          actual_revenue: number
+          actual_sales_quantity: number
+          actual_visit_points: number
+          completed_count: number
+          morning_submitted_count: number
+          no_report_count: number
+          target_customer_visits: number
+          target_revenue: number
+          target_sales_quantity: number
+          target_visit_points: number
+        }[]
+      }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       vn_today: { Args: never; Returns: string }
@@ -271,3 +341,4 @@ export const Constants = {
     },
   },
 } as const
+

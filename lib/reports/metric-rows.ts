@@ -49,36 +49,64 @@ export type KpiMetricRow = {
 };
 
 /**
- * Thứ tự bốn dòng lấy đúng `docs/05 §7.1` và `§14`, giữ giống `CommitmentSummary`.
- * `actual_route` là cột text nên KHÔNG nằm trong danh sách này — nó không phải
- * một chỉ tiêu đo được (DEC-029).
+ * Bảng tra theo chỉ tiêu. `satisfies Record<KpiMetric, …>` bắt lỗi biên dịch
+ * ngay nếu một ngày nào đó `KpiMetric` có thêm giá trị mà bảng này chưa có —
+ * và vì nó **toàn phần**, `kpiMetricRow()` bên dưới trả về kiểu không `undefined`
+ * mà không cần một phép ép kiểu nào (NFR-012).
  */
-export const KPI_METRIC_ROWS: readonly KpiMetricRow[] = [
-  {
+const ROW_BY_METRIC = {
+  VISIT_POINTS: {
     metric: 'VISIT_POINTS',
     label: 'Viếng thăm',
     targetColumn: 'target_visit_points',
     actualColumn: 'actual_visit_points',
   },
-  {
+  SALES_QUANTITY: {
     metric: 'SALES_QUANTITY',
     label: 'Doanh số',
     targetColumn: 'target_sales_quantity',
     actualColumn: 'actual_sales_quantity',
   },
-  {
+  REVENUE: {
     metric: 'REVENUE',
     label: 'Doanh thu',
     targetColumn: 'target_revenue',
     actualColumn: 'actual_revenue',
   },
-  {
+  CUSTOMER_VISITS: {
     metric: 'CUSTOMER_VISITS',
     label: 'Khách hàng',
     targetColumn: 'target_customer_visits',
     actualColumn: 'actual_customer_visits',
   },
+} satisfies Record<KpiMetric, KpiMetricRow>;
+
+/**
+ * Thứ tự bốn dòng lấy đúng `docs/05 §7.1` và `§14`, giữ giống `CommitmentSummary`.
+ * `actual_route` là cột text nên KHÔNG nằm trong danh sách này — nó không phải
+ * một chỉ tiêu đo được (DEC-029).
+ *
+ * Mảng dựng TỪ bảng tra ở trên chứ không khai lại nội dung: thứ tự hiển thị và
+ * nội dung từng dòng là hai chuyện khác nhau, nhưng chúng phải là cùng một dữ
+ * liệu.
+ */
+export const KPI_METRIC_ROWS: readonly KpiMetricRow[] = [
+  ROW_BY_METRIC.VISIT_POINTS,
+  ROW_BY_METRIC.SALES_QUANTITY,
+  ROW_BY_METRIC.REVENUE,
+  ROW_BY_METRIC.CUSTOMER_VISITS,
 ];
+
+/**
+ * Chỉ tiêu → định nghĩa dòng của nó. Dùng khi tầng gọi đã có sẵn một `KpiMetric`
+ * (ví dụ `?metric=` đã qua `parseTrendMetric`) và cần biết nhãn hoặc tên cột.
+ *
+ * Trả về kiểu **không** `undefined` — khác `KPI_METRIC_ROWS.find()`, vốn buộc
+ * mọi nơi gọi phải viết một nhánh dự phòng không bao giờ chạy tới.
+ */
+export function kpiMetricRow(metric: KpiMetric): KpiMetricRow {
+  return ROW_BY_METRIC[metric];
+}
 
 /**
  * Đúng tập cột mà một tầng trình bày cần đọc để dựng bốn dòng trên. Khai báo

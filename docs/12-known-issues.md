@@ -75,7 +75,7 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-002 | P2 | **CLOSED** | Satori (`next/og`) chỉ hỗ trợ tập con CSS + cần font có dấu tiếng Việt. **Đã dựng thật 2026-08-08: Satori dựng đủ layout `docs/05 §14`, KHÔNG cần fallback `html-to-image`** | Phase 6 | DEC-010, FR-018, UC-08 |
 | ISSUE-003 | P2 | OPEN | Zalo in-app webview chưa được kiểm chứng trên thiết bị thật | Phase 6, Phase 11 | NFR-009, DEC-011, FR-020 |
 | ISSUE-004 | P2 | **CLOSED** | TypeScript 7.0.2 + ESLint 10.8.0 là bản major mới, chưa xác nhận tương thích Next 16. **Đã xảy ra thật 2026-08-07: cả hai đều vỡ; pin `typescript@6.0.3` + `eslint@9.39.5`** | Phase 1 | DEC-002, NFR-012 |
-| ISSUE-005 | P3 | OPEN | `is_admin()` phát sinh thêm một truy vấn `profiles` mỗi câu lệnh RLS | Phase 2, Phase 11 | DEC-006, NFR-002, NFR-015 |
+| ISSUE-005 | P3 | **CLOSED** | `is_admin()` phát sinh thêm một truy vấn `profiles` mỗi câu lệnh RLS. **Đã đo bằng `EXPLAIN ANALYZE` 2026-08-10: Postgres nâng `(select public.is_admin())` thành InitPlan, đánh giá đúng 1 lần cho cả câu lệnh** | Phase 2, Phase 11 | DEC-006, NFR-002, NFR-015 |
 | ISSUE-006 | P3 | **CLOSED** | Chưa có khái niệm ngày nghỉ → cảnh báo "chưa báo cáo" có thể tính cả người nghỉ. **Chủ nghiệp vụ xác nhận 2026-08-07: không xử lý gì thêm ở v1** | Phase 8 | OQ-08, AF-02, AF-15, FR-033, UC-20 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; là điều kiện tiên quyết nếu cho phép sửa sau khi `COMPLETED` | Phase 4+ (điều kiện) | OQ-04, OQ-05, BR-019, BR-020, AF-12 |
 | ISSUE-008 | P3 | **CLOSED** | `docs/01` mâu thuẫn nội bộ về khi nào `AchievementResult.percent = null` — đã chốt cách đọc ở **DEC-038** (2026-08-07) | Phase 5 | BR-015, DEC-025, DEC-038, OQ-11 |
@@ -83,11 +83,13 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-010 | P3 | OPEN | Máy phát triển chạy **nhiều stack Supabase local cùng lúc** → chọn nhầm container/port là chuyện đã xảy ra thật | Phase 2, Phase 11 | DEC-022, DEC-031 |
 | ISSUE-011 | **P1** | OPEN | **Service role key đã lọt vào transcript hội thoại** khi IDE tự đồng bộ `.env.local`. Phải **rotate** | Phase 2 | NFR-005, DEC-005, DEC-031 |
 | ISSUE-012 | P3 | OPEN | Sau `supabase db reset`, GoTrue + Kong không tự phục hồi → mọi lần đăng nhập nhận `502` cho tới khi restart hai container | Phase 3 → mọi phase sau | ISSUE-010, DEC-022 |
-| ISSUE-013 | P3 | OPEN | **NFR-008 mâu thuẫn với FR-008**: form sáng có 5 trường bắt buộc nên sàn lý thuyết là 7 lần chạm, không thể ≤ 6. Đo thật: **7 chạm / 1,8 giây**. **Cần người dùng quyết định (OQ-18)** | Phase 3 | NFR-008, FR-008, UC-04, OQ-18 |
+| ISSUE-013 | P3 | **CLOSED** | **NFR-008 mâu thuẫn với FR-008**: form sáng có 5 trường bắt buộc nên sàn lý thuyết là 7 lần chạm, không thể ≤ 6. Đo thật: **7 chạm / 1,8 giây**. **Đã giải quyết 2026-08-10: người dùng chọn phương án (a), NFR-008 nới thành ≤ 8 lần chạm — DEC-043** | Phase 3 | NFR-008, FR-008, UC-04, OQ-18, DEC-043 |
 | ISSUE-014 | P2 | **CLOSED** | Lưu báo cáo cuối ngày thành công nhưng **mất banner xác nhận** và **draft không bị xoá** — re-render RSC của route hiện tại sau Server Action làm form unmount trước khi effect chạy. Đã sửa bằng DEC-037 | Phase 4 | FR-015, FR-035, DEC-034, DEC-037 |
 | ISSUE-015 | **P1** | **CLOSED** | **MỚI** — middleware redirect **mọi** đường dẫn chưa đăng nhập về `/login`, kể cả `/api/*`. `fetch()` tự đi theo redirect ⇒ nút "Xuất ảnh" nhận HTML kèm `status 200` và lưu nó thành file `.png` hỏng. Đã sửa bằng **DEC-039** | Phase 6 | DEC-004, DEC-011, DEC-039, FR-020, NFR-014 |
+| ISSUE-016 | **P1** | **CLOSED** | **MỚI** — file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module, `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra". **build / typecheck / lint / 724 unit test đều XANH** — chỉ E2E bắt được. Sửa bằng **DEC-045** | Phase 10, Phase 11 | DEC-045, UC-17, FR-030, FR-023 |
+| ISSUE-017 | P3 | OPEN | **MỚI** — `notFound()` trên route có `loading.tsx` trả **200** kèm giao diện "Không tìm thấy" thay vì 404, do response đã stream. **Cố ý không sửa** — tính không-phân-biệt-được của BR-003 vẫn đúng, và route API vẫn trả mã thật | Phase 7, Phase 9, Phase 10 | BR-003, BR-022, DEC-039, ISSUE-015 |
 
-Tổng: **8 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 6 × P3), **0 FIXING**, **0 VERIFY**, **7 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-006, ISSUE-008, ISSUE-014, ISSUE-015).
+Tổng: **7 OPEN** (1 × P1 — ISSUE-011, 1 × P2 — ISSUE-003, 5 × P3), **0 FIXING**, **0 VERIFY**, **10 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016).
 
 ---
 
@@ -314,7 +316,7 @@ Nội dung gốc của issue ở trên được **giữ nguyên không sửa** t
 ### ISSUE-005
 
 **Severity: P3**
-**Status: OPEN**
+**Status: CLOSED — đo thật 2026-08-10 (Phase 11)**
 
 **Module:**
 `supabase/migrations/0003_functions_triggers.sql` và `0004_rls_policies.sql` (**đề xuất, chưa triển khai**) — hàm `public.is_admin()`, `public.is_active_sales()` và toàn bộ RLS policy trên `profiles`, `daily_reports`. Liên quan: DEC-004, DEC-006, NFR-002, NFR-015, Phase 2 và Phase 11.
@@ -350,6 +352,38 @@ Kế hoạch kiểm chứng (**chưa chạy**):
 - Test RLS phải chứng minh không xảy ra lỗi recursion khi `select` trên `profiles` bằng cả JWT admin lẫn JWT sales.
 - Ghi số đo vào `docs/08-testing-strategy.md` như một phần của bộ test NFR-002.
 - Đóng issue khi có số đo thật chứng minh chi phí chấp nhận được ở quy mô NFR-015.
+
+---
+
+**Verification (2026-08-10) — ĐÃ ĐO, không còn là giả thuyết:**
+
+`tests/integration/indexes.test.ts` dựng **2.700 dòng** `daily_reports` tổng hợp, `analyze`, rồi chạy `EXPLAIN (ANALYZE)` **dưới vai `authenticated`** (bắt buộc — role `postgres` có `rolbypassrls` nên policy không tham gia kế hoạch, và bài test sẽ "xanh" một cách vô nghĩa).
+
+Kế hoạch thật của Admin đọc danh sách báo cáo một tháng:
+
+```text
+Limit (actual rows=20 loops=1)
+  InitPlan 1
+    ->  Result (actual rows=1 loops=1)
+  InitPlan 2
+    ->  Result (actual rows=1 loops=1)
+  ->  Index Scan using idx_daily_reports_date_status on daily_reports (actual rows=20 loops=1)
+        Index Cond: ((report_date >= '2017-03-01') AND (report_date <= '2017-03-31'))
+        Filter: ((sales_id = (InitPlan 1).col1) OR (InitPlan 2).col1)
+```
+
+Ba điều đọc được, và cả ba đều là điều DEC-006 dự đoán:
+
+1. `(select public.is_admin())` **được nâng thành InitPlan** — `actual rows=1 loops=1`, tức đánh giá **đúng một lần cho cả câu lệnh**, không phải mỗi dòng. Đây chính là rủi ro mà issue này ghi nhận, và nó **không xảy ra**.
+2. Policy **không phá kế hoạch**: truy vấn vẫn đi qua `idx_daily_reports_date_status`, không có `Seq Scan`.
+3. `Filter` giữ đúng hình dạng `own OR admin` của `reports_select_own_or_admin`.
+
+**Hai câu hỏi bỏ ngỏ trong `0005_indexes.sql` cũng đã có câu trả lời:**
+
+- `idx_daily_reports_sales_date_desc` **KHÔNG dư thừa** — nó thắng `uq_daily_reports_sales_date` cho truy vấn lịch sử của FR-021 (`Index Scan using idx_daily_reports_sales_date_desc`, không có node `Sort`). **Không drop.**
+- `idx_profiles_role_active` **phủ được** truy vấn đếm Sales active (kiểm bằng `enable_seqscan = off`). Ở quy mô vài chục dòng, planner chọn `Seq Scan` là hợp lý — bài test cố ý **không** khẳng định "planner luôn chọn index", vì đó là khẳng định sai ở quy mô này.
+
+14 bài `EXPLAIN` này chạy trong `npm test` từ nay về sau, nên một policy hay một truy vấn viết hỏng ở phase sau sẽ làm chúng đỏ.
 
 ---
 
@@ -651,7 +685,7 @@ Lấy đúng tên container bằng `docker ps --filter "name=supabase_auth"` —
 ### ISSUE-013
 
 **Severity: P3**
-**Status: OPEN — cần người dùng quyết định (OQ-18)**
+**Status: CLOSED — người dùng chọn phương án (a) ngày 2026-08-10, xem DEC-043**
 
 **Module:**
 `/sales/today/morning` — NFR-008, FR-008, UC-04. Liên quan: `docs/01 §OPEN QUESTIONS`, Phase 3.
@@ -691,6 +725,18 @@ Cho tới khi có quyết định, mục *"Walkthrough xác nhận hoàn tất b
 
 **Verification:**
 Script kiểm chứng dùng-một-lần đã đếm số lần chạm và đo thời gian thật trên Chromium 375px (2026-08-07): **7 chạm / 1,8 giây**. Sau khi chốt phương án, phải đo lại và ghi số mới vào `WORKLOG.md`.
+
+---
+
+**Resolution (2026-08-10) — DEC-043:**
+
+Người dùng chọn **phương án (a)**: nới NFR-008 thành **≤ 8 lần chạm**, **giữ nguyên 5 trường bắt buộc** của FR-008.
+
+- Con số đo được (**7 chạm / 1,8 giây**) nay **đạt** cả hai vế.
+- **Không có thay đổi code nào** — form giữ nguyên 5 trường; ba biện pháp giảm thao tác đã có (chip cộng nhanh `+1tr/+5tr/+10tr`, `inputMode="numeric"`, `enterKeyHint="next"`) giữ nguyên.
+- `docs/01 § NFR-008` đã sửa; `docs/01 § OQ-18` chuyển sang ĐÃ TRẢ LỜI; mục walkthrough NFR-008 ở `PROJECT_CHECKLIST.md § Phase 3` nay tick được, đóng Phase 3 ở **14/14**.
+
+Hai phương án còn lại bị loại vì: (b) định nghĩa lại "chạm" là sửa cách đo cho khớp con số; (c) bỏ bớt trường bắt buộc là **thay đổi nghiệp vụ thật**, kéo theo migration mới và bốn tài liệu, chỉ để làm đẹp một con số.
 
 ---
 
@@ -766,6 +812,96 @@ Middleware được viết ở Phase 2, khi dự án **chưa có route API nào*
 - Chromium, `maxRedirects: 0`: **401**, body `{"code":"UNAUTHENTICATED",…}`, `content-type` **không** phải `text/html` — 3/3 PASS.
 - `lib/auth/routes.test.ts` — 2 test mới cho `isApiPath`, gồm cả case bẫy `/apiary` và `/sales/api` **không** được nhận nhầm.
 - Hồi quy: trang thường chưa đăng nhập **vẫn** redirect về `/login` như cũ (bộ test auth 375px/1440px của Phase 2 không đổi hành vi).
+
+---
+
+### ISSUE-016
+
+**Severity: P1**
+**Status: CLOSED — sửa 2026-08-10 bằng DEC-045**
+
+**Module:**
+`features/admin-sales-management/actions.ts` và `features/account/actions.ts` — hai file `'use server'`. Ảnh hưởng thật tới `/admin/sales/new`, `/admin/sales/[id]`, `/admin/account`, `/sales/account`. Liên quan: DEC-045, UC-11, UC-17, UC-18, UC-19, FR-023, FR-030…FR-032, Phase 10, Phase 11.
+
+**Description:**
+Cả hai file khai báo `'use server'` ở dòng đầu **và** export một object hằng số (`SALES_ADMIN_MESSAGES`, `CHANGE_PASSWORD_MESSAGES`). Next.js không cho phép điều đó và ném ngay khi **nạp module**:
+
+```
+Error: A "use server" file can only export async functions, found object.
+```
+
+Hậu quả với người dùng: mở `/admin/sales/new` thì thấy màn hình lỗi *"Đã có lỗi xảy ra · Không tải được nội dung · Mã lỗi: 3659088964@E352"* thay vì form tạo tài khoản. **Toàn bộ UC-17 không dùng được.**
+
+**Vì sao nó sống sót qua mọi cửa kiểm cũ — đây mới là phần đáng ghi nhớ:**
+
+| Cửa kiểm | Kết quả | Lý do bỏ lọt |
+|---|---|---|
+| `npm run typecheck` | ✅ exit 0 | Đây là quy định của **framework**, không phải của hệ thống kiểu. TypeScript không biết `'use server'` nghĩa là gì |
+| `npm run lint` | ✅ 0 error | `eslint-config-next` không có rule cho luật này |
+| `npm run build` | ✅ exit 0, 18 route | Lỗi xảy ra lúc **nạp module ở runtime**, không phải lúc biên dịch |
+| `npm test` (724 case) | ✅ toàn xanh | Không có test nào nạp một Server Action qua đúng đường của Next |
+
+Nghĩa là bốn cửa kiểm quen thuộc **không phát hiện được nhóm lỗi này về nguyên tắc**, chứ không phải vì viết thiếu test. Chỉ có thứ chạy ứng dụng thật mới thấy.
+
+**Cách nó lộ ra:**
+Bài E2E `UC-17: tạo tài khoản Sales` của Phase 11, ngay lượt chạy **đầu tiên**. Đây là giá trị cụ thể đầu tiên mà bộ E2E trả về, và nó xuất hiện trước cả khi bộ E2E chạy xong lần nào.
+
+**Expected:**
+`/admin/sales/new` render form; `createSalesAccount` chạy và trả `ActionResult`.
+
+**Actual (trước khi sửa):**
+Error boundary của route group `(admin)` bắt lỗi và hiện "Đã có lỗi xảy ra".
+
+**Fix (ĐÃ ÁP DỤNG — DEC-045):**
+1. `SALES_ADMIN_MESSAGES` → `lib/admin/messages.ts` (MỚI).
+2. `CHANGE_PASSWORD_MESSAGES` → `lib/account/messages.ts` (MỚI).
+3. Hai file `actions.ts` import ngược lại, và mang một chú thích cảnh báo tại đúng chỗ hằng số từng nằm — để lần sau không ai "dọn dẹp" bằng cách chuyển ngược vào.
+4. Quy tắc chung ghi vào DEC-045 và `AGENTS.md`.
+
+**Verification (2026-08-10):**
+- `npx playwright test --project=mobile-375` — bài UC-17 chuyển từ FAIL sang PASS, và đi tiếp được tới bước kiểm email trùng (BR-025).
+- Bộ E2E đầy đủ 3 project: **99/99 PASS**.
+- `npm run typecheck` / `npm run lint` / `npm run build` / `npm test` (**729/729**) đều xanh sau khi sửa.
+
+**Phòng ngừa:**
+Bộ E2E của Phase 11 **phải chạm ít nhất một Server Action của mỗi feature**. Hiện đã có: `saveMorningReport`, `updateMorningReport`, `saveEveningReport`, `createSalesAccount`, `changePasswordAction`. Feature mới thêm Server Action mà không có bài E2E chạm tới nó là một lỗ hổng cùng loại đang chờ.
+
+---
+
+### ISSUE-017
+
+**Severity: P3**
+**Status: OPEN — hành vi đã hiểu rõ, cố ý không sửa**
+
+**Module:**
+`app/(sales)/sales/reports/[id]/page.tsx`, `app/(admin)/admin/reports/[id]/page.tsx`, `app/(admin)/admin/sales/[id]/page.tsx` — mọi trang gọi `notFound()`. Liên quan: BR-003, BR-022, DEC-019, `docs/05 §12`, Phase 7, Phase 9, Phase 10.
+
+**Description:**
+`notFound()` trong một page nằm dưới route group có `loading.tsx` cho ra **HTTP 200** kèm giao diện "Không tìm thấy nội dung", chứ không phải **404**. Nguyên nhân: `loading.tsx` tạo một biên Suspense ở tầng layout, nên Next stream phần vỏ trang ra trước; tới lúc `notFound()` được ném thì header đã gửi đi và mã trạng thái không đổi được nữa.
+
+**Đã đo, không phải suy đoán (2026-08-10):**
+
+| Đường dẫn | Mã trạng thái | Giao diện |
+|---|---|---|
+| `/sales/reports/<uuid-không-tồn-tại>` | **200** | "Không tìm thấy nội dung" |
+| `/sales/reports/<uuid-của-Sales-khác>` | **200** | "Không tìm thấy nội dung" — **giống hệt** |
+| `/duong-dan-khong-ton-tai` (ngoài route group) | **404** | trang 404 gốc |
+| `GET /api/reports/<id>/share-image` chưa đăng nhập | **401 JSON** | — |
+| `GET /api/admin/reports/export` bằng phiên Sales | **403 JSON** | — |
+
+**Vì sao KHÔNG sửa:**
+
+1. **Thứ BR-003 thật sự đòi hỏi vẫn nguyên vẹn.** Yêu cầu là "không tồn tại" và "không có quyền" phải **không phân biệt được**, để trang không thành kênh dò ID (`docs/05 §12` dòng 9). Cả hai đều cho `200` cộng đúng một giao diện — tính chất đó vẫn đúng, chỉ là ở mã 200 thay vì 404. Có một bài E2E khoá đúng tính chất này.
+2. **Không có dữ liệu nào rò rỉ.** Trang không render một byte nào của báo cáo người khác; RLS trả `null` trước khi có gì để render.
+3. **Nơi mã trạng thái THỰC SỰ quan trọng vẫn đúng.** Client duy nhất đọc mã để phân nhánh là `share-image-button.tsx` gọi route API — và Route Handler không stream nên vẫn trả 401/403/404 thật (ISSUE-015, DEC-039).
+4. **Cách sửa duy nhất là bỏ `loading.tsx`**, tức đánh đổi một mã trạng thái lấy trạng thái tải của **mọi** trang trong route group — trong khi `PROJECT_CHECKLIST.md § Phase 8` yêu cầu rõ "skeleton cho phần tải > 300ms".
+
+**Điều kiện kích hoạt (khi nào phải xem lại):**
+- Nếu v2 có client nào `fetch()` một **trang** (không phải route API) và phân nhánh theo mã trạng thái;
+- hoặc nếu cần SEO / giám sát ngoài đếm 404 — hiện không, vì đây là ứng dụng nội bộ sau đăng nhập;
+- hoặc nếu Next.js đổi hành vi này ở bản major sau.
+
+**Phép đo giữ lại để chốt nguyên nhân:** bài E2E *"đường dẫn không tồn tại ngoài route group vẫn trả 404 thật"*. Nếu một ngày bài đó cũng thành 200 thì nguyên nhân đã khác, và issue này phải viết lại chứ không phải nới thêm.
 
 ---
 

@@ -1086,3 +1086,84 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dư
 1. Brief §8 nêu `formatVietnamDate('2026-08-07')` → `Thứ Năm, 07/08/2026`. Đã kiểm chứng: **2026-08-07 là Thứ Sáu**. Đây là lỗi ví dụ, không phải thay đổi quy tắc; cần sửa ví dụ trong brief và các docs có nhắc lại.
 2. Chuỗi kết quả của `formatCurrencyVND` chứa **NO-BREAK SPACE `U+00A0`** trước `₫`, không phải space thường. Mọi ví dụ dạng `125.000.000 ₫` trong tài liệu dự án nên kèm ghi chú này để không ai viết assertion sai.
 3. Ranh giới `is_active` giữa RLS và middleware (§5.3.1) chưa được nói rõ ở docs/06 — cần bổ sung, và chốt cùng đợt rà policy của OQ-04/OQ-05.
+
+---
+
+## CẬP NHẬT PHASE 11 (2026-08-10) — bộ E2E, a11y và test kế hoạch truy vấn đã CHẠY THẬT
+
+> Từ hôm nay, bốn dòng `N/A` cuối bảng "Testing State" của `SESSION_CHECKPOINT.md` chỉ còn **hai** (Lighthouse và kiểm Zalo trên thiết bị thật). E2E và a11y **đã chạy thật và có kết quả**.
+
+### A. Con số thật của lần chạy cuối (2026-08-10)
+
+| Lệnh | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
+| `npm run build` | ✅ exit 0 — **18 route** |
+| `npm test` | ✅ **729 passed / 729**, 29 test file, 23,8 giây |
+| — `--project unit` | **542** |
+| — `--project integration` | **54** |
+| — `--project rls` | **133** |
+| `npx vitest run --project unit --coverage` | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** |
+| `npx playwright test` (3 project) | ✅ **99 passed / 99**, 4,4 phút |
+
+### B. `tests/integration/indexes.test.ts` — TẦNG MỚI: kế hoạch truy vấn
+
+14 bài. Trả lời ba câu hỏi bỏ ngỏ từ `0005_indexes.sql` và ISSUE-005 — kết luận đầy đủ ở `docs/02 § CẬP NHẬT PHASE 8–11 §E`.
+
+**Hai điều bộ này làm khác mọi bộ trước, và cả hai đều bắt buộc:**
+
+1. **Tự sinh 2.700 dòng rồi `analyze`.** Trên bảng 22 dòng của seed, Postgres **luôn** chọn `Seq Scan` — đọc cả bảng rẻ hơn đọc index rồi nhảy về heap. Một bài test chạy trên seed sẽ báo "không dùng index" với **mọi** truy vấn, kể cả truy vấn hoàn hảo. Dữ liệu được dọn sạch ở `afterAll`.
+2. **Đo dưới vai `authenticated`, không phải `postgres`.** `postgres` có `rolbypassrls` nên policy **không tham gia kế hoạch** — bài test sẽ "xanh" một cách vô nghĩa. Đổi vai bằng `set local role` + `request.jwt.claims` trong một transaction luôn `rollback` (`inRollbackTransaction()` ở `tests/integration/setup.ts`).
+
+⚠ Bộ này khẳng định **hình dạng truy vấn khớp index** — thứ duy nhất môi trường local chứng minh được một cách trung thực. Nó **không** khẳng định thời gian chạy trên Supabase cloud.
+
+### C. `playwright.config.ts` — ba project
+
+| Project | Viewport / UA | Vì sao cần |
+|---|---|---|
+| `mobile-375` | 375 × 812, `isMobile` | Bề rộng nhỏ nhất phải hỗ trợ. Đây là môi trường **thật** của Sales |
+| `desktop-1440` | 1440 × 900 | Nơi DEC-019 đổi card thành `<table>` và DEC-018 đổi bottom nav thành sidebar — hai nhánh hiển thị khác nhau |
+| `zalo-like` | 375 × 812 + userAgent webview Zalo | NFR-009 |
+
+⚠ **Giới hạn đã biết của `zalo-like`:** đội một `userAgent` khác **không** tái hiện được giới hạn API thật của webview (Web Share API, quyền tải file, quyền lưu ảnh). Nó bắt lỗi ở tầng bố cục và tầng suy luận theo UA, **không thay thế được ISSUE-003** — việc đó vẫn cần điện thoại thật và link công khai.
+
+**Môi trường:** `webServer` tự chạy `next build && next start --port 3100` với env bơm từ `.env.test.local` (`e2e/env.ts`). `NEXT_PUBLIC_*` được Next nhúng vào bundle **lúc build**, nên không thể sửa sau khi build xong — đây là cách duy nhất đảm bảo cả server lẫn bundle client đều trỏ vào Supabase **local** (DEC-022). `reuseExistingServer: false` là cố ý: một `next start` cũ giữ cổng sẽ phục vụ bản build cũ với env cũ.
+
+**Fixture (`e2e/fixtures.ts`):** mỗi project có **Sales riêng**, vì BR-001 chỉ cho một báo cáo mỗi ngày và BR-019 khoá vĩnh viễn khi `COMPLETED` — dùng chung một tài khoản thì lượt chạy thứ hai trong ngày sẽ đỏ dù code hoàn toàn đúng. Mọi tài khoản `@e2e.bikeforce.test` bị xoá sạch ở `globalTeardown`, và `globalSetup` dọn **trước** khi dựng để bộ E2E chạy được nhiều lần liên tiếp.
+
+### D. 33 bài × 3 project = 99 bài. Phủ những gì
+
+| File | Phủ |
+|---|---|
+| `e2e/sales-flow.spec.ts` | Login → Today → Morning → Save → **Reopen/Edit** → Evening → Save → bảng đối chiếu → nút Xuất ảnh · BR-019 khoá vĩnh viễn · BR-007 · FR-021 lịch sử + lọc tháng + phân trang · FR-022 chi tiết · empty state · `?month=` rác · UC-11 đổi mật khẩu |
+| `e2e/admin-flow.spec.ts` | UC-12 dashboard · UC-13 lọc theo tên (**cặp đối chứng**: có kết quả ↔ empty state) · lọc tháng · UC-14 chi tiết · UC-15 phân tích + biểu đồ + bảng thay thế + đổi chỉ tiêu qua URL · UC-16 bảng hiệu suất · UC-17 tạo tài khoản + BR-025 email trùng · FR-004 ranh giới vai trò · bộ lọc rác |
+| `e2e/security.spec.ts` | BR-003/BR-022 IDOR · DEC-039 401 JSON cho `/api/*` · FR-034 CSV: Sales → 403, Admin → 200 + `no-store` · BR-002 ảnh PNG **1080×1920 đọc từ khối `IHDR`** · **NFR-005 grep service role key trong HTML của 4 trang Admin** |
+| `e2e/a11y.spec.ts` | 10 màn hình × 3 project = **30 lượt quét axe**, `wcag2a/2aa/21a/21aa`, **0 vi phạm serious/critical** |
+
+**NFR-005 được đo bằng E2E chứ không bằng một bước CI grep bundle riêng:** bài a11y/security mở trang thật rồi kiểm `page.content()` không chứa giá trị key **và** không chứa chuỗi `SUPABASE_SERVICE_ROLE_KEY`. Cách này mạnh hơn grep file tĩnh vì nó đo đúng thứ trình duyệt nhận được. Chốt chặn compile-time `import 'server-only'` ở `lib/supabase/admin.ts` vẫn giữ nguyên.
+
+### E. Ba bài học viết E2E, đã trả giá bằng lượt chạy đỏ
+
+1. **Chờ PHẦN TỬ THẬT, không chờ mạng.** `waitForLoadState('networkidle')` bắn *trước khi* React render xong — đã gây một vòng chẩn đoán sai ở Phase 5.
+2. **`getByText(...).first()` là cái bẫy của chính dự án này.** DEC-019 render **hai nhánh cùng lúc trong DOM** (card `md:hidden` + `<table>` `hidden md:table`), nên mỗi con số xuất hiện hai lần và ở 1440px thì bản đứng **trước** trong DOM chính là bản bị ẩn. Đã làm 4 bài đỏ cùng lúc ở đúng project `desktop-1440` dù giao diện hoàn toàn đúng. Dùng `visibleText()` (`filter({ visible: true })`) ở `e2e/helpers.ts`.
+3. **Đừng kiểm chuỗi cấm bằng `textContent('body')`** — nó gộp cả RSC flight payload của Next, mà payload đó **luôn** chứa `$undefined`. Dùng `innerText`.
+
+### F. Giá trị đo được của bộ E2E — nó bắt bug ngay lượt chạy đầu tiên
+
+**ISSUE-016**: file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module ⇒ `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra", **toàn bộ UC-17 không dùng được**. Bốn cửa kiểm cũ đều **xanh**: typecheck, lint, build (18 route), và 724 unit/integration/RLS test. Đây là bằng chứng cụ thể rằng bốn cửa đó **không phát hiện được nhóm lỗi này về nguyên tắc**.
+
+**Phòng ngừa đã ghi thành luật:** bộ E2E phải chạm **ít nhất một Server Action của mỗi feature**. Hiện có: `saveMorningReport`, `updateMorningReport`, `saveEveningReport`, `createSalesAccount`, `changePasswordAction`.
+
+### G. §3.5.3 — hành vi của `getVietnamMonthRange()` với chuỗi sai định dạng: **ĐÃ CHỐT**
+
+Trả **`null`**, không ném lỗi (**DEC-040**). Bài test khoá lại: tháng 2 năm nhuận (`'2028-02'` → `to = '2028-02-29'`), tháng 12, `'2026-13'`, `'2026-1'`, `''`, `'abc'`, và một bài E2E `?month=abc&page=-5` không làm sập trang.
+
+### H. Còn `N/A` sau Phase 11
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Lighthouse | ❌ `N/A — chưa chạy` |
+| Kiểm ảnh 9:16 trong Zalo trên thiết bị thật | ❌ `N/A — cần điện thoại thật + link công khai` (ISSUE-003) |
+
+Hai dòng này **không được diễn giải thành pass** dưới bất kỳ hình thức nào.

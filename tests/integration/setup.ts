@@ -78,6 +78,34 @@ export async function closePool(): Promise<void> {
   await pool.end();
 }
 
+/**
+ * Chạy một khối lệnh trên **đúng MỘT kết nối**, trong một transaction luôn bị
+ * `rollback`.
+ *
+ * `sql()` mượn một kết nối bất kỳ trong pool mỗi lần gọi, nên `set local role`
+ * hay `set local request.jwt.claims` đặt ở lượt gọi này có thể không còn hiệu
+ * lực ở lượt gọi sau. Bộ test EXPLAIN (`indexes.test.ts`) bắt buộc phải đổi vai
+ * sang `authenticated` để RLS thực sự áp dụng — nên nó cần hàm này.
+ *
+ * Luôn `rollback`: bài đo kế hoạch truy vấn không được để lại dấu vết nào trong
+ * database, kể cả khi assert giữa chừng ném lỗi.
+ */
+export async function inRollbackTransaction<T>(
+  run: (query: (text: string, params?: unknown[]) => Promise<QueryResult>) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+
+  try {
+    await client.query('begin');
+    return await run((text, params = []) => client.query(text, params));
+  } finally {
+    // `rollback` phải chạy kể cả khi khối trên ném lỗi, nếu không kết nối trả về
+    // pool trong trạng thái "đang mở transaction" và mọi test sau đó hỏng theo.
+    await client.query('rollback').catch(() => undefined);
+    client.release();
+  }
+}
+
 export const TEST_PASSWORD = 'LocalDev#2026';
 
 export type TestUserSpec = {

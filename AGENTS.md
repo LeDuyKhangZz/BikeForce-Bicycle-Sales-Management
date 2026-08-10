@@ -201,7 +201,7 @@ Bốn cái tên sau là **canonical**. Không đặt tên khác, không viết b
 | `formatCurrencyVND(value)` | `lib/currency.ts` | `125000000` → `125.000.000 ₫` bằng `Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND', maximumFractionDigits:0 })` |
 | `getVietnamToday()` | `lib/date.ts` | `YYYY-MM-DD` theo `Asia/Ho_Chi_Minh`, dùng `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })` |
 
-Đi kèm: `parseCurrencyInput()` (`lib/currency.ts`), `formatVietnamDate()` và `getVietnamMonthRange()` (`lib/date.ts`).
+Đi kèm: `parseCurrencyInput()` (`lib/currency.ts`); `formatVietnamDate()`, `isValidVietnamDate()` và **nhóm 5 hàm tháng** (`getVietnamMonthRange` — trả `null` khi sai định dạng theo **DEC-040**, `getVietnamCurrentMonth`, `formatVietnamMonth`, `shiftVietnamMonth`, `resolveVietnamMonth`) ở `lib/date.ts`; `kpiMetricRow()` và `KPI_METRIC_ROWS` (`lib/reports/metric-rows.ts` — nguồn **duy nhất** của “4 chỉ tiêu là gì”); `buildTrendChart()` (`lib/reports/trend-chart.ts`).
 
 Quy tắc:
 
@@ -213,6 +213,16 @@ Quy tắc:
 - Tiền lưu `bigint` VND; format chỉ ở tầng hiển thị (BR-010, DEC-008).
 - **Không dùng `new Date()` để suy ra ngày nghiệp vụ.** Chỉ `getVietnamToday()`. Không thêm dependency timezone (DEC-009).
 - Zod schema tập trung ở `lib/validation/`, dùng chung cho client form và Server Action — một nguồn, không hai bản.
+- **Chuỗi thông báo dùng chung cũng ở `lib/`**, không ở `features/*/actions.ts`: `lib/auth/messages.ts`, `lib/reports/messages.ts`, `lib/account/messages.ts`, `lib/admin/messages.ts`.
+
+> ⛔ **LUẬT CỨNG — file `'use server'` CHỈ được export async function và `export type`** (DEC-045).
+> Export một object hằng số làm Next ném lỗi **lúc chạy**: *A "use server" file can only export
+> async functions, found object.* Nguy hiểm ở chỗ `next build`, `tsc --noEmit`, `eslint` và toàn bộ
+> unit test **đều xanh** — chỉ người dùng mở đúng trang đó mới thấy. Việc này đã xảy ra thật và làm
+> hỏng toàn bộ UC-17 (ISSUE-016); chỉ bộ E2E của Phase 11 bắt được.
+>
+> **Hệ quả bắt buộc cho testing:** bộ E2E phải chạm **ít nhất một Server Action của mỗi feature**.
+> Thêm feature mới có Server Action mà không có bài E2E chạm tới nó là để lại một lỗ hổng cùng loại.
 
 ---
 

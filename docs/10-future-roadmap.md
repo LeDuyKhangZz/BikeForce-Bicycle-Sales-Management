@@ -727,3 +727,31 @@ Ngoài ra, hai câu hỏi sau **chưa có OQ-xx** và phải được bổ sung 
 | `docs/06-auth-permissions.md` | RLS policy hiện tại — mọi mục đổi phân quyền đều tham chiếu về đây |
 | `docs/11-decisions.md` | DEC-001 → DEC-030; nơi bắt buộc ghi khi promote bất kỳ mục nào |
 | `docs/12-known-issues.md` | ISSUE-001 → ISSUE-007; ISSUE-006 và ISSUE-007 gắn trực tiếp với AF-15 và AF-12 |
+
+---
+
+## CẬP NHẬT 2026-08-10 — hai mục mới đẩy sang sau v1
+
+### R-xx · Buộc đổi mật khẩu ở lần đăng nhập đầu
+
+**Trạng thái:** cố ý **không làm ở v1** — **DEC-041**.
+
+`docs/06 §3.3` ghi chú 6 nêu hai phương án và để ngỏ từ Phase 0. Đã đóng lại theo hướng không làm cả hai, vì:
+
+- cờ trong `user_metadata` **không phải hàng rào thật** — client sửa được bằng `auth.updateUser()`;
+- thêm cột vào `profiles` cần một migration mới cộng sửa trigger `handle_new_user()`;
+- và với một đội nội bộ nơi Admin bàn giao mật khẩu **trực tiếp**, lợi ích không bù được chi phí.
+
+**Điều kiện kích hoạt cho v2:** đội vượt quy mô bàn giao trực tiếp (khoảng 20+ Sales), **hoặc** có yêu cầu tuân thủ bắt buộc. Khi làm, phương án đúng là **cột trong `profiles`** (ví dụ `must_change_password boolean not null default false`) cộng một chặn ở middleware, **không** dùng `user_metadata`.
+
+### R-xx · `pg_trgm` GIN index cho tìm kiếm theo tên Sales
+
+**Trạng thái:** cố ý chưa làm.
+
+`/admin/reports` tìm theo tên bằng `ilike` trên bảng nhúng. Với ≤ 200 Sales thì quét vài trăm dòng rẻ hơn chi phí bảo trì một GIN index.
+
+**Điều kiện kích hoạt:** vượt **200 Sales**, hoặc `EXPLAIN ANALYZE` cho thấy truy vấn tìm kiếm trở thành nút thắt. Khi làm: `create extension pg_trgm` cộng `create index ... using gin (full_name gin_trgm_ops)` trong một migration mới, rồi **đo lại bằng `tests/integration/indexes.test.ts`** — bộ đó đã có sẵn khuôn để thêm bài.
+
+### Ghi nhận: FR-037 đã RỜI khỏi roadmap
+
+Biểu đồ trend theo ngày (FR-037, AF-08) từng được xem là ứng viên hoãn vì sợ kéo theo thư viện biểu đồ. **Đã làm ở Phase 9 bằng SVG viết tay, không thêm dependency nào** — xem **DEC-044**. Không còn nằm trong roadmap.

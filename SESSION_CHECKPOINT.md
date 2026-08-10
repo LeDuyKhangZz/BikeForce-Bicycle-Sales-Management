@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: 6 (11/12 — còn 1 mục cần thiết bị thật) → sẵn sàng Phase 7 | Last updated: 2026-08-08
+> Status: ACTIVE | Phase: 11 (12/14 — còn Lighthouse và ma trận thử tay) → sẵn sàng Phase 12 | Last updated: 2026-08-10
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 Đây là file **quan trọng nhất** để một session hoàn toàn mới tiếp tục công việc mà không phải làm
@@ -10,78 +10,71 @@ lại từ đầu. Đọc file này ngay sau `BIKEFORCE_MASTER_SPEC.md`.
 
 ## Current State
 
-**Current Phase:** `PHASE 6 — Xuất ảnh 9:16` — **11/12 mục `[x]`** (2026-08-08).
-Phase 0, 1, 2, 5 đã đóng. Phase 3 còn 1 mục treo chờ người dùng (OQ-18); Phase 4 còn 1 mục chờ bộ
-E2E của Phase 11; Phase 6 còn 1 mục cần **thiết bị thật**.
+**Current Phase:** `PHASE 11 — Testing & Security` — **12/14 mục `[x]`** (2026-08-10).
+Phase 0, 1, 2, **3**, **4**, 5, **7**, **8**, **9**, **10** đã đóng đủ. Phase 6 còn 1 mục cần **thiết
+bị thật**; Phase 11 còn 2 mục cũng cần thiết bị thật.
 
-**Current Task:** **Bắt đầu PHASE 7 — Sales History (FR-021, FR-022, UC-09, UC-10).**
+**Current Task:** **Bắt đầu PHASE 12 — Deployment Preparation.** Việc đầu tiên và bắt buộc là **đẩy
+migration 0006 + 0007 lên Supabase cloud** — xem `docs/09 §12`, có hướng dẫn từng bước bấm.
 
-> ✅ **Phase 6 đã chạy thật đầu-cuối.** `GET /api/reports/[id]/share-image` sinh PNG **1080×1920**
-> bằng Satori với font Inter nhúng sẵn; nút "Xuất ảnh báo cáo" ở `/sales/today` bấm ra file thật.
-> **ISSUE-002 → CLOSED**: Satori dựng được toàn bộ bố cục `docs/05 §14`, **không** phải dùng
-> fallback `html-to-image`, DEC-010 giữ nguyên.
+> ✅ **Phiên 2026-08-10 gộp năm phase: 7 → 8 → 9 → 10 → 11.** Toàn bộ **18 route của v1 nay chạy
+> thật**. Chi tiết ở `WORKLOG.md` Entry 010.
 
-> ⚠ **Một việc của Phase 6 CHƯA LÀM ĐƯỢC, đừng tick hộ:** kiểm tay trong **Zalo in-app webview trên
-> thiết bị thật** (ISSUE-003, NFR-009). Cần một điện thoại thật và một link công khai ⇒ phải chờ sau
-> khi deploy Vercel. Playwright project `zalo-like` chỉ đội `userAgent` khác, **không** tái hiện
-> được giới hạn API thật của webview — không được coi nó là bằng chứng.
+> ⚠ **ĐỌC TRƯỚC KHI TIN CHECKPOINT NÀY:** phiên trước đã viết khoảng **7.000 dòng code Phase 7–10 mà
+> không cập nhật một dòng tài liệu nào**, nên checkpoint cũ ghi "Phase 7 chưa bắt đầu" trong khi code
+> đã có đủ. Bài học đã trả giá: **luôn đo trạng thái thật bằng công cụ** (`git status`, `npm test`,
+> `npm run build`) trước khi tin bất kỳ tài liệu nào — đúng như CLAUDE.md §4 yêu cầu. Lần này tài
+> liệu đã được đồng bộ đầy đủ.
 
-> ⏳ **Hai việc chờ người dùng, KHÔNG chặn Phase 7:**
-> 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
-> 2. **OQ-18 / ISSUE-013** — NFR-008 đặt "≤ 6 lần chạm" nhưng FR-008 có 5 trường bắt buộc nên sàn
->    lý thuyết là 7; đo thật **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18`.
->    **Đừng tự chọn hộ**, và **đừng bỏ bớt trường bắt buộc** để ép con số xuống.
-
-> 🔧 **Ghi nhận một sự cố môi trường đã tự hết:** giữa phiên 2026-08-08, **Docker Desktop hỏng ở mức
-> engine của chính nó** (`docker ps` trả `500 Internal Server Error`) làm mọi request tới Supabase
-> local timeout 30s — một lượt `npm test` chạy 434 giây rồi báo FAIL. **Không phải** ISSUE-012
-> (lần đó Kong/GoTrue mới là thủ phạm), và **không phải** lỗi code. Docker tự hồi phục, lượt cuối
-> cho **369/369 trong 15 giây**. Nếu gặp lại: khởi động lại Docker Desktop trước khi nghi ngờ code.
-
-**Phase 3 → Phase 6 đã làm được gì (tóm tắt cho session mới):**
+**Phiên 2026-08-10 làm được gì (tóm tắt cho session mới):**
 
 | Hạng mục | Trạng thái |
 |---|---|
-| `/sales/today` | ✅ FR-007 thật — badge trạng thái, bảng đối chiếu, **đúng 1 CTA chính**, **nút Xuất ảnh chạy thật (Phase 6)** |
-| `/sales/today/morning` | ✅ UC-04 (tạo) + UC-05 (sửa) — cùng một form, hai Server Action |
-| `/sales/today/evening` | ✅ **FR-013 + FR-014 thật (Phase 4)** — đối chiếu cam kết sáng + 6 ô thực đạt + `status → COMPLETED` |
-| `lib/date.ts` · `lib/currency.ts` | ✅ Triển khai thật (DEC-032). **`getVietnamMonthRange` vẫn là khung** — Phase 7. `formatCompactVND` thêm ở Phase 6 |
-| `lib/kpi.ts` | ✅ **Thân thật (Phase 5)** — 6 hàm thuần (thêm `formatMetricValueCompact` ở Phase 6), **coverage 100%** cả bốn cột |
-| Bảng đối chiếu 4 chỉ tiêu | ✅ **`features/report-comparison/` (Phase 5)** — 4 card ở < 768px, `<table>` thật từ 768px (DEC-019), gắn ở `/sales/today` |
-| **Ảnh chia sẻ 9:16** | ✅ **`app/api/reports/[id]/share-image/route.tsx` + `features/report-share/` (Phase 6)** — PNG 1080×1920 bằng Satori, font nhúng, Web Share API + 2 fallback |
-| Test | ✅ **369** (**290** unit · **40** integration · **39** RLS) — xem lưu ý về lượt chạy cuối ở §Testing State |
+| `/sales/history` · `/sales/reports/[id]` · `/sales/account` | ✅ **Phase 7 thật** — lọc tháng, phân trang server-side, empty state, `BackLink` có `href` tường minh |
+| `/admin` | ✅ **Phase 8 thật** — 12 chỉ số + 2 nhóm cảnh báo, Suspense + Skeleton |
+| `/admin/reports` · `/admin/reports/[id]` · `/admin/analytics` | ✅ **Phase 9 thật** — 7 chiều lọc, tìm theo tên (`ilike`), **biểu đồ trend FR-037** |
+| `/admin/sales` · `/admin/sales/new` · `/admin/sales/[id]` · `/admin/account` | ✅ **Phase 10 thật** — bảng hiệu suất + số ngày đạt KPI (BR-024), UC-17/18/19 |
+| `GET /api/admin/reports/export` | ✅ **Route Handler thứ hai và CUỐI CÙNG** của v1 (DEC-042) |
+| 5 hàm SQL aggregate | ✅ `0006_admin_aggregates.sql` (4 hàm) + `0007_admin_daily_trend.sql` (1 hàm) |
+| Bộ E2E Playwright | ✅ **MỚI** — 3 project × 33 bài = **99/99 PASS**, gồm 30 lượt quét axe |
+| `tests/integration/indexes.test.ts` | ✅ **MỚI** — 14 bài `EXPLAIN ANALYZE`, **đóng ISSUE-005** |
+| Nợ Phase 3 và Phase 4 | ✅ **ĐÃ ĐÓNG** — OQ-18 được trả lời (DEC-043) · bộ E2E có commit ra đời |
+| Test | ✅ **729** (`unit` **542** · `integration` **54** · `rls` **133**) + **99** E2E |
 
-> ⚠ **Sửa số liệu:** checkpoint này trước đây ghi `189 unit · 47 integration`. Tổng `269` **đúng**
-> nhưng cách chia **sai** — con số thật trước Phase 5 là `196 · 40 · 33`. Nguồn lệch:
-> `lib/currency.test.ts` có **36** test chứ không phải 29, và file đó chưa từng bị sửa từ Phase 3.
-> Đo lại bằng `npx vitest run --project <ten>`. Chi tiết ở `WORKLOG.md` Entry 008 mục Errors 3.
+**Sáu quyết định mới của phiên này — đọc trước khi động vào code:**
 
-**Supabase cloud đã nối xong:**
-
-| Hạng mục | Giá trị |
+| DEC | Nội dung một dòng |
 |---|---|
-| project-ref | `rnmywhwanpxmipqducqu` |
-| Tên | `BikeForce_Bicycle Sales Management` |
-| Region | **`ap-southeast-1`** (Singapore) ✅ |
-| Trạng thái | `ACTIVE_HEALTHY`, Postgres `17.6.1.155`, GoTrue `v2.195.0` |
-| Migration | ✅ Cả 5 file đã `db push` thành công. **Seed KHÔNG được đẩy** (`seeds: []`) |
-| Tự đăng ký | ✅ **Đã tắt** — `POST /auth/v1/signup` → `422 signup_disabled` (BR-012, FR-006) |
-| Deny-by-default | ✅ `anon` đọc `profiles`/`daily_reports` → `401` + `42501 permission denied` |
-| `types/database.types.ts` | ✅ Generate bằng `--linked`. Khác bản `--local` đúng một khối metadata ⇒ **schema hai bên khớp** |
+| **DEC-040** | `getVietnamMonthRange()` trả **`null`** khi chuỗi tháng sai, **không ném lỗi** |
+| **DEC-041** | Mật khẩu tối thiểu **8** ký tự, không bắt quy tắc thành phần, **v1 KHÔNG ép đổi lần đầu** |
+| **DEC-042** | `GET /api/admin/reports/export` là Route Handler **thứ hai và cuối cùng** |
+| **DEC-043** | **OQ-18 đã trả lời** — NFR-008 nới thành **≤ 8 lần chạm**, giữ nguyên 5 trường |
+| **DEC-044** | FR-037 vẽ bằng **SVG viết tay**, không thêm thư viện; **chữ không được nằm trong SVG** |
+| **DEC-045** | Hằng số dùng chung **KHÔNG** được nằm trong file `'use server'` |
 
-> ⚠ **ISSUE-011 (P1) — service role key đã lọt vào transcript hội thoại**, cần **rotate**. Key chưa
-> từng vào git (`git log -S "sb_secret" --all` → 0 kết quả). Nhờ DEC-031, key đó không đọc/ghi được
-> `profiles` và `daily_reports`; bán kính giới hạn ở `auth.admin.*`.
+**Supabase — trạng thái hai môi trường KHÁC NHAU, đây là điều quan trọng nhất phải nhớ:**
+
+| Migration | Local | Cloud `rnmywhwanpxmipqducqu` |
+|---|---|---|
+| `0001` … `0005` | ✅ | ✅ đã push (2026-08-07) |
+| `0006_admin_aggregates.sql` | ✅ | ⏳ **CHƯA PUSH** |
+| `0007_admin_daily_trend.sql` | ✅ | ⏳ **CHƯA PUSH** |
+
+> ⚠ **Hệ quả: deploy lên Vercel bây giờ thì TOÀN BỘ khu vực Admin hỏng** — mọi màn hình Admin gọi
+> RPC, mà cloud chưa có hàm nào. Hướng dẫn từng bước bấm ở **`docs/09 §12`** (hai cách: CLI hoặc dán
+> SQL trên Dashboard, kèm hai câu kiểm để xác nhận đủ 5 hàm và `anon` không execute được).
+
+> ⏳ **Hai việc chờ người dùng, KHÔNG chặn code:**
+> 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
+> 2. **Kiểm ảnh 9:16 trong Zalo trên điện thoại thật** (ISSUE-003) — cần link công khai ⇒ chờ deploy.
 
 **Current Branch:** `main` — remote `origin` =
 `https://github.com/LeDuyKhangZz/BikeForce-Bicycle-Sales-Management.git` (DEC-028).
-`origin/main` đã đồng bộ tới `61271ac`.
 
-> ⚠ **`git push` KHÔNG chạy được từ phía agent** (phát hiện 2026-08-07). Credential helper là
-> Git Credential Manager và môi trường không có TTY nên push luôn fail
-> (`could not read Username for 'https://github.com'`), kể cả khi tắt sandbox.
-> **Đây là giới hạn kỹ thuật, không phải thiếu quyền** — quyền push đứng vẫn còn hiệu lực.
-> Cách làm: agent **commit bình thường**, rồi **báo người dùng tự chạy `git push origin main`**.
+> ⚠ **`git push` KHÔNG chạy được từ phía agent** (giới hạn kỹ thuật, không phải thiếu quyền —
+> credential helper là Git Credential Manager và môi trường không có TTY). Agent **commit bình
+> thường**, rồi **báo người dùng tự chạy `git push origin main`**.
+
 
 ---
 
@@ -181,59 +174,95 @@ cấu trúc DEC-023; 3 Supabase client + `lib/env.ts`; design token DEC-014; fon
 
 ---
 
+### Phase 7 → Phase 11 (2026-08-10) — chi tiết ở `WORKLOG.md` Entry 010
+
+**Phase 7 — Sales History (11/11):**
+- `lib/date.ts` hoàn tất — nhóm 5 hàm tháng, `getVietnamMonthRange()` trả `null` khi sai định dạng (DEC-040).
+- `lib/reports/{pagination,history-row,history-url,report-status}.ts` — hàm thuần, có unit test.
+- `services/reports.listReportsByMonth()` — phân trang **server-side** bằng `.range()` + `count: 'exact'`.
+- `/sales/history` · `/sales/reports/[id]` · `/sales/account`; `features/sales-history/`, `features/account/`.
+- `features/navigation/` + `lib/navigation/nav-items.ts` — bottom nav 3 mục / sidebar từ 1024px (DEC-018).
+- `components/ui/back-link.tsx` — `href` tường minh, không `router.back()`.
+- **Xoá `CTA_ROUTES_NOT_READY`** — không còn cờ "chưa sẵn sàng" nào trong dự án.
+
+**Phase 8 — Admin Dashboard (9/9):**
+- `supabase/migrations/0006_admin_aggregates.sql` — 4 hàm SQL, `security invoker`, guard InitPlan.
+- `services/admin.ts`; `features/admin-dashboard/{overview-tiles,missing-report-alerts}.tsx`.
+- `/admin` thật với 12 chỉ số + 2 nhóm cảnh báo; Suspense + Skeleton.
+
+**Phase 9 — Admin Reports & Filters (11/11, gồm cả mục SHOULD):**
+- `lib/reports/{admin-filters,admin-overview,csv}.ts` — hàm thuần, có unit test.
+- `/admin/reports` (7 chiều lọc + tìm theo tên) · `/admin/reports/[id]` · `/admin/analytics`.
+- `GET /api/admin/reports/export` — CSV đúng tập đang lọc (DEC-042).
+- **FR-037** — `0007_admin_daily_trend.sql` + `lib/reports/trend-chart.ts` + `features/admin-analytics/` (DEC-044).
+
+**Phase 10 — Sales Management (11/11):**
+- `lib/validation/{account,sales-account}.ts` (DEC-041); `services/profiles.ts` mở rộng.
+- `features/admin-sales-management/` — UC-17/18/19; **service role chỉ dùng đúng một lời gọi** `auth.admin.createUser`.
+- `/admin/sales` · `/admin/sales/new` · `/admin/sales/[id]` · `/admin/account`.
+
+**Phase 11 — Testing & Security (12/14):**
+- `tests/integration/indexes.test.ts` — 14 bài `EXPLAIN ANALYZE`, **đóng ISSUE-005**.
+- `playwright.config.ts` + `e2e/` (9 file) — 3 project × 33 bài = **99/99 PASS**.
+- 30 lượt quét `@axe-core/playwright` — **0 vi phạm serious/critical** (NFR-007).
+- Bắt được **ISSUE-016 (P1)** ngay lượt chạy đầu; sửa bằng **DEC-045**.
+- Còn `[ ]`: Lighthouse · ma trận thử tay Chrome/Safari mobile — **cả hai cần thiết bị thật**.
+
+---
+
 ## Currently Working On
 
-**Không có công việc code nào đang dở.** Phase 6 dừng ở trạng thái sạch: mọi thứ đã viết đều đã chạy
-thật và đã có test. Việc duy nhất còn nợ của phase là **kiểm tay trên thiết bị thật trong Zalo**,
-và nó **không thể** làm từ môi trường agent.
+**Không có công việc code nào đang dở.** Phiên 2026-08-10 dừng ở trạng thái sạch: mọi thứ đã viết đều
+đã chạy thật, có test, và tài liệu đã đồng bộ đầy đủ.
+
+Việc kế tiếp là **Phase 12 — Deployment**, và bước đầu tiên (**đẩy migration 0006 + 0007 lên cloud**)
+cần thao tác của người dùng vì `supabase db push` hỏi mật khẩu database.
 
 ---
 
 ## Not Started
 
-- **Phase 7 → Phase 12:** chưa bắt đầu. Chưa có màn hình Admin thật, chưa có lịch sử báo cáo, chưa
-  có màn hình chi tiết `/sales/reports/[id]`.
-- **Test còn thiếu:** `playwright.config.ts` và toàn bộ `e2e/*.spec.ts` (Phase 11);
-  `tests/integration/indexes.test.ts` với `EXPLAIN ANALYZE` (Phase 11).
+- **Phase 12 — Deployment Preparation:** chưa bắt đầu. Xem `Next Exact Steps`.
 
 **Những thứ CỐ Ý chưa làm** (đúng kế hoạch, không phải thiếu sót):
 
 | Thứ chưa làm | Thuộc phase | Vì sao chưa làm |
 |---|---|---|
-| `getVietnamMonthRange()` | Phase 7 / 9 | Chỉ phục vụ filter tháng FR-021/FR-028; hành vi với chuỗi sai định dạng chưa chốt |
-| ~~Nút "Xuất ảnh" hoạt động thật~~ | ~~Phase 6~~ | ✅ **XONG 2026-08-08** — cờ `EXPORT_IMAGE_NOT_READY` đã xoá |
-| `/sales/reports/[id]` | Phase 7 | CTA "Xem báo cáo hôm nay" render **disabled**; tập `CTA_ROUTES_NOT_READY` đánh dấu chỗ phải xoá — nay là cờ **duy nhất** còn lại trong file đó |
-| Bottom nav / sidebar DEC-018 | Phase 7, 8 | — |
-| UC-17/18/19 quản lý tài khoản | Phase 10 | `lib/supabase/admin.ts` vẫn chưa được gọi ở đâu cả — đúng thiết kế |
-| Kiểm Zalo webview trên máy thật | Phase 6 (nợ) / Phase 11 | Cần điện thoại thật + link công khai ⇒ chờ deploy Vercel (ISSUE-003) |
+| Kiểm Zalo webview trên máy thật | Phase 6 (nợ) | Cần điện thoại thật + link công khai ⇒ chờ deploy (ISSUE-003) |
+| Lighthouse mobile | Phase 11 (nợ) | Cần bản deploy thật để đo có ý nghĩa |
+| Ma trận thử tay Chrome/Safari mobile | Phase 11 (nợ) | Cần thiết bị thật |
+| Ép đổi mật khẩu lần đầu | — | **Cố ý không làm ở v1** (DEC-041), đã ghi vào `docs/10` |
+| `pg_trgm` GIN cho tìm kiếm tên | — | Chỉ cần khi vượt 200 Sales; đã ghi vào `docs/10` |
+| PWA manifest | Phase 12 | Chưa tới lượt |
 
-> `/admin` hiện vẫn là **trang tối thiểu của Phase 2**, chỉ để luồng đăng nhập có đích đến thật và
-> test được — FR-024 (Phase 8) mới là nội dung thật. `/sales/today` **đã được thay bằng FR-007 thật ở
-> Phase 3**. Điều này đã ghi ngay trong comment đầu mỗi file.
+**Không còn màn hình nào của v1 chưa dựng.** 18/18 route đã chạy thật.
 
 ---
 
 ## Known Issues
 
-Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 8 OPEN, 7 đã CLOSED.**
+Chi tiết đầy đủ ở `docs/12-known-issues.md`. **Còn 7 OPEN, 10 CLOSED.**
 
 | ID | Sev | Status | Nội dung |
 |---|---|---|---|
 | ISSUE-001 | P1 | **CLOSED** | 17/17 OQ đã được trả lời |
-| ISSUE-002 | P2 | **CLOSED** | Satori dựng được toàn bộ bố cục `docs/05 §14` (2026-08-08) — **không** dùng fallback `html-to-image`, DEC-010 giữ nguyên |
-| ISSUE-003 | P2 | OPEN | Zalo in-app webview **vẫn** chưa kiểm chứng trên thiết bị thật — cần điện thoại + link công khai |
+| ISSUE-002 | P2 | **CLOSED** | Satori dựng được toàn bộ bố cục — không cần fallback |
+| ISSUE-003 | P2 | OPEN | Zalo in-app webview **vẫn** chưa kiểm trên thiết bị thật — cần điện thoại + link công khai |
 | ISSUE-004 | P2 | **CLOSED** | TS 7 + ESLint 10 đã vỡ thật; pin `typescript@6.0.3` + `eslint@9.39.5` |
-| ISSUE-005 | P3 | OPEN | `is_admin()` thêm một truy vấn `profiles` mỗi câu lệnh. Đã viết dạng `(select public.is_admin())`; **chưa đo `EXPLAIN`** → Phase 11 |
+| ISSUE-005 | P3 | **CLOSED** | **MỚI ĐÓNG 2026-08-10** — `EXPLAIN ANALYZE` cho thấy `is_admin()` được nâng thành **InitPlan**, chạy đúng 1 lần/câu lệnh |
 | ISSUE-006 | P3 | **CLOSED** | Không xử lý gì quanh ngày nghỉ ở v1 |
 | ISSUE-007 | P3 | OPEN | Chưa có audit log; chỉ cần nếu mở quyền sửa sau `COMPLETED` |
-| ISSUE-008 | P3 | **CLOSED** | `docs/01` mâu thuẫn về khi nào `AchievementResult.percent = null` — **đã chốt 2026-08-07 bằng DEC-038**, kiểm chứng bằng 46 unit test + 36 phép kiểm trình duyệt |
-| ISSUE-009 | P3 | OPEN | **MỚI** — Next 16.3 deprecate tên `middleware.ts`, khuyến nghị `proxy.ts`. Cố ý hoãn, có điều kiện kích hoạt |
-| ISSUE-010 | P3 | OPEN | **MỚI** — máy đang chạy **3 stack Supabase local**; chọn nhầm container đã xảy ra thật |
-| ISSUE-011 | **P1** | OPEN | service role key lọt vào transcript hội thoại do IDE tự đồng bộ `.env.local`. **Phải rotate.** Chưa vào git |
-| ISSUE-012 | P3 | OPEN | **MỚI** — sau `supabase db reset`, GoTrue + Kong không tự phục hồi → đăng nhập nhận `502` dù `docker ps` báo `healthy`. Có lệnh khắc phục đã kiểm chứng |
-| ISSUE-013 | P3 | OPEN | NFR-008 (≤ 6 chạm) mâu thuẫn với FR-008 (5 trường bắt buộc). Đo thật **7 chạm / 1,8 giây**. **Cần người dùng quyết định — OQ-18** |
-| ISSUE-014 | P2 | **CLOSED** | lưu cuối ngày thành công nhưng mất banner + draft không bị xoá, do re-render RSC của route hiện tại sau Server Action. Sửa bằng **DEC-037** |
-| ISSUE-015 | **P1** | **CLOSED** | **MỚI** — middleware redirect `/api/*` về `/login`; `fetch()` đi theo redirect nên nút Xuất ảnh lưu HTML thành file `.png` hỏng mà không báo lỗi. Sửa bằng **DEC-039** |
+| ISSUE-008 | P3 | **CLOSED** | Đã chốt bằng DEC-038 |
+| ISSUE-009 | P3 | OPEN | Next 16.3 deprecate tên `middleware.ts`, khuyến nghị `proxy.ts`. Cố ý hoãn |
+| ISSUE-010 | P3 | OPEN | Máy đang chạy **3 stack Supabase local**; chọn nhầm container đã xảy ra thật |
+| ISSUE-011 | **P1** | OPEN | Service role key lọt vào transcript hội thoại. **Phải rotate.** Chưa vào git |
+| ISSUE-012 | P3 | OPEN | Sau `supabase db reset`, GoTrue + Kong không tự phục hồi → đăng nhập nhận `502` |
+| ISSUE-013 | P3 | **CLOSED** | **MỚI ĐÓNG 2026-08-10** — OQ-18 được trả lời bằng phương án (a); NFR-008 nới thành ≤ 8 chạm (DEC-043) |
+| ISSUE-014 | P2 | **CLOSED** | Mất banner + draft không bị xoá; sửa bằng DEC-037 |
+| ISSUE-015 | P1 | **CLOSED** | Middleware redirect `/api/*`; sửa bằng DEC-039 |
+| ISSUE-016 | **P1** | **CLOSED** | **MỚI** — file `'use server'` export object hằng số ⇒ `/admin/sales/new` sập ở runtime **trong khi build/typecheck/lint/724 test đều xanh**. Chỉ E2E bắt được. Sửa bằng **DEC-045** |
+| ISSUE-017 | P3 | OPEN | **MỚI** — `notFound()` trên route có `loading.tsx` trả **200** thay vì 404 do response đã stream. **Cố ý không sửa** — tính không-phân-biệt-được của BR-003 vẫn đúng, route API vẫn trả mã thật |
+
 
 ---
 
@@ -424,45 +453,70 @@ thứ hai — URL không phải localhost thì ném lỗi ngay.
 
 ---
 
+**Tầng Sales History, Admin và E2E (Phase 7–11 — MỚI):**
+
+| File | Vai trò |
+|---|---|
+| `lib/date.ts` | Thêm nhóm **5 hàm tháng**. `getVietnamMonthRange()` trả `null` khi sai định dạng (DEC-040) — **không còn khung ném lỗi nào trong `lib/`** |
+| `lib/reports/pagination.ts` | `REPORTS_PAGE_SIZE = 20`, `parsePageParam()`, số học phân trang. Ba màn hình dùng chung |
+| `lib/reports/admin-filters.ts` | Chuẩn hoá `searchParams` của Admin thành một khoảng ngày + 3 bộ lọc rời. Tham số tìm kiếm là **`q`** |
+| `lib/reports/{history-row,history-url,admin-overview,report-status}.ts` | View model thuần cho danh sách và dashboard |
+| `lib/reports/csv.ts` | Dựng CSV + escape đúng chuẩn. Tên cột đọc từ `metric-rows.ts` |
+| `lib/reports/trend-chart.ts` | **Toàn bộ hình học biểu đồ** dưới dạng hàm thuần (DEC-044). SVG chỉ đổ số vào |
+| `lib/reports/metric-rows.ts` | Thêm `kpiMetricRow(metric)` — bảng tra **toàn phần**, trả kiểu không `undefined` |
+| `lib/navigation/nav-items.ts` | Nav Sales 3 mục / Admin 4 mục + **tập tiền tố** cho trạng thái active (DEC-018) |
+| `lib/validation/{account,sales-account}.ts` | Zod cho đổi mật khẩu và quản lý tài khoản (DEC-041) |
+| `lib/account/messages.ts` · `lib/admin/messages.ts` | **MỚI** — chuỗi thông báo. Ở `lib/` vì file `'use server'` không được export object (DEC-045) |
+| `supabase/migrations/0006_admin_aggregates.sql` | 4 hàm SQL aggregate cho Admin |
+| `supabase/migrations/0007_admin_daily_trend.sql` | RPC `admin_daily_trend` cho FR-037 |
+| `services/admin.ts` | 5 hàm gọi RPC. Trả **giá trị an toàn khi lỗi** (0 / mảng rỗng), không ném |
+| `services/reports.ts` | Thêm `listReportsByMonth`, `getReportById`, `listAdminReports`, `getAdminReportsForExport` |
+| `services/profiles.ts` | Thêm `getAccountProfile`, `updateSalesProfile`, `setSalesActive`, `listSalesProfiles` |
+| `app/api/admin/reports/export/route.ts` | Route Handler **thứ hai và cuối cùng** của v1 (DEC-042) |
+| `features/sales-history/` · `features/account/` · `features/navigation/` | Phase 7 |
+| `features/admin-dashboard/` · `features/admin-reports/` · `features/admin-analytics/` · `features/admin-sales-management/` | Phase 8–10 |
+| `components/ui/back-link.tsx` | `href` tường minh, không phá back stack |
+| `playwright.config.ts` | 3 project · `webServer` tự build + start ở cổng 3100 với env local · `reuseExistingServer: false` |
+| `e2e/env.ts` | Nạp `.env.test.local` + **chặn an toàn** không cho trỏ ra cloud. Dùng `process.cwd()`, **không** `import.meta` |
+| `e2e/accounts.ts` | Hằng số email — tách riêng để spec không kéo theo pool `pg` |
+| `e2e/fixtures.ts` · `e2e/global-{setup,teardown}.ts` | Dựng/dọn tài khoản `@e2e.bikeforce.test`. **Mỗi project một Sales riêng** |
+| `e2e/helpers.ts` | `signIn`, `visibleText`, `expectNoBrokenNumbers`, `expectNoHorizontalScroll` |
+| `e2e/{sales-flow,admin-flow,security,a11y}.spec.ts` | 33 bài |
+| `tests/integration/indexes.test.ts` | 14 bài `EXPLAIN ANALYZE`. Đóng ISSUE-005 |
+| `tests/integration/setup.ts` | Thêm `inRollbackTransaction()` — đổi vai sang `authenticated` trên **một** kết nối |
+| `tests/rls/{admin-aggregates,admin-reports,history-service,sales-management}.rls.test.ts` | RLS cho toàn bộ khu vực Admin và lịch sử |
+
+---
+
 ## Database State
 
-**Schema đã chạy thật trên CẢ HAI môi trường** — Supabase local (Postgres 17.6.1.156) và cloud
-`rnmywhwanpxmipqducqu` region `ap-southeast-1` (Postgres 17.6.1.155). **Không có migration mới ở
-Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo đầu ngày.
+**Schema chạy thật trên Supabase local với 7 migration.** ⚠ **Cloud mới có 5** — xem bảng ở
+`Current State` và hướng dẫn đẩy ở `docs/09 §12`.
 
-- 2 enum (`user_role`, `report_status`), 2 bảng (`public.profiles`, `public.daily_reports`).
-- `UNIQUE(sales_id, report_date)`, 16 CHECK, 3 index hiệu năng, 7 function, 6 trigger.
-- RLS **`enable` + `force`** trên cả 2 bảng, **6 policy**, deny-by-default. Không có DELETE policy,
-  không có INSERT policy trên `profiles`.
-- GRANT thực tế (đã đo bằng `information_schema.role_table_grants`):
-
-  | role | `profiles` | `daily_reports` |
-  |---|---|---|
-  | `anon` | *(không có DML)* | *(không có DML)* |
-  | `authenticated` | `SELECT, UPDATE` | `SELECT, INSERT, UPDATE` |
-  | `service_role` | *(không có DML)* — DEC-031 | *(không có DML)* — DEC-031 |
+- 2 enum, 2 bảng, `UNIQUE(sales_id, report_date)`, 16 CHECK, **3 index hiệu năng** (không thêm index
+  mới nào ở Phase 7–11), 7 function + 6 trigger của Phase 2, **cộng 5 hàm aggregate** của 0006/0007.
+- RLS **`enable` + `force`** trên cả 2 bảng, **6 policy**, deny-by-default. Không DELETE policy.
+- 5 hàm aggregate: `security invoker`, guard `(select public.is_admin())` dạng InitPlan, chỉ
+  `authenticated` được `execute` — `anon` **không** gọi được hàm nào.
+- GRANT không đổi: `service_role` **không có DML** trên hai bảng nghiệp vụ (DEC-031).
 
 - Cổng local của **BikeForce**: API `54321`, Postgres **`54322`**, Studio `54323`.
-  ⚠ Máy đang chạy thêm 2 stack Supabase khác (`cq-tntt-manager` 54421/54422, `Polymind_Chinese`
-  55321/55322) — xem ISSUE-010. Luôn lấy cổng bằng `npx supabase status` **trong thư mục dự án**.
+  ⚠ Máy đang chạy thêm 2 stack Supabase khác (ISSUE-010). Luôn lấy cổng bằng `npx supabase status`
+  **trong thư mục dự án**.
 
-> ⚠ **Sau mỗi `npx supabase db reset` phải restart 3 container, nếu không mọi lần đăng nhập nhận
-> `502`** (ISSUE-012 — đã mất một vòng chẩn đoán sai vì `docker ps` vẫn báo `healthy`):
+> ⚠ **Sau mỗi `npx supabase db reset` phải restart 3 container**, nếu không mọi lần đăng nhập nhận
+> `502` (ISSUE-012 — `docker ps` vẫn báo `healthy` nên rất dễ chẩn đoán sai):
 >
 > ```bash
 > docker restart supabase_auth_<project> supabase_rest_<project>
 > sleep 8 && docker restart supabase_kong_<project>
 > ```
 >
-> Trên máy này `db reset` còn **treo ở bước "Restarting containers"** dù seed đã chạy xong. Kiểm bằng
-> `docker exec supabase_db_<project> psql -U postgres -d postgres -t -c "select count(*) from public.daily_reports;"`
-> → thấy `22` là xong, có thể ngắt lệnh.
+> ⚠ **`db reset` sẽ xoá cả hai migration mới nếu chúng chưa nằm trong thư mục `supabase/migrations/`**
+> — chúng đã nằm ở đó, nên `reset` sẽ apply lại đủ 7 file.
 >
-> **Fixture cho kiểm chứng tay — ĐỌC TRẠNG THÁI THẬT TRƯỚC KHI DÙNG.** Mô tả cũ ("`sales.c` chưa
-> có báo cáo · `sales.a` `MORNING_SUBMITTED` · `sales.b` `COMPLETED`") **đã lỗi thời**: chính các
-> phiên kiểm chứng tay của Phase 4 và Phase 5 đã ghi vào database local. Trạng thái đo được ngày
-> 2026-08-07 là `sales.c` `MORNING_SUBMITTED` · `sales.a` và `sales.b` đều `COMPLETED`.
-> Luôn kiểm bằng một câu `select` trước khi dựa vào fixture:
+> **Fixture cho kiểm chứng tay — ĐỌC TRẠNG THÁI THẬT TRƯỚC KHI DÙNG.** Các phiên kiểm chứng tay đã
+> ghi vào database local nhiều lần, nên mô tả cũ trong tài liệu **luôn có thể lỗi thời**:
 >
 > ```bash
 > docker exec supabase_db_<project> psql -U postgres -d postgres -c \
@@ -470,9 +524,8 @@ Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo �
 >    where r.report_date = (select (now() at time zone 'Asia/Ho_Chi_Minh')::date);"
 > ```
 >
-> Muốn về đúng ba trạng thái gốc thì `npx supabase db reset` (nhớ ISSUE-012 ở trên).
-> **Không có báo cáo `target = 0` cho ngày hôm nay** trong seed — muốn nhìn tận mắt nhánh BR-015
-> thì `update` tạm trên database local rồi **khôi phục lại**, đúng như Phase 5 đã làm.
+> **Bộ E2E tự dựng và tự dọn fixture riêng** (`@e2e.bikeforce.test`), nên nó **không** đụng tới trạng
+> thái seed mà bạn đang kiểm tay.
 
 ---
 
@@ -480,34 +533,66 @@ Phase 3** — schema của Phase 2 đã đủ cho toàn bộ luồng báo cáo �
 
 | Loại | Trạng thái |
 |---|---|
-| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, **8 route** — thêm `ƒ /api/reports/[id]/share-image`) |
+| **Build** | ✅ `npm run build` → **exit 0** (Next.js 16.3.0, Turbopack, **18 route**) |
 | **Typecheck** | ✅ `npm run typecheck` → **exit 0** |
 | **Lint** | ✅ `npm run lint` → **exit 0**, 0 error 0 warning |
-| **Unit** | ✅ **290 passed** — `auth/routes` **16** · `date` 33 · `currency` **51** · `validation/report` 96 · `reports/today-cta` 17 · `kpi` **49** · **`reports/share-card` 43** |
-| **Integration (DB)** | ✅ **40 passed** — UNIQUE, 16 CHECK, FK RESTRICT, 4 trigger, 3 function, bảng GRANT |
-| **RLS** | ✅ **39 passed** — JWT thật của `salesA`/`salesB`/`admin`/`inactive` + `anon`. Gồm 7 test `completeEveningReport()` và **6 test `getReportForShare()`** (IDOR) |
-| **Tổng `npm test`** | ✅ **369 passed / 369**, 16 test file, 15,3 giây (đo lúc 01:03 ngày 2026-08-08, sau khi Docker hồi phục) |
-| **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **98,46%** · branch **99,28%** · func **97,43%** · lines **98,75%**. `lib/kpi.ts` và `lib/reports/share-card.ts` **100%** cả bốn cột. Hai dòng chưa phủ là **cố ý**: nhánh không tới được trong `formatCompactVND` và khung ném lỗi `getVietnamMonthRange`. ⚠ Chỉ tính các module `lib/` mà tầng unit **thực sự import** |
-| **UI mobile (Phase 2 — auth)** | ✅ Chromium 375px + 1440px: **32/32 PASS** |
-| **UI mobile (Phase 3 — báo cáo sáng)** | ⚠ Chromium 375px + 1440px: **57/58 PASS**. Mục lệch duy nhất là **NFR-008 (7 lần chạm)** — ISSUE-013, không phải lỗi code |
-| **UI mobile (Phase 4 — báo cáo cuối ngày)** | ✅ Chromium 375px + 1440px: **62/62 PASS** (lần đo trước khi sửa ISSUE-014: 59/62) |
-| **UI (Phase 5 — bảng đối chiếu KPI)** | ✅ Chromium 375px + 1440px: **36/36 PASS** (lần đo đầu 27/36 là do script đọc DOM quá sớm, không phải lỗi code — xem `WORKLOG.md` Entry 008 Errors 1) |
-| **Xuất ảnh 9:16 (Phase 6)** | ✅ Chromium 375px + 1440px: **44/44 PASS** — header FR-019, `IHDR` 1080×1920, BR-002 → 403, IDOR → 404, BR-022 → 200, chưa đăng nhập → 401 (ISSUE-015) |
-| **Ảnh PNG xuất ra (Phase 6)** | ✅ **đã xem tận mắt 2 tấm** — dấu tiếng Việt và `₫` đúng glyph; tấm thứ hai gom đủ 6 edge case, không `NaN`/`∞` |
-| **Zalo webview thiết bị thật** | ❌ `N/A — chưa làm được, cần điện thoại thật + link công khai` (ISSUE-003) |
-| **Hồi quy luồng sáng sau refactor Phase 4** | ✅ **11/11 PASS** — UC-04, UC-05, DEC-034 vẫn đúng |
+| **Unit** | ✅ **542 passed** — 14 file, gồm `reports/trend-chart` **17** và `reports/metric-rows` **5** (MỚI) |
+| **Integration (DB)** | ✅ **54 passed** — 5 file, gồm **`indexes` 14 (MỚI — `EXPLAIN ANALYZE`)** |
+| **RLS** | ✅ **133 passed** — 9 file, gồm 4 file mới cho toàn bộ khu vực Admin và lịch sử |
+| **Tổng `npm test`** | ✅ **729 passed / 729**, 29 test file, 23,8 giây |
+| **Coverage (`--project unit --coverage`)** | ✅ `lib/**` — stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** |
+| **E2E (Playwright)** | ✅ **99 passed / 99** — 3 project (`mobile-375`, `desktop-1440`, `zalo-like`) × 33 bài, 4,4 phút |
+| **A11y (axe-core)** | ✅ **30 lượt quét** (10 màn hình × 3 project) — **0 vi phạm serious/critical** (NFR-007) |
+| **EXPLAIN ANALYZE / InitPlan** | ✅ **ĐÃ ĐO** — `is_admin()` là InitPlan, mọi truy vấn list đi qua index. **ISSUE-005 CLOSED** |
+| **Bảo mật (E2E)** | ✅ IDOR · 401/403 JSON cho `/api/*` · CSV Sales→403 Admin→200 + `no-store` · PNG **1080×1920** đọc từ `IHDR` · **service role key không có trong HTML** |
+| **Xem tận mắt biểu đồ trend** | ✅ chụp và mở xem ở **375px và 1440px** — phát hiện lỗi type scale thật, đã sửa (DEC-044) |
+| **Kiểm chứng các phase trước (script dùng-một-lần, đã xoá)** | ✅ Phase 2 **32/32** · Phase 3 **57/58** *(mục lệch NFR-008 nay ĐẠT theo DEC-043)* · Phase 4 **62/62** + hồi quy **11/11** · Phase 5 **36/36** · Phase 6 **44/44** |
 | **Tài khoản inactive** | ✅ **6/6 PASS**, gồm cả bị vô hiệu hoá **giữa phiên** |
-| **E2E (Playwright)** | ❌ `N/A — chưa có playwright.config.ts, chưa có e2e/*.spec.ts` |
-| **A11y (axe-core)** | ❌ `N/A — chưa chạy` |
-| **EXPLAIN ANALYZE / InitPlan** | ❌ `N/A — chưa đo. Phase 11, NFR-002` |
+| **Zalo webview thiết bị thật** | ❌ `N/A — chưa làm được, cần điện thoại thật + link công khai` (ISSUE-003) |
 | **Lighthouse** | ❌ `N/A — chưa chạy` |
 
-Bốn dòng `N/A` ở cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào. Ba script kiểm chứng
-trình duyệt là **công cụ dùng một lần, đã xoá, không commit** — chúng không phải bộ E2E hồi quy.
+Hai dòng `N/A` cuối **không được diễn giải thành pass** dưới bất kỳ hình thức nào. Các script kiểm
+chứng trình duyệt của Phase 2–6 là **công cụ dùng một lần, đã xoá, không commit** — chúng không phải
+bộ hồi quy. **Bộ hồi quy thật nay là `e2e/`**, đã commit, chạy bằng `npm run e2e`.
+
 
 ---
 
 ## Last Working Feature
+
+
+**Toàn bộ v1 chạy thật đầu-cuối, cả Sales lẫn Admin (Phase 7–11).** `npm run e2e` tự `next build` +
+`next start` trỏ vào Supabase local rồi chạy **99 bài trên 3 project**, tất cả xanh. Đường đi được
+kiểm bằng máy, không phải bằng mắt:
+
+**Phía Sales** — đăng nhập → `/sales/today` hiện "Chưa báo cáo" → **Tạo báo cáo đầu ngày** → điền 5
+trường → **Lưu** → banner "Đã lưu báo cáo đầu ngày" do **server** quyết định (DEC-034) → **Sửa cam
+kết sáng**, form prefill đúng `10`, đổi thành `8` → banner đổi thành "Đã cập nhật cam kết sáng" →
+**Hoàn thành báo cáo cuối ngày**, form nhắc lại "8 xe" để đối chiếu → điền 4 chỉ số + tuyến + ghi chú
+có dấu tiếng Việt → **Hoàn tất** → bảng đối chiếu hiện `125,0%` (vượt) và `75,0%` (chưa đạt), hai đầu
+của BR-023 → vào lại `/evening` **và** `/morning` đều bị đá về `/sales/today` (BR-019 khoá vĩnh viễn)
+→ nút **Xuất ảnh** xuất hiện (BR-002). Rồi **Lịch sử** → tháng trước → mở một dòng →
+`/sales/reports/[id]` hiện đúng bảng đối chiếu + nút Xuất ảnh → **Tài khoản** → đổi mật khẩu, hai lần
+nhập lệch nhau báo lỗi vào **đúng ô nhập lại**.
+
+**Phía Admin** — đăng nhập → `/admin` hiện 12 chỉ số và cảnh báo → `/admin/reports`, tìm theo tên có
+kết quả còn tên không tồn tại ra **empty state** (cặp đối chứng, chứng minh bộ lọc chạy thật ở server)
+→ lọc tháng → mở chi tiết báo cáo của một Sales bất kỳ (BR-022) → `/admin/analytics` hiện tổng 4 chỉ
+tiêu, **biểu đồ trend theo ngày**, mở `<details>` ra bảng số, đổi chỉ tiêu bằng URL → `/admin/sales`
+hiện bảng hiệu suất → **Tạo tài khoản**, mật khẩu tạm hiện đúng một lần, tạo lại cùng email thì báo
+"Email này đã được dùng cho một tài khoản khác" (BR-025) → mở `/sales/today` thì bị guard đưa về
+`/admin` (FR-004).
+
+**Phía bảo mật** — `salesA` mở `/sales/reports/<id-của-salesB>` nhận **đúng cùng một giao diện** với
+`id` không tồn tại (BR-003, không dò được ID) · `anon` gọi hai route API nhận **401 JSON** không phải
+HTML (DEC-039) · Sales gọi route CSV nhận **403** và **không một dòng dữ liệu nào** · Admin gọi thì
+nhận `text/csv` + `attachment` + `no-store` · ảnh PNG đọc từ khối `IHDR` đúng **1080×1920** · HTML
+của 4 trang Admin **không chứa** service role key.
+
+**Phía khả năng tiếp cận** — 30 lượt quét axe trên 10 màn hình: **0 vi phạm serious/critical**.
+
+Đây là **mốc an toàn thứ bảy**, và là mốc đầu tiên được chứng minh bằng một bộ test **có commit** thay
+vì script dùng-một-lần.
 
 **Xuất ảnh 9:16 chạy thật đầu-cuối (Phase 6).** `next build` + `next start` trỏ vào Supabase local,
 đăng nhập bằng một Sales đã `COMPLETED` → `/sales/today` hiện nút **"Xuất ảnh báo cáo"** (chưa hoàn
@@ -570,62 +655,114 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
-> ✅ Phase 0, 1, 2, 5 đã đóng đủ; Phase 3 xong 13/14, Phase 4 xong 9/10, Phase 6 xong 11/12 —
-> **không làm lại**. Ba mục treo đó **không chặn Phase 7**.
+> ✅ Phase 0, 1, 2, 3, 4, 5, 7, 8, 9, 10 đã đóng đủ. Phase 6 xong 11/12, Phase 11 xong 12/14 —
+> **bốn mục còn lại của cả hai phase đều cần thiết bị thật hoặc link công khai**, không phải code.
+> **Không làm lại bất cứ thứ gì trong danh sách trên.**
 
-**VIỆC 0 — kiểm tra môi trường trước khi gõ code (30 giây):**
+**VIỆC 0 — kiểm môi trường trước khi gõ code (1 phút):**
 
-1. **`npx supabase status` trong thư mục dự án** rồi `npm test`. Kỳ vọng **369 passed**
-   (`unit` 290 · `integration` 40 · `rls` 39) trong ~15 giây. Nếu test treo hàng phút rồi FAIL,
-   **kiểm Docker trước khi nghi ngờ code** — xem `WORKLOG.md` Entry 009 mục **Errors 3**.
-   Nếu đăng nhập nhận `502` thì đó là **ISSUE-012**, có lệnh khắc phục ở mục `Database State`.
+1. `npx supabase status` **trong thư mục dự án**, rồi `npm test`. Kỳ vọng **729 passed**
+   (`unit` 542 · `integration` 54 · `rls` 133) trong khoảng 24 giây. Nếu test treo hàng phút rồi
+   FAIL, **kiểm `docker ps` trước khi nghi ngờ code** (`WORKLOG.md` Entry 009 mục Errors 3). Đăng
+   nhập nhận `502` thì đó là **ISSUE-012**, lệnh khắc phục ở mục `Database State`.
+2. Muốn chạy E2E: `npm run e2e`. Nó **tự `next build` rồi `next start` ở cổng 3100** với env bơm từ
+   `.env.test.local`, tự dựng và tự dọn tài khoản `@e2e.bikeforce.test`. Kỳ vọng **99 passed**,
+   khoảng 4,5 phút. Chỉ chạy một project: `npx playwright test --project=mobile-375`.
 
-**PHASE 7 — Sales History. Không còn chốt chặn nghiệp vụ nào, làm được ngay:**
+**PHASE 12 — Deployment Preparation. Làm đúng thứ tự này:**
 
-2. **`getVietnamMonthRange(yyyyMM)` trong `lib/date.ts`** — hiện **vẫn cố ý là khung ném lỗi**. Viết
-   thân thật + unit test: tháng 2 năm nhuận (`'2028-02'` → `to = '2028-02-29'`), tháng 12, và
-   **chuỗi sai định dạng** (theo DEC-033 thì hàm hiển thị trả `'—'`, nhưng hàm này trả về một
-   khoảng ngày dùng cho truy vấn — quyết cách xử lý rồi ghi vào `docs/08 §3.5.3`, đừng để ngỏ).
-3. **`services/reports.listReportsByMonth(supabase, salesId, month, page)`** — phân trang
-   **server-side** bằng `.range()` + `count: 'exact'`, `order by report_date desc`, bám
-   `idx_daily_reports_sales_date_desc`. **Không** `select('*')` (NFR-002). `PAGE_SIZE` là hằng số.
-4. **`app/(sales)/sales/history/page.tsx`** — FR-021, UC-09. Filter tháng qua `searchParams`, empty
-   state có icon + hướng dẫn + CTA. Mobile card, `<table>` từ 768px (DEC-019).
-5. **`app/(sales)/sales/reports/[id]/page.tsx`** — FR-022, UC-10. **Dùng lại nguyên** `AchievementTable`
-   + `ReportNotes` + `ShareImageButton` **đã có sẵn** — đừng viết lại. RLS chặn đọc báo cáo người
-   khác ⇒ service trả `null` ⇒ gọi `notFound()`.
-6. **Xoá `VIEW_REPORT` khỏi `CTA_ROUTES_NOT_READY`** trong `app/(sales)/sales/today/page.tsx` ngay
-   khi bước 5 xong. Đó là **cờ duy nhất còn lại** trong file đó (`EXPORT_IMAGE_NOT_READY` đã xoá ở
-   Phase 6), và cùng lúc xoá luôn câu "Màn hình chi tiết báo cáo sẽ có ở bản cập nhật tiếp theo".
-7. **Bottom nav Sales 3 mục** (Hôm nay / Lịch sử / Tài khoản) — icon **và** label, DEC-018. Danh
-   sách phải có `pb-20` để nav không che dòng cuối.
-8. **Test RLS bắt buộc:** salesA gọi `listReportsByMonth` với `salesId` của salesB → 0 dòng; salesA
-   mở `/sales/reports/<id-của-salesB>` → `notFound()`. Đặt ở `tests/rls/`, **không** phải
-   `tests/integration/` (role `postgres` có `rolbypassrls`).
+3. **Đẩy migration 0006 + 0007 lên cloud.** `docs/09 §12` có đủ hai cách và các câu SQL kiểm chứng.
+   Cách nhanh: `npx supabase db push --linked` (sẽ hỏi mật khẩu database). Nếu không nhập được mật
+   khẩu thì dán SQL trên Dashboard theo `§12.3` — **đã ghi từng bước bấm**.
+   **Kiểm xong phải thấy đủ 5 hàm** `admin_*` và `anon` **không** execute được hàm nào.
+4. **Đặt `Minimum password length = 8`** trên Supabase Dashboard → Authentication → Password, cho
+   khớp `PASSWORD_MIN_LENGTH` ở `lib/validation/account.ts` (**DEC-041**). Không bật yêu cầu chữ
+   hoa/chữ số/ký tự đặc biệt. Xác nhận **Enable email signup vẫn TẮT** (BR-012, FR-006).
+5. **Rotate service role key (ISSUE-011, P1).** Dashboard → Project Settings → API Keys → mục secret
+   → **`Generate new secret key`**. **Đóng `.env.local` trong VS Code trước khi dán** giá trị mới,
+   hoặc dán bằng terminal — nếu không, IDE lại tự đưa key vào ngữ cảnh hội thoại đúng như lần trước.
+6. **Regenerate `types/database.types.ts` từ cloud** sau khi push, rồi so với bản `--local`: hai bên
+   phải chỉ khác đúng một khối metadata. Lệch nhiều hơn nghĩa là push chưa xong.
+7. **Vercel** — `docs/09 §12.5`: framework Next.js, region `sin1`, Node 22, ba biến môi trường
+   (**không** thêm `SUPABASE_DB_URL`), bật "Protect Preview Deployments".
+8. **Chạy runbook tạo Admin đầu tiên trên production** — `docs/09 §10`: tạo user trên Dashboard rồi
+   `update public.profiles set role = 'ADMIN' where email = '<email>';` **một lần duy nhất**.
+9. **PWA manifest + icon + `display: standalone`** (FR-036). **Không** service worker (DEC-024).
+10. **Smoke test trên production** — 5 điều ở `docs/09 §12.6`.
 
-**Ba việc chờ người dùng / môi trường, KHÔNG chặn Phase 7:**
+**Ba việc chỉ làm được SAU khi có link công khai:**
 
-9. **Rotate service role key (ISSUE-011, P1).** Dashboard → `Project Settings` → `API Keys` → mục
-   secret → **`Generate new secret key`** → dán giá trị mới vào `.env.local`.
-   **Đóng `.env.local` trong IDE trước khi dán**, hoặc dán bằng terminal — nếu không, IDE lại tự đưa
-   key vào ngữ cảnh hội thoại đúng như lần trước (`docs/06 §11.2` biện pháp thứ 8).
-10. **Trả lời OQ-18 (ISSUE-013).** Sau khi có quyết định: cập nhật `docs/01`, tạo DEC mới nếu nới
-    NFR-008, đo lại, rồi mới tick mục cuối của Phase 3 trong `PROJECT_CHECKLIST.md`.
-11. **Kiểm ảnh 9:16 trong Zalo trên điện thoại thật (ISSUE-003)** — mục cuối cùng còn nợ của Phase 6.
-    Cần deploy Vercel trước để có link công khai. Kiểm đủ ba đường ra: share sheet có Zalo không,
-    `<a download>` có lưu được không, và ảnh mở ra có đúng dấu tiếng Việt không.
+11. **ISSUE-003 — kiểm ảnh 9:16 trong Zalo trên điện thoại thật.** Mục cuối cùng còn nợ của Phase 6.
+    Kiểm đủ ba đường ra: share sheet có Zalo không · `<a download>` có lưu được không · ảnh mở ra có
+    đúng dấu tiếng Việt không. **Project `zalo-like` của Playwright KHÔNG thay thế được** — nó chỉ
+    đội một `userAgent` khác, không tái hiện giới hạn API thật của webview.
+12. **Lighthouse mobile ≥ 90, LCP < 2,5s trên 4G** (NFR-001) — mục còn lại của Phase 11.
+13. **Ma trận thử tay** Chrome mobile + Safari mobile 2 phiên bản gần nhất (NFR-009) — mục còn lại
+    của Phase 11.
 
-**Việc của Phase 11 và Phase 12, chưa cần bây giờ:**
+**Nếu cần sửa code ở phase sau, đọc `DO NOT REDO` bên dưới trước.**
 
-12. `playwright.config.ts` + `e2e/*.spec.ts` (Phase 11) — **mục cuối của Phase 4 chỉ tick được sau
-    bước này**, vì nó đòi một bộ E2E hồi quy có commit, không phải script dùng-một-lần. Ba script
-    kiểm chứng của Phase 3/4/5/6 là nguyên liệu tốt để viết lại thành spec thật.
-13. Runbook Admin đầu tiên trên cloud (`docs/09 §10`): tạo user trên Dashboard rồi
-    `update public.profiles set role = 'ADMIN' where email = '<email>';` — **một lần duy nhất**.
 
 ---
 
 ## DO NOT REDO
+
+
+**Từ Phase 7–11 (mới nhất — 2026-08-10):**
+
+- **Toàn bộ Phase 7, 8, 9, 10 ĐÃ XONG và có test.** 18 route đều chạy thật. **Đừng dựng lại** bất kỳ
+  màn hình nào vì checkpoint cũ ghi "chưa bắt đầu" — checkpoint đó đã lỗi thời và đã được sửa.
+- **`getVietnamMonthRange()` ĐÃ CÓ THÂN THẬT**, trả `{from,to} | null` (DEC-040). Ghi chú cũ
+  "vẫn cố ý là khung ném lỗi" **đã hết hiệu lực**. Nhóm hàm tháng nay có 5 hàm:
+  `getVietnamMonthRange` · `getVietnamCurrentMonth` · `formatVietnamMonth` · `shiftVietnamMonth` ·
+  `resolveVietnamMonth`.
+- **`CTA_ROUTES_NOT_READY` đã bị xoá** khỏi `app/(sales)/sales/today/page.tsx`. Không còn cờ
+  "chưa sẵn sàng" nào trong dự án. CTA "Xem báo cáo hôm nay" nay **bấm được thật**.
+- **`lib/reports/metric-rows.ts` nay có `kpiMetricRow(metric)`** trả kiểu **không** `undefined`.
+  Dùng nó thay cho `KPI_METRIC_ROWS.find(...)` — hàm kia buộc mọi nơi gọi viết một nhánh dự phòng
+  không bao giờ chạy tới. Mảng `KPI_METRIC_ROWS` dựng **TỪ** bảng tra, nên hai bên không thể lệch.
+- **Năm hàm SQL aggregate là `security invoker`, KHÔNG phải `security definer`.** `definer` sẽ chạy
+  vượt RLS — đúng thứ DEC-004 cấm. Ngoại lệ duy nhất vẫn là `is_admin()` (DEC-006). **Đừng "sửa cho
+  chạy được"** bằng cách đổi sang `definer`; có 31 bài RLS khoá lại và chúng sẽ đỏ.
+- **ISSUE-005 ĐÃ ĐÓNG bằng phép đo thật.** `(select public.is_admin())` được Postgres nâng thành
+  **InitPlan**, `actual rows=1 loops=1`. **Đừng đo lại**, và đừng "tối ưu" cách gọi hàm đó.
+- **`idx_daily_reports_sales_date_desc` KHÔNG dư thừa — ĐỪNG DROP.** Câu hỏi bỏ ngỏ trong
+  `0005_indexes.sql` đã có câu trả lời: nó thắng `uq_daily_reports_sales_date` cho truy vấn FR-021,
+  và không sinh node `Sort`. `idx_profiles_role_active` thì phủ được truy vấn nhưng ở quy mô vài
+  chục dòng planner chọn `Seq Scan` là **hợp lý** — đừng kết luận "index hỏng" từ điều đó.
+- **Bộ `indexes.test.ts` PHẢI tự sinh dữ liệu và PHẢI đo dưới vai `authenticated`.** Trên bảng 22
+  dòng của seed thì **mọi** truy vấn đều `Seq Scan`; và role `postgres` có `rolbypassrls` nên policy
+  không tham gia kế hoạch. Bỏ một trong hai điều đó là bài test "xanh" một cách vô nghĩa.
+- **File `'use server'` chỉ được export async function** (DEC-045, ISSUE-016). Chuỗi thông báo nằm ở
+  `lib/account/messages.ts` và `lib/admin/messages.ts`. **Đừng chuyển ngược vào `actions.ts`** —
+  build, typecheck, lint và toàn bộ unit test vẫn xanh, còn trang thì sập ở runtime.
+- **Bộ E2E phải chạm ít nhất một Server Action của mỗi feature.** Đây là điều kiện duy nhất bắt được
+  nhóm lỗi ISSUE-016. Thêm feature mới có Server Action mà không có bài E2E chạm tới nó là để lại
+  một lỗ hổng cùng loại.
+- **Đừng dùng `getByText(...).first()` trong E2E — dùng `visibleText()` ở `e2e/helpers.ts`.**
+  DEC-019 render **hai nhánh cùng lúc trong DOM**, và ở 1440px thì bản đứng **trước** là bản bị ẩn.
+  Đã làm 4 bài đỏ cùng lúc trong khi giao diện hoàn toàn đúng.
+- **Mỗi project Playwright có Sales riêng — đừng gộp.** BR-001 chỉ cho một báo cáo mỗi ngày và
+  BR-019 khoá vĩnh viễn, nên dùng chung một tài khoản thì lượt chạy thứ hai trong ngày sẽ đỏ dù code
+  đúng. Cũng **đừng dùng tài khoản seed** cho E2E — nó phá trạng thái người dùng đang kiểm tay.
+- **`reuseExistingServer: false` trong `playwright.config.ts` là CỐ Ý.** Một `next start` cũ giữ cổng
+  sẽ phục vụ bản build cũ với env cũ — đã gây một vòng chẩn đoán sai ở Phase 4.
+- **`e2e/env.ts` dùng `process.cwd()`, KHÔNG dùng `import.meta.url`.** Playwright biên dịch file cấu
+  hình sang CommonJS, nơi `import.meta` là **lỗi cú pháp**.
+- **`globalSetup` KHÔNG được đóng pool `pg`** — `globalTeardown` dùng chung instance module đó và sẽ
+  không dọn được fixture, trong khi Playwright chỉ báo "1 error was not a part of any test".
+- **Biểu đồ trend: KHÔNG đặt chữ vào trong `<svg>`.** viewBox cố định cộng `width: 100%` làm SVG
+  phóng to 2,7 lần ở 1440px, biến chữ 11px thành ~30px (DEC-044). Nhãn ngày là HTML, và vùng vẽ phải
+  trải kín bề rộng viewBox (`PLOT_LEFT = 0`) để nhãn khớp cột — có unit test khoá lại.
+- **`admin_daily_trend` cố ý chỉ trả ngày CÓ báo cáo hoàn tất.** Đừng "hoàn thiện" bằng
+  `generate_series` cả tháng: v1 không có khái niệm ngày nghỉ (DEC-030), nên cột 0 cho Chủ nhật là
+  số liệu bịa.
+- **ISSUE-017 là hành vi đã hiểu rõ và CỐ Ý không sửa:** `notFound()` trên route có `loading.tsx`
+  trả **200** kèm giao diện "Không tìm thấy". Tính không-phân-biệt-được của BR-003 vẫn đúng, không
+  có dữ liệu nào rò rỉ, và route API vẫn trả mã thật. **Đừng bỏ `loading.tsx`** để lấy lại 404.
+- **`formatCompactVND` vẫn CHỈ dành cho thẻ ảnh 9:16.** Biểu đồ trend cố ý **không** có nhãn số trên
+  trục vì lý do này — con số chính xác nằm ở bảng `<details>` bên dưới.
+
 
 **Từ Phase 0:**
 
@@ -757,14 +894,15 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ---
 
-## OPEN QUESTIONS — 17/17 câu ban đầu đã đóng · **OQ-18 đang chờ**
+## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG ĐỦ **18/18**
 
-**Không còn câu hỏi nghiệp vụ nào của bộ 17 câu ban đầu.** Người dùng đã trả lời đủ **17/17** ngày
-`2026-08-07`. Danh sách đầy đủ kèm câu trả lời chính thức: `docs/01-business-analysis.md § OPEN QUESTIONS`.
+**KHÔNG CÒN CÂU HỎI NGHIỆP VỤ NÀO ĐANG CHỜ.** Người dùng đã trả lời **17/17** ngày `2026-08-07` và
+**OQ-18** ngày `2026-08-10`. Danh sách đầy đủ kèm câu trả lời chính thức:
+`docs/01-business-analysis.md § OPEN QUESTIONS`.
 
-> ⏳ **OQ-18 (MỚI, phát sinh ở Phase 3 — không phải hỏi lại câu cũ):** NFR-008 đặt "≤ 6 lần chạm"
-> nhưng FR-008 có 5 trường bắt buộc nên sàn lý thuyết là 7. Đo thật: **7 chạm / 1,8 giây**.
-> Ba phương án ở `docs/01 § OQ-18` và `docs/12 § ISSUE-013`. **Không chặn Phase 4.**
+> ✅ **OQ-18 ĐÃ ĐƯỢC TRẢ LỜI ngày 2026-08-10 — phương án (a):** NFR-008 nới thành **≤ 8 lần chạm**,
+> **giữ nguyên 5 trường bắt buộc** của FR-008 — **DEC-043**. Con số đo được **7 chạm / 1,8 giây** nay
+> **ĐẠT cả hai vế**; ISSUE-013 → **CLOSED**; Phase 3 đóng ở **14/14**. **Không sửa một dòng code nào.**
 
 | ID | Câu trả lời chính thức |
 |---|---|
@@ -791,8 +929,10 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
    đúng cho **cả hai** ca, phân biệt bằng `status`.
 2. ~~**DEC-025 — đầu Phase 5**~~ — ✅ **ĐÃ ĐÓNG 2026-08-07** bằng **DEC-038**:
    `calculateAchievement(target, actual, metric)` trả cả `display` đã format lẫn `surplus` thô.
-3. **Buộc đổi mật khẩu lần đầu — trước Phase 10:** `docs/06 §3.3` ghi chú 6 nêu hai phương án
-   (cờ trong `user_metadata` vs thêm cột vào `profiles`), **chưa chốt**. Phải quyết và ghi thành DEC
-   mới **trước** khi làm UC-17. Schema hiện **không có** cột nào cho việc này.
+3. ~~**Buộc đổi mật khẩu lần đầu — trước Phase 10**~~ — ✅ **ĐÃ ĐÓNG 2026-08-10** bằng **DEC-041**:
+   **v1 KHÔNG ép đổi mật khẩu lần đầu.** Cả hai phương án của `docs/06 §3.3` ghi chú 6 đều bị loại —
+   cờ trong `user_metadata` không phải hàng rào thật (client sửa được), còn thêm cột vào `profiles`
+   thì cần migration mới cộng sửa trigger. Schema **cố ý không có** cột nào cho việc này, và đó là
+   trạng thái đúng. Đã ghi điều kiện kích hoạt cho v2 vào `docs/10-future-roadmap.md`.
 4. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
    **phải làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.

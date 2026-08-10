@@ -694,3 +694,65 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Nh�
 | Test viewport mobile và test accessibility | `docs/08-testing-strategy.md` |
 | Trạng thái của DEC-012..DEC-019 (đều APPROVED) | `docs/11-decisions.md` |
 | Rủi ro ISSUE-002 (Satori), ISSUE-003 (Zalo webview) | `docs/12-known-issues.md` |
+
+---
+
+## CẬP NHẬT PHASE 7–11 (2026-08-10) — page inventory đầy đủ và đặc tả biểu đồ trend
+
+### §16.1 — Page inventory: 18 route, tất cả đã dựng thật
+
+| Route | UC / FR | Ghi chú hiển thị |
+|---|---|---|
+| `/login` | UC-01, FR-001 | DEC-017 |
+| `/sales/today` | UC-03, FR-007 | badge trạng thái · bảng đối chiếu 4 chỉ tiêu · **đúng 1 CTA chính** · nút Xuất ảnh khi `COMPLETED` |
+| `/sales/today/morning` | UC-04, UC-05, FR-008 | 5 trường bắt buộc · chip cộng nhanh · nút Lưu **sticky** đáy |
+| `/sales/today/evening` | UC-06, FR-013, FR-014 | mỗi ô nhắc lại con số cam kết sáng |
+| `/sales/history` | UC-09, FR-021 | **MỚI** — lọc tháng · card < 768px, `<table>` từ 768px (DEC-019) · phân trang · empty state có icon + CTA |
+| `/sales/reports/[id]` | UC-10, FR-022 | **MỚI** — dùng lại `AchievementTable` + `ReportNotes` + `ShareImageButton`, không viết lại |
+| `/sales/account` | UC-11, FR-023 | **MỚI** — đúng 3 khối: hồ sơ · đổi mật khẩu · đăng xuất. **Không** có form sửa hồ sơ (`docs/06 §7 (b)`) |
+| `/admin` | UC-12, FR-024 | **MỚI (thật)** — 12 chỉ số · cảnh báo chưa báo cáo · Suspense + Skeleton |
+| `/admin/reports` | UC-13, FR-025, FR-026 | **MỚI** — 7 chiều lọc · tìm theo tên · phân trang server-side · nút Xuất CSV |
+| `/admin/reports/[id]` | UC-14, FR-027 | **MỚI** — BR-022, Admin xem được báo cáo bất kỳ |
+| `/admin/analytics` | UC-15, FR-028, FR-037 | **MỚI** — tổng 4 chỉ tiêu · **biểu đồ trend theo ngày** · chọn tháng bằng link |
+| `/admin/sales` | UC-16, FR-029 | **MỚI** — bảng hiệu suất + số ngày đạt KPI (BR-024) |
+| `/admin/sales/new` | UC-17, FR-030 | **MỚI** — mật khẩu tạm hiện **đúng một lần**, cố ý không redirect sau khi tạo |
+| `/admin/sales/[id]` | UC-18, UC-19, FR-031, FR-032 | **MỚI** — hồ sơ · sửa · bật/tắt `is_active` · lịch sử báo cáo |
+| `/admin/account` | FR-023 | **MỚI** — cùng khuôn với `/sales/account` |
+| `/api/reports/[id]/share-image` | UC-08, FR-018 | Route Handler, PNG 1080×1920 |
+| `/api/admin/reports/export` | UC-21, FR-034 | **MỚI** — Route Handler, CSV (DEC-042) |
+| `/` | FR-005 | phân luồng theo role |
+
+### §16.2 — Điều hướng (DEC-018) — đã dựng
+
+- **Sales: 3 mục** — Hôm nay · Lịch sử · Tài khoản. **Admin: 4 mục** — Tổng quan · Báo cáo · Sales · Tài khoản. Cả hai đều **≤ 5 mục**.
+- Mỗi mục có **icon VÀ chữ**. Không dùng emoji làm icon.
+- **< 1024px:** bottom nav cố định. Mọi trang có danh sách phải có `pb-20` để nav không che dòng cuối.
+- **≥ 1024px:** sidebar cố định bên trái. **Không bao giờ hiển thị đồng thời cả hai.**
+- Trạng thái active xác định bằng **tập tiền tố đường dẫn**, không phải so sánh chuỗi bằng nhau — `/sales/reports/<id>` thuộc về mục "Lịch sử" dù `href` là `/sales/history`. Bảng tiền tố nằm ở `lib/navigation/nav-items.ts` (hàm thuần, có unit test).
+- Trang con có `BackLink` với **`href` tường minh**, không dùng `router.back()`: mở trang từ một link Zalo thì lịch sử trình duyệt trống, "quay lại" sẽ rơi ra ngoài ứng dụng.
+
+### §16.3 — Bảng và danh sách: một luật, không ngoại lệ
+
+Mọi bảng render **hai nhánh cùng lúc trong DOM**: card xếp dọc cho `< 768px` (`md:hidden`) và `<table>` thật từ `768px` (`hidden md:table`) — DEC-019. Không cuộn ngang ở bất kỳ bề rộng nào, đã đo bằng E2E ở cả ba project.
+
+> ⚠ Hệ quả cho người viết test và người debug: **mỗi con số xuất hiện hai lần trong DOM**, và ở 1440px thì bản đứng **trước** chính là bản bị ẩn. Đây là nguyên nhân đã làm 4 bài E2E đỏ cùng lúc — xem `docs/08 §E`.
+
+### §15 — Biểu đồ trend theo ngày (FR-037, AF-08) — đặc tả đã dựng thật
+
+**Hình thức:** biểu đồ cột, một cột cho mỗi ngày **có báo cáo hoàn tất**. Mỗi cột gồm hai lớp:
+
+- **khung cam kết** — chỉ viền (`--color-input-border`, 4.76:1), rộng 72% khe;
+- **cột thực đạt** — nền đặc, rộng 50% khung cam kết, vẽ **đè lên giữa** để lộ khung tham chiếu; màu theo BR-023: `EXCEEDED` → `--color-success` · `NEAR` → `--color-warning` · `MISSED` → `--color-destructive`.
+
+**Bốn ràng buộc bắt buộc:**
+
+1. **Không có CHỮ nào bên trong `<svg>`.** Nhãn ngày là HTML (`<li class="flex-1">`) đặt ngay dưới, nên nhận đúng `--text-xs` như phần còn lại của trang. Lý do: SVG có viewBox cố định cộng `width: 100%` sẽ phóng to theo màn hình — ở 1440px là **2,7 lần**, biến chữ 11px thành ~30px và biểu đồ cao 540px. Đã nhìn thấy trên ảnh chụp thật (DEC-044).
+2. **`preserveAspectRatio="none"` + chiều cao cố định bằng CSS** (`h-40 md:h-52`). Mọi nét vẽ dùng `vector-effect="non-scaling-stroke"`, nếu không phép kéo ngang làm viền dày mỏng không đều.
+3. **Phương án `data-table` thay thế là BẮT BUỘC.** `<svg role="img">` mang `aria-label` tóm tắt (số ngày có báo cáo, số ngày đạt chỉ tiêu), và ngay dưới là một `<table>` **thật** trong `<details>` chứa đúng những con số đã vẽ — vẫn nằm trong DOM, vẫn tìm được bằng `Ctrl+F`.
+4. **Màu không bao giờ là kênh thông tin duy nhất.** Có chú giải bằng chữ ("Cam kết / Đạt / Gần đạt / Chưa đạt") và bảng bên dưới có cột "Hoàn thành" bằng chữ.
+
+**Gridline:** 3 vạch ngang màu `--color-border`, mảnh, **không kèm nhãn số**. Nhãn tiền VND đầy đủ không đọc được ở cỡ chữ trục, mà rút gọn thì phải dùng `formatCompactVND` — hàm đó **chỉ** dành cho thẻ ảnh 9:16 (kết luận Phase 6). Con số lớn nhất hiện bằng chữ thường ở dòng mô tả phía trên ("Cao nhất: …"), con số chính xác nằm ở bảng.
+
+**Nhãn trục X giãn thưa:** tối đa 8 nhãn. Với 31 ngày thì hiện ngày 01, 05, 09, … — đủ để định vị mà không chồng chữ ở 375px.
+
+**Chọn chỉ tiêu:** bốn `<Link>` thật đổi `?metric=`, **không phải state client**. Đổi chỉ tiêu là đổi câu hỏi đang xem nên nó thuộc về URL: chia sẻ được, quay lại được bằng nút Back, và không cần một byte JavaScript nào.

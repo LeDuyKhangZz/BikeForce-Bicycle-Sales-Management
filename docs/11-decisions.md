@@ -774,6 +774,135 @@ Một endpoint trả dữ liệu phải trả lời bằng mã trạng thái đ�
 
 ---
 
+## DEC-040 — `getVietnamMonthRange()` trả `null` khi chuỗi tháng sai định dạng, không ném lỗi
+
+**Date:** 2026-08-10 · **Phase:** 7 · **Loại:** technical
+
+**Decision:** `getVietnamMonthRange(yyyyMM)` trả `{ from, to } | null`. Chuỗi không khớp `^\d{4}-(0[1-9]|1[0-2])$` cho `null`. Hàm **không** tự lùi về tháng hiện tại — việc chọn tháng thay thế là của tầng gọi (`/sales/history` và `/admin/*` dùng `getVietnamCurrentMonth()`).
+
+**Reason:** `docs/08 §3.5.3` để ngỏ hành vi này từ Phase 0, và đề xuất cũ là "ném lỗi có kiểu rồi để caller fallback". Đầu vào thật của hàm là `searchParams.month` — **một chuỗi bất kỳ người dùng gõ được vào URL**. Ném lỗi biến `?month=abc` thành một trang 500, và một `try/catch` mà caller có thể quên là thứ compiler không nhắc được. `null` thì ngược lại: TypeScript **bắt** mọi nơi gọi phải xử lý, và không có đường nào làm sập trang. Cùng tinh thần DEC-033 (hàm hiển thị trả `'—'` thay vì throw), nhưng giữ kiểu an toàn vì kết quả đi vào truy vấn chứ không đi thẳng ra màn hình.
+
+Hàm cố ý **không** tự fallback về tháng hiện tại: làm vậy buộc nó phải đọc đồng hồ, và một hàm thuần biến thành hàm phụ thuộc thời gian — không test được nếu không giả lập giờ hệ thống.
+
+**Alternatives:**
+*(a)* Ném `RangeError` — bị loại, lý do ở trên.
+*(b)* Trả về tháng hiện tại khi đầu vào sai — bị loại: mất tính thuần, và che mất lỗi thật (một link hỏng vẫn hiện dữ liệu, không ai biết link sai).
+*(c)* Nhận `Date` thay vì chuỗi — bị loại: `searchParams` là chuỗi, và `new Date('2026-02-30')` không ném lỗi mà cuộn sang `2026-03-02` (đúng cái bẫy DEC-033 đã ghi).
+
+**Impact:** `lib/date.ts` (`getVietnamMonthRange` + nhóm hàm tháng `getVietnamCurrentMonth` / `formatVietnamMonth` / `shiftVietnamMonth` / `resolveVietnamMonth`), `lib/date.test.ts`, `lib/reports/admin-filters.ts`, `services/reports.ts`, `app/(sales)/sales/history/page.tsx`, `app/(admin)/admin/analytics/page.tsx`, `docs/08 §3.5.3`. Có bài E2E khoá lại (`?month=abc&page=-5` không làm sập trang).
+
+**Status:** APPROVED (technical)
+
+---
+
+## DEC-041 — Chính sách mật khẩu: tối thiểu 8 ký tự, không ép đổi ở lần đăng nhập đầu
+
+**Date:** 2026-08-10 · **Phase:** 10 · **Loại:** business (người dùng đã xác nhận)
+
+**Decision:**
+
+1. Mật khẩu tối thiểu **8 ký tự**, tối đa **72** (giới hạn thật của bcrypt mà GoTrue dùng). **Không** bắt buộc chữ hoa / chữ số / ký tự đặc biệt.
+2. Form đổi mật khẩu bắt **nhập lại lần 2**; lỗi không khớp gắn vào **ô nhập lại**, không đặt ở cấp form.
+3. Mật khẩu tạm do Admin đặt khi tạo tài khoản (UC-17) dùng **cùng chính sách** — không nới lỏng hơn, vì nó là mật khẩu thật cho tới khi Sales tự đổi.
+4. **v1 KHÔNG ép đổi mật khẩu ở lần đăng nhập đầu.** Điểm treo số 3 ở `SESSION_CHECKPOINT.md § OPEN QUESTIONS` (`docs/06 §3.3` ghi chú 6 — cờ trong `user_metadata` vs thêm cột vào `profiles`) **đóng lại theo hướng: không làm cả hai.**
+
+**Reason:** Sales gõ mật khẩu trên bàn phím điện thoại, ngoài trời, giữa lúc đi tuyến. Quy tắc phức tạp đẩy họ tới chỗ ghi mật khẩu ra giấy hoặc đặt một chuỗi kiểu `Abc@1234` — tức là làm hệ thống **kém** an toàn hơn chứ không hơn. Đây cũng là khuyến nghị của NIST SP 800-63B: ưu tiên độ dài, bỏ quy tắc thành phần bắt buộc.
+
+Về mục 4: ép đổi lần đầu cần **một trong hai** thay đổi có chi phí thật — thêm cột vào `profiles` (migration mới + sửa trigger `handle_new_user`), hoặc một cờ trong `user_metadata` mà client sửa được bằng `auth.updateUser()` nên **không** phải hàng rào thật. Với một đội nội bộ nơi Admin bàn giao mật khẩu trực tiếp, lợi ích không bù được chi phí ở v1. Đã ghi vào `docs/10-future-roadmap.md`.
+
+**Alternatives:**
+*(a)* Tối thiểu 12 ký tự — bị loại: cùng lý do trên, và không có yêu cầu tuân thủ nào bắt buộc con số đó.
+*(b)* Bắt nhập mật khẩu **hiện tại** khi đổi — bị loại: lớp bảo vệ tương đương nằm ở tầng nền tảng (bật **Secure password change** trên Supabase Dashboard để GoTrue tự đòi phiên đăng nhập gần đây, `docs/09 §11`). Thêm một ô ở form **không** thay thế được lớp đó, chỉ thêm thao tác.
+*(c)* Ép đổi lần đầu bằng cột trong `profiles` — hoãn sang v2, xem lý do ở trên.
+
+**Impact:** `lib/validation/account.ts` (`PASSWORD_MIN_LENGTH = 8`), `lib/validation/sales-account.ts`, `features/account/`, `features/admin-sales-management/`, `docs/06 §11.1`, `docs/09 §11`, `docs/10-future-roadmap.md`.
+
+⚠ **Con số 8 phải khớp cả ở Supabase Dashboard → Authentication → Password.** Chỉ đặt ở Zod thì đổi mật khẩu qua API vẫn lọt; chỉ đặt ở Supabase thì người dùng nhận thông báo lỗi tiếng Anh thô.
+
+**Status:** APPROVED (người dùng xác nhận 2026-08-10)
+
+---
+
+## DEC-042 — Route Handler thứ hai: `GET /api/admin/reports/export` cho CSV
+
+**Date:** 2026-08-10 · **Phase:** 9 · **Loại:** technical
+
+**Decision:** FR-034 (xuất CSV) triển khai bằng **Route Handler** `GET /api/admin/reports/export`, không bằng Server Action. Đây là route API thứ hai và **cuối cùng** của v1, bên cạnh `GET /api/reports/[id]/share-image` của Phase 6.
+
+**Reason:** DEC-003 nói "không REST API riêng cho **CRUD báo cáo**", và điều đó vẫn đúng — đây không phải CRUD, nó là **một file tải về**. Cùng lý do đã cho phép route ảnh tồn tại: Server Action không đặt được `Content-Disposition`, không trả được nội dung khác HTML, và không cho trình duyệt biết "đây là file, hãy lưu lại".
+
+**Alternatives:**
+*(a)* Server Action trả chuỗi CSV rồi client dựng `Blob` — bị loại: đẩy toàn bộ nội dung qua payload của action (giới hạn 1 MB mặc định của Next), và tải file vốn là đúng việc của một `GET` có thể bookmark.
+*(b)* Sinh file rồi lưu vào Supabase Storage — bị loại: DEC-021 đã loại Storage khỏi v1, và file này chứa doanh thu toàn đội nên không nên tồn tại ở đâu ngoài lần tải đó.
+
+**Impact:** `app/api/admin/reports/export/route.ts`, `lib/reports/csv.ts` (+ unit test), `services/reports.getAdminReportsForExport()` (có trần `CSV_EXPORT_MAX_ROWS`), `docs/04 §4`, `docs/07`. Ba lớp bảo vệ: middleware trả **401 JSON** cho `/api/*` (DEC-039) · route tự kiểm `role === 'ADMIN'` trả **403** · RLS `reports_select_own_or_admin` đứng dưới cùng. Header bắt buộc `Cache-Control: private, no-store`. Có 3 bài E2E khoá cả ba lớp.
+
+**Status:** APPROVED (technical, người dùng có quyền veto)
+
+---
+
+## DEC-043 — NFR-008 nới thành "≤ 8 lần chạm" (trả lời OQ-18)
+
+**Date:** 2026-08-10 · **Phase:** 3 (đóng nợ) · **Loại:** business (người dùng đã chọn)
+
+**Decision:** NFR-008 sửa từ "hoàn tất báo cáo sáng ≤ 60 giây và **≤ 6 lần chạm**" thành "≤ 60 giây và **≤ 8 lần chạm**". **Giữ nguyên 5 trường bắt buộc của FR-008.** Đây là phương án **(a)** trong ba phương án ghi ở `docs/01 § OQ-18`.
+
+**Reason:** Hai requirement mâu thuẫn nhau về mặt số học, không phải chỗ tối ưu được bằng code. FR-008 quy định 5 trường bắt buộc ⇒ sàn lý thuyết của luồng là `1 (mở form) + 5 (chạm từng ô) + 1 (lưu) = 7`. Đo thật ở 375px cho **7 chạm / 1,8 giây** — đạt vế thời gian, không đạt vế số chạm, và **không có cách nào đạt được** nếu vẫn giữ 5 trường.
+
+Người dùng chọn (a) vì hai phương án còn lại đều tệ hơn: (b) định nghĩa lại "chạm" là sửa cách đo cho khớp con số — một kiểu tự chấm điểm; (c) bỏ bớt trường bắt buộc là **thay đổi nghiệp vụ thật**, làm báo cáo mất một chỉ tiêu và kéo theo migration mới cộng sửa bốn tài liệu, chỉ để làm đẹp một con số.
+
+Ngưỡng mới là **8** chứ không phải 7 để còn một chạm dự phòng cho bước phát sinh trên thiết bị thật (ví dụ đóng bàn phím trước khi bấm Lưu), mà vẫn giữ được ý nghĩa gốc của NFR-008: luồng phải **ngắn và không có bước thừa**.
+
+**Alternatives:** (b) và (c) — xem trên. Cả hai đều được trình bày cho người dùng trước khi chốt.
+
+**Impact:** `docs/01 § NFR-008` và `§ OQ-18` (OQ-18 → ĐÃ TRẢ LỜI), `docs/08` (bảng đo), `docs/12 § ISSUE-013` (→ CLOSED), `PROJECT_CHECKLIST.md § Phase 3` (mục walkthrough NFR-008 nay tick được — đo thật **7 ≤ 8**). **Không có thay đổi code nào** — form giữ nguyên 5 trường, ba biện pháp giảm thao tác đã có (chip cộng nhanh, `inputMode="numeric"`, `enterKeyHint="next"`) giữ nguyên.
+
+**Status:** APPROVED (người dùng chọn phương án (a) ngày 2026-08-10)
+
+---
+
+## DEC-044 — FR-037 vẽ biểu đồ bằng SVG viết tay, không thêm thư viện biểu đồ
+
+**Date:** 2026-08-10 · **Phase:** 9 · **Loại:** technical
+
+**Decision:** Biểu đồ trend theo ngày (FR-037, AF-08) render bằng **SVG viết tay trong Server Component**. Không thêm dependency nào. Toàn bộ phép tính toạ độ nằm ở `lib/reports/trend-chart.ts` (hàm thuần, 17 unit test); component chỉ đổ số vào thuộc tính SVG.
+
+**Reason:** `PROJECT_CHECKLIST.md § Phase 9` ràng buộc FR-037 là **SHOULD, chỉ làm nếu không phát sinh dependency nặng**. Recharts kéo theo toàn bộ D3 (~90 kB gzip) và **buộc component phải là client component** — tức đẩy cả dữ liệu doanh thu của đội qua payload RSC cho một thứ chỉ để nhìn. Một biểu đồ cột tĩnh là khoảng 40 dòng SVG, không cần một byte JavaScript nào chạy trên máy khách.
+
+**Hai ràng buộc thiết kế đã đo bằng mắt, không phải suy đoán:**
+
+1. **Chữ KHÔNG được nằm trong SVG.** Bản đầu đặt nhãn ngày vào `<text>` với viewBox cố định cộng `width: 100%`; ảnh chụp thật ở 1440px cho thấy SVG phóng to **2,7 lần**, chữ `font-size: 11` render thành khoảng 30px và biểu đồ cao 540px — phá vỡ type scale của `docs/05 §3.3`. Sửa bằng cách đưa nhãn ra HTML và cho SVG `preserveAspectRatio="none"` cộng chiều cao cố định bằng CSS. Hệ quả bắt buộc: vùng vẽ phải trải kín bề rộng viewBox (`PLOT_LEFT = 0`) để nhãn HTML khớp cột, và có unit test khoá lại điều đó.
+2. **Chỉ vẽ ngày CÓ báo cáo hoàn tất**, không `generate_series` cả tháng. v1 không có khái niệm ngày nghỉ (DEC-030), nên một cột 0 cho Chủ nhật là **số liệu bịa** — biểu đồ sẽ nói dối rằng cả đội thất bại hôm đó.
+
+**Alternatives:**
+*(a)* Recharts / Chart.js / visx — bị loại, lý do ở trên.
+*(b)* Không làm FR-037, chỉ giữ bảng số — phương án cũ của session trước; bị thay khi thấy chi phí thật bằng 0 dependency.
+*(c)* Vẽ bằng `<canvas>` — bị loại: cần client component cộng JavaScript, và không có gì cho trình đọc màn hình.
+
+**Impact:** `supabase/migrations/0007_admin_daily_trend.sql` (RPC `admin_daily_trend`), `services/admin.getAdminDailyTrend()`, `lib/reports/trend-chart.ts` cộng test, `features/admin-analytics/daily-trend-chart.tsx`, `app/(admin)/admin/analytics/page.tsx`, `types/database.types.ts`, `docs/02`, `docs/05 §15`, `docs/07`. Biểu đồ có `role="img"` cộng `aria-label` tóm tắt **và** một `<table>` thật trong `<details>` — đúng yêu cầu "mọi bảng/biểu đồ có phương án `data-table` thay thế" của Phase 9.
+
+**Status:** APPROVED (technical, người dùng đã chọn "có làm, vẽ bằng inline SVG" ngày 2026-08-10)
+
+---
+
+## DEC-045 — Hằng số dùng chung KHÔNG được nằm trong file `'use server'`
+
+**Date:** 2026-08-10 · **Phase:** 11 · **Loại:** technical
+
+**Decision:** Mọi bảng hằng số và chuỗi thông báo dùng chung phải nằm ở `lib/`. File `'use server'` (`features/*/actions.ts`) chỉ được chứa **async function** và `export type`.
+
+**Reason:** Next.js ép luật này ở **runtime**: `A "use server" file can only export async functions, found object.` Điều nguy hiểm là `next build`, `tsc --noEmit` và `eslint` đều **xanh** — lỗi chỉ nổ khi người dùng mở đúng trang đó. Ở đây nó làm `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra", và **chỉ bộ E2E của Phase 11 mới bắt được** (ISSUE-016). Dự án vốn đã có sẵn khuôn đúng từ Phase 2/3 — `lib/auth/messages.ts` và `lib/reports/messages.ts` — nên đây là việc quay lại đúng khuôn, không phải phát minh quy ước mới.
+
+**Alternatives:**
+*(a)* Bọc hằng số trong một async function `getMessages()` — bị loại: biến một hằng số thành lời gọi bất đồng bộ ở mọi nơi dùng, chỉ để lách quy định của framework.
+*(b)* Tách thành `actions.ts` cộng `constants.ts` **trong cùng thư mục feature** — chấp nhận được, nhưng đặt ở `lib/` đúng hơn: chuỗi thông báo là thứ cả server lẫn client đọc, và `lib/` là nơi dự án đã quy ước cho "một nguồn duy nhất" (AGENTS.md §9).
+
+**Impact:** `lib/account/messages.ts` (MỚI), `lib/admin/messages.ts` (MỚI), `features/account/actions.ts`, `features/admin-sales-management/actions.ts`, `AGENTS.md`, `docs/12 § ISSUE-016`.
+
+**Status:** APPROVED (technical)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

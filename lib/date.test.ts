@@ -7,7 +7,16 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { formatVietnamDate, getVietnamToday, isValidVietnamDate } from './date';
+import {
+  formatVietnamDate,
+  formatVietnamMonth,
+  getVietnamCurrentMonth,
+  getVietnamMonthRange,
+  getVietnamToday,
+  isValidVietnamDate,
+  resolveVietnamMonth,
+  shiftVietnamMonth,
+} from './date';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -143,5 +152,211 @@ describe('formatVietnamDate', () => {
     for (const input of ['not-a-date', '2026-02-30', '', '2026-13-01']) {
       expect(formatVietnamDate(input)).not.toContain('Invalid');
     }
+  });
+});
+
+/* ===========================================================================
+ * NHÓM HÀM THÁNG — PHASE 7. Bảng case lấy nguyên từ `docs/08 §3.5.3`.
+ * ========================================================================= */
+
+describe('getVietnamMonthRange — khoảng tháng inclusive hai đầu (FR-021, FR-028)', () => {
+  const CASES: ReadonlyArray<readonly [label: string, input: string, from: string, to: string]> = [
+    ['tháng 31 ngày', '2026-08', '2026-08-01', '2026-08-31'],
+    ['tháng 30 ngày', '2026-04', '2026-04-01', '2026-04-30'],
+    ['tháng 2 năm thường', '2026-02', '2026-02-01', '2026-02-28'],
+    ['tháng 2 năm nhuận', '2028-02', '2028-02-01', '2028-02-29'],
+    ['tháng 12 không tràn sang năm sau', '2026-12', '2026-12-01', '2026-12-31'],
+    ['tháng 1 là biên dưới', '2026-01', '2026-01-01', '2026-01-31'],
+    ['năm chia hết 100 nhưng KHÔNG nhuận', '2100-02', '2100-02-01', '2100-02-28'],
+    ['năm chia hết 400 nên NHUẬN', '2000-02', '2000-02-01', '2000-02-29'],
+  ];
+
+  it.each(CASES)('%s', (_label, input, from, to) => {
+    expect(getVietnamMonthRange(input)).toEqual({ from, to });
+  });
+
+  it('hai đầu khoảng đều là ngày CÓ THẬT trên lịch', () => {
+    for (const [, input] of CASES) {
+      const range = getVietnamMonthRange(input);
+      expect(range).not.toBeNull();
+      // `range` đã được khẳng định khác null ngay trên dòng này.
+      expect(isValidVietnamDate(range!.from)).toBe(true);
+      expect(isValidVietnamDate(range!.to)).toBe(true);
+    }
+  });
+
+  it('ngày cuối tháng nằm TRONG khoảng — không bỏ sót báo cáo ngày 31', () => {
+    const range = getVietnamMonthRange('2026-08');
+    expect(range?.to).toBe('2026-08-31');
+    // `between from and to` của Postgres là inclusive, nên `to` phải là ngày
+    // cuối cùng chứ không phải ngày đầu tháng sau.
+    expect(range?.to).not.toBe('2026-09-01');
+  });
+
+  it.each([
+    ['tháng 13 không tồn tại', '2026-13'],
+    ['tháng 00 không tồn tại', '2026-00'],
+    ['thiếu số 0 đứng đầu', '2026-8'],
+    ['là một ngày đầy đủ chứ không phải tháng', '2026-08-01'],
+    ['chuỗi rác', 'not-a-month'],
+    ['chuỗi rỗng', ''],
+    ['sai thứ tự', '08-2026'],
+    ['có khoảng trắng', ' 2026-08'],
+  ])('%s → trả null, KHÔNG throw (DEC-040)', (_label, input) => {
+    expect(() => getVietnamMonthRange(input)).not.toThrow();
+    expect(getVietnamMonthRange(input)).toBeNull();
+  });
+
+  it('không phụ thuộc timezone của tiến trình', () => {
+    const originalTz = process.env.TZ;
+
+    try {
+      for (const tz of ['UTC', 'America/New_York', 'Asia/Ho_Chi_Minh', 'Pacific/Kiritimati']) {
+        process.env.TZ = tz;
+        expect(getVietnamMonthRange('2026-08'), `TZ=${tz}`).toEqual({
+          from: '2026-08-01',
+          to: '2026-08-31',
+        });
+      }
+    } finally {
+      if (originalTz === undefined) delete process.env.TZ;
+      else process.env.TZ = originalTz;
+    }
+  });
+});
+
+describe('getVietnamCurrentMonth — tháng nghiệp vụ hôm nay (BR-005)', () => {
+  it.each([
+    ['một phút trước biên đổi ngày cuối tháng', '2026-08-31T16:59:00Z', '2026-08'],
+    ['một phút sau biên — đã sang tháng 9 giờ VN', '2026-08-31T17:01:00Z', '2026-09'],
+    ['qua mốc đổi năm', '2026-12-31T17:01:00Z', '2027-01'],
+    ['giữa tháng', '2026-08-10T03:00:00Z', '2026-08'],
+  ])('%s', (_label, instant, expected) => {
+    freezeAt(instant);
+    expect(getVietnamCurrentMonth()).toBe(expected);
+  });
+
+  it('kết quả luôn là chuỗi tháng hợp lệ mà getVietnamMonthRange nhận được', () => {
+    freezeAt('2026-08-31T17:01:00Z');
+    expect(getVietnamMonthRange(getVietnamCurrentMonth())).not.toBeNull();
+  });
+});
+
+describe('formatVietnamMonth — hiển thị (DEC-033)', () => {
+  it.each([
+    ['2026-08', 'Tháng 08/2026'],
+    ['2026-01', 'Tháng 01/2026'],
+    ['2026-12', 'Tháng 12/2026'],
+  ])('%s → %s', (input, expected) => {
+    expect(formatVietnamMonth(input)).toBe(expected);
+  });
+
+  it.each([
+    ['chuỗi rác', 'not-a-month'],
+    ['tháng 13', '2026-13'],
+    ['chuỗi rỗng', ''],
+    ['là một ngày đầy đủ', '2026-08-01'],
+  ])('%s → trả "—", KHÔNG throw', (_label, input) => {
+    expect(() => formatVietnamMonth(input)).not.toThrow();
+    expect(formatVietnamMonth(input)).toBe('—');
+  });
+
+  it('không bao giờ trả chuỗi chứa "Invalid" hay "NaN"', () => {
+    for (const input of ['not-a-month', '2026-13', '', 'NaN-NaN']) {
+      expect(formatVietnamMonth(input)).not.toContain('Invalid');
+      expect(formatVietnamMonth(input)).not.toContain('NaN');
+    }
+  });
+});
+
+describe('shiftVietnamMonth — nút Tháng trước / Tháng sau', () => {
+  it.each([
+    ['lùi một tháng trong cùng năm', '2026-08', -1, '2026-07'],
+    ['tiến một tháng trong cùng năm', '2026-08', 1, '2026-09'],
+    ['lùi qua mốc đổi năm', '2026-01', -1, '2025-12'],
+    ['tiến qua mốc đổi năm', '2026-12', 1, '2027-01'],
+    ['lùi 12 tháng', '2026-08', -12, '2025-08'],
+    ['delta 0 giữ nguyên', '2026-08', 0, '2026-08'],
+  ])('%s', (_label, input, delta, expected) => {
+    expect(shiftVietnamMonth(input, delta)).toBe(expected);
+  });
+
+  it('đi tới rồi đi lui trả về đúng tháng ban đầu', () => {
+    for (const month of ['2026-01', '2026-08', '2026-12', '2028-02']) {
+      const next = shiftVietnamMonth(month, 1);
+      expect(next).not.toBeNull();
+      expect(shiftVietnamMonth(next!, -1)).toBe(month);
+    }
+  });
+
+  it('kết quả luôn được getVietnamMonthRange chấp nhận', () => {
+    for (const delta of [-13, -1, 0, 1, 13]) {
+      const shifted = shiftVietnamMonth('2026-08', delta);
+      expect(shifted).not.toBeNull();
+      expect(getVietnamMonthRange(shifted!)).not.toBeNull();
+    }
+  });
+
+  it.each([
+    ['tháng sai định dạng', '2026-13', 1],
+    ['chuỗi rác', 'abc', 1],
+    ['delta không nguyên', '2026-08', 1.5],
+    ['delta NaN', '2026-08', Number.NaN],
+  ])('%s → trả null, KHÔNG throw', (_label, month, delta) => {
+    expect(() => shiftVietnamMonth(month, delta)).not.toThrow();
+    expect(shiftVietnamMonth(month, delta)).toBeNull();
+  });
+});
+
+describe('resolveVietnamMonth — chuẩn hoá ?month= từ URL (DEC-040)', () => {
+  it('tháng hợp lệ được giữ nguyên, không fallback', () => {
+    freezeAt('2026-08-10T03:00:00Z');
+    expect(resolveVietnamMonth('2026-04')).toEqual({
+      month: '2026-04',
+      from: '2026-04-01',
+      to: '2026-04-30',
+      didFallback: false,
+    });
+  });
+
+  it('thiếu tham số → tháng hiện tại, KHÔNG coi là fallback', () => {
+    freezeAt('2026-08-10T03:00:00Z');
+    expect(resolveVietnamMonth(undefined)).toEqual({
+      month: '2026-08',
+      from: '2026-08-01',
+      to: '2026-08-31',
+      didFallback: false,
+    });
+  });
+
+  it.each([
+    ['tháng 13', '2026-13'],
+    ['chuỗi rác', 'abc'],
+    ['chuỗi rỗng', ''],
+    ['là một ngày đầy đủ', '2026-08-01'],
+  ])('%s → lùi về tháng hiện tại và báo didFallback', (_label, raw) => {
+    freezeAt('2026-08-10T03:00:00Z');
+    expect(resolveVietnamMonth(raw)).toEqual({
+      month: '2026-08',
+      from: '2026-08-01',
+      to: '2026-08-31',
+      didFallback: true,
+    });
+  });
+
+  it('kết quả LUÔN dùng được — không bao giờ null, không bao giờ chuỗi rỗng', () => {
+    freezeAt('2028-02-15T03:00:00Z');
+    for (const raw of [undefined, '', 'abc', '2026-13', '2028-02', '2026-08-01']) {
+      const resolved = resolveVietnamMonth(raw);
+      expect(isValidVietnamDate(resolved.from)).toBe(true);
+      expect(isValidVietnamDate(resolved.to)).toBe(true);
+      expect(getVietnamMonthRange(resolved.month)).not.toBeNull();
+      expect(resolved.from <= resolved.to).toBe(true);
+    }
+  });
+
+  it('tháng 2 năm nhuận qua đường fallback vẫn ra 29 ngày', () => {
+    freezeAt('2028-02-15T03:00:00Z');
+    expect(resolveVietnamMonth('rác')).toMatchObject({ month: '2028-02', to: '2028-02-29' });
   });
 });

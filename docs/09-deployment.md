@@ -762,3 +762,104 @@ Các OQ ảnh hưởng trực tiếp tới nội dung migration mà tài liệu 
 | OQ-08 | Có khái niệm ngày nghỉ / không đi thị trường không? | v1 không có | Ảnh hưởng chỉ số "chưa báo cáo" ở smoke checklist §11.4 (ISSUE-006) |
 
 Danh sách OPEN QUESTION đầy đủ (OQ-01 … OQ-17) nằm ở **`docs/01-business-analysis.md` §OPEN QUESTIONS**.
+
+---
+
+## §12 — CẬP NHẬT PHASE 7–11 (2026-08-10): đẩy migration 0006 + 0007 lên cloud
+
+> ⏳ **Hai migration mới ĐÃ chạy trên local nhưng CHƯA đẩy lên cloud.** Ứng dụng deploy lên Vercel sẽ **hỏng ở toàn bộ khu vực Admin** cho tới khi làm xong bước này — mọi màn hình Admin gọi RPC, mà cloud chưa có hàm nào.
+
+### 12.1 — Kiểm trước khi đẩy (30 giây)
+
+Mở terminal **trong thư mục dự án** rồi chạy:
+
+```bash
+npx supabase migration list --linked
+```
+
+Cột `LOCAL` sẽ có `0006` và `0007`, cột `REMOTE` thì **chưa**. Nếu lệnh hỏi mật khẩu database, đó là mật khẩu bạn đặt lúc tạo project Supabase (không phải mật khẩu đăng nhập Supabase).
+
+### 12.2 — Cách 1 (khuyến nghị): đẩy bằng CLI
+
+```bash
+npx supabase db push --linked
+```
+
+Màn hình sẽ liệt kê **đúng hai file** sắp áp dụng và hỏi `Do you want to push these migrations to the remote database? [Y/n]` → gõ `Y` rồi Enter.
+
+Kỳ vọng: `Applying migration 0006_admin_aggregates.sql...` → `Applying migration 0007_admin_daily_trend.sql...` → `Finished supabase db push.`
+
+> ⚠ **Nếu CLI không chạy được vì không có TTY để nhập mật khẩu**, dùng Cách 2. Đừng đặt mật khẩu database vào biến môi trường rồi commit nhầm.
+
+### 12.3 — Cách 2: dán SQL trên Dashboard, từng bước bấm
+
+1. Mở https://supabase.com/dashboard và đăng nhập.
+2. Chọn project **`BikeForce_Bicycle Sales Management`** (ref `rnmywhwanpxmipqducqu`).
+3. Ở thanh bên trái, bấm biểu tượng **SQL Editor** (icon giống một tờ giấy có chữ `SQL`).
+4. Bấm nút **`+ New query`** ở góc trên bên trái vùng nội dung.
+5. Mở file `supabase/migrations/0006_admin_aggregates.sql` trong VS Code, **chọn hết** (`Ctrl+A`), **copy** (`Ctrl+C`).
+6. Quay lại tab trình duyệt, click vào ô soạn thảo lớn, **dán** (`Ctrl+V`).
+7. Bấm nút **`Run`** màu xanh ở góc dưới bên phải (hoặc `Ctrl+Enter`).
+8. Kỳ vọng: dải kết quả bên dưới hiện **`Success. No rows returned`**. Nếu hiện chữ đỏ, **dừng lại**, chụp màn hình và hỏi trước khi chạy tiếp.
+9. Bấm **`+ New query`** một lần nữa, rồi lặp lại bước 5–8 với file `supabase/migrations/0007_admin_daily_trend.sql`.
+10. Vẫn trong SQL Editor, tạo query mới và chạy câu kiểm sau để xác nhận **đủ 5 hàm**:
+
+```sql
+select proname
+  from pg_proc
+ where proname like 'admin\_%'
+ order by 1;
+```
+
+Kỳ vọng đúng 5 dòng: `admin_daily_trend`, `admin_missing_report_alerts`, `admin_monthly_summary`, `admin_sales_performance`, `admin_today_overview`.
+
+11. Chạy tiếp câu này để xác nhận **`anon` không gọi được** hàm nào (deny-by-default):
+
+```sql
+select p.proname, r.rolname, has_function_privilege(r.rolname, p.oid, 'execute') as can_execute
+  from pg_proc p
+ cross join (values ('anon'), ('authenticated')) as r(rolname)
+ where p.proname like 'admin\_%'
+ order by p.proname, r.rolname;
+```
+
+Kỳ vọng: mọi dòng `anon` là **`false`**, mọi dòng `authenticated` là **`true`**.
+
+> ⚠ **Nếu chạy Cách 2**, bảng theo dõi migration của CLI trên cloud sẽ không biết hai file này đã chạy. Lần sau `db push` sẽ định chạy lại chúng — vô hại vì cả hai đều là `create or replace function` (idempotent), nhưng để sổ sách đúng thì chạy thêm:
+> ```sql
+> insert into supabase_migrations.schema_migrations (version, name)
+> values ('0006','admin_aggregates'), ('0007','admin_daily_trend')
+> on conflict do nothing;
+> ```
+
+### 12.4 — Cài đặt Authentication phải khớp DEC-041
+
+Vẫn trên Dashboard:
+
+1. Thanh bên trái → **Authentication** → **Sign In / Providers** (hoặc **Policies** tuỳ phiên bản giao diện) → mục **Password**.
+2. Đặt **Minimum password length** = **`8`**. Con số này phải khớp `PASSWORD_MIN_LENGTH` trong `lib/validation/account.ts` — chỉ đặt ở một bên là có lỗ hổng (Zod chặn form nhưng API vẫn lọt) hoặc thông báo lỗi tiếng Anh thô lọt ra cho người dùng.
+3. **Không** bật yêu cầu chữ hoa / chữ số / ký tự đặc biệt (DEC-041).
+4. Xác nhận **Enable email signup** vẫn **TẮT** — BR-012, FR-006. Đã tắt từ Phase 2, chỉ cần nhìn lại cho chắc.
+5. *(Tuỳ chọn, khuyến nghị)* bật **Secure password change** — GoTrue sẽ đòi phiên đăng nhập gần đây trước khi cho đổi mật khẩu. Ứng dụng đã xử lý sẵn mã lỗi `reauthentication_needed` và hiện câu tiếng Việt tương ứng.
+
+### 12.5 — Biến môi trường trên Vercel
+
+Ba biến bắt buộc, thêm ở **Project Settings → Environment Variables**:
+
+| Tên | Giá trị lấy ở đâu | Environment |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Dashboard → Project Settings → API → `Project URL` | Production + Preview |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cùng trang, khoá **publishable / anon** | Production + Preview |
+| `SUPABASE_SERVICE_ROLE_KEY` | cùng trang, mục **secret key** | Production + Preview |
+
+⚠ **`SUPABASE_DB_URL` KHÔNG được thêm vào Vercel.** Nó chỉ phục vụ bộ test trên máy local (DEC-022, DEC-031); ứng dụng không bao giờ đọc biến này.
+
+⚠ **ISSUE-011 vẫn OPEN:** service role key hiện tại đã lọt vào transcript hội thoại. **Rotate trước khi deploy**: Dashboard → Project Settings → API Keys → mục secret → **`Generate new secret key`**. Dán giá trị mới thẳng vào Vercel và vào `.env.local` — **đóng `.env.local` trong VS Code trước khi dán**, hoặc dán bằng terminal, nếu không IDE lại tự đưa key vào ngữ cảnh hội thoại đúng như lần trước.
+
+### 12.6 — Sau khi deploy, kiểm bằng tay đúng 5 điều
+
+1. `/login` mở được, đăng nhập bằng tài khoản Admin thật → vào `/admin`, **12 chỉ số hiện số thật, không có ô nào trống hay `NaN`**.
+2. `/admin/analytics` → biểu đồ trend hiện cột, bấm **"Xem số liệu dạng bảng"** ra bảng số.
+3. `/admin/reports` → bấm **Xuất CSV**, file tải về mở được bằng Excel, dấu tiếng Việt đúng.
+4. Đăng nhập một tài khoản Sales → `/sales/today` → hoàn tất một báo cáo → bấm **Xuất ảnh**, ảnh tải về mở được và **đúng 1080×1920**.
+5. **Mở chính link đó bằng điện thoại thật, trong Zalo** — đây là ISSUE-003, mục cuối cùng còn nợ của Phase 6. Kiểm đủ ba đường ra: share sheet có Zalo không · `<a download>` có lưu được không · ảnh mở ra có đúng dấu tiếng Việt không.

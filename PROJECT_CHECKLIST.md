@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 6 | Last updated: 2026-08-08
+> Status: ACTIVE | Phase: 11 | Last updated: 2026-08-10
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -25,31 +25,31 @@ Hệ quả bắt buộc:
 - Phase chỉ được coi là đóng khi **toàn bộ** mục của phase đó `[x]` và qua quality gate
   Master Spec §42.
 
-**Tình trạng hôm nay (2026-08-08, sau Phase 6):** repository đã có schema chạy thật trên Supabase
-local **và** cloud, tầng auth đầy đủ, **cả hai nửa của luồng báo cáo ngày chạy thật đầu-cuối**
-(cam kết sáng → hoàn tất cuối ngày → khoá vĩnh viễn), **KPI engine thật + bảng đối chiếu 4 chỉ tiêu
-hai chế độ hiển thị**, **ảnh chia sẻ 9:16 sinh thật bằng Satori**, và bộ test 369 case. Kết quả
-thật của lần chạy cuối:
+**Tình trạng hôm nay (2026-08-10, sau Phase 11):** repository đã có **toàn bộ 18 route của v1 chạy thật** — luồng
+báo cáo ngày hai nửa, KPI engine, ảnh chia sẻ 9:16, lịch sử báo cáo, và **toàn bộ khu vực Admin** (dashboard 12 chỉ
+số, danh sách + 7 chiều lọc, phân tích tháng + biểu đồ trend, quản lý tài khoản Sales, xuất CSV). Schema chạy thật
+trên Supabase local với **7 migration**; cloud mới có 5 — xem `docs/09 §12`. Bộ test **729 case** cộng **99 bài E2E**
+trên 3 project. Kết quả thật của lần chạy cuối:
 
 | Lệnh | Kết quả |
 |---|---|
-| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, **8 route** — có `ƒ /api/reports/[id]/share-image`) |
-| `npx vitest run --project unit --coverage` | ✅ **290 passed**; `lib/**` → stmt **98,46%** · branch **99,28%** · func **97,43%** · lines **98,75%**; `lib/kpi.ts` và `lib/reports/share-card.ts` **100%** cả bốn cột |
+| `npm run build` | ✅ exit 0 (Next.js 16.3.0, Turbopack, **18 route** — thêm `ƒ /api/admin/reports/export`) |
 | `npm run typecheck` | ✅ exit 0 |
 | `npm run lint` | ✅ exit 0 — 0 error, 0 warning |
-| `npm test` | ✅ **369 passed / 369** — 16 test file, 3 project (`unit` **290** · `integration` **40** · `rls` **39**), 15,3 giây |
-| Kiểm chứng xuất ảnh 9:16 trên Chromium (Phase 6) | ✅ **44/44 PASS** ở 375px và 1440px — header FR-019, `IHDR` 1080×1920, BR-002 → 403, IDOR → 404, BR-022 → 200, chưa đăng nhập → 401 |
-| Xem tận mắt ảnh PNG xuất ra (Phase 6) | ✅ dấu tiếng Việt `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ` + `₫` đúng glyph; ảnh gom đủ 6 edge case đọc được, không `NaN`/`∞` |
-| Kiểm chứng auth trên Chromium (Phase 2) | ✅ **32/32 PASS** ở 375px và 1440px |
-| Kiểm chứng tài khoản `is_active=false` (Phase 2) | ✅ **6/6 PASS** |
-| Kiểm chứng luồng báo cáo sáng trên Chromium (Phase 3) | ⚠ **57/58 PASS** ở 375px và 1440px — mục FAIL duy nhất là NFR-008 (7 lần chạm), xem ISSUE-013 |
-| Kiểm chứng luồng báo cáo cuối ngày trên Chromium (Phase 4) | ✅ **62/62 PASS** ở 375px và 1440px — sau khi sửa ISSUE-014 (lần đo trước đó: 59/62) |
-| Hồi quy luồng báo cáo sáng sau refactor (Phase 4) | ✅ **11/11 PASS** — UC-04 tạo, UC-05 sửa, DEC-034 vẫn đúng |
-| Kiểm chứng bảng đối chiếu KPI trên Chromium (Phase 5) | ✅ **36/36 PASS** ở 375px và 1440px — 4 card ↔ `<table>` thật, 3 tình huống `docs/05 §7.3`, không cuộn ngang, không `NaN`/`∞` |
+| `npm test` | ✅ **729 passed / 729** — 29 test file, 3 project (`unit` **542** · `integration` **54** · `rls` **133**), 23,8 giây |
+| `npx vitest run --project unit --coverage` | ✅ `lib/**` → stmt **99%** · branch **98,69%** · func **100%** · lines **99,4%** |
+| `npx playwright test` | ✅ **99 passed / 99** trên 3 project (`mobile-375`, `desktop-1440`, `zalo-like`), 4,4 phút |
+| — trong đó a11y `@axe-core/playwright` | ✅ **10 màn hình × 3 project = 30 lượt quét, 0 vi phạm serious/critical** (NFR-007) |
+| — trong đó bảo mật | ✅ IDOR · 401/403 JSON cho `/api/*` · CSV Sales→403 Admin→200 · PNG 1080×1920 · **service role key không rò rỉ ra HTML** |
+| `EXPLAIN ANALYZE` (`tests/integration/indexes.test.ts`) | ✅ **14 bài** — `is_admin()` được nâng thành **InitPlan** (ISSUE-005 → CLOSED); mọi truy vấn list đều đi qua index, không `Seq Scan` |
+| Xem tận mắt biểu đồ trend ở 375px và 1440px | ✅ đã chụp và xem — nhãn trục đúng type scale sau khi đưa chữ ra khỏi SVG (DEC-044) |
+| Kiểm chứng các phase trước (Chromium, script dùng-một-lần) | ✅ Phase 2 **32/32** · Phase 3 **57/58** *(mục lệch NFR-008 nay ĐẠT theo DEC-043)* · Phase 4 **62/62** + hồi quy **11/11** · Phase 5 **36/36** · Phase 6 **44/44** |
 
-**Playwright E2E vẫn `N/A`** — chưa có `playwright.config.ts`, chưa có file `e2e/*.spec.ts` nào. Các
-kiểm chứng trình duyệt ở trên chạy bằng script dùng-một-lần (đã xoá, không commit), **không phải**
-bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
+
+**Playwright E2E nay ĐÃ CHẠY THẬT** — `playwright.config.ts` cộng 5 file trong `e2e/` đều đã commit, chạy bằng
+`npm run e2e`. Đây là bộ hồi quy thật, khác hẳn các script dùng-một-lần của Phase 2–6 (đã xoá, không commit).
+**Hai hạng mục vẫn `N/A` và không được diễn giải thành pass:** Lighthouse (chưa chạy) và kiểm ảnh 9:16 trong
+Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link công khai, phải chờ sau khi deploy Vercel).
 
 > ⚠ **Sửa số liệu ở Phase 5 (2026-08-07):** bảng này trước đây ghi `unit 189 · integration 47`.
 > Tổng `269` là **đúng**, nhưng cách chia giữa hai project thì **sai** — đo lại bằng
@@ -144,8 +144,9 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 3 — Morning Report
 
-> **Trạng thái 2026-08-07: 13/14 mục `[x]`.** Mục còn lại (walkthrough NFR-008) **không phải lỗi code** — nó bị
-> chặn bởi một mâu thuẫn giữa NFR-008 và FR-008, đã ghi thành **ISSUE-013 + OQ-18** và **cần người dùng quyết định**.
+> **Trạng thái 2026-08-10: ✅ 14/14 mục `[x]` — PHASE 3 ĐÃ ĐÓNG.** Mục cuối (walkthrough NFR-008) mở được
+> sau khi người dùng trả lời OQ-18 bằng phương án (a): NFR-008 nới thành **≤ 8 lần chạm** (**DEC-043**), nên
+> con số đo được **7 chạm / 1,8 giây** đạt cả hai vế. ISSUE-013 → **CLOSED**. Không sửa một dòng code nào.
 > Bốn cổng chất lượng đã chạy thật: `npm run build` · `npm run typecheck` · `npm run lint` đều exit 0;
 > `npm test` → **213/213**. Kiểm chứng Chromium 375px + 1440px: **57/58**.
 
@@ -175,7 +176,8 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
       → `min-h-12` full-width, `pb-[calc(0.75rem+env(safe-area-inset-bottom))]`, khoá cả trong lúc chờ điều hướng để chống double submit
 - [x] Trạng thái loading (skeleton >300ms), empty state và error state có nút "Thử lại"
       → Dùng lại `loading.tsx`/`error.tsx` của route group `(sales)` (Phase 2); empty state có icon + hướng dẫn + đúng 1 CTA
-- [ ] Walkthrough xác nhận hoàn tất báo cáo sáng ≤ 60 giây và ≤ 6 lần chạm — NFR-008
+- [x] Walkthrough xác nhận hoàn tất báo cáo sáng ≤ 60 giây và **≤ 8 lần chạm** — NFR-008
+      → Đo thật ở 375px: **7 chạm / 1,8 giây ⇒ ĐẠT cả hai vế**. Ngưỡng được nới từ “≤ 6” sang “≤ 8” ngày 2026-08-10 theo **DEC-043** (người dùng chọn phương án (a) của OQ-18). **Không có thay đổi code nào** — form giữ nguyên 5 trường bắt buộc. ISSUE-013 → CLOSED
       → **ĐÃ ĐO THẬT: 1,8 giây (đạt) · 7 lần chạm (KHÔNG đạt).** Sàn lý thuyết là 7 vì FR-008 có 5 trường bắt buộc. **Không tick** cho tới khi người dùng chọn phương án ở **OQ-18 / ISSUE-013**
 
 ## Phase 4 — Evening Report
@@ -204,7 +206,8 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
       → Dùng lại `useReportDraft` sau khi nâng lên `lib/hooks/` (DEC-035); khoá gắn với ngày nghiệp vụ. Kiểm chứng thật E23–E26, E31. ⚠ Việc **xoá draft sau khi lưu** phải chuyển sang `DiscardEveningDraft` trên `/sales/today` — xem ISSUE-014 / DEC-037
 - [x] Save thất bại không mất dữ liệu form, có nút retry — NFR-010
       → Kiểm chứng thật E20–E22: submit thiếu ô → ở lại trang, dữ liệu đã gõ còn nguyên, có error summary + lỗi inline `role="alert"`, nút Lưu bấm lại được ngay
-- [ ] E2E luồng đầy đủ Morning → Save → Reopen → Evening → Save chạy xanh trên project `mobile-375`
+- [x] E2E luồng đầy đủ Morning → Save → Reopen → Evening → Save chạy xanh trên project `mobile-375`
+      → ✅ **ĐÓNG 2026-08-10 ở Phase 11.** `e2e/sales-flow.spec.ts` phủ đúng chuỗi này và xanh trên **cả ba** project (`mobile-375`, `desktop-1440`, `zalo-like`), kèm BR-019 khoá vĩnh viễn và BR-002. Đây là bộ E2E có commit, không phải script dùng-một-lần
       → **KHÔNG tick.** Luồng này **đã chạy thật đầu-cuối trên Chromium** (62/62 + 11/11), nhưng bằng **script dùng-một-lần đã xoá, không commit** — đó **không phải** bộ E2E hồi quy. `playwright.config.ts` và project `mobile-375` thuộc **Phase 11** và chưa tồn tại
 
 ## Phase 5 — KPI Engine
@@ -274,74 +277,74 @@ bộ E2E hồi quy. Không được diễn giải thành "E2E đã pass".
 
 ## Phase 7 — Sales History
 
-- [ ] `/sales/history` liệt kê báo cáo của chính mình — FR-021, UC-09
-- [ ] Filter theo tháng dùng `getVietnamMonthRange(yyyyMM)`
-- [ ] Phân trang **server-side**, không tải toàn bộ rồi lọc ở client — NFR-002
-- [ ] Truy vấn dùng `idx_daily_reports_sales_date_desc`, xác nhận bằng `EXPLAIN ANALYZE`, không `select *` toàn bảng
-- [ ] `/sales/reports/[id]` chi tiết báo cáo của chính mình kèm bảng đối chiếu và nút xuất ảnh — FR-022, UC-10
-- [ ] RLS chặn Sales đọc báo cáo của Sales khác — BR-003
-- [ ] Empty state có icon + hướng dẫn + CTA khi tháng chưa có báo cáo nào
-- [ ] `/sales/account`: hồ sơ, đổi mật khẩu, đăng xuất — FR-023, UC-11
-- [ ] Bottom nav Sales 3 mục (Hôm nay / Lịch sử / Tài khoản) có icon **và** label, active state rõ, sidebar từ 1024px — DEC-018
-- [ ] Nút Back thật ở trang con, không phá back stack; giữ state filter khi quay lại
-- [ ] E2E bảo mật: đăng nhập `salesA` rồi mở trực tiếp `/sales/reports/<id-của-salesB>` → 404/redirect
+- [x] `/sales/history` liệt kê báo cáo của chính mình — FR-021, UC-09
+- [x] Filter theo tháng dùng `getVietnamMonthRange(yyyyMM)`
+- [x] Phân trang **server-side**, không tải toàn bộ rồi lọc ở client — NFR-002
+- [x] Truy vấn dùng `idx_daily_reports_sales_date_desc`, xác nhận bằng `EXPLAIN ANALYZE`, không `select *` toàn bảng
+- [x] `/sales/reports/[id]` chi tiết báo cáo của chính mình kèm bảng đối chiếu và nút xuất ảnh — FR-022, UC-10
+- [x] RLS chặn Sales đọc báo cáo của Sales khác — BR-003
+- [x] Empty state có icon + hướng dẫn + CTA khi tháng chưa có báo cáo nào
+- [x] `/sales/account`: hồ sơ, đổi mật khẩu, đăng xuất — FR-023, UC-11
+- [x] Bottom nav Sales 3 mục (Hôm nay / Lịch sử / Tài khoản) có icon **và** label, active state rõ, sidebar từ 1024px — DEC-018
+- [x] Nút Back thật ở trang con, không phá back stack; giữ state filter khi quay lại
+- [x] E2E bảo mật: đăng nhập `salesA` rồi mở trực tiếp `/sales/reports/<id-của-salesB>` → 404/redirect
 
 ## Phase 8 — Admin Dashboard
 
-- [ ] `/admin` hiển thị đủ **12 chỉ số bắt buộc** theo Master Spec §16 — FR-024, UC-12, AF-01
-- [ ] Các chỉ số tính bằng aggregate SQL server-side, không kéo toàn bộ row về client — NFR-002
-- [ ] Cảnh báo Sales **chưa báo cáo sáng** và Sales **đã sáng nhưng chưa hoàn tất cuối ngày** — FR-033, UC-20, AF-02
-- [ ] Trình bày theo Executive Dashboard: 4–6 KPI card lớn, traffic-light status, một màn hình, mobile rút gọn
-- [ ] `layout.tsx` của group `(admin)` chặn non-admin server-side — FR-004
-- [ ] Bottom nav Admin 4 mục (Tổng quan / Báo cáo / Sales / Tài khoản), sidebar cố định từ 1024px, không hiển thị đồng thời — DEC-018
-- [ ] Truy vấn dùng `idx_daily_reports_date_status`, xác nhận bằng `EXPLAIN ANALYZE`
-- [ ] Skeleton cho phần tải >300ms và empty state khi chưa Sales nào báo cáo
-- [ ] Kiểm tra `is_admin()` được gọi dạng `(select public.is_admin())` để Postgres nâng thành InitPlan — DEC-006, ISSUE-005
+- [x] `/admin` hiển thị đủ **12 chỉ số bắt buộc** theo Master Spec §16 — FR-024, UC-12, AF-01
+- [x] Các chỉ số tính bằng aggregate SQL server-side, không kéo toàn bộ row về client — NFR-002
+- [x] Cảnh báo Sales **chưa báo cáo sáng** và Sales **đã sáng nhưng chưa hoàn tất cuối ngày** — FR-033, UC-20, AF-02
+- [x] Trình bày theo Executive Dashboard: 4–6 KPI card lớn, traffic-light status, một màn hình, mobile rút gọn
+- [x] `layout.tsx` của group `(admin)` chặn non-admin server-side — FR-004
+- [x] Bottom nav Admin 4 mục (Tổng quan / Báo cáo / Sales / Tài khoản), sidebar cố định từ 1024px, không hiển thị đồng thời — DEC-018
+- [x] Truy vấn dùng `idx_daily_reports_date_status`, xác nhận bằng `EXPLAIN ANALYZE`
+- [x] Skeleton cho phần tải >300ms và empty state khi chưa Sales nào báo cáo
+- [x] Kiểm tra `is_admin()` được gọi dạng `(select public.is_admin())` để Postgres nâng thành InitPlan — DEC-006, ISSUE-005
 
 ## Phase 9 — Admin Reports & Filters
 
-- [ ] `/admin/reports` danh sách toàn bộ báo cáo — FR-025, UC-13, AF-03
-- [ ] Filter ngày / khoảng ngày / tháng / Sales / status, và search theo tên Sales — FR-025
-- [ ] Filter và phân trang thực hiện **server-side** toàn bộ — FR-026, NFR-002
-- [ ] Search theo tên dùng `ilike` ở v1; chỉ thêm `pg_trgm` GIN khi vượt 200 Sales (ghi vào roadmap)
-- [ ] Mobile hiển thị card, từ 768px hiển thị `<table>` có `aria-sort`; cấm cuộn ngang — DEC-019
-- [ ] `/admin/reports/[id]` xem chi tiết báo cáo của Sales bất kỳ — FR-027, UC-14, AF-04
-- [ ] `/admin/analytics` tổng target vs actual cho **cả 4 chỉ tiêu** theo tháng, kèm % — FR-028, UC-15, AF-05
-- [ ] Export CSV đúng tập dữ liệu đang filter, không phải toàn bảng — FR-034, UC-21, AF-09
-- [ ] Biểu đồ trend theo ngày trong tháng (SHOULD, chỉ làm nếu không phát sinh dependency nặng) — FR-037, AF-08
-- [ ] Mọi bảng/biểu đồ có phương án `data-table` thay thế; gridline mảnh; không lạm dụng pie chart
-- [ ] `EXPLAIN ANALYZE` cho mọi truy vấn list mới, xác nhận đều dùng index
+- [x] `/admin/reports` danh sách toàn bộ báo cáo — FR-025, UC-13, AF-03
+- [x] Filter ngày / khoảng ngày / tháng / Sales / status, và search theo tên Sales — FR-025
+- [x] Filter và phân trang thực hiện **server-side** toàn bộ — FR-026, NFR-002
+- [x] Search theo tên dùng `ilike` ở v1; chỉ thêm `pg_trgm` GIN khi vượt 200 Sales (ghi vào roadmap)
+- [x] Mobile hiển thị card, từ 768px hiển thị `<table>` có `aria-sort`; cấm cuộn ngang — DEC-019
+- [x] `/admin/reports/[id]` xem chi tiết báo cáo của Sales bất kỳ — FR-027, UC-14, AF-04
+- [x] `/admin/analytics` tổng target vs actual cho **cả 4 chỉ tiêu** theo tháng, kèm % — FR-028, UC-15, AF-05
+- [x] Export CSV đúng tập dữ liệu đang filter, không phải toàn bảng — FR-034, UC-21, AF-09
+- [x] Biểu đồ trend theo ngày trong tháng (SHOULD, chỉ làm nếu không phát sinh dependency nặng) — FR-037, AF-08
+- [x] Mọi bảng/biểu đồ có phương án `data-table` thay thế; gridline mảnh; không lạm dụng pie chart
+- [x] `EXPLAIN ANALYZE` cho mọi truy vấn list mới, xác nhận đều dùng index
 
 ## Phase 10 — Sales Management
 
-- [ ] `/admin/sales` danh sách Sales kèm bảng hiệu suất: tổng doanh số, doanh thu, viếng thăm, achievement trung bình, số ngày đạt KPI — FR-029, UC-16, AF-06
-- [ ] "Ngày đạt KPI" tính theo BR-024 (cả 4 chỉ tiêu ≥ 100%), tính bằng aggregate SQL — OQ-17
-- [ ] `/admin/sales/new` tạo tài khoản Sales: email, mật khẩu tạm, họ tên, phone, mã NV — FR-030, UC-17
-- [ ] Việc tạo/sửa tài khoản dùng `lib/supabase/admin.ts` (service role, `import 'server-only'`) và **chỉ** gọi `auth.admin.*`; không bao giờ dùng service role để đọc/ghi `daily_reports` — DEC-005
-- [ ] `/admin/sales/[id]` xem hồ sơ + hiệu suất + lịch sử báo cáo, và sửa hồ sơ Sales — FR-031, UC-18
-- [ ] Bật/tắt `is_active`; tài khoản inactive lập tức không đăng nhập và không thao tác được — FR-032, UC-19, BR-009
-- [ ] Trigger `guard_profile_self_update` chặn non-admin tự đổi `role`, `is_active`, `email`, `id`
-- [ ] Admin **không** có quyền UPDATE lên các cột số liệu của `daily_reports` — BR-020, OQ-05
-- [ ] Email profile khớp `auth.users.email` và unique toàn hệ thống — BR-025
-- [ ] Runbook tạo Admin đầu tiên (tạo user trên Supabase Dashboard rồi `update profiles set role='ADMIN'` một lần bằng SQL editor) đã viết trong `docs/09-deployment.md`, không code UI cho việc này
-- [ ] Không có self-registration ở bất kỳ đâu trong app — FR-006, BR-012
+- [x] `/admin/sales` danh sách Sales kèm bảng hiệu suất: tổng doanh số, doanh thu, viếng thăm, achievement trung bình, số ngày đạt KPI — FR-029, UC-16, AF-06
+- [x] "Ngày đạt KPI" tính theo BR-024 (cả 4 chỉ tiêu ≥ 100%), tính bằng aggregate SQL — OQ-17
+- [x] `/admin/sales/new` tạo tài khoản Sales: email, mật khẩu tạm, họ tên, phone, mã NV — FR-030, UC-17
+- [x] Việc tạo/sửa tài khoản dùng `lib/supabase/admin.ts` (service role, `import 'server-only'`) và **chỉ** gọi `auth.admin.*`; không bao giờ dùng service role để đọc/ghi `daily_reports` — DEC-005
+- [x] `/admin/sales/[id]` xem hồ sơ + hiệu suất + lịch sử báo cáo, và sửa hồ sơ Sales — FR-031, UC-18
+- [x] Bật/tắt `is_active`; tài khoản inactive lập tức không đăng nhập và không thao tác được — FR-032, UC-19, BR-009
+- [x] Trigger `guard_profile_self_update` chặn non-admin tự đổi `role`, `is_active`, `email`, `id`
+- [x] Admin **không** có quyền UPDATE lên các cột số liệu của `daily_reports` — BR-020, OQ-05
+- [x] Email profile khớp `auth.users.email` và unique toàn hệ thống — BR-025
+- [x] Runbook tạo Admin đầu tiên (tạo user trên Supabase Dashboard rồi `update profiles set role='ADMIN'` một lần bằng SQL editor) đã viết trong `docs/09-deployment.md`, không code UI cho việc này
+- [x] Không có self-registration ở bất kỳ đâu trong app — FR-006, BR-012
 
 ## Phase 11 — Testing & Security
 
-- [ ] Vitest unit cho `lib/kpi`, `lib/currency`, `lib/date` và toàn bộ Zod schema; coverage `lib/**` ≥ 90%
-- [ ] Integration test DB: persist sáng → tối; vi phạm `UNIQUE(sales_id, report_date)` ném lỗi; `ck_completed_requires_actuals` chặn đúng
-- [ ] Integration test trigger: chặn `COMPLETED → MORNING_SUBMITTED`; chặn Sales tự đổi `role`
-- [ ] RLS test bằng **JWT thật** của `salesA` / `salesB` / `admin`: salesA select report của salesB → 0 rows; update → 0 rows affected; insert với `sales_id` của người khác → bị từ chối; delete → bị từ chối; admin select → có dữ liệu; user inactive → bị chặn — NFR-004
-- [ ] Playwright cấu hình 3 project: `mobile-375`, `desktop-1440`, `zalo-like` (userAgent webview)
-- [ ] E2E luồng Sales đầy đủ: Login → Today → Morning → Save → Reopen → Evening → Save → Comparison → Export
-- [ ] E2E luồng Admin: Login → Dashboard → Reports → Filter tháng → Filter Sales → Detail
-- [ ] E2E bảo mật: `GET /api/reports/<id-của-salesB>/share-image` bằng session salesA → 403/404
-- [ ] `@axe-core/playwright` trên `/login`, `/sales/today`, `/sales/today/morning`, `/admin`: **0 violation** mức serious/critical — NFR-007
-- [ ] Bước CI grep bundle client xác nhận `SUPABASE_SERVICE_ROLE_KEY` không rò rỉ — NFR-005
+- [x] Vitest unit cho `lib/kpi`, `lib/currency`, `lib/date` và toàn bộ Zod schema; coverage `lib/**` ≥ 90%
+- [x] Integration test DB: persist sáng → tối; vi phạm `UNIQUE(sales_id, report_date)` ném lỗi; `ck_completed_requires_actuals` chặn đúng
+- [x] Integration test trigger: chặn `COMPLETED → MORNING_SUBMITTED`; chặn Sales tự đổi `role`
+- [x] RLS test bằng **JWT thật** của `salesA` / `salesB` / `admin`: salesA select report của salesB → 0 rows; update → 0 rows affected; insert với `sales_id` của người khác → bị từ chối; delete → bị từ chối; admin select → có dữ liệu; user inactive → bị chặn — NFR-004
+- [x] Playwright cấu hình 3 project: `mobile-375`, `desktop-1440`, `zalo-like` (userAgent webview)
+- [x] E2E luồng Sales đầy đủ: Login → Today → Morning → Save → Reopen → Evening → Save → Comparison → Export
+- [x] E2E luồng Admin: Login → Dashboard → Reports → Filter tháng → Filter Sales → Detail
+- [x] E2E bảo mật: `GET /api/reports/<id-của-salesB>/share-image` bằng session salesA → 403/404
+- [x] `@axe-core/playwright` trên `/login`, `/sales/today`, `/sales/today/morning`, `/admin`: **0 violation** mức serious/critical — NFR-007
+- [x] Bước CI grep bundle client xác nhận `SUPABASE_SERVICE_ROLE_KEY` không rò rỉ — NFR-005
 - [ ] Lighthouse mobile ≥ 90 và LCP < 2.5s trên 4G — NFR-001
-- [ ] Unit test biên múi giờ: 23:30 VN và 00:30 VN ra đúng 2 ngày nghiệp vụ khác nhau — NFR-011
+- [x] Unit test biên múi giờ: 23:30 VN và 00:30 VN ra đúng 2 ngày nghiệp vụ khác nhau — NFR-011
 - [ ] Ma trận thử tay: Chrome mobile, Safari mobile (2 phiên bản gần nhất) và **Zalo in-app browser** — NFR-009
-- [ ] Coverage tổng thể ≥ 60% (không đặt mục tiêu 100% để tránh test rác)
+- [x] Coverage tổng thể ≥ 60% (không đặt mục tiêu 100% để tránh test rác)
 
 ## Phase 12 — Deployment Preparation
 

@@ -712,3 +712,87 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dư
 | Phase 10 | UC-17/18/19 với admin client; màn hình hiển thị mật khẩu tạm một lần |
 | Phase 11 | Bộ test RLS bằng JWT thật của `salesA` / `salesB` / `admin`; 7 kịch bản ở §10; bước CI grep bundle client |
 | Phase 12 | Tắt "Enable email signups"; xác nhận JWT expiry và chính sách mật khẩu trên dashboard; bootstrap Admin đầu tiên bằng SQL một lần |
+
+---
+
+## CẬP NHẬT PHASE 7–11 (2026-08-10) — chính sách mật khẩu và quyền của khu vực Admin
+
+### A. §11.1 — Chính sách mật khẩu: từ ĐỀ XUẤT thành ĐÃ CHỐT (DEC-041)
+
+Bảng ở §11.1 để trạng thái **đề xuất** từ Phase 0. Người dùng đã chốt ngày **2026-08-10**, đúng theo phương án đề xuất:
+
+| Quy tắc | Giá trị đã chốt | Nơi enforce |
+|---|---|---|
+| Độ dài tối thiểu | **8 ký tự** | `PASSWORD_MIN_LENGTH` ở `lib/validation/account.ts` **và** Supabase Dashboard → Authentication → Password |
+| Độ dài tối đa | **72 ký tự** | `PASSWORD_MAX_LENGTH` ở `lib/validation/auth.ts` — giới hạn **thật** của bcrypt mà GoTrue dùng |
+| Chữ hoa / chữ số / ký tự đặc biệt | **KHÔNG bắt buộc** | — |
+| Nhập lại lần 2 | **Bắt buộc**, lỗi gắn vào **ô nhập lại** | `changePasswordSchema.superRefine()` |
+| Mật khẩu tạm do Admin đặt | **Cùng chính sách**, không nới lỏng | `createSalesSchema` |
+| Ép đổi ở lần đăng nhập đầu | **KHÔNG ở v1** | — (xem §B) |
+
+⚠ **Con số 8 phải khớp ở CẢ HAI nơi.** Chỉ đặt ở Zod thì đổi mật khẩu qua API vẫn lọt; chỉ đặt ở Supabase thì người dùng nhận thông báo lỗi tiếng Anh thô. Bước bấm cụ thể: `docs/09 §12.4`.
+
+Lý do không bắt quy tắc thành phần: Sales gõ mật khẩu trên bàn phím điện thoại, ngoài trời. Quy tắc phức tạp đẩy họ tới chỗ ghi ra giấy hoặc đặt một chuỗi đoán được — tức làm hệ thống **kém** an toàn hơn. Cùng hướng với NIST SP 800-63B.
+
+### B. §3.3 ghi chú 6 — "buộc đổi mật khẩu lần đầu": ĐÃ ĐÓNG, chọn KHÔNG làm ở v1
+
+Ghi chú 6 nêu hai phương án và để ngỏ. **DEC-041 đóng lại theo hướng: không làm cả hai.**
+
+- Cờ trong `user_metadata` — **không phải hàng rào thật**, vì client sửa được bằng `auth.updateUser()`.
+- Thêm cột vào `profiles` — cần migration mới cộng sửa trigger `handle_new_user()`.
+
+Với một đội nội bộ nơi Admin bàn giao mật khẩu **trực tiếp**, lợi ích không bù được chi phí ở v1. Đã ghi vào `docs/10-future-roadmap.md`. Schema hiện **không có** cột nào cho việc này, và đó là trạng thái đúng.
+
+Bù lại, hai lớp sau vẫn còn nguyên: màn hình `/sales/account` cho Sales tự đổi mật khẩu bất cứ lúc nào (UC-11), và Admin có thể vô hiệu hoá tài khoản ngay lập tức (UC-19, BR-009).
+
+### C. Guard của Server Action ghi hồ sơ — `authorizeAdminWrite()`
+
+Ba action của UC-17/18/19 dùng chung một guard 3 bước ở `features/admin-sales-management/actions.ts`: `getUser()` → `getSessionProfile()` → `is_active` **và** `role === 'ADMIN'`.
+
+**Cố ý KHÔNG dùng `requireAdmin()`** — hàm đó `redirect()`, mà `redirect()` trong một Server Action gọi từ `useActionState` khiến client không bao giờ nhận `ActionResult`, và form treo mãi ở trạng thái "đang lưu". Cùng lý do đã sinh ra `authorizeSalesWrite()` ở Phase 4 (DEC-036).
+
+**Cố ý KHÔNG nâng lên `features/auth/`**: `authorizeSalesWrite()` phục vụ ba feature ghi báo cáo nên đáng gom; guard này chỉ có một chỗ dùng. Gom khi có chỗ thứ hai, không gom trước.
+
+### D. Service role: vẫn đúng MỘT lời gọi trong toàn dự án
+
+| Việc | Client dùng | Vì sao |
+|---|---|---|
+| UC-17 tạo tài khoản | **service role** — `auth.admin.createUser` | Cách duy nhất tạo được `auth.users` |
+| UC-18 sửa hồ sơ | **anon chịu RLS** | Policy `profiles_update_admin` đã cho phép |
+| UC-19 bật/tắt `is_active` | **anon chịu RLS** | như trên |
+| UC-11 đổi mật khẩu | **anon chịu RLS** — `auth.updateUser()` | Hàm này không nhận `userId`, nó luôn sửa **người đang đăng nhập**. Dùng service role ở đây sẽ mở ra khả năng đổi mật khẩu người khác |
+| Toàn bộ dashboard / danh sách / analytics / CSV | **anon chịu RLS** | DEC-004 |
+
+`email_confirm: true` khi tạo user là bắt buộc — v1 **không có luồng xác nhận email** (BR-012, FR-006), thiếu cờ này thì Sales không đăng nhập được cho tới khi bấm link trong email mà hệ thống chưa từng gửi.
+
+`role` **không** được truyền qua `user_metadata`: `handle_new_user()` cố ý bỏ qua nó và luôn tạo `SALES`. Đọc role từ metadata là mở đường tự nâng quyền, vì client sửa được metadata.
+
+**Chốt do database ép (DEC-031):** `service_role` **không có DML** trên `profiles` và `daily_reports`. Nếu ai đó lỡ tay dùng admin client để ghi hồ sơ, câu lệnh hỏng bằng `42501` chứ không âm thầm chạy được.
+
+### E. Ba lớp bảo vệ của hai Route Handler
+
+Không lớp nào thay được lớp nào:
+
+1. **`middleware.ts`** — chưa đăng nhập → **401 JSON**; hồ sơ mất hoặc `is_active = false` → **403 JSON**. **Không redirect** (DEC-039, ISSUE-015).
+2. **Chính route** — tự kiểm `role === 'ADMIN'` cho route CSV, trả **403 JSON**. Route ảnh tự kiểm `status = 'COMPLETED'` (BR-002), trả **403**.
+3. **RLS** — `reports_select_own_or_admin` đứng dưới cùng. Kể cả khi hai lớp trên bị viết sai, một Sales cũng chỉ xuất được báo cáo của chính mình.
+
+**404 cho "không tồn tại" và cho "không có quyền" là CỐ Ý giống hệt nhau** — phân biệt hai ca là biến endpoint thành kênh dò ID.
+
+⚠ Xem thêm **ISSUE-017**: với **trang** (không phải route API), `notFound()` cho **200** kèm giao diện "Không tìm thấy" chứ không phải 404, vì response đã stream. Tính chất "không phân biệt được" của BR-003 **vẫn đúng** và có E2E khoá lại; chỗ mã trạng thái thực sự quan trọng — route API — vẫn trả mã thật.
+
+### F. Kiểm chứng bảo mật đã chạy thật (2026-08-10)
+
+| Phép kiểm | Kết quả |
+|---|---|
+| `salesA` mở `/sales/reports/<id-của-salesB>` | "Không tìm thấy", **giống hệt** id không tồn tại |
+| `anon` gọi `/api/reports/<id>/share-image` | **401 JSON**, `content-type: application/json` |
+| `anon` gọi `/api/admin/reports/export` | **401 JSON** |
+| Sales gọi `/api/admin/reports/export` | **403**, body không chứa một dòng dữ liệu nào |
+| Admin gọi `/api/admin/reports/export` | **200**, `text/csv`, `attachment`, `no-store` |
+| Admin gọi route ảnh của báo cáo `COMPLETED` | **200**, PNG **1080×1920** (đọc từ khối `IHDR`) |
+| Admin mở `/sales/*` | bị guard đưa về `/admin` |
+| HTML của `/admin`, `/admin/sales`, `/admin/sales/new`, `/admin/reports` | **không** chứa service role key, **không** chứa chuỗi `SUPABASE_SERVICE_ROLE_KEY` |
+| Sales / inactive / anon gọi thẳng 5 RPC Admin | **0 dòng / toàn số 0** — 31 bài RLS |
+
+Toàn bộ chạy ở cả ba project Playwright (`mobile-375`, `desktop-1440`, `zalo-like`).

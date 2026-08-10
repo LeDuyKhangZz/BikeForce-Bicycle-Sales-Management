@@ -1164,3 +1164,73 @@ Ngoài chín câu trên, hai câu sau tuy không đổi cột nào nhưng **ch�
 ---
 
 *Hết tài liệu. Mọi thay đổi schema sau này phải đi kèm một entry `DEC-xxx` trong `docs/11-decisions.md` và một migration mới — migration chỉ tiến tới, muốn lùi phải viết migration mới.*
+
+---
+
+## CẬP NHẬT PHASE 8–11 (2026-08-10) — migration 0006 và 0007, kèm kết quả `EXPLAIN` thật
+
+> Mục này **bổ sung**, không thay thế phần thiết kế ở trên. Schema bảng, constraint, trigger và RLS policy của Phase 2 **không đổi một dòng nào** — hai migration mới chỉ thêm **hàm đọc**.
+
+### A. `0006_admin_aggregates.sql` — bốn hàm tổng hợp cho Admin
+
+| Hàm | Tham số | Trả về | Phục vụ |
+|---|---|---|---|
+| `admin_today_overview(p_date)` | ngày nghiệp vụ | 1 dòng × 12 cột | 12 chỉ số dashboard — FR-024, UC-12, AF-01 |
+| `admin_missing_report_alerts(p_date)` | ngày nghiệp vụ | n dòng (`id`, `full_name`, `employee_code`, `alert_kind`) | Cảnh báo chưa báo cáo — FR-033, UC-20, AF-02 |
+| `admin_monthly_summary(p_from, p_to)` | khoảng ngày | 1 dòng × 10 cột | Tổng target vs actual tháng — FR-028, UC-15, AF-05 |
+| `admin_sales_performance(p_from, p_to)` | khoảng ngày | 1 dòng / Sales | Bảng hiệu suất + số ngày đạt KPI — FR-029, UC-16, AF-06 |
+
+### B. `0007_admin_daily_trend.sql` — chuỗi số liệu theo ngày
+
+| Hàm | Trả về | Phục vụ |
+|---|---|---|
+| `admin_daily_trend(p_from, p_to)` | ≤ 31 dòng, mỗi ngày 1 dòng × 10 cột | Biểu đồ trend — FR-037, AF-08 (DEC-044) |
+
+### C. Năm luật chung của cả năm hàm — đọc trước khi thêm hàm thứ sáu
+
+1. **`security invoker`, KHÔNG `security definer`.** `definer` sẽ chạy vượt RLS — đúng thứ DEC-004 cấm. Ngoại lệ duy nhất của dự án vẫn là `is_admin()` (DEC-006), vì nó bắt buộc phải `definer` để policy trên `profiles` không tự đệ quy.
+2. **Guard `(select public.is_admin())` dạng InitPlan**, không gọi trần. Xem kết quả đo ở §E.
+3. **Chỉ `grant execute` cho `authenticated`.** `anon` không gọi được hàm nào. `revoke ... from public` viết tường minh trước mỗi `grant`.
+4. **Trả về SỐ THÔ, không bao giờ trả `%`.** BR-011 + DEC-007 cấm persist phần trăm, và `lib/kpi.ts` là nguồn duy nhất của công thức. Hàm SQL chỉ cộng và đếm.
+5. **`coalesce(..., 0)` ở mọi cột số.** Tập rỗng phải cho `0` chứ không `null` — giao diện không bao giờ được nhận `null` ở ô số (tinh thần BR-015).
+
+### D. Hai quyết định về ý nghĩa dữ liệu, dễ bị "sửa nhầm" ở phase sau
+
+- **`admin_monthly_summary`, `admin_sales_performance` và `admin_daily_trend` chỉ cộng báo cáo `COMPLETED`.** Một tháng đang dở không được lấy cam kết sáng của hôm nay cộng vào cột "thực đạt" rồi kết luận cả đội chưa đạt.
+- **`admin_daily_trend` chỉ trả ngày CÓ báo cáo hoàn tất**, cố ý không `generate_series` cả tháng. v1 không có khái niệm ngày nghỉ (OQ-08 → "không", DEC-030, ISSUE-006 CLOSED), nên một cột 0 cho Chủ nhật là **số liệu bịa**.
+- **`admin_today_overview` chỉ tính Sales đang `is_active`.** Người đã nghỉ việc không kéo tổng của đội xuống, và cũng không được đếm vào mẫu số.
+- **`admin_sales_performance` trả cả Sales chưa có báo cáo nào** (left join). Một người vắng mặt cả tháng là thông tin quan trọng nhất của bảng đó, không phải thứ để giấu đi.
+- **BR-024 cài thẳng trong SQL** dưới dạng `actual >= target` cho cả bốn chỉ tiêu. Viết vậy để **không có phép chia nào** — nên không có đường nào sinh `NaN`/`Infinity`, và `target = 0` tự động coi là đạt đúng theo BR-015.
+
+### E. Kết quả `EXPLAIN ANALYZE` — trả lời ba câu hỏi bỏ ngỏ từ `0005_indexes.sql`
+
+Đo ngày **2026-08-10** trên Postgres 17.6 local với **2.700 dòng** `daily_reports` tổng hợp (bộ test `tests/integration/indexes.test.ts`, 14 bài, chạy trong `npm test`).
+
+| Câu hỏi bỏ ngỏ ở 0005 | Kết luận đo được |
+|---|---|
+| `idx_daily_reports_sales_date_desc` có dư thừa so với `uq_daily_reports_sales_date` không? | **KHÔNG dư thừa.** Truy vấn lịch sử FR-021 chọn `Index Scan using idx_daily_reports_sales_date_desc`, **không có node `Sort`**. **Không drop index này.** |
+| `idx_profiles_role_active` có cột dẫn đầu `role` vô dụng không? | Index **phủ được** truy vấn (kiểm bằng `enable_seqscan = off`). Ở quy mô vài chục dòng, planner chọn `Seq Scan` là **hợp lý** — không được kết luận "index hỏng" từ điều đó. |
+| `is_admin()` có bị gọi mỗi dòng không (ISSUE-005)? | **KHÔNG.** Postgres nâng `(select public.is_admin())` thành **InitPlan**, `actual rows=1 loops=1` — đánh giá đúng một lần cho cả câu lệnh. **ISSUE-005 → CLOSED.** |
+
+Kế hoạch thật của Admin đọc danh sách một tháng, chạy **dưới vai `authenticated`** (bắt buộc — role `postgres` có `rolbypassrls` nên policy không tham gia kế hoạch):
+
+```text
+Limit (actual rows=20 loops=1)
+  InitPlan 1
+    ->  Result (actual rows=1 loops=1)
+  InitPlan 2
+    ->  Result (actual rows=1 loops=1)
+  ->  Index Scan using idx_daily_reports_date_status on daily_reports (actual rows=20 loops=1)
+        Index Cond: ((report_date >= '2017-03-01') AND (report_date <= '2017-03-31'))
+        Filter: ((sales_id = (InitPlan 1).col1) OR (InitPlan 2).col1)
+```
+
+**Không có index mới nào được thêm ở Phase 7–11.** Ba index của `0005` phủ đủ mọi truy vấn list của FR-021, FR-025, FR-028, FR-029 và FR-037.
+
+### F. Trạng thái đẩy lên cloud
+
+| Migration | Local | Cloud `rnmywhwanpxmipqducqu` |
+|---|---|---|
+| `0001` … `0005` | ✅ đã apply | ✅ đã `db push` (2026-08-07) |
+| `0006_admin_aggregates.sql` | ✅ đã apply | ⏳ **CHƯA push** — xem `docs/09 §12` |
+| `0007_admin_daily_trend.sql` | ✅ đã apply | ⏳ **CHƯA push** — xem `docs/09 §12` |

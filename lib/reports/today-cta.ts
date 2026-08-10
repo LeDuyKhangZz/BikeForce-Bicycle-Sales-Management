@@ -9,6 +9,7 @@
  *
  * Nguồn: `docs/03-workflow.md §3.2` (bảng ba trạng thái) · FR-007 · BR-002.
  */
+import { REPORT_STATUS_LABEL, REPORT_STATUS_TONE } from '@/lib/reports/report-status';
 import type { Database } from '@/types/database.types';
 
 type ReportStatus = Database['public']['Enums']['report_status'];
@@ -86,8 +87,9 @@ export function getTodayView(report: TodayReportRef | null): TodayView {
   if (report.status === 'MORNING_SUBMITTED') {
     return {
       state: 'MORNING_SUBMITTED',
-      statusLabel: 'Đã cam kết',
-      statusTone: 'info',
+      // Nhãn dùng chung với danh sách lịch sử và màn hình Admin — một nguồn.
+      statusLabel: REPORT_STATUS_LABEL.MORNING_SUBMITTED,
+      statusTone: REPORT_STATUS_TONE.MORNING_SUBMITTED,
       statusDescription: 'Đã gửi cam kết đầu ngày. Cuối ngày hãy nhập kết quả thực đạt.',
       primaryCta: {
         key: 'COMPLETE_EVENING',
@@ -106,8 +108,8 @@ export function getTodayView(report: TodayReportRef | null): TodayView {
 
   return {
     state: 'COMPLETED',
-    statusLabel: 'Đã hoàn thành',
-    statusTone: 'success',
+    statusLabel: REPORT_STATUS_LABEL.COMPLETED,
+    statusTone: REPORT_STATUS_TONE.COMPLETED,
     statusDescription: 'Báo cáo hôm nay đã hoàn tất và được khoá lại.',
     primaryCta: {
       key: 'VIEW_REPORT',

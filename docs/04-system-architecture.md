@@ -592,3 +592,45 @@ Master Spec §2 nói thẳng: "Không over-engineer" và liệt kê những th�
 | OQ-07 | Tuyến nhập tự do hay danh mục cấu hình sẵn? | ✅ **ĐÃ TRẢ LỜI** | v1 nhập tự do + gợi ý 5 tuyến gần nhất | Nếu cần thống kê theo tuyến: thêm bảng `routes` (AF-14) + một service + màn hình Admin. Thêm chiều rộng, không thêm tầng. |
 
 **Rủi ro kiến trúc đã ghi nhận, theo dõi ở `docs/12-known-issues.md`:** ISSUE-001 **đã CLOSED** (17/17 OQ đã trả lời). Ngữ cảnh cũ: ISSUE-001 (P1 — 9 câu BLOCKING chưa có đáp án nên chưa viết được migration Phase 2), ISSUE-002 (P2 — giới hạn Satori), ISSUE-003 (P2 — Zalo webview chưa kiểm chứng), ISSUE-004 (P2 — TypeScript 7 / ESLint 10 là major mới, có thể phải lùi phiên bản), ISSUE-005 (P3 — `is_admin()` thêm một truy vấn `profiles` mỗi statement; mitigation `(select public.is_admin())` để Postgres nâng thành InitPlan, nếu vẫn chậm thì chuyển role vào custom JWT claim), ISSUE-007 (P3 — chưa có audit log).
+
+---
+
+## CẬP NHẬT PHASE 7–11 (2026-08-10)
+
+### Workflow mới đã dựng thật
+
+**W-07 · Sales xem lại lịch sử (UC-09 → UC-10):**
+`/sales/today` → bottom nav "Lịch sử" → `/sales/history` (mặc định **tháng hiện tại** theo giờ VN) → chọn tháng khác bằng bộ lọc → phân trang 20 dòng/trang → chạm một dòng → `/sales/reports/[id]` → xem bảng đối chiếu + ghi chú → nếu `COMPLETED` thì bấm **Xuất ảnh** → `BackLink` đưa về đúng `/sales/history`.
+
+*Failure flow:* tháng không có báo cáo → empty state có icon + câu hướng dẫn + CTA sang tháng trước, **không phải trang trắng** · `?month=` sai định dạng → tự lùi về tháng hiện tại (DEC-040), không trả 500 · `id` không tồn tại **hoặc** của người khác → cùng một giao diện "Không tìm thấy" (BR-003; xem ISSUE-017 về mã trạng thái).
+
+**W-08 · Admin theo dõi ngày (UC-12 → UC-20):**
+`/admin` → 12 chỉ số của hôm nay → khối cảnh báo tách **hai nhóm**: "chưa báo cáo gì" đứng **trước** (cần nhắc gấp hơn), rồi "đã cam kết sáng nhưng chưa hoàn tất". Tài khoản `is_active = false` **không** bị cảnh báo — đã nghỉ thì không phải nhắc.
+
+**W-09 · Admin tra cứu và xuất dữ liệu (UC-13 → UC-14 → UC-21):**
+`/admin/reports` → lọc theo ngày / khoảng ngày / tháng / Sales / trạng thái / tên → phân trang server-side → mở chi tiết bất kỳ (BR-022) → hoặc bấm **Xuất CSV** để tải đúng tập đang lọc (FR-034).
+
+**W-10 · Admin phân tích tháng (UC-15):**
+`/admin/analytics` → chọn tháng bằng hai nút trước/sau (**không cho đi tới tương lai** — BR-021) → tổng cam kết vs thực đạt cho cả 4 chỉ tiêu → chọn chỉ tiêu → biểu đồ trend theo ngày → mở `<details>` xem bảng số.
+
+**W-11 · Admin quản lý tài khoản (UC-16 → UC-17 → UC-18 → UC-19):**
+`/admin/sales` → bảng hiệu suất + số ngày đạt KPI → **Tạo tài khoản** → điền form → **mật khẩu tạm hiện đúng một lần**, trang **cố ý không tự chuyển đi** để Admin kịp chép và bàn giao → hoặc mở hồ sơ một người → sửa thông tin / bật tắt quyền truy cập.
+
+*Failure flow:* email trùng → thông báo tiếng Việt gắn vào ô email (BR-025) · mã nhân viên trùng → tương tự · Admin tự khoá chính mình → bị chặn ở cả tầng action lẫn tầng service.
+
+**W-12 · Đổi mật khẩu (UC-11):**
+`/sales/account` hoặc `/admin/account` → nhập mật khẩu mới hai lần → lưu → banner xác nhận **do server quyết định** (DEC-034). Không redirect, không `revalidatePath` — không có dữ liệu RSC nào đổi.
+
+---
+
+### Kiến trúc: hai bổ sung của Phase 7–11, không có thay đổi nào khác
+
+**1. Tầng RPC cho aggregate của Admin.** Server Component gọi `services/admin.ts`, file này gọi **hàm SQL** trong migration 0006/0007 chứ không kéo hàng nghìn dòng về Node để cộng (AGENTS.md §5, NFR-002). Năm hàm, tất cả `security invoker` để RLS vẫn là hàng rào thật (DEC-004) — chi tiết ở `docs/02 § CẬP NHẬT PHASE 8–11`.
+
+Mọi hàm của `services/admin.ts` trả **giá trị an toàn khi lỗi** (số 0 / mảng rỗng) thay vì ném: một khối dashboard hỏng không được phép kéo sập cả trang. Chi tiết kỹ thuật chỉ đi vào `console.error` phía server (NFR-014).
+
+**2. Route Handler thứ hai — và cuối cùng — của v1:** `GET /api/admin/reports/export` (DEC-042). DEC-003 vẫn nguyên vẹn: cả hai route API đều **không phải CRUD**, chúng chỉ để **tải file**, thứ mà Server Action không làm được vì không đặt được `Content-Disposition`.
+
+**Ranh giới client/server không đổi.** Danh sách client component vẫn ngắn và vẫn chỉ là phần tương tác: form (báo cáo, tài khoản, tạo/sửa Sales), nút chia sẻ ảnh, nút bật/tắt `is_active`, bộ lọc có `<select>` tự submit, và thanh điều hướng. **Biểu đồ trend là Server Component** — nó chỉ là SVG tĩnh, không cần một byte JavaScript nào trên máy khách (DEC-044).
+
+**Một luật mới của tầng feature (DEC-045):** file `'use server'` chỉ được export **async function** và `export type`. Hằng số dùng chung nằm ở `lib/` — `lib/auth/messages.ts`, `lib/reports/messages.ts`, `lib/account/messages.ts`, `lib/admin/messages.ts`. Vi phạm luật này làm module ném lỗi **lúc chạy** trong khi build/typecheck/lint đều xanh (ISSUE-016).

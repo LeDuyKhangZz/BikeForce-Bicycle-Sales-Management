@@ -1,5 +1,5 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 6 | Last updated: 2026-08-08
+> Status: ACTIVE | Phase: 11 | Last updated: 2026-08-10
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 > **Đọc file này TRƯỚC, rồi đọc `SESSION_CHECKPOINT.md`.** Hai file đó đủ để bắt đầu làm việc.
@@ -21,23 +21,29 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 6 — Xuất ảnh 9:16: 11/12 mục** (2026-08-08). Phase 0, 1, 2, 5 đã đóng; Phase 3 còn 1 mục chờ OQ-18; Phase 4 còn 1 mục chờ E2E Phase 11; **Phase 6 còn 1 mục cần thiết bị thật** (ISSUE-003) |
-| Source code | **ĐÃ CÓ.** Next.js 16.3.0 App Router · 5 migration chạy thật trên **cả local lẫn cloud** · tầng auth đầy đủ · **luồng báo cáo ngày chạy thật đầu-cuối cả hai nửa** (`/sales/today`, `/sales/today/morning`, `/sales/today/evening`) · **KPI engine thật + bảng đối chiếu 4 chỉ tiêu** · **ảnh chia sẻ 9:16 sinh thật bằng Satori** · bộ test 369 case |
-| Git | **Đã là git repository** — nhánh `main`, remote `origin` trỏ tới GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). Quyền push đứng vẫn còn, **nhưng `git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
-| Supabase **local** | ✅ **Đã chạy thật** — Docker + CLI 2.111.0, Postgres 17.6.1.156. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
-| Supabase **cloud** | ✅ **Đã nối xong** — `rnmywhwanpxmipqducqu`, region `ap-southeast-1`, 5 migration đã `db push`, seed **không** được đẩy, signup đã tắt |
-| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-08): cả 3 exit 0, lint 0 error 0 warning, build ra **8 route** |
-| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **369/369** (290 unit + 40 integration + 39 RLS), 15,3 giây. Coverage `lib/**`: stmt 98,46% · branch 99,28% · lines 98,75% |
-| E2E / a11y / Lighthouse | **N/A — chưa có `playwright.config.ts`, chưa có `e2e/*.spec.ts`.** Không được ghi PASS |
-| Chặn tiến độ | ✅ **Không còn chốt chặn nào.** 17/17 OQ ban đầu đã trả lời; **39 DEC** và 25 BR đều `APPROVED` |
+| Phase | **PHASE 11 — Testing & Security: 12/14 mục** (2026-08-10). Phase 0, 1, 2, **3**, **4**, 5, **7**, **8**, **9**, **10** đã đóng đủ. Phase 6 còn 1 mục và Phase 11 còn 2 mục — **cả ba đều cần thiết bị thật**, không phải code |
+| Source code | **ĐẦY ĐỦ v1.** Next.js 16.3.0 App Router · **18 route chạy thật** · **7 migration** trên local · luồng báo cáo ngày hai nửa · KPI engine · ảnh 9:16 · **lịch sử báo cáo** · **toàn bộ khu vực Admin** (dashboard 12 chỉ số, 7 chiều lọc, phân tích tháng + biểu đồ trend, quản lý tài khoản, xuất CSV) · bộ test **729 case** + **99 bài E2E** |
+| Git | Nhánh `main`, remote `origin` → GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). **`git push` không chạy được từ agent** (không có TTY) → commit xong phải nhờ người dùng tự push |
+| Supabase **local** | ✅ Chạy thật — Docker + CLI 2.111.0, Postgres 17.6. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012) |
+| Supabase **cloud** | ⚠ **`rnmywhwanpxmipqducqu` mới có 5/7 migration.** `0006` và `0007` **CHƯA push** ⇒ deploy bây giờ thì **toàn bộ khu vực Admin hỏng**. Hướng dẫn từng bước bấm: `docs/09 §12` |
+| Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-10): cả 3 exit 0, lint 0 error 0 warning, build ra **18 route** |
+| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **729/729** (542 unit + 54 integration + 133 RLS), 23,8 giây. Coverage `lib/**`: stmt 99% · branch 99,28%→**98,69%** · func **100%** · lines **99,4%** |
+| E2E / a11y | ✅ **PASS thật**: `npm run e2e` → **99/99** trên 3 project, gồm **30 lượt quét axe, 0 vi phạm serious/critical** |
+| Lighthouse | ❌ **N/A — chưa chạy.** Không được ghi PASS |
+| Chặn tiến độ | ✅ **Không còn chốt chặn nào.** **18/18 OQ** đã trả lời; **45 DEC** và 25 BR đều `APPROVED` |
 
-**Hệ quả trực tiếp:** **Phase 7 (Sales History) là việc kế tiếp.** Bắt đầu bằng `getVietnamMonthRange()` — hàm **duy nhất** trong `lib/` còn cố ý là khung ném lỗi. Khi dựng xong `/sales/reports/[id]`, nhớ xoá `VIEW_REPORT` khỏi `CTA_ROUTES_NOT_READY`. Màn hình chi tiết **dùng lại** `AchievementTable` + `ReportNotes` + `ShareImageButton` đã có sẵn — không viết lại. Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`, và **không được tự trả lời** một câu hỏi nghiệp vụ còn treo.
+**Hệ quả trực tiếp:** **Phase 12 (Deployment Preparation) là việc kế tiếp**, và bước đầu tiên **bắt buộc** là **đẩy migration `0006` + `0007` lên Supabase cloud** — `docs/09 §12` có hướng dẫn từng bước bấm, cả hai cách (CLI và dán SQL trên Dashboard), kèm câu SQL kiểm chứng. **Không code thêm màn hình nào**: 18/18 route của v1 đã chạy thật và có test. Theo Master Spec §71 **không được tự ý thay đổi** bất kỳ business rule nào đã `APPROVED`.
 
-> ⏳ **Hai việc chờ người dùng, KHÔNG chặn việc code:**
-> 1. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
-> 2. **Trả lời OQ-18** (ISSUE-013) — NFR-008 đặt "≤ 6 lần chạm" nhưng FR-008 có 5 trường bắt buộc nên sàn lý thuyết là 7; đo thật được **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18`. **Đừng tự chọn hộ**, và **đừng bỏ bớt trường bắt buộc** để ép con số xuống.
+> ⚠ **BÀI HỌC CỦA PHIÊN 2026-08-10, ĐỌC TRƯỚC KHI TIN BẤT KỲ TÀI LIỆU NÀO:** phiên trước đó đã viết khoảng **7.000 dòng code Phase 7–10 mà không cập nhật một dòng tài liệu nào**, nên checkpoint ghi "Phase 7 chưa bắt đầu" trong khi code đã có đủ và đang xanh. **Luôn đo trạng thái thật bằng công cụ** (`git status`, `npm test`, `npm run build`) trước khi tin checkpoint — đúng như §4 của chính file này yêu cầu. Lần này tài liệu đã đồng bộ đầy đủ.
+
+> ⏳ **Ba việc chờ người dùng hoặc chờ thiết bị thật, KHÔNG chặn việc code:**
+> 1. **Đẩy `0006` + `0007` lên cloud** — cần mật khẩu database, agent không nhập được.
+> 2. **Rotate service role key** (ISSUE-011, P1) — key đã lọt vào transcript hội thoại.
+> 3. **Kiểm ảnh 9:16 trong Zalo trên điện thoại thật** (ISSUE-003) + **Lighthouse** — cần link công khai ⇒ chờ deploy Vercel.
 >
-> Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy.
+> ✅ **OQ-18 đã được trả lời ngày 2026-08-10** — phương án (a), NFR-008 nới thành **≤ 8 lần chạm** (**DEC-043**). **Không còn câu hỏi nghiệp vụ nào đang chờ.**
+
+Người dùng đã yêu cầu **hướng dẫn thật chi tiết từng bước bấm** ở khúc Supabase và Vercel — đừng chỉ đưa lệnh CLI rồi tự chạy.
 
 ---
 
@@ -292,7 +298,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-039` (decision) · `ISSUE-001..ISSUE-015` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-025` (business rule) · `OQ-01..OQ-18` (open question) · `DEC-001..DEC-045` (decision) · `ISSUE-001..ISSUE-017` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 `UC`, `FR`, `NFR`, `BR`, `AF` là **dãy đóng** — không thêm ID mới nếu không có xác nhận của người dùng. `OQ`, `DEC`, `ISSUE` là **dãy mở**: cấp ID mới = số lớn nhất từng dùng + 1, **không bao giờ renumber, không tái sử dụng ID đã CLOSED**.
 
@@ -313,7 +319,9 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 **Hàm dùng chung — tên đã chốt, không đặt tên khác, không viết lại:**
 `lib/kpi.ts` → `calculateAchievement(target, actual, metric)`, `getAchievementStatus()`, `formatMetricValue()`, `achievementLabel()`, `isKpiAchievedDay()` ·
 `lib/currency.ts` → `formatCurrencyVND()`, `parseCurrencyInput()` ·
-`lib/date.ts` → `getVietnamToday()`, `formatVietnamDate()`, `getVietnamMonthRange()`.
+`lib/date.ts` → `getVietnamToday()`, `formatVietnamDate()`, `isValidVietnamDate()` + **nhóm 5 hàm tháng** (`getVietnamMonthRange` — trả **`null`** khi sai định dạng, DEC-040 · `getVietnamCurrentMonth` · `formatVietnamMonth` · `shiftVietnamMonth` · `resolveVietnamMonth`) ·
+`lib/reports/metric-rows.ts` → `KPI_METRIC_ROWS`, `kpiMetricRow()` — nguồn **duy nhất** của “4 chỉ tiêu là gì” ·
+`lib/reports/trend-chart.ts` → `buildTrendChart()`, `parseTrendMetric()`.
 
 **Ba Supabase client, ba mục đích, không dùng lẫn:**
 `lib/supabase/client.ts` (browser, anon, chịu RLS) · `lib/supabase/server.ts` (RSC + Server Actions, anon, chịu RLS — **đường dữ liệu chính**) · `lib/supabase/admin.ts` (service role, `import 'server-only'`, **chỉ** `auth.admin.*` cho UC-17/18/19).
@@ -325,29 +333,30 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 4. ~~**Phase 3 — Morning Report**~~ — ✅ **XONG 13/14 mục 2026-08-07.** Kiểm chứng trình duyệt 57/58.
 5. ~~**Phase 4 — Evening Report**~~ — ✅ **XONG 9/10 mục 2026-08-07.** Kiểm chứng trình duyệt 62/62 + hồi quy luồng sáng 11/11. Mục còn lại là **E2E Playwright**, thuộc Phase 11.
 6. ~~**Phase 5 — KPI Engine**~~ — ✅ **ĐÓNG ĐỦ 11/11 mục 2026-08-07.** ISSUE-008 + DEC-025 đã chốt (**DEC-038**); `lib/kpi.ts` có thân thật + 46 unit test; bảng đối chiếu `features/report-comparison/` gắn ở `/sales/today`; 315 test xanh; kiểm chứng trình duyệt **36/36**.
-7. **Đang chờ người dùng (không chặn code):** rotate service role key (ISSUE-011) · trả lời **OQ-18** (ISSUE-013).
+7. **Đang chờ người dùng (không chặn code):** đẩy migration `0006` + `0007` lên cloud (`docs/09 §12`) · rotate service role key (ISSUE-011) · kiểm Zalo trên thiết bị thật (ISSUE-003) · Lighthouse. ~~trả lời OQ-18~~ — ✅ **đã xong 2026-08-10 (DEC-043)**.
 8. ~~**Phase 6 — Xuất ảnh 9:16**~~ — ✅ **XONG 11/12 mục 2026-08-08.** Route Handler sinh PNG 1080×1920 bằng Satori, font Inter nhúng đủ dấu tiếng Việt, nút Xuất ảnh chạy thật với Web Share API + 2 fallback; **ISSUE-002 CLOSED** (không cần fallback `html-to-image`); phát sinh và đã sửa **ISSUE-015** bằng **DEC-039**; 44/44 phép kiểm trình duyệt. Mục còn lại: **kiểm Zalo trên thiết bị thật** (ISSUE-003) — cần điện thoại + link công khai.
-9. **Phase 7 — Sales History (việc kế tiếp).** `getVietnamMonthRange()` → `listReportsByMonth()` phân trang server-side → `/sales/history` → `/sales/reports/[id]` → xoá `VIEW_REPORT` khỏi `CTA_ROUTES_NOT_READY` → bottom nav 3 mục (DEC-018). Chi tiết từng bước ở `SESSION_CHECKPOINT.md § Next Exact Steps`.
+9. ~~**Phase 7 — Sales History**~~ · ~~**Phase 8 — Admin Dashboard**~~ · ~~**Phase 9 — Admin Reports & Filters**~~ · ~~**Phase 10 — Sales Management**~~ · ~~**Phase 11 — Testing & Security**~~ — ✅ **XONG 2026-08-10 trong một phiên.** 18/18 route chạy thật · 5 hàm SQL aggregate · bộ E2E 99/99 · 729 test. Chi tiết: `WORKLOG.md` Entry 010.
+10. **Phase 12 — Deployment Preparation (việc kế tiếp).** Bước đầu tiên bắt buộc: **đẩy migration `0006` + `0007` lên Supabase cloud** — `docs/09 §12`. Rồi đặt `Minimum password length = 8` (DEC-041), rotate service role key (ISSUE-011), sau đó mới tới Vercel. Chi tiết từng bước ở `SESSION_CHECKPOINT.md § Next Exact Steps`.
 
 **Những thứ đã kiểm chứng mà session sau KHÔNG được làm lại** (chi tiết ở `SESSION_CHECKPOINT.md § DO NOT REDO`):
 
 *Phase 2:* `force row level security` **an toàn** vì `postgres` có `rolbypassrls` · `now()` **dùng được** trong CHECK constraint · `service_role` **cố ý không có DML** trên 2 bảng nghiệp vụ (DEC-031) — đừng cấp thêm.
 
-*Phase 3:* `lib/date.ts` và `lib/currency.ts` **đã xong thật** (DEC-032) *(dòng này trước đây còn ghi "`lib/kpi.ts` vẫn cố ý ném lỗi" — **đã hết hiệu lực từ Phase 5**)* · client **không được** suy ra thông báo thành công từ `mode` của form (DEC-034, đã có lỗi thật) · `useReportDraft` **phải** dùng `useSyncExternalStore`, React Compiler chặn `setState` trong effect · CTA "Xem báo cáo hôm nay" **cố ý disabled** (`CTA_ROUTES_NOT_READY`, Phase 7) — *còn nút "Xuất ảnh" thì **đã bật thật ở Phase 6**, `EXPORT_IMAGE_NOT_READY` không còn tồn tại*.
+*Phase 3:* `lib/date.ts` và `lib/currency.ts` **đã xong thật** (DEC-032) *(dòng này trước đây còn ghi "`lib/kpi.ts` vẫn cố ý ném lỗi" — **đã hết hiệu lực từ Phase 5**)* · client **không được** suy ra thông báo thành công từ `mode` của form (DEC-034, đã có lỗi thật) · `useReportDraft` **phải** dùng `useSyncExternalStore`, React Compiler chặn `setState` trong effect · ~~CTA "Xem báo cáo hôm nay" cố ý disabled~~ — **hết hiệu lực**: `CTA_ROUTES_NOT_READY` **đã bị xoá ở Phase 7**, không còn cờ "chưa sẵn sàng" nào trong dự án.
 
 *Phase 6:* Satori **dựng được** bố cục 9:16 — ISSUE-002 CLOSED, đừng chuyển sang `html-to-image` · font `.ttf` trong `public/fonts/` là **asset bắt buộc**, Satori không đọc `woff2` và subset `vietnamese` **không có** chữ Latin cơ bản · `outputFileTracingIncludes` trong `next.config.ts` **không được xoá** · `getReportForShare()` **cố ý không nhận `salesId`** (thêm vào là chặn nhầm Admin — BR-022) · middleware trả **401/403 JSON** cho `/api/*` (DEC-039), đừng gộp lại thành redirect · `lib/reports/metric-rows.ts` là nguồn duy nhất của "4 chỉ tiêu là gì", Phase 8/9 **import chứ đừng khai lại** · `formatCompactVND` **chỉ** dành cho thẻ ảnh.
 
-*Phase 5:* `lib/kpi.ts` **đã có thân thật, không còn ném lỗi** — đừng viết lại · `calculateAchievement()` nhận **ba** tham số (`target, actual, metric`), đừng gọi bằng hai · `percent = 99.99` cho `display = '100,0%'` nhưng `status = 'NEAR'` là **đúng theo BR-014 × BR-023**, có test khoá lại, đừng "sửa" · `features/report-morning/commitment-summary.tsx` **cố ý chỉ một cột** và chỉ còn dùng ở `/sales/today/evening` — đừng gộp nó với `AchievementTable` · `getVietnamMonthRange()` **vẫn cố ý là khung ném lỗi** (Phase 7/9), việc Phase 5 đóng không có nghĩa hàm đó đã xong.
+*Phase 5:* `lib/kpi.ts` **đã có thân thật, không còn ném lỗi** — đừng viết lại · `calculateAchievement()` nhận **ba** tham số (`target, actual, metric`), đừng gọi bằng hai · `percent = 99.99` cho `display = '100,0%'` nhưng `status = 'NEAR'` là **đúng theo BR-014 × BR-023**, có test khoá lại, đừng "sửa" · `features/report-morning/commitment-summary.tsx` **cố ý chỉ một cột** và chỉ còn dùng ở `/sales/today/evening` — đừng gộp nó với `AchievementTable` · ~~`getVietnamMonthRange()` vẫn cố ý là khung ném lỗi~~ — **hết hiệu lực từ Phase 7**: hàm đã có thân thật và trả `null` khi sai định dạng (DEC-040). **Không còn khung ném lỗi nào trong `lib/`.**
 
 *Phase 4:* `useReportDraft` nay ở `lib/hooks/`, `CurrencyField` nay ở `components/ui/` (DEC-035) — **không phải file bị mất** · guard quyền của Server Action đã gom về `authorizeSalesWrite()` ở `features/auth/queries.ts` (DEC-036) — **đừng viết lại** · `saveEveningReport` **cố ý tự `redirect()` và không trả gì khi thành công** (DEC-037, ISSUE-014) — **đừng thêm lại nhánh `ok: true`**, nó không bao giờ tới được client · 7 test RLS của `completeEveningReport` **phải ở `tests/rls/`**, chuyển sang `tests/integration/` là làm chúng vô nghĩa (`postgres` có `rolbypassrls`).
 
 ---
 
-## OPEN QUESTIONS — 17/17 câu ban đầu ĐÃ ĐÓNG (2026-08-07) · **OQ-18 đang chờ**
+## OPEN QUESTIONS — ✅ ĐÃ ĐÓNG ĐỦ **18/18** (OQ-01…OQ-17 ngày 2026-08-07 · OQ-18 ngày 2026-08-10)
 
-Người dùng đã trả lời **đủ 17/17** câu của bộ ban đầu — **tuyệt đối không hỏi lại**. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
+Người dùng đã trả lời **đủ 18/18** câu — **tuyệt đối không hỏi lại**. Danh sách đầy đủ kèm câu trả lời nằm ở `docs/01-business-analysis.md §OPEN QUESTIONS` — **đọc mục đó trước khi viết migration hoặc `lib/kpi.ts`**.
 
-> ⏳ **OQ-18 (MỚI, phát sinh ở Phase 3):** NFR-008 đặt "hoàn tất báo cáo sáng ≤ 6 lần chạm", nhưng FR-008 quy định 5 trường bắt buộc nên sàn lý thuyết là `1 + 5 + 1 = 7`. Đo thật: **7 chạm / 1,8 giây**. Ba phương án ở `docs/01 § OQ-18` và `docs/12 § ISSUE-013`. **Không chặn Phase 4.** Đây là câu hỏi mới, không phải hỏi lại câu cũ.
+> ✅ **OQ-18 ĐÃ ĐƯỢC TRẢ LỜI ngày 2026-08-10 — phương án (a):** NFR-008 nới từ "≤ 6 lần chạm" thành **"≤ 8 lần chạm"**, **giữ nguyên 5 trường bắt buộc** của FR-008 — ghi thành **DEC-043**. Con số đo được **7 chạm / 1,8 giây** nay **ĐẠT cả hai vế**; ISSUE-013 → **CLOSED**; Phase 3 đóng ở **14/14**. **Không sửa một dòng code nào.** **Không còn câu hỏi nghiệp vụ nào đang chờ.**
 
 Mười quyết định nghiệp vụ mà mọi session sau phải nhớ:
 

@@ -265,7 +265,7 @@ Priority: **M** = MUST (MVP), **S** = SHOULD, **L** = LATER.
 | FR-034 | Export CSV danh sách báo cáo đang filter | S | UC-21 |
 | FR-035 | Draft cục bộ (localStorage) khôi phục khi mất mạng/đóng tab | S | UC-04, UC-06 |
 | FR-036 | PWA manifest + Add to Home Screen | S | — |
-| FR-037 | Biểu đồ trend theo ngày trong tháng | S | UC-15 |
+| FR-037 | Biểu đồ trend theo ngày trong tháng | S | UC-15 — ✅ **ĐÃ LÀM 2026-08-10** bằng SVG viết tay, không thêm dependency (**DEC-044**) |
 
 ---
 
@@ -280,7 +280,7 @@ Priority: **M** = MUST (MVP), **S** = SHOULD, **L** = LATER.
 | NFR-005 | Security | Service role key chỉ server-side, không có trong client bundle | grep bundle trong CI |
 | NFR-006 | Security | Mọi Server Action tự kiểm tra auth + role + validate Zod | code review + test |
 | NFR-007 | Accessibility | WCAG 2.2 AA toàn bộ; text ≥ 4.5:1, UI component ≥ 3:1 | axe + bảng contrast đã đo |
-| NFR-008 | Usability | Hoàn tất báo cáo sáng ≤ 60 giây, ≤ 6 lần chạm | usability walkthrough |
+| NFR-008 | Usability | Hoàn tất báo cáo sáng ≤ 60 giây, **≤ 8 lần chạm** *(sửa từ “≤ 6” ngày 2026-08-10 — **DEC-043**, trả lời OQ-18)* | usability walkthrough — **ĐO THẬT: 7 chạm / 1,8 giây ⇒ ĐẠT** |
 | NFR-009 | Compatibility | Chrome/Safari mobile 2 phiên bản gần nhất + **Zalo in-app browser** | manual matrix |
 | NFR-010 | Reliability | Save thất bại không mất dữ liệu form; có retry | E2E offline test |
 | NFR-011 | Correctness | Ngày nghiệp vụ luôn theo `Asia/Ho_Chi_Minh`, kể cả 23:00–01:00 | unit test biên |
@@ -529,7 +529,7 @@ flowchart TD
 
 ### 12.2 Nhịp cuối tháng
 
-6. **Monthly analytics** (UC-15, AF-05, FR-028): chọn tháng → tổng target vs actual cho cả 4 chỉ tiêu + % đạt. Trend theo ngày là SHOULD (AF-08, FR-037).
+6. **Monthly analytics** (UC-15, AF-05, FR-028): chọn tháng → tổng target vs actual cho cả 4 chỉ tiêu + % đạt. Trend theo ngày (AF-08, FR-037) là SHOULD và **đã làm** — biểu đồ cột SVG viết tay, chỉ vẽ ngày **có** báo cáo hoàn tất (DEC-044).
 7. **Sales performance table** (UC-16, AF-06, FR-029): theo từng Sales — tổng doanh số, tổng doanh thu, tổng viếng thăm, achievement trung bình, **số ngày đạt KPI**. Định nghĩa "ngày đạt KPI" hiện là BR-024 (cả 4 chỉ tiêu ≥ 100%) và **đang chờ OQ-17**.
 
 ### 12.3 Quản lý tài khoản Sales (AF-07)
@@ -715,13 +715,13 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 
 ---
 
-## OPEN QUESTIONS — **17/17 CÂU BAN ĐẦU ĐÃ TRẢ LỜI (2026-08-07) · OQ-18 phát sinh ở Phase 3, đang chờ**
+## OPEN QUESTIONS — **ĐÃ TRẢ LỜI ĐỦ 18/18 (OQ-01…OQ-17 ngày 2026-08-07 · OQ-18 ngày 2026-08-10)**
 
 > **Đây là DANH SÁCH ĐẦY ĐỦ DUY NHẤT của toàn dự án.** Mọi tài liệu khác (`docs/02` … `docs/12`, `CLAUDE.md`, `AGENTS.md`) chỉ liệt kê các `OQ-xx` liên quan trực tiếp tới nó và **trỏ ngược về mục này**. Không được tạo `OQ` mới ở tài liệu khác.
 
 > ✅ **Ngày 2026-08-07, người dùng đã trả lời đủ 17/17 câu hỏi ban đầu.** Phase 2 và Phase 3 đều hết blocker nghiệp vụ. Các câu trả lời dưới đây là **business decision đã được xác nhận** — theo Master Spec §66 chúng đứng ở mức ưu tiên sự thật **cao nhất**, và theo Master Spec §71 **không được tự ý thay đổi**.
 
-> ⏳ **OQ-18 là câu hỏi MỚI, phát sinh khi đo thật ở Phase 3** (không phải hỏi lại câu cũ). Nó **không chặn** việc code — chi tiết ở cuối mục này và ở `docs/12 § ISSUE-013`.
+> ✅ **OQ-18 đã được trả lời ngày 2026-08-10** — phương án **(a)**, ghi thành **DEC-043**. **Không còn câu hỏi nghiệp vụ nào đang chờ trả lời.** Chi tiết ở cuối mục này và ở `docs/12 § ISSUE-013` (→ CLOSED).
 
 | ID | Câu hỏi | **CÂU TRẢ LỜI CHÍNH THỨC** | Ràng buộc sinh ra |
 |---|---|---|---|
@@ -743,15 +743,20 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 | OQ-16 | Có cần role thứ ba không? | **KHÔNG. Chỉ 2 role**: `ADMIN`, `SALES` | DEC-030 · enum `user_role` giữ 2 giá trị |
 | OQ-17 | "Ngày đạt KPI" là đạt cả 4 chỉ tiêu hay chỉ doanh thu? | **Đạt cả 4 chỉ tiêu ≥ 100%** | **BR-024 APPROVED** · `lib/kpi`, AF-06 |
 
-### OQ-18 — ĐANG CHỜ TRẢ LỜI (phát sinh 2026-08-07, Phase 3)
+### OQ-18 — ✅ ĐÃ TRẢ LỜI (phát sinh 2026-08-07 ở Phase 3 · trả lời 2026-08-10)
 
-| ID | Câu hỏi | Vì sao phát sinh | Ba phương án |
+| ID | Câu hỏi | **CÂU TRẢ LỜI CHÍNH THỨC** | Ràng buộc sinh ra |
 |---|---|---|---|
-| **OQ-18** | **NFR-008 nói "hoàn tất báo cáo sáng ≤ 60 giây và ≤ 6 lần chạm". Đo thật ở 375px cho ra 1,8 giây (đạt) nhưng 7 lần chạm (không đạt). Chấp nhận con số nào?** | FR-008 quy định **5 trường bắt buộc**. Sàn lý thuyết của luồng là `1 (mở form) + 5 (chạm từng ô) + 1 (lưu) = 7`. Hai requirement mâu thuẫn nhau, không phải chỗ tối ưu được bằng code | **(a)** Nới NFR-008 thành ≤ 8 lần chạm, giữ nguyên 5 trường · **(b)** Định nghĩa lại "chạm" = số ô phải nhập (5) · **(c)** Bỏ bớt một trường bắt buộc — **đây là thay đổi nghiệp vụ**, đụng FR-008 và schema |
+| **OQ-18** | NFR-008 nói “hoàn tất báo cáo sáng ≤ 60 giây và ≤ 6 lần chạm”. Đo thật ở 375px cho **1,8 giây (đạt)** nhưng **7 lần chạm (không đạt)**. Chấp nhận con số nào? | **Phương án (a)** — nới NFR-008 thành **≤ 8 lần chạm**, **giữ nguyên 5 trường bắt buộc** của FR-008 | **DEC-043 APPROVED** · NFR-008 sửa ở § bảng NFR · ISSUE-013 → CLOSED |
 
-**Ảnh hưởng nếu chọn (c):** phải sửa FR-008, viết migration mới cho cột bị bỏ (migration chỉ tiến tới), và cập nhật `docs/02`, `docs/03`, `docs/05`, `docs/08`.
+**Vì sao (a) chứ không phải (b) hay (c):**
 
-**Trong lúc chờ:** form giữ nguyên 5 trường; ba biện pháp giảm thao tác đã làm và đo được là chip cộng nhanh `+1tr/+5tr/+10tr`, `inputMode="numeric"`, `enterKeyHint="next"`. Mục walkthrough NFR-008 trong `PROJECT_CHECKLIST.md` Phase 3 **để nguyên `[ ]`**.
+- **(b)** định nghĩa lại “chạm” = số ô phải nhập (5) — bị loại: đó là sửa **cách đo** cho khớp con số, một kiểu tự chấm điểm.
+- **(c)** bỏ bớt một trường bắt buộc — bị loại: đây là **thay đổi nghiệp vụ thật**, làm báo cáo mất một chỉ tiêu, kéo theo sửa FR-008, một migration mới (migration chỉ tiến tới) và bốn tài liệu `docs/02`, `docs/03`, `docs/05`, `docs/08` — tất cả chỉ để làm đẹp một con số.
+
+Ngưỡng mới là **8** chứ không phải 7 để còn một chạm dự phòng cho bước phát sinh trên thiết bị thật (ví dụ đóng bàn phím trước khi bấm Lưu), mà vẫn giữ ý nghĩa gốc của NFR-008: luồng phải **ngắn và không có bước thừa**.
+
+**Đã chốt (2026-08-10):** form **giữ nguyên 5 trường** — không có thay đổi code nào. Ba biện pháp giảm thao tác đã làm và đo được (chip cộng nhanh `+1tr/+5tr/+10tr`, `inputMode="numeric"`, `enterKeyHint="next"`) giữ nguyên. Ngưỡng NFR-008 nới thành **≤ 8**, nên con số đo được **7 chạm / 1,8 giây ĐẠT cả hai vế**, và mục walkthrough NFR-008 trong `PROJECT_CHECKLIST.md` Phase 3 nay **đã tick** — Phase 3 đóng ở 14/14. Chi tiết lý do loại (b) và (c): **DEC-043**.
 
 ### Business rule chuyển từ PROPOSED sang APPROVED
 

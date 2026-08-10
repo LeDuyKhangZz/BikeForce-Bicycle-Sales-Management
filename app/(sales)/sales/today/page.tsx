@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CalendarPlus, CheckCircle2, Clock, FileText } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, Clock } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonClassName } from '@/components/ui/button';
+import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
 import { AchievementTable } from '@/features/report-comparison/achievement-table';
@@ -13,7 +13,7 @@ import { ShareImageButton } from '@/features/report-share/share-image-button';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { messageForSavedParam } from '@/lib/reports/messages';
 import { shareImageFileName } from '@/lib/reports/share-card';
-import { getTodayView, type TodayCtaKey } from '@/lib/reports/today-cta';
+import { getTodayView } from '@/lib/reports/today-cta';
 import { createClient } from '@/lib/supabase/server';
 import { getTodayReport } from '@/services/reports';
 
@@ -29,16 +29,14 @@ export const metadata: Metadata = {
  * chỉ RENDER kết quả đó — không có một câu `if (status === …)` nào về nghiệp vụ.
  */
 
-/**
- * Route đích của CTA chưa được dựng trong bản hiện tại.
+/*
+ * PHASE 7 — `CTA_ROUTES_NOT_READY` đã bị XOÁ.
  *
- * `VIEW_REPORT` trỏ tới `/sales/reports/[id]` — FR-022, **Phase 7**. Nút vẫn
- * hiện (để trạng thái COMPLETED không cụt lủn) nhưng ở dạng disabled kèm câu
- * giải thích, thay vì một link dẫn tới 404.
- *
- * 👉 Xoá `VIEW_REPORT` khỏi tập này ngay khi Phase 7 dựng xong route đó.
+ * Tập đó từng giữ `VIEW_REPORT` vì `/sales/reports/[id]` chưa tồn tại, nên CTA
+ * "Xem báo cáo hôm nay" render disabled. Route đó nay đã có (FR-022, UC-10) và
+ * `EXPORT_IMAGE_NOT_READY` đã bỏ từ Phase 6 ⇒ file này không còn cờ tạm nào.
+ * Mọi CTA của `getTodayView()` giờ đều là link thật.
  */
-const CTA_ROUTES_NOT_READY: ReadonlySet<TodayCtaKey> = new Set<TodayCtaKey>(['VIEW_REPORT']);
 
 const STATE_ICON = {
   NO_REPORT: CalendarPlus,
@@ -117,21 +115,9 @@ export default async function SalesTodayPage({ searchParams }: Props) {
       {view.state === 'COMPLETED' && <DiscardEveningDraft today={today} />}
 
       <div className="flex flex-col gap-3">
-        {CTA_ROUTES_NOT_READY.has(view.primaryCta.key) ? (
-          <div className="flex flex-col gap-2">
-            <Button size="lg" disabled>
-              <FileText aria-hidden="true" className="size-5" />
-              {view.primaryCta.label}
-            </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              Màn hình chi tiết báo cáo sẽ có ở bản cập nhật tiếp theo.
-            </p>
-          </div>
-        ) : (
-          <Link href={view.primaryCta.href} className={buttonClassName({ size: 'lg' })}>
-            {view.primaryCta.label}
-          </Link>
-        )}
+        <Link href={view.primaryCta.href} className={buttonClassName({ size: 'lg' })}>
+          {view.primaryCta.label}
+        </Link>
 
         {view.secondaryCta && (
           <Link
