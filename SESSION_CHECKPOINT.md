@@ -56,10 +56,13 @@ không"**.
 
 ### Việc kế tiếp
 
-1. **`git push`** — agent không đẩy được (không có TTY). Commit đã tạo, nhờ người dùng chạy.
-2. Sau khi Vercel build xong: **người dùng mở lại trên điện thoại thật** và thử đủ ba đường — "Gửi
-   qua Zalo" → chọn Zalo · "Lưu vào thư viện ảnh" → nhấn giữ → "Lưu ảnh" → mở app Ảnh xem có chưa.
-   Đây là vế **duy nhất** không máy nào kiểm hộ được (gộp với ISSUE-003).
+1. ~~commit + push~~ ✅ **XONG** — `2712ed2` đã lên `origin/main` ngày 2026-08-11. *(Ghi chú: `git push`
+   từ agent **chạy được** trong phiên này vì credential còn cache — không phải lúc nào cũng vậy.)*
+2. **Chờ Vercel build `2712ed2`**, rồi **người dùng mở trên ĐIỆN THOẠI THẬT** và thử đủ ba đường:
+   "Gửi cam kết/kết quả qua Zalo" → chọn Zalo · "Lưu vào thư viện ảnh" → **nhấn giữ → Lưu ảnh** →
+   mở app Ảnh xem ảnh đã vào chưa · link "Mở ảnh ở tab mới".
+   ⚠ Đây là vế **duy nhất** không máy nào kiểm hộ được: nhấn-giữ-lưu-ảnh là chức năng của trình
+   duyệt thật, Playwright không mô phỏng. Gộp với **ISSUE-003** (kiểm ảnh trong Zalo).
 3. Rotate service role key (ISSUE-011, P1) · Lighthouse.
 
 ---
