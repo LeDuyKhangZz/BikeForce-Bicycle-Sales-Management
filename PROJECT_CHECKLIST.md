@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 11 | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: 15 — Hệ phản hồi loading thống nhất (đã đóng) | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -846,6 +846,24 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `npx next build` — 18 route
 - [x] `npm test` — **784/784**
 - [x] `npm run e2e` — **153 passed / 12 skipped / 0 failed**, 4,6 phút *(165 bài, có 3 bài MỚI của DEC-064)*
+
+## Phase 15 — Hệ phản hồi loading thống nhất (ĐÓNG 2026-08-11, DEC-065)
+
+- [x] Dùng `ui-ux-pro-max`: chạy query loading/accessibility/z-index + guideline Next.js
+- [x] `Button loading/loadingText`: spinner · disabled · `aria-busy` · `role=status`
+- [x] `RouteLoading` dùng chung cho `(sales)` và `(admin)`, skeleton không làm nhảy bố cục
+- [x] Điều hướng chính, CTA, quay lại, đổi tháng, phân trang, bảng chi tiết có pending tức thì
+- [x] Tất cả Server Action/form chính có loading đúng hành động
+- [x] Khối xuất ảnh phân biệt `share/download/copy`, không để cả ba nút nói cùng một việc
+- [x] Form lọc dùng `next/form` + `useFormStatus`, URL GET vẫn deep-link được
+- [x] Unit render loading primitives — **592/592 unit test PASS**
+- [x] Full Vitest unit + integration + RLS — **786/786 PASS**
+- [x] `npm run typecheck` — exit 0
+- [x] `npm run lint` — 0 error, 0 warning
+- [x] `npm run build` — 20 route
+- [x] E2E loading mới — **6/6 PASS** trên 3 project; full regression — **159 passed / 12 skipped / 0 failed**
+- [x] Nhìn tận mắt 375px + 1440px, gồm pending link và route skeleton; không tràn ngang
+- [x] Commit tính năng **`668835d`** + push `origin/main`
 
 ## OPEN QUESTIONS
 

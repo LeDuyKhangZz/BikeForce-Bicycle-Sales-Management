@@ -1,6 +1,33 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **14 — XONG, gồm 4 lỗi/yêu cầu production người dùng báo (ISSUE-027/028/029 + ISSUE-003)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **15 — Hệ phản hồi loading thống nhất (DEC-065)** | Last updated: 2026-08-11
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 024 — PHASE 15, DEC-065 — ĐÃ ĐÓNG)
+
+Người dùng yêu cầu xem UI hiện tại và thiết kế loading hiện đại, cùng tone, cho mọi quãng chờ; đồng
+thời nhắc rõ **xong phải tự commit + push**.
+
+**Đã làm:** ba lớp feedback (link pending → route skeleton → button pending); phủ navigation,
+form/Server Action, filter, retry và khối xuất ảnh; không đổi màu DEC-046, không thêm dependency,
+tôn trọng reduced motion. `next/form` giữ filter dạng GET/deep link nhưng cho `useFormStatus` pending
+thật. `busyAction` của ảnh phân biệt share/download/copy.
+
+| Cổng đã chạy trong phiên | Kết quả thật |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npm run build` | ✅ 20 route |
+| `npm run test:unit` | ✅ **592/592** |
+| `npm test` | ✅ **786/786** |
+| E2E loading mới | ✅ **6/6** trên `mobile-375`, `desktop-1440`, `zalo-like` |
+| Full E2E | ✅ **159 passed / 12 skipped / 0 failed** trong 171 lượt, 4,5 phút |
+| Nhìn tận mắt | ✅ pending 375px; route skeleton 375px + 1440px, không tràn ngang |
+| Git | ✅ `668835d` đã push lên `origin/main`; commit tài liệu đóng phiên đi ngay sau |
+
+**Việc còn lại của Entry 024:** không còn việc code/test. Chỉ theo dõi Vercel build; nợ thiết bị thật
+vẫn là ISSUE-003 (Zalo) và Lighthouse như các entry trước, không thuộc hệ loading.
 
 ---
 

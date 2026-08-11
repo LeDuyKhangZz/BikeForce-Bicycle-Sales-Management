@@ -1085,3 +1085,53 @@ hai** route group. Nó cho hình một chỗ đứng rõ ràng và cân được
 > trong là `text-heading` nên nó thắng: **chữ #0B4A76 trên nền #0B4A76 — 1:1, biến mất hoàn toàn.**
 > Không phép đo tự động nào bắt được, vì **WCAG miễn trừ logotype** khỏi ngưỡng tương phản nên bộ đo
 > cũng bỏ qua. Nó chỉ lộ ra khi **chụp ảnh ra và nhìn**.
+
+---
+
+## 18. CẬP NHẬT PHASE 15 (2026-08-11) — hệ phản hồi loading (DEC-065)
+
+### 18.1 Ba quãng chờ, ba phản hồi
+
+| Quãng chờ | Component | Người dùng thấy |
+|---|---|---|
+| Từ cú chạm tới khi Next bắt đầu route | `LinkPendingIcon` / `LinkSpinner` | Icon tại đúng link vừa chạm đổi thành spinner; label không nhảy |
+| Route đang đọc dữ liệu | `RouteLoading` trong hai `loading.tsx` | Status card + skeleton đúng hình học heading/KPI/danh sách |
+| Server Action / thao tác trình duyệt | `Button loading loadingText` | Nút tự khoá, spinner thay icon, nhãn nói đúng việc đang làm |
+
+Đây là chuỗi nối tiếp, không phải ba animation cùng lúc: phản hồi link lấp khoảng lặng đầu; loading
+boundary tiếp quản khi route stream; nội dung thật thay skeleton mà không nhảy bố cục.
+
+### 18.2 Đặc tả thị giác
+
+- **Không thêm màu mới:** status pill dùng `status-info-bg/fg`, spinner dùng màu chữ semantic của
+  chính bề mặt, card dùng `shadow-sm`, skeleton dùng `border/70` + shimmer đã có từ DEC-053.
+- Loading route giữ header/sidebar/bottom nav để người dùng luôn biết mình đang ở đâu. Không scrim,
+  không overlay, không `z-[9999]`.
+- Skeleton đặt trước hai KPI card và một danh sách ba dòng; ở 375px vẫn là hai cột vừa khung, không
+  cuộn ngang. Nội dung thật dài hơn vẫn do page thật quyết định.
+- Nút giữ nguyên chiều cao/rộng khi pending. Spinner `size-5` thay icon, nhãn đổi trong cùng flex
+  box; không animate width/height nên không tạo reflow chủ động.
+
+### 18.3 Ngữ nghĩa và reduced motion
+
+- Route: `aria-busy="true"`, `aria-live="polite"`, `data-route-loading` chỉ làm mốc kiểm thử.
+- Nút: `disabled` thật + `aria-busy="true"`; nhãn pending nằm trong `role="status"`.
+- Link: spinner `aria-hidden`; câu "Đang mở…" nằm trong `role="status"` cho screen reader.
+- `prefers-reduced-motion: reduce` dừng spinner/shimmer gần như tức thì nhưng **giữ nguyên khối
+  tĩnh**, nên ý nghĩa loading không biến mất.
+
+### 18.4 Phạm vi đã phủ
+
+Đăng nhập · đăng xuất · lưu cam kết sáng · hoàn tất cuối ngày · đổi mật khẩu · lưu hồ sơ Admin/Sales
+· tạo tài khoản · bật/tắt tài khoản · gửi/tải/sao chép ảnh · retry error boundary · lọc báo cáo ·
+bottom nav/sidebar · CTA Hôm nay · quay lại · đổi tháng · phân trang · mở chi tiết báo cáo/nhân viên.
+
+CSV vẫn là link tải native với `Content-Disposition`; trình duyệt không có sự kiện hoàn tất download
+đáng tin cậy nên không hiển thị một spinner giả kéo dài tuỳ tiện.
+
+### 18.5 Kiểm chứng trực quan thực tế
+
+Ngày 2026-08-11, `RouteLoading` được render trong chính layout Admin production và chụp ở **375×812**
+cùng **1440×900**. Cả hai bản đều giữ header/navigation, status card không gãy chữ, hai KPI skeleton
+không tràn ngang và danh sách không bị bottom nav che. Pending icon trên bottom nav 375px cũng được
+giữ request để quan sát trực tiếp: icon đổi thành spinner nhưng label/vị trí không nhảy.

@@ -1977,3 +1977,51 @@ lặng.
   duyệt thật, nhưng đó là thứ có sẵn của trình duyệt, **không phải một bước trong hướng dẫn**.
 - **Không** gỡ ảnh xem trước xuống sau một cú bấm nào đó. Nó luôn hiện — người dùng yêu cầu thẳng.
 - **Không** đổi nút tải ảnh thành nút "lưu vào thư viện": nhãn đó **hứa sai**, web không làm được.
+
+---
+
+## DEC-065 — Ba lớp phản hồi loading thống nhất cho điều hướng, route và thao tác
+
+**Date:** 2026-08-11
+**Status:** APPROVED (người dùng yêu cầu trực tiếp: mọi thao tác có thời gian chờ phải cho biết trang
+không bị đứng, thiết kế hiện đại và cùng style/tone với hệ thống hiện tại)
+
+**Decision:** BikeForce dùng đúng ba lớp phản hồi, mỗi lớp trả lời một quãng chờ khác nhau:
+
+1. **Ngay tại điểm vừa chạm:** link điều hướng đổi icon thành spinner bằng `useLinkStatus()`; áp cho
+   bottom nav/sidebar, CTA, quay lại, đổi tháng, phân trang và link mở chi tiết. Đây là tín hiệu
+   dưới 100ms, trước khi trang đích bắt đầu render.
+2. **Trong lúc route lấy dữ liệu:** `loading.tsx` của hai route group dùng chung `RouteLoading` —
+   status card + skeleton giữ trước hình học của heading, KPI và danh sách. Không overlay che toàn
+   trang, không màn hình trắng, không làm mất header/navigation hiện tại.
+3. **Trong lúc thao tác:** `Button` nhận `loading` + `loadingText`, tự `disabled`, đặt
+   `aria-busy`, thay icon bằng spinner và công bố nhãn qua `role="status"`. Áp cho đăng nhập/đăng
+   xuất, hai form báo cáo, hồ sơ, mật khẩu, tạo/bật-tắt Sales, xuất ảnh, retry và form lọc.
+
+**Reason:** `loading.tsx` chỉ xuất hiện sau khi Next bắt đầu điều hướng; trên mạng chậm vẫn có một
+quãng im lặng sau cú chạm. Ngược lại, chỉ gắn spinner vào link không giữ được bố cục khi dữ liệu
+đang stream. Một primitive nút chung còn ngăn các feature tự viết nhiều phiên bản `isPending` lệch
+icon, nhãn và ngữ nghĩa trợ năng.
+
+**Style và motion:** giữ nguyên toàn bộ bảng màu DEC-046 và lớp Soft UI DEC-053. Spinner dùng xanh
+semantic hiện có; skeleton dùng shimmer hiện có; animation chỉ là `rotate`/`transform`, vô hạn chỉ
+trong trạng thái loading. `prefers-reduced-motion` toàn cục rút chuyển động về `0.01ms`. Không thêm
+dependency, không GSAP, không progress giả theo phần trăm và không overlay có `z-index` tuỳ tiện.
+
+**Hai chi tiết kỹ thuật đã chốt:**
+
+- Form lọc báo cáo dùng `next/form` với `action` dạng chuỗi: vẫn là GET, URL vẫn bookmark/chia sẻ
+  được và progressive enhancement vẫn còn, nhưng `useFormStatus()` nay nhận được pending thật.
+- Khối xuất ảnh dùng `BusyAction = 'share' | 'download' | 'copy' | null` thay boolean chung, để chỉ
+  đúng nút vừa bấm có spinner/nhãn tương ứng; các nút còn lại chỉ bị khoá, không nói sai hành động.
+
+**Alternatives rejected:** overlay toàn màn hình (che ngữ cảnh và bottom nav); progress bar giả
+không biết phần trăm thật; chỉ dùng spinner cho mọi trang (gây CLS); chỉ dùng skeleton (không phản
+hồi ngay tại cú chạm); thư viện animation mới (trái DEC-015 và không tạo thêm giá trị).
+
+**Impact:** không đổi business rule, schema, RLS, service hay Server Action. Thêm primitive UI,
+hai bài unit render server và E2E giữ request bằng cổng xác định để nhìn thấy pending thật.
+
+**Verification:** commit tính năng `668835d`; build/typecheck/lint exit 0; Vitest **786/786**; E2E
+loading **6/6** và full regression **159 passed / 12 skipped / 0 failed**; nhìn trực tiếp route skeleton
+ở 375px + 1440px. Commit đã push `origin/main` ngày 2026-08-11.

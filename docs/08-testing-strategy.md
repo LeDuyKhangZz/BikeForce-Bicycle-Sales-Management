@@ -1315,3 +1315,47 @@ hẳn (ca `cache()` của ISSUE-021) vẫn không bao giờ trả về nên bài
 
 ⚠ **Nếu một ngày cần nâng tiếp thì ĐỪNG NÂNG — hãy sửa ISSUE-021.** Ngưỡng này là chỗ chi phí đó lộ
 ra; nới mãi là tự bịt cái đồng hồ duy nhất đang đo nó.
+
+---
+
+## 14. CẬP NHẬT PHASE 15 — kiểm hệ loading (DEC-065)
+
+### 14.1 Unit render server
+
+`components/ui/loading-feedback.test.tsx` dùng `renderToStaticMarkup()` để khoá hai hợp đồng không
+phụ thuộc tốc độ mạng:
+
+- `RouteLoading`: có `aria-busy`, `aria-live`, mốc route, spinner, nhãn và nhiều skeleton
+  `aria-hidden` giữ hình học.
+- `Button loading`: tự `disabled`, `aria-busy`, có spinner + nhãn pending và không render nội dung
+  nút cũ cùng lúc.
+
+Unit project của Vitest vì vậy mở rộng include sang `components/**/*.test.tsx`; đây vẫn là test
+Node thuần, không I/O, không DB.
+
+### 14.2 E2E pending thật, không dùng timeout đoán
+
+`e2e/loading-feedback.spec.ts` giữ request bằng một **request gate**: bắt đầu click, chờ DOM thật
+chuyển sang pending, rồi mới thả request. Cách này chứng minh phản hồi tồn tại mà không phụ thuộc máy
+nhanh/chậm và không cần tăng timeout:
+
+1. đăng nhập: nút có `aria-busy`, spinner và nhãn "Đang đăng nhập…";
+2. chuyển module: đúng link vừa chạm có `data-link-loading`;
+3. lọc GET qua `next/form`: nút disabled, spinner và nhãn "Đang lọc báo cáo…".
+
+Không chặn toàn bộ RSC rồi đòi thấy `loading.tsx`: loading boundary cũng nằm trong RSC response, nên
+cách đó chặn luôn chính thứ đang muốn quan sát. Route skeleton được khoá bằng unit render; các E2E
+hiện có tiếp tục dùng `waitForContent()` trên `aria-busy` để bảo đảm không đọc nhầm skeleton.
+
+### 14.3 Kết quả thực tế ngày 2026-08-11
+
+| Cổng | Kết quả |
+|---|---|
+| Unit project | **592/592 passed** |
+| Toàn bộ Vitest | **786/786 passed** — 32 file |
+| E2E riêng loading | **6/6 passed** — đủ 3 project |
+| Full E2E | **159 passed / 12 skipped / 0 failed** — 171 lượt, 4,5 phút |
+| Visual route skeleton | **2/2 passed** ở 375px + 1440px; route/spec preview đã xoá, không commit |
+
+`12 skipped` là các nhánh thiết bị được bộ hiện hữu cố ý bỏ qua, không phải failure. Full E2E vẫn phủ
+axe serious/critical, hàng rào touch target, horizontal overflow và dynamic type.

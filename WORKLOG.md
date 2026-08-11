@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 12 — Deployment Preparation (đã đẩy migration lên cloud) | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: 15 — Hệ phản hồi loading thống nhất (đã đóng) | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -9,6 +9,13 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 ---
 
 ## Current Phase
+
+**PHASE 15 ĐÃ ĐÓNG NGÀY 2026-08-11 (DEC-065).** Hệ loading ba lớp đã phủ điều hướng, route và thao
+tác; commit tính năng `668835d` đã lên `origin/main`. Quality gate thật: build/typecheck/lint xanh ·
+Vitest **786/786** · E2E **159 passed / 12 skipped / 0 failed** · nhìn trực tiếp 375px và 1440px.
+
+Quy tắc đứng của người dùng vẫn là: hoàn tất thay đổi thì agent **tự commit + push**, không chờ nhắc lại;
+chi tiết vận hành nằm ở `CLAUDE.md § Git`.
 
 **PHASE 7 → PHASE 11 ĐÃ XONG TRONG MỘT PHIÊN (2026-08-10).**
 
@@ -50,6 +57,8 @@ cloud** (`docs/09 §12`) · toàn bộ Phase 12.
 - [ ] Phase 11 — Testing & Security *(12/14 — E2E + a11y + EXPLAIN đã chạy thật; còn Lighthouse và ma trận thử tay, cả hai cần thiết bị thật)*
 - [ ] Phase 12 — Deployment Preparation *(đang làm — migration đã đẩy lên cloud 7/7 ngày 2026-08-10; ⚠ **cloud nay thiếu `0008`**)*
 - [ ] Phase 13 — Nhận diện thương hiệu & soát UI/UX *(13a ✅ · 13b ✅ trừ 2 mục cần **mắt người** và **thiết bị thật** · 13c ✅ đủ 3 nhóm A/B/C)*
+- [x] Phase 14 — Hoàn thiện chia sẻ ảnh và hồ sơ Admin *(đóng 2026-08-11, DEC-064)*
+- [x] Phase 15 — Hệ phản hồi loading thống nhất *(đóng 2026-08-11, DEC-065 · `668835d`)*
 
 > Ghi chú về dấu `[x]` của Phase 0: đánh dấu này chỉ có nghĩa "**deliverable tài liệu của Phase 0
 > đã tạo đủ**". Điều kiện đóng phase hoàn toàn (bao gồm "OPEN QUESTION mức BLOCKING đã được trả
@@ -2456,3 +2465,59 @@ Ghi lại ở đây để ai truy `git log` về sau không đi tìm DEC-064 nh�
 | Thử hai đường vòng trên **Zalo thật** (Android + iOS) | ISSUE-003 — Playwright không mô phỏng được WebView của ứng dụng bên thứ ba |
 | Siết `profiles_update_self` xuống chỉ còn Admin | Ngoài phạm vi yêu cầu; siết RLS phải là một DEC riêng |
 | Lighthouse | Cần bản deploy mới |
+
+---
+
+### Entry 024 — PHASE 15: hệ phản hồi loading thống nhất (DEC-065)
+
+**Date:** 2026-08-11
+
+**Phase:** PHASE 15 — Hệ phản hồi loading thống nhất (**ĐÃ ĐÓNG**)
+
+**Completed:**
+
+1. Dùng `ui-ux-pro-max` rà loading feedback, accessibility, motion, z-index và hướng dẫn Next.js;
+   chốt hệ ba lớp: pending ngay điểm chạm → route skeleton → pending tại thao tác.
+2. Mở rộng `Button` bằng `loading`/`loadingText`, tự khóa double-submit, có Lucide spinner,
+   `aria-busy` và `role="status"`; áp dụng cho toàn bộ form/Server Action chính và retry.
+3. Thêm `RouteLoading`, `LinkPendingIcon`, `PendingSubmitButton`; phủ main nav, CTA, back, tháng,
+   phân trang, bảng chi tiết, empty/not-found state và filter GET dùng `next/form`.
+4. Tách trạng thái ảnh thành `share | download | copy`, nên chỉ đúng nút vừa bấm nói đúng hành động.
+5. Soát bằng mắt trên trình duyệt thật ở 375px và 1440px: không tràn ngang, header/navigation giữ
+   nguyên, status card và skeleton cùng palette/Soft UI DEC-046/053.
+6. Commit tính năng **`668835d`** (`feat(ui): thêm hệ phản hồi loading thống nhất`) và đã push lên
+   `origin/main`.
+
+**Files Changed:** 39 file code/test trong `app/`, `components/ui/`, `features/`, `e2e/` và
+`vitest.config.mts`; 6 file tài liệu gồm `docs/05`, `docs/08`, `docs/11`, `PROJECT_CHECKLIST.md`,
+`WORKLOG.md`, `SESSION_CHECKPOINT.md`; cập nhật mốc hiện hành trong `CLAUDE.md`.
+
+**Tests:**
+
+- `npm run build` — exit 0, **20 route**; chỉ còn hai warning deprecation đã biết.
+- `npm run typecheck` — exit 0.
+- `npm run lint` — exit 0, 0 error/0 warning.
+- `npm test` — **786/786 passed** (32 file).
+- E2E riêng loading — **6/6 passed** trên `mobile-375`, `desktop-1440`, `zalo-like`.
+- Full E2E — **159 passed / 12 skipped / 0 failed** trong 171 lượt, 4,5 phút.
+- Preview kiểm bằng mắt dùng route/spec tạm — **2/2 passed** ở 375px + 1440px; route/spec tạm đã xoá,
+  không commit.
+
+**Errors:**
+
+- Bài E2E đầu dùng delay cố định nên đua với mạng; đổi sang request gate xác định.
+- Chặn toàn bộ RSC đồng thời chặn chính loading boundary; route skeleton chuyển sang unit render và
+  kiểm trực quan riêng, còn E2E giữ request tại đúng hành động/link.
+- Runner Playwright có lúc không nhận `next start` đã sẵn sàng; lượt xác minh dùng production server
+  local đã probe HTTP 200 + config reuse tạm, rồi xoá config tạm. Full regression sau đó xanh.
+- Sau khi xoá route preview, `.next` còn type stale; đã xác minh đúng build cache, xoá và tái tạo.
+  Build sandbox thiếu mạng tải Inter nên chạy lại cùng lệnh với quyền mạng và exit 0.
+
+**Decisions:** **DEC-065** — ba lớp phản hồi loading thống nhất, không overlay toàn màn hình, không
+progress giả, không dependency animation mới; giữ nguyên token và reduced-motion của hệ thống.
+
+**Remaining:** N/A — phạm vi loading đã hoàn tất, kiểm thử và push. Nợ ngoài phạm vi vẫn là Zalo trên
+thiết bị thật (ISSUE-003), Lighthouse sau deploy và siết RLS bằng một DEC riêng nếu được yêu cầu.
+
+**Next:** theo dõi Vercel build commit `668835d`; khi có thiết bị thật thì kiểm hai đường vòng Zalo và
+Lighthouse theo các nợ đã ghi, không viết lại hệ loading DEC-065.
