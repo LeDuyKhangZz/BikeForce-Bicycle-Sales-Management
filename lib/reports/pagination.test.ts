@@ -8,7 +8,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildPaginationItems,
   buildPageInfo,
+  formatPageRangeLabel,
   pageRange,
   parsePageParam,
   REPORTS_PAGE_SIZE,
@@ -174,5 +176,59 @@ describe('buildPageInfo', () => {
         expect(info.rangeEnd).toBeLessThanOrEqual(info.total);
       }
     }
+  });
+});
+
+describe('buildPaginationItems — cụm số trang gọn', () => {
+  it('tối đa 7 trang thì hiện toàn bộ, không có dấu ba chấm', () => {
+    expect(buildPaginationItems(buildPageInfo(140, 4))).toEqual(
+      [1, 2, 3, 4, 5, 6, 7].map((page) => ({ type: 'PAGE', page })),
+    );
+  });
+
+  it('ở đầu danh sách giữ trang đầu, năm trang gần và trang cuối', () => {
+    expect(buildPaginationItems(buildPageInfo(2_000, 1))).toEqual([
+      { type: 'PAGE', page: 1 },
+      { type: 'PAGE', page: 2 },
+      { type: 'PAGE', page: 3 },
+      { type: 'PAGE', page: 4 },
+      { type: 'PAGE', page: 5 },
+      { type: 'PAGE', page: 6 },
+      { type: 'ELLIPSIS', position: 'END' },
+      { type: 'PAGE', page: 100 },
+    ]);
+  });
+
+  it('ở giữa có dấu ba chấm hai phía', () => {
+    expect(buildPaginationItems(buildPageInfo(2_000, 50))).toEqual([
+      { type: 'PAGE', page: 1 },
+      { type: 'ELLIPSIS', position: 'START' },
+      { type: 'PAGE', page: 48 },
+      { type: 'PAGE', page: 49 },
+      { type: 'PAGE', page: 50 },
+      { type: 'PAGE', page: 51 },
+      { type: 'PAGE', page: 52 },
+      { type: 'ELLIPSIS', position: 'END' },
+      { type: 'PAGE', page: 100 },
+    ]);
+  });
+
+  it('ở cuối không lặp trang cuối', () => {
+    const items = buildPaginationItems(buildPageInfo(2_000, 100));
+    const pages = items.filter((item) => item.type === 'PAGE').map((item) => item.page);
+    expect(pages).toEqual([1, 95, 96, 97, 98, 99, 100]);
+    expect(new Set(pages).size).toBe(pages.length);
+  });
+});
+
+describe('formatPageRangeLabel', () => {
+  it('format số lớn theo vi-VN', () => {
+    expect(formatPageRangeLabel(buildPageInfo(123_456, 2))).toBe(
+      'Báo cáo 21–40 trên 123.456',
+    );
+  });
+
+  it('tập rỗng có nhãn rõ nghĩa', () => {
+    expect(formatPageRangeLabel(buildPageInfo(0, 1))).toBe('Không có báo cáo');
   });
 });

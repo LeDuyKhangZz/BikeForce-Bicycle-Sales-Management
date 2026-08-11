@@ -6,11 +6,10 @@ import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LinkSpinner } from '@/components/ui/link-spinner';
 import { AdminReportTable } from '@/features/admin-reports/admin-report-table';
+import { AdminPaginationNav } from '@/features/admin-reports/admin-pagination-nav';
 import { ReportFilterBar } from '@/features/admin-reports/report-filter-bar';
 import { requireRole } from '@/features/auth/queries';
-import { PaginationNav } from '@/features/sales-history/pagination-nav';
 import {
-  adminReportsPath,
   buildAdminReportQuery,
   hasActiveFilters,
   parseAdminReportFilters,
@@ -31,8 +30,8 @@ export const metadata: Metadata = {
  * ─────────────────────────────────────────────────────────────────────────
  *  LỌC VÀ PHÂN TRANG CHẠY HOÀN TOÀN Ở SERVER
  * ─────────────────────────────────────────────────────────────────────────
- *  Năm chiều lọc đi qua `parseAdminReportFilters()` — hàm thuần, đã có 43 unit
- *  test cho mọi tổ hợp rác. Kết quả đi thẳng vào `gte/lte/eq/ilike` của
+ *  Các chiều lọc đi qua `parseAdminReportFilters()` — hàm thuần, có unit test
+ *  cho mọi tổ hợp rác. Kết quả đi thẳng vào `gte/lte/eq/ilike` của
  *  `getAdminReports()`, và truy vấn chỉ lấy **đúng 20 dòng** của trang đang
  *  xem. Không có bước nào tải cả bảng rồi lọc bằng JavaScript (FR-026, NFR-002).
  *
@@ -108,10 +107,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
 
           <AdminReportTable reports={rows} buildHref={(id) => `/admin/reports/${id}`} />
 
-          <PaginationNav
-            pageInfo={pageInfo}
-            buildHref={(nextPage) => adminReportsPath(filters, { page: nextPage })}
-          />
+          <AdminPaginationNav filters={filters} pageInfo={pageInfo} />
         </>
       )}
     </div>

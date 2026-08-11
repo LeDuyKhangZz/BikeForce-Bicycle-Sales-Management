@@ -1,6 +1,6 @@
 # 08 — Testing Strategy
 
-> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -1359,3 +1359,21 @@ hiện có tiếp tục dùng `waitForContent()` trên `aria-busy` để bảo �
 
 `12 skipped` là các nhánh thiết bị được bộ hiện hữu cố ý bỏ qua, không phải failure. Full E2E vẫn phủ
 axe serious/critical, hàng rào touch target, horizontal overflow và dynamic type.
+
+---
+
+## 15. CẬP NHẬT PHASE 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066)
+
+- Unit: tháng hiện tại mặc định, `period=all`, tham số rác, ưu tiên ngày/khoảng/tháng/all, chuyển tháng,
+  giữ hoặc bỏ từng filter, chip tóm tắt và cửa sổ số trang ở đầu/giữa/cuối.
+- Integration/RLS: fixture 100.002 báo cáo; mỗi page tối đa 20 dòng; thứ tự
+  `report_date DESC, id DESC` ổn định; trang 2 không lặp/mất dòng; `EXPLAIN ANALYZE` không full sort và mọi
+  điều kiện vẫn chạy phía PostgreSQL.
+- E2E Admin: URL trống hiện tháng hiện tại, vùng nâng cao đóng mặc định, chuyển tháng, lọc Sales/trạng thái,
+  nhảy trực tiếp tới trang 2, quay lại từ chi tiết giữ filter/page và `period=all` hoạt động.
+- Responsive: kiểm trực quan 375×812 và 1440×900; không tràn ngang, vùng nâng cao mở/đóng đúng, bottom nav
+  không che dòng cuối và control giữ kích thước chạm theo chuẩn.
+
+Kết quả thực tế 2026-08-11: full Vitest **802/802** (32 file); nhóm helper liên quan **102/102**;
+integration + RLS liên quan **38/38** với 100.002 dòng; E2E Admin **36/36** trên đủ ba project;
+build/typecheck/lint exit 0 và build có 20 route.

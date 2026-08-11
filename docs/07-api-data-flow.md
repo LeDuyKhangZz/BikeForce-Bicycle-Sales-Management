@@ -1,6 +1,6 @@
 # 07 — API & Data Flow
 
-> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 > Đáp ứng Master Spec §51.
 
@@ -554,3 +554,20 @@ với DEC-033: một ô "Hoàn thành" trống thì đọc được, còn một 
 Hệ quả đã lường trước ở tầng SQL: những dòng đó **không** được đếm vào `kpi_achieved_days`, vì phép
 so sánh với `null` cho `null`. Đúng chủ ý — một ngày cũ chấm theo bộ chỉ tiêu cũ thì không thể tuyên
 bố là đạt theo bộ chỉ tiêu mới.
+
+---
+
+## 14. CẬP NHẬT PHASE 16 — Data flow danh sách báo cáo Admin (DEC-066)
+
+`parseAdminReportFilters(searchParams)` là điểm chuẩn hoá duy nhất. `AdminReportSearchParams` nhận thêm
+`period?: 'all'`; tham số khác bị bỏ qua. Thứ tự thời gian là `date` hợp lệ → `from/to` hợp lệ → `month`
+hợp lệ → `period=all` → tháng hiện tại theo `Asia/Ho_Chi_Minh`. Vì vậy URL trống vẫn tạo `dateFrom/dateTo`
+cho tháng hiện tại trước khi gọi service, còn URL tất cả thời gian phải ghi tường minh `period=all`.
+
+Luồng đọc không đổi tầng: Server Component → `features/admin-reports/queries.ts` → `services/reports.ts` →
+Supabase server client chịu RLS. PostgreSQL thực hiện toàn bộ filter, count và sort
+`report_date DESC, id DESC`; `.range()` chỉ trả tối đa 20 dòng. Helper thuần dựng URL chuyển tháng, bỏ từng
+filter và cụm số trang; thay filter bỏ `page`, còn mọi liên kết phân trang giữ nguyên filter.
+
+CSV vẫn dùng cùng bộ lọc đã chuẩn hoá và giữ trần 5.000 dòng. Không đổi schema. `EXPLAIN ANALYZE` với
+100.002 báo cáo mô phỏng xác nhận truy vấn tháng/mới nhất dùng index hiện hữu và không cần full sort.

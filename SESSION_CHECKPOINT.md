@@ -1,6 +1,26 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **15 — Hệ phản hồi loading thống nhất (DEC-065)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **16 — Báo cáo Admin cho dữ liệu lớn (DEC-066)** | Last updated: 2026-08-11
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 025 — PHASE 16, DEC-066 — ĐÃ ĐÓNG)
+
+Người dùng yêu cầu triển khai ngay thiết kế `/admin/reports` cho dữ liệu hàng trăm nghìn dòng. Code đã đổi
+mặc định sang tháng hiện tại theo giờ Việt Nam; thêm `period=all`; bộ lọc nâng cao đóng mặc định, chip tóm
+tắt, chuyển tháng và phân trang nhảy trực tiếp. Tất cả vẫn là Server Component + GET query string, 20 dòng
+mỗi trang, filter/sort ở PostgreSQL và không đổi schema.
+
+| Cổng đã chạy | Kết quả thật |
+|---|---|
+| Build / typecheck / lint | ✅ exit 0; build 20 route |
+| Unit liên quan | ✅ 102/102 |
+| Integration + RLS liên quan | ✅ 38/38; fixture 100.002 báo cáo + EXPLAIN ANALYZE |
+| Full Vitest | ✅ 802/802 — 32 file |
+| E2E Admin | ✅ 36/36 trên mobile-375, desktop-1440, zalo-like |
+| Visual | ✅ đã nhìn 375×812 và 1440×900; không thấy tràn ngang |
+
+**Còn lại:** không còn code/test trong phạm vi; commit và push. Không sửa schema/RLS và không cài thư viện.
 
 ---
 

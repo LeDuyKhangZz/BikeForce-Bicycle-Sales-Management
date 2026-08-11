@@ -1,6 +1,6 @@
 # 05 — UI/UX Design
 
-> Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 > Đáp ứng Master Spec §3, §4, §28, §33, §49.
 
@@ -460,7 +460,7 @@ Cả ba chuỗi trên do **`lib/kpi.ts` sinh sẵn** (`display`), không compone
 | `/sales/reports/[id]` | SALES | UC-10, UC-07, UC-08 | ReportDetail, ComparisonTable, ShareButton | skeleton | — | 404 nếu không phải của mình | card → bảng từ 768px |
 | `/sales/account` | SALES | UC-11 | ProfileCard, ChangePasswordForm, LogoutButton | skeleton | — | lỗi theo field | 1 cột |
 | `/admin` | ADMIN | UC-12, UC-20 | 12 StatTile + AlertList | skeleton từng khối (stream) | "Chưa Sales nào báo cáo hôm nay" | ErrorState từng khối | 1 → 2 → 4 cột |
-| `/admin/reports` | ADMIN | UC-13, FR-025 | FilterBar, ReportTable/Card, Pagination, ExportCsv | skeleton | "Không có báo cáo khớp bộ lọc" + nút xoá lọc | ErrorState | card → `<table>` có `aria-sort` |
+| `/admin/reports` | ADMIN | UC-13, FR-025 | ReportFilterBar thu gọn, ActiveReportFilters, AdvancedReportFilters, ReportTable/Card, AdminPaginationNav, ExportCsv | skeleton | "Không có báo cáo khớp bộ lọc" + nút xoá lọc | ErrorState | card → `<table>` có `aria-sort` |
 | `/admin/reports/[id]` | ADMIN | UC-14 | ReportDetail, ComparisonTable | skeleton | — | 404 | như `/sales/reports/[id]` |
 | `/admin/analytics` | ADMIN | UC-15, FR-028 | MonthPicker, SummaryTable, TrendChart *(SHOULD)* | skeleton | "Tháng này chưa có dữ liệu" | ErrorState | 1 cột → 2 cột |
 | `/admin/sales` | ADMIN | UC-16, FR-029 | SalesTable, SearchBox, CreateButton | skeleton | "Chưa có Sales nào" + CTA tạo | ErrorState | card → `<table>` |
@@ -1135,3 +1135,17 @@ Ngày 2026-08-11, `RouteLoading` được render trong chính layout Admin produ
 cùng **1440×900**. Cả hai bản đều giữ header/navigation, status card không gãy chữ, hai KPI skeleton
 không tràn ngang và danh sách không bị bottom nav che. Pending icon trên bottom nav 375px cũng được
 giữ request để quan sát trực tiếp: icon đổi thành spinner nhưng label/vị trí không nhảy.
+
+---
+
+## 19. CẬP NHẬT PHASE 16 (2026-08-11) — Báo cáo Admin cho dữ liệu lớn (DEC-066)
+
+- Mặc định mở **tháng hiện tại theo giờ Việt Nam**; báo cáo mới nhất đứng trước. “Tất cả thời gian” là
+  lựa chọn chủ động, không còn là trạng thái ngầm định.
+- Hàng luôn hiện gồm tìm tên Sales, tháng đang xem, tháng trước/sau và “Tháng này”. Các điều kiện ít dùng
+  nằm trong `<details>` “Bộ lọc nâng cao”, đóng mặc định; chip phía trên giữ trạng thái nhìn thấy khi đóng.
+- Ở 375px, form và phân trang xếp một cột, control tối thiểu 44px, input 48px, không tạo vùng cuộn ngang.
+  Ở desktop, control đi theo hàng/lưới và phân trang hiện cụm số quanh trang hiện tại.
+- Mobile có nút trước/sau và ô GET “Đi tới trang”; desktop có đầu/trước/số trang/sau/cuối. Nhãn phạm vi dùng
+  dạng “Báo cáo 21–40 trên 2.438”. Mọi link giữ bộ lọc và trang chi tiết giữ `returnTo`.
+- Danh sách vẫn chỉ render 20 dòng nên không dùng infinite scroll hoặc virtualization.

@@ -1,9 +1,9 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 15 — Hệ phản hồi loading thống nhất (đã đóng) | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-11
 
-> **Mốc mới nhất:** DEC-065 đã triển khai và kiểm đủ trên commit `668835d` (đã push `origin/main`):
-> pending tại link/nút + route skeleton, Vitest 786/786, E2E 159 passed/12 skipped, nhìn trực tiếp
-> 375px/1440px. Quy tắc đứng vẫn là **xong việc tự commit + push, không chờ người dùng nhắc lại**.
+> **Mốc mới nhất:** DEC-066 đã hoàn tất: `/admin/reports` mặc định tháng hiện tại, filter thu gọn và phân
+> trang nhảy trực tiếp; truy vấn vẫn 20 dòng, sort ổn định và đã EXPLAIN trên 100.002 dòng. Quy tắc đứng
+> vẫn là **xong việc tự commit + push, không chờ người dùng nhắc lại**.
 
 > ## ⚠ NGHIỆP VỤ ĐÃ ĐỔI Ở PHASE 13 — ĐỌC TRƯỚC KHI TIN BẤT KỲ MỤC NÀO BÊN DƯỚI
 >
@@ -45,15 +45,15 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Phase | **PHASE 15 — ĐÃ ĐÓNG** (2026-08-11, DEC-065). Hệ loading ba lớp đã phủ điều hướng, route và thao tác; commit `668835d` đã push. Các nợ thiết bị thật cũ của Phase 6/11 không đổi |
+| Phase | **PHASE 16 — ĐÃ ĐÓNG** (2026-08-11, DEC-066). Báo cáo Admin mặc định tháng hiện tại, filter progressive disclosure và phân trang trực tiếp cho dữ liệu lớn. Các nợ thiết bị thật cũ của Phase 6/11 không đổi |
 | Migration | ✅ Local **8/8** · Cloud **8/8** — `0008` đẩy ngày 2026-08-10, đã xác minh **7 phép kiểm** (GRANT, `anon` bị chặn, dữ liệu cũ còn nguyên, `convalidated`) — bảng đầy đủ ở `SESSION_CHECKPOINT.md § Database State` |
-| Source code | **ĐẦY ĐỦ v1.** Next.js 16.3.0 App Router · **20 route chạy thật** · loading DEC-065 · luồng báo cáo ngày hai nửa · KPI engine · ảnh 9:16 · lịch sử · toàn bộ khu vực Admin · **786 Vitest** + **171 lượt E2E** |
+| Source code | **ĐẦY ĐỦ v1.** Next.js 16.3.0 App Router · **20 route chạy thật** · loading DEC-065 · Admin reports DEC-066 · luồng báo cáo ngày hai nửa · KPI engine · ảnh 9:16 · lịch sử · toàn bộ khu vực Admin · **802 Vitest** |
 | Git | Nhánh `main`, remote `origin` → GitHub `LeDuyKhangZz/BikeForce-Bicycle-Sales-Management` (DEC-028). ⚠ **Câu "`git push` không chạy được từ agent" là SAI và đã bị xoá khỏi dòng này ngày 2026-08-11** — nó chạy được, đã push thật nhiều lần (gần nhất `8b698f6`). Nó chỉ đỏ khi Git Credential Manager hết cache. **Người dùng yêu cầu thẳng: XONG VIỆC LÀ COMMIT VÀ PUSH LUÔN, không hỏi, không bàn giao lệnh push.** Chỉ nhờ người dùng chạy tay khi lệnh push đã chạy và đã đỏ vì credential |
 | Supabase **local** | ✅ Chạy thật — Docker + CLI 2.111.0, Postgres 17.6. ⚠ Sau `db reset` phải restart 3 container, nếu không đăng nhập nhận `502` (ISSUE-012). ⚠ **Docker chết giữa lượt E2E = thiếu RAM trong WSL2, không phải hồi quy** — trần `.wslconfig` là `3GB` đặt cho **2 dự án**; nếu máy đang mở stack Supabase của dự án khác thì **tắt bớt** trước khi chạy E2E. Dựng lại: `wsl --shutdown` → `Start-Process 'Docker Desktop.exe'` (KHÔNG dùng `Start-Service`, cần admin) — ISSUE-024 |
 | Supabase **cloud** | ✅ **`rnmywhwanpxmipqducqu` đủ 7/7 migration** (`0006` + `0007` đẩy ngày 2026-08-10). Đã kiểm thật: 5 hàm `admin_*` tồn tại, `anon` không execute được, signup vẫn tắt (`422`), schema khớp local. ⚠ **Seed KHÔNG được đẩy ⇒ cloud chưa có user nào** — phải chạy runbook tạo Admin đầu tiên (`docs/09 §10`) |
 | Build / Typecheck / Lint | ✅ **PASS thật** (2026-08-11): cả 3 exit 0, lint 0 error/0 warning, build ra **20 route** |
-| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **786/786**; riêng unit **592/592** |
-| E2E / a11y | ✅ **PASS thật**: **159 passed / 12 skipped / 0 failed** trong 171 lượt trên 3 project; loading riêng **6/6**; axe serious/critical vẫn xanh |
+| Unit / Integration / RLS | ✅ **PASS thật**: `npm test` → **802/802**; riêng nhóm Admin mới **102/102**, DB/RLS liên quan **38/38** |
+| E2E / a11y | ✅ **PASS thật**: Admin hiện hành **36/36** trên 3 project; full regression gần nhất **159 passed / 12 skipped / 0 failed**; axe serious/critical vẫn xanh |
 | Lighthouse | ❌ **N/A — chưa chạy.** Không được ghi PASS |
 | Chặn tiến độ | ✅ **Không còn chốt chặn nào.** **18/18 OQ** đã trả lời; **45 DEC** và 25 BR đều `APPROVED` |
 

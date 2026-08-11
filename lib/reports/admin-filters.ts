@@ -15,12 +15,19 @@
  *  thuần, mọi tổ hợp kỳ quặc kiểm được bằng unit test không cần database.
  *
  *  Thứ tự ưu tiên khi có nhiều chiều ngày cùng lúc — **hẹp nhất thắng**:
- *      `date` (một ngày)  →  `from`+`to` (khoảng)  →  `month` (cả tháng)
+ *      `date` → `from`+`to` → `month` → `period=all` → tháng hiện tại
  *  Lý do: người dùng vừa bấm một ngày cụ thể thì đó là ý định mới nhất; giữ
  *  `month` cũ sẽ ra một kết quả rộng hơn thứ họ vừa chọn.
  */
-import { isValidVietnamDate } from '@/lib/date';
-import { getVietnamMonthRange } from '@/lib/date';
+import {
+  formatVietnamDate,
+  formatVietnamMonth,
+  getVietnamCurrentMonth,
+  getVietnamMonthRange,
+  isValidVietnamDate,
+  shiftVietnamMonth,
+} from '@/lib/date';
+import { REPORT_STATUS_LABEL } from '@/lib/reports/report-status';
 import type { Database } from '@/types/database.types';
 
 type ReportStatus = Database['public']['Enums']['report_status'];
@@ -30,6 +37,7 @@ export const ADMIN_REPORT_PARAMS = {
   FROM: 'from',
   TO: 'to',
   MONTH: 'month',
+  PERIOD: 'period',
   SALES: 'salesId',
   STATUS: 'status',
   SEARCH: 'q',
@@ -47,6 +55,7 @@ export type AdminReportSearchParams = {
   from?: string;
   to?: string;
   month?: string;
+  period?: 'all';
   salesId?: string;
   status?: string;
   q?: string;
@@ -62,9 +71,31 @@ export type AdminReportFilters = {
   /** Chuỗi tìm theo tên Sales, đã trim. `null` = không tìm. */
   search: string | null;
   /** Ghi lại chiều ngày đang dùng để giao diện tô đúng ô đang chọn. */
-  dateMode: 'DAY' | 'RANGE' | 'MONTH' | 'ALL';
+  dateMode: 'DAY' | 'RANGE' | 'MONTH' | 'ALL' | 'CURRENT_MONTH';
   /** Giá trị đã chuẩn hoá, để render lại đúng vào ô nhập. */
-  raw: { date: string | null; from: string | null; to: string | null; month: string | null };
+  raw: {
+    date: string | null;
+    from: string | null;
+    to: string | null;
+    month: string | null;
+    period: 'all' | null;
+  };
+};
+
+export type AdminReportFilterKey = 'TIME' | 'SALES' | 'STATUS' | 'SEARCH';
+
+export type AdminReportFilterSummary = {
+  key: AdminReportFilterKey;
+  label: string;
+  removable: boolean;
+};
+
+export type AdminReportMonthNavigation = {
+  label: string;
+  previousHref: string;
+  nextHref: string | null;
+  currentHref: string;
+  isCurrentMonth: boolean;
 };
 
 /** Hai giá trị hợp lệ của `report_status` — BR-008, DEC-020. */
@@ -106,7 +137,7 @@ export function parseAdminReportFilters(params: AdminReportSearchParams): AdminR
       ...base,
       range: { from: params.date, to: params.date },
       dateMode: 'DAY',
-      raw: { date: params.date, from: null, to: null, month: null },
+      raw: { date: params.date, from: null, to: null, month: null, period: null },
     };
   }
 
@@ -127,7 +158,7 @@ export function parseAdminReportFilters(params: AdminReportSearchParams): AdminR
       ...base,
       range: { from, to },
       dateMode: 'RANGE',
-      raw: { date: null, from, to, month: null },
+      raw: { date: null, from, to, month: null, period: null },
     };
   }
 
@@ -140,25 +171,39 @@ export function parseAdminReportFilters(params: AdminReportSearchParams): AdminR
         ...base,
         range: monthRange,
         dateMode: 'MONTH',
-        raw: { date: null, from: null, to: null, month: params.month },
+        raw: { date: null, from: null, to: null, month: params.month, period: null },
       };
     }
   }
 
-  // 4) Không lọc theo ngày. `getAdminReports` vẫn phân trang nên đây KHÔNG phải
-  //    "trả về toàn bộ bảng" (AGENTS.md §5).
+  // 4) Toàn bộ lịch sử chỉ khi người dùng chọn tường minh. `getAdminReports`
+  //    vẫn phân trang nên đây KHÔNG phải "trả về toàn bộ bảng" (AGENTS.md §5).
+  if (params.period === 'all') {
+    return {
+      ...base,
+      range: null,
+      dateMode: 'ALL',
+      raw: { date: null, from: null, to: null, month: null, period: 'all' },
+    };
+  }
+
+  // 5) Không có chiều thời gian hợp lệ → tháng hiện tại theo giờ Việt Nam.
+  //    Đây là mặc định an toàn cho một bảng tăng mãi theo năm (DEC-066).
+  const currentMonth = getVietnamCurrentMonth();
+  const currentRange = getVietnamMonthRange(currentMonth);
+
   return {
     ...base,
-    range: null,
-    dateMode: 'ALL',
-    raw: { date: null, from: null, to: null, month: null },
+    range: currentRange ?? { from: `${currentMonth}-01`, to: `${currentMonth}-01` },
+    dateMode: 'CURRENT_MONTH',
+    raw: { date: null, from: null, to: null, month: currentMonth, period: null },
   };
 }
 
-/** `true` khi có ít nhất một bộ lọc đang bật — để hiện nút "Xoá lọc". */
+/** `true` khi có ít nhất một điều kiện ngoài mặc định tháng hiện tại. */
 export function hasActiveFilters(filters: AdminReportFilters): boolean {
   return (
-    filters.range !== null ||
+    filters.dateMode !== 'CURRENT_MONTH' ||
     filters.salesId !== null ||
     filters.status !== null ||
     filters.search !== null
@@ -181,7 +226,12 @@ export function buildAdminReportQuery(
   if (filters.raw.date) search.set(ADMIN_REPORT_PARAMS.DATE, filters.raw.date);
   if (filters.raw.from) search.set(ADMIN_REPORT_PARAMS.FROM, filters.raw.from);
   if (filters.raw.to) search.set(ADMIN_REPORT_PARAMS.TO, filters.raw.to);
-  if (filters.raw.month) search.set(ADMIN_REPORT_PARAMS.MONTH, filters.raw.month);
+  // Tháng hiện tại là mặc định canonical của `/admin/reports`, nên không cần
+  // ghi lên URL. Tháng do người dùng chọn thì phải giữ để deep-link chính xác.
+  if (filters.raw.month && filters.dateMode === 'MONTH') {
+    search.set(ADMIN_REPORT_PARAMS.MONTH, filters.raw.month);
+  }
+  if (filters.raw.period) search.set(ADMIN_REPORT_PARAMS.PERIOD, filters.raw.period);
   if (filters.salesId) search.set(ADMIN_REPORT_PARAMS.SALES, filters.salesId);
   if (filters.status) search.set(ADMIN_REPORT_PARAMS.STATUS, filters.status);
   if (filters.search) search.set(ADMIN_REPORT_PARAMS.SEARCH, filters.search);
@@ -191,6 +241,125 @@ export function buildAdminReportQuery(
   }
 
   return search;
+}
+
+function removeTimeParams(search: URLSearchParams): void {
+  search.delete(ADMIN_REPORT_PARAMS.DATE);
+  search.delete(ADMIN_REPORT_PARAMS.FROM);
+  search.delete(ADMIN_REPORT_PARAMS.TO);
+  search.delete(ADMIN_REPORT_PARAMS.MONTH);
+  search.delete(ADMIN_REPORT_PARAMS.PERIOD);
+  search.delete(ADMIN_REPORT_PARAMS.PAGE);
+}
+
+/** Giữ mọi bộ lọc khác và chuyển thẳng sang một tháng cụ thể. */
+export function adminReportsMonthPath(filters: AdminReportFilters, month: string): string {
+  const range = getVietnamMonthRange(month);
+  if (range === null) return adminReportsPath(filters);
+
+  const search = buildAdminReportQuery(filters);
+  removeTimeParams(search);
+  search.set(ADMIN_REPORT_PARAMS.MONTH, month);
+
+  return `${ADMIN_REPORTS_PATH}?${search.toString()}`;
+}
+
+/** Giữ mọi bộ lọc khác và mở toàn bộ lịch sử một cách tường minh. */
+export function adminReportsAllTimePath(filters: AdminReportFilters): string {
+  const search = buildAdminReportQuery(filters);
+  removeTimeParams(search);
+  search.set(ADMIN_REPORT_PARAMS.PERIOD, 'all');
+
+  return `${ADMIN_REPORTS_PATH}?${search.toString()}`;
+}
+
+/** Bỏ đúng một chip, giữ nguyên các điều kiện còn lại và quay về trang 1. */
+export function adminReportsPathWithoutFilter(
+  filters: AdminReportFilters,
+  key: AdminReportFilterKey,
+): string {
+  const search = buildAdminReportQuery(filters);
+  search.delete(ADMIN_REPORT_PARAMS.PAGE);
+
+  if (key === 'TIME') removeTimeParams(search);
+  if (key === 'SALES') search.delete(ADMIN_REPORT_PARAMS.SALES);
+  if (key === 'STATUS') search.delete(ADMIN_REPORT_PARAMS.STATUS);
+  if (key === 'SEARCH') search.delete(ADMIN_REPORT_PARAMS.SEARCH);
+
+  const query = search.toString();
+  return query === '' ? ADMIN_REPORTS_PATH : `${ADMIN_REPORTS_PATH}?${query}`;
+}
+
+/** Số điều kiện ngoài mặc định "tháng hiện tại", dùng cho nhãn bộ lọc nâng cao. */
+export function countActiveAdminReportFilters(filters: AdminReportFilters): number {
+  return (
+    (filters.dateMode === 'CURRENT_MONTH' ? 0 : 1) +
+    (filters.salesId === null ? 0 : 1) +
+    (filters.status === null ? 0 : 1) +
+    (filters.search === null ? 0 : 1)
+  );
+}
+
+/** Chuỗi tóm tắt đã sẵn sàng render; component không tự format ngày/trạng thái. */
+export function buildAdminReportFilterSummaries(
+  filters: AdminReportFilters,
+  salesName: string | null,
+): AdminReportFilterSummary[] {
+  let timeLabel: string;
+
+  if (filters.dateMode === 'DAY' && filters.raw.date !== null) {
+    timeLabel = formatVietnamDate(filters.raw.date);
+  } else if (
+    filters.dateMode === 'RANGE' &&
+    filters.raw.from !== null &&
+    filters.raw.to !== null
+  ) {
+    timeLabel = `${formatVietnamDate(filters.raw.from)} → ${formatVietnamDate(filters.raw.to)}`;
+  } else if (filters.dateMode === 'ALL') {
+    timeLabel = 'Tất cả thời gian';
+  } else {
+    timeLabel = formatVietnamMonth(filters.raw.month ?? getVietnamCurrentMonth());
+  }
+
+  const summaries: AdminReportFilterSummary[] = [
+    { key: 'TIME', label: timeLabel, removable: filters.dateMode !== 'CURRENT_MONTH' },
+  ];
+
+  if (filters.salesId !== null) {
+    summaries.push({ key: 'SALES', label: salesName ?? 'Nhân viên đã chọn', removable: true });
+  }
+  if (filters.status !== null) {
+    summaries.push({ key: 'STATUS', label: REPORT_STATUS_LABEL[filters.status], removable: true });
+  }
+  if (filters.search !== null) {
+    summaries.push({ key: 'SEARCH', label: `Tên chứa “${filters.search}”`, removable: true });
+  }
+
+  return summaries;
+}
+
+/** Điều hướng tháng nhanh, không cho đi tới tháng tương lai. */
+export function buildAdminReportMonthNavigation(
+  filters: AdminReportFilters,
+): AdminReportMonthNavigation {
+  const currentMonth = getVietnamCurrentMonth();
+  const anchorMonth =
+    filters.dateMode === 'MONTH' || filters.dateMode === 'CURRENT_MONTH'
+      ? (filters.raw.month ?? currentMonth)
+      : currentMonth;
+  const previousMonth = shiftVietnamMonth(anchorMonth, -1) ?? currentMonth;
+  const nextMonth = shiftVietnamMonth(anchorMonth, 1);
+
+  return {
+    label: formatVietnamMonth(anchorMonth),
+    previousHref: adminReportsMonthPath(filters, previousMonth),
+    nextHref:
+      nextMonth !== null && nextMonth <= currentMonth
+        ? adminReportsMonthPath(filters, nextMonth)
+        : null,
+    currentHref: adminReportsMonthPath(filters, currentMonth),
+    isCurrentMonth: anchorMonth === currentMonth,
+  };
 }
 
 export function adminReportsPath(

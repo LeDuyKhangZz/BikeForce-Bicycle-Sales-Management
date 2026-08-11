@@ -39,6 +39,10 @@ export type PageInfo = {
   rangeEnd: number;
 };
 
+export type PaginationItem =
+  | { type: 'PAGE'; page: number }
+  | { type: 'ELLIPSIS'; position: 'START' | 'END' };
+
 /**
  * `?page=` → số trang 1-based dùng được.
  *
@@ -106,4 +110,42 @@ export function buildPageInfo(
     rangeStart,
     rangeEnd,
   };
+}
+
+/**
+ * Cụm số trang gọn cho màn hình rộng: luôn có trang đầu/cuối và tối đa năm
+ * trang quanh vị trí hiện tại. Dấu ba chấm chỉ xuất hiện khi thật sự có khoảng
+ * trống, không tạo nút cho hàng nghìn trang.
+ */
+export function buildPaginationItems(pageInfo: PageInfo): PaginationItem[] {
+  const { page, pageCount } = pageInfo;
+
+  if (pageCount <= 7) {
+    return Array.from({ length: pageCount }, (_, index) => ({
+      type: 'PAGE' as const,
+      page: index + 1,
+    }));
+  }
+
+  const windowStart = Math.max(2, Math.min(page - 2, pageCount - 5));
+  const windowEnd = Math.min(pageCount - 1, windowStart + 4);
+  const items: PaginationItem[] = [{ type: 'PAGE', page: 1 }];
+
+  if (windowStart > 2) items.push({ type: 'ELLIPSIS', position: 'START' });
+  for (let visiblePage = windowStart; visiblePage <= windowEnd; visiblePage += 1) {
+    items.push({ type: 'PAGE', page: visiblePage });
+  }
+  if (windowEnd < pageCount - 1) items.push({ type: 'ELLIPSIS', position: 'END' });
+
+  items.push({ type: 'PAGE', page: pageCount });
+  return items;
+}
+
+const integerFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+
+/** Nhãn số dòng đã format, để component không chứa `Intl.NumberFormat`. */
+export function formatPageRangeLabel(pageInfo: PageInfo): string {
+  if (pageInfo.total === 0) return 'Không có báo cáo';
+
+  return `Báo cáo ${integerFormatter.format(pageInfo.rangeStart)}–${integerFormatter.format(pageInfo.rangeEnd)} trên ${integerFormatter.format(pageInfo.total)}`;
 }

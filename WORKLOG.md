@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 15 — Hệ phản hồi loading thống nhất (đã đóng) | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -10,9 +10,10 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 
 ## Current Phase
 
-**PHASE 15 ĐÃ ĐÓNG NGÀY 2026-08-11 (DEC-065).** Hệ loading ba lớp đã phủ điều hướng, route và thao
-tác; commit tính năng `668835d` đã lên `origin/main`. Quality gate thật: build/typecheck/lint xanh ·
-Vitest **786/786** · E2E **159 passed / 12 skipped / 0 failed** · nhìn trực tiếp 375px và 1440px.
+**PHASE 16 ĐÃ ĐÓNG NGÀY 2026-08-11 (DEC-066).** `/admin/reports` nay mặc định tháng hiện tại,
+có bộ lọc progressive disclosure, chip tóm tắt và điều hướng trực tiếp cho dữ liệu lớn. Build/typecheck/lint,
+Vitest **802/802**, 38 integration/RLS test trên fixture 100.002 báo cáo và E2E Admin **36/36** trên ba
+project đều đã xanh.
 
 Quy tắc đứng của người dùng vẫn là: hoàn tất thay đổi thì agent **tự commit + push**, không chờ nhắc lại;
 chi tiết vận hành nằm ở `CLAUDE.md § Git`.
@@ -59,6 +60,7 @@ cloud** (`docs/09 §12`) · toàn bộ Phase 12.
 - [ ] Phase 13 — Nhận diện thương hiệu & soát UI/UX *(13a ✅ · 13b ✅ trừ 2 mục cần **mắt người** và **thiết bị thật** · 13c ✅ đủ 3 nhóm A/B/C)*
 - [x] Phase 14 — Hoàn thiện chia sẻ ảnh và hồ sơ Admin *(đóng 2026-08-11, DEC-064)*
 - [x] Phase 15 — Hệ phản hồi loading thống nhất *(đóng 2026-08-11, DEC-065 · `668835d`)*
+- [x] Phase 16 — Báo cáo Admin cho dữ liệu lớn *(đóng 2026-08-11, DEC-066)*
 
 > Ghi chú về dấu `[x]` của Phase 0: đánh dấu này chỉ có nghĩa "**deliverable tài liệu của Phase 0
 > đã tạo đủ**". Điều kiện đóng phase hoàn toàn (bao gồm "OPEN QUESTION mức BLOCKING đã được trả
@@ -2521,3 +2523,35 @@ thiết bị thật (ISSUE-003), Lighthouse sau deploy và siết RLS bằng m�
 
 **Next:** theo dõi Vercel build commit `668835d`; khi có thiết bị thật thì kiểm hai đường vòng Zalo và
 Lighthouse theo các nợ đã ghi, không viết lại hệ loading DEC-065.
+
+---
+
+### Entry 025 — PHASE 16: Báo cáo Admin cho dữ liệu lớn (DEC-066)
+
+**Date:** 2026-08-11
+
+**Phase:** PHASE 16 — Báo cáo Admin cho dữ liệu lớn (**ĐÃ ĐÓNG**)
+
+**Completed:**
+
+1. Mặc định URL trống về tháng hiện tại theo giờ Việt Nam; thêm `period=all` và khoá thứ tự ưu tiên các
+   kiểu thời gian bằng helper thuần + unit test.
+2. Thiết kế lại filter theo progressive disclosure: tìm Sales/đổi tháng luôn hiện, advanced đóng mặc định,
+   chip tóm tắt và bỏ riêng từng điều kiện; giữ Server Component và GET query string.
+3. Thay thanh phân trang bằng nhãn phạm vi, cụm số trang desktop và ô nhảy trang mobile; mọi URL giữ filter,
+   thay filter quay về trang 1 và `returnTo` giữ đúng trang khi quay lại từ chi tiết.
+4. Giữ service 20 dòng, filter PostgreSQL, sort `report_date DESC, id DESC`, CSV 5.000; mở fixture index lên
+   100.002 báo cáo và chạy `EXPLAIN ANALYZE` thật.
+5. Kiểm trực quan UI thật ở 375×812 và 1440×900; vùng advanced đóng mặc định, bố cục không thấy tràn ngang.
+
+**Tests đã chạy thật:** build/typecheck/lint exit 0; full Vitest **802/802** (32 file); unit liên quan
+**102/102**; integration + RLS liên quan **38/38** trên fixture 100.002 dòng; E2E Admin **36/36** trên
+`mobile-375`, `desktop-1440`, `zalo-like`.
+
+**Errors:** lượt E2E đầu có 33 pass/3 fail vì regex giả định thứ tự query string, trong khi URL và UI đúng;
+đã đổi assertion sang `URLSearchParams`. Hai lần gọi tiếp theo đứng ở webServer vì sandbox không được chạm
+Docker/Supabase local; chạy lại đúng quyền dự án thì UC-13 xanh 3/3 và full file xanh 36/36.
+
+**Decision:** DEC-066. Không có migration, policy, dependency hay business rule KPI mới.
+
+**Remaining:** không còn code/test trong phạm vi; commit và push `origin/main`.

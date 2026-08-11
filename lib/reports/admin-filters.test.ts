@@ -9,21 +9,44 @@
  *   • **URL sinh ra phải khứ hồi được** — nếu không, nút phân trang và link tải
  *     CSV sẽ trỏ tới một bộ lọc khác với bảng đang hiển thị (FR-034).
  */
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  adminReportsAllTimePath,
+  adminReportsMonthPath,
   adminReportsPath,
+  adminReportsPathWithoutFilter,
+  buildAdminReportFilterSummaries,
+  buildAdminReportMonthNavigation,
+  countActiveAdminReportFilters,
   hasActiveFilters,
   parseAdminReportFilters,
   MAX_SEARCH_LENGTH,
   type AdminReportSearchParams,
 } from './admin-filters';
 
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-08-11T03:00:00.000Z'));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe('parseAdminReportFilters — chiều ngày', () => {
-  it('không tham số nào → không lọc ngày', () => {
+  it('không tham số nào → tháng hiện tại theo giờ Việt Nam', () => {
     const filters = parseAdminReportFilters({});
+    expect(filters.range).toEqual({ from: '2026-08-01', to: '2026-08-31' });
+    expect(filters.dateMode).toBe('CURRENT_MONTH');
+    expect(filters.raw.month).toBe('2026-08');
+  });
+
+  it('period=all mới mở toàn bộ lịch sử', () => {
+    const filters = parseAdminReportFilters({ period: 'all' });
     expect(filters.range).toBeNull();
     expect(filters.dateMode).toBe('ALL');
+    expect(filters.raw.period).toBe('all');
   });
 
   it('một ngày cụ thể → khoảng một ngày, inclusive hai đầu', () => {
@@ -79,7 +102,7 @@ describe('parseAdminReportFilters — chiều ngày', () => {
   });
 
   it('thiếu MỘT đầu của khoảng → rơi xuống chiều tiếp theo', () => {
-    expect(parseAdminReportFilters({ from: '2026-08-01' }).dateMode).toBe('ALL');
+    expect(parseAdminReportFilters({ from: '2026-08-01' }).dateMode).toBe('CURRENT_MONTH');
     expect(parseAdminReportFilters({ from: '2026-08-01', month: '2026-08' }).dateMode).toBe(
       'MONTH',
     );
@@ -91,11 +114,11 @@ describe('parseAdminReportFilters — chiều ngày', () => {
     ['tháng 13', { month: '2026-13' }],
     ['chuỗi rác', { date: 'abc', month: 'xyz' }],
     ['khoảng có một đầu rác', { from: '2026-08-01', to: 'abc' }],
-  ])('%s → bỏ qua, không lọc ngày, KHÔNG throw', (_label, params) => {
+  ])('%s → bỏ qua, về tháng hiện tại, KHÔNG throw', (_label, params) => {
     expect(() => parseAdminReportFilters(params)).not.toThrow();
     const filters = parseAdminReportFilters(params);
-    expect(filters.range).toBeNull();
-    expect(filters.dateMode).toBe('ALL');
+    expect(filters.range).toEqual({ from: '2026-08-01', to: '2026-08-31' });
+    expect(filters.dateMode).toBe('CURRENT_MONTH');
   });
 
   it('khoảng trả về luôn có from <= to', () => {
@@ -170,6 +193,7 @@ describe('hasActiveFilters', () => {
   it.each([
     ['ngày', { date: '2026-08-07' }],
     ['tháng', { month: '2026-08' }],
+    ['tất cả thời gian', { period: 'all' as const }],
     ['trạng thái', { status: 'COMPLETED' }],
     ['tìm kiếm', { q: 'Khang' }],
     ['Sales', { salesId: '8f1c0000-0000-4000-8000-000000000001' }],
@@ -202,6 +226,7 @@ describe('adminReportsPath — URL phải khứ hồi được', () => {
     ['một ngày', { date: '2026-08-07' }],
     ['khoảng ngày', { from: '2026-08-01', to: '2026-08-15' }],
     ['tháng', { month: '2026-08' }],
+    ['tất cả thời gian', { period: 'all' as const }],
     ['trạng thái + tìm kiếm', { status: 'COMPLETED', q: 'Lê Duy Khang' }],
     [
       'đủ mọi chiều',
@@ -231,5 +256,95 @@ describe('adminReportsPath — URL phải khứ hồi được', () => {
     const url = new URL(adminReportsPath(filters), 'https://bikeforce.test');
 
     expect(url.searchParams.get('q')).toBe('Lê & Khang');
+  });
+});
+
+describe('đường dẫn thao tác nhanh và chip bộ lọc', () => {
+  const salesId = '8f1c0000-0000-4000-8000-000000000001';
+
+  it('chuyển tháng giữ Sales, trạng thái, tìm kiếm và bỏ trang cũ', () => {
+    const filters = parseAdminReportFilters({
+      period: 'all',
+      salesId,
+      status: 'COMPLETED',
+      q: 'Khang',
+    });
+    const url = new URL(adminReportsMonthPath(filters, '2026-07'), 'https://bikeforce.test');
+
+    expect(url.searchParams.get('month')).toBe('2026-07');
+    expect(url.searchParams.get('period')).toBeNull();
+    expect(url.searchParams.get('salesId')).toBe(salesId);
+    expect(url.searchParams.get('status')).toBe('COMPLETED');
+    expect(url.searchParams.get('q')).toBe('Khang');
+    expect(url.searchParams.get('page')).toBeNull();
+  });
+
+  it('mở toàn thời gian là lựa chọn tường minh và giữ bộ lọc khác', () => {
+    const filters = parseAdminReportFilters({ month: '2026-07', status: 'MORNING_SUBMITTED' });
+    const url = new URL(adminReportsAllTimePath(filters), 'https://bikeforce.test');
+
+    expect(url.searchParams.get('period')).toBe('all');
+    expect(url.searchParams.get('month')).toBeNull();
+    expect(url.searchParams.get('status')).toBe('MORNING_SUBMITTED');
+  });
+
+  it('bỏ từng chip không làm mất các chip còn lại', () => {
+    const filters = parseAdminReportFilters({
+      month: '2026-07',
+      salesId,
+      status: 'COMPLETED',
+      q: 'Khang',
+    });
+    const url = new URL(
+      adminReportsPathWithoutFilter(filters, 'STATUS'),
+      'https://bikeforce.test',
+    );
+
+    expect(url.searchParams.get('status')).toBeNull();
+    expect(url.searchParams.get('month')).toBe('2026-07');
+    expect(url.searchParams.get('salesId')).toBe(salesId);
+    expect(url.searchParams.get('q')).toBe('Khang');
+  });
+
+  it('bỏ chip thời gian đưa về tháng hiện tại canonical', () => {
+    const filters = parseAdminReportFilters({ period: 'all', q: 'Khang' });
+    expect(adminReportsPathWithoutFilter(filters, 'TIME')).toBe('/admin/reports?q=Khang');
+  });
+
+  it('đếm điều kiện không tính tháng hiện tại mặc định', () => {
+    expect(countActiveAdminReportFilters(parseAdminReportFilters({}))).toBe(0);
+    expect(
+      countActiveAdminReportFilters(
+        parseAdminReportFilters({ month: '2026-07', status: 'COMPLETED', q: 'Khang' }),
+      ),
+    ).toBe(3);
+  });
+
+  it('summary format sẵn ngày, trạng thái và tên Sales', () => {
+    const filters = parseAdminReportFilters({
+      date: '2026-08-07',
+      salesId,
+      status: 'COMPLETED',
+      q: 'Khang',
+    });
+
+    expect(buildAdminReportFilterSummaries(filters, 'Lê Duy Khang')).toEqual([
+      { key: 'TIME', label: 'Thứ Sáu, 07/08/2026', removable: true },
+      { key: 'SALES', label: 'Lê Duy Khang', removable: true },
+      { key: 'STATUS', label: 'Đã hoàn thành', removable: true },
+      { key: 'SEARCH', label: 'Tên chứa “Khang”', removable: true },
+    ]);
+  });
+
+  it('điều hướng tháng không cho đi tới tương lai', () => {
+    const current = buildAdminReportMonthNavigation(parseAdminReportFilters({}));
+    expect(current.label).toBe('Tháng 08/2026');
+    expect(current.previousHref).toContain('month=2026-07');
+    expect(current.nextHref).toBeNull();
+    expect(current.isCurrentMonth).toBe(true);
+
+    const past = buildAdminReportMonthNavigation(parseAdminReportFilters({ month: '2026-06' }));
+    expect(past.nextHref).toContain('month=2026-07');
+    expect(past.isCurrentMonth).toBe(false);
   });
 });

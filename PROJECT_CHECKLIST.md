@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 15 — Hệ phản hồi loading thống nhất (đã đóng) | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -864,6 +864,23 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] E2E loading mới — **6/6 PASS** trên 3 project; full regression — **159 passed / 12 skipped / 0 failed**
 - [x] Nhìn tận mắt 375px + 1440px, gồm pending link và route skeleton; không tràn ngang
 - [x] Commit tính năng **`668835d`** + push `origin/main`
+
+## Phase 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066)
+
+- [x] URL không có bộ lọc thời gian mặc định tháng hiện tại theo giờ Việt Nam
+- [x] `period=all` là lựa chọn tất cả thời gian tường minh; ưu tiên ngày → khoảng → tháng → all → hiện tại
+- [x] Tìm Sales và điều hướng tháng luôn hiện; bộ lọc nâng cao đóng mặc định; có chip bỏ riêng điều kiện
+- [x] Mobile một cột; desktop dạng hàng/lưới; không dùng client fetch, infinite scroll hay virtualization
+- [x] Phân trang hiện phạm vi, đầu/trước/cụm trang/sau/cuối và ô nhảy trang; link giữ nguyên filter
+- [x] Service giữ 20 dòng/trang, `report_date DESC, id DESC`, lọc PostgreSQL và CSV tối đa 5.000 dòng
+- [x] Helper/filter/pagination unit liên quan — **102/102 passed**
+- [x] Integration + RLS liên quan — **38/38 passed**, fixture **100.002 báo cáo** + `EXPLAIN ANALYZE`
+- [x] Full Vitest — **802/802 passed** (32 file)
+- [x] `npm run typecheck` và `npm run lint` — exit 0
+- [x] `npm run build` — exit 0, 20 route
+- [x] Kiểm trực quan 375×812 và 1440×900 — không thấy tràn ngang, advanced đóng mặc định
+- [x] E2E Admin — **36/36 passed** trên `mobile-375`, `desktop-1440`, `zalo-like`
+- [x] DEC-066 + docs UI/data flow/testing + checklist/worklog/checkpoint đã cập nhật
 
 ## OPEN QUESTIONS
 

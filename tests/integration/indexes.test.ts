@@ -48,8 +48,9 @@ const PERF_EMAILS = [
 ] as const;
 
 /** Ngày bắt đầu vùng dữ liệu tổng hợp — đủ xa để không đụng seed lẫn fixture khác. */
-const SYNTHETIC_FROM = '2019-01-01';
-const SYNTHETIC_DAYS = 900;
+const SYNTHETIC_FROM = '1935-01-01';
+// 3 Sales × 33.334 ngày = 100.002 báo cáo — quy mô người dùng yêu cầu đo.
+const SYNTHETIC_DAYS = 33_334;
 
 let salesIds: string[] = [];
 let adminId = '';
@@ -110,8 +111,8 @@ beforeAll(async () => {
   await setRole(adminId, 'ADMIN');
 
   /*
-   * 3 Sales × 900 ngày = 2.700 dòng. `generate_series` sinh thẳng trong SQL —
-   * 2.700 lượt round-trip từ Node sẽ chậm hơn hàng chục lần.
+   * 3 Sales × 33.334 ngày = 100.002 dòng. `generate_series` sinh thẳng trong
+   * SQL — hàng trăm nghìn lượt round-trip từ Node sẽ chậm hơn hàng chục lần.
    *
    * Ngày đều nằm trong quá khứ nên `ck_report_not_future` chấp nhận;
    * `UNIQUE(sales_id, report_date)` được tôn trọng vì mỗi Sales một chuỗi ngày
@@ -162,8 +163,8 @@ afterAll(async () => {
 describe('khối lượng dữ liệu tổng hợp', () => {
   it('đã chèn đủ dòng để planner có lý do chọn index', async () => {
     const result = await sql<{ n: string }>(
-      'select count(*)::text as n from public.daily_reports where report_date >= $1 and report_date < $2',
-      [SYNTHETIC_FROM, '2022-01-01'],
+      'select count(*)::text as n from public.daily_reports where sales_id = any($1::uuid[])',
+      [salesIds],
     );
 
     expect(Number(result.rows[0]?.n ?? '0')).toBeGreaterThanOrEqual(SYNTHETIC_DAYS * 3);
@@ -184,7 +185,7 @@ describe('FR-021 · /sales/history — lịch sử của MỘT Sales, phân tran
       from public.daily_reports
      where sales_id = $1
        and report_date between $2 and $3
-     order by report_date desc
+     order by report_date desc, id desc
      limit 20`;
 
   it('KHÔNG quét toàn bảng', async () => {
@@ -247,7 +248,7 @@ describe('FR-025 / FR-026 · /admin/reports — danh sách toàn đội có filt
     select id, sales_id, report_date, status
       from public.daily_reports
      where report_date between $1 and $2
-     order by report_date desc
+     order by report_date desc, id desc
      limit 20`;
 
   it('dùng idx_daily_reports_date_status và không sắp xếp lại', async () => {
@@ -256,6 +257,7 @@ describe('FR-025 / FR-026 · /admin/reports — danh sách toàn đội có filt
     expect(hasSeqScanOn(plan, 'daily_reports')).toBe(false);
     expect(indexesUsed(plan)).toContain('idx_daily_reports_date_status');
     expect(plan.some((node) => node['Node Type'] === 'Sort')).toBe(false);
+    expect(Number(plan[0]?.['Actual Rows'] ?? 0)).toBeLessThanOrEqual(20);
   });
 
   it('lọc thêm theo status vẫn đi qua cùng index', async () => {

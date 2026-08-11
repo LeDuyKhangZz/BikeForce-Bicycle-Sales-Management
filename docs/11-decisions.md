@@ -2025,3 +2025,39 @@ hai bài unit render server và E2E giữ request bằng cổng xác định đ�
 **Verification:** commit tính năng `668835d`; build/typecheck/lint exit 0; Vitest **786/786**; E2E
 loading **6/6** và full regression **159 passed / 12 skipped / 0 failed**; nhìn trực tiếp route skeleton
 ở 375px + 1440px. Commit đã push `origin/main` ngày 2026-08-11.
+
+---
+
+## DEC-066 — Danh sách báo cáo Admin ưu tiên tháng hiện tại và điều hướng trực tiếp
+
+**Date:** 2026-08-11
+
+**Decision:** `/admin/reports` tiếp tục phân trang server-side 20 dòng, lọc hoàn toàn trong PostgreSQL và
+sắp xếp ổn định `report_date DESC, id DESC`. URL không có bộ lọc thời gian được hiểu là **tháng hiện tại
+theo giờ Việt Nam**; `period=all` là lựa chọn tường minh để xem toàn bộ lịch sử. Thứ tự ưu tiên là một ngày
+→ khoảng ngày → tháng → tất cả thời gian → tháng hiện tại.
+
+Thanh lọc dùng progressive disclosure: tìm tên Sales và điều hướng tháng luôn hiện; nhân viên, trạng thái,
+một ngày, khoảng ngày và tất cả thời gian nằm trong vùng “Bộ lọc nâng cao” đóng mặc định. Chip tóm tắt luôn
+cho biết điều kiện đang áp dụng và cho phép bỏ riêng từng điều kiện. Phân trang desktop có đầu/trước/cụm số
+trang/sau/cuối; mobile giữ trước/sau và ô “Đi tới trang”. Mọi liên kết giữ nguyên bộ lọc, còn thay đổi bộ lọc
+luôn quay về trang 1.
+
+**Reason:** dữ liệu có thể tăng tới hàng trăm nghìn báo cáo, nhưng nhu cầu điều tra luôn bắt đầu từ khoảng
+thời gian gần hoặc một điều kiện cụ thể. Chỉ render 20 dòng mỗi trang nên infinite scroll và virtualization
+không đem lại lợi ích thực tế; chúng còn làm mất khả năng bookmark, quay lại đúng trang và nhảy thẳng tới
+lịch sử xa.
+
+**Alternatives:** giữ mặc định tất cả thời gian bị loại vì đẩy Admin vào một lịch sử quá rộng; infinite scroll
+bị loại vì điều hướng tuần tự; virtualization bị loại vì DOM tối đa chỉ 20 dòng; cursor/keyset pagination được
+hoãn vì sản phẩm cần tổng số trang và nhảy trang trực tiếp, trong khi `EXPLAIN ANALYZE` trên 100.002 dòng mô
+phỏng đã xác nhận truy vấn hiện tại dùng index và không có full sort.
+
+**Impact:** không đổi schema, RLS, trần CSV 5.000 hay Server Component/GET query string. Thay đổi nằm ở helper
+lọc/phân trang thuần, UI `/admin/reports`, integration/E2E liên quan và tài liệu UI/data flow/testing.
+
+**Status:** APPROVED (người dùng yêu cầu trực tiếp ngày 2026-08-11)
+
+**Verification:** build/typecheck/lint exit 0; full Vitest **802/802**; integration + RLS liên quan
+**38/38** với fixture 100.002 báo cáo; E2E Admin **36/36** trên ba project; kiểm trực quan 375×812 và
+1440×900 không thấy tràn ngang.

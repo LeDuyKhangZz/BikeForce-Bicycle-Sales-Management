@@ -49,6 +49,12 @@ test.describe('FR-025 / FR-026 / FR-027 — danh sách và chi tiết báo cáo'
     await expect(page).toHaveURL(/\/admin\/reports/);
     await expectNoHorizontalScroll(page);
 
+    // DEC-066 — URL trần mặc định tháng hiện tại, không còn mở toàn lịch sử.
+    await expect(visibleText(page, /Tháng \d{2}\/\d{4}/)).toBeVisible();
+    const advanced = page.locator('details').filter({ hasText: 'Bộ lọc nâng cao' });
+    await expect(advanced).not.toHaveAttribute('open', '');
+    await expect(page.getByLabel('Nhân viên')).not.toBeVisible();
+
     /*
      * Search theo tên Sales (`ilike`) — filter chạy SERVER-SIDE.
      * Tham số là `q`, không phải `search`: xem `REPORT_FILTER_PARAMS` trong
@@ -74,6 +80,24 @@ test.describe('FR-025 / FR-026 / FR-027 — danh sách và chi tiết báo cáo'
     });
 
     await page.goto(`/admin/reports?month=${previousMonth}`);
+    await page.getByText('Bộ lọc nâng cao').click();
+    await page.getByLabel('Nhân viên').selectOption({ label: E2E_DONE_SALES_NAME });
+    await page.getByLabel('Trạng thái').selectOption('COMPLETED');
+    await page.getByRole('button', { name: /Áp dụng bộ lọc/ }).click();
+    await expect(page).toHaveURL(/status=COMPLETED/);
+    const filteredUrl = new URL(page.url());
+    expect(filteredUrl.searchParams.get('month')).toBe(previousMonth);
+    expect(filteredUrl.searchParams.get('salesId')).not.toBeNull();
+    expect(filteredUrl.searchParams.get('status')).toBe('COMPLETED');
+    await expect(visibleText(page, E2E_DONE_SALES_NAME)).toBeVisible();
+    await expect(visibleText(page, 'Đã hoàn thành')).toBeVisible();
+
+    // Nhảy thẳng tới trang 2 — không bấm "Trang sau" tuần tự.
+    await page.getByLabel('Đi tới trang').fill('2');
+    await page.getByRole('button', { name: 'Mở trang đã nhập' }).click();
+    await expect(page).toHaveURL(/page=2/);
+    await expect(visibleText(page, /Báo cáo 21–\d+ trên/)).toBeVisible();
+
     const detailLink = page.locator('a[href^="/admin/reports/"]:visible').first();
     await expect(detailLink).toBeVisible({ timeout: 20_000 });
     await expectNoBrokenNumbers(page);
@@ -83,6 +107,19 @@ test.describe('FR-025 / FR-026 / FR-027 — danh sách và chi tiết báo cáo'
     await expect(page).toHaveURL(/\/admin\/reports\/[0-9a-f-]{36}/);
     await expect(visibleText(page, 'Viếng thăm')).toBeVisible();
     await expectNoBrokenNumbers(page);
+    await expectNoHorizontalScroll(page);
+
+    // Back giữ đúng tháng, Sales, trạng thái và trang đang xem (state-preservation).
+    await page.goBack();
+    await expect(page).toHaveURL(/month=.*salesId=.*status=COMPLETED.*page=2/);
+    await expect(visibleText(page, /Báo cáo 21–\d+ trên/)).toBeVisible();
+  });
+
+  test('chỉ period=all mới mở toàn bộ lịch sử', async ({ page }) => {
+    await page.goto('/admin/reports?period=all');
+
+    await expect(visibleText(page, 'Tất cả thời gian')).toBeVisible();
+    await expect(page).toHaveURL(/period=all/);
     await expectNoHorizontalScroll(page);
   });
 
