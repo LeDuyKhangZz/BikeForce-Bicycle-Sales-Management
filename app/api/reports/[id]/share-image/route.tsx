@@ -7,7 +7,12 @@ import { z } from 'zod';
 import { DailyReportShareCard } from '@/features/report-share/daily-report-share-card';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
-import { buildShareCardModel, shareImageFileName } from '@/lib/reports/share-card';
+import {
+  SHARE_IMAGE_VIEW_PARAM,
+  SHARE_IMAGE_VIEW_VALUE,
+  buildShareCardModel,
+  shareImageFileName,
+} from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
 import { getReportForShare } from '@/services/reports';
 
@@ -116,8 +121,24 @@ type ShareImageContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, context: ShareImageContext): Promise<Response> {
+export async function GET(request: Request, context: ShareImageContext): Promise<Response> {
   const { id } = await context.params;
+
+  /*
+   * `?view=1` → HIỆN ảnh thay vì TẢI ảnh — PHASE 14, **DEC-061** (ISSUE-029).
+   *
+   * Tham số này KHÔNG chạm tới quyền, không chọn dữ liệu, không chọn biến thể:
+   * nó chỉ đổi đúng một chữ trong `Content-Disposition`. Mọi lớp kiểm tra bên
+   * dưới chạy y hệt hai chế độ, nên không có bề mặt tấn công mới ở đây.
+   *
+   * Lý do nghiệp vụ: `attachment` tải file vào thư mục Tải xuống của điện thoại,
+   * mà **Thư viện ảnh thì trang web không ghi vào được** — không có API nào cả.
+   * Đường duy nhất còn lại là để người dùng nhấn giữ vào ảnh đang hiển thị rồi
+   * chọn "Lưu ảnh", và muốn vậy thì ảnh phải được hiển thị. Xem chú thích đầy đủ
+   * ở `lib/reports/share-card.ts § SHARE_IMAGE_VIEW_PARAM`.
+   */
+  const wantsInlineView =
+    new URL(request.url).searchParams.get(SHARE_IMAGE_VIEW_PARAM) === SHARE_IMAGE_VIEW_VALUE;
 
   const parsedId = reportIdSchema.safeParse(id);
   if (!parsedId.success) {
@@ -170,8 +191,9 @@ export async function GET(_request: Request, context: ShareImageContext): Promis
       height: SHARE_IMAGE_HEIGHT,
       fonts: await loadShareFonts(),
       headers: {
-        // FR-019 — tên file đã bỏ dấu, khoảng trắng thành `-`.
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        // FR-019 — tên file đã bỏ dấu, khoảng trắng thành `-`. Tên file được
+        // giữ ở CẢ HAI chế độ: `inline` vẫn đặt tên cho lần "Lưu ảnh" sau đó.
+        'Content-Disposition': `${wantsInlineView ? 'inline' : 'attachment'}; filename="${fileName}"`,
         // DEC-021 — ảnh không lưu ở đâu cả, và là dữ liệu riêng của một người.
         'Cache-Control': 'private, no-store',
       },

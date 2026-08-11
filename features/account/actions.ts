@@ -1,10 +1,12 @@
 'use server';
 
-import { CHANGE_PASSWORD_MESSAGES } from '@/lib/account/messages';
+import { revalidatePath } from 'next/cache';
+
+import { CHANGE_PASSWORD_MESSAGES, OWN_PROFILE_MESSAGES } from '@/lib/account/messages';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
 import { createClient } from '@/lib/supabase/server';
-import { changePasswordSchema } from '@/lib/validation/account';
-import { getSessionProfile } from '@/services/profiles';
+import { changePasswordSchema, updateOwnProfileSchema } from '@/lib/validation/account';
+import { getSessionProfile, updateOwnProfile } from '@/services/profiles';
 import type { ActionResult } from '@/types/action-result';
 
 /**
@@ -117,4 +119,114 @@ export async function changePasswordAction(
    * chỉ cần một banner. Cũng KHÔNG `revalidatePath` — không có gì để làm mới.
    */
   return { ok: true, data: { notice: CHANGE_PASSWORD_MESSAGES.SUCCESS } };
+}
+
+/* ---------------------------------------------------------------------------
+ * Sửa hồ sơ của chính mình — PHASE 14, DEC-063
+ * ------------------------------------------------------------------------- */
+
+export type UpdateOwnProfileState = ActionResult<{ notice: string }> | null;
+
+/**
+ * Admin tự sửa **họ tên, số điện thoại, mã nhân viên** của mình.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO CHỈ ADMIN, DÙ POLICY `profiles_update_self` KHÔNG PHÂN BIỆT VAI
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Đây là một luật **nghiệp vụ**, không phải giới hạn kỹ thuật. Hồ sơ của Sales
+ *  do Admin quản lý (UC-18, FR-031): mã nhân viên và họ tên là dữ liệu đi vào
+ *  báo cáo gửi khách, nên đội bán hàng không tự đổi. Admin thì không có ai ở
+ *  trên để nhờ — màn hình cũ bảo họ "hãy liên hệ Admin", tức là tự nói với
+ *  chính mình. Đó là chỗ DEC-063 sửa.
+ *
+ *  Ràng buộc "chỉ ADMIN" vì vậy phải ép **ở đây**, ở tầng Server Action, chứ
+ *  không thể trông vào RLS: policy `profiles_update_self` cho mọi vai sửa dòng
+ *  của mình, và nới nó ra thì không còn đường nào cấm Sales nữa.
+ *
+ *  Thứ tự bắt buộc (AGENTS.md §8): **validate Zod → auth → role/trạng thái →
+ *  ghi → map lỗi an toàn**.
+ */
+export async function updateOwnProfileAction(
+  _prevState: UpdateOwnProfileState,
+  formData: FormData,
+): Promise<UpdateOwnProfileState> {
+  // 1) VALIDATE — luôn validate lại phía server (NFR-006).
+  const parsed = updateOwnProfileSchema.safeParse({
+    full_name: formData.get('full_name'),
+    phone: formData.get('phone'),
+    employee_code: formData.get('employee_code'),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      code: 'VALIDATION',
+      message: OWN_PROFILE_MESSAGES.VALIDATION,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
+  }
+
+  const supabase = await createClient();
+
+  // 2) AUTH — `getUser()` chứ không `getSession()` (`docs/06 §3.1` quy tắc 2).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, code: 'UNAUTHORIZED', message: AUTH_MESSAGES.SESSION_EXPIRED };
+  }
+
+  // 3) ROLE + TRẠNG THÁI. `is_active` phải kiểm vì tài khoản bị khoá GIỮA PHIÊN
+  //    vẫn còn cookie hợp lệ (BR-009).
+  const profile = await getSessionProfile(supabase, user.id);
+
+  if (!profile) {
+    return { ok: false, code: 'NOT_FOUND', message: AUTH_MESSAGES.PROFILE_MISSING };
+  }
+
+  if (!profile.is_active) {
+    return { ok: false, code: 'ACCOUNT_DISABLED', message: AUTH_MESSAGES.ACCOUNT_DISABLED };
+  }
+
+  if (profile.role !== 'ADMIN') {
+    return { ok: false, code: 'FORBIDDEN', message: OWN_PROFILE_MESSAGES.FORBIDDEN };
+  }
+
+  // 4) GHI — `user.id` từ phiên đã xác minh, KHÔNG bao giờ từ `FormData`.
+  const result = await updateOwnProfile(supabase, user.id, parsed.data);
+
+  if (!result.ok) {
+    if (result.error === 'DUPLICATE_CODE') {
+      return {
+        ok: false,
+        code: 'CONFLICT',
+        message: OWN_PROFILE_MESSAGES.DUPLICATE_CODE,
+        fieldErrors: { employee_code: [OWN_PROFILE_MESSAGES.DUPLICATE_CODE] },
+      };
+    }
+
+    if (result.error === 'REJECTED') {
+      return { ok: false, code: 'VALIDATION', message: OWN_PROFILE_MESSAGES.REJECTED };
+    }
+
+    if (result.error === 'NOT_FOUND') {
+      return { ok: false, code: 'NOT_FOUND', message: AUTH_MESSAGES.PROFILE_MISSING };
+    }
+
+    return { ok: false, code: 'UNKNOWN', message: OWN_PROFILE_MESSAGES.FAILED };
+  }
+
+  /*
+   * Khác `changePasswordAction`: ở đây CÓ dữ liệu RSC đổi thật — tên hiển thị
+   * trên header nằm trong layout và đọc từ cùng bảng `profiles`. Không
+   * `revalidatePath` thì người dùng lưu xong vẫn thấy tên cũ ở góc trên, đúng
+   * kiểu lỗi mà DEC-034 cảnh báo: giao diện tự kể một câu chuyện khác với server.
+   *
+   * `layout` chứ không phải `page`: tên hiển thị ở header, mà header thuộc
+   * layout của cả khu vực `/admin`.
+   */
+  revalidatePath('/admin', 'layout');
+
+  return { ok: true, data: { notice: OWN_PROFILE_MESSAGES.SUCCESS } };
 }

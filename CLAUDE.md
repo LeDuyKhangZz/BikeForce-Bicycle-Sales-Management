@@ -324,6 +324,27 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** đặt `BrandLockup` lên nền đậm bằng `className="text-white"` — class bên trong là `text-heading` và nó thắng. Phải dùng `tone="inverse"` (DEC-054).
 - ❌ **Không** gỡ `agentRules: false` khỏi `next.config.ts` — gỡ ra là để `next dev` ghi đè vào `AGENTS.md`, một tài liệu điều khiển (ISSUE-025).
 - ❌ **Không** kết luận một nút "đã chạy được" chỉ vì E2E thấy nó `toBeVisible()`. Nút gọi Web API của trình duyệt (`navigator.share`, `download`, clipboard, camera) **bắt buộc** có bài E2E **bấm thật** — ISSUE-027 đã lọt ra production đúng vì thiếu điều này.
+- ❌ **Không** coi "đã tải file về máy" là "đã lưu vào Thư viện ảnh". **Trang web KHÔNG có API nào ghi
+  vào Thư viện ảnh Android / app Ảnh iOS** — chỉ có hai đường, cả hai cần thao tác tay: bảng chia sẻ
+  → "Lưu ảnh", hoặc **nhấn giữ vào ảnh đang hiển thị** (DEC-061, ISSUE-029).
+- ❌ **Không** đưa nhánh dự phòng của điện thoại về `window.location.href` trỏ vào route ảnh — route
+  trả `attachment` nên file rơi vào thư mục Tải xuống rồi thôi, đúng ISSUE-029. Phải **hiện ảnh ra**
+  bằng `?view=1` (DEC-061).
+- ❌ **Không** đặt `inline` làm mặc định cho route ảnh, và **không** bỏ tham số `?view=1` (DEC-061).
+- ❌ **Không** tách giao diện điện thoại/máy tính của khối xuất ảnh bằng JavaScript — dùng
+  `pointer-coarse:` của Tailwind. Hook `matchMedia` chỉ đúng **sau khi hydrate** nên điện thoại sẽ
+  nhấp nháy nhãn máy tính một nhịp (DEC-062).
+- ❌ **Không** bỏ bước **nạp trước ảnh** trên thiết bị cảm ứng — iOS Safari đòi quyền hạn từ cú chạm
+  còn hiệu lực khi gọi `navigator.share()`, mất nó là nút "không làm gì cả" (DEC-062, ISSUE-027).
+- ❌ **Không** hứa "gửi thẳng vào Zalo" trong bất kỳ chữ nào của giao diện. Không có deep link Zalo
+  nào nhận file; `navigator.share` mở **bảng chia sẻ của hệ điều hành**, Zalo là một mục trong đó
+  (DEC-062).
+- ❌ **Không** gộp nhãn nút Zalo thành một chuỗi chung. `SEND_TO_ZALO_LABEL` là `Record` theo biến
+  thể ("Gửi cam kết…" / "Gửi kết quả…") — gộp lại là làm mất thông tin DEC-058 cố ý đặt vào nhãn.
+- ❌ **Không** bỏ dòng kiểm `profile.role !== 'ADMIN'` trong `updateOwnProfileAction` với lý do "RLS
+  lo rồi" — `profiles_update_self` cho **mọi vai** sửa dòng của chính mình (DEC-063).
+- ❌ **Không** thêm form sửa hồ sơ vào `/sales/account`. Hồ sơ Sales do Admin quản lý (UC-18); chỉ
+  `/admin/account` có form (DEC-063).
 - ❌ **Không** đặt đường dự phòng trong `catch` của `anchor.click()` — hàm đó **không bao giờ ném lỗi**, kể cả khi trình duyệt bỏ qua thuộc tính `download` (DEC-060).
 - ❌ **Không** thêm lại nhánh `ok: true` vào `saveMorningReport` — nó **tự `redirect()`** từ DEC-059, đúng khuôn DEC-037. Câu cũ của DEC-037 gọi luồng sáng là ngoại lệ đã hết hiệu lực.
 - ❌ **Không** viết lại `updateMorningReport` (Server Action hoặc hàm service) — UC-05/FR-012 đã bị **DEC-055** gỡ khỏi v1. Cam kết sáng khoá ngay khi gửi.
@@ -338,7 +359,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-060` (decision) · `ISSUE-001..ISSUE-028` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-063` (decision) · `ISSUE-001..ISSUE-029` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
 > **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy

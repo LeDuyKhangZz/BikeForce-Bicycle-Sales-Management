@@ -20,6 +20,7 @@ import {
   buildShareCardModel,
   shareImageFileName,
   shareImagePath,
+  shareImageViewPath,
   truncateText,
   type ShareCardSource,
 } from './share-card';
@@ -370,5 +371,19 @@ describe('shareImagePath', () => {
     expect(shareImagePath('11111111-2222-3333-4444-555555555555')).toBe(
       '/api/reports/11111111-2222-3333-4444-555555555555/share-image',
     );
+  });
+});
+
+describe('shareImageViewPath — DEC-061', () => {
+  it('là CHÍNH route ảnh, chỉ thêm tham số xem', () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+
+    expect(shareImageViewPath(id)).toBe(`${shareImagePath(id)}?view=1`);
+  });
+
+  it('KHÔNG đổi chế độ mặc định: không tham số thì vẫn là đường tải về', () => {
+    // Máy tính không có "thư viện ảnh"; đổi mặc định sang `inline` là làm hỏng
+    // hành vi tải file mà người dùng máy tính đã quen (DEC-060).
+    expect(shareImagePath('11111111-2222-3333-4444-555555555555')).not.toContain('view');
   });
 });

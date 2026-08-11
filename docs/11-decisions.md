@@ -1745,3 +1745,150 @@ Hai điểm cần theo dõi tiếp, **không chặn tiến độ** nhưng đã g
 - **AF-12 (audit log)** — chưa cần vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa (OQ-04/OQ-05), **phải làm audit log trước**.
 
 Danh sách câu hỏi và câu trả lời đầy đủ nằm ở `docs/01-business-analysis.md` mục OPEN QUESTIONS.
+
+---
+
+## DEC-061 — "Tải về" không phải "lưu vào thư viện": route ảnh có thêm chế độ XEM
+
+**Date:** 2026-08-11
+**Status:** APPROVED (người dùng báo lỗi trực tiếp — ISSUE-029)
+**Bối cảnh:** ngay sau khi DEC-060 sửa xong ISSUE-027, người dùng báo tiếp: trên điện thoại, ảnh
+"tải về xong tự động lưu ở đâu đó", không vào Thư viện ảnh, và họ **không tìm ra file**.
+
+**Sự thật kỹ thuật phải nhớ trước khi đọc quyết định:**
+
+> **Trang web không có bất kỳ API nào ghi vào Thư viện ảnh của Android hay app Ảnh của iOS.**
+> Không có `navigator.saveToGallery`, và `Content-Disposition` dù đặt thế nào cũng chỉ điều khiển
+> được *thư mục tải xuống*. Đây là giới hạn của hệ điều hành, không phải thiếu sót của sản phẩm.
+
+Từ đó chỉ còn **hai** đường vào thư viện, **cả hai đều cần một thao tác tay của con người**:
+
+| # | Đường | Cơ chế | Có trên |
+|---|---|---|---|
+| 1 | Bảng chia sẻ của hệ điều hành → "Lưu ảnh" | `navigator.share({ files })` | Android + iOS |
+| 2 | **Nhấn giữ vào ảnh đang hiển thị** → "Lưu ảnh" / "Tải ảnh xuống" | ảnh phải được HIỆN | Android + iOS |
+
+**Decision:**
+
+1. `GET /api/reports/[id]/share-image` nhận thêm tham số **`?view=1`** → trả
+   `Content-Disposition: **inline**` thay vì `attachment`. Mặc định **không đổi**: không có tham số
+   thì vẫn là `attachment`.
+   Tham số này **không** chạm quyền, **không** chọn dữ liệu, **không** chọn biến thể ảnh — mọi lớp
+   kiểm tra chạy y hệt ở cả hai chế độ, nên không mở ra bề mặt tấn công mới.
+2. Khi bảng chia sẻ không dùng được, nút **hiện thẳng tấm ảnh ra trong trang** bằng
+   `<img src="…?view=1">`, kèm câu "Nhấn giữ vào ảnh bên dưới rồi chọn *Lưu ảnh*…". **Không** điều
+   hướng, **không** sinh file lạc.
+3. Link "lối thoát không cần JavaScript" (nguyên tắc (c) của DEC-060) trỏ vào `?view=1` — trước đây
+   nó trỏ vào chế độ tải nên chỉ mở ra một tab trắng rồi tải thêm một file.
+4. Ảnh xem trước dùng **URL http thật**, không dùng `blob:` của lượt `fetch`: thao tác "Lưu ảnh" khi
+   nhấn giữ chạy ổn định với URL thật trên cả Chrome Android lẫn Safari iOS, còn với `blob:` thì tuỳ
+   phiên bản.
+
+**Phương án đã cân nhắc và loại:**
+
+| Phương án | Vì sao loại |
+|---|---|
+| Đổi tên file / đổi thư mục tải về | Không giải quyết gì: vấn đề không phải tên file mà là **file không nằm trong thư viện**, và web không chọn được thư mục đích |
+| Ghi thẳng vào thư viện | **Không tồn tại API nào.** Đây là điều kiện biên, không phải lựa chọn |
+| Bỏ hẳn `attachment`, luôn trả `inline` | Máy tính không có "thư viện ảnh"; người dùng máy tính cần **file**, và DEC-060 vừa chốt điều đó |
+| Chỉ thêm một câu hướng dẫn "vào thư mục Tải xuống mà tìm" | Đúng nhưng vô dụng: người dùng muốn ảnh **trong thư viện** để gửi lại, không muốn học đường đi của file |
+
+**Hệ quả bắt buộc nhớ:**
+- **Không** đặt giá trị mặc định `inline` cho route ảnh.
+- **Không** đưa nhánh dự phòng của điện thoại về `window.location.href` — đó chính là ISSUE-029.
+- Mọi câu chữ trong giao diện phải phân biệt rạch ròi **"đã tải về"** với **"đã lưu vào thư viện"**.
+
+---
+
+## DEC-062 — Giao diện điện thoại tách hai nút: "Gửi qua Zalo" và "Lưu vào thư viện ảnh"
+
+**Date:** 2026-08-11
+**Status:** APPROVED (người dùng yêu cầu trực tiếp: *"triển khai thêm nút gửi qua zalo ở giao diện
+điện thoại"*, và *"áp dụng được cho cả android và ios nhé"*)
+
+**Decision:** trên thiết bị cảm ứng, khối xuất ảnh có **hai** nút thay vì một:
+
+| Nút | Biến thể | Hành vi |
+|---|---|---|
+| **Gửi cam kết qua Zalo** (sáng) / **Gửi kết quả qua Zalo** (chiều) | `accent` (cam logo) | `navigator.share({ files })` → **bảng chia sẻ của hệ điều hành**, nơi Zalo là một mục. Hỏng thì hiện ảnh ra kèm hướng dẫn 3 bước: lưu ảnh ⇢ mở Zalo ⇢ gửi |
+| **Lưu vào thư viện ảnh** | `secondary` | Hiện `<img …?view=1>` ngay trong trang + câu "nhấn giữ để lưu". **Không chờ mạng**, không dựng blob |
+
+Máy tính **giữ nguyên một nút tải file** ("Xuất ảnh báo cáo") — không có Zalo trong bảng chia sẻ của
+Windows (DEC-060), và cũng không có "thư viện ảnh".
+
+**Ba điểm kỹ thuật là phần cốt lõi của quyết định này, không phải chi tiết cài đặt:**
+
+1. **Tách bằng CSS (`pointer-coarse:` của Tailwind v4), không bằng JavaScript.** Một hook đọc
+   `matchMedia` chỉ biết kết quả *sau khi hydrate*, nên HTML của server luôn là bản máy tính và điện
+   thoại sẽ thấy nhãn "Xuất ảnh báo cáo" nhấp nháy một nhịp. CSS đúng ngay từ khung hình đầu tiên.
+   Vẫn là **feature detection** (kiểu con trỏ), không sniff `userAgent`, và `pointer: coarse` đúng
+   trên **cả Android lẫn iOS**.
+   ⚠ Hai class ẩn/hiện đặt lên **thẻ bọc**, không đặt lên `<Button>`: `cn()` của dự án cố ý không có
+   `tailwind-merge`, nên `hidden` gặp `inline-flex` sẵn có trong class nền là một xung đột do thứ tự
+   CSS quyết định.
+2. **Nạp trước tấm ảnh trên thiết bị cảm ứng** (`useEffect` + `ref`, không `setState`). Đây là điều
+   kiện sống còn của **iOS**: Safari chỉ cho gọi `navigator.share()` khi quyền hạn từ cú chạm còn
+   hiệu lực, mà dựng ảnh 1080×1920 mất vài trăm ms tới vài giây thì quyền đó đã hết hạn —
+   `NotAllowedError`, và nút "không làm gì cả" đúng như ISSUE-027. Nạp trước ⇒ lúc chạm chỉ còn một
+   microtask. Máy tính **không** nạp trước: `<a download>` không đòi quyền hạn đó, và không đáng bắt
+   mỗi lượt xem trang trả giá một lượt dựng ảnh.
+3. **Không có deep link Zalo nào nhận file.** `zalo://`, `sharer.zalo.me`, `intent://` chỉ chia sẻ
+   được **đường dẫn**, mà đường dẫn ảnh của BikeForce đòi đăng nhập nên người nhận chỉ thấy màn hình
+   đăng nhập. Nhãn "Gửi qua Zalo" mô tả **ý định**; bảng chia sẻ là con đường duy nhất tồn tại. Giao
+   diện **không được hứa hơn thế** trong bất kỳ chữ nào.
+
+**Nhãn nút Zalo chia theo biến thể ảnh (DEC-058), nhãn nút thư viện thì không.** Người dùng phải
+biết mình đang gửi *cam kết đầu ngày* hay *kết quả cuối ngày* — đó chính là thông tin mà DEC-058 cố
+ý đặt vào nhãn cũ, và gộp thành một chữ "Gửi qua Zalo" là làm mất nó ở đúng màn hình mà cả hai tấm
+đều xuất hiện được. Ngược lại, "cất ảnh vào máy" là **cùng một việc** với cả hai tấm nên nút thư
+viện giữ một nhãn.
+
+**Hệ quả:** nhãn nút nằm ở `lib/reports/share-card.ts` (`SEND_TO_ZALO_LABEL` — một `Record` theo
+biến thể, `SAVE_TO_GALLERY_LABEL` — một chuỗi) — từ vựng nghiệp vụ, không để rải trong component
+(AGENTS.md §9).
+
+---
+
+## DEC-063 — Admin sửa được hồ sơ của chính mình; Sales vẫn không
+
+**Date:** 2026-08-11
+**Status:** APPROVED (người dùng yêu cầu trực tiếp: *"tài khoản admin chỗ tài khoản, hồ sơ của bạn
+có thể thay đổi được họ và tên, số điện thoại, mã nhân viên"*)
+
+**Bối cảnh — một mâu thuẫn có thật trong sản phẩm:** `/admin/account` dùng chung `ProfileCard` chỉ
+đọc với `/sales/account`, và kết thúc bằng câu *"Cần sửa thông tin hồ sơ? Hãy liên hệ Admin — chỉ
+Admin mới đổi được các trường này."* Với Sales thì câu đó đúng. Với **Admin** thì nó bảo họ đi liên
+hệ chính mình — và không có màn hình nào trong sản phẩm sửa được hồ sơ Admin, vì UC-18 lọc
+`role = 'SALES'`. Kết quả: họ tên của Admin bị khoá vĩnh viễn ở giá trị lúc tạo tài khoản.
+
+**Decision:**
+
+1. `/admin/account` thay `ProfileCard` bằng **`OwnProfileForm`** — sửa được **ba** trường:
+   `full_name`, `phone`, `employee_code`.
+2. `/sales/account` **giữ nguyên `ProfileCard` chỉ đọc.** Hồ sơ Sales do Admin quản lý (UC-18,
+   FR-031): mã nhân viên và họ tên đi thẳng vào ảnh báo cáo gửi khách.
+3. **`email`, `role`, `is_active` không sửa được ở đây**, mỗi cái một lý do khác nhau: email là định
+   danh đăng nhập và phải đồng bộ với `auth.users` (BR-025); `role` là đường tự nâng quyền kinh điển
+   (BR-012); `is_active` là UC-19, một hành động riêng trên tài khoản **người khác** (BR-009).
+   Email và vai trò vẫn **hiển thị** dạng `<dl>`, **không** phải `<input disabled>` — một ô nhập mờ
+   đi đọc ra "tạm thời chưa sửa được", trong khi sự thật là không bao giờ.
+4. **Không cần migration.** Policy `profiles_update_self` đã có từ Phase 2, và trigger
+   `guard_profile_self_update()` đã chặn sẵn nhóm cột nhạy cảm.
+
+**⚠ Điểm phải nhớ về nơi luật được ép:**
+
+`profiles_update_self` cho **mọi vai** sửa dòng của chính mình — nó không phân biệt ADMIN với SALES.
+Vì vậy luật nghiệp vụ *"Sales không tự sửa hồ sơ"* được ép ở **Server Action**
+(`updateOwnProfileAction` kiểm `profile.role !== 'ADMIN'`), **không** ở RLS. Có một bài test trong
+`tests/rls/profiles.rls.test.ts` khoá đúng sự thật này lại, để không ai bỏ dòng kiểm đó với lý do
+"RLS lo rồi".
+
+Hệ quả còn lại, **đã biết và chấp nhận**: một Sales gọi thẳng PostgREST bằng token của mình vẫn đổi
+được `full_name` của chính họ. Đây là lệch luật nghiệp vụ, **không** phải leo thang quyền — nhóm cột
+nguy hiểm vẫn bị trigger chặn. Muốn bịt nốt thì phải siết `profiles_update_self` xuống chỉ còn Admin
+bằng một migration `0009` + đẩy lên cloud; việc đó **chưa làm** vì nằm ngoài phạm vi người dùng yêu
+cầu, và siết RLS là thay đổi cần được quyết định riêng.
+
+**Hệ quả kỹ thuật:** ba trường hồ sơ dọn sang `lib/validation/profile-fields.ts` để form UC-18 và
+form DEC-063 dùng **chung một định nghĩa** — ràng buộc đến từ CHECK constraint của
+`0001_init_enums_profiles.sql`, chép ra hai bản là mở đường cho hai bản trôi khỏi nhau.

@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 
 import { Card, CardTitle } from '@/components/ui/card';
 import { ChangePasswordForm } from '@/features/account/change-password-form';
-import { ProfileCard } from '@/features/account/profile-card';
+import { OwnProfileForm } from '@/features/account/own-profile-form';
+import { ROLE_LABEL } from '@/features/account/profile-card';
 import { requireRole } from '@/features/auth/queries';
 import { SignOutButton } from '@/features/auth/sign-out-button';
 import { createClient } from '@/lib/supabase/server';
@@ -16,8 +17,13 @@ export const metadata: Metadata = {
  * `/admin/account` — UC-11, FR-023. Cùng ba khối với `/sales/account`
  * (`docs/05 §9`: "như `/sales/account`").
  *
- * Dùng lại nguyên `ProfileCard` và `ChangePasswordForm` của Phase 7 — chúng cố
- * ý không giả định vai nào. Chỉ khác đúng một dòng: `requireRole('ADMIN')`.
+ * Dùng lại nguyên `ChangePasswordForm` của Phase 7 — nó cố ý không giả định vai
+ * nào.
+ *
+ * ⚠ **PHASE 14 (DEC-063) — khối hồ sơ ở đây KHÔNG còn giống `/sales/account`.**
+ * Trang này dùng `OwnProfileForm` (sửa được họ tên / SĐT / mã NV), còn
+ * `/sales/account` giữ `ProfileCard` chỉ đọc. Khác biệt đó là **chủ ý**: hồ sơ
+ * Sales do Admin quản lý (UC-18, FR-031), còn Admin không có ai ở trên để nhờ.
  *
  * `changePasswordAction` gọi `auth.updateUser()`, hàm này **luôn** sửa người
  * đang đăng nhập và không nhận `userId`, nên nó an toàn cho cả hai vai mà không
@@ -41,7 +47,27 @@ export default async function AdminAccountPage() {
           </p>
         </Card>
       ) : (
-        <ProfileCard profile={profile} />
+        /*
+         * PHASE 14 (DEC-063) — Admin SỬA ĐƯỢC hồ sơ của chính mình.
+         *
+         * `/sales/account` vẫn là `ProfileCard` chỉ đọc, và đó là chủ ý: hồ sơ
+         * Sales do Admin quản lý (UC-18). Còn Admin thì trước đây bị màn hình
+         * này bảo "hãy liên hệ Admin" — tự nói với chính mình — trong khi UC-18
+         * lọc `role = 'SALES'` nên không có đường nào sửa hồ sơ Admin cả.
+         */
+        <Card className="flex flex-col gap-3">
+          <CardTitle className="text-base">Hồ sơ của bạn</CardTitle>
+          <OwnProfileForm
+            initialValues={{
+              full_name: profile.full_name,
+              // `null` ⇒ chuỗi rỗng: `defaultValue` của `<input>` không nhận
+              // `null`, và schema quy chuỗi rỗng ngược về `null` khi lưu.
+              phone: profile.phone ?? '',
+              employee_code: profile.employee_code ?? '',
+            }}
+            readOnly={{ email: profile.email, roleLabel: ROLE_LABEL[profile.role] }}
+          />
+        </Card>
       )}
 
       <Card className="flex flex-col gap-3">

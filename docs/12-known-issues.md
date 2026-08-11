@@ -101,8 +101,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-026 | P3 | OPEN | **MỚI 2026-08-10** — `next dev` (Turbopack) trả **403** cho `_next/static/chunks/node_modules_next_dist_*.js` trên máy này ⇒ **trang KHÔNG hydrate**, mọi nút client "chết" trong khi giao diện trông hoàn toàn bình thường. `curl` cùng URL trả **200**. Cách đi vòng: kiểm chứng UI bằng `next build` + `next start` (đúng cách bộ E2E làm) |
 | ISSUE-027 | **P1** | **CLOSED** | **MỚI 2026-08-11** — nút xuất ảnh **im lặng trên điện thoại** (`<a download>` bị webview bỏ qua mà `click()` không ném lỗi ⇒ nhánh dự phòng không chạy) và **mở share sheet vô dụng trên máy tính** (`canShare` trả `true` trên Windows, không có Zalo). Sửa bằng **DEC-060**. Lộ ra vì E2E chỉ kiểm nút `toBeVisible`, chưa từng **bấm** nút |
 | ISSUE-028 | P3 | **CLOSED** | **MỚI 2026-08-11** — bài a11y `/login` đỏ-rồi-xanh vì axe quét trúng giữa hiệu ứng `animate-rise-in`, đo `#8BA9BE` thay vì `#0B4A76`. Sửa bằng `use.contextOptions.reducedMotion = 'reduce'` |
+| ISSUE-029 | **P1** | **CLOSED** | **MỚI 2026-08-11** — trên điện thoại, ảnh **tải vào thư mục Tải xuống chứ không vào Thư viện ảnh**, người dùng không tìm ra file. Gốc: trang web **không có API ghi vào Thư viện ảnh** (giới hạn hệ điều hành) + nhánh dự phòng của DEC-060 trả `attachment` nên ảnh không bao giờ được HIỆN để nhấn giữ. Sửa bằng **DEC-061** + **DEC-062** |
 
-Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **14 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, **ISSUE-027**, **ISSUE-028**).
+Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **15 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, **ISSUE-029**).
 
 ---
 
@@ -1439,3 +1440,52 @@ Các `OQ-xx` ảnh hưởng **trực tiếp** tới tài liệu này. Danh sách
 | OQ-13 | Có được xoá báo cáo không? Soft hay hard delete? | v1 không xoá; nếu cần thì soft delete + chỉ Admin | ISSUE-001, ISSUE-007 |
 
 Ngoài ra `ISSUE-001` bao trùm **toàn bộ** các OQ mức BLOCKING, kể cả những câu không liệt kê trong bảng trên (`OQ-01`, `OQ-02`, `OQ-03`, `OQ-09`), vì chừng nào chúng còn mở thì migration Phase 2 vẫn chưa được viết.
+
+---
+
+### ISSUE-029
+
+**Severity:** P1 | **Status:** **CLOSED** (sửa bằng DEC-061 + DEC-062, 2026-08-11)
+**Phát hiện:** người dùng, trên bản deploy production, ngày 2026-08-11 — **ngay sau khi DEC-060 đã
+sửa xong ISSUE-027**.
+
+**Triệu chứng (nguyên văn người dùng):**
+
+> "ở điện thoại, nút lưu hình ảnh báo cáo không lưu về thư viện ở android hay ứng dụng ảnh ở ios mà
+> thấy nó tải về xong nó tự động lưu ở đâu đó giờ tôi kiếm không ra"
+
+**File thật sự nằm ở đâu:** thư mục **Tải xuống** của máy —
+`/storage/emulated/0/Download/` trên Android, `Tệp (Files) → Tải xuống` trên iOS. Tên file đúng
+FR-019: `BikeForce_Report_<Ten>_<YYYY-MM-DD>.png` (bản sáng là `BikeForce_CamKet_…`).
+
+**Nguyên nhân gốc — hai tầng, tầng dưới KHÔNG sửa được bằng code:**
+
+1. **Tầng nền tảng (không sửa được):** trang web **không có bất kỳ API nào** ghi vào Thư viện ảnh
+   Android hay app Ảnh của iOS. Đây là giới hạn của hệ điều hành, không phải thiếu sót của
+   BikeForce. Chỉ tồn tại **hai** đường vào thư viện, cả hai đều cần một thao tác tay của con người:
+   bảng chia sẻ → "Lưu ảnh", hoặc **nhấn giữ vào một tấm ảnh đang hiển thị** → "Lưu ảnh".
+2. **Tầng sản phẩm (sửa được, và đã sửa):** khi bảng chia sẻ không dùng được, DEC-060 điều hướng
+   thật sang route ảnh. Route trả `Content-Disposition: attachment` ⇒ trình duyệt **tải file rồi
+   thôi**: không hiện ảnh, nên không nhấn giữ được, nên không có đường nào vào thư viện. Link "Mở
+   ảnh trực tiếp" cũng trỏ vào chính route đó nên chỉ mở ra một tab trắng rồi tải thêm một file nữa.
+
+**Vì sao bộ test không bắt được — bài học nối tiếp ISSUE-027:**
+
+DEC-060 đã bổ sung E2E **bấm thật** vào nút, và những bài đó **xanh** trong lúc lỗi này đang tồn
+tại. Chúng kiểm đúng thứ DEC-060 đặt ra — "không nhánh nào im lặng" — và nhánh dự phòng quả thật có
+tạo ra một file. Cái chúng không hỏi là câu người dùng thật sự quan tâm: **file đó có tới được nơi
+người dùng cần không.** "Đã tải về" và "đã lưu vào thư viện" là hai mệnh đề khác nhau, và bộ test
+chỉ khoá mệnh đề thứ nhất.
+
+**Cách sửa:** DEC-061 (route có chế độ `?view=1` trả `inline`; nhánh dự phòng **hiện ảnh trong
+trang** kèm câu hướng dẫn nhấn giữ) + DEC-062 (giao diện điện thoại tách thành **hai nút** đúng hai
+ý định: *Gửi qua Zalo* và *Lưu vào thư viện ảnh*).
+
+**Verification (2026-08-11):**
+- E2E mới, **3 project**: nhánh không có share sheet phải **hiện `<img>` trỏ vào `?view=1`**, phải
+  hiện câu "Nhấn giữ vào ảnh bên dưới", và **không được rời trang**.
+- E2E ở tầng HTTP: route mặc định trả `attachment`, có `?view=1` trả `inline`.
+- Nhìn tận mắt ảnh chụp 375px cả hai trạng thái (trước và sau khi bấm).
+- ⚠ **Còn một vế chưa kiểm được ở đây:** thao tác "Lưu ảnh" khi nhấn giữ là chức năng **của trình
+  duyệt thật trên máy thật** — Playwright không mô phỏng được. Vế này gộp chung với ISSUE-003 (kiểm
+  trên điện thoại thật + Zalo).

@@ -433,9 +433,30 @@ Ngay cả khi client bị sửa, Route Handler vẫn **tự đọc `status` từ
 → Render ImageResponse 1080×1920 từ DailyReportShareCard
 → Trả PNG kèm Content-Disposition attachment và Cache-Control private no-store
 → Client nhận blob
-→ navigator.canShare files = true → navigator.share → share sheet có Zalo
-→ Không hỗ trợ → tạo thẻ a download → tải file về máy
 → Tên file BikeForce_Report_Nguyen-Van-A_2026-08-07.png (FR-019)
+
+  ── PHASE 14 — DEC-061 + DEC-062: từ đây luồng TÁCH ĐÔI theo thiết bị ──
+  Tách bằng CSS (pointer-coarse), không bằng JavaScript, nên đúng ngay từ khung hình đầu tiên.
+
+  ĐIỆN THOẠI (pointer: coarse) — hai nút, hai ý định:
+
+    Nút "Gửi qua Zalo"
+    → ảnh đã được NẠP TRƯỚC từ lúc mở màn hình (điều kiện sống còn của iOS:
+      Safari đòi quyền hạn từ cú chạm còn hiệu lực khi gọi navigator.share)
+    → navigator.canShare files = true → navigator.share → bảng chia sẻ của HỆ ĐIỀU HÀNH
+      → người dùng chọn Zalo để gửi, hoặc "Lưu ảnh" để cất vào Thư viện
+    → người dùng bấm huỷ (AbortError) → KHÔNG báo gì, không phải lỗi
+    → không có Web Share (webview Zalo, Firefox Android)
+      → hiện ảnh trong trang + hướng dẫn 3 bước: lưu ảnh ⇢ mở Zalo ⇢ gửi ảnh đó
+
+    Nút "Lưu vào thư viện ảnh"
+    → hiện img src=/api/reports/:id/share-image?view=1 (route trả inline) ngay trong trang
+    → "Nhấn giữ vào ảnh rồi chọn Lưu ảnh" — đường DUY NHẤT còn lại vào Thư viện ảnh,
+      vì trang web KHÔNG có API nào ghi vào Thư viện của Android/iOS (ISSUE-029)
+
+  MÁY TÍNH (pointer: fine) — một nút "Xuất ảnh báo cáo":
+    → thẻ a download từ blob → tải file về máy + dòng "Đã tải ảnh về máy…"
+    → KHÔNG BAO GIỜ gọi share sheet: bảng chia sẻ của Windows không có Zalo (DEC-060)
 ```
 
 ### 6.2 Sequence diagram

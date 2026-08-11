@@ -1,10 +1,70 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **14 — XONG, gồm cả 2 lỗi production người dùng báo (ISSUE-027/028)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **14 — XONG, gồm 3 lỗi/yêu cầu production người dùng báo (ISSUE-027/028/029)** | Last updated: 2026-08-11
 
 ---
 
-## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 020 — PHASE 14)
+## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 021 — PHASE 14)
+
+**Phiên nối tiếp ngày 2026-08-11 làm 3 yêu cầu nữa của người dùng, sinh ra DEC-061 → DEC-063.**
+
+| Việc | Trạng thái |
+|---|---|
+| **ISSUE-029 (P1)** — ảnh "tải về đâu đó không tìm ra", không vào Thư viện ảnh — **DEC-061** | ✅ code + test + docs |
+| **Nút "Gửi qua Zalo"** trên giao diện điện thoại, chạy cả Android lẫn iOS — **DEC-062** | ✅ code + test + docs |
+| **Admin sửa được hồ sơ của chính mình** (họ tên · SĐT · mã NV) — **DEC-063** | ✅ code + test + docs |
+
+### ⚠ BA SỰ THẬT PHẢI NHỚ TRƯỚC KHI ĐỘNG VÀO KHỐI XUẤT ẢNH
+
+1. **Trang web KHÔNG có API nào ghi vào Thư viện ảnh Android / app Ảnh iOS.** Đây là giới hạn hệ
+   điều hành. Chỉ có hai đường, **cả hai đều cần con người chạm**: bảng chia sẻ → "Lưu ảnh", hoặc
+   **nhấn giữ vào ảnh đang hiển thị** → "Lưu ảnh". Mọi thiết kế ở đây là hệ quả của câu này.
+2. **"Đã tải file về máy" ≠ "đã lưu vào Thư viện".** File tải về nằm ở thư mục Tải xuống, và người
+   dùng **không tìm ra** — đó chính là ISSUE-029. Giao diện phải phân biệt hai mệnh đề này.
+3. **Giao diện điện thoại/máy tính tách bằng CSS `pointer-coarse:`, KHÔNG bằng JavaScript.** Hook
+   `matchMedia` chỉ đúng sau khi hydrate ⇒ nhấp nháy nhãn máy tính một nhịp trên điện thoại.
+
+### ⚠ HAI ĐIỀU DỄ VÔ TÌNH PHÁ
+
+- **Nạp trước ảnh trên thiết bị cảm ứng là điều kiện sống còn của iOS**, không phải tối ưu tốc độ.
+  Safari chỉ cho gọi `navigator.share()` khi quyền hạn từ cú chạm còn hiệu lực; bỏ nạp trước là nút
+  "không làm gì cả" (DEC-062).
+- **Luật "chỉ Admin sửa hồ sơ của mình" nằm ở Server Action, KHÔNG ở RLS.**
+  `profiles_update_self` cho **mọi vai** sửa dòng của chính mình — có bài test nói thẳng điều đó ở
+  `tests/rls/profiles.rls.test.ts` (DEC-063).
+
+| Cổng chất lượng | Kết quả thật (2026-08-11, cuối Entry 021) |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npx next build` | ✅ 18 route |
+| `npm test` | ✅ **784/784** (unit 590 · integration 57 · rls 137) |
+| `npm run e2e` | ✅ **150 passed / 12 skipped / 0 failed**, 5,1 phút *(162 bài, có 8 bài MỚI của DEC-061/062/063)* |
+| **Nhìn tận mắt** | ✅ ảnh chụp 375px: hai nút mới · trạng thái hiện ảnh xem trước · `/admin/account` |
+
+⚠ **BỘ E2E LẠI BẮT ĐƯỢC HỒI QUY, LẦN NÀY DO CHÍNH THAY ĐỔI CỦA PHIÊN.** Đổi nhãn nút xong,
+`sales-flow.spec.ts` đỏ **4 bài** trên hai project điện thoại vì vẫn tìm nút "Xuất ảnh báo cáo" —
+nay là nút **chỉ có trên máy tính**. Typecheck/lint/build đều xanh trong lúc đó: nhãn nút là chuỗi,
+việc ẩn nút là CSS. Đã sửa bằng `exportButtonFor(projectName)`.
+
+⚠ **BÀI HỌC LỚN NHẤT CỦA ENTRY 021 — đọc trước khi tin bất kỳ lượt E2E xanh nào:** DEC-060 vừa bổ
+sung E2E **bấm thật** vào nút xuất ảnh, và **những bài đó vẫn xanh trong lúc ISSUE-029 đang xảy ra**.
+Chúng kiểm đúng thứ DEC-060 đặt ra ("không nhánh nào im lặng") và nhánh dự phòng quả thật tạo ra một
+file. Cái chúng không hỏi là câu người dùng quan tâm: **file đó có tới được nơi cần đến không.**
+Entry 020 học được "phải bấm nút"; entry này học tiếp **"bấm xong còn phải hỏi kết quả có dùng được
+không"**.
+
+### Việc kế tiếp
+
+1. **`git push`** — agent không đẩy được (không có TTY). Commit đã tạo, nhờ người dùng chạy.
+2. Sau khi Vercel build xong: **người dùng mở lại trên điện thoại thật** và thử đủ ba đường — "Gửi
+   qua Zalo" → chọn Zalo · "Lưu vào thư viện ảnh" → nhấn giữ → "Lưu ảnh" → mở app Ảnh xem có chưa.
+   Đây là vế **duy nhất** không máy nào kiểm hộ được (gộp với ISSUE-003).
+3. Rotate service role key (ISSUE-011, P1) · Lighthouse.
+
+---
+
+## ✅ Phiên trước đó (Entry 020 — PHASE 14)
 
 **Phiên 2026-08-11 làm 4 yêu cầu của người dùng và sinh ra DEC-055 → DEC-058.**
 

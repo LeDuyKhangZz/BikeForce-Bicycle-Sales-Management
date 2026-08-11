@@ -182,3 +182,60 @@ test.describe('FR-004 — ranh giới vai trò', () => {
     await expect(page).toHaveURL(/\/admin(\?|$)/);
   });
 });
+
+/**
+ * PHASE 14 — DEC-063: Admin sửa hồ sơ của chính mình.
+ *
+ * Trước đó `/admin/account` chỉ đọc và kết thúc bằng câu "Cần sửa thông tin hồ
+ * sơ? Hãy liên hệ Admin" — tức là bảo Admin đi liên hệ chính mình. Không màn
+ * hình nào sửa được hồ sơ Admin: UC-18 lọc `role = 'SALES'`.
+ */
+test.describe('DEC-063 — Admin tự sửa hồ sơ', () => {
+  test('sửa họ tên, SĐT và mã NV rồi thấy đổi thật sau khi tải lại', async ({ page }) => {
+    await page.goto('/admin/account');
+
+    const newName = 'E2E Quản Trị Đã Đổi';
+    const newPhone = '0987654321';
+    const newCode = 'E2E-ADM';
+
+    await fillField(page, 'full_name', newName);
+    await fillField(page, 'phone', newPhone);
+    await fillField(page, 'employee_code', newCode);
+    await page.getByRole('button', { name: /Lưu hồ sơ/ }).click();
+
+    await expect(visibleText(page, /Đã cập nhật hồ sơ/)).toBeVisible({ timeout: 20_000 });
+
+    // Tải lại: chứng minh dữ liệu nằm trong database chứ không phải chỉ trong
+    // state của form — đúng bài học DEC-034.
+    await page.reload();
+    await expect(page.getByLabel('Họ và tên')).toHaveValue(newName);
+    await expect(page.getByLabel('Số điện thoại')).toHaveValue(newPhone);
+    await expect(page.getByLabel('Mã nhân viên')).toHaveValue(newCode);
+
+    // Tên trên header thuộc LAYOUT, không thuộc page. Không `revalidatePath`
+    // đúng chỗ thì chỗ này còn tên cũ — một lỗi rất dễ lọt vì trang thì đúng.
+    await expect(visibleText(page, newName).first()).toBeVisible();
+  });
+
+  test('email và vai trò KHÔNG có ô nhập nào', async ({ page }) => {
+    await page.goto('/admin/account');
+
+    // Chúng hiển thị dạng `<dl>` chứ không phải `<input disabled>` — một ô nhập
+    // mờ đi đọc ra "tạm thời chưa sửa được", còn sự thật là không bao giờ sửa
+    // được ở đây (trigger `guard_profile_self_update()` chặn ở database).
+    await expect(page.locator('input[name="email"]')).toHaveCount(0);
+    await expect(page.locator('input[name="role"]')).toHaveCount(0);
+    await expect(page.locator('input[name="is_active"]')).toHaveCount(0);
+  });
+
+  test('số điện thoại sai định dạng bị chặn ngay tại ô nhập', async ({ page }) => {
+    await page.goto('/admin/account');
+
+    await fillField(page, 'phone', '090-abc-123');
+    await page.getByRole('button', { name: /Lưu hồ sơ/ }).click();
+
+    await expect(visibleText(page, /Số điện thoại chỉ gồm chữ số/)).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+});

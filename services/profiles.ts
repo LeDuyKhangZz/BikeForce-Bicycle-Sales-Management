@@ -232,6 +232,56 @@ const ACCOUNT_PROFILE_COLUMNS = `${SESSION_PROFILE_COLUMNS}, phone`;
  * khoản thì điều đó không xảy ra được (`profiles_select_self_or_admin` luôn cho
  * đọc hồ sơ của chính mình), nhưng tầng gọi vẫn phải xử lý.
  */
+/**
+ * Sửa hồ sơ của **chính người đang đăng nhập** — PHASE 14, **DEC-063**.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO TÁCH KHỎI `updateSalesProfile()` DÙ CÂU SQL GẦN GIỐNG NHAU
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Hai hàm đi qua **hai policy khác nhau** và bảo vệ hai thứ khác nhau:
+ *
+ *  | | `updateSalesProfile` | `updateOwnProfile` |
+ *  |---|---|---|
+ *  | Policy | `profiles_update_admin` | `profiles_update_self` |
+ *  | Lọc | `.eq('role','SALES')` — Admin không sửa Admin khác | `.eq('id', userId)` |
+ *  | Chốt chặn thứ hai | trigger chống nâng quyền | **cùng** trigger đó |
+ *
+ *  `.eq('role','SALES')` của hàm kia là một luật nghiệp vụ thật (UC-18 nói về
+ *  tài khoản Sales). Gộp hai hàm bằng một tham số cờ sẽ khiến luật đó thành một
+ *  nhánh `if` — đúng loại chỗ mà một lần sửa vội sau này làm Admin sửa được hồ
+ *  sơ của Admin khác mà không ai nhận ra.
+ *
+ *  `userId` **luôn** đến từ `auth.getUser()` phía server, không bao giờ từ
+ *  `FormData`. Dù có truyền sai thì `profiles_update_self` cũng trả 0 dòng —
+ *  đây là defense-in-depth, không phải lớp bảo vệ duy nhất (DEC-004).
+ */
+export async function updateOwnProfile(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  values: SalesProfileWrite,
+): Promise<ProfileWriteResult> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(values)
+    .eq('id', userId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    console.error('[updateOwnProfile]', error.code, error.message);
+
+    if (error.code === PG_UNIQUE_VIOLATION) return { ok: false, error: 'DUPLICATE_CODE' };
+    if (error.code && PG_REJECTED_CODES.has(error.code)) return { ok: false, error: 'REJECTED' };
+    return { ok: false, error: 'UNKNOWN' };
+  }
+
+  // 0 dòng khớp: phiên đã hết hạn, hoặc hồ sơ không còn. RLS không thể là lý do
+  // ở đây vì `profiles_update_self` luôn cho sửa dòng của chính mình.
+  if (data === null) return { ok: false, error: 'NOT_FOUND' };
+
+  return { ok: true };
+}
+
 export async function getAccountProfile(
   supabase: SupabaseClient<Database>,
   userId: string,

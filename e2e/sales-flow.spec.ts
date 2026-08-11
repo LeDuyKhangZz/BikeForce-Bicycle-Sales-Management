@@ -19,6 +19,23 @@ import {
 
 const salesFor = (projectName: string): string => flowSalesEmail(toE2eProject(projectName));
 
+/**
+ * Nhãn nút xuất ảnh — **hai chiều**: theo thiết bị (DEC-062) và theo biến thể
+ * ảnh (DEC-058).
+ *
+ * Điện thoại có hai nút cho hai ý định (gửi Zalo · lưu vào thư viện), máy tính
+ * giữ một nút tải file. Việc ẩn/hiện do **CSS** (`pointer-coarse:`) quyết định
+ * nên nút của thiết bị kia thật sự **không hiển thị**, không phải chỉ đổi nhãn.
+ * Chi tiết luồng ở `e2e/share-image.spec.ts`.
+ */
+const exportButtonFor = (projectName: string, variant: 'MORNING' | 'EVENING'): string => {
+  if (projectName === 'desktop-1440') {
+    return variant === 'MORNING' ? 'Lưu hình báo cáo đầu ngày' : 'Xuất ảnh báo cáo';
+  }
+
+  return variant === 'MORNING' ? 'Gửi cam kết qua Zalo' : 'Gửi kết quả qua Zalo';
+};
+
 test.describe('Luồng Sales đầu-cuối', () => {
   test('UC-04 → UC-06: cam kết sáng (khoá ngay), rồi hoàn tất cuối ngày', async ({
     page,
@@ -62,7 +79,9 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await expect(page).toHaveURL(/\/sales\/today(\?|$)/);
 
     /* ── 5b. DEC-058 — chỗ nút cũ nay là ảnh CAM KẾT ĐẦU NGÀY ──────────────── */
-    await expect(page.getByRole('button', { name: 'Lưu hình báo cáo đầu ngày' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'MORNING') }),
+    ).toBeVisible();
 
     /* ── 6. UC-06 — hoàn tất cuối ngày ─────────────────────────────────────── */
     await page.getByRole('link', { name: 'Hoàn thành báo cáo cuối ngày' }).click();
@@ -101,8 +120,12 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await expect(page).toHaveURL(/\/sales\/today(\?|$)/);
 
     /* ── 9. DEC-058 — nút ảnh đổi sang bản KẾT QUẢ sau khi hoàn tất ─────────── */
-    await expect(page.getByRole('button', { name: 'Xuất ảnh báo cáo' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Lưu hình báo cáo đầu ngày' })).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'EVENING') }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'MORNING') }),
+    ).toHaveCount(0);
   });
 
   test('BR-007: chưa cam kết sáng thì không vào được form cuối ngày', async ({
@@ -121,7 +144,9 @@ test.describe('Luồng Sales đầu-cuối', () => {
 });
 
 test.describe('FR-021 / FR-022 — lịch sử và chi tiết báo cáo', () => {
-  test('UC-09: lịch sử tháng có phân trang, lọc tháng, và mở được chi tiết', async ({ page }) => {
+  test('UC-09: lịch sử tháng có phân trang, lọc tháng, và mở được chi tiết', async ({
+    page,
+  }, testInfo) => {
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
     /* ── Bottom nav 3 mục, có icon VÀ chữ (DEC-018) ────────────────────────── */
@@ -151,7 +176,9 @@ test.describe('FR-021 / FR-022 — lịch sử và chi tiết báo cáo', () => 
     await detailLink.click();
     await expect(page).toHaveURL(/\/sales\/reports\/[0-9a-f-]{36}/);
     await expect(visibleText(page, 'Viếng thăm')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Xuất ảnh/ })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'EVENING') }),
+    ).toBeVisible();
     await expectNoBrokenNumbers(page);
     await expectNoHorizontalScroll(page);
   });

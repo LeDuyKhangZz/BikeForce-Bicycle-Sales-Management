@@ -654,7 +654,7 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
 ## Phase 14 — Gỡ sửa cam kết sáng · Thẻ ảnh 9:16 đổi nội dung, đổi màu, tách hai biến thể (MỞ 2026-08-11)
 
 **Nguồn:** 4 lượt yêu cầu trực tiếp của người dùng trong phiên 2026-08-11 (kèm 3 ảnh chú thích tay).
-**Quyết định:** DEC-055 · DEC-056 · DEC-057 · DEC-058. **BR-002 được NỚI** (DEC-058).
+**Quyết định:** DEC-055 · DEC-056 · DEC-057 · DEC-058 · DEC-059 · DEC-060 · **DEC-061 · DEC-062 · DEC-063**. **BR-002 được NỚI** (DEC-058).
 
 ### 14a. Gỡ hẳn "Sửa cam kết sáng" — DEC-055
 
@@ -726,6 +726,74 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
 - [x] **`e2e/share-image.spec.ts` (MỚI)** — 4 bài **bấm thật**, bắt sự kiện `download`
 - [x] **ISSUE-028 (P3)** — a11y `/login` đỏ-rồi-xanh do đua với `animate-rise-in`; sửa bằng `contextOptions.reducedMotion = 'reduce'`
 - [x] Chạy lại đủ: typecheck · lint · build · `npm test` **765/765** · `npm run e2e` **130 passed / 8 skipped / 0 failed**
+
+### 14i. Ảnh phải tới được THƯ VIỆN, không chỉ tới thư mục Tải xuống — DEC-061 + DEC-062 (ISSUE-029)
+
+**Nguồn:** người dùng báo trên production ngày 2026-08-11, **ngay sau khi DEC-060 đóng ISSUE-027**:
+*"nút lưu hình ảnh báo cáo không lưu về thư viện ở android hay ứng dụng ảnh ở ios mà thấy nó tải về
+xong nó tự động lưu ở đâu đó giờ tôi kiếm không ra"*. Cộng hai yêu cầu tiếp theo trong cùng phiên:
+*"triển khai thêm nút gửi qua zalo ở giao diện điện thoại"* và *"áp dụng được cho cả android và ios"*.
+
+- [x] **Xác định đúng gốc:** trang web **không có API nào** ghi vào Thư viện ảnh Android/iOS — giới
+      hạn hệ điều hành, không phải thiếu sót sản phẩm. Chỉ còn 2 đường, đều cần thao tác tay
+- [x] Route ảnh nhận **`?view=1`** → `Content-Disposition: inline` (mặc định vẫn `attachment`)
+- [x] `shareImageViewPath()` + `SHARE_IMAGE_VIEW_PARAM` ở `lib/reports/share-card.ts`
+- [x] Nhánh dự phòng của điện thoại: **hiện ảnh trong trang** (`<img …?view=1>`) + câu "nhấn giữ để
+      lưu" — **không** còn `window.location.href`, không sinh file lạc
+- [x] Link lối-thoát đổi sang `?view=1` và đổi nhãn thành "Mở ảnh ở tab mới" (tránh trùng nghĩa với
+      nút mới)
+- [x] **Nút "Gửi cam kết/kết quả qua Zalo"** (`accent`) — `navigator.share({ files })`, hỏng thì hướng dẫn 3 bước. Nhãn **chia theo biến thể** để giữ thông tin DEC-058 đã đặt vào nhãn cũ
+- [x] **Nút "Lưu vào thư viện ảnh"** (`secondary`) — hiện ảnh ngay, **không chờ mạng**
+- [x] Tách điện thoại/máy tính bằng **CSS `pointer-coarse:`**, không bằng JS → không nhấp nháy nhãn
+      khi hydrate; hai class đặt lên **thẻ bọc** vì `cn()` không có `tailwind-merge`
+- [x] **Nạp trước ảnh trên thiết bị cảm ứng** (`useEffect` + `ref`) — điều kiện sống còn của **iOS**:
+      Safari đòi quyền hạn từ cú chạm còn hiệu lực khi gọi `navigator.share()`
+- [x] Nhãn nút ở `lib/` (`SEND_TO_ZALO_LABEL`, `SAVE_TO_GALLERY_LABEL`), không rải trong component
+- [x] `e2e/share-image.spec.ts`: **+4 bài** — bố cục nút theo thiết bị · nút thư viện hiện ảnh ·
+      nhánh không-share-sheet phải HIỆN ảnh và **không rời trang** · route `inline` vs `attachment`
+- [x] `e2e/sales-flow.spec.ts` cập nhật theo nhãn nút mới (`exportButtonFor()`)
+- [x] **Nhìn tận mắt** ảnh chụp 375px: hai nút + trạng thái đã hiện ảnh xem trước
+- [ ] Nhấn giữ → "Lưu ảnh" trên **điện thoại thật** (Android + iOS) — gộp với ISSUE-003, cần thiết bị
+
+### 14j. Admin sửa được hồ sơ của chính mình — DEC-063
+
+**Nguồn:** người dùng yêu cầu trực tiếp: *"tài khoản admin chỗ tài khoản, hồ sơ của bạn có thể thay
+đổi được họ và tên, số điện thoại, mã nhân viên"*.
+
+- [x] Phát hiện mâu thuẫn thật: `/admin/account` bảo Admin "hãy liên hệ Admin", mà UC-18 lọc
+      `role = 'SALES'` nên **không màn hình nào** sửa được hồ sơ Admin
+- [x] `lib/validation/profile-fields.ts` **(MỚI)** — ba trường hồ sơ dùng chung với form UC-18, tránh
+      hai bản ràng buộc trôi khỏi nhau (và tránh vòng import `account.ts` ↔ `sales-account.ts`)
+- [x] `updateOwnProfileSchema` ở `lib/validation/account.ts` — **chỉ** 3 trường, cố ý không có
+      `email` / `role` / `is_active`
+- [x] `services/profiles.updateOwnProfile()` — tách khỏi `updateSalesProfile()` vì đi qua **policy
+      khác** (`profiles_update_self`) và không có bộ lọc `role = 'SALES'`
+- [x] `features/account/actions.updateOwnProfileAction` — thứ tự AGENTS.md §8, chặn `role !== 'ADMIN'`
+      **ở Server Action** (RLS không phân biệt vai), `revalidatePath('/admin', 'layout')` vì tên hiển
+      thị nằm ở header của layout
+- [x] `features/account/own-profile-form.tsx` **(MỚI)** — khuôn theo `EditSalesForm`; email + vai trò
+      để dạng `<dl>` chứ **không** `<input disabled>` (rule `read-only-distinction`)
+- [x] `/sales/account` **giữ nguyên `ProfileCard` chỉ đọc** — hồ sơ Sales do Admin quản lý
+- [x] `OWN_PROFILE_MESSAGES` ở `lib/account/messages.ts` (KHÔNG đặt trong file `'use server'` —
+      ISSUE-016)
+- [x] **Không cần migration**: `profiles_update_self` + `guard_profile_self_update()` đã có từ Phase 2
+- [x] `lib/validation/account.test.ts` **(MỚI)** — 13 unit test, gồm bài khoá **bề mặt tấn công**:
+      schema bỏ qua `role` / `is_active` / `email` dù client gửi lên
+- [x] `tests/rls/profiles.rls.test.ts` **+4 bài** — trong đó có bài ghi rõ **tầng DB vẫn cho Sales tự
+      sửa họ tên**, để không ai bỏ dòng kiểm vai với lý do "RLS lo rồi"
+- [x] `e2e/admin-flow.spec.ts` **+3 bài** — sửa & tải lại thấy đổi thật · không có ô nhập cho
+      email/role · SĐT sai định dạng bị chặn
+- [x] `e2e/a11y.spec.ts` **+1 bài** — quét axe `/admin/account`: trang này **đổi bản chất** (chỉ đọc →
+      form + khối `<dl>` chỉ đọc trong cùng thẻ `<form>`), đúng kiểu bố cục dễ sinh nhãn mồ côi
+- [x] **Nhìn tận mắt** `/admin/account` ở 375px
+
+### 14k. Quality gate của 14i + 14j
+
+- [x] `npm run typecheck` — exit 0
+- [x] `npm run lint` — 0 error, 0 warning
+- [x] `npx next build` — 18 route
+- [x] `npm test` đủ 3 project — **784/784** (unit 590 · integration 57 · rls 137)
+- [x] `npm run e2e` — **150 passed / 12 skipped / 0 failed**, 5,1 phút *(162 bài, có 8 bài MỚI của DEC-061/062/063)*
 
 ## OPEN QUESTIONS
 

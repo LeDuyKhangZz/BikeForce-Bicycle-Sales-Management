@@ -2160,3 +2160,106 @@ hiệu ứng chuyển tiếp.
 |---|---|
 | Kiểm ảnh trong Zalo trên **thiết bị thật** | ISSUE-003 — máy không thay người được ở khâu này |
 | Lighthouse | Cần bản deploy mới |
+
+---
+
+### Entry 021 — PHASE 14 (tiếp): ảnh phải tới được THƯ VIỆN · nút Gửi qua Zalo · Admin sửa hồ sơ của mình
+
+**Ngày:** 2026-08-11 (cùng ngày với Entry 020, phiên nối tiếp)
+**Nguồn:** ba yêu cầu/báo lỗi liên tiếp của người dùng trong một phiên.
+**Sinh ra:** **ISSUE-029** · **DEC-061** · **DEC-062** · **DEC-063**.
+
+#### 1. Người dùng báo lỗi — và nó tới NGAY SAU khi DEC-060 vừa đóng ISSUE-027
+
+> *"ở điện thoại, nút lưu hình ảnh báo cáo không lưu về thư viện ở android hay ứng dụng ảnh ở ios mà
+> thấy nó tải về xong nó tự động lưu ở đâu đó giờ tôi kiếm không ra"*
+
+File nằm trong thư mục **Tải xuống** (`/storage/emulated/0/Download/` trên Android, `Tệp → Tải
+xuống` trên iOS), tên đúng FR-019. Nhưng đó không phải nơi người dùng cần.
+
+**Gốc rễ có hai tầng, và tầng dưới KHÔNG sửa được bằng code:**
+
+> **Trang web không có bất kỳ API nào ghi vào Thư viện ảnh của Android hay app Ảnh của iOS.**
+
+Chỉ còn **hai** đường vào thư viện, cả hai đều cần một thao tác tay của con người: bảng chia sẻ →
+"Lưu ảnh", hoặc **nhấn giữ vào một tấm ảnh đang hiển thị** → "Lưu ảnh". Tầng thứ hai — tầng sửa được
+— là nhánh dự phòng của DEC-060: nó điều hướng sang route ảnh, route trả `attachment`, nên trình
+duyệt **tải file rồi thôi**; ảnh không bao giờ được HIỆN nên không nhấn giữ được. Link "Mở ảnh trực
+tiếp" cũng trỏ vào chính route đó, tức chỉ mở ra một tab trắng rồi tải thêm một file nữa.
+
+**Sửa (DEC-061):** route ảnh nhận `?view=1` → `Content-Disposition: inline`; nhánh dự phòng **hiện
+thẳng tấm ảnh trong trang** kèm câu "nhấn giữ để lưu"; link lối-thoát trỏ vào `?view=1`.
+
+#### 2. Bài học đắt nhất của phiên: bộ test XANH trong lúc lỗi đang tồn tại
+
+DEC-060 vừa mới bổ sung E2E **bấm thật** vào nút — đúng bài học của Entry 020 — và **những bài đó
+vẫn xanh** khi ISSUE-029 đang xảy ra. Chúng kiểm đúng thứ DEC-060 đặt ra ("không nhánh nào im
+lặng"), và nhánh dự phòng quả thật có tạo ra một file.
+
+> Cái chúng không hỏi là câu người dùng thật sự quan tâm: **file đó có tới được nơi người dùng cần
+> không.** "Đã tải về" và "đã lưu vào thư viện" là hai mệnh đề khác nhau. Entry 020 học được rằng
+> phải **bấm** nút; entry này học tiếp rằng bấm xong còn phải hỏi **kết quả có dùng được không**.
+
+#### 3. Hai yêu cầu tiếp theo, làm luôn trong cùng lượt
+
+*"triển khai thêm nút gửi qua zalo ở giao diện điện thoại"* + *"áp dụng được cho cả android và ios"*
+→ **DEC-062**. Điện thoại nay có **hai** nút cho **hai ý định** khác nhau:
+
+| Nút | Hành vi |
+|---|---|
+| **Gửi qua Zalo** (`accent`) | `navigator.share({ files })` → bảng chia sẻ của hệ điều hành, Zalo là một mục trong đó |
+| **Lưu vào thư viện ảnh** (`secondary`) | Hiện `<img …?view=1>` ngay trong trang + "nhấn giữ để lưu". Không chờ mạng |
+
+Máy tính giữ nguyên một nút tải file — bảng chia sẻ của Windows không có Zalo (DEC-060).
+
+**Ba điểm kỹ thuật là phần cốt lõi, không phải chi tiết cài đặt:**
+
+1. **Tách bằng CSS `pointer-coarse:`, không bằng JavaScript.** Hook `matchMedia` chỉ đúng *sau khi
+   hydrate* ⇒ điện thoại sẽ thấy nhãn máy tính nhấp nháy một nhịp. CSS đúng từ khung hình đầu tiên,
+   và vẫn là feature detection chứ không sniff `userAgent` — `pointer: coarse` đúng trên **cả
+   Android lẫn iOS**.
+2. **Nạp trước tấm ảnh trên thiết bị cảm ứng.** Đây là điều kiện sống còn của **iOS**: Safari chỉ
+   cho gọi `navigator.share()` khi quyền hạn từ cú chạm còn hiệu lực, mà dựng ảnh 1080×1920 mất vài
+   trăm ms tới vài giây. Không nạp trước thì `NotAllowedError`, và nút "không làm gì cả" — đúng
+   ISSUE-027 lặp lại lần nữa, chỉ khác nguyên nhân.
+3. **Không có deep link Zalo nào nhận file.** `zalo://`, `sharer.zalo.me`, `intent://` chỉ chia sẻ
+   được **đường dẫn**, mà đường dẫn ảnh của ta đòi đăng nhập. Nhãn nút mô tả **ý định**; giao diện
+   không được hứa hơn thế.
+
+*"tài khoản admin chỗ tài khoản, hồ sơ của bạn có thể thay đổi được họ và tên, số điện thoại, mã
+nhân viên"* → **DEC-063**. Đây không chỉ là thêm form: `/admin/account` đang bảo Admin *"hãy liên hệ
+Admin"* — tự nói với chính mình — trong khi UC-18 lọc `role = 'SALES'` nên **không màn hình nào**
+sửa được hồ sơ Admin. Họ tên của Admin bị khoá vĩnh viễn ở giá trị lúc tạo tài khoản.
+
+**Không cần migration:** `profiles_update_self` và trigger `guard_profile_self_update()` đã có từ
+Phase 2. ⚠ Nhưng policy đó cho **mọi vai** sửa dòng của chính mình, nên luật "chỉ Admin" phải ép ở
+**Server Action**, không ở RLS — đã ghi một bài test trong `tests/rls/profiles.rls.test.ts` nói
+thẳng sự thật này để không ai bỏ dòng kiểm vai với lý do "RLS lo rồi". Hệ quả còn lại (Sales gọi
+thẳng PostgREST vẫn đổi được `full_name` của chính họ) là **lệch luật nghiệp vụ, không phải leo
+thang quyền** — đã ghi vào DEC-063 và `docs/06` ghi chú (b).
+
+#### 4. Bộ E2E lại bắt được hồi quy, lần này của chính mình
+
+Lượt `npm run e2e` đầu sau khi đổi nhãn nút: **4 bài đỏ** ở `sales-flow.spec.ts` trên hai project
+điện thoại — chúng vẫn tìm nút "Xuất ảnh báo cáo", nay là nút **chỉ có trên máy tính**. Đã thêm
+`exportButtonFor(projectName)` cho hai chỗ đó. Đây là loại hồi quy mà typecheck/lint/build không thể
+thấy: nhãn nút là chuỗi, và việc ẩn nút là CSS.
+
+#### 5. Quality gate
+
+| Cổng | Kết quả thật |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npx next build` | ✅ 18 route |
+| `npm test` | ✅ **784/784** (unit 590 · integration 57 · rls 137) |
+| `npm run e2e` | ✅ **150 passed / 12 skipped / 0 failed**, 5,1 phút *(162 bài, có 8 bài MỚI của DEC-061/062/063)* |
+| **Nhìn tận mắt** | ✅ ảnh chụp 375px: hai nút mới · trạng thái đã hiện ảnh xem trước · `/admin/account` |
+
+#### Còn nợ
+
+| Việc | Vì sao chưa làm |
+|---|---|
+| Nhấn giữ → "Lưu ảnh" trên **điện thoại thật** (Android + iOS) | Là chức năng **của trình duyệt thật**, Playwright không mô phỏng được. Gộp với ISSUE-003 |
+| Siết `profiles_update_self` xuống chỉ còn Admin (migration `0009`) | Ngoài phạm vi người dùng yêu cầu; siết RLS là thay đổi biên giới bảo mật, phải là một DEC riêng |
+| Deploy để người dùng kiểm lại trên máy thật | `git push` cần người dùng chạy |

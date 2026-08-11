@@ -22,56 +22,18 @@ import { z } from 'zod';
 
 import { PASSWORD_MAX_LENGTH } from '@/lib/validation/auth';
 import { PASSWORD_MIN_LENGTH } from '@/lib/validation/account';
+import { employeeCodeField, fullNameField, phoneField } from '@/lib/validation/profile-fields';
 
-/** Khớp `ck_profiles_full_name_len`. */
-export const FULL_NAME_MAX_LENGTH = 100;
-/** Khớp `ck_profiles_phone_format` — chỉ số, dấu cộng và khoảng trắng. */
-export const PHONE_PATTERN = /^[0-9+ ]{8,15}$/;
-/** Không có CHECK riêng ở DB; trần này chỉ để form không nhận một chuỗi vô hạn. */
-export const EMPLOYEE_CODE_MAX_LENGTH = 32;
-
-const fullNameField = z
-  .string({ message: 'Vui lòng nhập họ và tên.' })
-  .trim()
-  .min(1, { message: 'Vui lòng nhập họ và tên.' })
-  .max(FULL_NAME_MAX_LENGTH, {
-    message: `Họ và tên tối đa ${FULL_NAME_MAX_LENGTH} ký tự.`,
-  });
-
-/**
- * Trường TUỲ CHỌN nhưng đến từ `FormData`, nên giá trị "không nhập" là chuỗi
- * rỗng chứ không phải `undefined`. Quy về `null` ở đây để service không phải
- * phân biệt hai thứ đó — và để `uq_profiles_employee_code` (unique WHERE not
- * null) không coi nhiều chuỗi rỗng là trùng nhau.
+/*
+ * PHASE 14 (DEC-063) — ba trường hồ sơ đã dọn sang `lib/validation/profile-fields.ts`
+ * vì Admin nay sửa được hồ sơ của **chính mình** và cần đúng những ràng buộc đó.
+ * Re-export để mọi chỗ đang import hằng số từ file này không phải đổi đường dẫn.
  */
-function optionalField(schema: z.ZodType<string>) {
-  return z
-    .string()
-    .trim()
-    .transform((value) => (value === '' ? null : value))
-    .nullable()
-    .superRefine((value, ctx) => {
-      if (value === null) return;
-      const result = schema.safeParse(value);
-      if (!result.success) {
-        for (const issue of result.error.issues) {
-          ctx.addIssue({ code: 'custom', message: issue.message });
-        }
-      }
-    });
-}
-
-const phoneField = optionalField(
-  z.string().regex(PHONE_PATTERN, {
-    message: 'Số điện thoại chỉ gồm chữ số, dấu cộng và khoảng trắng, dài 8–15 ký tự.',
-  }),
-);
-
-const employeeCodeField = optionalField(
-  z.string().max(EMPLOYEE_CODE_MAX_LENGTH, {
-    message: `Mã nhân viên tối đa ${EMPLOYEE_CODE_MAX_LENGTH} ký tự.`,
-  }),
-);
+export {
+  EMPLOYEE_CODE_MAX_LENGTH,
+  FULL_NAME_MAX_LENGTH,
+  PHONE_PATTERN,
+} from '@/lib/validation/profile-fields';
 
 const emailField = z
   .string({ message: 'Vui lòng nhập email.' })

@@ -32,8 +32,22 @@ import { signIn } from './helpers';
  *  hàm ghi lại lời gọi.
  */
 
-/** Nút xuất ảnh của một báo cáo đã hoàn tất (bản KẾT QUẢ — DEC-058). */
+/**
+ * Nút của **máy tính** — tải file (DEC-062). Trên điện thoại nút này bị ẩn bằng
+ * CSS và thay bằng hai nút bên dưới.
+ */
 const EXPORT_BUTTON = 'Xuất ảnh báo cáo';
+
+/**
+ * Nút 1 của **điện thoại**: mở bảng chia sẻ của hệ điều hành (DEC-062).
+ *
+ * Nhãn mang biến thể ảnh (DEC-058) — mọi bài ở đây dùng tài khoản đã `COMPLETED`
+ * nên luôn là bản KẾT QUẢ. Bản sáng là "Gửi cam kết qua Zalo".
+ */
+const ZALO_BUTTON = 'Gửi kết quả qua Zalo';
+
+/** Nút 2 của **điện thoại**: hiện ảnh ra để nhấn giữ lưu (DEC-061 + DEC-062). */
+const GALLERY_BUTTON = 'Lưu vào thư viện ảnh';
 
 type ShareProbe = {
   called: boolean;
@@ -96,8 +110,12 @@ async function stubWebShare(
 }
 
 test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm được việc', () => {
-  test('bấm nút → tải về một file PNG có đúng tên FR-019', async ({ page }, testInfo) => {
-    // Không có share sheet dùng được ⇒ mọi project đều đi đường tải về.
+  test('máy tính: bấm nút → tải về một file PNG có đúng tên FR-019', async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== 'desktop-1440',
+      'Từ DEC-061, điện thoại KHÔNG còn tải file — nó hiện ảnh ra. Xem bài kế tiếp.',
+    );
+
     await stubWebShare(page, { supported: false });
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
@@ -112,15 +130,54 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     // biến thể KẾT QUẢ; bản sáng dùng `BikeForce_CamKet_` (DEC-058).
     expect(download.suggestedFilename()).toMatch(/^BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/);
 
-    /*
-     * Máy tính đi đường blob nên hiện được dòng xác nhận. Thiết bị cảm ứng đi
-     * đường ĐIỀU HƯỚNG THẬT (`location.href`) — ở đó chính trình duyệt hiện
-     * giao diện tải của nó, và trang đã rời đi nên không còn chỗ cho dòng chữ.
-     * Cả hai đều thoả nguyên tắc (b) của DEC-060: không nhánh nào im lặng.
-     */
-    if (testInfo.project.name === 'desktop-1440') {
-      await expect(page.getByText('Đã tải ảnh về máy')).toBeVisible();
-    }
+    // Nguyên tắc (b) của DEC-060 — không nhánh nào im lặng.
+    await expect(page.getByText('Đã tải ảnh về máy')).toBeVisible();
+  });
+
+  /**
+   * ⚠ BÀI NÀY KHOÁ LẠI **ISSUE-029** — DEC-061.
+   *
+   * Lỗi thật người dùng báo: trên điện thoại, nút "lưu hình" đẩy file vào thư
+   * mục Tải xuống rồi thôi. Không vào Thư viện ảnh, và họ không tìm ra file.
+   *
+   * Trang web **không ghi được vào Thư viện ảnh** — không có API nào. Nên phép
+   * kiểm ở đây không phải "ảnh đã vào thư viện chưa" (không kiểm được, và cũng
+   * không đúng chỗ), mà là: **điện thoại có được đưa tới đúng thao tác tay dẫn
+   * vào thư viện hay không** — tức ảnh phải HIỆN RA để nhấn giữ.
+   */
+  test('điện thoại không có share sheet → HIỆN ảnh ra, KHÔNG tải file ngầm', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'desktop-1440',
+      'Bài này nói về `pointer: coarse` — chỉ có nghĩa trên project cảm ứng.',
+    );
+
+    await stubWebShare(page, { supported: false });
+    await signIn(page, E2E_DONE_SALES_EMAIL);
+
+    const urlBeforeClick = page.url();
+
+    await page.getByRole('button', { name: ZALO_BUTTON }).click();
+
+    // Ảnh thật hiện ngay trong trang, trỏ vào chế độ XEM của route (`inline`).
+    const preview = page.getByRole('img', { name: /^Ảnh báo cáo dọc 9:16/ });
+    await expect(preview).toBeVisible({ timeout: 60_000 });
+    await expect(preview).toHaveAttribute('src', /\/share-image\?view=1$/);
+
+    // FR-019 vẫn được giữ: tên file đi theo ảnh để lần "Lưu ảnh" đặt đúng tên.
+    await expect(preview).toHaveAttribute(
+      'alt',
+      /BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/,
+    );
+
+    // Và phải nói cho người dùng biết thao tác tiếp theo, nếu không họ lại đi
+    // tìm file như đúng lần đã báo lỗi.
+    await expect(page.getByText('Nhấn giữ vào ảnh bên dưới')).toBeVisible();
+
+    // Không rời trang: bản DEC-060 điều hướng thật, và đó chính là lúc file rơi
+    // vào thư mục Tải xuống mà không ai thấy.
+    expect(page.url()).toBe(urlBeforeClick);
   });
 
   test('KHÔNG bao giờ dùng share sheet trên máy tính có chuột', async ({ page }, testInfo) => {
@@ -151,7 +208,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await stubWebShare(page, { supported: true });
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
-    await page.getByRole('button', { name: EXPORT_BUTTON }).click();
+    await page.getByRole('button', { name: ZALO_BUTTON }).click();
 
     await expect
       .poll(async () => (await page.evaluate(() => window.__shareProbe))?.called, {
@@ -165,16 +222,117 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     expect(probe?.fileName).toMatch(/^BikeForce_Report_.+\.png$/);
     // File rỗng nghĩa là blob hỏng — share sheet vẫn mở nhưng Zalo nhận ảnh lỗi.
     expect(probe?.fileSize ?? 0).toBeGreaterThan(1000);
+
+    // DEC-061: mở được bảng chia sẻ vẫn CHƯA phải là ảnh đã vào thư viện — phải
+    // chỉ đúng mục cần bấm trong bảng đó.
+    await expect(page.getByText('Chọn Zalo trong bảng vừa mở')).toBeVisible();
   });
 
-  test('luôn có lối lấy ảnh KHÔNG cần JavaScript', async ({ page }) => {
+  /**
+   * DEC-062 — bố cục nút do **CSS** quyết định, không do JavaScript.
+   *
+   * Bài này khoá lại đúng điều đó: cùng một HTML, hai thiết bị thấy hai bộ nút
+   * khác nhau ngay từ khung hình đầu tiên. Nếu ai đó đổi sang một hook đọc
+   * `matchMedia` thì điện thoại sẽ nhấp nháy nhãn máy tính một nhịp — bài này
+   * không bắt được cái nhấp nháy, nhưng bắt được việc nút hiện sai thiết bị.
+   */
+  test('điện thoại thấy hai nút Zalo + thư viện, máy tính chỉ thấy nút tải file', async ({
+    page,
+  }, testInfo) => {
+    await signIn(page, E2E_DONE_SALES_EMAIL);
+
+    const isDesktop = testInfo.project.name === 'desktop-1440';
+
+    const zalo = page.getByRole('button', { name: ZALO_BUTTON });
+    const gallery = page.getByRole('button', { name: GALLERY_BUTTON });
+    const download = page.getByRole('button', { name: EXPORT_BUTTON });
+
+    if (isDesktop) {
+      await expect(download).toBeVisible();
+      await expect(zalo).toBeHidden();
+      await expect(gallery).toBeHidden();
+      return;
+    }
+
+    await expect(zalo).toBeVisible();
+    await expect(gallery).toBeVisible();
+    await expect(download).toBeHidden();
+  });
+
+  /**
+   * Nút "Lưu vào thư viện ảnh" — DEC-062.
+   *
+   * Nút này KHÔNG chờ mạng: nó chỉ hiện thẻ `<img>` trỏ vào `?view=1`. Người
+   * dùng ở ngoài thị trường, mạng yếu, mà việc họ muốn chỉ là nhìn thấy ảnh để
+   * nhấn giữ — bắt họ chờ dựng blob là thừa.
+   */
+  test('điện thoại: nút thư viện hiện ảnh ngay, không cần bảng chia sẻ', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'desktop-1440',
+      'Nút này chỉ tồn tại trên giao diện điện thoại.',
+    );
+
+    await signIn(page, E2E_DONE_SALES_EMAIL);
+
+    await page.getByRole('button', { name: GALLERY_BUTTON }).click();
+
+    const preview = page.getByRole('img', { name: /^Ảnh báo cáo dọc 9:16/ });
+    await expect(preview).toBeVisible({ timeout: 60_000 });
+    await expect(preview).toHaveAttribute('src', /\/share-image\?view=1$/);
+    await expect(page.getByText('Nhấn giữ vào ảnh bên dưới')).toBeVisible();
+  });
+
+  test('luôn có lối lấy ảnh KHÔNG cần JavaScript, và nó DẪN VÀO THƯ VIỆN', async ({ page }) => {
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
     // Nguyên tắc (c) của DEC-060: nếu webview chặn hết automation (ISSUE-003 —
     // trình duyệt trong Zalo), đây vẫn là một đường lấy ảnh chạy được.
-    const link = page.getByRole('link', { name: 'Mở ảnh trực tiếp' });
+    const link = page.getByRole('link', { name: 'Mở ảnh ở tab mới' });
 
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute('href', /\/api\/reports\/[0-9a-f-]{36}\/share-image$/);
+
+    /*
+     * `?view=1` chứ KHÔNG phải route trần — DEC-061.
+     *
+     * Route trần trả `attachment`: link mở ra một tab trắng rồi file rơi vào thư
+     * mục Tải xuống. Đó đúng là ISSUE-029, và nó làm một "lối thoát" mất hết ý
+     * nghĩa. `?view=1` trả `inline` ⇒ ảnh hiện ra ⇒ nhấn giữ được ⇒ lưu được vào
+     * Thư viện ảnh.
+     */
+    await expect(link).toHaveAttribute(
+      'href',
+      /\/api\/reports\/[0-9a-f-]{36}\/share-image\?view=1$/,
+    );
+  });
+
+  /**
+   * Hai chế độ của route ảnh — DEC-061. Đây là phép kiểm ở tầng HTTP, độc lập
+   * với mọi hành vi client, vì cả hai câu chuyện trên đều dựa vào đúng một chữ
+   * trong header này.
+   */
+  test('route ảnh: mặc định TẢI, có ?view=1 thì HIỆN', async ({ page }) => {
+    await signIn(page, E2E_DONE_SALES_EMAIL);
+
+    const href = await page
+      .getByRole('link', { name: 'Mở ảnh ở tab mới' })
+      .getAttribute('href');
+
+    expect(href).not.toBeNull();
+    if (href === null) return;
+
+    const viewResponse = await page.request.get(href, { maxRedirects: 0 });
+    expect(viewResponse.status()).toBe(200);
+    expect(viewResponse.headers()['content-type']).toBe('image/png');
+    expect(viewResponse.headers()['content-disposition']).toMatch(/^inline; filename="BikeForce_/);
+
+    const downloadResponse = await page.request.get(href.replace('?view=1', ''), {
+      maxRedirects: 0,
+    });
+    expect(downloadResponse.status()).toBe(200);
+    expect(downloadResponse.headers()['content-disposition']).toMatch(
+      /^attachment; filename="BikeForce_/,
+    );
   });
 });

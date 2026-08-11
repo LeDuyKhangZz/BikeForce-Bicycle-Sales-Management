@@ -315,13 +315,13 @@ nay là **đường UPDATE duy nhất** của ứng dụng trên `daily_reports`
 |---|---|
 | **File** | `app/api/reports/[id]/share-image/route.tsx` |
 | **Runtime** | Node (cần đọc file font bằng `fs` cho Satori) |
-| **Input** | Path param `id` (uuid). Không nhận query param nào ảnh hưởng nội dung — **kể cả biến thể ảnh**: nó suy ra từ `status` đọc trong database, client không chọn được (DEC-058) |
+| **Input** | Path param `id` (uuid) + query param tuỳ chọn **`?view=1`** (PHASE 14 — **DEC-061**). ⚠ `view` **không** ảnh hưởng nội dung ảnh, chỉ đổi `Content-Disposition` từ `attachment` sang `inline`. **Biến thể ảnh vẫn suy ra từ `status` đọc trong database**, client không chọn được (DEC-058) |
 | **Validation** | `id` phải là uuid hợp lệ — nếu không, trả 404 luôn, không truy vấn database |
 | **Permission** | 1) Có phiên đăng nhập, nếu không → **401**. 2) Đọc report qua **server client** — RLS `reports_select_own_or_admin` tự chặn: Sales chỉ thấy của mình, Admin thấy tất cả (BR-003, BR-022). 3) Nếu 0 row → **404**. ⚠ **PHASE 14 (DEC-058): bước 4 cũ — `status !== 'COMPLETED'` → 403 — ĐÃ BỊ XOÁ.** `status` nay chọn **biến thể** ảnh chứ không chặn |
 | **Database** | Một truy vấn `select` join `profiles` lấy `full_name`, `employee_code` — chọn đúng cột cần, không `select *` |
-| **Output** | `ImageResponse` PNG 1080×1920, **hai biến thể** (DEC-058). Header: `Content-Type: image/png`, `Content-Disposition: attachment; filename="BikeForce_Report_Nguyen-Van-A_2026-08-07.png"` cho bản chiều và `"BikeForce_CamKet_…"` cho bản sáng (FR-019, tên đã bỏ dấu và thay khoảng trắng bằng `-`), `Cache-Control: private, no-store` |
+| **Output** | `ImageResponse` PNG 1080×1920, **hai biến thể** (DEC-058). Header: `Content-Type: image/png`, `Cache-Control: private, no-store`, và `Content-Disposition: **attachment**; filename="BikeForce_Report_Nguyen-Van-A_2026-08-07.png"` cho bản chiều / `"BikeForce_CamKet_…"` cho bản sáng (FR-019, tên đã bỏ dấu và thay khoảng trắng bằng `-`).<br>⚠ **PHASE 14 (DEC-061):** có `?view=1` thì chữ `attachment` đổi thành **`inline`** — **tên file giữ nguyên** ở cả hai chế độ. `inline` là điều kiện để trình duyệt HIỆN ảnh, và hiện ảnh là đường DUY NHẤT còn lại để người dùng nhấn giữ → "Lưu ảnh" vào Thư viện (ISSUE-029) |
 | **Errors** | `401` chưa đăng nhập · `404` không tồn tại **hoặc** không có quyền (**cố tình không phân biệt** để chống dò ID) · `500` lỗi render — log chi tiết ở server, client chỉ nhận JSON `{ code, message }`. ⚠ Nhánh `403 NOT_COMPLETED` đã bị xoá (DEC-058) |
-| **Ghi chú bảo mật** | Đây là bề mặt tấn công IDOR rõ ràng nhất của hệ thống. Sau DEC-058, lớp bảo vệ là **RLS** — biên giới thật (DEC-004) — cộng với việc route **không nhận bất kỳ đầu vào nào từ client ngoài `id`**. Test bảo mật bắt buộc, KHÔNG đổi: Sales A gọi route với `id` của báo cáo Sales B → phải nhận **404**, không phải ảnh |
+| **Ghi chú bảo mật** | Đây là bề mặt tấn công IDOR rõ ràng nhất của hệ thống. Sau DEC-058, lớp bảo vệ là **RLS** — biên giới thật (DEC-004) — cộng với việc đầu vào từ client chỉ gồm `id` và một cờ hiển thị. ⚠ `?view=1` **không** mở bề mặt mới: nó không chạm quyền, không chọn dữ liệu, không chọn biến thể; mọi lớp kiểm tra chạy y hệt ở cả hai chế độ. Test bảo mật bắt buộc, KHÔNG đổi: Sales A gọi route với `id` của báo cáo Sales B → phải nhận **404**, không phải ảnh |
 
 ---
 

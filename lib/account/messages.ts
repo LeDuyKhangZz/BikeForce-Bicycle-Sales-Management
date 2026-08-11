@@ -21,6 +21,25 @@
  *  Một nguồn duy nhất cho câu chữ cũng là yêu cầu của DEC-034: **server** quyết
  *  định câu xác nhận, client không tự suy ra từ trạng thái form.
  */
+/** Sửa hồ sơ của chính mình — PHASE 14, DEC-063. */
+export const OWN_PROFILE_MESSAGES = {
+  SUCCESS: 'Đã cập nhật hồ sơ của bạn.',
+  VALIDATION: 'Vui lòng kiểm tra lại thông tin hồ sơ.',
+  /**
+   * Sales gọi thẳng Server Action. Không nói "bạn không phải Admin" — câu đó
+   * xác nhận hộ kẻ dò rằng đường này có thật với vai khác (`docs/06 §8.3`).
+   */
+  FORBIDDEN: 'Hồ sơ của bạn do Admin quản lý. Vui lòng liên hệ Admin để thay đổi.',
+  /** `uq_profiles_employee_code` — mã nhân viên đã có người khác dùng. */
+  DUPLICATE_CODE: 'Mã nhân viên này đã được dùng cho tài khoản khác.',
+  /**
+   * Trigger `guard_profile_self_update()` hoặc CHECK constraint từ chối.
+   * Không hiện mã lỗi Postgres cho người dùng (NFR-014).
+   */
+  REJECTED: 'Thông tin chưa hợp lệ nên hệ thống không lưu được. Vui lòng kiểm tra lại.',
+  FAILED: 'Không lưu được hồ sơ lúc này. Vui lòng thử lại.',
+} as const;
+
 export const CHANGE_PASSWORD_MESSAGES = {
   SUCCESS: 'Đã đổi mật khẩu. Lần đăng nhập sau hãy dùng mật khẩu mới.',
   VALIDATION: 'Vui lòng kiểm tra lại mật khẩu mới.',

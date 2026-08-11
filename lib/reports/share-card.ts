@@ -75,6 +75,48 @@ export const SHARE_IMAGE_LABEL: Record<ShareCardVariant, string> = {
 };
 
 /**
+ * Nhãn hai nút của **giao diện điện thoại** — PHASE 14, DEC-062.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO ĐIỆN THOẠI CÓ NHÃN RIÊNG, KHÔNG DÙNG `SHARE_IMAGE_LABEL`
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Trên điện thoại, "xuất ảnh" không phải một việc mà là **hai việc khác nhau**,
+ *  và người dùng biết rõ mình đang muốn việc nào:
+ *
+ *    • **Gửi cho người khác** → Zalo. Đây là mục đích gốc của cả tính năng.
+ *    • **Cất lại cho mình** → Thư viện ảnh.
+ *
+ *  Một nhãn chung ("Xuất ảnh báo cáo") bắt người dùng đoán xem nó làm việc nào,
+ *  và câu trả lời còn đổi theo thiết bị — đúng thứ đã sinh ra ISSUE-029. Máy
+ *  tính thì ngược lại: không có Zalo trong bảng chia sẻ của Windows (DEC-060) và
+ *  cũng không có "thư viện ảnh", nên ở đó vẫn là một nút tải file duy nhất.
+ *
+ *  Nhãn nút Zalo **chia theo biến thể** để giữ nguyên điều DEC-058 cố ý đặt vào
+ *  nhãn cũ: người dùng phải biết mình đang gửi *cam kết đầu ngày* hay *kết quả
+ *  cuối ngày*. Gộp thành một chữ "Gửi qua Zalo" là làm mất thông tin đó ở đúng
+ *  màn hình mà cả hai tấm đều có thể xuất hiện.
+ *
+ *  ⚠ **Nút Zalo mở BẢNG CHIA SẺ của hệ điều hành, nơi Zalo là một mục.**
+ *  Không có cách nào đẩy thẳng một file vào một cuộc trò chuyện Zalo từ trình
+ *  duyệt — Zalo không có deep link nhận file, và trang web không với tới được
+ *  ứng dụng khác. Nhãn này mô tả **ý định**, còn bảng chia sẻ là con đường duy
+ *  nhất tồn tại. Đừng hứa hơn thế trong bất kỳ chữ nào của giao diện.
+ */
+export const SEND_TO_ZALO_LABEL: Record<ShareCardVariant, string> = {
+  MORNING: 'Gửi cam kết qua Zalo',
+  EVENING: 'Gửi kết quả qua Zalo',
+};
+
+/**
+ * Nút thứ hai của điện thoại — mở ảnh ra để nhấn giữ (DEC-061).
+ *
+ * Không chia theo biến thể như nhãn trên: "cất ảnh vào máy" là **cùng một việc**
+ * dù đang ở tấm sáng hay tấm chiều. Chỉ chia nhãn ở chỗ nào biến thể thật sự đổi
+ * nghĩa của hành động.
+ */
+export const SAVE_TO_GALLERY_LABEL = 'Lưu vào thư viện ảnh';
+
+/**
  * `status` đã persist → biến thể ảnh. Là hàm chứ không phải một `Record` để chỗ
  * gọi không phải tự nghĩ xem trạng thái lạ thì rơi vào đâu.
  *
@@ -301,4 +343,50 @@ export function shareImageFileName(
  */
 export function shareImagePath(reportId: string): string {
   return `/api/reports/${reportId}/share-image`;
+}
+
+/* ---------------------------------------------------------------------------
+ * Chế độ XEM của route ảnh — PHASE 14, DEC-061
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Tham số bật chế độ **xem** thay vì **tải**.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO PHẢI CÓ HAI CHẾ ĐỘ — đọc trước khi gộp lại làm một
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Người dùng báo ngày 2026-08-11 (**ISSUE-029**): trên điện thoại bấm nút thì
+ *  file rơi vào thư mục **Tải xuống**, không vào Thư viện ảnh, và họ không tìm
+ *  ra nó.
+ *
+ *  Đây KHÔNG sửa được bằng cách đổi tên file hay đổi header cho "đúng hơn":
+ *  **trang web không có bất kỳ API nào ghi được vào Thư viện ảnh của Android
+ *  hay app Ảnh của iOS.** Đó là giới hạn của hệ điều hành. Chỉ còn đúng hai
+ *  đường vào thư viện, và cả hai đều cần con người chạm:
+ *
+ *    1. Bảng chia sẻ của hệ điều hành → "Lưu ảnh" — `navigator.share()`.
+ *    2. **Nhấn giữ vào một tấm ảnh ĐANG HIỂN THỊ** → "Lưu ảnh" / "Tải ảnh xuống".
+ *
+ *  Đường (2) đòi ảnh phải được HIỆN RA. `Content-Disposition: attachment` thì
+ *  không bao giờ hiện — trình duyệt tải thẳng rồi thôi. Vì vậy route cần một
+ *  chế độ trả `inline`, và đó là toàn bộ lý do tồn tại của tham số này.
+ *
+ *  ⚠ Giữ **mặc định là tải về**: máy tính không có "thư viện ảnh", và cả bộ E2E
+ *  lẫn thói quen người dùng máy tính đều dựa trên hành vi tải file.
+ */
+export const SHARE_IMAGE_VIEW_PARAM = 'view';
+
+/** Giá trị DUY NHẤT được chấp nhận — route so sánh đúng chuỗi này, không parse. */
+export const SHARE_IMAGE_VIEW_VALUE = '1';
+
+/**
+ * `/api/reports/<id>/share-image?view=1` — cùng route, cùng quyền, cùng ảnh;
+ * chỉ khác `Content-Disposition`.
+ *
+ * Không đẻ ra route thứ hai vì mọi thứ đáng giá của route ảnh (xác thực, RLS,
+ * BR-002, chọn biến thể theo `status`) phải chạy y hệt. Một route thứ hai là một
+ * bản sao của những luật đó, và bản sao thì trôi.
+ */
+export function shareImageViewPath(reportId: string): string {
+  return `${shareImagePath(reportId)}?${SHARE_IMAGE_VIEW_PARAM}=${SHARE_IMAGE_VIEW_VALUE}`;
 }

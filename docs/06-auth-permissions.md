@@ -234,13 +234,27 @@ Cột **"Chặn ở đâu (thật sự)"** phải chỉ đúng tên policy RLS h
 | 16 | Edit sales profile (người khác) | UC-18, FR-031 | **Có** | **Không** | RLS `profiles_update_admin` — `(select public.is_admin())` ở cả USING và WITH CHECK | APPROVED |
 | 17 | Activate / deactivate account | UC-19, FR-032, BR-009 | **Có** | **Không** | RLS `profiles_update_admin` + trigger `guard_profile_self_update` chặn non-admin đổi `is_active` | APPROVED |
 | 18 | Change own password | UC-11, FR-023 | **Có** | **Có** | Supabase Auth `updateUser`, chỉ tác động lên chính `auth.uid()` của phiên hiện tại — không đi qua RLS bảng `public` | APPROVED |
-| 19 | Change own name / phone | UC-11 | **Có\*** | **Có\*** | RLS `profiles_update_self` + trigger `guard_profile_self_update` chặn `role`, `is_active`, `email`, `id` | **Cho phép ở tầng DB; v1 chưa có FR cấp UI** — xem ghi chú (b) |
+| 19 | Change own name / phone / employee_code | UC-11, **DEC-063** | **KHÔNG** (không có UI, chặn ở Server Action) | **CÓ** — `/admin/account` | RLS `profiles_update_self` + trigger `guard_profile_self_update` chặn `role`, `is_active`, `email`, `id`. Ràng buộc **chỉ-Admin** ép ở `updateOwnProfileAction`, KHÔNG ở RLS | **APPROVED — PHASE 14** (DEC-063), xem ghi chú (b) |
 | 20 | Change role | UC-18, OQ-16 | **Có\*** | **Không** | ADMIN: về mặt DB `profiles_update_admin` cho phép. SALES: trigger `guard_profile_self_update` chặn tuyệt đối | **APPROVED**; v1 UI không expose đổi role |
 
 **Ghi chú:**
 
 - **(a)** Dòng 3/4/5 ghi ADMIN = **Không** theo BR-020 (*"Admin không tạo/sửa nội dung số liệu báo cáo của Sales trong v1"*). Master Spec §50 nêu ví dụ "Optional" cho Admin ở hai dòng này — brief chốt là **Không** cho v1 và treo ở **OQ-05**. Nếu OQ-05 trả lời "Có", phải bổ sung policy UPDATE cho admin **và** audit log AF-12 trước khi bật (ISSUE-007).
-- **(b)** Dòng 19: policy `profiles_update_self` cho phép người dùng tự cập nhật các cột không nhạy cảm, nhưng **không có FR nào trong brief §5 định nghĩa màn hình sửa họ tên / phone cho Sales** — `/sales/account` chỉ gồm hồ sơ, đổi mật khẩu, đăng xuất (brief §12). Vì vậy v1 **không render form sửa** này. Nếu muốn khoá hẳn ở tầng DB thì phải bỏ policy `profiles_update_self`; quyết định này cần xác nhận ở Phase 2 và ghi thành DEC — **không được tự chốt khi viết migration**.
+- **(b)** Dòng 19 — **ĐÃ ĐỔI Ở PHASE 14 (DEC-063), đọc kỹ vì hai vai nay khác nhau:**
+  - **Admin CÓ form sửa** tại `/admin/account` (`OwnProfileForm`): `full_name`, `phone`,
+    `employee_code`. Lý do: không màn hình nào khác sửa được hồ sơ Admin — UC-18 lọc
+    `role = 'SALES'` — nên câu "hãy liên hệ Admin" của bản cũ là bảo Admin liên hệ chính mình.
+  - **Sales KHÔNG có form sửa.** `/sales/account` giữ nguyên `ProfileCard` chỉ đọc: hồ sơ Sales do
+    Admin quản lý (UC-18, FR-031), và họ tên / mã NV đi thẳng vào ảnh báo cáo gửi khách.
+  - ⚠ **Luật "chỉ Admin" KHÔNG nằm ở RLS.** `profiles_update_self` có từ Phase 2 và cho **mọi vai**
+    sửa dòng của chính mình. Ràng buộc vai được ép ở Server Action `updateOwnProfileAction`
+    (`profile.role !== 'ADMIN'` → `FORBIDDEN`). Có bài test trong `tests/rls/profiles.rls.test.ts`
+    khoá đúng sự thật này lại — đừng bỏ dòng kiểm vai với lý do "RLS lo rồi".
+  - **Hệ quả còn lại, đã biết và chấp nhận:** Sales gọi thẳng PostgREST bằng token của mình vẫn đổi
+    được `full_name` của chính họ. Đây là lệch luật nghiệp vụ, **không** phải leo thang quyền — nhóm
+    cột nguy hiểm (`role`, `is_active`, `email`, `id`) vẫn bị trigger chặn. Muốn bịt nốt thì siết
+    `profiles_update_self` xuống chỉ còn Admin bằng migration `0009`; **chưa làm**, và phải là một
+    DEC riêng vì siết RLS là thay đổi biên giới bảo mật.
 - **(c)** Dòng 1 và 8/10 ghi ADMIN = **N/A** vì Admin không tạo báo cáo trong v1 (BR-020) nên không có "báo cáo của chính mình". Về mặt policy, `reports_select_own_or_admin` vẫn khớp nhánh `is_admin()` nên không có lỗi kỹ thuật.
 - **(d)** Mọi dòng "Không" đều phải có test tương ứng ở §10 — quyền bị từ chối mà không có test thì coi như chưa được bảo vệ.
 

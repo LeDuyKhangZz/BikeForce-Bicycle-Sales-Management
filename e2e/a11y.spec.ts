@@ -122,4 +122,18 @@ test.describe('NFR-007 — 0 vi phạm serious/critical', () => {
     await expect(page.locator('[name="email"]')).toBeVisible();
     await scan(page, '/admin/sales/new');
   });
+
+  /**
+   * PHASE 14 (DEC-063) — trang này **đổi bản chất** nên phải quét lại.
+   *
+   * Trước đây nó chỉ đọc, và `/sales/account` đã quét khuôn tương đương. Nay nó
+   * có một form ba trường **cộng** một khối `<dl>` chỉ đọc nằm ngay trong cùng
+   * thẻ `<form>` — đúng kiểu bố cục dễ sinh nhãn mồ côi và thứ tự tiêu đề sai.
+   */
+  test('/admin/account — form sửa hồ sơ của chính mình', async ({ page }) => {
+    await signIn(page, E2E_ADMIN_EMAIL);
+    await page.goto('/admin/account');
+    await expect(page.locator('[name="full_name"]')).toBeVisible();
+    await scan(page, '/admin/account');
+  });
 });

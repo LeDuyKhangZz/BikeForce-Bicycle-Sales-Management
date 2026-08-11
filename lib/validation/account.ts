@@ -24,6 +24,7 @@
 import { z } from 'zod';
 
 import { PASSWORD_MAX_LENGTH } from '@/lib/validation/auth';
+import { employeeCodeField, fullNameField, phoneField } from '@/lib/validation/profile-fields';
 
 /** DEC-041 — phải khớp Supabase Dashboard. */
 export const PASSWORD_MIN_LENGTH = 8;
@@ -65,3 +66,30 @@ export const changePasswordSchema = z
   });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+/**
+ * Sửa hồ sơ của **chính mình** — PHASE 14, **DEC-063**.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  BA TRƯỜNG NÀY, VÀ KHÔNG MỘT TRƯỜNG NÀO KHÁC
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Cố ý vắng mặt, mỗi cái một lý do khác nhau — đừng "thêm cho đủ":
+ *
+ *  • `email` — là định danh đăng nhập. Đổi nó phải đồng bộ `auth.users.email`
+ *    với `profiles.email` (BR-025) và trigger `guard_profile_self_update()`
+ *    **chặn thẳng** ở tầng database. Không có FR nào cho việc này ở v1.
+ *  • `role` — đây là đường tự nâng quyền kinh điển. Trigger chặn (BR-012), và
+ *    schema không có trường thì Server Action cũng không có gì để ghi.
+ *  • `is_active` — tự khoá/mở khoá chính mình là vô nghĩa; bật/tắt là UC-19,
+ *    một hành động riêng của Admin trên tài khoản NGƯỜI KHÁC (BR-009).
+ *
+ *  Ba trường còn lại dùng chung định nghĩa với form sửa Sales của UC-18, nên
+ *  ràng buộc không thể trôi khỏi nhau (`lib/validation/profile-fields.ts`).
+ */
+export const updateOwnProfileSchema = z.object({
+  full_name: fullNameField,
+  phone: phoneField,
+  employee_code: employeeCodeField,
+});
+
+export type UpdateOwnProfileInput = z.infer<typeof updateOwnProfileSchema>;

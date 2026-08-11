@@ -466,7 +466,7 @@ Cả ba chuỗi trên do **`lib/kpi.ts` sinh sẵn** (`display`), không compone
 | `/admin/sales` | ADMIN | UC-16, FR-029 | SalesTable, SearchBox, CreateButton | skeleton | "Chưa có Sales nào" + CTA tạo | ErrorState | card → `<table>` |
 | `/admin/sales/new` | ADMIN | UC-17 | CreateSalesForm | — | — | lỗi theo field (email trùng, mã NV trùng) | `max-w-md` |
 | `/admin/sales/[id]` | ADMIN | UC-18, UC-19, UC-16 | ProfileForm, ActiveToggle, PerformanceCard, HistoryList | skeleton | "Sales này chưa có báo cáo" | 404 | 1 cột → 2 cột |
-| `/admin/account` | ADMIN | UC-11 | như `/sales/account` | — | — | — | 1 cột |
+| `/admin/account` | ADMIN | UC-11, **DEC-063** | **OwnProfileForm** (sửa họ tên / SĐT / mã NV) · ChangePasswordForm · SignOutButton. ⚠ **KHÔNG còn giống `/sales/account`** — trang kia là `ProfileCard` chỉ đọc | — | — | lỗi theo field (mã NV trùng, SĐT sai định dạng) | 1 cột |
 | `/api/reports/[id]/share-image` | SALES(own) + ADMIN | UC-08, FR-018 | *(trả PNG, không phải trang)* | — | — | 403/404 dạng JSON | — |
 
 Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
@@ -758,7 +758,7 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Nh�
 | `/admin/sales` | UC-16, FR-029 | **MỚI** — bảng hiệu suất + số ngày đạt KPI (BR-024) |
 | `/admin/sales/new` | UC-17, FR-030 | **MỚI** — mật khẩu tạm hiện **đúng một lần**, cố ý không redirect sau khi tạo |
 | `/admin/sales/[id]` | UC-18, UC-19, FR-031, FR-032 | **MỚI** — hồ sơ · sửa · bật/tắt `is_active` · lịch sử báo cáo |
-| `/admin/account` | FR-023 | **MỚI** — cùng khuôn với `/sales/account` |
+| `/admin/account` | FR-023, **DEC-063** | hồ sơ **sửa được** (họ tên · SĐT · mã NV) · đổi mật khẩu · đăng xuất. Email và vai trò chỉ đọc, dạng `<dl>` chứ không phải `<input disabled>` |
 | `/api/reports/[id]/share-image` | UC-08, FR-018 | Route Handler, PNG 1080×1920 |
 | `/api/admin/reports/export` | UC-21, FR-034 | **MỚI** — Route Handler, CSV (DEC-042) |
 | `/` | FR-005 | phân luồng theo role |

@@ -20,8 +20,13 @@ type Props = {
   profile: AccountProfile;
 };
 
-/** Nhãn tiếng Việt của vai — từ vựng nghiệp vụ, chỉ có hai giá trị (DEC-030). */
-const ROLE_LABEL = {
+/**
+ * Nhãn tiếng Việt của vai — từ vựng nghiệp vụ, chỉ có hai giá trị (DEC-030).
+ *
+ * Export từ PHASE 14 (DEC-063) để `/admin/account` dùng lại trong form sửa hồ
+ * sơ. Chỉ có một bảng nhãn vai trong toàn dự án.
+ */
+export const ROLE_LABEL = {
   ADMIN: 'Quản trị viên',
   SALES: 'Nhân viên kinh doanh',
 } as const;
