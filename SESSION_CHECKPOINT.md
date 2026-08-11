@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **14 — XONG, quality gate xanh ĐỦ, CHỜ COMMIT** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **14 — XONG, quality gate xanh đủ, ĐÃ COMMIT + PUSH (`80aef59`)** | Last updated: 2026-08-11
 
 ---
 
@@ -797,12 +797,13 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
-### ⛔ VIỆC SỐ 0 — COMMIT PHASE 14
+### ✅ ~~VIỆC SỐ 0 — COMMIT PHASE 14~~ — **XONG**
 
-Working tree đang mang toàn bộ PHASE 14 và **đã qua đủ quality gate** (bảng ở đầu file). Không cần
-chạy lại gì trước khi commit.
+`80aef59` đã lên GitHub, xác minh bằng `git ls-remote origin refs/heads/main`.
+**Việc còn lại của người dùng:** đợi Vercel build xong `80aef59` rồi mở `/sales/today` xem nút
+"Lưu hình báo cáo đầu ngày" và xuất thử **cả hai** tấm ảnh trên điện thoại thật (ISSUE-003).
 
-Nếu vẫn muốn chạy lại cho chắc, đây là trình tự đã dùng:
+Trình tự quality gate đã dùng, để phiên sau chạy lại cho nhanh:
 
 ```powershell
 # 1. Bật Docker Desktop, rồi xác minh — ISSUE-024: LUÔN kiểm trước khi đọc kết quả test
