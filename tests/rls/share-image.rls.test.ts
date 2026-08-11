@@ -47,11 +47,12 @@ describe('getReportForShare() — UC-08, FR-018', () => {
     expect(report?.sales).toEqual({ full_name: 'RLS Sales A', employee_code: 'RLS-A' });
   });
 
-  it('trả về `status` để route handler gác BR-002 — fixture đang MORNING_SUBMITTED', async () => {
+  it('trả về `status` để route handler chọn BIẾN THỂ ảnh — fixture đang MORNING_SUBMITTED', async () => {
     const report = await getReportForShare(fx.clients.salesA, fx.reports.salesA);
 
-    // Route trả 403 `NOT_COMPLETED` với đúng giá trị này. Service KHÔNG tự lọc
-    // theo status: quyết định nghiệp vụ thuộc về tầng gọi (AGENTS.md §5).
+    // PHASE 14 (DEC-058): giá trị này cho ra thẻ bản `MORNING` (bảng 2 cột) chứ
+    // không còn cho ra 403 `NOT_COMPLETED` như trước. Service KHÔNG tự lọc theo
+    // status: quyết định nghiệp vụ thuộc về tầng gọi (AGENTS.md §5).
     expect(report?.status).toBe('MORNING_SUBMITTED');
   });
 

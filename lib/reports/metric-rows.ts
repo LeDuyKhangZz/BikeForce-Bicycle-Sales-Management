@@ -81,8 +81,11 @@ const ROW_BY_METRIC = {
   },
   REVENUE: {
     metric: 'REVENUE',
+    // ⚠ PHASE 14 (DEC-056) — nhãn rút gọn là **"Doanh thu"**, KHÔNG phải "Công
+    // nợ". Người dùng đọc tấm ảnh gửi cho cấp trên và chữ "Công nợ" nói ngược
+    // nghĩa: đây là tiền ĐÃ THU HỒI ĐƯỢC, không phải số nợ còn lại (DEC-050).
     label: 'Doanh thu công nợ',
-    shortLabel: 'Công nợ',
+    shortLabel: 'Doanh thu',
     targetColumn: 'target_revenue',
     actualColumn: 'actual_revenue',
   },

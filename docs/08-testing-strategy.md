@@ -515,7 +515,7 @@ Nhầm lẫn phổ biến nhất: viết `expect(error).not.toBeNull()` cho mộ
 | R11 | salesA | INSERT | row của chính mình với `status = 'COMPLETED'` ngay từ đầu (bỏ qua bước sáng) | Lỗi **`42501`** — policy yêu cầu `status = 'MORNING_SUBMITTED'` — **BR-007**, BR-008 |
 | R12 | salesA | INSERT | row thứ hai cùng ngày cho chính mình | Lỗi **`23505`** (UNIQUE bắt trước) — BR-001 |
 | R13 | salesA | UPDATE | báo cáo của salesB (đổi `actual_revenue`) | **0 rows affected**, `error` null — BR-003, BR-019 |
-| R14 | salesA | UPDATE | báo cáo của chính mình đang `MORNING_SUBMITTED` → sửa target | 1 row — FR-012, UC-05, **phụ thuộc OQ-04** |
+| R14 | salesA | UPDATE | báo cáo của chính mình đang `MORNING_SUBMITTED` → sửa target | 1 row *(policy vẫn cho, và đó là ĐÚNG: nó phục vụ `completeEveningReport`)*. ⚠ **PHASE 14 — DEC-055 gỡ FR-012/UC-05 ở tầng ỨNG DỤNG**, không ở tầng RLS |
 | R15 | salesA | UPDATE | báo cáo của chính mình `MORNING_SUBMITTED` → `COMPLETED` + đủ 4 actual | 1 row — FR-015, UC-06 |
 | R16 | salesA | UPDATE | báo cáo của chính mình đã `COMPLETED` (sửa lần 2) | **0 rows affected** — sau khi COMPLETED thì `USING` không còn khớp nên báo cáo tự khoá — **BR-019**, **phụ thuộc OQ-04** |
 | R17 | salesA | UPDATE | báo cáo của chính mình, cố đổi `sales_id` sang salesB | Lỗi **`42501`** (WITH CHECK) hoặc **`P0001`** (trigger `guard_report_transition`) — BR-008 |
@@ -606,7 +606,7 @@ Luồng theo Master Spec §37: Login → Today → Morning Report → Save → R
 | 9 | Nhập bộ dữ liệu hợp lệ (tuyến, `target_visit_points`, `target_sales_quantity`, `target_revenue`, `target_customer_visits`), nhấn Lưu | Nút chuyển trạng thái loading và **disabled** trong lúc gửi — docs/05 `loading-buttons`; sau đó hiện thông báo thành công — FR-008 |
 | 10 | Ô doanh thu sau khi blur | Hiển thị dạng có phân cách nghìn (`125.000.000`), nhưng giá trị gửi lên là số nguyên — BR-010, DEC-008 |
 | 11 | Quay lại `/sales/today` | Trạng thái đổi sang "đã báo cáo sáng"; CTA chính đổi thành hành động cuối ngày — FR-007 |
-| 12 | **Reopen**: vào lại `/sales/today/morning` | Form nạp lại đúng giá trị đã lưu (không rỗng) — FR-012, UC-05, **phụ thuộc OQ-04** |
+| 12 | **Reopen**: vào lại `/sales/today/morning` sau khi đã cam kết | **Bị `redirect()` về `/sales/today`** — PHASE 14, **DEC-055** *(trước đây: form nạp lại giá trị đã lưu)* |
 | 13 | Sửa `target_sales_quantity` rồi lưu | Lưu thành công; giá trị mới hiển thị ở `/sales/today` — FR-012 |
 | 14 | Thử tạo báo cáo thứ hai cho cùng ngày (điều hướng thẳng vào form tạo mới) | UI không cho tạo trùng; nếu vẫn submit thì server trả lỗi rõ ràng, không tạo row thứ hai — **BR-001**, FR-011 |
 | 15 | Vào `/sales/today/evening` | Hiện lại **toàn bộ cam kết sáng** để đối chiếu trực tiếp — **FR-013**, Master Spec §8 |
@@ -619,8 +619,8 @@ Luồng theo Master Spec §37: Login → Today → Morning Report → Save → R
 | 22 | Kiểm hiển thị tiền | Chuỗi khớp `formatCurrencyVND` (nhớ chuẩn hoá NBSP như §3.3) — BR-010 |
 | 23 | Ở `mobile-375`, kiểm bảng đối chiếu | Render dạng **4 card**, DOM **không chứa** phần tử `<table>` cho bảng này — **DEC-019** |
 | 24 | Ở `desktop-1440`, kiểm bảng đối chiếu | Render bằng `<table>` thật — DEC-019 |
-| 25 | **Export**: xem nút "Xuất ảnh" khi báo cáo mới ở trạng thái `MORNING_SUBMITTED` (dùng một report fixture riêng) | Nút ở trạng thái **disabled** — **BR-002**, **FR-017**, Master Spec §12 |
-| 26 | Sau khi báo cáo đã lưu thành công với `COMPLETED` | Nút "Xuất ảnh" **enabled** — BR-002, FR-017 |
+| 25 | **Export**: xem nút xuất ảnh khi báo cáo mới ở trạng thái `MORNING_SUBMITTED` | Nút hiện với nhãn **"Lưu hình báo cáo đầu ngày"** — **DEC-058** *(trước đây: disabled)*. Không có báo cáo nào ⇒ **không có nút** |
+| 26 | Sau khi báo cáo đã lưu thành công với `COMPLETED` | Nhãn nút đổi thành **"Xuất ảnh báo cáo"** — BR-002, FR-017, DEC-058 |
 | 27 | Nhấn "Xuất ảnh" và bắt response | Response từ `GET /api/reports/<id>/share-image`: `status === 200`; header `content-type` là **`image/png`**; `content-disposition` chứa `BikeForce_Report_` và kết thúc `.png` — **FR-018**, **FR-019**, DEC-010 |
 | 28 | Kiểm nội dung nhị phân của response | Độ dài body > 0; 8 byte đầu khớp PNG magic number `89 50 4E 47 0D 0A 1A 0A` — FR-018 |
 | 29 | Kiểm tên file trong `content-disposition` | Khớp mẫu `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png`, họ tên đã bỏ dấu và nối bằng `-` — **FR-019** |
@@ -670,7 +670,7 @@ Luồng theo Master Spec §37: Login → Dashboard → Reports → Filter month 
 |---|---|---|---|
 | X1 | salesA đăng nhập, truy cập thẳng URL `/sales/reports/<id-của-salesB>` | Không hiển thị bất kỳ dữ liệu nào của salesB. Kết quả là 404 hoặc redirect. Nội dung trang **không chứa** họ tên salesB, tuyến của salesB, hay bất kỳ con số nào của salesB. | **BR-003**, Master Spec §37 "Sales A không đọc report Sales B", §34 IDOR |
 | X2 | salesA gọi `GET /api/reports/<id-của-salesB>/share-image` | Status là **403 hoặc 404**; `content-type` **không** phải `image/png`; body không chứa dữ liệu của salesB | BR-002, BR-003, FR-018 |
-| X3 | salesA gọi `GET /api/reports/<id-của-chính-mình>/share-image` khi report còn `MORNING_SUBMITTED` | Status **không** phải 200; `content-type` **không** phải `image/png` (mã lỗi chính xác chốt ở Phase 6) | **BR-002**, Master Spec §12 |
+| X3 | salesA gọi `GET /api/reports/<id-của-chính-mình>/share-image` khi report còn `MORNING_SUBMITTED` | ⚠ **ĐỔI Ở PHASE 14 (DEC-058):** nay trả **200 + `image/png`**, nội dung là thẻ bản **CAM KẾT**. Điều phải kiểm là **biến thể do server chọn**, không phải mã lỗi | **BR-002** *(đã nới)*, DEC-058 |
 | X4 | salesA truy cập `/admin` | Redirect về `/sales/today`, không render nội dung admin dù chỉ trong một khung hình | **FR-004** |
 | X5 | salesA truy cập `/admin/reports`, `/admin/analytics`, `/admin/sales`, `/admin/sales/new` | Đều bị chặn — FR-004 |
 | X6 | admin truy cập `/sales/today` | Bị chặn hoặc redirect theo quy tắc đã chốt ở docs/06 (hành vi phải nhất quán ở mọi route) | FR-004 |
@@ -950,7 +950,7 @@ Quy tắc tick: chỉ đánh `[x]` khi test đã **thật sự chạy và xanh**
 - [x] Chữ ký PNG đúng, và **`IHDR` cho đúng `1080×1920`** — đo trên chính response, không tin tham số truyền vào
 - [x] Tên file khớp `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019), đã bỏ dấu tiếng Việt
 - [x] Security X2: salesA gọi share-image của salesB → **404** `REPORT_NOT_FOUND`, không phải PNG
-- [x] Security X3: gọi share-image khi report chưa `COMPLETED` (**bằng phiên của chính chủ**) → **403** `NOT_COMPLETED` (BR-002)
+- [x] Security X3: gọi share-image khi report chưa `COMPLETED` (**bằng phiên của chính chủ**) → **403** `NOT_COMPLETED` (BR-002) — ⚠ **kết quả này thuộc về Phase 6 và ĐÃ HẾT HIỆU LỰC** từ PHASE 14: DEC-058 cho phép, nay trả PNG bản CAM KẾT
 - [x] Security X17: header `Cache-Control: private, no-store`
 - [x] **MỚI** — chưa đăng nhập → **401 JSON, KHÔNG redirect** (ISSUE-015, DEC-039). Phải đo bằng `maxRedirects: 0`, nếu không client đi theo redirect và thấy `200 text/html`
 - [x] **MỚI** — `id` không phải uuid → 404 mà không chạm database
@@ -1136,7 +1136,7 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dư
 
 | File | Phủ |
 |---|---|
-| `e2e/sales-flow.spec.ts` | Login → Today → Morning → Save → **Reopen/Edit** → Evening → Save → bảng đối chiếu → nút Xuất ảnh · BR-019 khoá vĩnh viễn · BR-007 · FR-021 lịch sử + lọc tháng + phân trang · FR-022 chi tiết · empty state · `?month=` rác · UC-11 đổi mật khẩu |
+| `e2e/sales-flow.spec.ts` | Login → Today → Morning → Save → **cam kết khoá ngay (DEC-055)** → **nút ảnh bản CAM KẾT (DEC-058)** → Evening → Save → bảng đối chiếu → **nút ảnh đổi sang bản KẾT QUẢ** · BR-019 khoá vĩnh viễn · BR-007 · FR-021 lịch sử + lọc tháng + phân trang · FR-022 chi tiết · empty state · `?month=` rác · UC-11 đổi mật khẩu |
 | `e2e/admin-flow.spec.ts` | UC-12 dashboard · UC-13 lọc theo tên (**cặp đối chứng**: có kết quả ↔ empty state) · lọc tháng · UC-14 chi tiết · UC-15 phân tích + biểu đồ + bảng thay thế + đổi chỉ tiêu qua URL · UC-16 bảng hiệu suất · UC-17 tạo tài khoản + BR-025 email trùng · FR-004 ranh giới vai trò · bộ lọc rác |
 | `e2e/security.spec.ts` | BR-003/BR-022 IDOR · DEC-039 401 JSON cho `/api/*` · FR-034 CSV: Sales → 403, Admin → 200 + `no-store` · BR-002 ảnh PNG **1080×1920 đọc từ khối `IHDR`** · **NFR-005 grep service role key trong HTML của 4 trang Admin** |
 | `e2e/a11y.spec.ts` | 10 màn hình × 3 project = **30 lượt quét axe**, `wcag2a/2aa/21a/21aa`, **0 vi phạm serious/critical** |
@@ -1153,7 +1153,7 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md §OPEN QUESTIONS`. Dư
 
 **ISSUE-016**: file `'use server'` export một object hằng số ⇒ Next ném lỗi lúc nạp module ⇒ `/admin/sales/new` và `/admin/account` hiện "Đã có lỗi xảy ra", **toàn bộ UC-17 không dùng được**. Bốn cửa kiểm cũ đều **xanh**: typecheck, lint, build (18 route), và 724 unit/integration/RLS test. Đây là bằng chứng cụ thể rằng bốn cửa đó **không phát hiện được nhóm lỗi này về nguyên tắc**.
 
-**Phòng ngừa đã ghi thành luật:** bộ E2E phải chạm **ít nhất một Server Action của mỗi feature**. Hiện có: `saveMorningReport`, `updateMorningReport`, `saveEveningReport`, `createSalesAccount`, `changePasswordAction`.
+**Phòng ngừa đã ghi thành luật:** bộ E2E phải chạm **ít nhất một Server Action của mỗi feature**. Hiện có: `saveMorningReport`, `saveEveningReport`, `createSalesAccount`, `changePasswordAction`. *(`updateMorningReport` đã bị xoá khỏi dự án — DEC-055.)*
 
 ### G. §3.5.3 — hành vi của `getVietnamMonthRange()` với chuỗi sai định dạng: **ĐÃ CHỐT**
 

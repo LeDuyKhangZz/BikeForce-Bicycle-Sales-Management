@@ -20,7 +20,7 @@ import {
 const salesFor = (projectName: string): string => flowSalesEmail(toE2eProject(projectName));
 
 test.describe('Luồng Sales đầu-cuối', () => {
-  test('UC-04 → UC-05 → UC-06: cam kết sáng, sửa, rồi hoàn tất cuối ngày', async ({
+  test('UC-04 → UC-06: cam kết sáng (khoá ngay), rồi hoàn tất cuối ngày', async ({
     page,
   }, testInfo) => {
     await signIn(page, salesFor(testInfo.project.name));
@@ -41,7 +41,8 @@ test.describe('Luồng Sales đầu-cuối', () => {
 
     await fillField(page, 'planned_route', 'Quận 1 → Quận 3 → Bình Thạnh');
     await fillField(page, 'target_visit_points', '12');
-    await fillField(page, 'target_sales_amount', '80000000');
+    // 60tr là con số cố ý: cuối ngày nhập 75tr ⇒ 125,0%, một đầu của BR-023.
+    await fillField(page, 'target_sales_amount', '60000000');
     await fillField(page, 'target_revenue', '100000000');
     await fillField(page, 'target_customer_visits', '12');
 
@@ -53,19 +54,15 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await expect(page.getByText('Đã cam kết')).toBeVisible();
     await expectNoBrokenNumbers(page);
 
-    /* ── 5. UC-05 — sửa cam kết sáng, form phải prefill đúng ───────────────── */
-    await page.getByRole('link', { name: 'Sửa cam kết sáng' }).click();
-    await expect(page).toHaveURL(/\/sales\/today\/morning/);
-    // Prefill là số THÔ từ database (chưa qua `blur` nên chưa phân nhóm nghìn).
-    await expect(page.locator('[name="target_sales_amount"]')).toHaveValue('80000000');
+    /* ── 5. DEC-055 — cam kết sáng KHOÁ NGAY khi gửi ───────────────────────────
+       Không còn nút "Sửa cam kết sáng", và gõ thẳng URL cũng bị đá về.        */
+    await expect(page.getByRole('link', { name: 'Sửa cam kết sáng' })).toHaveCount(0);
 
-    await fillField(page, 'target_sales_amount', '60000000');
-    await page.getByRole('button', { name: 'Lưu thay đổi' }).click();
+    await page.goto('/sales/today/morning');
+    await expect(page).toHaveURL(/\/sales\/today(\?|$)/);
 
-    await expect(page).toHaveURL(/\/sales\/today(\?|$)/, { timeout: 20_000 });
-    // Câu xác nhận của lần SỬA khác lần TẠO — client không được tự suy ra từ
-    // `mode` của form (DEC-034, đã có lỗi thật vì chuyện này).
-    await expect(page.getByText('Đã cập nhật cam kết sáng')).toBeVisible();
+    /* ── 5b. DEC-058 — chỗ nút cũ nay là ảnh CAM KẾT ĐẦU NGÀY ──────────────── */
+    await expect(page.getByRole('button', { name: 'Lưu hình báo cáo đầu ngày' })).toBeVisible();
 
     /* ── 6. UC-06 — hoàn tất cuối ngày ─────────────────────────────────────── */
     await page.getByRole('link', { name: 'Hoàn thành báo cáo cuối ngày' }).click();
@@ -103,8 +100,9 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await page.goto('/sales/today/morning');
     await expect(page).toHaveURL(/\/sales\/today(\?|$)/);
 
-    /* ── 9. BR-002 — nút Xuất ảnh chỉ xuất hiện khi đã COMPLETED ───────────── */
-    await expect(page.getByRole('button', { name: /Xuất ảnh/ })).toBeVisible();
+    /* ── 9. DEC-058 — nút ảnh đổi sang bản KẾT QUẢ sau khi hoàn tất ─────────── */
+    await expect(page.getByRole('button', { name: 'Xuất ảnh báo cáo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Lưu hình báo cáo đầu ngày' })).toHaveCount(0);
   });
 
   test('BR-007: chưa cam kết sáng thì không vào được form cuối ngày', async ({

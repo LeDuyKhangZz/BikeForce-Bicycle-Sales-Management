@@ -1,7 +1,6 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Save, RotateCcw } from 'lucide-react';
 import type { ZodType } from 'zod';
 
@@ -12,14 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useReportDraft } from '@/lib/hooks/use-report-draft';
 import { morningDraftKey } from '@/lib/reports/draft-keys';
-import { SALES_TODAY_PATH } from '@/lib/reports/today-cta';
 import {
   MAX_ROUTE_LENGTH,
   MIN_TARGET_VISIT_POINTS,
   morningReportSchema,
 } from '@/lib/validation/report';
 
-import { saveMorningReport, updateMorningReport, type MorningReportState } from './actions';
+import { saveMorningReport, type MorningReportState } from './actions';
 
 /**
  * NĂM ô của form, tất cả giữ dưới dạng CHUỖI đúng như người dùng gõ.
@@ -37,13 +35,26 @@ export type MorningFormValues = {
 
 type FieldName = keyof MorningFormValues;
 
+/**
+ * Form LUÔN bắt đầu rỗng — PHASE 14, DEC-055.
+ *
+ * Trước đây giá trị ban đầu đến từ route dưới dạng prop `initialValues` để phục
+ * vụ chế độ SỬA (UC-05). UC-05 đã bị gỡ, nên chỉ còn đúng một điểm khởi đầu.
+ * Hằng số ở **tầng module** chứ không dựng trong thân component: `useReportDraft`
+ * nhận nó làm giá trị nền, và một object mới mỗi lần render là một nguồn
+ * re-render vô ích.
+ */
+const EMPTY_VALUES: MorningFormValues = {
+  planned_route: '',
+  target_visit_points: '',
+  target_sales_amount: '',
+  target_revenue: '',
+  target_customer_visits: '',
+};
+
 type Props = {
-  /** `create` = UC-04, `edit` = UC-05. Quyết định Server Action nào được gọi. */
-  mode: 'create' | 'edit';
-  reportId: string | null;
   /** Ngày nghiệp vụ, dùng làm một phần khoá draft (BR-021). */
   today: string;
-  initialValues: MorningFormValues;
 };
 
 /**
@@ -60,7 +71,7 @@ const COUNT_FIELDS: ReadonlyArray<{ name: FieldName; label: string; helper: stri
 ];
 
 /**
- * Form cam kết đầu ngày — UC-04, UC-05, FR-008.
+ * Form cam kết đầu ngày — UC-04, FR-008.
  *
  * `'use client'` là bắt buộc (state form, validate on blur, draft localStorage),
  * nhưng nó chỉ bọc phần tương tác: trang `/sales/today/morning` vẫn là Server
@@ -69,36 +80,39 @@ const COUNT_FIELDS: ReadonlyArray<{ name: FieldName; label: string; helper: stri
  * Validate phía client dùng **chính** `morningReportSchema` của Server Action —
  * một nguồn, không hai bản (AGENTS.md §9). Client validate chỉ để UX; server
  * luôn validate lại (NFR-006).
+ *
+ * ⚠ **PHASE 14 — DEC-055.** Component này từng có hai chế độ (`create` / `edit`)
+ * và tự chọn một trong hai Server Action. Nay chỉ còn `saveMorningReport`, giống
+ * hệt `EveningReportForm` vốn cố ý chỉ có một chế độ.
  */
-export function MorningReportForm({ mode, reportId, today, initialValues }: Props) {
-  const router = useRouter();
-  const action = mode === 'create' ? saveMorningReport : updateMorningReport;
-  const [state, formAction, isPending] = useActionState<MorningReportState, FormData>(action, null);
+export function MorningReportForm({ today }: Props) {
+  const [state, formAction, isPending] = useActionState<MorningReportState, FormData>(
+    saveMorningReport,
+    null,
+  );
 
-  const { values, setValue, isDirty, restoredFromDraft, discardDraft, clearDraft } = useReportDraft(
+  const { values, setValue, isDirty, restoredFromDraft, discardDraft } = useReportDraft(
     morningDraftKey(today),
-    initialValues,
+    EMPTY_VALUES,
   );
 
   const [clientErrors, setClientErrors] = useState<Partial<Record<FieldName, string>>>({});
   const formRef = useRef<HTMLFormElement>(null);
 
   /**
-   * Đang gửi, HOẶC đã gửi xong và đang chờ điều hướng về `/sales/today`.
-   *
-   * Giữ form ở trạng thái khoá trong cả hai giai đoạn: chống double submit
-   * (rule `loading-buttons`), và tránh việc các ô nháy về giá trị gốc trong một
-   * khung hình sau khi `clearDraft()` chạy mà trang chưa kịp chuyển.
+   * `state` chỉ mang giá trị khi THẤT BẠI: lưu thành công thì action `redirect()`
+   * và trang này bị thay thế (DEC-037, áp cho luồng sáng từ PHASE 14). Nhờ vậy
+   * `isBusy` chỉ cần theo `isPending`.
    */
-  const isBusy = isPending || Boolean(state?.ok);
+  const isBusy = isPending;
 
-  const serverFieldErrors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
-  const formError = state && !state.ok && state.code !== 'VALIDATION' ? state.message : null;
+  const serverFieldErrors = state?.fieldErrors ?? {};
+  const formError = state && state.code !== 'VALIDATION' ? state.message : null;
 
   const errorFor = (field: FieldName): string | undefined =>
     clientErrors[field] ?? serverFieldErrors[field]?.[0];
 
-  const errorFields = (Object.keys(initialValues) as FieldName[]).filter((field) =>
+  const errorFields = (Object.keys(EMPTY_VALUES) as FieldName[]).filter((field) =>
     Boolean(errorFor(field)),
   );
 
@@ -126,33 +140,26 @@ export function MorningReportForm({ mode, reportId, today, initialValues }: Prop
   // Đưa focus về ô lỗi đầu tiên sau khi server trả lỗi validate (rule
   // focus-management, `docs/05 §8` mục 5).
   useEffect(() => {
-    if (!state || state.ok || state.code !== 'VALIDATION') return;
+    if (!state || state.code !== 'VALIDATION') return;
     const firstError = Object.keys(state.fieldErrors ?? {})[0];
     if (!firstError) return;
     formRef.current?.querySelector<HTMLElement>(`[name="${firstError}"]`)?.focus();
   }, [state]);
 
-  // Lưu thành công: xoá draft + gỡ cảnh báo rời trang TRƯỚC khi điều hướng
-  // (`docs/03 §4.2` bước 21–22).
-  useEffect(() => {
-    if (!state?.ok) return;
-
-    clearDraft();
-
-    // `notice` do SERVER trả về. KHÔNG suy ra từ `mode` ở đây: sau khi tạo
-    // thành công, `revalidatePath('/sales/today/morning')` làm RSC của chính
-    // trang này render lại — lúc đó đã có báo cáo nên `mode` đã đổi thành
-    // `'edit'`, và một lần TẠO MỚI sẽ hiện nhầm câu "Đã cập nhật cam kết sáng".
-    // Lỗi này đã xảy ra thật khi kiểm chứng Phase 3 trên Chromium.
-    router.replace(`${SALES_TODAY_PATH}?saved=${state.data.notice}`);
-  }, [state, clearDraft, router]);
+  /*
+   * ⚠ KHÔNG còn `useEffect` bắt `state.ok` để `clearDraft()` + `router.replace()`.
+   *
+   * Nó đã chết cùng DEC-055 và bộ E2E bắt được ngay: `/sales/today/morning` nay
+   * tự `redirect()` khi hôm nay đã có báo cáo, nên lần render lại RSC sau Server
+   * Action làm form unmount **trước khi** effect kịp commit. Điều hướng do
+   * `saveMorningReport` phát ra (DEC-037), việc dọn draft do `DiscardMorningDraft`
+   * trên `/sales/today` lo.
+   */
 
   const routeLength = values.planned_route.trim().length;
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-6" noValidate>
-      {mode === 'edit' && reportId && <input type="hidden" name="report_id" value={reportId} />}
-
       {restoredFromDraft && (
         <div className="flex flex-col gap-2 rounded-lg border border-input-border bg-card p-3">
           <p className="text-sm text-foreground">
@@ -269,7 +276,7 @@ export function MorningReportForm({ mode, reportId, today, initialValues }: Prop
 
       <FormField
         id="target_customer_visits"
-        label="Mục tiêu số lượng khách hàng"
+        label="Mục tiêu số lượng khách hàng sẽ gặp"
         required
         error={errorFor('target_customer_visits')}
         helperText="Số khách dự kiến gặp trong ngày. Tối đa 1.000."
@@ -299,11 +306,7 @@ export function MorningReportForm({ mode, reportId, today, initialValues }: Prop
       <div className="sticky bottom-0 -mx-4 mt-2 border-t border-border bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <Button type="submit" size="lg" disabled={isBusy} aria-busy={isBusy}>
           <Save aria-hidden="true" className="size-5" />
-          {isBusy
-            ? 'Đang lưu…'
-            : mode === 'create'
-              ? 'Lưu báo cáo đầu ngày'
-              : 'Lưu thay đổi'}
+          {isBusy ? 'Đang lưu…' : 'Lưu báo cáo đầu ngày'}
         </Button>
         {isDirty && !isBusy && (
           <p className="mt-2 text-center text-xs text-muted-foreground">

@@ -32,20 +32,24 @@ export const REPORT_MESSAGES = {
   WRONG_BUSINESS_DATE: 'Chỉ được tạo báo cáo cho ngày hôm nay.',
   /** Mất mạng / timeout. Form KHÔNG được reset (NFR-010). */
   SAVE_FAILED: 'Không lưu được. Kiểm tra kết nối rồi thử lại.',
-  /**
-   * BR-002 / FR-017 — gọi route ảnh cho một báo cáo chưa `COMPLETED`. Nút trên
-   * giao diện đã bị khoá, nên câu này chỉ tới tay người gọi thẳng URL.
+  /*
+   * ⚠ PHASE 14 — `NOT_COMPLETED` ("Chỉ xuất ảnh được sau khi hoàn tất báo cáo
+   * cuối ngày.") ĐÃ BỊ XOÁ cùng chốt chặn sinh ra nó. **DEC-058** cho phép xuất
+   * ảnh ngay sau cam kết sáng, nên không còn tình huống nào trả câu đó nữa.
    */
-  NOT_COMPLETED: 'Chỉ xuất ảnh được sau khi hoàn tất báo cáo cuối ngày.',
   /** Sinh ảnh 9:16 thất bại — chi tiết chỉ nằm ở log server (NFR-014). */
   IMAGE_FAILED: 'Không tạo được ảnh báo cáo. Vui lòng thử lại.',
   UNKNOWN: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
 } as const;
 
-/** Thông báo thành công, hiển thị ở `/sales/today` sau khi quay về. */
+/**
+ * Thông báo thành công, hiển thị ở `/sales/today` sau khi quay về.
+ *
+ * ⚠ `MORNING_UPDATED` ("Đã cập nhật cam kết sáng.") đã bị XOÁ ở PHASE 14 cùng
+ * UC-05 (DEC-055). Không còn đường nào trong ứng dụng sinh ra câu đó.
+ */
 export const REPORT_SAVED_NOTICES = {
   MORNING_CREATED: 'Đã lưu báo cáo đầu ngày.',
-  MORNING_UPDATED: 'Đã cập nhật cam kết sáng.',
   EVENING_COMPLETED: 'Đã hoàn tất báo cáo hôm nay.',
 } as const;
 
@@ -54,25 +58,21 @@ export type ReportSavedNotice = keyof typeof REPORT_SAVED_NOTICES;
 /** Giá trị hợp lệ của query param `?saved=` trên `/sales/today`. */
 export const SAVED_PARAM = {
   MORNING_CREATED: 'morning',
-  MORNING_UPDATED: 'morning-updated',
   EVENING_COMPLETED: 'evening',
 } as const;
 
 /**
- * Giá trị này do **Server Action** trả về, không do client tự suy ra.
+ * Giá trị này do **Server Action** trả về, không do client tự suy ra (DEC-034).
  *
- * Lý do nằm ở một lỗi đã xảy ra thật khi kiểm chứng Phase 3: sau khi tạo báo cáo
- * thành công, `revalidatePath('/sales/today/morning')` khiến RSC của trang form
- * render lại — lúc này đã có báo cáo nên form chuyển sang chế độ SỬA. Nếu client
- * suy ra thông báo từ `mode` hiện tại thì nó đọc được `'edit'` và hiện nhầm câu
- * "Đã cập nhật cam kết sáng" cho một lần TẠO MỚI. Chỉ server mới biết chắc nó
- * vừa `insert` hay vừa `update`.
+ * Lý do nằm ở một lỗi đã xảy ra thật khi kiểm chứng Phase 3: client suy thông
+ * báo từ trạng thái form của chính nó thì đọc trúng trạng thái ĐÃ bị
+ * `revalidatePath()` làm mới, và hiện nhầm câu xác nhận. Quy tắc giữ nguyên kể
+ * cả khi PHASE 14 rút danh sách xuống còn hai giá trị: **server quyết định**.
  */
 export type SavedParamValue = (typeof SAVED_PARAM)[keyof typeof SAVED_PARAM];
 
 export function messageForSavedParam(value: string | undefined): string | null {
   if (value === SAVED_PARAM.MORNING_CREATED) return REPORT_SAVED_NOTICES.MORNING_CREATED;
-  if (value === SAVED_PARAM.MORNING_UPDATED) return REPORT_SAVED_NOTICES.MORNING_UPDATED;
   if (value === SAVED_PARAM.EVENING_COMPLETED) return REPORT_SAVED_NOTICES.EVENING_COMPLETED;
   return null;
 }

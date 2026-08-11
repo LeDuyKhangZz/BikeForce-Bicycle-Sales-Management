@@ -5,25 +5,27 @@ import { ArrowLeft } from 'lucide-react';
 
 import { Card, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
-import {
-  MorningReportForm,
-  type MorningFormValues,
-} from '@/features/report-morning/morning-report-form';
+import { MorningReportForm } from '@/features/report-morning/morning-report-form';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { SALES_TODAY_PATH, canOpenMorningForm } from '@/lib/reports/today-cta';
 import { createClient } from '@/lib/supabase/server';
-import { getTodayReport, type DailyReport } from '@/services/reports';
+import { getTodayReport } from '@/services/reports';
 
 export const metadata: Metadata = {
   title: 'Báo cáo đầu ngày · BikeForce',
 };
 
 /**
- * `/sales/today/morning` — UC-04 (tạo) và UC-05 (sửa), FR-008…FR-012.
+ * `/sales/today/morning` — UC-04, FR-008…FR-011.
+ *
+ * ⚠ **PHASE 14 — DEC-055.** Route này từng gánh CẢ UC-05 (sửa cam kết sáng) bằng
+ * một chế độ `edit`. Chế độ đó đã bị gỡ: hôm nay đã có báo cáo thì đây là màn
+ * hình CHỈ ĐỌC-KHÔNG-VÀO-ĐƯỢC, người dùng bị đưa thẳng về `/sales/today`. Cam kết
+ * sáng khoá ngay khi gửi.
  *
  * RSC **luôn** truy vấn báo cáo hôm nay trước khi render. Đây là lớp chống trùng
- * THỨ NHẤT trong ba lớp của FR-011 (`docs/03 §4.4`):
- *   1. tầng này — đã có báo cáo thì mở ở chế độ SỬA, không phải TẠO;
+ * THỨ NHẤT trong ba lớp của FR-011 (`docs/03 §4.2`):
+ *   1. tầng này — đã có báo cáo thì không mở form nữa;
  *   2. Server Action — kiểm lại trước khi ghi;
  *   3. `UNIQUE(sales_id, report_date)` — chốt chặn thật cho hai tab bấm cùng lúc.
  */
@@ -34,13 +36,11 @@ export default async function MorningReportPage() {
   const today = getVietnamToday();
   const report = await getTodayReport(supabase, profile.id, today);
 
-  // BR-019 — đã COMPLETED thì khoá vĩnh viễn. Chặn ngay ở đây để người dùng
-  // không gõ lại cả form rồi mới nhận lỗi lưu.
+  // DEC-055 (đã gửi cam kết sáng) và BR-019 (đã COMPLETED) — cả hai đều dừng ở
+  // đây, để người dùng không gõ lại cả form rồi mới nhận lỗi lưu.
   if (!canOpenMorningForm(report)) {
     redirect(SALES_TODAY_PATH);
   }
-
-  const mode = report === null ? 'create' : 'edit';
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
@@ -53,9 +53,7 @@ export default async function MorningReportPage() {
           Về trang Hôm nay
         </Link>
 
-        <h1 className="text-2xl font-bold tracking-tight text-heading">
-          {mode === 'create' ? 'Báo cáo đầu ngày' : 'Sửa cam kết sáng'}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-heading">Báo cáo đầu ngày</h1>
       </div>
 
       {/*
@@ -79,42 +77,12 @@ export default async function MorningReportPage() {
         </dl>
       </Card>
 
-      <MorningReportForm
-        mode={mode}
-        reportId={report?.id ?? null}
-        today={today}
-        initialValues={toFormValues(report)}
-      />
+      {/*
+        Form LUÔN mở rỗng. Từ DEC-055 không còn nhánh prefill nào: tới được dòng
+        này nghĩa là `report === null`, đã được `canOpenMorningForm()` bảo đảm ở
+        trên. Hàm `toFormValues()` cũ đã bị xoá cùng chế độ `edit`.
+      */}
+      <MorningReportForm today={today} />
     </div>
   );
-}
-
-/**
- * Row của database → giá trị chuỗi cho ô nhập.
- *
- * Số được đổi sang chuỗi ở ĐÂY chứ không ở component: ô nhập giữ đúng những gì
- * người dùng gõ, còn việc quy về số nguyên là của `morningReportSchema`
- * (BR-010 — không bao giờ có chuỗi đã format đi xuống database).
- */
-function toFormValues(report: DailyReport | null): MorningFormValues {
-  if (report === null) {
-    return {
-      planned_route: '',
-      target_visit_points: '',
-      target_sales_amount: '',
-      target_revenue: '',
-      target_customer_visits: '',
-    };
-  }
-
-  return {
-    planned_route: report.planned_route,
-    target_visit_points: String(report.target_visit_points),
-    // `?? ''` chứ không `String(...)`: các báo cáo có TRƯỚC migration 0008 mang
-    // `null` ở cột này (DEC-050, OQ-19c). `String(null)` sẽ đổ chữ "null" vào ô
-    // nhập — người dùng phải thấy ô TRỐNG và tự nhập lại.
-    target_sales_amount: report.target_sales_amount?.toString() ?? '',
-    target_revenue: String(report.target_revenue),
-    target_customer_visits: String(report.target_customer_visits),
-  };
 }

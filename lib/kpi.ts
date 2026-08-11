@@ -156,8 +156,10 @@ export function formatMetricValue(value: number | null, metric: KpiMetric): stri
  * số đầy đủ mới đúng. Một tham số boolean ở đó sẽ luôn là `false` và sớm muộn
  * cũng có người truyền nhầm. Hai cái tên, hai chỗ dùng rõ ràng.
  *
- * Chỗ DUY NHẤT được dùng bản này là bảng 4 dòng của thẻ ảnh (`docs/05 §14`) —
- * khối "DOANH THU THỰC ĐẠT" bên dưới vẫn phải hiện số đầy đủ.
+ * Chỗ DUY NHẤT được dùng bản này là bảng 4 dòng của thẻ ảnh (`docs/05 §14`).
+ * ⚠ PHASE 14 — khối nhấn mạnh dưới bảng KHÔNG còn là "DOANH THU THỰC ĐẠT" (số
+ * tiền đầy đủ) mà là "SỐ KHÁCH LÀM VIỆC" (một tỉ lệ phần trăm), nên thẻ ảnh nay
+ * chỉ còn đúng một đường dùng số tiền và nó là đường RÚT GỌN này (DEC-056).
  */
 export function formatMetricValueCompact(value: number | null, metric: KpiMetric): string {
   if (value === null || !isUsableNumber(value)) return EMPTY_DISPLAY;
@@ -234,6 +236,56 @@ export function calculateAchievement(
     display: formatPercent(percent),
     surplus: null,
   };
+}
+
+/* ---------------------------------------------------------------------------
+ * "Số khách làm việc" — chỉ số DẪN XUẤT, thêm ở PHASE 14 (DEC-056)
+ * ------------------------------------------------------------------------- */
+
+export type CustomerWorkRateResult = {
+  /** `null` khi KHÔNG tồn tại một con số có nghĩa. Không bao giờ `NaN`/`Infinity`. */
+  percent: number | null;
+  /** Chuỗi đã format sẵn: `'50,0%'` | `'—'`. */
+  display: string;
+};
+
+const EMPTY_WORK_RATE: CustomerWorkRateResult = { percent: null, display: EMPTY_DISPLAY };
+
+/**
+ * `khách thực gặp / điểm đã viếng thăm × 100` — chỉ số "Số khách làm việc".
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  ĐÂY KHÔNG PHẢI CHỈ TIÊU THỨ NĂM
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Nó **không** có cột `target_*`, **không** vào bảng bốn dòng, **không** tham
+ *  gia `isKpiAchievedDay()` (BR-024 vẫn là "cả 4 chỉ tiêu ≥ 100%"). Nó là một
+ *  phép chia trên hai con số THỰC ĐẠT đã có, trả lời đúng một câu: mỗi điểm
+ *  viếng thăm quy đổi ra bao nhiêu khách thực sự làm việc được.
+ *
+ *  Vì vậy nó cũng KHÔNG đi qua `getAchievementStatus()`: không có ngưỡng
+ *  80/100 nào của BR-023 áp cho nó, và cũng không có nhãn "Đạt / Chưa đạt".
+ *
+ *  Đặt ở đây, cạnh `calculateAchievement()`, vì `lib/kpi.ts` là **nguồn duy
+ *  nhất** của mọi phép chia phần trăm trong dự án (NFR-012, AGENTS.md §9) — thẻ
+ *  ảnh 9:16 phải gọi hàm này chứ không được tự nhân 100 rồi tự làm tròn.
+ *
+ *  **Mẫu số bằng 0 → `'—'`.** Chia cho 0 không xác định, và ở đây cũng không có
+ *  cách diễn giải nào khác cho "gặp khách mà không ghé điểm nào". Cùng tinh thần
+ *  BR-015: thà một ô trống đọc được còn hơn một `∞` lọt ra ảnh gửi cho khách.
+ */
+export function calculateCustomerWorkRate(
+  customerVisits: number | null,
+  visitPoints: number | null,
+): CustomerWorkRateResult {
+  if (customerVisits === null || !isUsableNumber(customerVisits)) return EMPTY_WORK_RATE;
+  if (visitPoints === null || !isUsableNumber(visitPoints)) return EMPTY_WORK_RATE;
+  if (visitPoints === 0) return EMPTY_WORK_RATE;
+
+  const percent = (customerVisits / visitPoints) * 100;
+
+  // KHÔNG clamp — cùng lý do với BR-004: một điểm viếng thăm có thể gặp nhiều
+  // khách, nên vượt 100% là kết quả thật chứ không phải lỗi nhập liệu.
+  return { percent, display: formatPercent(percent) };
 }
 
 /**

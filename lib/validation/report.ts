@@ -153,7 +153,12 @@ export const morningReportSchema = z.object({
   ),
   target_sales_amount: integerField(MAX_SALES_AMOUNT_VND, 'Mục tiêu doanh số'),
   target_revenue: integerField(MAX_REVENUE_VND, 'Mục tiêu doanh thu công nợ'),
-  target_customer_visits: integerField(MAX_CUSTOMER_VISITS, 'Mục tiêu số lượng khách hàng'),
+  target_customer_visits: integerField(
+    MAX_CUSTOMER_VISITS,
+    // Nhãn trong thông báo lỗi phải TRÙNG nhãn trên ô nhập, nếu không người
+    // dùng đọc lỗi mà không biết nó nói về ô nào (PHASE 14, yêu cầu người dùng).
+    'Mục tiêu số lượng khách hàng sẽ gặp',
+  ),
 });
 
 export type MorningReportInput = z.infer<typeof morningReportSchema>;

@@ -1,10 +1,45 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **13b — XONG, quality gate xanh đủ, CHỜ COMMIT** | Last updated: 2026-08-10
+> Status: ACTIVE | Phase: **14 — XONG, quality gate xanh ĐỦ, CHỜ COMMIT** | Last updated: 2026-08-11
 
 ---
 
-## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 019 — DEC-054)
+## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 020 — PHASE 14)
+
+**Phiên 2026-08-11 làm 4 yêu cầu của người dùng và sinh ra DEC-055 → DEC-058.**
+
+| Việc | Trạng thái |
+|---|---|
+| Gỡ hẳn "Sửa cam kết sáng" (UC-05/FR-012 ra khỏi v1) — **DEC-055** | ✅ code + test + docs |
+| Thẻ ảnh: "Công nợ" → "Doanh thu", khối "Số khách làm việc" — **DEC-056** | ✅ |
+| Thẻ ảnh đổi sang **nền sáng tone logo** — **DEC-057** | ✅ đo 21 cặp màu, thấp nhất 5,04:1 |
+| **Hai tấm ảnh mỗi ngày** (sáng: cam kết · chiều: kết quả) — **DEC-058** | ✅ **BR-002 được NỚI** |
+| Nhãn ô nhập → "Mục tiêu số lượng khách hàng sẽ gặp" | ✅ |
+
+| Cổng chất lượng | Kết quả thật (2026-08-11) |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npx next build` | ✅ 18 route |
+| `npm test` | ✅ **765/765** (unit 575 · integration 57 · rls 133) |
+| `npm run e2e` | ✅ **121 passed / 5 skipped / 0 failed**, 4,9 phút |
+| **Nhìn tận mắt** | ✅ render PNG thật **cả hai biến thể**, sửa bản sáng vì rỗng đáy, render lại |
+
+⚠ **BỘ E2E BẮT ĐƯỢC MỘT LỖI HỒI QUY THẬT — và đó là điều đáng nhớ nhất của phiên.** Lượt chạy đầu
+đỏ **3/3 project** ở đúng một dòng: sau khi lưu cam kết sáng, banner "Đã lưu báo cáo đầu ngày" biến
+mất. Nguyên nhân: DEC-055 làm `/sales/today/morning` biết tự `redirect()`, mà Next **luôn** render
+lại RSC của route hiện tại sau Server Action — lần render đó `redirect()` **không kèm `?saved=`** và
+đè mất `router.replace()` của client. Sửa bằng **DEC-059**: `saveMorningReport` tự `redirect()`,
+đúng khuôn DEC-037 đã ghi từ Phase 4. **Không phép kiểm tĩnh nào bắt được — typecheck, lint, build
+và 765 test đều xanh trong lúc lỗi đang tồn tại.** (Cùng họ với ISSUE-016.)
+
+⚠ **Ba thứ đã bị XOÁ khỏi dự án, đừng đi tìm:** Server Action `updateMorningReport`, hàm service
+`updateMorningReport()`, chuỗi `REPORT_MESSAGES.NOT_COMPLETED`. Và `TodayView.canExportImage` đã
+bị thay bằng `TodayView.shareImageVariant`.
+
+---
+
+## ✅ Phiên trước đó (Entry 019 — DEC-054)
 
 **Phiên trước đã đóng đủ quality gate. Việc duy nhất còn lại là `git commit` + `git push`.**
 
@@ -762,7 +797,52 @@ bị vô hiệu hoá giữa phiên bị đá về `/login?reason=deactivated`.
 
 ## Next Exact Steps
 
-### ✅ VIỆC SỐ 0 — COMMIT PHIÊN DEC-054 (chưa làm)
+### ⛔ VIỆC SỐ 0 — COMMIT PHASE 14
+
+Working tree đang mang toàn bộ PHASE 14 và **đã qua đủ quality gate** (bảng ở đầu file). Không cần
+chạy lại gì trước khi commit.
+
+Nếu vẫn muốn chạy lại cho chắc, đây là trình tự đã dùng:
+
+```powershell
+# 1. Bật Docker Desktop, rồi xác minh — ISSUE-024: LUÔN kiểm trước khi đọc kết quả test
+docker version
+
+# 2. Supabase local
+npx supabase start
+
+# 3. Hai project test còn thiếu
+npm run test:db
+
+# 4. Giải phóng cổng 3100 nếu lượt e2e trước còn giữ
+Get-NetTCPConnection -LocalPort 3100 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+
+# 5. E2E
+npm run e2e
+```
+
+**Hai bài E2E chắc chắn phải xanh vì chúng khoá đúng thay đổi của phiên này:**
+- `e2e/sales-flow.spec.ts` — không còn link "Sửa cam kết sáng"; `/sales/today/morning` bị đá về;
+  nút **"Lưu hình báo cáo đầu ngày"** hiện ở `MORNING_SUBMITTED`; sau khi hoàn tất thì nhãn đổi
+  thành **"Xuất ảnh báo cáo"**.
+- `e2e/security.spec.ts` — ảnh PNG vẫn 1080×1920, IDOR vẫn 404.
+
+Xong mới commit:
+
+```bash
+git add -A
+git commit -m "feat(phase14): bo sua cam ket sang; anh 9:16 doi noi dung, doi mau, tach hai bien the"
+git push
+```
+
+⚠ `git push` từ agent **chỉ chạy khi credential còn cache**. Hết cache thì nhờ người dùng push, và
+luôn xác minh bằng `git ls-remote origin refs/heads/main`.
+
+---
+
+
+
+### ✅ ~~VIỆC SỐ 0 — COMMIT PHIÊN DEC-054~~ — **XONG**, commit `af95155`
 
 Toàn bộ Phase 13b nằm trong working tree và **đã qua đủ quality gate** (bảng ở đầu file).
 Không cần chạy lại gì trước khi commit.
@@ -882,6 +962,40 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 ---
 
 ## DO NOT REDO
+
+**Từ PHASE 14 (MỚI NHẤT — DEC-055…058, 2026-08-11):**
+
+- **`saveMorningReport` TỰ `redirect()` — đừng thêm lại nhánh `ok: true`** (DEC-059). Cách cũ vỡ
+  ngay khi DEC-055 cho `/sales/today/morning` quyền tự `redirect()`, và **bỏ `revalidatePath` của
+  chính route đó KHÔNG cứu được** — Next re-render route hiện tại dù có revalidate hay không (đã đo
+  ở Phase 4, ghi trong `features/report-evening/actions.ts`). Việc dọn draft nằm ở
+  `DiscardMorningDraft` trên `/sales/today`, **không** ở `useEffect` của form.
+- **Câu của DEC-037 gọi luồng sáng là ngoại lệ ("form đầu ngày nhận `ok: true` rồi tự
+  `router.replace()`") ĐÃ HẾT HIỆU LỰC.** Cả hai luồng nay cùng một khuôn.
+- **`updateMorningReport` (cả Server Action lẫn hàm service) ĐÃ BỊ XOÁ — đừng viết lại.** Cam kết
+  sáng khoá ngay khi gửi (DEC-055). Muốn mở lại phải có DEC mới **và** audit log AF-12 đi trước.
+- **Policy `reports_update_own_open` KHÔNG được gỡ** dù FR-012 đã đi. Nó là đường UPDATE **duy
+  nhất** còn lại của ứng dụng, phục vụ `completeEveningReport()`.
+- **`shareImageFileName()` có tham số `variant` BẮT BUỘC — đừng thêm giá trị mặc định.** Hai tấm
+  ảnh cùng ngày trùng tên file thì tấm chiều ghi đè tấm sáng trong thư mục Tải về.
+- **Route ảnh KHÔNG còn nhánh `403 NOT_COMPLETED`** — đó là DEC-058, không phải thiếu sót. Đừng
+  "siết lại cho chặt": phần cốt lõi của BR-002 nằm ở chỗ ảnh dựng từ dòng **đã persist** và client
+  **không chọn được biến thể**.
+- **Satori KHÔNG dựng được `<>…</>`.** Hàng tiêu đề bảng của thẻ ảnh dựng bằng **mảng** rồi `.map()`.
+- **`ROW_METRICS` cố ý cho bản sáng nhịp dòng lớn hơn hẳn bản chiều.** Không phải copy nhầm: bản
+  sáng chỉ có 4 con số, dùng chung cỡ chữ thì nội dung kết thúc ở ~1030/1920 và nửa dưới tấm ảnh
+  trống trơn. Đã render PNG thật ra nhìn mới thấy — **không phép đo nào bắt được lỗi này.**
+- **Cách kiểm chứng thẻ ảnh mà không cần dựng cả app:** một file `lib/*.test.tsx` dùng-một-lần gọi
+  `ImageResponse` của `next/og` rồi ghi PNG ra thư mục tạm. Chạy `npx vitest run --project unit
+  <file>`, **xem ảnh, rồi XOÁ file** — không commit.
+- **Sửa tài liệu bằng script: biên thay thế phải là heading CÙNG CẤP kế tiếp.** Phiên này lấy nhầm
+  `### 13.1` (nằm sau `## 15`) làm biên và nuốt mất ~110 dòng của `docs/05`; phát hiện nhờ
+  `git diff --stat`, khôi phục bằng `git checkout --`. **Luôn đọc `git diff --stat` sau mỗi lần
+  sửa docs bằng script.**
+
+---
+
+
 
 **Từ phiên `/login` + Đăng xuất (MỚI NHẤT — DEC-054, 2026-08-10):**
 

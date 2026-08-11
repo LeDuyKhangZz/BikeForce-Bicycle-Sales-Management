@@ -15,6 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   achievementLabel,
   calculateAchievement,
+  calculateCustomerWorkRate,
   formatMetricValue,
   formatMetricValueCompact,
   getAchievementStatus,
@@ -337,5 +338,72 @@ describe('formatMetricValueCompact — bản rút gọn cho thẻ ảnh 9:16 (Ph
     expect(formatMetricValueCompact(null, 'REVENUE')).toBe('—');
     expect(formatMetricValueCompact(Number.NaN, 'REVENUE')).toBe('—');
     expect(formatMetricValueCompact(-1, 'SALES_AMOUNT')).toBe('—');
+  });
+});
+
+describe('calculateCustomerWorkRate — "Số khách làm việc" (PHASE 14, DEC-056)', () => {
+  it('ca của người dùng đưa ra: 5 khách trên 10 điểm = 50,0%', () => {
+    expect(calculateCustomerWorkRate(5, 10)).toEqual({ percent: 50, display: '50,0%' });
+  });
+
+  it('làm tròn 1 chữ số thập phân, dấu phẩy kiểu Việt Nam', () => {
+    expect(calculateCustomerWorkRate(1, 3).display).toBe('33,3%');
+    expect(calculateCustomerWorkRate(2, 3).display).toBe('66,7%');
+  });
+
+  it('KHÔNG clamp — nhiều khách trên một điểm là kết quả thật', () => {
+    const result = calculateCustomerWorkRate(25, 10);
+    expect(result.percent).toBe(250);
+    expect(result.display).toBe('250,0%');
+  });
+
+  it('`percent` giữ nguyên độ chính xác, chỉ `display` mới làm tròn', () => {
+    const result = calculateCustomerWorkRate(1, 3);
+    expect(result.percent).toBeCloseTo(33.3333, 4);
+    expect(result.percent).not.toBe(33.3);
+  });
+
+  it('0 khách trên 10 điểm = 0,0% — có nghĩa, không phải "chưa có số liệu"', () => {
+    expect(calculateCustomerWorkRate(0, 10)).toEqual({ percent: 0, display: '0,0%' });
+  });
+
+  it('mẫu số 0 → "—", KHÔNG BAO GIỜ ∞ (tinh thần BR-015)', () => {
+    expect(calculateCustomerWorkRate(5, 0)).toEqual({ percent: null, display: '—' });
+    expect(calculateCustomerWorkRate(0, 0)).toEqual({ percent: null, display: '—' });
+  });
+
+  it('chưa có số liệu cuối ngày → "—"', () => {
+    expect(calculateCustomerWorkRate(null, 10).display).toBe('—');
+    expect(calculateCustomerWorkRate(5, null).display).toBe('—');
+    expect(calculateCustomerWorkRate(null, null).display).toBe('—');
+  });
+
+  it('đầu vào không dùng được → "—", không ném lỗi (DEC-033)', () => {
+    for (const [a, b] of [
+      [Number.NaN, 10],
+      [5, Number.NaN],
+      [Number.POSITIVE_INFINITY, 10],
+      [5, Number.POSITIVE_INFINITY],
+      [-1, 10],
+      [5, -1],
+    ] as const) {
+      const result = calculateCustomerWorkRate(a, b);
+      expect(result).toEqual({ percent: null, display: '—' });
+    }
+  });
+
+  it('bất biến: không tổ hợp nào cho ra NaN / Infinity / "∞"', () => {
+    const values = [null, -1, 0, 1, 7, 1000, Number.NaN, Number.POSITIVE_INFINITY];
+    for (const customers of values) {
+      for (const points of values) {
+        const { percent, display } = calculateCustomerWorkRate(customers, points);
+        if (percent !== null) {
+          expect(Number.isFinite(percent)).toBe(true);
+        }
+        expect(display).not.toContain('NaN');
+        expect(display).not.toContain('∞');
+        expect(display).not.toContain('Infinity');
+      }
+    }
   });
 });

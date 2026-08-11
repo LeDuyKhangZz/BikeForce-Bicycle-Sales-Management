@@ -21,11 +21,14 @@ import { getReportForShare } from '@/services/reports';
  * ─────────────────────────────────────────────────────────────────────────
  *  ĐÂY LÀ BỀ MẶT IDOR RÕ RÀNG NHẤT CỦA HỆ THỐNG (`docs/07 §4.1`)
  * ─────────────────────────────────────────────────────────────────────────
- *  Một `id` đoán được là đủ để thử. Nó được bảo vệ bằng HAI lớp:
- *    1. **RLS** `reports_select_own_or_admin` — biên giới thật (DEC-004).
- *       Route dùng `lib/supabase/server.ts` (anon key + cookie phiên), **không**
- *       bao giờ dùng `lib/supabase/admin.ts` (DEC-005).
- *    2. Kiểm tra tường minh `status === 'COMPLETED'` trong handler (BR-002).
+ *  Một `id` đoán được là đủ để thử. Nó được bảo vệ bằng **RLS**
+ *  `reports_select_own_or_admin` — biên giới thật (DEC-004). Route dùng
+ *  `lib/supabase/server.ts` (anon key + cookie phiên), **không** bao giờ dùng
+ *  `lib/supabase/admin.ts` (DEC-005).
+ *
+ *  ⚠ PHASE 14 — lớp thứ hai cũ ("phải `status = 'COMPLETED'`") đã được **DEC-058**
+ *  thay bằng việc chọn BIẾN THỂ ảnh theo `status`. Xem chú thích tại chỗ trong
+ *  `GET` bên dưới.
  *
  *  Không tồn tại và không có quyền đều trả **404 giống hệt nhau**: phân biệt hai
  *  ca là tự xác nhận rằng một `id` có thật, tức là biến 404 thành một kênh dò.
@@ -141,14 +144,25 @@ export async function GET(_request: Request, context: ShareImageContext): Promis
     return errorResponse(404, 'REPORT_NOT_FOUND', REPORT_MESSAGES.REPORT_NOT_FOUND);
   }
 
-  // BR-002 — điều kiện được kiểm trên dữ liệu ĐÃ PERSIST, không bao giờ trên
-  // trạng thái form phía client.
-  if (report.status !== 'COMPLETED') {
-    return errorResponse(403, 'NOT_COMPLETED', REPORT_MESSAGES.NOT_COMPLETED);
-  }
-
+  /*
+   * BR-002 sau khi **DEC-058** nới nó — đọc kỹ trước khi "sửa lại cho chặt".
+   *
+   * Trước PHASE 14, chỗ này trả 403 `NOT_COMPLETED` cho mọi báo cáo chưa hoàn
+   * tất. Người dùng yêu cầu gửi Zalo HAI lần mỗi ngày (sáng: cam kết, chiều: kết
+   * quả), nên điều kiện đổi từ "phải `COMPLETED`" thành "phải TỒN TẠI và người
+   * gọi phải có quyền đọc" — hai vế đó đã được `getReportForShare()` + RLS trả
+   * lời ngay bên trên.
+   *
+   * Phần CỐT LÕI của BR-002 không đổi và vẫn được ép ở đây: ảnh dựng từ **một
+   * dòng đã persist trong database**, không bao giờ từ dữ liệu client gửi lên.
+   * Client cũng KHÔNG chọn được biến thể — `status` quyết định.
+   */
   const model = buildShareCardModel(report);
-  const fileName = shareImageFileName(report.sales.full_name, report.report_date);
+  const fileName = shareImageFileName(
+    report.sales.full_name,
+    report.report_date,
+    model.variant,
+  );
 
   try {
     return new ImageResponse(<DailyReportShareCard model={model} />, {

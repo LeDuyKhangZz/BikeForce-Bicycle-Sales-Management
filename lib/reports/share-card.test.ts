@@ -24,14 +24,14 @@ import {
   type ShareCardSource,
 } from './share-card';
 
-/** Đổi NBSP thành space thường để assertion đọc được bằng mắt. */
-const nbsp = (value: string): string => value.replace(/\u00a0/g, ' ');
-
 /**
  * Một báo cáo đã `COMPLETED` "bình thường" — mọi test bên dưới chỉ ghi đè đúng
  * trường nó quan tâm, nên đọc test là thấy ngay case đang kiểm là gì.
  */
 const BASE: ShareCardSource = {
+  // `status` quyết định biến thể thẻ (DEC-058) — mặc định là bản CHIỀU vì phần
+  // lớn case của Phase 6 nói về bảng 4 cột.
+  status: 'COMPLETED',
   report_date: '2026-08-07',
   planned_route: 'Quận 1 → Quận 3',
   actual_route: null,
@@ -83,10 +83,11 @@ describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
   // Thẻ ảnh dùng `shortLabel` (DEC-050) vì cột nhãn có bề rộng cố định — nhãn
   // đầy đủ "Doanh thu công nợ" / "Khách hàng đã gặp" chỉ hiện trên web.
   it('đúng bốn dòng, đúng thứ tự và nhãn RÚT GỌN của docs/05 §14', () => {
+    // ⚠ Dòng thứ ba là **"Doanh thu"**, không phải "Công nợ" — DEC-056.
     expect(build().metrics.map((row) => row.label)).toEqual([
       'Viếng thăm',
       'Doanh số',
-      'Công nợ',
+      'Doanh thu',
       'Khách hàng',
     ]);
   });
@@ -120,8 +121,87 @@ describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
     ]);
   });
 
-  it('doanh thu thực đạt ở khối nhấn mạnh là số ĐẦY ĐỦ, không rút gọn', () => {
-    expect(nbsp(build().revenueActualText)).toBe('125.000.000 ₫');
+});
+
+describe('buildShareCardModel — khối "Số khách làm việc" (PHASE 14, DEC-056)', () => {
+  it('tỉ lệ = khách thực đạt / điểm đã viếng thăm, lấy nguyên từ lib/kpi', () => {
+    // BASE: 12 khách trên 10 điểm.
+    expect(build().workRate?.display).toBe('120,0%');
+  });
+
+  it('ca của người dùng đưa ra: 5 khách trên 10 điểm = 50,0%', () => {
+    const model = build({ actual_customer_visits: 5, actual_visit_points: 10 });
+
+    expect(model.workRate?.display).toBe('50,0%');
+    expect(model.workRate?.detailText).toBe('5 khách / 10 điểm');
+  });
+
+  it('dòng phụ ghép bằng formatMetricValue — đơn vị vẫn chỉ ghép ở lib/kpi', () => {
+    expect(build().workRate?.detailText).toBe('12 khách / 10 điểm');
+  });
+
+  it('chưa có số liệu cuối ngày → "—" và KHÔNG có dòng phụ', () => {
+    const model = build({ actual_customer_visits: null, actual_visit_points: null });
+
+    expect(model.workRate?.display).toBe('—');
+    expect(model.workRate?.detailText).toBeNull();
+  });
+
+  it('0 điểm viếng thăm → "—", không bao giờ ∞', () => {
+    const model = build({ actual_customer_visits: 5, actual_visit_points: 0 });
+
+    expect(model.workRate?.display).toBe('—');
+    // Dòng phụ vẫn dựng được vì cả hai vế đều có số thật — nó giải thích ĐÚNG
+    // lý do tỉ lệ trống: mẫu số bằng 0.
+    expect(model.workRate?.detailText).toBe('5 khách / 0 điểm');
+  });
+});
+
+describe('buildShareCardModel — hai biến thể thẻ (PHASE 14, DEC-058)', () => {
+  /** Một báo cáo mới chỉ có cam kết sáng: bốn cột `actual_*` đều `null`. */
+  const morning = () =>
+    build({
+      status: 'MORNING_SUBMITTED',
+      actual_visit_points: null,
+      actual_sales_amount: null,
+      actual_revenue: null,
+      actual_customer_visits: null,
+      actual_route: null,
+      evening_note: null,
+    });
+
+  it('status quyết định biến thể — client KHÔNG chọn được', () => {
+    expect(morning().variant).toBe('MORNING');
+    expect(build().variant).toBe('EVENING');
+  });
+
+  it('chữ trên đầu thẻ nói rõ đây là ảnh nào', () => {
+    expect(morning().kindLabel).toBe('CAM KẾT ĐẦU NGÀY');
+    expect(build().kindLabel).toBe('KẾT QUẢ CUỐI NGÀY');
+  });
+
+  it('bản sáng KHÔNG có khối "Số khách làm việc" — chưa có số để chia', () => {
+    expect(morning().workRate).toBeNull();
+    expect(build().workRate).not.toBeNull();
+  });
+
+  it('bản sáng vẫn đủ 4 dòng cam kết, lấy tuyến KẾ HOẠCH', () => {
+    const model = morning();
+
+    expect(model.metrics.map((row) => row.targetText)).toEqual([
+      '8 điểm',
+      '5 ₫',
+      '150tr',
+      '12 khách',
+    ]);
+    expect(model.routeText).toBe('Quận 1 → Quận 3');
+  });
+
+  it('bản sáng: cột thực đạt là "—" và badge là "Chờ số liệu" (BR-023)', () => {
+    const model = morning();
+
+    expect(model.metrics.map((row) => row.actualText)).toEqual(['—', '—', '—', '—']);
+    expect(model.metrics.every((row) => row.achievement.status === 'PENDING')).toBe(true);
   });
 });
 
@@ -158,13 +238,12 @@ describe('Edge case bắt buộc của Phase 6', () => {
     expect(build({ evening_note: '   \n  ' }).noteText).toBeNull();
   });
 
-  it('doanh thu 12 chữ số vẫn vừa khung: rút gọn trong bảng, đầy đủ ở khối dưới', () => {
+  it('doanh thu 12 chữ số vẫn vừa khung nhờ dạng rút gọn trong bảng', () => {
     const model = build({ target_revenue: 100_000_000_000, actual_revenue: 99_999_999_999 });
     const revenue = model.metrics[2];
 
     expect(revenue?.targetText).toBe('100tỷ');
     expect(revenue?.actualText).toBe('100tỷ');
-    expect(nbsp(model.revenueActualText)).toBe('99.999.999.999 ₫');
   });
 
   it('achievement 4 chữ số hiển thị đủ, KHÔNG clamp về 100% (BR-004)', () => {
@@ -205,7 +284,9 @@ describe('Edge case bắt buộc của Phase 6', () => {
         const text = [
           model.dateText,
           model.salesName,
-          model.revenueActualText,
+          model.kindLabel,
+          model.workRate?.display ?? '',
+          model.workRate?.detailText ?? '',
           ...model.metrics.flatMap((row) => [row.targetText, row.actualText, row.achievement.display]),
         ].join(' | ');
 
@@ -239,8 +320,18 @@ describe('truncateText — cắt ở tầng dữ liệu vì Satori không có li
 
 describe('shareImageFileName — FR-019', () => {
   it('bỏ dấu tiếng Việt và thay khoảng trắng bằng dấu nối', () => {
-    expect(shareImageFileName('Nguyễn Văn A', '2026-08-07')).toBe(
+    expect(shareImageFileName('Nguyễn Văn A', '2026-08-07', 'EVENING')).toBe(
       'BikeForce_Report_Nguyen-Van-A_2026-08-07.png',
+    );
+  });
+
+  it('hai tấm ảnh của CÙNG một ngày có tên khác nhau — DEC-058', () => {
+    // Nếu hai tên trùng nhau, tấm chiều ghi đè tấm sáng trong thư mục Tải về.
+    expect(shareImageFileName('Nguyễn Văn A', '2026-08-07', 'MORNING')).toBe(
+      'BikeForce_CamKet_Nguyen-Van-A_2026-08-07.png',
+    );
+    expect(shareImageFileName('Nguyễn Văn A', '2026-08-07', 'MORNING')).not.toBe(
+      shareImageFileName('Nguyễn Văn A', '2026-08-07', 'EVENING'),
     );
   });
 
@@ -256,14 +347,14 @@ describe('shareImageFileName — FR-019', () => {
   });
 
   it('tên không còn ký tự ASCII nào vẫn cho ra tên file hợp lệ', () => {
-    expect(shareImageFileName('。。。', '2026-08-07')).toBe(
+    expect(shareImageFileName('。。。', '2026-08-07', 'EVENING')).toBe(
       'BikeForce_Report_Sales_2026-08-07.png',
     );
   });
 
   it('ngày giữ nguyên YYYY-MM-DD để tên file sắp xếp được theo thời gian', () => {
     const names = ['2026-08-07', '2026-08-09', '2026-12-01']
-      .map((date) => shareImageFileName('A', date))
+      .map((date) => shareImageFileName('A', date, 'EVENING'))
       .sort();
 
     expect(names).toEqual([

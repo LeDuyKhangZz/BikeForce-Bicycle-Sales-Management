@@ -1,26 +1,20 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { authorizeSalesWrite } from '@/features/auth/queries';
-import { REPORT_MESSAGES, SAVED_PARAM, type SavedParamValue } from '@/lib/reports/messages';
-import {
-  EVENING_REPORT_PATH,
-  MORNING_REPORT_PATH,
-  SALES_TODAY_PATH,
-} from '@/lib/reports/today-cta';
+import { REPORT_MESSAGES, SAVED_PARAM } from '@/lib/reports/messages';
+import { EVENING_REPORT_PATH, SALES_TODAY_PATH } from '@/lib/reports/today-cta';
 import { getVietnamToday } from '@/lib/date';
 import { morningReportSchema, reportDateSchema } from '@/lib/validation/report';
-import {
-  insertMorningReport,
-  updateMorningReport as updateMorningReportRow,
-  type MorningReportWrite,
-} from '@/services/reports';
+import { insertMorningReport } from '@/services/reports';
 import type { ActionResult } from '@/types/action-result';
 
 /**
- * Server Action của cam kết đầu ngày — UC-04 (tạo), UC-05 (sửa).
+ * Server Action của cam kết đầu ngày — UC-04 (tạo). **Chỉ còn một action**
+ * từ PHASE 14: UC-05 (sửa) đã bị gỡ khỏi v1 (DEC-055).
  *
  * Bảy bước bắt buộc, đúng thứ tự của `docs/07 §1.3`:
  *   auth → profile (role + is_active) → Zod → dữ liệu do server quyết định →
@@ -32,12 +26,28 @@ import type { ActionResult } from '@/types/action-result';
  */
 
 /**
- * `notice` cho client biết phải hiện câu xác nhận nào ở `/sales/today`.
- * **Server quyết định**, client không suy ra — xem chú thích của `SavedParamValue`.
+ * Action này chỉ trả về khi **THẤT BẠI**.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 14 — ĐỔI SANG KHUÔN CỦA DEC-037, VÀ ĐÂY LÀ LÝ DO ĐO ĐƯỢC
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Tới hết PHASE 13, action này trả `ok: true` rồi form tự `router.replace()`.
+ *  **DEC-055 làm cách đó vỡ**, và bộ E2E bắt được ngay ở lượt chạy đầu (3/3
+ *  project đỏ cùng một chỗ): sau mỗi Server Action, Next render lại RSC của route
+ *  hiện tại. Lần render lại đó của `/sales/today/morning` thấy hôm nay **đã có**
+ *  báo cáo nên chạy `redirect(SALES_TODAY_PATH)` — điều hướng phía server, **không
+ *  mang theo `?saved=`**. Nó thắng trước `useEffect` của form, nên banner "Đã lưu
+ *  báo cáo đầu ngày" biến mất và draft còn sót trong localStorage.
+ *
+ *  Đây đúng là ISSUE-014 lặp lại ở luồng sáng, và DEC-037 đã ghi sẵn quy tắc:
+ *  **route hiện tại có thể tự `redirect()` sau khi dữ liệu đổi ⇒ để Server Action
+ *  tự `redirect()`.** Bỏ `revalidatePath` của chính route đó **không** cứu được —
+ *  Next re-render route hiện tại dù có revalidate hay không (đã đo ở Phase 4).
+ *
+ *  Việc dọn draft vì vậy chuyển sang `DiscardMorningDraft` trên `/sales/today`,
+ *  cùng cách `DiscardEveningDraft` đã làm từ Phase 4.
  */
-export type MorningReportState =
-  | ActionResult<{ reportId: string; notice: SavedParamValue }>
-  | null;
+export type MorningReportState = Exclude<ActionResult<never>, { ok: true }> | null;
 
 /**
  * Server Action là ENDPOINT CÔNG KHAI — ai cũng gọi được bằng HTTP thủ công,
@@ -47,7 +57,7 @@ export type MorningReportState =
  */
 
 /** Gom `fieldErrors` theo đúng tên field để UI gắn lỗi ngay dưới từng ô. */
-function validationFailure(error: z.ZodError): Exclude<MorningReportState, null> {
+function validationFailure(error: z.ZodError): NonNullable<MorningReportState> {
   return {
     ok: false,
     code: 'VALIDATION',
@@ -72,9 +82,16 @@ function readMorningFormData(formData: FormData): Record<string, unknown> {
   };
 }
 
+/**
+ * ⚠ CỐ Ý **KHÔNG** revalidate `MORNING_REPORT_PATH` — đây là chính trang đang mở.
+ *
+ * Không phải vì nó gây ra lỗi mất banner (bỏ nó **không** cứu được, xem chú thích
+ * của `MorningReportState`), mà vì nó vô nghĩa: từ DEC-055, trang đó chỉ có hai
+ * kết cục — form rỗng khi chưa có báo cáo, hoặc `redirect()` khi đã có. Không có
+ * nội dung nào để làm mới.
+ */
 function revalidateReportRoutes(): void {
   revalidatePath(SALES_TODAY_PATH);
-  revalidatePath(MORNING_REPORT_PATH);
   revalidatePath(EVENING_REPORT_PATH);
 }
 
@@ -119,53 +136,22 @@ export async function saveMorningReport(
 
   revalidateReportRoutes();
 
-  // Cố ý KHÔNG redirect() ở đây: client cần nhận `ok: true` để xoá draft
-  // localStorage và gỡ `beforeunload` guard TRƯỚC khi điều hướng
-  // (`docs/03 §4.2` bước 21–22).
-  return { ok: true, data: { reportId: result.reportId, notice: SAVED_PARAM.MORNING_CREATED } };
+  // PHASE 14 — server tự điều hướng, kèm `?saved=` để `/sales/today` biết hiện
+  // câu xác nhận nào (DEC-034: server quyết định, client không suy ra). Deterministic,
+  // không có cuộc đua với `useEffect` của form. `redirect()` ném ra một exception
+  // đặc biệt của Next nên không có dòng nào chạy sau nó.
+  redirect(`${SALES_TODAY_PATH}?saved=${SAVED_PARAM.MORNING_CREATED}`);
 }
 
-const reportIdSchema = z.uuid({ message: REPORT_MESSAGES.REPORT_NOT_FOUND });
-
-/**
- * UC-05, FR-012, BR-019 — sửa cam kết đầu ngày khi còn `MORNING_SUBMITTED`.
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 14 — `updateMorningReport()` ĐÃ BỊ XOÁ (DEC-055)
+ * ─────────────────────────────────────────────────────────────────────────
+ *  File này từng có Server Action thứ hai cho UC-05 / FR-012 ("sửa cam kết
+ *  sáng"). Người dùng yêu cầu gỡ hẳn khả năng sửa, nên cả action, hàm service
+ *  `updateMorningReport()` lẫn nút bấm đều đã bị xoá — không để lại code chết.
  *
- * `reportId` đến từ client, nhưng điều đó **an toàn**: policy
- * `reports_update_own_open` chỉ khớp dòng của chính `auth.uid()` và chỉ khi
- * dòng đó chưa `COMPLETED`. Một `reportId` của người khác cho ra 0 dòng, và ta
- * cố ý trả cùng một thông báo với trường hợp báo cáo đã khoá — chống dò ID.
+ *  ⚠ Policy `reports_update_own_open` trong database **KHÔNG bị đụng tới**: nó
+ *  vẫn là đường ghi hợp lệ DUY NHẤT của báo cáo cuối ngày (`completeEveningReport`,
+ *  UC-06). Bỏ policy đó là làm sập luồng cuối ngày.
  */
-export async function updateMorningReport(
-  _prevState: MorningReportState,
-  formData: FormData,
-): Promise<MorningReportState> {
-  const auth = await authorizeSalesWrite();
-  if (!auth.ok) return auth;
-
-  const reportId = reportIdSchema.safeParse(formData.get('report_id'));
-  if (!reportId.success) {
-    return { ok: false, code: 'NOT_FOUND', message: REPORT_MESSAGES.REPORT_NOT_FOUND };
-  }
-
-  const parsed = morningReportSchema.safeParse(readMorningFormData(formData));
-  if (!parsed.success) return validationFailure(parsed.error);
-
-  const values: MorningReportWrite = parsed.data;
-  const result = await updateMorningReportRow(
-    auth.supabase,
-    reportId.data,
-    auth.profile.id,
-    values,
-  );
-
-  if (!result.ok) {
-    if (result.error === 'REJECTED') {
-      return { ok: false, code: 'CONFLICT', message: REPORT_MESSAGES.REPORT_LOCKED };
-    }
-    return { ok: false, code: 'UNKNOWN', message: REPORT_MESSAGES.SAVE_FAILED };
-  }
-
-  revalidateReportRoutes();
-
-  return { ok: true, data: { reportId: result.reportId, notice: SAVED_PARAM.MORNING_UPDATED } };
-}

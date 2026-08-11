@@ -2002,3 +2002,124 @@ Câu trả lời chính thức đầy đủ: `docs/01-business-analysis.md § OP
 
 Quy tắc còn hiệu lực: `## Overall Progress` chỉ được tick thêm một phase khi phase đó qua đủ
 quality gate của Master Spec §42 — **không phải** khi "đã viết xong code".
+
+---
+
+### Entry 020 — PHASE 14: gỡ sửa cam kết sáng · ảnh 9:16 đổi nội dung, đổi màu, tách hai biến thể
+
+**Ngày:** 2026-08-11
+**Trạng thái cuối phiên:** typecheck ✅ · lint ✅ · build ✅ 18 route · `npm test` ✅ **765/765** ·
+`npm run e2e` ✅ **121 passed / 5 skipped / 0 failed** (4,9 phút) · **nhìn tận mắt** ✅ hai tấm PNG.
+
+#### Người dùng yêu cầu gì (4 lượt trong cùng một phiên)
+
+1. **Bỏ hẳn nút "Sửa cam kết sáng"** (ảnh gạch chéo đỏ trên `/sales/today`).
+2. **Sửa nội dung ảnh 9:16**: nhãn "Công nợ" phải là **"Doanh thu"**; khối "Doanh thu thực đạt" đổi
+   thành **"Số khách làm việc"** = *thực đạt khách hàng / điểm đã viếng thăm*.
+3. **Đổi màu ảnh 9:16** bằng skill `ui-ux-pro-max` — *"hiện tại đang bị tối quá, sử dụng tone màu logo"*.
+4. *(giữa phiên)* **Chỗ nút cũ đổi thành "Lưu hình báo cáo đầu ngày"** — sáng gửi một ảnh, chiều gửi
+   một ảnh. Chốt lại: *"miễn sáng và chiều đều có thể xuất ảnh báo cáo là được"*.
+5. *(giữa phiên)* Nhãn ô nhập → **"Mục tiêu số lượng khách hàng sẽ gặp"**.
+
+#### Hỏi trước khi làm — 3 câu, gộp một lượt
+
+| Câu | Người dùng chọn |
+|---|---|
+| Bỏ nút ở mức nào? | **Bỏ hẳn khả năng sửa** (xoá nút + chặn route), không phải chỉ ẩn nút |
+| Mẫu số của "Số khách làm việc"? | **Điểm viếng thăm THỰC ĐẠT** (`actual_visit_points`), không phải mục tiêu |
+| Hướng màu? | **Nền trắng, chữ xanh logo, nhấn cam** |
+
+#### Bốn quyết định mới
+
+| DEC | Nội dung một dòng |
+|---|---|
+| **DEC-055** | Gỡ hẳn UC-05 / FR-012 — xoá nút, chế độ `edit`, Server Action, hàm service, thông báo `MORNING_UPDATED` |
+| **DEC-056** | Nhãn `REVENUE` rút gọn thành "Doanh thu"; khối nhấn mạnh thành "Số khách làm việc" |
+| **DEC-057** | Thẻ ảnh đổi sang **nền sáng tone logo**, thay bảng hex tối của Phase 6 |
+| **DEC-058** | **Hai tấm ảnh mỗi ngày** — bản `MORNING` và bản `EVENING`; **BR-002 được NỚI** |
+| **DEC-059** | `saveMorningReport` **tự `redirect()`** — sửa hồi quy do DEC-055 gây ra, E2E bắt được |
+
+#### Đã làm gì (theo tầng)
+
+**`lib/`**
+- `kpi.ts` — thêm `calculateCustomerWorkRate()`, hàm thuần, `'—'` khi mẫu số 0 hoặc thiếu số liệu,
+  **không clamp**. 9 test mới gồm một lưới 64 tổ hợp chống `NaN`/`∞`.
+- `reports/metric-rows.ts` — `shortLabel` của `REVENUE`: `'Công nợ'` → `'Doanh thu'`.
+- `reports/share-card.ts` — thêm `ShareCardVariant`, `shareCardVariantForStatus()`,
+  `SHARE_IMAGE_LABEL`; model có `variant` + `kindLabel`; `revenueActualText` **bị thay** bằng
+  `workRate: ShareCardWorkRate | null`; `shareImageFileName()` nhận thêm tham số `variant` **bắt buộc**.
+- `reports/today-cta.ts` — `secondaryCta` của `MORNING_SUBMITTED` thành `null`; `canOpenMorningForm()`
+  rút về `report === null`; **`canExportImage: boolean` bị thay bằng `shareImageVariant`**.
+- `reports/messages.ts` — xoá `MORNING_UPDATED` và `NOT_COMPLETED`.
+- `validation/report.ts` — nhãn lỗi khớp nhãn ô nhập mới.
+
+**`features/` + `app/`**
+- `report-morning/actions.ts` — xoá Server Action `updateMorningReport`.
+- `report-morning/morning-report-form.tsx` — bỏ `mode`/`reportId`, luôn mở rỗng, một action duy nhất.
+- `report-share/daily-report-share-card.tsx` — **viết lại**: bảng màu sáng, sọc nền chẵn/lẻ, hai
+  biến thể, khối "Số khách làm việc", nhịp chữ riêng cho bản sáng.
+- `report-share/share-image-button.tsx` — nhận `variant`, nhãn lấy từ `SHARE_IMAGE_LABEL`.
+- `/sales/today`, `/sales/reports/[id]` — render nút theo biến thể.
+- `/sales/today/morning` — `redirect()` khi hôm nay đã có báo cáo; xoá `toFormValues()`.
+- `api/reports/[id]/share-image/route.tsx` — bỏ nhánh `403 NOT_COMPLETED`, chọn biến thể theo `status`.
+
+**`services/`** — xoá `updateMorningReport()`.
+
+#### Ba điều đáng nhớ của phiên này
+
+1. **Đã render PNG thật ra nhìn, và mắt bắt được lỗi mà không phép đo nào bắt được.** Lượt render
+   đầu dùng chung một cỡ chữ cho hai biến thể: bản sáng chỉ có 4 con số nên nội dung kết thúc ở
+   ~1030/1920 — **gần nửa tấm ảnh là khoảng trắng**. Đã tăng nhịp dòng riêng cho bản sáng
+   (`ROW_METRICS`), render lại, nhìn lại. Cách làm: một file `*.test.tsx` dùng-một-lần gọi
+   `ImageResponse` ghi PNG ra thư mục tạm, **xoá ngay sau khi xem**, không commit.
+2. **Satori không dựng được `<>…</>`.** Hàng tiêu đề bảng phải dựng bằng **mảng** rồi `.map()`.
+3. **Đã suýt phá tài liệu.** Một lệnh thay thế theo chỉ số ký tự trên `docs/05` lấy biên là mục
+   `### 13.1` — mục đó nằm **sau** `## 15`, nên nó nuốt mất ~110 dòng của các mục 15/16/OQ. Phát
+   hiện bằng `git diff --stat` (162 dòng xoá / 54 thêm), khôi phục bằng `git checkout --` rồi làm
+   lại với biên là `## 15.`. **Bài học: thay theo biên PHẢI là heading cùng cấp kế tiếp, và luôn
+   đọc `git diff --stat` sau mỗi lần sửa tài liệu bằng script.**
+
+#### Tài liệu đã đồng bộ
+
+`docs/01` (UC-05, FR-012, BR-002, máy trạng thái, §9.3, §11, edge case 17) · `docs/02` (máy trạng
+thái, policy UPDATE, bảng persisted/derived) · `docs/03` (INV-3, §3.2, §4.4 viết lại, §10.8a viết
+lại, concurrency §11) · `docs/05` (**§4.5 bảng màu mới**, **§14 viết lại đủ hai biến thể**, §13.1,
+§16) · `docs/07` (§3.6 xoá, §4.1 route ảnh) · `docs/08` (R14, bước 12/25/26, X3, bảng E2E) ·
+`docs/11` (DEC-055…058).
+
+#### Nửa sau của phiên — E2E bắt được một lỗi hồi quy THẬT (DEC-059)
+
+Người dùng bật Docker và nói *"mốt bạn tự bật tự chạy hết đi"*. Chạy `npm test` → **765/765**.
+Chạy `npm run e2e` → **3/3 project ĐỎ** ở đúng một dòng của `sales-flow.spec.ts`:
+
+```
+expect(page.getByText('Đã lưu báo cáo đầu ngày')).toBeVisible()  →  element(s) not found
+```
+
+**Chẩn đoán.** DEC-055 cho `/sales/today/morning` quyền tự `redirect()` khi hôm nay đã có báo cáo.
+Mà Next **luôn** render lại RSC của route hiện tại sau mỗi Server Action — lần render lại đó chạy
+`redirect(SALES_TODAY_PATH)`, một điều hướng **phía server không mang `?saved=`**, và nó thắng
+trước `useEffect` của form. Kết quả: mất banner xác nhận, draft còn sót trong localStorage.
+
+**Đây là ISSUE-014 lặp lại ở luồng sáng**, và dự án đã ghi sẵn cả cơ chế lẫn lời giải trong chú
+thích của `features/report-evening/actions.ts` từ Phase 4 — gồm cả câu *"bỏ `revalidatePath` của
+chính route đó **không** cứu được"*. **Đọc lại rẻ hơn thử lại.**
+
+**Sửa bằng DEC-059** — `saveMorningReport` tự `redirect('/sales/today?saved=morning')`;
+`MorningReportState` rút về chỉ nhánh lỗi; `isBusy` rút về `isPending`; thêm
+`features/report-morning/discard-morning-draft.tsx` dọn draft trên `/sales/today`; bỏ
+`revalidatePath(MORNING_REPORT_PATH)`.
+
+**Chạy lại đủ bốn cổng:** typecheck ✅ · lint ✅ · build ✅ 18 route · `npm test` ✅ **765/765** ·
+`npm run e2e` ✅ **121 passed / 5 skipped / 0 failed**.
+
+> ⚠ **Bài học đắt nhất của phiên:** typecheck, lint, build và **765 unit/integration/RLS test đều
+> xanh** trong lúc lỗi này đang tồn tại. Chỉ E2E bắt được — đúng như ISSUE-016 đã dạy một lần.
+> Một thay đổi đụng vào `redirect()` của RSC **bắt buộc** phải chạy E2E trước khi kết luận.
+
+#### Còn nợ
+
+| Việc | Vì sao chưa làm |
+|---|---|
+| Kiểm ảnh trong Zalo trên điện thoại thật | ISSUE-003, cần thiết bị thật + link công khai |
+| Lighthouse | Cần bản deploy mới |

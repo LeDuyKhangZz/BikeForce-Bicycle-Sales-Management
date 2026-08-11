@@ -202,22 +202,29 @@ Bốn trạng thái này do `getAchievementStatus()` trả về (BR-023) — **g
 
 > **Quy tắc `color-not-only` — bắt buộc.** Mỗi badge phải có **icon + chữ**, không bao giờ chỉ có màu. Khoảng 8% nam giới bị mù màu đỏ-lục; một đội Sales 25 người thì gần như chắc chắn có người không phân biệt được nền xanh với nền đỏ. Ngoài ra ảnh chụp màn hình gửi qua Zalo có thể bị nén màu.
 
-### 4.5 Token cho thẻ ảnh chia sẻ 9:16 (dark cố định)
+### 4.5 Token cho thẻ ảnh chia sẻ 9:16 (**nền sáng** — DEC-057)
 
-Đây **không phải** dark mode của app (v1 không có dark mode — DEC-016). Đây là bảng màu riêng của một tấm ảnh, chọn nền tối vì ảnh sẽ nằm giữa dòng tin nhắn Zalo và cần nổi bật.
+⚠ **ĐỔI HẲN Ở PHASE 14.** Bảng cũ là nền tối `#0B1220` + vàng `#FBBF24`, ra đời **trước** DEC-046 nên nó là mảnh duy nhất của sản phẩm còn nói một thứ tiếng màu khác với phần còn lại. Người dùng nói thẳng: *"tối quá, dùng tone màu logo"*. Bảng hiện hành lấy nguyên token của DEC-046:
 
-| Vai trò | Hex | Trên `#0B1220` |
-|---|---|---:|
-| Nền thẻ | `#0B1220` | — |
-| Chữ chính | `#FFFFFF` | **18.72:1 · AAA** |
-| Chữ phụ | `#CBD5E1` | **12.61:1 · AAA** |
-| Nhãn/chú thích | `#94A3B8` | **7.30:1 · AAA** |
-| Thương hiệu / nhấn | `#FBBF24` | **11.22:1 · AAA** |
-| Vượt mục tiêu | `#4ADE80` | **10.74:1 · AAA** |
-| Chưa đạt | `#F87171` | **6.77:1 · AA** |
-| Thông tin | `#60A5FA` | **7.36:1 · AAA** |
+| Vai trò | Hex | Trên `#FFFFFF` | Trên sọc `#F4F7FA` |
+|---|---|---:|---:|
+| Nền thẻ | `#FFFFFF` | — | — |
+| Sọc bảng chẵn/lẻ | `#F4F7FA` | 1,08:1 *(tách lớp, không mang chữ)* | — |
+| Tên, tiêu đề, số cam kết | `#0B4A76` | **9,31:1 · AAA** | **8,66:1 · AAA** |
+| Chữ thân | `#0F172A` | **17,85:1 · AAA** | **16,60:1 · AAA** |
+| Nhãn / chú thích | `#566A7B` | **5,61:1 · AA** | **5,22:1 · AA** |
+| Chữ sắc cam | `#97580B` | **5,65:1 · AA** | — |
+| Vượt mục tiêu | `#166534` | **7,13:1 · AAA** | **6,63:1 · AA** |
+| Gần đạt | `#92400E` | **7,09:1 · AAA** | **6,59:1 · AA** |
+| Chưa đạt | `#991B1B` | **8,31:1 · AAA** | **7,73:1 · AAA** |
+| Nền khối nhấn mạnh | `#FDF1E3` | *(nền)* | `#0F172A` 16,04 · `#97580B` 5,08 · `#566A7B` 5,04 |
+| Cam logo — **chỉ vạch/nền** | `#E9A04F` | *đồ hoạ* | — |
 
-> **Lưu ý kỹ thuật cho Phase 6:** thẻ ảnh render bằng Satori (DEC-010) nên bảng màu này phải viết bằng **hex thuần**, không dùng `oklch()` mà Tailwind v4 sinh ra, và không dùng biến CSS.
+**Cặp thấp nhất của cả tấm ảnh là 5,04:1**, vẫn dư ngưỡng AA 4,5:1. Toàn bộ số đo bằng công thức relative luminance của WCAG 2.x, không ước lượng bằng mắt.
+
+⚠ **Chữ trắng trên cam logo đo được 2,19:1 — CẤM tuyệt đối** (DEC-046). Cam chỉ làm vạch trang trí và nền khối nhấn mạnh (chữ tối trên nó).
+
+> **Lưu ý kỹ thuật:** thẻ ảnh render bằng Satori (DEC-010) nên bảng màu này phải viết bằng **hex thuần**, không dùng `oklch()` mà Tailwind v4 sinh ra, và không dùng biến CSS.
 
 ---
 
@@ -596,71 +603,85 @@ Danh sách đầy đủ những chỗ có chuyển động: nút (màu + scale 0
 
 ## 14. Thẻ ảnh chia sẻ 9:16 — bố cục (Master Spec §13)
 
-Kích thước cố định **1080 × 1920**, nền `#0B1220`, render server-side bằng Satori (DEC-010).
+Kích thước cố định **1080 × 1920**, nền **`#FFFFFF`**, render server-side bằng Satori (DEC-010).
 Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `kebab-case` theo `AGENTS.md §3`; `DailyReportShareCard` là tên **component**).
 
-> ✅ **ĐÃ TRIỂN KHAI VÀ KIỂM CHỨNG THẬT — Phase 6, 2026-08-08.** Satori dựng được toàn bộ bố cục dưới đây, **không** phải dùng fallback `html-to-image` (ISSUE-002 → CLOSED). Ba điểm bố cục thật khác bản phác thảo ASCII bên dưới, đều là làm rõ chứ không đổi thiết kế:
-> 1. Ô "Hoàn thành" có **hai dòng**: con số (`125,0%`) và **nhãn chữ** bên dưới (`Vượt mục tiêu`). Nhãn lấy từ `achievementLabel()` — bắt buộc, vì quy tắc `color-not-only` ở §4.4 áp dụng cho ảnh còn mạnh hơn cho web (ảnh qua Zalo bị nén màu).
-> 2. Cột "Cam kết" và "Thực đạt" của dòng Doanh thu dùng **`formatCompactVND()`** (`150tr`, `100tỷ`) — số đầy đủ nằm ở khối "DOANH THU THỰC ĐẠT". Ba chỉ tiêu còn lại giữ đơn vị đầy đủ vì trần của chúng chỉ 4 chữ số.
-> 3. Footer ghim ở đáy bằng `marginTop: auto`, nên báo cáo ngắn để lại khoảng trống ở giữa — đúng ý đồ, không phải lỗi bố cục.
+> ⚠ **VIẾT LẠI HOÀN TOÀN Ở PHASE 14 (2026-08-11).** Ba quyết định đổi cùng lúc — đọc trước khi tin bất kỳ dòng nào của bản Phase 6:
 >
-> Toàn bộ chuỗi hiển thị do **`lib/reports/share-card.ts`** dựng (hàm thuần, 43 unit test); component chỉ render và ánh xạ `status → màu`.
+> | | Phase 6 (cũ) | PHASE 14 (hiện hành) |
+> |---|---|---|
+> | Nền | tối `#0B1220`, nhấn vàng `#FBBF24` | **trắng `#FFFFFF`, tone logo** — **DEC-057** |
+> | Số biến thể | một | **hai**: `MORNING` (cam kết) · `EVENING` (kết quả) — **DEC-058** |
+> | Khối nhấn mạnh | "DOANH THU THỰC ĐẠT" (số tiền) | **"SỐ KHÁCH LÀM VIỆC"** (tỉ lệ %) — **DEC-056** |
+> | Nhãn dòng 3 | `Công nợ` | **`Doanh thu`** — **DEC-056** |
+
+> ✅ **ĐÃ KIỂM CHỨNG BẰNG MẮT — render PNG thật cả hai biến thể rồi nhìn (2026-08-11).** Lượt render đầu dùng chung một cỡ chữ cho cả hai biến thể: bản sáng chỉ có 4 con số nên nội dung kết thúc ở ~1030/1920 — **gần nửa tấm ảnh là khoảng trắng**, trông như ảnh lỗi. Đã tăng nhịp dòng riêng cho bản sáng (`ROW_METRICS`), render lại, nhìn lại. Không phép đo nào bắt được lỗi này.
+
+> Toàn bộ chuỗi hiển thị do **`lib/reports/share-card.ts`** dựng (hàm thuần, có unit test); component chỉ render và ánh xạ `status → màu`.
+
+### 14.1 Bản CHIỀU — `EVENING` (`status = 'COMPLETED'`)
 
 ```
-┌──────────────────────────────────────┐ 1080 × 1920
-│                                      │
-│   BIKEFORCE                          │  wordmark, #FBBF24, 48px, weight 700
-│   DAILY SALES REPORT                 │  #94A3B8, 28px, letter-spacing rộng
-│  ──────────────────────────────────  │  đường kẻ 2px #1E3A8A
-│                                      │
-│   Thứ Sáu, 07/08/2026                │  #CBD5E1, 36px
-│                                      │
-│   NGUYỄN VĂN A                       │  #FFFFFF, 56px, weight 700
-│   NV-0042                            │  #94A3B8, 28px
-│                                      │
-│   Tuyến: Quận 1 → Quận 3             │  #CBD5E1, 32px, xuống dòng tối đa 2 dòng
-│                                      │
-│  ┌────────────────────────────────┐  │
-│  │ CHỈ TIÊU   CAM KẾT  THỰC  ĐẠT  │  │  header #94A3B8, 26px
-│  ├────────────────────────────────┤  │
-│  │ Viếng thăm      8     10  125% │  │  giá trị #FFFFFF 36px
-│  │ Doanh số        5      4   80% │  │  % vượt → #4ADE80
-│  │ Doanh thu    150tr  125tr  83% │  │  % chưa đạt → #F87171
-│  │ Khách hàng     12     12  100% │  │
+┌──────────────────────────────────────┐ 1080 × 1920, nền #FFFFFF
+│  ▬▬▬▬                                │  vạch cam #E9A04F, 132×10
+│   BIKEFORCE                          │  #0B4A76, 50px, weight 700
+│   KẾT QUẢ CUỐI NGÀY                  │  #97580B, 26px, letter-spacing 5
+│  ──────────────────────────────────  │  đường kẻ 3px #0B4A76
+│   Thứ Ba, 11/08/2026                 │  #566A7B, 36px
+│   TRƯƠNG CHÍ CƯỜNG                   │  #0B4A76, 64px, weight 700
+│   VP-IT-001                          │  #566A7B, 30px
+│  ┌────────────────────────────────┐  │  khối nền #F4F7FA
+│  │ TUYẾN                          │  │  #566A7B, 24px
+│  │ Quận 1 → Quận 5 → Quận 10      │  │  #0F172A, 34px, tối đa 2 dòng
 │  └────────────────────────────────┘  │
-│                                      │
-│   DOANH THU THỰC ĐẠT                 │  #94A3B8, 28px
-│   125.000.000 ₫                      │  #FFFFFF, 64px, weight 700
-│                                      │
-│   Ghi chú                            │  #94A3B8, 26px
-│   Khách hẹn lại tuần sau, đang…      │  #CBD5E1, 30px, tối đa 4 dòng
-│                                      │
+│   CHỈ TIÊU  CAM KẾT  THỰC ĐẠT  HOÀN  │  header #566A7B, 26px, weight 600
+│  ══════════════════════════════════  │  2px #0B4A76
+│   Viếng thăm  12 điểm  10 điểm 83,3% │  dòng lẻ nền trắng
+│                                Gần đạt│  nhãn chữ #566A7B, 24px
+│   Doanh số        1tr      5tr 500,0%│  dòng chẵn nền #F4F7FA (sọc)
+│   Doanh thu       1tr      0 ₫   0,0%│  % vượt #166534 · gần đạt #92400E
+│   Khách hàng  10 khách 5 khách  50,0%│  % chưa đạt #991B1B
+│  ▌┌──────────────────────────────┐   │  vạch cam dọc 10px + nền #FDF1E3
+│  ▌│ SỐ KHÁCH LÀM VIỆC            │   │  #97580B, 26px
+│  ▌│ 50,0%   5 khách / 10 điểm    │   │  88px weight 700 · phụ 28px
+│  ▌└──────────────────────────────┘   │
+│   GHI CHÚ                            │  #566A7B, 26px
+│   Khách đóng cửa nhiều, chiều…       │  #0F172A, 34px, tối đa 4 dòng
 │  ──────────────────────────────────  │
-│   BikeForce · Bicycle Sales System   │  #94A3B8, 24px, canh giữa
+│   BikeForce · Bicycle Sales System   │  #566A7B, 24px, canh giữa
 └──────────────────────────────────────┘
 ```
 
-**Ràng buộc bắt buộc kiểm thử ở Phase 6** (Master Spec §13) — cột cuối là kết quả **đo thật ngày 2026-08-08**:
+### 14.2 Bản SÁNG — `MORNING` (`status = 'MORNING_SUBMITTED'`)
+
+Cùng phần đầu và phần chân. Khác đúng ba chỗ:
+
+1. Chữ dưới wordmark là **`CAM KẾT ĐẦU NGÀY`**.
+2. Bảng chỉ **2 cột** (`CHỈ TIÊU` · `CAM KẾT`), dòng cao hơn và số to hơn hẳn (`paddingY: 70`, nhãn `42px`, số `56px` weight 700 màu `#0B4A76`) — đây là thứ giữ cho tấm ảnh không rỗng đáy.
+3. **Không có** khối "Số khách làm việc" và **không có** ghi chú cuối ngày; thay vào đó là một dòng nhắc `#566A7B` 32px: *"Kết quả thực đạt sẽ được gửi vào cuối ngày."* — người nhận trên Zalo không có ngữ cảnh nào khác ngoài tấm ảnh.
+
+### 14.3 Ràng buộc bắt buộc
 
 | Ràng buộc | Cách xử lý | Kết quả |
 |---|---|---|
 | Tên dài 40+ ký tự → xuống dòng, không cắt chữ | không cắt gì cả, để Satori tự wrap | ✅ tên 42 ký tự xuống 2 dòng |
 | Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có `…` | `truncateText(route, 104)` ở tầng dữ liệu | ✅ |
 | Ghi chú 1000 ký tự → cắt ở 4 dòng, có `…` | `truncateText(note, 232)` ở tầng dữ liệu | ✅ |
-| Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` trong bảng, số đầy đủ ở khối "DOANH THU THỰC ĐẠT" | ✅ `100tỷ` / `99.999.999.999 ₫` |
+| Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` — nay là đường dùng tiền **duy nhất** của thẻ | ✅ `100tỷ` |
 | Achievement 4 chữ số (`1.250,0%`) hiển thị đủ | không clamp (BR-004) | ✅ |
 | `target = 0` không bao giờ ra `∞`/`NaN` (BR-015) | lấy nguyên `display` của `lib/kpi.ts` | ✅ `actual = 0` → `100,0%`; `actual > 0` → `+3 điểm` + "Vượt kế hoạch" |
+| **Số khách làm việc** với `actual_visit_points = 0` | `calculateCustomerWorkRate()` trả `'—'` | ✅ không bao giờ `∞` |
 | **Dấu tiếng Việt đầy đủ** `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` | 3 file `.ttf` Inter nhúng trong `public/fonts/` | ✅ đủ, kèm `₫` (`U+20AB`) |
 | Satori không có CSS Grid | flexbox toàn bộ, `display: 'flex'` ở mọi container nhiều con | ✅ |
+| Satori không dựng được `<>…</>` | hàng tiêu đề dựng bằng **mảng** `MORNING_HEADER` / `EVENING_HEADER` rồi `.map()` | ✅ |
 
 > ⚠ **Đính chính so với bản trước:** dòng `target = 0` ở đây từng ghi "hiện `—`". Từ **DEC-038** (Phase 5), `—` chỉ dành cho ca **chưa có số liệu**; ca `target = 0 && actual > 0` hiện **số vượt tuyệt đối có đơn vị**. Thẻ ảnh không tự quyết định điều này — nó render `AchievementResult.display`.
 
-**Ba cái bẫy kỹ thuật đã trả giá thật ở Phase 6, ghi lại để không ai mất công lần nữa:**
+**Bốn cái bẫy kỹ thuật đã trả giá thật, ghi lại để không ai mất công lần nữa:**
 1. **Satori không đọc `woff2`.** Phải là `.ttf`/`.otf`/`.woff`. Google Fonts trả `woff2` cho trình duyệt hiện đại và trả `.ttf` cho User-Agent lạ — lấy đúng bản `.ttf`.
 2. **Subset `vietnamese` của Google Fonts KHÔNG chứa chữ Latin cơ bản** — nó chỉ có các ký tự riêng của tiếng Việt cộng `₫`. Nhúng mỗi subset đó thì chữ thường mất glyph. Dùng file `.ttf` đủ bộ ký tự (2849 glyph, ~320 KB mỗi weight).
-3. **Font phải được ghim vào bundle** bằng `outputFileTracingIncludes` trong `next.config.ts`: đường dẫn ghép runtime nên bộ dò phụ thuộc không thấy, `next build` vẫn xanh còn hàm trên Vercel ném `ENOENT`.
-
----
+3. **Đường kẻ ngang mảnh biến mất sau khi Zalo nén ảnh.** Bảng dùng **sọc nền chẵn/lẻ** `#F4F7FA` thay vì kẻ 1px — một mảng nền rộng chịu được nén, một đường 1,25:1 thì không (DEC-057).
+4. **Cam logo `#E9A04F` chỉ làm nền và vạch trang trí.** Chữ trắng trên nó đo được **2,19:1** — DEC-046 cấm tuyệt đối. Chữ sắc cam trên nền sáng dùng `#97580B` (5,65:1).
 
 ## 15. PWA (Master Spec §29 · DEC-024 · DEC-047)
 
@@ -684,7 +705,7 @@ Chỉ manifest + icon + `display: standalone` để Sales "Thêm vào màn hình
 
 ## 16. Dark mode
 
-**Không có ở v1** — DEC-016. Ứng dụng chỉ có light theme. Thẻ ảnh 9:16 nền tối là quyết định thiết kế riêng của tấm ảnh, không phải theme.
+**Không có ở v1** — DEC-016. Ứng dụng chỉ có light theme. ⚠ Câu cũ ở đây ghi *"thẻ ảnh 9:16 nền tối là quyết định thiết kế riêng của tấm ảnh"* — **hết hiệu lực từ PHASE 14**: thẻ ảnh nay cũng nền sáng (DEC-057), nên sản phẩm không còn bề mặt tối nào.
 
 Điều này được ghi ra thành **quyết định** để không bị hiểu nhầm là nợ kỹ thuật bị bỏ quên. Nếu sau này làm dark mode, phải đo lại **toàn bộ** bảng contrast ở §4 cho theme tối — quy tắc `color-dark-mode` nói rõ dark mode dùng biến thể nhạt/giảm bão hoà chứ **không phải đảo ngược màu**.
 
@@ -790,7 +811,7 @@ Mọi bảng render **hai nhánh cùng lúc trong DOM**: card xếp dọc cho `<
 |---|---|---|---|
 | `VISIT_POINTS` | Viếng thăm | Viếng thăm | `điểm` |
 | `SALES_AMOUNT` | Doanh số | Doanh số | **VND** |
-| `REVENUE` | **Doanh thu công nợ** | **Công nợ** | **VND** |
+| `REVENUE` | **Doanh thu công nợ** | **Doanh thu** *(đổi ở PHASE 14 — DEC-056)* | **VND** |
 | `CUSTOMER_VISITS` | **Khách hàng đã gặp** | Khách hàng | `khách` |
 
 `shortLabel` sinh ra vì cột nhãn của thẻ ảnh có **bề rộng cố định** và Satori **không đo được chữ**

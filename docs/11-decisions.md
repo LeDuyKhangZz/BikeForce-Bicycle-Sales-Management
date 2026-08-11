@@ -1389,6 +1389,276 @@ nền×chữ mới nào phải đo (bài học ISSUE-018).
 
 ---
 
+## DEC-055 — Gỡ hẳn "Sửa cam kết sáng" (UC-05 / FR-012 ra khỏi v1)
+
+**Date:** 2026-08-11
+**Decision:** Sales **không còn sửa được cam kết đầu ngày** sau khi đã gửi. Cụ thể, năm thứ bị xoá
+cùng lúc chứ không chỉ ẩn nút đi:
+
+| Thứ bị xoá | Ở đâu |
+|---|---|
+| CTA phụ "Sửa cam kết sáng" | `lib/reports/today-cta.ts` — nhánh `MORNING_SUBMITTED` nay `secondaryCta: null`, khoá `EDIT_MORNING` biến mất khỏi `TodayCtaKey` |
+| Chế độ `edit` của form sáng | `features/report-morning/morning-report-form.tsx` — hết `mode`, hết `reportId`, hết input ẩn `report_id` |
+| Server Action `updateMorningReport` | `features/report-morning/actions.ts` |
+| Hàm service `updateMorningReport()` | `services/reports.ts` |
+| Thông báo `MORNING_UPDATED` | `lib/reports/messages.ts` |
+
+`canOpenMorningForm()` rút về đúng một vế: **`report === null`**. Vào thẳng
+`/sales/today/morning` khi hôm nay đã có báo cáo thì bị `redirect()` về `/sales/today`.
+
+**Reason:** Người dùng yêu cầu trực tiếp ("bỏ hẳn nút sửa cam kết sáng"), và khi được hỏi rõ phạm
+vi thì chọn **bỏ hẳn khả năng sửa**, không phải chỉ ẩn nút. Lý do nghiệp vụ đứng vững: cam kết sáng
+là một **lời hứa đã gửi đi**. Sửa được nó trong ngày — sau khi đã biết mình đang thắng hay thua —
+làm rỗng ý nghĩa của cả bản đối chiếu cuối ngày, thứ mà toàn bộ sản phẩm này tồn tại để tạo ra.
+
+**Ba điều KHÔNG đổi, ghi lại để không ai "dọn dẹp" nhầm:**
+
+1. **Policy `reports_update_own_open` ở lại nguyên vẹn.** Nó vẫn là đường ghi hợp lệ duy nhất của
+   `completeEveningReport()` (UC-06). Bỏ nó là làm sập luồng cuối ngày.
+2. **BR-019 không đổi** — nó nói về khoá vĩnh viễn sau `COMPLETED`. DEC này khoá **sớm hơn một
+   bước**, ngay ở `MORNING_SUBMITTED`.
+3. **BR-001 không đổi** — vẫn đúng một báo cáo mỗi ngày; nay nó cũng có nghĩa là **đúng một lần
+   nhập** cam kết sáng.
+
+**Alternatives:**
+*(a)* Chỉ ẩn nút, giữ route sửa được bằng URL — **bị loại**: người dùng đã chọn phương án bỏ hẳn, và
+để lại một màn hình không có lối vào là nợ kỹ thuật thuần tuý.
+*(b)* Cho sửa trong N phút đầu — **bị loại**: thêm một chiều thời gian vào nghiệp vụ mà không ai yêu
+cầu, và phải có audit log đi kèm (AF-12).
+
+**Impact:** `lib/reports/today-cta.ts` + test · `lib/reports/messages.ts` ·
+`features/report-morning/{actions,morning-report-form}.tsx` · `services/reports.ts` ·
+`app/(sales)/sales/today/morning/page.tsx` · `e2e/sales-flow.spec.ts` · `docs/01`, `docs/02`,
+`docs/03`, `docs/07`.
+
+**Status:** APPROVED (theo yêu cầu trực tiếp của người dùng, 2026-08-11)
+
+---
+
+## DEC-056 — Thẻ ảnh: "Công nợ" thành "Doanh thu"; "Doanh thu thực đạt" thành "Số khách làm việc"
+
+**Date:** 2026-08-11
+**Decision:** Hai sửa đổi **nội dung** trên tấm ảnh 9:16:
+
+1. **Nhãn rút gọn của chỉ tiêu `REVENUE` đổi từ `'Công nợ'` thành `'Doanh thu'`**
+   (`lib/reports/metric-rows.ts`). Nhãn đầy đủ trên web giữ nguyên "Doanh thu công nợ".
+2. **Khối nhấn mạnh dưới bảng đổi hẳn nội dung**: từ "DOANH THU THỰC ĐẠT" (số tiền đầy đủ) thành
+   **"SỐ KHÁCH LÀM VIỆC"** — một tỉ lệ phần trăm:
+
+   ```text
+   Số khách làm việc = actual_customer_visits / actual_visit_points × 100
+   ```
+
+   Kèm một dòng phụ giải thích (`'5 khách / 10 điểm'`). Công thức nằm ở
+   **`lib/kpi.calculateCustomerWorkRate()`**, không ở component và không ở `share-card.ts`.
+
+**Reason:** Cả hai đều do người dùng nêu khi nhìn tấm ảnh thật.
+*Nhãn:* từ DEC-050, cột này là **tiền đã THU HỒI ĐƯỢC**, nên chữ "Công nợ" nói ngược nghĩa với người
+đọc tấm ảnh (thường là cấp trên trên Zalo).
+*Khối nhấn mạnh:* "Doanh thu thực đạt" lặp lại đúng con số đã có ở dòng thứ ba của bảng ngay bên
+trên — tấm ảnh nói một thông tin hai lần. "Số khách làm việc" thì không xuất hiện ở đâu khác.
+
+**Bốn ràng buộc đã chốt kèm công thức:**
+
+| Tình huống | Kết quả | Vì sao |
+|---|---|---|
+| `actual_visit_points = 0` | **`'—'`** | Chia cho 0 không xác định. Tinh thần BR-015: thà một ô trống đọc được còn hơn một `∞` lọt ra ảnh gửi cho khách |
+| Chưa có số liệu cuối ngày | **`'—'`**, không có dòng phụ | `'— / —'` không giải thích được gì |
+| Tỉ lệ > 100% | **KHÔNG clamp** | Một điểm viếng thăm gặp nhiều khách là kết quả thật, cùng lý do với BR-004 |
+| Làm tròn | 1 chữ số thập phân ở `display`, `percent` giữ số thô | Cùng quy ước BR-014 |
+
+**Đây KHÔNG phải chỉ tiêu thứ năm.** Nó không có cột `target_*`, không vào bảng bốn dòng, không đi
+qua ngưỡng BR-023, và **không tham gia `isKpiAchievedDay()`** — BR-024 vẫn là "cả 4 chỉ tiêu ≥ 100%".
+Vì vậy nó là một **DEC**, không phải một `BR` mới (dãy `BR` vẫn đóng ở BR-026).
+
+**Alternatives:**
+*(a)* Giữ khối doanh thu và thêm khối mới bên dưới — **bị loại**: thẻ đã dài, và người dùng nói rõ
+là **đổi**, không phải thêm.
+*(b)* Tính tỉ lệ trong component thẻ ảnh — **bị loại**: vi phạm AGENTS.md §1.3 và NFR-012; mọi phép
+chia phần trăm của dự án nằm ở `lib/kpi.ts`.
+*(c)* Mẫu số là `target_visit_points` — **bị loại**: người dùng nói "điểm **đã** viếng thăm", và khi
+được hỏi lại đã xác nhận lấy số **thực đạt**.
+
+**Impact:** `lib/kpi.ts` (+ 9 test mới) · `lib/reports/metric-rows.ts` · `lib/reports/share-card.ts`
+(+ test) · `features/report-share/daily-report-share-card.tsx` · `docs/05 §14`.
+
+**Status:** APPROVED (theo yêu cầu trực tiếp của người dùng, 2026-08-11)
+
+---
+
+## DEC-057 — Thẻ ảnh 9:16 đổi sang NỀN SÁNG tone logo (thay bảng hex tối của Phase 6)
+
+**Date:** 2026-08-11
+**Decision:** Thẻ ảnh bỏ bảng màu tối `#0B1220` + vàng `#FBBF24` của Phase 6, chuyển sang **nền
+trắng, chữ xanh logo, nhấn cam logo** — lấy nguyên các token đã đo của **DEC-046**:
+
+| Vai trò | Giá trị | Trên trắng | Trên sọc `#F4F7FA` |
+|---|---|---:|---:|
+| Nền thẻ | `#FFFFFF` | — | — |
+| Sọc bảng (chẵn/lẻ) | `#F4F7FA` | 1,08:1 *(tách lớp, không mang chữ)* | — |
+| Tên, tiêu đề, số cam kết | `#0B4A76` | **9,31:1** | **8,66:1** |
+| Chữ thân | `#0F172A` | **17,85:1** | **16,60:1** |
+| Nhãn phụ | `#566A7B` | **5,61:1** | **5,22:1** |
+| Chữ cam | `#97580B` | **5,65:1** | — |
+| Vượt mục tiêu | `#166534` | **7,13:1** | **6,63:1** |
+| Gần đạt | `#92400E` | **7,09:1** | **6,59:1** |
+| Chưa đạt | `#991B1B` | **8,31:1** | **7,73:1** |
+| Nền khối nhấn mạnh | `#FDF1E3` | — | `body` 16,04 · `accentText` 5,08 · `muted` 5,04 |
+| Cam logo (vạch + viền) | `#E9A04F` | *chỉ đồ hoạ* | — |
+
+**Cặp thấp nhất của cả tấm ảnh là 5,04:1** — vẫn dư ngưỡng AA 4,5:1.
+
+**Reason:** Người dùng nói thẳng: *"hiện tại đang bị tối quá, sử dụng tone màu logo"*. Bảng tối của
+Phase 6 ra đời **trước** DEC-046 (bảng màu logo) nên nó là mảnh **duy nhất** của sản phẩm còn nói
+một thứ tiếng màu khác với phần còn lại.
+
+**Ba quyết định trình bày đi kèm, đều có lý do đo được:**
+
+1. **Sọc nền chẵn/lẻ thay đường kẻ ngang.** Ảnh gửi Zalo bị nén; một đường kẻ 1px ở 1,25:1 là thứ
+   đầu tiên biến mất sau khi nén, một mảng nền rộng thì không.
+2. **Cam logo chỉ làm vạch trang trí và nền khối nhấn mạnh**, không bao giờ làm chữ — chữ trắng trên
+   cam đo được **2,19:1**, đúng điều DEC-046 cấm tuyệt đối.
+3. **Kích thước chữ khác nhau giữa hai biến thể** (xem DEC-058). Bản đầu dùng chung một cỡ và **mắt
+   bắt được lỗi mà không phép đo nào bắt được**: bản sáng chỉ có 4 con số nên nội dung kết thúc ở
+   khoảng 1030/1920 — gần nửa tấm ảnh là khoảng trắng. Đã render PNG thật ra nhìn, sửa, rồi nhìn
+   lại. Đây là lần thứ ba bài học DEC-053 phải học lại.
+
+**Alternatives:**
+*(a)* Giữ nền tối nhưng đổi sang xanh logo `#0B4A76` → `#1273B8` — **bị loại**: người dùng chọn
+phương án nền trắng khi được hỏi.
+*(b)* Đầu ảnh là mảng cam đặc — **bị loại**: cùng lý do, và nó ăn mất 1/6 chiều cao cho trang trí.
+
+**Impact:** `features/report-share/daily-report-share-card.tsx` (viết lại), `app/globals.css` (ghi
+chú đầu file), `docs/05 §4.5` và `§14`.
+
+**Status:** APPROVED (design, theo yêu cầu trực tiếp của người dùng, 2026-08-11)
+
+---
+
+## DEC-058 — Mỗi ngày HAI tấm ảnh: bản CAM KẾT (sáng) và bản KẾT QUẢ (chiều) — nới BR-002
+
+**Date:** 2026-08-11
+**Decision:** Sales xuất ảnh **hai lần một ngày**. Thẻ ảnh có hai biến thể, do `status` **đã
+persist** quyết định:
+
+| | `MORNING` | `EVENING` |
+|---|---|---|
+| Điều kiện | `status = 'MORNING_SUBMITTED'` | `status = 'COMPLETED'` |
+| Chữ trên đầu thẻ | `CAM KẾT ĐẦU NGÀY` | `KẾT QUẢ CUỐI NGÀY` |
+| Bảng | **2 cột** — chỉ tiêu · cam kết | **4 cột** — thêm thực đạt · % hoàn thành |
+| Khối "Số khách làm việc" | *(không có)* | có |
+| Ghi chú cuối ngày | *(chưa tồn tại)* | có nếu Sales nhập |
+| Nhãn nút | **"Lưu hình báo cáo đầu ngày"** | "Xuất ảnh báo cáo" |
+| Tên file | `BikeForce_CamKet_….png` | `BikeForce_Report_….png` |
+
+Nút buổi sáng đứng **đúng chỗ** nút "Sửa cam kết sáng" vừa bị DEC-055 gỡ.
+
+**Reason:** Yêu cầu trực tiếp của người dùng: *"chỗ sửa cam kết sáng này đổi thành lưu hình báo cáo
+đầu ngày, để sáng gửi 1 lần chiều gửi 1 lần"*, và xác nhận lại: *"miễn sáng và chiều đều có thể
+xuất ảnh báo cáo là được"*. Đây là cách đội Sales thật sự dùng Zalo — báo cam kết đầu ca, báo kết
+quả cuối ca.
+
+**BR-002 được NỚI, không bị bỏ.** Nguyên văn cũ: *"Chỉ xuất ảnh sau khi báo cáo persist thành công
+và `status = 'COMPLETED'`"*. Nay:
+
+> Chỉ xuất ảnh từ một báo cáo **đã persist**; `status` quyết định **biến thể** ảnh.
+> Điều kiện KHÔNG BAO GIỜ được suy ra từ trạng thái form phía client.
+
+Phần cốt lõi — thứ BR-002 sinh ra để chặn — **giữ nguyên**: không có đường nào dựng ảnh từ dữ liệu
+client gửi lên, và client **không chọn được biến thể**. Route handler đọc `status` từ database.
+Hệ quả kỹ thuật: nhánh `403 NOT_COMPLETED` trong route ảnh và chuỗi `REPORT_MESSAGES.NOT_COMPLETED`
+đã bị xoá vì không còn đường nào tới được.
+
+**Hai điểm ghi lại để không mắc lại:**
+
+1. **Tham số `variant` của `shareImageFileName()` là BẮT BUỘC, cố ý không có giá trị mặc định.** Hai
+   tấm ảnh cùng ngày mà trùng tên file thì tấm chiều **ghi đè** tấm sáng trong thư mục Tải về của
+   điện thoại — lỗi chỉ lộ ra sau khi đã gửi nhầm.
+2. **Trường `canExportImage: boolean` của `TodayView` bị thay bằng `shareImageVariant`.** Một
+   boolean không diễn tả nổi "xuất được, nhưng là tấm nào".
+
+**Alternatives:**
+*(a)* Một tấm ảnh duy nhất, buổi sáng để cột "Thực đạt" là `—` — **bị loại**: bảng 4 cột với nửa số
+ô là dấu gạch trông như dữ liệu lỗi, không như một bản cam kết.
+*(b)* Client gửi `?variant=` lên route — **bị loại**: mở đúng bề mặt mà BR-002 sinh ra để đóng.
+
+**Impact:** `lib/reports/share-card.ts` (+ test) · `lib/reports/today-cta.ts` (+ test) ·
+`lib/reports/messages.ts` · `features/report-share/{daily-report-share-card,share-image-button}.tsx` ·
+`app/api/reports/[id]/share-image/route.tsx` · `app/(sales)/sales/today/page.tsx` ·
+`app/(sales)/sales/reports/[id]/page.tsx` · `e2e/sales-flow.spec.ts` · `docs/01`, `docs/03`,
+`docs/05`, `docs/07`.
+
+**Status:** APPROVED (theo yêu cầu trực tiếp của người dùng, 2026-08-11)
+
+---
+
+## DEC-059 — `saveMorningReport` cũng tự `redirect()` — DEC-037 nay áp cho CẢ HAI luồng
+
+**Date:** 2026-08-11
+**Decision:** Server Action `saveMorningReport` **không còn trả `ok: true`**. Khi lưu thành công nó
+tự `redirect('/sales/today?saved=morning')`. Kiểu trả về rút về đúng nhánh lỗi:
+
+```ts
+export type MorningReportState = Exclude<ActionResult<never>, { ok: true }> | null;
+```
+
+Ba thay đổi đi kèm:
+
+| Thay đổi | Ở đâu |
+|---|---|
+| Bỏ `useEffect` bắt `state.ok` để `clearDraft()` + `router.replace()` | `morning-report-form.tsx` |
+| `isBusy` rút về `isPending` *(không còn giai đoạn "đã xong, chờ điều hướng")* | `morning-report-form.tsx` |
+| **`DiscardMorningDraft` — component MỚI**, không render gì, dọn draft trên `/sales/today` khi hôm nay đã có báo cáo | `features/report-morning/discard-morning-draft.tsx` |
+| Bỏ `revalidatePath(MORNING_REPORT_PATH)` | `features/report-morning/actions.ts` |
+
+**Reason:** **DEC-055 làm cách cũ vỡ, và bộ E2E bắt được ngay ở lượt chạy đầu** — 3/3 project đỏ
+cùng một dòng: `expect(page.getByText('Đã lưu báo cáo đầu ngày')).toBeVisible()` không tìm thấy
+banner.
+
+Cơ chế đã được chính dự án ghi lại từ Phase 4 (ISSUE-014, DEC-037): sau mỗi Server Action, Next
+render lại RSC của **route hiện tại**. Từ DEC-055, lần render lại đó của `/sales/today/morning`
+thấy hôm nay **đã có** báo cáo nên chạy `redirect(SALES_TODAY_PATH)` — một điều hướng **phía
+server, không mang theo `?saved=`**. Nó thắng trước `useEffect` của form, nên:
+
+- banner xác nhận biến mất, và
+- `clearDraft()` không bao giờ chạy ⇒ draft còn sót trong localStorage.
+
+**Bỏ `revalidatePath` của chính route đó KHÔNG cứu được** — Next re-render route hiện tại dù có
+revalidate hay không. Điều này đã được đo thật ở Phase 4 và ghi ngay trong chú thích của
+`features/report-evening/actions.ts`; phiên này chỉ việc đọc lại thay vì thử lại.
+
+**Điều đáng nói nhất:** DEC-037 (Phase 4) đã viết sẵn quy tắc rút ra —
+
+> *"nếu route hiện tại có thể tự `redirect()` sau khi dữ liệu đổi, hãy để Server Action tự
+> `redirect()` — đừng trông chờ `useEffect` của client được chạy nốt."*
+
+DEC-055 vừa biến `/sales/today/morning` thành đúng loại route đó. Vậy nên đây **không phải một
+quyết định mới**, mà là quy tắc cũ nay áp đủ cho cả hai luồng. Câu trong DEC-037 mô tả luồng sáng
+như một **ngoại lệ** ("form đầu ngày nhận `ok: true` rồi tự `router.replace()`") **hết hiệu lực từ
+đây** — không còn ngoại lệ nào.
+
+**Hai thứ KHÔNG đổi:**
+
+1. **DEC-034 vẫn nguyên vẹn** — câu xác nhận do **server** quyết định, client không suy ra. Nay
+   server còn quyết định luôn cả việc điều hướng, tức là đi xa hơn theo cùng một hướng.
+2. **Ba lớp chống trùng của FR-011** vẫn đủ ba: RSC guard → Server Action → `UNIQUE(sales_id, report_date)`.
+
+**Alternatives:**
+*(a)* Bỏ `revalidatePath(MORNING_REPORT_PATH)` và giữ nguyên `ok: true` — **bị loại**: đã có bằng
+chứng đo được từ Phase 4 rằng nó không đủ.
+*(b)* Cho `/sales/today/morning` render một trang "đã cam kết rồi" thay vì `redirect()` — **bị
+loại**: nó dựng lại đúng màn hình mà DEC-055 vừa gỡ, chỉ khác cái tên.
+*(c)* Dọn draft bằng `useEffect` trong form với `cleanup` — **bị loại**: cleanup của một component
+bị unmount vì điều hướng server không có gì bảo đảm chạy trước khi trang mới mount.
+
+**Impact:** `features/report-morning/actions.ts` · `features/report-morning/morning-report-form.tsx` ·
+`features/report-morning/discard-morning-draft.tsx` (**MỚI**) · `app/(sales)/sales/today/page.tsx` ·
+`docs/03 §4.2` · `docs/07 §3.5`.
+
+**Status:** APPROVED (technical — bắt buộc để E2E xanh, 2026-08-11)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

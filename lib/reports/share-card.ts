@@ -18,6 +18,7 @@
  */
 import {
   calculateAchievement,
+  calculateCustomerWorkRate,
   formatMetricValue,
   formatMetricValueCompact,
   type AchievementResult,
@@ -28,6 +29,7 @@ import type { Database } from '@/types/database.types';
 
 type DailyReportRow = Database['public']['Tables']['daily_reports']['Row'];
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type ReportStatus = Database['public']['Enums']['report_status'];
 
 /**
  * Số ký tự tối đa của tuyến trước khi cắt — tương đương **2 dòng** ở cỡ chữ
@@ -42,9 +44,54 @@ export const MAX_SHARE_NOTE_CHARS = 232;
 /** Dấu báo "còn nữa" — cùng ký tự `…` mà font nhúng đã xác nhận có glyph. */
 const ELLIPSIS = '…';
 
+/**
+ * HAI biến thể của tấm ảnh 9:16 — PHASE 14, **DEC-058**.
+ *
+ * Người dùng gửi Zalo **hai lần mỗi ngày**: sáng gửi lời cam kết, chiều gửi kết
+ * quả. Đó là hai tấm ảnh khác nhau về nội dung, không phải một tấm chụp hai lần:
+ *
+ * | | `MORNING` | `EVENING` |
+ * |---|---|---|
+ * | Điều kiện | `status = 'MORNING_SUBMITTED'` | `status = 'COMPLETED'` |
+ * | Bảng | 2 cột (chỉ tiêu · cam kết) | 4 cột, có `%` hoàn thành |
+ * | Khối nhấn mạnh | *(không có)* | "Số khách làm việc" |
+ * | Ghi chú cuối ngày | *(chưa tồn tại)* | có nếu Sales nhập |
+ */
+export type ShareCardVariant = 'MORNING' | 'EVENING';
+
+/** Chữ in trên đầu thẻ, ngay dưới tên thương hiệu. */
+const VARIANT_KIND_LABEL: Record<ShareCardVariant, string> = {
+  MORNING: 'CAM KẾT ĐẦU NGÀY',
+  EVENING: 'KẾT QUẢ CUỐI NGÀY',
+};
+
+/**
+ * Nhãn nút bấm — **từ vựng nghiệp vụ**, nên ở `lib/` chứ không ở component.
+ * `/sales/today` và `/sales/reports/[id]` cùng đọc bảng này (AGENTS.md §9).
+ */
+export const SHARE_IMAGE_LABEL: Record<ShareCardVariant, string> = {
+  MORNING: 'Lưu hình báo cáo đầu ngày',
+  EVENING: 'Xuất ảnh báo cáo',
+};
+
+/**
+ * `status` đã persist → biến thể ảnh. Là hàm chứ không phải một `Record` để chỗ
+ * gọi không phải tự nghĩ xem trạng thái lạ thì rơi vào đâu.
+ *
+ * ⚠ **Đây là chỗ BR-002 được diễn giải, sau khi DEC-058 nới nó.** Điều kiện
+ * "chỉ xuất ảnh từ dữ liệu ĐÃ PERSIST" giữ nguyên hiệu lực — đầu vào của hàm là
+ * `status` đọc từ database, không bao giờ là trạng thái form phía client.
+ */
+export function shareCardVariantForStatus(status: ReportStatus): ShareCardVariant {
+  return status === 'COMPLETED' ? 'EVENING' : 'MORNING';
+}
+
 /** Đầu vào của thẻ ảnh: đúng những cột nó đọc, không hơn (NFR-002). */
 export type ShareCardSource = KpiMetricSource &
-  Pick<DailyReportRow, 'report_date' | 'planned_route' | 'actual_route' | 'evening_note'> & {
+  Pick<
+    DailyReportRow,
+    'report_date' | 'planned_route' | 'actual_route' | 'evening_note' | 'status'
+  > & {
     readonly sales: Pick<ProfileRow, 'full_name' | 'employee_code'>;
   };
 
@@ -59,6 +106,10 @@ export type ShareCardMetricRow = {
 };
 
 export type ShareCardModel = {
+  /** Bản sáng hay bản chiều — quyết định bố cục (DEC-058). */
+  readonly variant: ShareCardVariant;
+  /** `'CAM KẾT ĐẦU NGÀY'` | `'KẾT QUẢ CUỐI NGÀY'`. */
+  readonly kindLabel: string;
   /** `'Thứ Sáu, 07/08/2026'`. */
   readonly dateText: string;
   /** Tên đã viết HOA theo thiết kế `docs/05 §14`. */
@@ -68,9 +119,31 @@ export type ShareCardModel = {
   /** Tuyến THỰC TẾ, lùi về tuyến kế hoạch nếu cuối ngày không nhập lại. */
   readonly routeText: string | null;
   readonly metrics: readonly ShareCardMetricRow[];
-  /** Doanh thu thực đạt dạng ĐẦY ĐỦ cho khối nhấn mạnh (`'125.000.000 ₫'`). */
-  readonly revenueActualText: string;
+  /**
+   * Khối nhấn mạnh dưới bảng — PHASE 14, **DEC-056**.
+   *
+   * Trước đây chỗ này là "DOANH THU THỰC ĐẠT" (số tiền đầy đủ). Nó lặp lại đúng
+   * con số đã có ở dòng thứ ba của bảng ngay bên trên, nên nhìn tấm ảnh ra hai
+   * lần cùng một thông tin. Nay là **"Số khách làm việc"** — một tỉ lệ KHÔNG
+   * xuất hiện ở đâu khác trên thẻ.
+   *
+   * `null` ở bản **sáng**: buổi sáng chưa có số thực đạt nào để chia (DEC-058).
+   */
+  readonly workRate: ShareCardWorkRate | null;
   readonly noteText: string | null;
+};
+
+export type ShareCardWorkRate = {
+  /** `'50,0%'` | `'—'` — đã đi qua `lib/kpi.ts`, không tự làm tròn ở đây. */
+  readonly display: string;
+  /**
+   * Dòng phụ giải thích tỉ lệ trên: `'5 khách / 10 điểm'`.
+   *
+   * `null` khi thiếu một trong hai vế — khi đó `display` cũng là `'—'` và một
+   * dòng "— / —" chỉ làm nhiễu. Cả hai vế đều đi qua `formatMetricValue()` nên
+   * đơn vị vẫn chỉ được ghép ở đúng một nơi (DEC-025).
+   */
+  readonly detailText: string | null;
 };
 
 /**
@@ -123,18 +196,44 @@ export function buildShareCardModel(source: ShareCardSource): ShareCardModel {
     };
   });
 
+  const variant = shareCardVariantForStatus(source.status);
+
   const route = optionalText(source.actual_route) ?? optionalText(source.planned_route);
   const note = optionalText(source.evening_note);
 
   return {
+    variant,
+    kindLabel: VARIANT_KIND_LABEL[variant],
     dateText: formatVietnamDate(source.report_date),
     salesName: source.sales.full_name.trim().toLocaleUpperCase('vi-VN'),
     employeeCode: optionalText(source.sales.employee_code),
     routeText: route === null ? null : truncateText(route, MAX_SHARE_ROUTE_CHARS),
     metrics,
-    revenueActualText: formatMetricValue(source.actual_revenue, 'REVENUE'),
+    // Bản sáng không có khối tỉ lệ: cả tử lẫn mẫu đều chưa tồn tại. Chặn ở đây
+    // chứ không để component tự đoán — nó không được biết luật này (AGENTS.md §1.3).
+    workRate: variant === 'EVENING' ? buildWorkRate(source) : null,
     noteText: note === null ? null : truncateText(note, MAX_SHARE_NOTE_CHARS),
   };
+}
+
+/**
+ * Khối "Số khách làm việc" — DEC-056.
+ *
+ * Phép chia nằm ở `lib/kpi.ts`; hàm này chỉ ghép hai chuỗi đã format. Dòng phụ
+ * chỉ dựng khi CẢ HAI vế có số thật: `'— / —'` không giải thích được gì.
+ */
+function buildWorkRate(source: ShareCardSource): ShareCardWorkRate {
+  const customers = source.actual_customer_visits;
+  const points = source.actual_visit_points;
+
+  const { display } = calculateCustomerWorkRate(customers, points);
+
+  const detailText =
+    customers === null || points === null
+      ? null
+      : `${formatMetricValue(customers, 'CUSTOMER_VISITS')} / ${formatMetricValue(points, 'VISIT_POINTS')}`;
+
+  return { display, detailText };
 }
 
 /* ---------------------------------------------------------------------------
@@ -169,14 +268,30 @@ export function asciiNameSlug(fullName: string): string {
   return slug === '' ? FALLBACK_NAME_SLUG : slug;
 }
 
+/** Đoạn giữa tên file, phân biệt hai tấm ảnh của cùng một ngày (DEC-058). */
+const VARIANT_FILE_TOKEN: Record<ShareCardVariant, string> = {
+  MORNING: 'CamKet',
+  EVENING: 'Report',
+};
+
 /**
  * `'BikeForce_Report_Nguyen-Van-A_2026-08-07.png'` — FR-019, `docs/07 §4.1`.
+ * Bản sáng: `'BikeForce_CamKet_Nguyen-Van-A_2026-08-07.png'`.
  *
  * Ngày dùng NGUYÊN `report_date` dạng `YYYY-MM-DD`: tên file phải sắp xếp được
  * theo thứ tự thời gian khi Sales lưu nhiều ảnh vào cùng một thư mục.
+ *
+ * ⚠ **`variant` là tham số BẮT BUỘC, cố ý không có giá trị mặc định.** Từ
+ * DEC-058 mỗi ngày có HAI tấm ảnh; một mặc định thầm lặng sẽ khiến tấm sáng ghi
+ * đè tấm chiều trong thư mục Tải về của điện thoại — đúng thứ người dùng sẽ chỉ
+ * phát hiện ra sau khi đã gửi nhầm.
  */
-export function shareImageFileName(fullName: string, reportDate: string): string {
-  return `BikeForce_Report_${asciiNameSlug(fullName)}_${reportDate}.png`;
+export function shareImageFileName(
+  fullName: string,
+  reportDate: string,
+  variant: ShareCardVariant,
+): string {
+  return `BikeForce_${VARIANT_FILE_TOKEN[variant]}_${asciiNameSlug(fullName)}_${reportDate}.png`;
 }
 
 /**

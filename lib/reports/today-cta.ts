@@ -10,6 +10,7 @@
  * Nguồn: `docs/03-workflow.md §3.2` (bảng ba trạng thái) · FR-007 · BR-002.
  */
 import { REPORT_STATUS_LABEL, REPORT_STATUS_TONE } from '@/lib/reports/report-status';
+import { shareCardVariantForStatus, type ShareCardVariant } from '@/lib/reports/share-card';
 import type { Database } from '@/types/database.types';
 
 type ReportStatus = Database['public']['Enums']['report_status'];
@@ -26,11 +27,12 @@ export function salesReportPath(reportId: string): string {
 /** Ba trạng thái của dashboard, suy ra từ `daily_reports.status` (BR-008). */
 export type TodayReportState = 'NO_REPORT' | 'MORNING_SUBMITTED' | 'COMPLETED';
 
-export type TodayCtaKey =
-  | 'CREATE_MORNING'
-  | 'EDIT_MORNING'
-  | 'COMPLETE_EVENING'
-  | 'VIEW_REPORT';
+/**
+ * ⚠ `EDIT_MORNING` đã bị GỠ ở PHASE 14 (**DEC-055**). Cam kết sáng nay khoá ngay
+ * khi gửi: không còn nút "Sửa cam kết sáng", và `/sales/today/morning` từ chối
+ * mở khi hôm nay đã có báo cáo. Đừng thêm lại khoá này mà không có DEC mới.
+ */
+export type TodayCtaKey = 'CREATE_MORNING' | 'COMPLETE_EVENING' | 'VIEW_REPORT';
 
 export type TodayCta = {
   key: TodayCtaKey;
@@ -50,10 +52,14 @@ export type TodayView = {
   primaryCta: TodayCta;
   secondaryCta: TodayCta | null;
   /**
-   * BR-002 / FR-017 — chỉ `true` khi báo cáo đã persist với `status = 'COMPLETED'`.
-   * KHÔNG BAO GIỜ suy ra từ trạng thái form phía client.
+   * Tấm ảnh 9:16 nào đang xuất được — `null` khi chưa có gì để xuất.
+   *
+   * ⚠ **PHASE 14 — DEC-058 thay trường boolean `canExportImage` cũ.** Nay Sales
+   * gửi Zalo **hai lần một ngày**: `'MORNING'` ngay sau khi cam kết, `'EVENING'`
+   * sau khi hoàn tất. BR-002 vẫn giữ phần cốt lõi: giá trị này suy ra từ `status`
+   * **đã persist**, KHÔNG BAO GIỜ từ trạng thái form phía client.
    */
-  canExportImage: boolean;
+  shareImageVariant: ShareCardVariant | null;
 };
 
 /** Tham chiếu tối thiểu tới báo cáo hôm nay — chỉ cần `id` và `status`. */
@@ -80,7 +86,8 @@ export function getTodayView(report: TodayReportRef | null): TodayView {
         href: MORNING_REPORT_PATH,
       },
       secondaryCta: null,
-      canExportImage: false,
+      // Chưa có dòng nào trong database ⇒ không có gì để vẽ lên ảnh (BR-002).
+      shareImageVariant: null,
     };
   }
 
@@ -96,13 +103,12 @@ export function getTodayView(report: TodayReportRef | null): TodayView {
         label: 'Hoàn thành báo cáo cuối ngày',
         href: EVENING_REPORT_PATH,
       },
-      // UC-05, FR-012, BR-019 — sửa được cho tới khi báo cáo COMPLETED.
-      secondaryCta: {
-        key: 'EDIT_MORNING',
-        label: 'Sửa cam kết sáng',
-        href: MORNING_REPORT_PATH,
-      },
-      canExportImage: false,
+      // PHASE 14 (DEC-055) — KHÔNG còn CTA phụ "Sửa cam kết sáng". Cam kết sáng
+      // là một lời hứa đã gửi đi; sửa được nó sau khi biết mình đang thắng hay
+      // thua làm hỏng ý nghĩa của cả bản đối chiếu cuối ngày.
+      secondaryCta: null,
+      // PHASE 14 (DEC-058) — chỗ của nút cũ nay là "Lưu hình báo cáo đầu ngày".
+      shareImageVariant: shareCardVariantForStatus(report.status),
     };
   }
 
@@ -117,18 +123,21 @@ export function getTodayView(report: TodayReportRef | null): TodayView {
       href: salesReportPath(report.id),
     },
     secondaryCta: null,
-    canExportImage: true,
+    shareImageVariant: shareCardVariantForStatus(report.status),
   };
 }
 
 /**
- * Form đầu ngày có mở được không (UC-04 tạo mới, UC-05 sửa).
+ * Form đầu ngày có mở được không — nay CHỈ còn UC-04 (tạo mới).
  *
- * `COMPLETED` → **không**: BR-019 khoá vĩnh viễn, và policy
- * `reports_update_own_open` yêu cầu `OLD.status = 'MORNING_SUBMITTED'` nên
- * UPDATE sẽ trả về 0 row. Chặn ngay ở tầng route để người dùng nhận một câu
- * giải thích thay vì một lỗi lưu khó hiểu.
+ * ⚠ **PHASE 14 — DEC-055.** Trước đây hàm này còn trả `true` cho
+ * `MORNING_SUBMITTED` để phục vụ UC-05 (sửa cam kết sáng). UC-05 đã bị gỡ khỏi
+ * v1 theo yêu cầu trực tiếp của người dùng, nên điều kiện rút về đúng một vế:
+ * **hôm nay chưa có báo cáo nào**.
+ *
+ * Giữ nguyên hàm thay vì để route tự viết `report === null`: đây vẫn là nơi DUY
+ * NHẤT trả lời câu hỏi "mở form sáng được không", và nó có unit test riêng.
  */
 export function canOpenMorningForm(report: TodayReportRef | null): boolean {
-  return report === null || report.status === 'MORNING_SUBMITTED';
+  return report === null;
 }

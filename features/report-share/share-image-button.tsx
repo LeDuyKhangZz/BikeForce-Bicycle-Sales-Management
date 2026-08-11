@@ -5,10 +5,10 @@ import { Image as ImageIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
-import { shareImagePath } from '@/lib/reports/share-card';
+import { SHARE_IMAGE_LABEL, shareImagePath, type ShareCardVariant } from '@/lib/reports/share-card';
 
 /**
- * Nút "Xuất ảnh báo cáo" — FR-017, FR-020, UC-08, DEC-011.
+ * Nút xuất ảnh 9:16 — FR-017, FR-020, UC-08, DEC-011.
  *
  * ─────────────────────────────────────────────────────────────────────────
  *  BA ĐƯỜNG RA, THEO ĐÚNG THỨ TỰ ƯU TIÊN — DEC-011 + ISSUE-003
@@ -25,16 +25,21 @@ import { shareImagePath } from '@/lib/reports/share-card';
  *  duy nhất trả lời đúng được "trình duyệt này có chia sẻ FILE được không" —
  *  nhiều webview có `navigator.share` nhưng từ chối `files`.
  *
- * Component này **không** quyết định có được xuất ảnh hay không. Điều kiện đó là
- * BR-002 và nó được kiểm ở hai nơi khác: `getTodayView().canExportImage` (server)
- * và chính route handler (`status === 'COMPLETED'`). Ẩn/hiện nút không phải bảo
- * mật (AGENTS.md §7).
+ * Component này **không** quyết định có được xuất ảnh hay không, và cũng không
+ * quyết định xuất ảnh NÀO. Cả hai đều suy ra từ `status` đã persist ở server —
+ * `getTodayView().shareImageVariant` — và route handler đọc lại `status` một lần
+ * nữa khi dựng ảnh. Ẩn/hiện nút không phải bảo mật (AGENTS.md §7).
  */
 
 type Props = {
   reportId: string;
   /** Tên file tải về — do server dựng bằng `shareImageFileName()` (FR-019). */
   fileName: string;
+  /**
+   * Bản sáng hay bản chiều (DEC-058). Chỉ dùng để chọn NHÃN nút: nội dung ảnh do
+   * route handler quyết định từ dữ liệu, client không gửi biến thể lên server.
+   */
+  variant: ShareCardVariant;
 };
 
 const PNG_MIME = 'image/png';
@@ -42,7 +47,7 @@ const PNG_MIME = 'image/png';
 /** Câu hướng dẫn của đường ra thứ ba — ISSUE-003. */
 const LONG_PRESS_HINT = 'Đã mở ảnh ở tab mới. Nhấn giữ vào ảnh để lưu về máy.';
 
-export function ShareImageButton({ reportId, fileName }: Props) {
+export function ShareImageButton({ reportId, fileName, variant }: Props) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -133,7 +138,7 @@ export function ShareImageButton({ reportId, fileName }: Props) {
       */}
       <Button variant="accent" size="lg" onClick={handleExport} disabled={isBusy} aria-busy={isBusy}>
         <ImageIcon aria-hidden="true" className="size-5" />
-        {isBusy ? 'Đang tạo ảnh…' : 'Xuất ảnh báo cáo'}
+        {isBusy ? 'Đang tạo ảnh…' : SHARE_IMAGE_LABEL[variant]}
       </Button>
 
       {error !== null && (

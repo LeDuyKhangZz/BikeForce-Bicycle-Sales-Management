@@ -109,7 +109,7 @@ EveningReportForm
 → daily_reports.status = COMPLETED
 → revalidatePath('/sales/today')
 → redirect('/sales/today?saved=evening')            (DEC-037)
-→ /sales/today đọc lại status ĐÃ PERSIST → enable nút Xuất ảnh (BR-002)
+→ /sales/today đọc lại status ĐÃ PERSIST → nút ảnh đổi sang bản KẾT QUẢ (BR-002, DEC-058)
 ```
 
 > Tên hàm service là **`completeEveningReport`**, không phải `completeReport` như bản phác thảo đầu tiên của mục này — khớp ví dụ đặt tên Server Action ở `AGENTS.md §3` và `SESSION_CHECKPOINT.md`.
@@ -222,23 +222,21 @@ flowchart TD
 | **Validation** | Số nguyên ≥ 0, trong trần (BR-006, BR-017); `plannedRoute` 1–300 ký tự; từ chối `NaN`/`Infinity`/số âm/chuỗi rác |
 | **Permission** | Đã đăng nhập + `role = 'SALES'` + `is_active` |
 | **Database** | `insert into daily_reports (sales_id = auth.uid(), report_date = vn_today(), status = 'MORNING_SUBMITTED', …)` — RLS `reports_insert_own_today` |
-| **Output** | `ActionResult<{ reportId: string }>` |
+| **Output** | ⚠ **Không trả về gì khi thành công — action tự `redirect('/sales/today?saved=morning')`** (PHASE 14, **DEC-059**). Kiểu trả về chỉ còn nhánh lỗi: `Exclude<ActionResult<never>, { ok: true }> \| null`, giống hệt `saveEveningReport` |
 | **Errors** | `DUPLICATE_REPORT` (Postgres `23505`) → "Hôm nay bạn đã có báo cáo rồi. Hãy mở báo cáo hiện có." + link (BR-001) · `VALIDATION_FAILED` · `FORBIDDEN` · `INACTIVE_ACCOUNT` · `NETWORK` |
-| **Revalidate** | `revalidatePath('/sales/today')` |
+| **Revalidate** | `/sales/today` và `/sales/today/evening`. ⚠ **Cố ý KHÔNG revalidate `/sales/today/morning`** — chính trang đang mở, và từ DEC-055 nó không còn nội dung nào để làm mới |
 | **Ghi chú** | Lỗi `23505` là đường phòng thủ **thật sự** cho tình huống hai tab bấm Lưu cùng lúc — không thể chặn ở tầng ứng dụng |
 
-### 3.6 `updateMorningReport` — UC-05
+### 3.6 ~~`updateMorningReport` — UC-05~~ — ĐÃ XOÁ (PHASE 14, DEC-055)
 
-| Mục | Nội dung |
-|---|---|
-| **File** | `features/report-morning/actions.ts` |
-| **Input** | `{ reportId, ...morningFields }` |
-| **Permission** | Chủ báo cáo + `is_active` + `status = 'MORNING_SUBMITTED'` (BR-019) |
-| **Database** | `update daily_reports set … where id = $1` — RLS `reports_update_own_open` |
-| **Output** | `ActionResult<void>` |
-| **Errors** | `REPORT_NOT_FOUND` (0 row — có thể do không phải chủ, hoặc đã `COMPLETED`; **không phân biệt trong thông báo** để chống dò) · `REPORT_LOCKED` → "Báo cáo đã hoàn tất nên không sửa được." |
-| **Revalidate** | `/sales/today`, `/sales/reports/[id]` |
-| **Phụ thuộc** | **OQ-04** — nếu cho phép sửa sau khi `COMPLETED` thì điều kiện `status` bị bỏ và cần thêm audit log |
+Server Action này **không còn tồn tại**, cùng với hàm service `updateMorningReport()` và toàn bộ
+chế độ `edit` của form sáng. Cam kết đầu ngày khoá ngay khi gửi.
+
+⚠ **Đừng viết lại nó.** Nếu một ngày nghiệp vụ đổi ý, phải có DEC mới, và khi đó **bắt buộc** kèm
+audit log (AF-12, ISSUE-007) — đúng điều DEC-026 đã ghi từ đầu.
+
+⚠ **Policy `reports_update_own_open` KHÔNG bị gỡ** — nó vẫn phục vụ `saveEveningReport` ở §3.7,
+nay là **đường UPDATE duy nhất** của ứng dụng trên `daily_reports`.
 
 ### 3.7 `saveEveningReport` — UC-06
 
@@ -256,7 +254,7 @@ flowchart TD
 | **Revalidate** | `/sales/today` và `/sales/today/morning`. ⚠ **Cố ý KHÔNG revalidate `/sales/today/evening`** — xem ISSUE-014 |
 | **Ba lớp chặn `report_id`** | (1) action đối chiếu `report_id` với báo cáo của `getVietnamToday()` — chặn hoàn tất một báo cáo NGÀY CŨ còn mở (BR-021, RLS **không** chặn việc này); (2) `.eq('sales_id')` trong service; (3) RLS `reports_update_own_open` |
 
-> **Điểm quan trọng nhất của cả tài liệu này:** trạng thái enable của nút Xuất ảnh **phải** bắt nguồn từ `status` đã persist, không được suy ra từ "form đã điền đủ" hay từ state phía client. Master Spec §12 nói thẳng: *"Nút Export không được enable chỉ vì form 'trông có vẻ đầy đủ'."*
+> **Điểm quan trọng nhất của cả tài liệu này:** nút xuất ảnh — cả **có hiện không** lẫn **hiện bản nào** — **phải** bắt nguồn từ `status` đã persist, không được suy ra từ "form đã điền đủ" hay từ state phía client. Master Spec §12 nói thẳng: *"Nút Export không được enable chỉ vì form 'trông có vẻ đầy đủ'."* DEC-058 nới điều kiện *khi nào xuất được*, **không** nới điều kiện *lấy sự thật từ đâu*.
 >
 > ⚠ **Bản triển khai đi CHẶT HƠN bản đề xuất, không lỏng hơn.** Đề xuất ban đầu là "UI bật nút khi nhận `status: 'COMPLETED'` từ action". Thực tế nút Xuất ảnh nằm ở `/sales/today`, và điều kiện bật của nó là `getTodayView(report).canExportImage` — tức đọc `status` **đã persist trong database** ở lần render kế tiếp. Không có đường nào cho giá trị trả về của action, hay trạng thái form, tham gia vào quyết định đó.
 
@@ -317,13 +315,13 @@ flowchart TD
 |---|---|
 | **File** | `app/api/reports/[id]/share-image/route.tsx` |
 | **Runtime** | Node (cần đọc file font bằng `fs` cho Satori) |
-| **Input** | Path param `id` (uuid). Không nhận query param nào ảnh hưởng nội dung |
+| **Input** | Path param `id` (uuid). Không nhận query param nào ảnh hưởng nội dung — **kể cả biến thể ảnh**: nó suy ra từ `status` đọc trong database, client không chọn được (DEC-058) |
 | **Validation** | `id` phải là uuid hợp lệ — nếu không, trả 404 luôn, không truy vấn database |
-| **Permission** | 1) Có phiên đăng nhập, nếu không → **401**. 2) Đọc report qua **server client** — RLS `reports_select_own_or_admin` tự chặn: Sales chỉ thấy của mình, Admin thấy tất cả (BR-003, BR-022). 3) Nếu 0 row → **404**. 4) Nếu `status !== 'COMPLETED'` → **403** (BR-002) |
+| **Permission** | 1) Có phiên đăng nhập, nếu không → **401**. 2) Đọc report qua **server client** — RLS `reports_select_own_or_admin` tự chặn: Sales chỉ thấy của mình, Admin thấy tất cả (BR-003, BR-022). 3) Nếu 0 row → **404**. ⚠ **PHASE 14 (DEC-058): bước 4 cũ — `status !== 'COMPLETED'` → 403 — ĐÃ BỊ XOÁ.** `status` nay chọn **biến thể** ảnh chứ không chặn |
 | **Database** | Một truy vấn `select` join `profiles` lấy `full_name`, `employee_code` — chọn đúng cột cần, không `select *` |
-| **Output** | `ImageResponse` PNG 1080×1920. Header: `Content-Type: image/png`, `Content-Disposition: attachment; filename="BikeForce_Report_Nguyen-Van-A_2026-08-07.png"` (FR-019, tên đã bỏ dấu và thay khoảng trắng bằng `-`), `Cache-Control: private, no-store` |
-| **Errors** | `401` chưa đăng nhập · `404` không tồn tại **hoặc** không có quyền (**cố tình không phân biệt** để chống dò ID) · `403` báo cáo chưa hoàn tất · `500` lỗi render — log chi tiết ở server, client chỉ nhận JSON `{ code, message }` |
-| **Ghi chú bảo mật** | Đây là bề mặt tấn công IDOR rõ ràng nhất của hệ thống. Nó được bảo vệ bởi **cả** RLS **và** kiểm tra tường minh trong handler. Test bảo mật bắt buộc: Sales A gọi route với `id` của báo cáo Sales B → phải nhận **404**, không phải ảnh |
+| **Output** | `ImageResponse` PNG 1080×1920, **hai biến thể** (DEC-058). Header: `Content-Type: image/png`, `Content-Disposition: attachment; filename="BikeForce_Report_Nguyen-Van-A_2026-08-07.png"` cho bản chiều và `"BikeForce_CamKet_…"` cho bản sáng (FR-019, tên đã bỏ dấu và thay khoảng trắng bằng `-`), `Cache-Control: private, no-store` |
+| **Errors** | `401` chưa đăng nhập · `404` không tồn tại **hoặc** không có quyền (**cố tình không phân biệt** để chống dò ID) · `500` lỗi render — log chi tiết ở server, client chỉ nhận JSON `{ code, message }`. ⚠ Nhánh `403 NOT_COMPLETED` đã bị xoá (DEC-058) |
+| **Ghi chú bảo mật** | Đây là bề mặt tấn công IDOR rõ ràng nhất của hệ thống. Sau DEC-058, lớp bảo vệ là **RLS** — biên giới thật (DEC-004) — cộng với việc route **không nhận bất kỳ đầu vào nào từ client ngoài `id`**. Test bảo mật bắt buộc, KHÔNG đổi: Sales A gọi route với `id` của báo cáo Sales B → phải nhận **404**, không phải ảnh |
 
 ---
 
@@ -450,7 +448,6 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Nh�
 | Action | File | UC / FR | Ghi chú |
 |---|---|---|---|
 | `saveMorningReport` | `features/report-morning/actions.ts` | UC-04, FR-008 | trả `ActionResult` kèm `data.notice` (DEC-034) |
-| `updateMorningReport` | `features/report-morning/actions.ts` | UC-05, FR-011 | |
 | `saveEveningReport` | `features/report-evening/actions.ts` | UC-06, FR-013/014 | **tự `redirect()`**, chỉ trả về khi lỗi (DEC-037) |
 | `signInAction` / `signOutAction` | `features/auth/actions.ts` | UC-01, UC-02 | |
 | `changePasswordAction` | `features/account/actions.ts` | UC-11, FR-023 | không `redirect`, không `revalidatePath` — không có RSC nào đổi |

@@ -34,7 +34,7 @@ BikeForce là ứng dụng nội bộ giúp đội ngũ Sales xe đạp **cam k�
 | G-1 | Chuẩn hoá việc cam kết KPI đầu ngày của từng Sales thành dữ liệu có cấu trúc, thay cho tin nhắn tự do | 1 row `daily_reports` / Sales / ngày (BR-001) |
 | G-2 | Ghi nhận kết quả thực tế cuối ngày trên đúng bản ghi buổi sáng, không tách rời | `status = COMPLETED` trên cùng row (BR-007, BR-008) |
 | G-3 | Tự động tính % hoàn thành cho 4 chỉ tiêu, không phụ thuộc tính tay | `lib/kpi.calculateAchievement()` (BR-004, BR-011, BR-014) |
-| G-4 | Sản phẩm đầu ra là một ảnh 9:16 gửi được ngay lên Zalo, **chỉ sau khi dữ liệu đã lưu** | BR-002, FR-017, FR-018 |
+| G-4 | Sản phẩm đầu ra là ảnh 9:16 gửi được ngay lên Zalo, **chỉ sau khi dữ liệu đã lưu** — **hai tấm mỗi ngày** từ PHASE 14: cam kết đầu ca, kết quả cuối ca (DEC-058) | BR-002, FR-017, FR-018 |
 | G-5 | Admin nhìn được tình hình toàn đội trong ngày mà không cần hỏi từng người | AF-01, AF-02, FR-024, FR-033 |
 | G-6 | Vận hành tài khoản Sales không cần vào Supabase Dashboard | AF-07, UC-17…UC-19 |
 | G-7 | Chạy trọn trong hạn mức Vercel Free + Supabase Free | NFR-013 |
@@ -58,7 +58,7 @@ Theo Master Spec §39 MUST HAVE, ánh xạ sang FR/UC của tài liệu này:
 - Xử lý tài khoản `is_active = false` — FR-005, BR-009.
 - Không self-registration; chỉ Admin tạo tài khoản — FR-006, BR-012.
 - Dashboard Sales hôm nay với đúng một CTA chính theo trạng thái — FR-007, UC-03.
-- Báo cáo đầu ngày (Morning Report) — FR-008…FR-012, UC-04, UC-05.
+- Báo cáo đầu ngày (Morning Report) — FR-008…FR-011, UC-04. *(FR-012 / UC-05 đã gỡ — DEC-055.)*
 - Báo cáo cuối ngày (Evening Report) có hiển thị lại cam kết sáng — FR-013…FR-015, UC-06.
 - KPI engine tính % hoàn thành 4 chỉ tiêu — FR-016, UC-07, BR-004, BR-011, BR-014.
 - Save trước — Export sau — FR-017, BR-002, §11.
@@ -163,7 +163,7 @@ Ma trận kỹ thuật đầy đủ (policy, middleware, layout) nằm ở `docs
 | Hoàn thành báo cáo cuối ngày | **Không** | Có | BR-020 — APPROVED, OQ-05 |
 | Sửa nội dung số liệu báo cáo của Sales | **Không** | Chỉ của mình, chỉ khi `MORNING_SUBMITTED`; khoá vĩnh viễn khi `COMPLETED` | BR-019/BR-020 — APPROVED, OQ-04/OQ-05 |
 | Xoá báo cáo | **Không** | **Không** | BR-013 — APPROVED, OQ-13 |
-| Xuất ảnh 9:16 | Có (báo cáo bất kỳ, đã `COMPLETED`) | Có (báo cáo của mình, đã `COMPLETED`) | BR-002, BR-022 |
+| Xuất ảnh 9:16 | Có (báo cáo bất kỳ đã persist) | Có (báo cáo của mình đã persist — sáng: thẻ CAM KẾT, chiều: thẻ KẾT QUẢ) | BR-002 *(nới bởi DEC-058)*, BR-022 |
 | Tạo / sửa hồ sơ Sales | Có | **Không** | FR-030, FR-031 |
 | Bật / tắt `is_active` | Có | **Không** | FR-032, BR-009 |
 | Đổi mật khẩu của chính mình | Có | Có | FR-023 |
@@ -188,7 +188,7 @@ Role phải được enforce ở **4 tầng**, và **ẩn nút/menu ở frontend
 | UC-02 | Đăng xuất | Sales, Admin | FR-003 |
 | UC-03 | Xem dashboard hôm nay | Sales | FR-007; ngày theo BR-005 |
 | UC-04 | Tạo báo cáo đầu ngày | Sales | FR-008…FR-011; BR-001, BR-005, BR-006, BR-016, BR-021 |
-| UC-05 | Sửa báo cáo đầu ngày (trước khi hoàn tất) | Sales | FR-012; BR-019 (APPROVED, OQ-04) |
+| ~~UC-05~~ | ~~Sửa báo cáo đầu ngày~~ — **GỠ KHỎI v1 ở PHASE 14 (DEC-055)**. Cam kết sáng khoá ngay khi gửi | — | ~~FR-012~~ |
 | UC-06 | Hoàn thành báo cáo cuối ngày | Sales | FR-013…FR-015; BR-007, BR-008 |
 | UC-07 | Xem đối chiếu cam kết / thực đạt | Sales, Admin | FR-016; BR-004, BR-011, BR-014, BR-015, BR-023 |
 | UC-08 | Xuất ảnh báo cáo 9:16 | Sales | FR-017…FR-020; **BR-002**, BR-022 |
@@ -212,10 +212,11 @@ Role phải được enforce ở **4 tầng**, và **ẩn nút/menu ở frontend
 stateDiagram-v2
     [*] --> NO_REPORT
     NO_REPORT --> MORNING_SUBMITTED : UC-04 insert thành công
-    MORNING_SUBMITTED --> MORNING_SUBMITTED : UC-05 sửa cam kết
     MORNING_SUBMITTED --> COMPLETED : UC-06 update thành công
     COMPLETED --> [*] : khoá theo BR-019 phương án mặc định
 ```
+
+⚠ **PHASE 14 (DEC-055)** — vòng lặp `MORNING_SUBMITTED --> MORNING_SUBMITTED` (UC-05 sửa cam kết) đã bị **xoá khỏi máy trạng thái**: sau khi gửi cam kết sáng, đường đi duy nhất còn lại là tiến tới `COMPLETED`.
 
 `NO_REPORT` **không** là giá trị enum trong database — nó là trạng thái "chưa có row cho `(sales_id, report_date)`". Enum `public.report_status` chỉ có đúng 2 giá trị `MORNING_SUBMITTED` và `COMPLETED` (DEC-020). Không có `DRAFT`, không có `LOCKED`.
 
@@ -240,7 +241,7 @@ Priority: **M** = MUST (MVP), **S** = SHOULD, **L** = LATER.
 | FR-009 | Họ tên tự lấy từ profile, không cho nhập lại | M | UC-04 |
 | FR-010 | `report_date` mặc định = ngày hiện tại theo `Asia/Ho_Chi_Minh` | M | UC-04 |
 | FR-011 | Chặn tạo trùng báo cáo cùng ngày ở cả client, server và database | M | UC-04 |
-| FR-012 | Sửa báo cáo đầu ngày khi status = `MORNING_SUBMITTED` (phạm vi chính xác: OQ-04) | M | UC-05 |
+| ~~FR-012~~ | ~~Sửa báo cáo đầu ngày khi status = `MORNING_SUBMITTED`~~ — **GỠ KHỎI v1 ở PHASE 14 (DEC-055)** theo yêu cầu trực tiếp của người dùng. Không còn nút, không còn Server Action, và route `/sales/today/morning` từ chối mở khi hôm nay đã có báo cáo | — | — |
 | FR-013 | Form cuối ngày hiển thị lại cam kết sáng để đối chiếu trực tiếp | M | UC-06 |
 | FR-014 | Nhập thực đạt: đã viếng thăm, doanh số, doanh thu, SL khách hàng, ghi chú (optional) | M | UC-06 |
 | FR-015 | Lưu thành công → status `COMPLETED`, ghi `evening_submitted_at` | M | UC-06 |
@@ -300,7 +301,7 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đ�
 | ID | Rule | Enforced at | Status |
 |---|---|---|---|
 | BR-001 | Mỗi Sales có tối đa **một** báo cáo cho một ngày nghiệp vụ | DB `UNIQUE(sales_id, report_date)` + server + UI | APPROVED (Spec §11) |
-| BR-002 | Chỉ được xuất ảnh **sau khi** báo cáo lưu thành công và status = `COMPLETED` | server (route handler kiểm tra status) + UI | APPROVED (Spec §12) |
+| BR-002 | Chỉ được xuất ảnh từ một báo cáo **đã persist**; `status` quyết định **biến thể** ảnh (`MORNING_SUBMITTED` → thẻ CAM KẾT · `COMPLETED` → thẻ KẾT QUẢ). Điều kiện **không bao giờ** suy ra từ trạng thái form phía client | server (route handler đọc `status` từ DB) + UI | APPROVED — **NỚI ở PHASE 14, DEC-058** (trước đó: bắt buộc `COMPLETED`) |
 | BR-003 | Sales không đọc được báo cáo của Sales khác | RLS + server | APPROVED (Spec §24) |
 | BR-004 | Achievement được phép > 100%, **không clamp** | `lib/kpi` | APPROVED (Spec §9) |
 | BR-005 | `report_date` là ngày nghiệp vụ tại `Asia/Ho_Chi_Minh`, không phải UTC | server + DB `vn_today()` | APPROVED (Spec §27) |
@@ -353,7 +354,7 @@ Công thức KPI, format tiền và ngày nghiệp vụ **chỉ tồn tại ở 
 
 ## 9. MORNING FLOW — Báo cáo đầu ngày
 
-**Use cases:** UC-01 → UC-03 → UC-04 (→ UC-05 nếu sửa).
+**Use cases:** UC-01 → UC-03 → UC-04. *(Không còn nhánh UC-05 — DEC-055.)*
 **Tiền điều kiện:** Sales đã đăng nhập, `profiles.is_active = true`, `role = 'SALES'`, chưa có row `daily_reports` cho `(auth.uid(), vn_today())`.
 **Hậu điều kiện thành công:** tồn tại đúng 1 row với `status = 'MORNING_SUBMITTED'`, `morning_submitted_at` đã ghi, mọi cột `actual_*` và `evening_submitted_at` là `NULL`.
 
@@ -401,11 +402,13 @@ Công thức KPI, format tiền và ngày nghiệp vụ **chỉ tồn tại ở 
 | MF-F7 | Tài khoản bị deactivate giữa phiên | Server Action từ chối, đăng xuất, hiển thị lý do (BR-009, FR-005). |
 | MF-F8 | Sales cố tạo báo cáo cho ngày khác hôm nay | Bị chặn ở server + RLS + CHECK. Đây là **phương án mặc định của BR-021, đang chờ OQ-12**. |
 
-### 9.3 Sửa báo cáo đầu ngày (UC-05)
+### 9.3 ~~Sửa báo cáo đầu ngày (UC-05)~~ — ĐÃ GỠ KHỎI v1 (PHASE 14, DEC-055)
 
-- Cho phép **chỉ khi** `status = 'MORNING_SUBMITTED'` (FR-012, BR-019).
-- Thực hiện bằng `update` qua policy `reports_update_own_open`; `sales_id` và `report_date` bị trigger `guard_report_transition()` chặn không cho đổi.
-- **Phạm vi chính xác được phép sửa (những cột nào, đến khi nào) chưa chốt — chờ OQ-04.** Phương án mặc định: sửa tự do mọi cột `target_*`, `planned_route`, `visit_purpose` cho tới khi báo cáo chuyển sang `COMPLETED`, sau đó khoá vĩnh viễn.
+Cam kết sáng **khoá ngay khi gửi**. Không còn nút "Sửa cam kết sáng", không còn Server Action `updateMorningReport`, và `/sales/today/morning` `redirect()` về `/sales/today` khi hôm nay đã có báo cáo.
+
+⚠ **Policy `reports_update_own_open` KHÔNG bị gỡ** — nó vẫn là đường ghi hợp lệ duy nhất của báo cáo cuối ngày (UC-06). Xem DEC-055.
+
+**Thay vào chỗ đó là gì:** nút **"Lưu hình báo cáo đầu ngày"** (DEC-058) — Sales gửi Zalo tấm ảnh cam kết ngay đầu ca.
 
 ---
 
@@ -455,7 +458,7 @@ Công thức KPI, format tiền và ngày nghiệp vụ **chỉ tồn tại ở 
 ### 11.1 Phát biểu dạng máy trạng thái
 
 > **Trạng thái `enabled` của nút "Xuất ảnh báo cáo" là một hàm thuần của trạng thái ĐÃ ĐƯỢC PERSIST do server trả về, và chỉ của nó.**
-> Cụ thể: `exportEnabled = (persistedReport !== null) AND (persistedReport.status === 'COMPLETED')`, trong đó `persistedReport` là bản ghi đọc từ database — hoặc do Server Component fetch, hoặc do Server Action trả về sau khi ghi thành công.
+> Cụ thể **sau khi DEC-058 nới BR-002**: `exportVariant = persistedReport === null ? null : (persistedReport.status === 'COMPLETED' ? 'EVENING' : 'MORNING')`, trong đó `persistedReport` là bản ghi đọc từ database — hoặc do Server Component fetch, hoặc do Server Action trả về sau khi ghi thành công. *(Bản cũ là một boolean `exportEnabled` yêu cầu `status === 'COMPLETED'`; nó không diễn tả nổi "xuất được, nhưng là tấm nào".)*
 > Nút **không bao giờ** được suy ra từ trạng thái form phía client: không từ `form.isValid`, không từ "đã điền đủ 4 ô", không từ `isDirty === false`, không từ cờ lạc quan (optimistic) đặt trước khi server xác nhận.
 
 ```ts
@@ -656,7 +659,7 @@ Danh sách hành vi mong đợi cho các tình huống biên. Đây là **đầu
 | 14 | **Tài khoản bị Admin deactivate giữa phiên đang đăng nhập** | Lần thao tác kế tiếp bị chặn: middleware/layout phát hiện `is_active = false` → đăng xuất + thông báo rõ lý do; RLS cũng chặn vì `is_active_sales()` trả false (BR-009, FR-005). Không được để Sales tiếp tục ghi dữ liệu chỉ vì cookie còn hạn. |
 | 15 | **Session hết hạn đúng lúc bấm Lưu** | Server Action từ chối vì không có user hợp lệ. Client redirect `/login`, **giữ draft localStorage**; sau khi đăng nhập lại quay về đúng form và khôi phục dữ liệu đã nhập (FR-035, NFR-010). |
 | 16 | **Sales A mở URL `/sales/reports/<id-của-Sales-B>`** | RLS `reports_select_own_or_admin` trả **0 rows** → trang render `not-found` (404). Không được trả 403 kèm thông tin xác nhận báo cáo tồn tại (BR-003, Master Spec §70). |
-| 17 | **Sales gọi thẳng `GET /api/reports/<id>/share-image` với report chưa `COMPLETED`** | Route handler kiểm tra `status` **sau khi** RLS đã cho đọc → từ chối vì chưa hoàn tất (BR-002). Không sinh ảnh, không rò dữ liệu một phần. Nếu `id` là của Sales khác → 403/404 như case #16. |
+| 17 | **Sales gọi thẳng `GET /api/reports/<id>/share-image` với report chưa `COMPLETED`** | **PHASE 14 (DEC-058):** trả về **thẻ bản CAM KẾT** (bảng 2 cột), không còn 403. Biến thể do `status` đọc từ database quyết định — client không chọn được. Nếu `id` là của Sales khác → 403/404 như case #16. |
 | 18 | **Admin xem tháng không có báo cáo nào** | Tất cả tổng = 0; **không** chia cho 0 khi tính `%` (áp BR-015). UI hiện empty state có icon + câu hướng dẫn + hành động (đổi tháng), không phải bảng trống hay `NaN%`. |
 | 19 | **Sales chưa từng có báo cáo nào** (tài khoản mới) | `/sales/history` hiện empty state với CTA "Tạo báo cáo đầu ngày". `/sales/today` hiện CTA tạo mới. Không hiển thị lỗi, không hiển thị `0%` gây hiểu nhầm là chưa đạt. |
 | 20 | **Trùng `employee_code` khi tạo/sửa Sales** | Kiểm tra trước khi gọi Auth; nếu vẫn lọt thì bắt `23505` trên `UNIQUE` và trả message "Mã nhân viên đã tồn tại", gắn lỗi vào đúng field. Không tạo tài khoản Auth mồ côi. |

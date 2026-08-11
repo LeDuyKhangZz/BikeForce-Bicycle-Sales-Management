@@ -12,7 +12,7 @@ import { ShareImageButton } from '@/features/report-share/share-image-button';
 import { formatVietnamDate } from '@/lib/date';
 import { salesHistoryPath } from '@/lib/reports/history-url';
 import { REPORT_STATUS_LABEL, REPORT_STATUS_TONE } from '@/lib/reports/report-status';
-import { shareImageFileName } from '@/lib/reports/share-card';
+import { shareCardVariantForStatus, shareImageFileName } from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
 import { getReportById } from '@/services/reports';
 
@@ -54,9 +54,12 @@ export default async function SalesReportDetailPage({ params }: Props) {
 
   if (report === null) notFound();
 
-  // BR-002 / FR-017 — nút Xuất ảnh chỉ tồn tại khi báo cáo đã persist với
-  // `status = 'COMPLETED'`. Đọc từ dữ liệu đã lưu, không bao giờ từ form.
   const isCompleted = report.status === 'COMPLETED';
+
+  // BR-002 / FR-017 — biến thể ảnh suy ra từ `status` ĐÃ PERSIST, không bao giờ
+  // từ trạng thái form. PHASE 14 (DEC-058): một báo cáo mới có cam kết sáng nay
+  // cũng xuất được ảnh — bản "CAM KẾT ĐẦU NGÀY".
+  const shareVariant = shareCardVariantForStatus(report.status);
 
   return (
     <div className="flex flex-col gap-4">
@@ -92,19 +95,21 @@ export default async function SalesReportDetailPage({ params }: Props) {
       <ReportNotes report={report} />
       <AchievementTable report={report} />
 
-      {isCompleted ? (
-        <ShareImageButton
-          reportId={report.id}
-          fileName={shareImageFileName(profile.full_name, report.report_date)}
-        />
-      ) : (
-        // BR-019 — báo cáo mới có cam kết sáng thì chưa xuất ảnh được, và cũng
-        // không sửa được từ đây. Nói rõ thay vì để một khoảng trống.
+      <ShareImageButton
+        reportId={report.id}
+        variant={shareVariant}
+        fileName={shareImageFileName(profile.full_name, report.report_date, shareVariant)}
+      />
+
+      {!isCompleted && (
+        // BR-019 — báo cáo mới có cam kết sáng thì không sửa được từ đây, và ảnh
+        // xuất ra là bản CAM KẾT chứ không phải bản kết quả. Nói rõ thay vì để
+        // người dùng tự đoán vì sao tấm ảnh thiếu cột "Thực đạt".
         <Card className="flex flex-col gap-2">
           <CardTitle className="text-base">Chưa hoàn tất</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Báo cáo này mới có cam kết đầu ngày. Ảnh chia sẻ chỉ xuất được sau khi báo cáo đã hoàn
-            tất cuối ngày.
+            Báo cáo này mới có cam kết đầu ngày, nên ảnh xuất ra là bản cam kết. Sau khi hoàn tất
+            cuối ngày, ảnh sẽ có thêm cột thực đạt và tỉ lệ hoàn thành.
           </p>
         </Card>
       )}

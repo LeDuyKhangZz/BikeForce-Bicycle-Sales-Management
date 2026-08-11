@@ -40,7 +40,7 @@ Master Spec §47 yêu cầu `docs/03-workflow.md` phải có **end-to-end workfl
 |---|---|---|
 | INV-1 | `report_date` **luôn** do server tính bằng `getVietnamToday()` / `public.vn_today()`. Client **không bao giờ** được gửi `report_date` lên. | BR-005, NFR-011, DEC-009 |
 | INV-2 | Achievement **không bao giờ** được lưu vào DB; luôn tính runtime bằng `lib/kpi.calculateAchievement()`. | BR-011, DEC-007 |
-| INV-3 | Nút "Xuất ảnh" chỉ enable khi báo cáo **đã persist** với `status = 'COMPLETED'`, không phải khi form "trông có vẻ đầy đủ". | BR-002, FR-017, Master Spec §12 |
+| INV-3 | Nút xuất ảnh chỉ xuất hiện khi báo cáo **đã persist**, không phải khi form "trông có vẻ đầy đủ". `status` quyết định **biến thể** ảnh: `MORNING_SUBMITTED` → thẻ CAM KẾT, `COMPLETED` → thẻ KẾT QUẢ (**DEC-058** nới BR-002). | BR-002, FR-017, Master Spec §12 |
 | INV-4 | Mọi thất bại ở mọi bước đều **giữ nguyên dữ liệu form** và **không reset form**. | Master Spec §12, §30, NFR-010 |
 
 ---
@@ -59,7 +59,6 @@ stateDiagram-v2
 
     [*] --> NONE
     NONE --> MS: UC-04 INSERT daily_reports thành công
-    MS --> MS: UC-05 UPDATE các cột target, trạng thái giữ nguyên
     MS --> CP: UC-06 UPDATE các cột actual và evening_submitted_at
     CP --> [*]: Bản ghi tự khoá theo BR-019
 
@@ -71,12 +70,12 @@ stateDiagram-v2
 
     note right of MS
         RLS reports_update_own_open vẫn khớp nên còn sửa được cam kết.
-        Nút Xuất ảnh: vẫn disable theo BR-002 và FR-017.
+        PHASE 14 (DEC-058): xuất được ảnh bản CAM KẾT ĐẦU NGÀY.
         Admin thấy cảnh báo AF-02 nhóm chưa hoàn tất cuối ngày.
     end note
 
     note right of CP
-        BR-002 mở khoá Xuất ảnh 9:16 kể từ đây.
+        Từ đây ảnh đổi sang bản KẾT QUẢ CUỐI NGÀY (4 cột + Số khách làm việc).
         USING của reports_update_own_open không còn khớp
         nên mọi UPDATE tiếp theo trả 0 row - bản ghi tự khoá.
         Nhánh CP quay lại MS hiện đang ĐÓNG, phụ thuộc OQ-04.
@@ -88,7 +87,6 @@ stateDiagram-v2
 | Từ | Đến | Kích hoạt bởi | Thao tác DB | Chốt chặn | UC / BR |
 |---|---|---|---|---|---|
 | *(không có bản ghi)* | `MORNING_SUBMITTED` | Sales lưu báo cáo đầu ngày | `INSERT` | RLS `reports_insert_own_today` (`sales_id = auth.uid()`, `is_active_sales()`, `report_date = vn_today()`, `status = 'MORNING_SUBMITTED'`) + `uq_daily_reports_sales_date` + `ck_report_not_future` | UC-04, BR-001, BR-005, BR-016, BR-021 |
-| `MORNING_SUBMITTED` | `MORNING_SUBMITTED` | Sales sửa cam kết sáng | `UPDATE` các cột `target_*`, `planned_route`, `visit_purpose` | RLS `reports_update_own_open` (USING yêu cầu `status = 'MORNING_SUBMITTED'`) + trigger `guard_report_transition()` chặn đổi `sales_id`/`report_date` | UC-05, FR-012, BR-019 ⚠ OQ-04 |
 | `MORNING_SUBMITTED` | `COMPLETED` | Sales lưu báo cáo cuối ngày | `UPDATE` các cột `actual_*`, `evening_note`, `evening_submitted_at`, `status` | RLS `reports_update_own_open` + `ck_completed_requires_actuals` + `ck_morning_has_no_evening_ts` | UC-06, FR-015, BR-007, BR-008 |
 | `COMPLETED` | `COMPLETED` | — | Mọi `UPDATE` khớp **0 row** vì USING không còn thoả | RLS là lớp chặn chính, trigger `guard_report_transition()` là lớp phụ | BR-019 ⚠ OQ-04 |
 | `COMPLETED` | `MORNING_SUBMITTED` | **Không tồn tại trong v1** | — | Trigger `guard_report_transition()` chặn tường minh | BR-008, DEC-020 |
@@ -164,15 +162,15 @@ flowchart TD
 
     F -->|"Không có row"| G["Trạng thái: Chưa báo cáo"]
     G --> G1["CTA chính: Tạo báo cáo đầu ngày → /sales/today/morning"]
-    G1 --> G2["Nút Xuất ảnh: disable — BR-002"]
+    G1 --> G2["Chưa có báo cáo ⇒ không có ảnh để xuất — BR-002"]
 
     F -->|"Có row"| H{"status của bản ghi"}
 
     H -->|"MORNING_SUBMITTED"| I["Trạng thái: Đã cam kết, chờ kết quả cuối ngày"]
     I --> I1["CTA chính: Hoàn thành báo cáo cuối ngày → /sales/today/evening"]
-    I1 --> I2["CTA phụ: Sửa cam kết sáng → /sales/today/morning — UC-05, BR-019"]
+    I1 --> I2["CTA phụ: Lưu hình báo cáo đầu ngày — DEC-058"]
     I2 --> I3["Hiển thị 4 KPI cam kết, cột Thực đạt là dấu gạch, badge Chờ số liệu — BR-023"]
-    I3 --> I4["Nút Xuất ảnh: disable — BR-002, FR-017"]
+    I3 --> I4["Ảnh xuất ra là bản CAM KẾT ĐẦU NGÀY — DEC-058"]
 
     H -->|"COMPLETED"| J["Trạng thái: Đã hoàn thành"]
     J --> J1["CTA chính: Xem báo cáo hôm nay → /sales/reports/:id"]
@@ -185,8 +183,8 @@ flowchart TD
 | Trạng thái DB | Nhãn trạng thái | CTA chính | CTA phụ | Nút Xuất ảnh | Nguồn |
 |---|---|---|---|---|---|
 | Không có row | `Chưa báo cáo` | **Tạo báo cáo đầu ngày** | — | Disable | FR-007, Master Spec §14 |
-| `MORNING_SUBMITTED` | `Đã cam kết` | **Hoàn thành báo cáo cuối ngày** | Sửa cam kết sáng ⚠ OQ-04 | Disable | FR-007, FR-012 |
-| `COMPLETED` | `Đã hoàn thành` | **Xem báo cáo hôm nay** | **Xuất ảnh** | **Enable** | FR-007, FR-017, BR-002 |
+| `MORNING_SUBMITTED` | `Đã cam kết` | **Hoàn thành báo cáo cuối ngày** | — | **Enable — bản CAM KẾT** ("Lưu hình báo cáo đầu ngày") | FR-007, **DEC-055**, **DEC-058** |
+| `COMPLETED` | `Đã hoàn thành` | **Xem báo cáo hôm nay** | — | **Enable — bản KẾT QUẢ** ("Xuất ảnh báo cáo") | FR-007, FR-017, BR-002 |
 
 **Quy tắc CTA:** không bao giờ hiển thị đồng thời hai CTA chính. `bottom-nav-limit` giữ nav 3 mục (Hôm nay / Lịch sử / Tài khoản); CTA chính nằm trong sticky action bar có `pb-[env(safe-area-inset-bottom)]`.
 
@@ -249,12 +247,20 @@ sequenceDiagram
     DB->>DB: uq_daily_reports_sales_date và các CHECK ràng buộc miền giá trị
     DB-->>SB: Row đã tạo với status MORNING_SUBMITTED
     SB-->>SA: data row gồm id
-    SA->>SA: revalidatePath /sales/today và /sales/today/morning
-    SA-->>C: ok true kèm reportId
-    C->>C: Xoá draft localStorage và gỡ beforeunload guard
-    C->>UI: router.replace /sales/today
-    UI-->>S: Toast Đã lưu báo cáo đầu ngày và CTA Hoàn thành báo cáo cuối ngày
+    SA->>SA: revalidatePath /sales/today và /sales/today/evening
+    SA->>UI: redirect /sales/today?saved=morning — DEC-059
+    UI->>UI: DiscardMorningDraft xoá draft localStorage
+    UI-->>S: Banner Đã lưu báo cáo đầu ngày và CTA Hoàn thành báo cáo cuối ngày
 ```
+
+> ⚠ **PHASE 14 — ba bước cuối đã ĐỔI (DEC-059).** Bản cũ là `ok: true` → client `clearDraft()` →
+> `router.replace()`. Cách đó vỡ ngay khi **DEC-055** cho `/sales/today/morning` quyền tự
+> `redirect()`: Next **luôn** render lại RSC của route hiện tại sau Server Action, và lần render lại
+> đó phát ra một điều hướng phía server **không mang `?saved=`**, đè mất `router.replace()` của
+> client. Hậu quả đo được bằng E2E: **mất banner xác nhận** và **draft còn sót**.
+>
+> Đây là ISSUE-014 lặp lại, nên lời giải cũng lặp lại — đúng quy tắc DEC-037. **Bỏ `revalidatePath`
+> của chính route đó KHÔNG cứu được.**
 
 ### 4.3 Ràng buộc dữ liệu tại luồng này
 
@@ -271,27 +277,27 @@ sequenceDiagram
 
 **Nhập số:** mọi field số dùng `inputMode="numeric"` + `pattern="[0-9]*"`; doanh thu format nghìn khi blur nhưng gửi lên là **số nguyên** đã qua `parseCurrencyInput()` — DB không bao giờ nhận chuỗi đã format (BR-010, Master Spec §26).
 
-### 4.4 Luồng D — Sửa báo cáo đầu ngày (UC-05, FR-012)
+### 4.4 ~~Luồng D — Sửa báo cáo đầu ngày (UC-05, FR-012)~~ — ĐÃ GỠ (PHASE 14, DEC-055)
+
+Luồng này **không còn tồn tại**. Cam kết sáng khoá ngay khi gửi: không có nút "Sửa cam kết sáng",
+không có Server Action `updateMorningReport`, và `/sales/today/morning` `redirect()` về
+`/sales/today` khi hôm nay đã có báo cáo — bất kể `MORNING_SUBMITTED` hay `COMPLETED`.
+
+**Thay vào chỗ nút cũ là "Lưu hình báo cáo đầu ngày"** (DEC-058):
 
 ```text
 /sales/today
 → status = MORNING_SUBMITTED
-→ Nhấn Sửa cam kết sáng
-→ /sales/today/morning
-→ RSC phát hiện đã có bản ghi hôm nay → render form ở chế độ SỬA, không phải TẠO
-→ Prefill toàn bộ giá trị target hiện tại
-→ Sales chỉnh sửa
-→ Validate client
-→ Nhấn Lưu thay đổi
-→ Validate server bằng Zod
-→ UPDATE chỉ các cột target, planned_route, visit_purpose
-→ RLS reports_update_own_open yêu cầu status = MORNING_SUBMITTED
-→ Vẫn MORNING_SUBMITTED
-→ revalidatePath
-→ Toast Đã cập nhật cam kết
+→ Nhấn Lưu hình báo cáo đầu ngày
+→ Client fetch GET /api/reports/:id/share-image kèm cookie session
+→ Route Handler đọc status ĐÃ PERSIST → chọn biến thể MORNING
+→ PNG 1080×1920 bản CAM KẾT ĐẦU NGÀY (bảng 2 cột: chỉ tiêu · cam kết)
+→ Web Share API → Zalo
 ```
 
-**Điểm phải nhớ:** RSC của `/sales/today/morning` **luôn** query báo cáo hôm nay trước khi render. Đây là lớp chống trùng thứ nhất trong ba lớp của FR-011 (xem §10.3). Nếu đã `COMPLETED`, route này chuyển hướng về `/sales/reports/[id]` kèm thông báo báo cáo đã khoá ⚠ OQ-04.
+**Điểm phải nhớ:** RSC của `/sales/today/morning` **luôn** query báo cáo hôm nay trước khi render.
+Đây là lớp chống trùng thứ nhất trong ba lớp của FR-011 (xem §10.3), và từ DEC-055 nó cũng là thứ
+thực thi luật "mỗi ngày nhập cam kết đúng một lần".
 
 ---
 
@@ -407,7 +413,7 @@ Server Action trả ok = true
 → Lúc này mới render nút Xuất ảnh ở trạng thái enable
 ```
 
-Ngay cả khi client bị sửa để bật nút sớm, Route Handler vẫn kiểm tra `status` lần nữa và trả HTTP 409 (§10.8a). Đây là hai lớp độc lập cho cùng một BR-002.
+Ngay cả khi client bị sửa, Route Handler vẫn **tự đọc `status` từ database** để chọn biến thể ảnh (§10.8a) — client không gửi biến thể lên. Đây vẫn là hai lớp độc lập cho cùng một BR-002 sau khi DEC-058 nới nó.
 
 ---
 
@@ -422,7 +428,7 @@ Ngay cả khi client bị sửa để bật nút sớm, Route Handler vẫn ki�
 → Route Handler đọc session, xác thực người dùng
 → Đọc report qua Supabase server client, RLS tự lọc
 → RLS trả 0 row → 404 (không lộ sự tồn tại của bản ghi)
-→ status khác COMPLETED → 409 (BR-002)
+→ status quyết định biến thể thẻ: MORNING_SUBMITTED → CAM KẾT, COMPLETED → KẾT QUẢ (DEC-058)
 → Hợp lệ → đọc file font Inter có dấu tiếng Việt bằng fs
 → Render ImageResponse 1080×1920 từ DailyReportShareCard
 → Trả PNG kèm Content-Disposition attachment và Cache-Control private no-store
@@ -459,7 +465,7 @@ sequenceDiagram
     else RLS trả 0 row
         RH-->>C: HTTP 404 không phân biệt không tồn tại và không có quyền
     else status khác COMPLETED
-        RH-->>C: HTTP 409 REPORT_NOT_COMPLETED theo BR-002
+        RH-->>C: PNG bản CAM KẾT theo DEC-058
     else Hợp lệ
         RH->>RH: Đọc file font Inter subset latin và vietnamese bằng fs ở Node runtime
         RH->>OG: Render DailyReportShareCard 1080x1920 nền tối 0B1220
@@ -525,7 +531,6 @@ sequenceDiagram
 | A | Đăng nhập / đăng xuất | `/login` | UC-01, UC-02 | — |
 | B | Dashboard hôm nay | `/sales/today` | UC-03 | (chỉ đọc) |
 | C | Tạo báo cáo đầu ngày | `/sales/today/morning` | UC-04 | → `MORNING_SUBMITTED` |
-| D | Sửa cam kết sáng | `/sales/today/morning` | UC-05 | giữ `MORNING_SUBMITTED` |
 | E | Hoàn thành cuối ngày | `/sales/today/evening` | UC-06, UC-07 | → `COMPLETED` |
 | F | Xuất ảnh 9:16 | `/api/reports/[id]/share-image` | UC-08 | (không đổi trạng thái) |
 | G | Lịch sử + chi tiết | `/sales/history`, `/sales/reports/[id]` | UC-09, UC-10 | (chỉ đọc) |
@@ -690,7 +695,7 @@ flowchart TD
 
 **Hệ thống làm gì.** Ba lớp chống trùng theo FR-011:
 
-1. **UI/RSC** — `/sales/today/morning` luôn query báo cáo hôm nay trước khi render; nếu đã có, form render ở chế độ **sửa** (UC-05) thay vì **tạo**, nên đường tạo trùng thường không xuất hiện.
+1. **UI/RSC** — `/sales/today/morning` luôn query báo cáo hôm nay trước khi render; nếu đã có thì **`redirect()` về `/sales/today`** (PHASE 14, DEC-055 — trước đây render ở chế độ sửa), nên đường tạo trùng thường không xuất hiện.
 2. **Server** — Server Action kiểm tra sự tồn tại trước khi `INSERT`.
 3. **Database** — `uq_daily_reports_sales_date` là chốt chặn cuối, ném `23505` kể cả khi hai request chạy đồng thời vượt qua lớp 2.
 
@@ -778,15 +783,23 @@ Server Action bắt **riêng** mã `23505` (không để nó rơi vào nhánh l�
 
 Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn khác nhau.
 
-#### 10.8a — Báo cáo chưa `COMPLETED`
+#### 10.8a — ~~Báo cáo chưa `COMPLETED`~~ → nay là "báo cáo mới có cam kết sáng" (PHASE 14, DEC-058)
 
-**Trigger.** Route Handler được gọi cho một báo cáo còn `MORNING_SUBMITTED`: tab cũ giữ trạng thái lỗi thời, deep link được chia sẻ lại, hoặc client bị sửa để bật nút sớm.
+**Đây KHÔNG còn là một failure flow.** Trước PHASE 14, Route Handler trả **409 / 403** khi báo cáo
+chưa `COMPLETED`. DEC-058 nới BR-002: mỗi ngày có hai tấm ảnh, nên một báo cáo `MORNING_SUBMITTED`
+là đầu vào **hợp lệ**.
 
-**Hệ thống làm gì.** Sau khi RLS trả về row, Route Handler kiểm tra `status !== 'COMPLETED'` → trả **HTTP 409** kèm `{ error: 'REPORT_NOT_COMPLETED' }` và **không** khởi tạo `ImageResponse` (BR-002, FR-017). Đây là lớp thực thi thứ hai, độc lập với việc bật/tắt nút ở UI.
+**Hệ thống làm gì.** Sau khi RLS trả về row, Route Handler đọc `status` và chọn biến thể:
+`MORNING_SUBMITTED` → thẻ **CAM KẾT ĐẦU NGÀY** (bảng 2 cột, không có khối "Số khách làm việc",
+không có ghi chú cuối ngày); `COMPLETED` → thẻ **KẾT QUẢ CUỐI NGÀY**. Client **không** gửi biến thể
+lên — đó là điều giữ cho phần cốt lõi của BR-002 còn nguyên hiệu lực.
 
-**Người dùng thấy gì.** Toast: *"Cần hoàn thành báo cáo cuối ngày trước khi xuất ảnh."* kèm nút **"Hoàn thành báo cáo cuối ngày"** dẫn tới `/sales/today/evening`.
+**Người dùng thấy gì.** Ảnh tải về / share sheet, không có thông báo lỗi nào. Trên
+`/sales/reports/[id]` của một báo cáo chưa hoàn tất còn thêm một thẻ giải thích rằng ảnh xuất ra là
+bản cam kết, và cột thực đạt sẽ có sau khi hoàn tất cuối ngày.
 
-**Dữ liệu form ra sao.** Nếu người dùng đang đứng ở form cuối ngày và bấm Xuất ảnh quá sớm, **form giữ nguyên toàn bộ số đã nhập, không reset**. Trang chi tiết báo cáo không có form nên không có gì để mất.
+**Điều gì vẫn là lỗi.** `id` sai định dạng hoặc không có quyền đọc → **404 giống hệt nhau** (chống
+dò ID); chưa đăng nhập → **401 JSON** (DEC-039). Hai nhánh đó không đổi.
 
 **Cách khôi phục.** Hoàn tất UC-06 → status chuyển `COMPLETED` → nút Xuất ảnh enable → thử lại.
 
@@ -855,12 +868,14 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 
 ### 11.3 Race giữa báo cáo sáng và báo cáo cuối ngày
 
-**Kịch bản 1 — sửa cam kết sáng trong khi đang nhập cuối ngày.** Tab A đang mở `/sales/today/evening` (hiển thị cam kết sáng để đối chiếu). Tab B mở form sửa cam kết (UC-05) và lưu target mới. Sau đó tab A submit.
+**~~Kịch bản 1 — sửa cam kết sáng trong khi đang nhập cuối ngày.~~ KHÔNG CÒN XẢY RA ĐƯỢC (PHASE 14, DEC-055).** Không còn đường nào sửa `target_*` sau khi gửi, nên hai tab không thể chạy đua trên cùng bộ cột nữa.
 
-- **Không có lost update:** Server Action cuối ngày **chỉ** ghi `actual_*`, `evening_note`, `evening_submitted_at`, `status`. Nó **không bao giờ** đụng vào các cột `target_*`. Vì vậy giá trị target mới của tab B được giữ nguyên.
-- **Có sai lệch hiển thị:** tab A đang hiển thị target **cũ** trong cột "Cam kết sáng". Sau khi lưu, hệ thống điều hướng sang `/sales/reports/:id` và trang này **đọc lại từ DB**, nên bảng đối chiếu cuối cùng và ảnh 9:16 luôn dùng target **mới nhất**. Số hiển thị trong lúc nhập có thể lệch, số được lưu và số xuất ra ảnh thì không.
+Hai điều rút ra từ kịch bản này vẫn **giữ nguyên giá trị** và không được làm yếu đi:
 
-**Kịch bản 2 — thứ tự ngược lại.** Tab A submit cuối ngày trước → status thành `COMPLETED`. Sau đó tab B bấm lưu sửa cam kết sáng → RLS `reports_update_own_open` yêu cầu `status = 'MORNING_SUBMITTED'` nên khớp **0 row** → Server Action trả thông báo *"Báo cáo đã hoàn tất, không sửa được nữa."* (BR-019). Form của tab B **giữ nguyên, không reset** (INV-4). ⚠ **OQ-04**: nếu câu trả lời là (b) hoặc (c), nhánh này phải mở lại và khi đó **bắt buộc** cần audit log AF-12 (ISSUE-007).
+- Server Action cuối ngày **chỉ** ghi `actual_*`, `evening_note`, `evening_submitted_at`, `status` — **không bao giờ** đụng cột `target_*`.
+- Trang chi tiết và ảnh 9:16 **đọc lại từ DB**, không dùng lại state của form.
+
+**Kịch bản 2 — hai tab cùng hoàn tất cuối ngày.** Tab A submit trước → status thành `COMPLETED`. Tab B bấm Hoàn tất sau → RLS `reports_update_own_open` yêu cầu `status = 'MORNING_SUBMITTED'` nên khớp **0 row** → Server Action trả *"Báo cáo hôm nay đã hoàn tất rồi."* (BR-019). Form của tab B **giữ nguyên, không reset** (INV-4). *(Bản trước PHASE 14 mô tả kịch bản này bằng thao tác sửa cam kết sáng; thao tác đó đã bị DEC-055 gỡ, nhưng chính sách RLS chặn nó thì không đổi.)*
 
 **Kịch bản 3 — vắt qua nửa đêm giờ Việt Nam.** Sales mở form lúc 23:58 ngày `D`, bấm Lưu lúc 00:01 ngày `D+1`.
 
@@ -880,7 +895,6 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 | §2 | Đăng nhập, định tuyến theo role | UC-01, UC-02 | FR-001..FR-006 | BR-009, BR-012 |
 | §3 | Dashboard hôm nay, chọn CTA | UC-03 | FR-007 | BR-005, BR-002 |
 | §4 | Báo cáo đầu ngày | UC-04 | FR-008..FR-011 | BR-001, BR-005, BR-006, BR-010, BR-016, BR-017, BR-021 |
-| §4.4 | Sửa cam kết sáng | UC-05 | FR-012 | BR-019 |
 | §5 | Báo cáo cuối ngày + achievement | UC-06, UC-07 | FR-013..FR-016 | BR-004, BR-007, BR-008, BR-011, BR-014, BR-015, BR-023 |
 | §6 | Xuất ảnh 9:16 | UC-08 | FR-017..FR-020 | BR-002, BR-022 |
 | §7 | Lịch sử + chi tiết | UC-09, UC-10 | FR-021, FR-022 | BR-003 |
@@ -890,7 +904,7 @@ Chia thành ba trường hợp riêng biệt vì cách khôi phục hoàn toàn 
 | §9.4 | Admin tạo tài khoản Sales | UC-17 | FR-030 | BR-012, BR-025 |
 | §9.5 | Admin vô hiệu hoá tài khoản | UC-19 | FR-032 | BR-009 |
 | §10 | Failure flows | tất cả | FR-035, NFR-010, NFR-014 | BR-001, BR-002, BR-003, BR-009, BR-019 |
-| §11 | Concurrency | UC-04, UC-05, UC-06 | FR-011, FR-015 | BR-001, BR-005, BR-008, BR-019, BR-021 |
+| §11 | Concurrency | UC-04, UC-06 | FR-011, FR-015 | BR-001, BR-005, BR-008, BR-019, BR-021 |
 
 **Ánh xạ AF (Admin Feature) đã dùng trong tài liệu này:** AF-01 (§9.1), AF-02 (§9.1, §9.2), AF-03 (§9.3), AF-04 (§9.2), AF-07 (§9.4, §9.5), AF-09 (§9.3), AF-12 (§9.2, §11.3 — điều kiện tiên quyết nếu OQ-04/OQ-05 đổi).
 

@@ -34,8 +34,8 @@ describe('getTodayView — chưa có báo cáo hôm nay', () => {
     expect(view.secondaryCta).toBeNull();
   });
 
-  it('không được xuất ảnh — BR-002', () => {
-    expect(view.canExportImage).toBe(false);
+  it('không có gì để xuất ảnh — chưa có dòng nào trong database (BR-002)', () => {
+    expect(view.shareImageVariant).toBeNull();
   });
 });
 
@@ -52,13 +52,12 @@ describe('getTodayView — MORNING_SUBMITTED', () => {
     expect(view.primaryCta.href).toBe(EVENING_REPORT_PATH);
   });
 
-  it('CTA phụ là sửa cam kết sáng — FR-012, BR-019', () => {
-    expect(view.secondaryCta?.key).toBe('EDIT_MORNING');
-    expect(view.secondaryCta?.href).toBe(MORNING_REPORT_PATH);
+  it('KHÔNG có CTA phụ — "Sửa cam kết sáng" đã bị gỡ (DEC-055)', () => {
+    expect(view.secondaryCta).toBeNull();
   });
 
-  it('vẫn CHƯA được xuất ảnh — BR-002', () => {
-    expect(view.canExportImage).toBe(false);
+  it('xuất được ảnh bản SÁNG — DEC-058 nới BR-002', () => {
+    expect(view.shareImageVariant).toBe('MORNING');
   });
 });
 
@@ -80,8 +79,8 @@ describe('getTodayView — COMPLETED', () => {
     expect(view.secondaryCta).toBeNull();
   });
 
-  it('được xuất ảnh — đây là trạng thái DUY NHẤT cho phép, BR-002', () => {
-    expect(view.canExportImage).toBe(true);
+  it('xuất được ảnh bản CHIỀU — bản có cột thực đạt và % hoàn thành', () => {
+    expect(view.shareImageVariant).toBe('EVENING');
   });
 });
 
@@ -102,10 +101,8 @@ describe('bất biến chung của cả ba trạng thái', () => {
     }
   });
 
-  it('canExportImage đúng bằng "state === COMPLETED"', () => {
-    for (const view of views) {
-      expect(view.canExportImage).toBe(view.state === 'COMPLETED');
-    }
+  it('có ảnh để xuất ⇔ hôm nay đã có báo cáo persist (BR-002 sau DEC-058)', () => {
+    expect(views.map((view) => view.shareImageVariant)).toEqual([null, 'MORNING', 'EVENING']);
   });
 });
 
@@ -114,11 +111,19 @@ describe('canOpenMorningForm', () => {
     expect(canOpenMorningForm(null)).toBe(true);
   });
 
-  it('mở được khi đang MORNING_SUBMITTED — UC-05, FR-012', () => {
-    expect(canOpenMorningForm({ id: REPORT_ID, status: 'MORNING_SUBMITTED' })).toBe(true);
+  it('KHÔNG mở được khi đã MORNING_SUBMITTED — DEC-055 gỡ UC-05', () => {
+    expect(canOpenMorningForm({ id: REPORT_ID, status: 'MORNING_SUBMITTED' })).toBe(false);
   });
 
   it('KHÔNG mở được khi đã COMPLETED — BR-019, DEC-026', () => {
     expect(canOpenMorningForm({ id: REPORT_ID, status: 'COMPLETED' })).toBe(false);
+  });
+
+  it('mở form được ⇔ hôm nay chưa có báo cáo nào', () => {
+    // Bất biến gộp: sau DEC-055, chỉ còn ĐÚNG MỘT lần mở form sáng mỗi ngày.
+    const cases = [null, { id: REPORT_ID, status: 'MORNING_SUBMITTED' }, { id: REPORT_ID, status: 'COMPLETED' }] as const;
+    for (const report of cases) {
+      expect(canOpenMorningForm(report)).toBe(report === null);
+    }
   });
 });

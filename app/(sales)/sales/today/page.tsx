@@ -10,6 +10,7 @@ import { requireRole } from '@/features/auth/queries';
 import { AchievementTable } from '@/features/report-comparison/achievement-table';
 import { ReportNotes } from '@/features/report-comparison/report-notes';
 import { DiscardEveningDraft } from '@/features/report-evening/discard-evening-draft';
+import { DiscardMorningDraft } from '@/features/report-morning/discard-morning-draft';
 import { ShareImageButton } from '@/features/report-share/share-image-button';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { messageForSavedParam } from '@/lib/reports/messages';
@@ -143,7 +144,14 @@ export default async function SalesTodayPage({ searchParams }: Props) {
         </>
       )}
 
-      {/* FR-035 — không render gì, chỉ dọn draft cuối ngày đã hết ý nghĩa. */}
+      {/*
+        FR-035 — hai component này không render gì, chỉ dọn draft đã hết ý nghĩa.
+
+        Cam kết sáng đã gửi ⇒ bản nháp đầu ngày vô nghĩa (PHASE 14, đi kèm DEC-055
+        khi `saveMorningReport` chuyển sang tự `redirect()`).
+        Báo cáo đã hoàn tất ⇒ bản nháp cuối ngày vô nghĩa (DEC-037).
+      */}
+      {report !== null && <DiscardMorningDraft today={today} />}
       {view.state === 'COMPLETED' && <DiscardEveningDraft today={today} />}
 
       <div className="flex flex-col gap-3">
@@ -168,22 +176,31 @@ export default async function SalesTodayPage({ searchParams }: Props) {
         )}
 
         {/*
-          BR-002 / FR-017 — nút Xuất ảnh CHỈ xuất hiện khi báo cáo đã persist với
-          `status = 'COMPLETED'`; `canExportImage` đọc từ dữ liệu đã lưu, không
-          bao giờ suy ra từ trạng thái form. Route handler kiểm lại lần nữa
-          (`docs/07 §4.1`) — ẩn nút không phải là bảo mật.
+          BR-002 / FR-017 — nút xuất ảnh chỉ xuất hiện khi đã có báo cáo PERSIST;
+          `shareImageVariant` đọc từ `status` đã lưu, không bao giờ suy ra từ
+          trạng thái form. Route handler kiểm lại lần nữa (`docs/07 §4.1`) — ẩn
+          nút không phải là bảo mật.
 
-          `report !== null` là điều kiện thừa về mặt nghiệp vụ (`canExportImage`
-          chỉ bật ở nhánh COMPLETED, mà nhánh đó luôn có báo cáo) nhưng TypeScript
-          cần nó để thu hẹp kiểu — và nó rẻ hơn một dấu `!`.
+          ⚠ PHASE 14 (DEC-058) — mỗi ngày có HAI tấm ảnh: sáng gửi cam kết, chiều
+          gửi kết quả. Nút buổi sáng đứng đúng chỗ nút "Sửa cam kết sáng" vừa bị
+          gỡ (DEC-055).
+
+          `report !== null` là điều kiện thừa về mặt nghiệp vụ (`shareImageVariant`
+          chỉ khác `null` khi đã có báo cáo) nhưng TypeScript cần nó để thu hẹp
+          kiểu — và nó rẻ hơn một dấu `!`.
         */}
-        {/* Nút Xuất ảnh dùng biến thể `accent` (cam logo) — xem lý do ở
+        {/* Nút xuất ảnh dùng biến thể `accent` (cam logo) — xem lý do ở
             `components/ui/button.tsx`: đây là hành động "khoe kết quả", cố ý
             khác màu với CTA chính để không tranh chỗ với nó. */}
-        {report !== null && view.canExportImage && (
+        {report !== null && view.shareImageVariant !== null && (
           <ShareImageButton
             reportId={report.id}
-            fileName={shareImageFileName(profile.full_name, report.report_date)}
+            variant={view.shareImageVariant}
+            fileName={shareImageFileName(
+              profile.full_name,
+              report.report_date,
+              view.shareImageVariant,
+            )}
           />
         )}
       </div>

@@ -108,7 +108,6 @@ erDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> MORNING_SUBMITTED : INSERT qua policy reports_insert_own_today
-    MORNING_SUBMITTED --> MORNING_SUBMITTED : UPDATE sửa cam kết sáng, FR-012
     MORNING_SUBMITTED --> COMPLETED : UPDATE kèm đủ 4 giá trị actual, FR-015
     COMPLETED --> [*] : khóa vĩnh viễn ở phương án mặc định của OQ-04
 ```
@@ -753,7 +752,7 @@ RLS ở trạng thái **deny-by-default**: bật RLS mà không có policy nào 
 |---|---|---|---|
 | SELECT | `reports_select_own_or_admin` | `sales_id = (select auth.uid()) OR (select public.is_admin())` | **BR-003** — Sales không bao giờ đọc được báo cáo của Sales khác, kể cả khi đoán đúng `id` trong URL (chống IDOR). Admin đọc toàn bộ (UC-12..UC-16). |
 | INSERT | `reports_insert_own_today` | WITH CHECK `sales_id = (select auth.uid()) AND (select public.is_active_sales()) AND report_date = public.vn_today() AND status = 'MORNING_SUBMITTED'` | Bốn điều kiện tương ứng bốn rule: không tạo hộ người khác (BR-003); tài khoản phải active (BR-009); đúng ngày hôm nay, không nhập bù (BR-021/OQ-12); phải bắt đầu từ trạng thái sáng (BR-008). |
-| UPDATE | `reports_update_own_open` | USING `sales_id = (select auth.uid()) AND (select public.is_active_sales()) AND status = 'MORNING_SUBMITTED'` · WITH CHECK `sales_id = (select auth.uid())` | Sửa cam kết sáng (FR-012) và hoàn tất cuối ngày (FR-015). |
+| UPDATE | `reports_update_own_open` | USING `sales_id = (select auth.uid()) AND (select public.is_active_sales()) AND status = 'MORNING_SUBMITTED'` · WITH CHECK `sales_id = (select auth.uid())` | **Hoàn tất cuối ngày (FR-015) — nay là đường UPDATE DUY NHẤT của ứng dụng.** ⚠ PHASE 14 (DEC-055) gỡ FR-012 khỏi v1, nhưng policy này **KHÔNG** được bỏ: bỏ nó là làm sập luồng cuối ngày. |
 | DELETE | *(không cấp)* | — | **BR-013** — không xoá cứng dữ liệu báo cáo trong v1. |
 
 **Cơ chế tự khoá cần hiểu chính xác:** trong PostgreSQL, mệnh đề `USING` của policy UPDATE được đánh giá trên **dòng cũ (OLD)**, còn `WITH CHECK` trên **dòng mới (NEW)**. Do đó `reports_update_own_open` cho phép đúng một lần chuyển `MORNING_SUBMITTED → COMPLETED`: lúc đó `OLD.status` vẫn là `MORNING_SUBMITTED` nên `USING` khớp. Sau khi đã `COMPLETED`, mọi UPDATE tiếp theo có `OLD.status = 'COMPLETED'` nên `USING` không khớp và câu lệnh trả về **0 rows affected** — báo cáo tự khoá. Đây đúng là phương án mặc định (a) của OQ-04 và là cách phát biểu BR-019 ở tầng database. **Nếu OQ-04 trả lời (b) hoặc (c), chính policy này phải được viết lại** — xem §16.
@@ -937,7 +936,7 @@ Postgres trả `numeric` cho `sum(bigint)`. PostgREST/`supabase-js` serialize `n
 
 Ba lý do, xếp theo mức độ nghiêm trọng:
 
-1. **Lệch dữ liệu là chuyện chắc chắn xảy ra, không phải rủi ro.** Nếu `%` được lưu, thì mỗi lần `actual_revenue` đổi mà quên tính lại là một dòng dữ liệu nói dối. Với FR-012 (sửa cam kết sáng) thì đường sửa đó có thật.
+1. **Lệch dữ liệu là chuyện chắc chắn xảy ra, không phải rủi ro.** Nếu `%` được lưu, thì mỗi lần `actual_revenue` đổi mà quên tính lại là một dòng dữ liệu nói dối. *(Đường sửa `target_*` của FR-012 đã bị DEC-055 gỡ, nhưng lập luận không phụ thuộc vào nó: bốn cột `actual_*` vẫn được ghi sau khi `target_*` đã tồn tại.)*
 2. **Công thức có nhánh không phải là số.** BR-015 (`target = 0` và `actual > 0`) trả `percent = null` và hiển thị số vượt tuyệt đối (`+3 xe`) chứ không phải một con số phần trăm — một cột `numeric` không biểu diễn được điều đó. Persist một `%` là đóng băng một quy tắc chưa được duyệt vào 18.000 dòng dữ liệu, và khi OQ-11 có câu trả lời thì phải backfill toàn bộ.
 3. **`%` không phải một con số duy nhất.** `AchievementResult` gồm `percent: number | null`, `status`, và `display` (chuỗi đã format `'80,0%'` / `'125,0%'` / `'—'`). Làm tròn 1 chữ số (BR-014) là quy tắc **hiển thị**; lưu nó vào DB là trộn tầng trình bày vào tầng dữ liệu.
 
@@ -979,7 +978,7 @@ Tất cả đều là **sự kiện hoặc số liệu do người dùng nhập*
 | **Tiền hiển thị** `125.000.000 ₫` | `formatCurrencyVND(bigint)` | `lib/currency.ts` | BR-010, DEC-008 |
 | **Ngày nghiệp vụ hôm nay** | `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })` / `public.vn_today()` | `lib/date.ts` / DB | BR-005, DEC-009 |
 | **CTA nào hiện trên `/sales/today`** | suy từ `status` của báo cáo hôm nay | Server Component | FR-007 |
-| **Nút "Xuất ảnh" có enable không** | `status = 'COMPLETED'` **và** đã persist | route handler + UI | BR-002, FR-017 |
+| **Xuất được ảnh nào** | Báo cáo **đã persist**; `status` chọn biến thể (`MORNING_SUBMITTED` → CAM KẾT · `COMPLETED` → KẾT QUẢ) | route handler + UI | BR-002 *(nới bởi DEC-058)*, FR-017 |
 | **Tên file PNG** `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` | `full_name` + `report_date` | route handler | FR-019 |
 
 **Điều quan trọng nhất của bảng này:** cột "Tính ở đâu" **không bao giờ được có hai giá trị cho cùng một hàng**. Nếu một component tự viết lại `actual / target * 100`, đó là vi phạm NFR-012 và phải bị chặn ở code review.
@@ -1091,7 +1090,7 @@ Truy vấn nặng nhất mà người dùng thật sự chạm tới đọc **1.
 
 - **Không có gì để tăng tốc.** Aggregate lớn nhất là 1.550 dòng (§14.2).
 - **MV cần refresh, mà refresh cần cron — NFR-013 cấm cron** (phải chạy trong hạn mức Vercel Free + Supabase Free, không cron/queue/storage).
-- **MV sẽ hiển thị số sai.** Sales sửa cam kết sáng lúc 10h (FR-012) và hoàn tất lúc 18h; một MV refresh theo lịch sẽ cho Admin xem số cũ mà không có dấu hiệu nào báo là cũ. Với một dashboard vận hành dùng để đốc thúc người thật, sai số im lặng còn tệ hơn chậm.
+- **MV sẽ hiển thị số sai.** Sales gửi cam kết lúc 8h và hoàn tất lúc 18h; một MV refresh theo lịch sẽ cho Admin xem số cũ mà không có dấu hiệu nào báo là cũ. Với một dashboard vận hành dùng để đốc thúc người thật, sai số im lặng còn tệ hơn chậm.
 - **MV mâu thuẫn với BR-011.** Materialize một bảng `%` chính là persist giá trị dẫn xuất, chỉ khoác tên khác.
 
 ### 14.5 Ngưỡng kích hoạt lại (viết sẵn để sau này không phải đoán)
@@ -1110,7 +1109,7 @@ Thứ tự xử lý khi đó: (1) kiểm tra lại kế hoạch truy vấn và i
 | Rule | Được ép ở đâu trong schema này |
 |---|---|
 | BR-001 | `uq_daily_reports_sales_date UNIQUE (sales_id, report_date)` |
-| BR-002 | Không ở DB — route handler kiểm tra `status = 'COMPLETED'` trước khi render PNG (FR-017) |
+| BR-002 | Không ở DB — route handler đọc `status` từ dòng đã persist để chọn **biến thể** PNG (FR-017, DEC-058) |
 | BR-003 | Policy `reports_select_own_or_admin`; `guard_report_transition()` chặn đổi `sales_id` |
 | BR-004 | Không ép ở DB (đúng ý đồ) — `%` không được lưu, không clamp ở `lib/kpi.ts` |
 | BR-005 | Kiểu `date` của `report_date`; `public.vn_today()`; `ck_report_not_future` |

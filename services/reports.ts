@@ -667,45 +667,18 @@ export async function insertMorningReport(
   return { ok: true, reportId: data.id };
 }
 
-/**
- * Sửa cam kết đầu ngày — UC-05, FR-012, BR-019.
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 14 — `updateMorningReport()` ĐÃ BỊ XOÁ (DEC-055)
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Hàm này phục vụ UC-05 / FR-012 ("sửa cam kết sáng"). Khả năng sửa đã bị gỡ
+ *  khỏi v1 theo yêu cầu trực tiếp của người dùng, nên hàm đi cùng Server Action
+ *  gọi nó thay vì ở lại làm code chết.
  *
- * Chỉ đụng vào các cột cam kết sáng: `status`, `sales_id`, `report_date` không
- * nằm trong payload nên không có đường nào đổi chủ sở hữu hay ngày báo cáo
- * (trigger `guard_report_transition` là chốt chặn thứ hai).
- *
- * `.eq('sales_id')` là lớp phòng thủ **thêm**, không thay RLS (AGENTS.md §8):
- * policy `reports_update_own_open` mới là thứ chặn thật, và nó còn yêu cầu
- * `OLD.status = 'MORNING_SUBMITTED'` nên báo cáo đã `COMPLETED` sẽ khớp 0 dòng.
+ *  Hệ quả đáng nhớ: sau thay đổi này, đường UPDATE **duy nhất** mà ứng dụng còn
+ *  dùng trên `daily_reports` là `completeEveningReport()` bên dưới. Policy
+ *  `reports_update_own_open` vì thế vẫn cần thiết và **không** bị gỡ.
  */
-export async function updateMorningReport(
-  supabase: SupabaseClient<Database>,
-  reportId: string,
-  salesId: string,
-  values: MorningReportWrite,
-): Promise<ReportWriteResult> {
-  const { data, error } = await supabase
-    .from('daily_reports')
-    .update(values)
-    .eq('id', reportId)
-    .eq('sales_id', salesId)
-    .select('id')
-    .maybeSingle();
-
-  if (error) {
-    console.error('[updateMorningReport]', error.code, error.message);
-
-    if (error.code && PG_REJECTED_CODES.has(error.code)) return { ok: false, error: 'REJECTED' };
-    return { ok: false, error: 'UNKNOWN' };
-  }
-
-  // 0 dòng khớp: không phải chủ báo cáo, hoặc báo cáo đã COMPLETED nên bị khoá.
-  // Cố ý KHÔNG phân biệt hai trường hợp trong kết quả trả về — chống dò ID
-  // (docs/07 §3.6).
-  if (data === null) return { ok: false, error: 'REJECTED' };
-
-  return { ok: true, reportId: data.id };
-}
 
 /**
  * Hoàn tất báo cáo cuối ngày — UC-06, FR-014, FR-015, BR-008.

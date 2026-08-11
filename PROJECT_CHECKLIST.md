@@ -649,6 +649,73 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
          chú, hay chuyển đổi theo một quy tắc do người dùng chốt).
 ---
 
+---
+
+## Phase 14 — Gỡ sửa cam kết sáng · Thẻ ảnh 9:16 đổi nội dung, đổi màu, tách hai biến thể (MỞ 2026-08-11)
+
+**Nguồn:** 4 lượt yêu cầu trực tiếp của người dùng trong phiên 2026-08-11 (kèm 3 ảnh chú thích tay).
+**Quyết định:** DEC-055 · DEC-056 · DEC-057 · DEC-058. **BR-002 được NỚI** (DEC-058).
+
+### 14a. Gỡ hẳn "Sửa cam kết sáng" — DEC-055
+
+- [x] `lib/reports/today-cta.ts` — `secondaryCta: null` ở `MORNING_SUBMITTED`; xoá khoá `EDIT_MORNING`
+- [x] `canOpenMorningForm()` rút về `report === null`; `/sales/today/morning` `redirect()` khi đã có báo cáo
+- [x] Xoá Server Action `updateMorningReport` (`features/report-morning/actions.ts`)
+- [x] Xoá hàm service `updateMorningReport()` (`services/reports.ts`)
+- [x] Xoá chế độ `edit` của form sáng (`mode`, `reportId`, input ẩn `report_id`, nhãn "Lưu thay đổi")
+- [x] Xoá thông báo `MORNING_UPDATED` khỏi `lib/reports/messages.ts`
+- [x] Cập nhật `lib/reports/today-cta.test.ts` — thêm bất biến "mở form ⇔ chưa có báo cáo"
+- [x] Cập nhật `e2e/sales-flow.spec.ts` — kiểm **không còn** link "Sửa cam kết sáng" và URL bị đá về
+- [x] Giữ nguyên policy `reports_update_own_open` *(nó phục vụ luồng cuối ngày — đừng gỡ)*
+
+### 14b. Nội dung thẻ ảnh — DEC-056
+
+- [x] `shortLabel` của `REVENUE`: `'Công nợ'` → `'Doanh thu'` (đổi ở **đúng một nơi**: `metric-rows.ts`)
+- [x] `lib/kpi.calculateCustomerWorkRate()` — hàm thuần + 9 unit test (gồm lưới 64 tổ hợp chống `NaN`/`∞`)
+- [x] Khối "DOANH THU THỰC ĐẠT" → **"SỐ KHÁCH LÀM VIỆC"** + dòng phụ `'5 khách / 10 điểm'`
+- [x] `'—'` khi `actual_visit_points = 0` hoặc chưa có số liệu — không bao giờ `∞`
+
+### 14c. Bảng màu sáng cho thẻ ảnh — DEC-057
+
+- [x] Dùng skill `ui-ux-pro-max` (phần checklist accessibility/color), **không** dùng `--design-system`
+- [x] Đo contrast **21 cặp màu** bằng công thức WCAG 2.x trước khi viết code — cặp thấp nhất **5,04:1**
+- [x] Viết lại `daily-report-share-card.tsx` với bảng màu DEC-046 (nền trắng, xanh `#0B4A76`, cam `#E9A04F`)
+- [x] Sọc nền chẵn/lẻ `#F4F7FA` thay đường kẻ 1px (chịu được nén ảnh của Zalo)
+- [x] Cập nhật ghi chú đầu `app/globals.css` — không còn "bảng hex dark cố định"
+
+### 14d. Hai tấm ảnh mỗi ngày — DEC-058
+
+- [x] `ShareCardVariant` + `shareCardVariantForStatus()` + `SHARE_IMAGE_LABEL` ở `lib/reports/share-card.ts`
+- [x] Bản `MORNING`: bảng 2 cột, nhịp dòng lớn, không có khối tỉ lệ, có câu nhắc "kết quả gửi cuối ngày"
+- [x] `shareImageFileName()` nhận `variant` **bắt buộc** — hai tấm cùng ngày không được trùng tên file
+- [x] `TodayView.canExportImage` → `shareImageVariant`; hai trang gọi `ShareImageButton` cập nhật theo
+- [x] Route ảnh bỏ nhánh `403 NOT_COMPLETED`; biến thể do `status` **đã persist** quyết định
+- [x] Nhãn nút: "Lưu hình báo cáo đầu ngày" (sáng) · "Xuất ảnh báo cáo" (chiều)
+
+### 14e. Nhãn ô nhập
+
+- [x] "Mục tiêu số lượng khách hàng" → **"Mục tiêu số lượng khách hàng sẽ gặp"** (form + thông báo lỗi Zod)
+
+### 14f. Quality gate
+
+- [x] `npm run typecheck` — exit 0
+- [x] `npm run lint` — 0 error, 0 warning
+- [x] `npx next build` — 18 route
+- [x] `npm test` đủ 3 project — **765/765** (unit 575 · integration 57 · rls 133)
+- [x] `npm run e2e` — **121 passed / 5 skipped / 0 failed**, 4,9 phút
+- [x] **Nhìn tận mắt**: render PNG thật cả hai biến thể, phát hiện bản sáng rỗng đáy, sửa, render lại
+- [ ] Kiểm ảnh trong Zalo trên điện thoại thật — ISSUE-003, cần thiết bị thật
+
+### 14g. Sửa hồi quy do DEC-055 gây ra — DEC-059 (E2E bắt được)
+
+- [x] Lượt E2E đầu: **3/3 project đỏ** ở `expect(getByText('Đã lưu báo cáo đầu ngày'))`
+- [x] Chẩn: RSC của `/sales/today/morning` render lại sau Server Action → `redirect()` **không kèm `?saved=`** → đè mất `router.replace()` của client
+- [x] `saveMorningReport` chuyển sang **tự `redirect()`** (đúng khuôn DEC-037)
+- [x] `MorningReportState` rút về **chỉ nhánh lỗi**; `isBusy` rút về `isPending`
+- [x] **`DiscardMorningDraft`** — component mới, dọn draft trên `/sales/today`
+- [x] Bỏ `revalidatePath(MORNING_REPORT_PATH)` — chính trang đang mở, không còn gì để làm mới
+- [x] Chạy lại đủ 4 cổng: typecheck · lint · build · test 765 · e2e 121
+
 ## OPEN QUESTIONS
 
 Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đầy đủ:
