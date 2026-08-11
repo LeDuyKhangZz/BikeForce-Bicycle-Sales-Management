@@ -845,7 +845,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `npm run lint` — 0 error, 0 warning
 - [x] `npx next build` — 18 route
 - [x] `npm test` — **784/784**
-- [x] `npm run e2e` — E2E_064_PLACEHOLDER
+- [x] `npm run e2e` — **153 passed / 12 skipped / 0 failed**, 4,6 phút *(165 bài, có 3 bài MỚI của DEC-064)*
 
 ## OPEN QUESTIONS
 

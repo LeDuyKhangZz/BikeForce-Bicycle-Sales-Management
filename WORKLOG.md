@@ -2341,3 +2341,118 @@ giữa hai lần đọc cách nhau chưa tới một phút. Chạy lại thì xa
 |---|---|
 | `npm run e2e` đầy đủ với luật `logo-clipped` | Cần Supabase local + tài khoản seed; luật đã được chạy thật bằng đúng đoạn mã đó trên DOM `/login` |
 | Deploy để người dùng nhìn lại trên điện thoại | `git push` cần người dùng chạy |
+
+---
+
+### Entry 023 — PHASE 14 (tiếp): bỏ thao tác ẩn · ảnh luôn hiện · webview của Zalo
+
+**Ngày:** 2026-08-11 (phiên nối tiếp Entry 021, cùng ngày).
+⚠ **Entry 022 là của một phiên Claude Code KHÁC chạy song song** trên cùng repo (ISSUE-030 — logo bị cắt). Commit `8b698f6` của phiên đó đã **gom luôn toàn bộ code DEC-064** đang nằm trong cây làm việc, dưới một thông điệp chỉ nói về logo — xem mục 6 bên dưới
+**Nguồn:** ba phản hồi liên tiếp của người dùng **sau khi `2712ed2` đã lên production**.
+**Sinh ra:** **DEC-064**. Cập nhật **ISSUE-003**.
+
+#### 1. Người dùng bác thẳng thiết kế vừa làm xong
+
+> *"nhưng tôi không thích cách phải giữ ảnh mới tải xuống hay chuyển ảnh đi được, vì nếu làm vậy
+> những người 'mù công nghệ' sẽ không biết làm."*
+
+DEC-061 xác định **đúng** rằng trang web không ghi được vào Thư viện ảnh, rồi kết luận lối duy nhất
+còn lại là **nhấn giữ vào ảnh**. Kết luận ấy đúng về kỹ thuật nhưng sai về sản phẩm: nó biến một
+giới hạn của nền tảng thành **một bước bắt buộc trong hướng dẫn sử dụng**. Người dùng của BikeForce
+là đội Sales ngoài thị trường, không phải người quen mò máy.
+
+> **Bài học ghi vào CLAUDE.md:** một giới hạn kỹ thuật có thật **không** tự động biến thành một
+> hướng dẫn hợp lệ. Nếu lối thoát duy nhất là dạy người dùng một thao tác ẩn thì phải đi tìm lối
+> khác, không phải viết câu hướng dẫn cho khéo hơn.
+
+Và câu tiếp theo chỉ luôn thứ cần làm:
+
+> *"cách hiển thị ảnh trước khi gửi cho người dùng coi trước tôi rất thích nhưng tôi cần nút tải ảnh
+> (bấm vào là tải được ảnh) và nút gửi ảnh zalo bấm vào là cho mình chọn nơi chuyển."*
+
+#### 2. Sửa (DEC-064)
+
+| | Trước | Sau |
+|---|---|---|
+| Ảnh xem trước | hiện **sau khi bấm** | **LUÔN hiện**, ngay khi mở trang |
+| Nút 2 (điện thoại) | "Lưu vào thư viện ảnh" → hiện ảnh + bảo nhấn giữ | **"Tải ảnh về máy" → tải THẬT một cú bấm** |
+| Nút máy tính | "Xuất ảnh báo cáo" | **"Tải ảnh về máy"** — cùng nhãn |
+| Chữ hướng dẫn | "nhấn giữ vào ảnh rồi chọn Lưu ảnh" | **không còn câu nào dạy thao tác ẩn** |
+
+`<a download>` với `blob:` **chạy thật** trên Chrome Android và Safari iOS 13+ — không cần dạy ai
+điều gì. Cái nó vẫn không làm được là ghi vào Thư viện ảnh; file vào thư mục Tải xuống, và dòng xác
+nhận nói đúng chỗ đó. Muốn ảnh vào Thư viện thì đi nút Zalo → "Lưu ảnh" **trong bảng chia sẻ** — đó
+là một mục **bấm được** của hệ điều hành, không phải một cử chỉ ẩn. Đây chính là lý do hai nút cùng
+tồn tại chứ không gộp một.
+
+Nhãn nút quay về mô tả **hành động**: DEC-058 từng bắt nhãn gánh việc "cho biết đang cầm tấm nào",
+nay **tấm ảnh tự nói** vì nó nằm ngay trên nút.
+
+#### 3. ISSUE-003 — trình duyệt TRONG Zalo, xử lý trong cùng lượt
+
+> *"các trình duyệt khác thì bình thường nhưng nếu mở link ngay trong zalo sẽ không thể tải ảnh hay
+> chuyển ảnh qua zalo"*
+
+Không có API web nào sửa được: WebView nhúng, app chủ quyết định, và nó cắt **cùng lúc cả ba** thứ ta
+dựa vào — Web Share · tải file · menu nhấn giữ. Nên mở **hai đường vòng có thật**:
+
+1. **"Sao chép ảnh để dán vào Zalo"** (`ClipboardItem` `image/png`) — giữ người dùng **ở trong
+   Zalo**, dán thẳng vào khung chat. Đứng trước vì họ đang ở đó và việc họ muốn là gửi ngay.
+2. **Hướng dẫn "Mở trong trình duyệt" / "Mở trong Safari"** — chắc chắn chạy, đúng như người dùng đã
+   xác nhận.
+
+Nhận ra webview bằng **capability** (`typeof navigator.share !== 'function'` trên máy cảm ứng),
+KHÔNG sniff `userAgent`: Zalo đổi UA là ta mù, mà Facebook/Instagram/TikTok cũng khoá y hệt.
+
+⚠ **Không thể biết lệnh tải có chạy hay không** — `anchor.click()` không bao giờ ném lỗi (bài học
+DEC-060). Nên sau khi bấm tải trong webview bị khoá, khối đường vòng **mở sẵn** thay vì đoán bừa.
+
+#### 4. Một điều đáng nhớ về cách KIỂM CHỨNG
+
+Ảnh chụp `fullPage` của trạng thái webview **làm tôi hiểu nhầm**: nó ghép sticky header vào giữa
+trang và trông như nút "Gửi qua Zalo" đã biến mất. Kiểm lại bằng **DOM** (`offsetParent !== null`)
+thì ba nút đều có mặt đúng như thiết kế.
+
+> Ảnh chụp trả lời câu "trông thế nào", không trả lời câu "có ở đó không". Hai câu hỏi khác nhau,
+> hai công cụ khác nhau — và `fullPage` với phần tử `sticky` thì còn nói dối câu thứ nhất.
+
+Nhưng chính lượt nhìn đó bắt được một lỗi thật mà không phép đo nào bắt: dòng trạng thái của nhánh
+dự phòng **vẫn còn câu "nhấn giữ vào ảnh"** — đúng thứ vừa bị bác. Đã viết lại.
+
+#### 5. Quality gate
+
+| Cổng | Kết quả thật |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npx next build` | ✅ 18 route |
+| `npm test` | ✅ **784/784** |
+| `npm run e2e` | ✅ **153 passed / 12 skipped / 0 failed**, 4,6 phút *(165 bài, có 3 bài MỚI của DEC-064)* |
+| **Nhìn tận mắt** | ✅ 375px, cả trạng thái bình thường lẫn webview bị khoá; kiểm chéo bằng DOM |
+
+#### 6. ⚠ HAI PHIÊN CLAUDE CODE CHẠY SONG SONG TRÊN CÙNG REPO — va chạm thật
+
+Giữa phiên này, một phiên Claude Code **khác** làm ISSUE-030 (logo bị cắt) trên cùng cây mã và
+`git commit -A`. Hệ quả:
+
+- Commit **`8b698f6`** mang thông điệp *"fix(brand): logo bị cắt..."* nhưng thực tế chứa **toàn bộ
+  code DEC-064** đang nằm dở trong cây làm việc: `share-image-button.tsx` (+338 dòng),
+  `lib/reports/share-card.ts`, hai spec E2E, và `docs/03 / 05 / 07 / 11`.
+- `WORKLOG.md` có **hai Entry 022**. Đã đổi entry của phiên này thành **023**.
+- `SESSION_CHECKPOINT.md`: khối đầu của phiên kia bị đè khi tôi viết lại phần đầu. **Đã lấy lại
+  nguyên văn từ `8b698f6`** và đặt thành mục *"Phiên song song (Entry 022 — ISSUE-030)"*.
+
+**Không viết lại lịch sử để tách commit** — `8b698f6` có thể đã được phiên kia đẩy đi, và viết lại
+lịch sử chung trong lúc một phiên khác đang làm việc là cách chắc chắn nhất để mất việc của cả hai.
+Ghi lại ở đây để ai truy `git log` về sau không đi tìm DEC-064 nhầm chỗ.
+
+> **Bài học vận hành:** hai agent cùng một thư mục làm việc thì `git add -A` của agent này sẽ nuốt
+> công việc dở dang của agent kia. Nếu cần chạy song song thật, phải tách **git worktree**.
+
+#### Còn nợ
+
+| Việc | Vì sao chưa làm |
+|---|---|
+| Thử hai đường vòng trên **Zalo thật** (Android + iOS) | ISSUE-003 — Playwright không mô phỏng được WebView của ứng dụng bên thứ ba |
+| Siết `profiles_update_self` xuống chỉ còn Admin | Ngoài phạm vi yêu cầu; siết RLS phải là một DEC riêng |
+| Lighthouse | Cần bản deploy mới |

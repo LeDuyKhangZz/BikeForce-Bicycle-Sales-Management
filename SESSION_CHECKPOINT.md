@@ -1,10 +1,73 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **14 — XONG, gồm 4 lỗi/yêu cầu production người dùng báo (ISSUE-027/028/029/030)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **14 — XONG, gồm 4 lỗi/yêu cầu production người dùng báo (ISSUE-027/028/029 + ISSUE-003)** | Last updated: 2026-08-11
 
 ---
 
-## ✅ MỚI NHẤT — Entry 022: logo bị cắt (ISSUE-030), đã sửa xong
+## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 023 — PHASE 14)
+
+**Người dùng bác thiết kế của DEC-061 ngay sau khi nó lên production. Sinh ra DEC-064.**
+
+> *"tôi không thích cách phải giữ ảnh mới tải xuống hay chuyển ảnh đi được, vì nếu làm vậy những
+> người 'mù công nghệ' sẽ không biết làm."*
+
+### ⚠ BÀI HỌC LỚN NHẤT — đọc trước khi thiết kế bất kỳ đường vòng nào
+
+**Một giới hạn kỹ thuật có thật KHÔNG tự động biến thành một hướng dẫn hợp lệ.** DEC-061 xác định
+đúng rằng web không ghi được vào Thư viện ảnh, rồi kết luận lối duy nhất là **nhấn giữ vào ảnh**.
+Đúng kỹ thuật, sai sản phẩm: nó biến giới hạn nền tảng thành **một bước bắt buộc trong hướng dẫn sử
+dụng**, cho một đội Sales ngoài thị trường. Nếu lối thoát duy nhất là dạy người dùng một thao tác
+ẩn thì **phải đi tìm lối khác**, không phải viết câu hướng dẫn cho khéo hơn.
+
+### Khối xuất ảnh nay trông thế nào (DEC-064)
+
+| Thành phần | Hành vi |
+|---|---|
+| **Ảnh xem trước** | **LUÔN hiện** ngay khi mở trang, mọi thiết bị. Người dùng yêu cầu trực tiếp |
+| **"Gửi cam kết/kết quả qua Zalo"** *(điện thoại)* | `navigator.share({files})` → bảng chọn của máy: Zalo, Messenger, Telegram… |
+| **"Tải ảnh về máy"** *(cả hai thiết bị)* | `<a download>` + `blob:` → **tải thật bằng một cú bấm** |
+| Chữ hướng dẫn | **Không còn câu nào dạy "nhấn giữ"** |
+| Khối đường vòng *(chỉ khi webview bị khoá)* | "Sao chép ảnh để dán vào Zalo" + hướng dẫn "Mở trong trình duyệt" |
+
+**ISSUE-003 đã có cách xử lý:** trình duyệt trong Zalo là WebView do app chủ kiểm soát, cắt **cùng
+lúc** Web Share + tải file + menu nhấn giữ. Không API web nào bật lại được. Nhận ra bằng
+**capability** (`typeof navigator.share !== 'function'` trên máy cảm ứng), **không** sniff `userAgent`.
+
+| Cổng chất lượng | Kết quả thật (2026-08-11, cuối Entry 022) |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npx next build` | ✅ 18 route |
+| `npm test` | ✅ **784/784** |
+| `npm run e2e` | ✅ **153 passed / 12 skipped / 0 failed**, 4,6 phút |
+| **Nhìn tận mắt** | ✅ 375px: trạng thái bình thường **và** webview bị khoá, kiểm chéo bằng DOM |
+
+⚠ **DOCKER CHẾT GIỮA PHIÊN — LẦN NÀY ĐÃ ĐO RA NGUYÊN NHÂN (ISSUE-024).** Trần `memory=3GB` trong
+`~/.wslconfig` được đặt cho **2 dự án**, nhưng máy đang chạy **3 stack Supabase** (>30 container) ⇒
+OOM trong WSL ⇒ `com.docker.service` Stopped ⇒ mọi lệnh Docker trả 500. Nó làm đỏ một bài a11y của
+`/admin/reports` — trang **không hề bị đụng tới** — và trông y hệt một hồi quy.
+**Cách dựng lại, agent làm được, KHÔNG cần admin:**
+`wsl --shutdown` → `Start-Process "Docker Desktop.exe"` → **tắt các stack Supabase của dự án khác**.
+`Start-Service com.docker.service` thì luôn thất bại (cần admin) — đừng thử.
+
+⚠ **Ảnh chụp `fullPage` NÓI DỐI khi trang có phần tử `sticky`:** nó ghép header vào giữa trang và
+làm tôi tưởng nút "Gửi qua Zalo" đã biến mất. Kiểm lại bằng **DOM** (`offsetParent !== null`) thì ba
+nút đều có đủ. Ảnh trả lời câu "trông thế nào", DOM trả lời câu "có ở đó không".
+Nhưng chính lượt nhìn ảnh đó bắt được một lỗi thật mà không phép đo nào bắt: dòng trạng thái của
+nhánh dự phòng **vẫn còn câu "nhấn giữ vào ảnh"** — đúng thứ vừa bị bác.
+
+### Việc kế tiếp
+
+1. **Chờ Vercel build**, rồi **người dùng thử trên điện thoại thật**: bấm "Tải ảnh về máy" (phải tải
+   được ngay), bấm "Gửi … qua Zalo" (phải mở bảng chọn có Zalo/Messenger/Telegram).
+2. **Mở link TRONG Zalo** và thử hai đường vòng: "Sao chép ảnh để dán vào Zalo" → dán vào khung chat;
+   và `⋮` → "Mở trong trình duyệt". ⚠ Đây là vế **duy nhất** Playwright không mô phỏng được
+   (ISSUE-003).
+3. Rotate service role key (ISSUE-011, P1) · Lighthouse.
+
+---
+
+## ✅ Phiên song song (Entry 022 — ISSUE-030: logo bị cắt)
 
 Người dùng gửi ảnh chụp màn hình: *"sửa lại logo của trang web hiện tại đang bị cắt"*. **Đáy hai
 bánh xe bị chém phẳng ở mọi nơi dùng `BrandMark`.**
@@ -54,7 +117,9 @@ lại thì xanh. **`git status` đầu phiên là ảnh chụp một thời đi�
 
 ---
 
-## ✅ ĐỌC DÒNG NÀY TRƯỚC TIÊN (cuối phiên Entry 021 — PHASE 14)
+---
+
+## ✅ Phiên trước đó (Entry 021 — DEC-061/062/063)
 
 **Phiên nối tiếp ngày 2026-08-11 làm 3 yêu cầu nữa của người dùng, sinh ra DEC-061 → DEC-063.**
 

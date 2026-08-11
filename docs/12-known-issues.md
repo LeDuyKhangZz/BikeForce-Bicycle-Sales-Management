@@ -96,7 +96,7 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-022 | P3 | OPEN | **MỚI 2026-08-10** — `gen types --local` đỏ vì `SUPABASE_DB_PASSWORD` của **cloud** lọt vào môi trường. Có cách đi vòng chắc chắn; ⚠ phải chuyển hướng `stderr`, nếu không dòng tiến trình bị ghi vào chính file types |
 | ISSUE-023 | P3 | OPEN | **MỚI 2026-08-10** — một bài E2E CSV-403 đỏ đúng một lần trong lượt chạy kéo dài **2,8 giờ** vì máy quá tải. Đã đo tỉ lệ: **82 lượt xanh liên tiếp** sau đó ⇒ **flake**, không phải hồi quy. Không sửa gì |
 
-| ISSUE-024 | P3 | OPEN | **MỚI 2026-08-10** — Docker Desktop chết ở tầng control plane sau nhiều giờ tải nặng (`docker version` → **500**). Làm **34 bài E2E đỏ** cùng lúc và **rất dễ chẩn đoán nhầm thành hồi quy**. Chạy `docker version` TRƯỚC khi đọc diff. ⚠ **ĐÃ TÁI DIỄN cùng ngày** ở lượt E2E của DEC-054 — lần này `com.docker.service` ở trạng thái **Stopped** và **agent KHÔNG khởi động lại được** (cần quyền admin) ⇒ phải nhờ người dùng |
+| ISSUE-024 | P3 | OPEN | **MỚI 2026-08-10** — Docker Desktop chết ở tầng control plane (`docker version` → **500**), làm E2E đỏ hàng loạt và **rất dễ chẩn đoán nhầm thành hồi quy**. Chạy `docker version` TRƯỚC khi đọc diff. ⚠ **TÁI DIỄN LẦN 3 ngày 2026-08-11 — và lần này đã ĐO RA NGUYÊN NHÂN:** trần `memory=3GB` trong `~/.wslconfig` được đặt cho **2 dự án**, nhưng máy đang chạy **3 stack Supabase** (>30 container) ⇒ OOM trong WSL. **Cách sửa: `wsl --shutdown` → `Start-Process 'Docker Desktop.exe'` → TẮT các stack của dự án khác.** `Start-Service com.docker.service` luôn thất bại từ agent (cần admin) nhưng `Start-Process` thì **được** |
 | ISSUE-025 | P3 | **CLOSED** | **MỚI 2026-08-10** — `next dev` của Next 16 **tự ghi thêm** khối `<!-- BEGIN:nextjs-agent-rules -->` vào cuối `AGENTS.md`, tức tài liệu điều khiển của dự án bị sửa mỗi lần chạy dev. Đã đóng bằng **`agentRules: false`** trong `next.config.ts` |
 | ISSUE-026 | P3 | OPEN | **MỚI 2026-08-10** — `next dev` (Turbopack) trả **403** cho `_next/static/chunks/node_modules_next_dist_*.js` trên máy này ⇒ **trang KHÔNG hydrate**, mọi nút client "chết" trong khi giao diện trông hoàn toàn bình thường. `curl` cùng URL trả **200**. Cách đi vòng: kiểm chứng UI bằng `next build` + `next start` (đúng cách bộ E2E làm) |
 | ISSUE-027 | **P1** | **CLOSED** | **MỚI 2026-08-11** — nút xuất ảnh **im lặng trên điện thoại** (`<a download>` bị webview bỏ qua mà `click()` không ném lỗi ⇒ nhánh dự phòng không chạy) và **mở share sheet vô dụng trên máy tính** (`canShare` trả `true` trên Windows, không có Zalo). Sửa bằng **DEC-060**. Lộ ra vì E2E chỉ kiểm nút `toBeVisible`, chưa từng **bấm** nút |
@@ -1588,3 +1588,53 @@ không để người dùng nhìn một ô vỡ.
 **Status: vẫn OPEN, nhưng đổi bản chất.** Phần "sản phẩm phải làm gì" đã xong; phần còn lại là
 **kiểm trên thiết bị thật** — hai đường vòng trên chạy được tới đâu trong Zalo Android và Zalo iOS
 thì chỉ máy thật trả lời được. Playwright không mô phỏng nổi WebView của một ứng dụng bên thứ ba.
+
+
+---
+
+### ISSUE-024 — cập nhật 2026-08-11: **đã tìm ra nguyên nhân đo được**
+
+Hai lần trước chỉ ghi được triệu chứng ("chạy nhiều giờ thì Docker chết"). Lần tái diễn thứ ba đã đo
+ra nguyên nhân, và nó **không phải "chạy lâu"** mà là **thiếu RAM trong WSL2**:
+
+| Con số đo được lúc Docker chết (2026-08-11) | Giá trị |
+|---|---|
+| RAM máy | 15,7 GB — **chỉ còn trống 2,3 GB** |
+| Trần RAM của WSL2 trong `~/.wslconfig` | **`memory=3GB`** |
+| Ghi chú ngay trong file đó | *"14 container Supabase của **2 dự án**"* |
+| Thực tế đang chạy | **3 stack Supabase** — BikeForce + `cq-tntt-manager` + `Polymind_Chinese`, **hơn 30 container** |
+
+**Cơ chế:** trần 3GB được đặt cho **2 dự án**. Khi máy mở thêm stack thứ ba, ba bộ Postgres + Kong +
+GoTrue + Realtime + Storage chen trong đúng 3GB đó, cộng thêm `next build` lặp lại của mỗi lượt
+`npm run e2e` và trình duyệt Playwright. Container bị OOM-kill từ bên trong VM ⇒ Docker Engine sập
+tầng điều khiển ⇒ `com.docker.service` chuyển sang **Stopped** ⇒ mọi lệnh Docker trả **500**.
+
+**Vì sao nó luôn giống một hồi quy:** nó chết **giữa** một lượt E2E dài, nên bảng kết quả trông như
+"code vừa sửa làm đỏ hàng loạt bài". Lần này nó làm đỏ một bài a11y của `/admin/reports` — một trang
+**không hề bị đụng tới** trong phiên.
+
+**Cách xử lý đã dùng, theo thứ tự (agent làm được hết, KHÔNG cần quyền admin):**
+
+```powershell
+# 1) Tắt sạch Docker Desktop rồi hạ hẳn VM của WSL — trả RAM về Windows
+Get-Process -Name "Docker Desktop","com.docker.backend","com.docker.build" | Stop-Process -Force
+wsl --shutdown
+
+# 2) Bật lại (KHÔNG dùng Start-Service com.docker.service — cần admin, sẽ thất bại)
+Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+# 3) Chờ engine lên thật, đừng đoán
+until docker version --format '{{.Server.Version}}' >/dev/null 2>&1; do sleep 5; done
+
+# 4) DỌN NGUYÊN NHÂN: tắt các stack Supabase của dự án khác
+docker ps -a --format "{{.Names}}" | Select-String "<ten-du-an-khac>" | ForEach-Object { docker stop $_ }
+```
+
+⚠ **Bước 4 là bước quan trọng nhất** — bỏ nó thì Docker sẽ chết lại giữa lượt E2E kế tiếp. Ghi chú
+trong `.wslconfig` nói "2 dự án"; nếu máy mở stack thứ ba thì **hoặc** tắt bớt, **hoặc** nâng trần
+`memory` — nhưng nâng trần thì Windows chỉ còn ~2GB, nên **tắt bớt là lựa chọn đúng**.
+
+⚠ `Start-Service com.docker.service` **luôn thất bại từ agent** (`Cannot open com.docker.service
+service`) vì cần quyền admin. Nhưng **khởi động Docker Desktop bằng `Start-Process` thì được** — nó
+tự lo phần dịch vụ. Ghi chú cũ ("agent KHÔNG khởi động lại được ⇒ phải nhờ người dùng") **đã hết
+hiệu lực**: đường đúng là qua `Start-Process`, không phải qua `Start-Service`.
