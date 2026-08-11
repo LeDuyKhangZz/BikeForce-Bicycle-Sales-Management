@@ -1659,6 +1659,75 @@ bị unmount vì điều hướng server không có gì bảo đảm chạy trư
 
 ---
 
+## DEC-060 — Nút xuất ảnh: share sheet CHỈ cho thiết bị cảm ứng; mọi nhánh phải để lại dấu vết
+
+**Date:** 2026-08-11
+**Decision:** `features/report-share/share-image-button.tsx` được viết lại theo **ba nguyên tắc**:
+
+**(a) Share sheet chỉ dùng khi `pointer: coarse`.** Máy tính có chuột đi thẳng đường tải về.
+
+**(b) Không nhánh nào được kết thúc trong im lặng.** Mỗi đường ra để lại một thứ nhìn thấy được:
+share sheet mở ra, hoặc dòng "Đã tải ảnh về máy…", hoặc một điều hướng thật, hoặc câu lỗi.
+
+**(c) Luôn có một lối lấy ảnh KHÔNG cần JavaScript** — link `<a>` "Mở ảnh trực tiếp" trỏ thẳng vào
+route ảnh, luôn hiện dưới nút.
+
+Bảng đường đi sau khi sửa:
+
+| Ngữ cảnh | Đường đi |
+|---|---|
+| `pointer: coarse` (điện thoại) | `navigator.share({files})` → nếu hỏng (kể cả `NotAllowedError`) thì **`window.location.href = shareImagePath(id)`** |
+| `pointer: fine` (máy tính) | `fetch` → blob → `<a download>` → dòng xác nhận |
+| Mọi ngữ cảnh | link "Mở ảnh trực tiếp", không cần JS |
+| Người dùng huỷ share sheet | im lặng — huỷ **không** phải lỗi |
+
+**Reason:** Người dùng báo hai lỗi thật trên production (**ISSUE-027**):
+*(1)* trên điện thoại bấm nút **không có gì xảy ra**; *(2)* trên máy tính hiện share sheet của
+Windows, trong đó **không có Zalo**.
+
+Gốc của vế (1) là một cái bẫy đáng ghi lại: bản cũ đặt đường dự phòng trong `catch` của
+`anchor.click()` — nhưng **`click()` không bao giờ ném lỗi**. Khi trình duyệt lặng lẽ **bỏ qua**
+thuộc tính `download` (iOS Safari với `blob:`, webview Zalo), lệnh vẫn "thành công" nên nhánh dự
+phòng không chạy. Và ca này **không phát hiện được bằng feature detection**: `'download' in anchor`
+vẫn trả `true` trên iOS Safari. Vì vậy trên thiết bị cảm ứng ta **không dùng `<a download>` nữa** mà
+điều hướng thật — server đã đặt `Content-Disposition: attachment` nên trình duyệt buộc phải tải file
+hoặc hiện bảng chọn của nó. Một điều hướng thật **không thể im lặng**.
+
+Gốc của vế (2): `navigator.canShare({files})` trả `true` trên Chrome Windows. Điều kiện
+`pointer: coarse` vẫn là **feature detection** — nó hỏi đúng câu cần hỏi ("máy này có phải cái người
+dùng cầm trên tay không"), khác hẳn việc đọc `userAgent` mà DEC-011 đã cấm.
+
+**Điều đáng giá nhất của quyết định này nằm ở bộ test, không nằm ở code.** Bộ E2E chỉ kiểm nút
+`toBeVisible()` và gọi route bằng `page.request.get()`; **không bài nào bấm nút**, nên
+`handleExport()` chưa từng chạy một lần trong CI. 121 bài xanh trong khi nhánh quan trọng nhất của
+tính năng chưa được chạm tới.
+
+> **Luật mới, áp cho mọi nút về sau:** `toBeVisible()` chỉ chứng minh nút **tồn tại**, không chứng
+> minh nút **làm được việc**. Nút nào gọi Web API của trình duyệt (`navigator.share`, `download`,
+> clipboard, camera, notification) **bắt buộc** phải có một bài E2E **bấm thật**.
+
+**Hàng rào:** `e2e/share-image.spec.ts` (MỚI) — 4 bài × 3 project: bấm thật và bắt sự kiện
+`download`; khoá "máy tính KHÔNG mở share sheet"; khoá "thiết bị cảm ứng gửi đúng file PNG > 1KB";
+khoá sự tồn tại của link không-cần-JS.
+
+**Alternatives:**
+*(a)* Giữ `<a download>` cho cả điện thoại và chỉ thêm thông báo — **bị loại**: thông báo sẽ **nói
+dối** ("đã tải") ở đúng ca file không hề được tải.
+*(b)* Đọc `userAgent` để nhận diện iOS/webview — **bị loại**: DEC-011 đã cấm, và danh sách webview
+thì không bao giờ đầy đủ.
+*(c)* Bỏ hẳn Web Share, chỉ tải về — **bị loại**: mục tiêu thật của tính năng là **gửi Zalo bằng
+một chạm**, và trên điện thoại share sheet làm được đúng việc đó.
+*(d)* Hai nút riêng ("Lưu ảnh" và "Chia sẻ") — **bị loại**: luật `primary-action` chỉ cho một hành
+động chính mỗi màn hình, và người dùng ngoài thị trường không nên phải chọn.
+
+**Impact:** `features/report-share/share-image-button.tsx` (viết lại) · `e2e/share-image.spec.ts`
+(MỚI) · `playwright.config.ts` (ISSUE-028) · `docs/07 §4.1` · `docs/08` · `docs/12` (ISSUE-027,
+ISSUE-028).
+
+**Status:** APPROVED (bug fix, do người dùng báo trên production, 2026-08-11)
+
+---
+
 ## Trạng thái: không còn quyết định nào bị chặn
 
 Ngày **2026-08-07**, người dùng đã trả lời **đủ 17/17 OPEN QUESTION**. Bốn quyết định trước đó ở trạng thái `PROPOSED` đã chuyển sang `APPROVED`:

@@ -323,6 +323,8 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** đưa opacity vào chữ trên cột thương hiệu của `/login` — `text-white/85` đo được **4,21:1**, trượt AA. Dùng `text-white` đặc, phân cấp bằng cỡ và độ đậm (DEC-054).
 - ❌ **Không** đặt `BrandLockup` lên nền đậm bằng `className="text-white"` — class bên trong là `text-heading` và nó thắng. Phải dùng `tone="inverse"` (DEC-054).
 - ❌ **Không** gỡ `agentRules: false` khỏi `next.config.ts` — gỡ ra là để `next dev` ghi đè vào `AGENTS.md`, một tài liệu điều khiển (ISSUE-025).
+- ❌ **Không** kết luận một nút "đã chạy được" chỉ vì E2E thấy nó `toBeVisible()`. Nút gọi Web API của trình duyệt (`navigator.share`, `download`, clipboard, camera) **bắt buộc** có bài E2E **bấm thật** — ISSUE-027 đã lọt ra production đúng vì thiếu điều này.
+- ❌ **Không** đặt đường dự phòng trong `catch` của `anchor.click()` — hàm đó **không bao giờ ném lỗi**, kể cả khi trình duyệt bỏ qua thuộc tính `download` (DEC-060).
 - ❌ **Không** thêm lại nhánh `ok: true` vào `saveMorningReport` — nó **tự `redirect()`** từ DEC-059, đúng khuôn DEC-037. Câu cũ của DEC-037 gọi luồng sáng là ngoại lệ đã hết hiệu lực.
 - ❌ **Không** viết lại `updateMorningReport` (Server Action hoặc hàm service) — UC-05/FR-012 đã bị **DEC-055** gỡ khỏi v1. Cam kết sáng khoá ngay khi gửi.
 - ❌ **Không** gỡ policy `reports_update_own_open` dù FR-012 đã đi — nó là đường UPDATE **duy nhất** còn lại, phục vụ `completeEveningReport()`.
@@ -336,7 +338,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-059` (decision) · `ISSUE-001..ISSUE-026` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-060` (decision) · `ISSUE-001..ISSUE-028` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
 > **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy

@@ -58,6 +58,31 @@ export default defineConfig({
     timezoneId: 'Asia/Ho_Chi_Minh',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    /*
+     * ISSUE-028 — bộ quét a11y ĐUA với hiệu ứng xuất hiện, và thua.
+     *
+     * `/login` có `animate-rise-in` (opacity 0→1 trong 260ms, DEC-053). axe chạy
+     * ngay sau khi nút "Đăng nhập" hiện ra, nên có lượt nó đo màu chữ **giữa
+     * chừng hiệu ứng**: `text-heading` `#0B4A76` bị đọc thành `#8BA9BE`
+     * (2,29:1) và báo `color-contrast` mức serious. Bài này đỏ trên một project
+     * rồi xanh ở lượt sau — đúng dạng flaky tệ nhất: nó dạy người đọc bỏ qua
+     * kết quả đỏ.
+     *
+     * `reducedMotion: 'reduce'` khiến trình duyệt gửi `prefers-reduced-motion:
+     * reduce`, và `app/globals.css` đã tôn trọng cờ đó từ DEC-053 (rút mọi
+     * animation về 0,01ms). Nhờ vậy mọi phép đo màu chạy trên **trạng thái cuối**.
+     *
+     * ⚠ Đây KHÔNG phải che lỗi: màu cuối cùng vẫn đúng bảng đã đo của DEC-046
+     * (`#0B4A76` trên nền `#F4F7FA` = **8,66:1**). WCAG không yêu cầu đủ tương
+     * phản ở từng khung hình của một hiệu ứng chuyển tiếp. Nó cũng là cấu hình
+     * TRUNG THỰC hơn: một người bật "giảm chuyển động" là người dùng thật.
+     *
+     * ⚠ Ở Playwright 1.62, `reducedMotion` nằm trong `contextOptions`, KHÔNG
+     * phải trực tiếp trong `use` — đặt sai chỗ là lỗi biên dịch, và `next build`
+     * bắt được nó trước cả Playwright vì webServer chạy `next build` (type-check
+     * cả `playwright.config.ts`).
+     */
+    contextOptions: { reducedMotion: 'reduce' },
   },
 
   projects: [

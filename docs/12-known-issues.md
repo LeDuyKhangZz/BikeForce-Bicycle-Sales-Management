@@ -99,8 +99,10 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-024 | P3 | OPEN | **MỚI 2026-08-10** — Docker Desktop chết ở tầng control plane sau nhiều giờ tải nặng (`docker version` → **500**). Làm **34 bài E2E đỏ** cùng lúc và **rất dễ chẩn đoán nhầm thành hồi quy**. Chạy `docker version` TRƯỚC khi đọc diff. ⚠ **ĐÃ TÁI DIỄN cùng ngày** ở lượt E2E của DEC-054 — lần này `com.docker.service` ở trạng thái **Stopped** và **agent KHÔNG khởi động lại được** (cần quyền admin) ⇒ phải nhờ người dùng |
 | ISSUE-025 | P3 | **CLOSED** | **MỚI 2026-08-10** — `next dev` của Next 16 **tự ghi thêm** khối `<!-- BEGIN:nextjs-agent-rules -->` vào cuối `AGENTS.md`, tức tài liệu điều khiển của dự án bị sửa mỗi lần chạy dev. Đã đóng bằng **`agentRules: false`** trong `next.config.ts` |
 | ISSUE-026 | P3 | OPEN | **MỚI 2026-08-10** — `next dev` (Turbopack) trả **403** cho `_next/static/chunks/node_modules_next_dist_*.js` trên máy này ⇒ **trang KHÔNG hydrate**, mọi nút client "chết" trong khi giao diện trông hoàn toàn bình thường. `curl` cùng URL trả **200**. Cách đi vòng: kiểm chứng UI bằng `next build` + `next start` (đúng cách bộ E2E làm) |
+| ISSUE-027 | **P1** | **CLOSED** | **MỚI 2026-08-11** — nút xuất ảnh **im lặng trên điện thoại** (`<a download>` bị webview bỏ qua mà `click()` không ném lỗi ⇒ nhánh dự phòng không chạy) và **mở share sheet vô dụng trên máy tính** (`canShare` trả `true` trên Windows, không có Zalo). Sửa bằng **DEC-060**. Lộ ra vì E2E chỉ kiểm nút `toBeVisible`, chưa từng **bấm** nút |
+| ISSUE-028 | P3 | **CLOSED** | **MỚI 2026-08-11** — bài a11y `/login` đỏ-rồi-xanh vì axe quét trúng giữa hiệu ứng `animate-rise-in`, đo `#8BA9BE` thay vì `#0B4A76`. Sửa bằng `use.contextOptions.reducedMotion = 'reduce'` |
 
-Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **12 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, **ISSUE-025**).
+Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **14 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, **ISSUE-027**, **ISSUE-028**).
 
 ---
 
@@ -1337,6 +1339,91 @@ xem `type` của ô có đổi không. Không đổi ⇒ chưa hydrate ⇒ **đ�
 chặn tiến độ** vì đã có cách đi vòng chắc chắn.
 
 ---
+
+### ISSUE-027
+
+**Severity:** P1 | **Status:** **CLOSED** (sửa bằng DEC-060, 2026-08-11)
+**Phát hiện:** người dùng, trên bản deploy production, ngày 2026-08-11.
+
+**Triệu chứng — hai vế, cùng một gốc:**
+
+1. **Điện thoại:** bấm nút xuất ảnh thì **không có gì xảy ra**. Không ảnh, không lỗi, không hướng dẫn.
+2. **Máy tính:** hiện **share sheet của Windows**, trong đó **không có Zalo** — tức mở đúng một bảng vô dụng ở nơi người dùng chỉ cần lưu file.
+
+**Nguyên nhân gốc (đọc kỹ, vì nó là một dạng bẫy hay lặp lại):**
+
+Bản cũ của `share-image-button.tsx` xếp ba đường ra theo thứ tự share → `<a download>` → mở tab mới,
+và đặt đường thứ ba trong **`catch` của `anchor.click()`**:
+
+```ts
+try { anchor.click(); } catch { window.open(objectUrl); setHint(...); }   // SAI
+```
+
+`anchor.click()` **không bao giờ ném lỗi**. Khi trình duyệt lặng lẽ **bỏ qua** thuộc tính `download`
+— iOS Safari với `blob:`, webview Zalo, một số webview Android — lệnh vẫn "thành công", nên đường
+thứ ba không bao giờ chạy và người dùng không nhận được gì.
+
+Tệ hơn: **không thể phát hiện ca này bằng feature detection.** `'download' in anchor` vẫn trả `true`
+trên iOS Safari dù nó không tôn trọng thuộc tính đó với `blob:`.
+
+Vế thứ hai đơn giản hơn: `navigator.canShare({files})` trả **`true` trên Chrome Windows**, nên bản
+cũ ưu tiên share sheet ở đúng nơi nó vô dụng nhất.
+
+**Cách sửa (DEC-060):**
+
+| Ngữ cảnh | Đường đi |
+|---|---|
+| `pointer: coarse` (điện thoại) | share sheet → nếu hỏng thì **điều hướng thật** tới route ảnh |
+| `pointer: fine` (máy tính có chuột) | tải bằng blob + `<a download>`, kèm dòng xác nhận |
+| Mọi ngữ cảnh | link `<a>` "Mở ảnh trực tiếp" luôn hiện, **không cần JavaScript** |
+
+Điều hướng thật không thể im lặng: server đã đặt `Content-Disposition: attachment` nên trình duyệt
+buộc phải tải file hoặc hiện bảng chọn của nó.
+
+**Vì sao bộ test không bắt được — phần đáng giá nhất của issue này:**
+
+Bộ E2E chỉ kiểm nút **có hiện** không (`toBeVisible`), còn ảnh thì gọi thẳng route bằng
+`page.request.get()`. **Không bài nào bấm nút**, nên toàn bộ `handleExport()` chưa từng chạy một
+lần trong CI — 121 bài xanh mà nhánh quan trọng nhất của tính năng chưa được chạm tới.
+
+> **Luật rút ra, áp cho mọi nút sau này:** `toBeVisible()` chỉ chứng minh nút **tồn tại**, không
+> chứng minh nút **làm được việc**. Nút nào gọi Web API của trình duyệt (`navigator.share`,
+> `download`, clipboard, camera, notification) **bắt buộc** phải có một bài E2E bấm thật.
+
+**Hàng rào đã dựng:** `e2e/share-image.spec.ts` — 4 bài × 3 project (9 chạy, 3 skip theo kiểu con
+trỏ): bấm thật và bắt sự kiện `download`; khoá "máy tính KHÔNG dùng share sheet"; khoá "thiết bị
+cảm ứng gửi đúng file PNG > 1KB vào share sheet"; khoá sự tồn tại của link không-cần-JS.
+
+**Còn lại:** kiểm trên thiết bị thật (ISSUE-003) — máy không thay người được ở khâu này.
+
+---
+
+### ISSUE-028
+
+**Severity:** P3 | **Status:** **CLOSED** (sửa bằng `contextOptions.reducedMotion`, 2026-08-11)
+
+**Triệu chứng:** bài a11y `/login` đỏ trên project `mobile-375` với `color-contrast` mức **serious**,
+rồi xanh ở lượt chạy sau. axe báo `text-heading` có màu `#8BA9BE` (2,29:1) và `muted-foreground` là
+`#ADB7C1` (1,89:1) — **không phải** giá trị nào trong bảng DEC-046.
+
+**Nguyên nhân:** `/login` bọc nội dung trong `animate-rise-in` (opacity 0→1 trong 260ms, DEC-053).
+Bài test quét ngay sau khi nút "Đăng nhập" hiện ra, nên có lượt axe đo **giữa chừng hiệu ứng** —
+`#0B4A76` ở khoảng 50% opacity trên nền `#F4F7FA` cho ra đúng `#8BA9BE`.
+
+**Vì sao đáng sửa dù chỉ là P3:** một bài đỏ-rồi-xanh dạy người đọc **bỏ qua kết quả đỏ**. Đó là
+thứ đắt hơn nhiều so với bản thân lỗi.
+
+**Cách sửa:** `use.contextOptions.reducedMotion = 'reduce'` trong `playwright.config.ts`. Trình duyệt
+gửi `prefers-reduced-motion: reduce`, và `app/globals.css` đã tôn trọng cờ này từ DEC-053 (rút mọi
+animation về 0,01ms), nên mọi phép đo màu chạy trên **trạng thái cuối**.
+
+⚠ **Không phải che lỗi.** Màu cuối cùng vẫn đúng bảng đã đo (`#0B4A76` trên `#F4F7FA` = **8,66:1**),
+và WCAG không yêu cầu đủ tương phản ở từng khung hình của một hiệu ứng chuyển tiếp. Cấu hình này
+còn trung thực hơn: người bật "giảm chuyển động" là người dùng thật.
+
+⚠ **Ở Playwright 1.62, `reducedMotion` nằm trong `contextOptions`**, không phải trực tiếp trong
+`use` — đặt sai chỗ là lỗi biên dịch, và `next build` bắt được trước cả Playwright.
+
 
 ## OPEN QUESTIONS
 

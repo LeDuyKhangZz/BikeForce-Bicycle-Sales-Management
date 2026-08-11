@@ -716,6 +716,17 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
 - [x] Bỏ `revalidatePath(MORNING_REPORT_PATH)` — chính trang đang mở, không còn gì để làm mới
 - [x] Chạy lại đủ 4 cổng: typecheck · lint · build · test 765 · e2e 121
 
+### 14h. Sửa hai lỗi người dùng báo trên production — DEC-060 (ISSUE-027, ISSUE-028)
+
+- [x] **ISSUE-027 (P1)** — nút xuất ảnh **im lặng trên điện thoại**: đường dự phòng nằm trong `catch` của `anchor.click()`, mà hàm đó không bao giờ ném lỗi
+- [x] **ISSUE-027 (P1)** — **share sheet vô dụng trên máy tính**: `canShare` trả `true` trên Windows nhưng không có Zalo
+- [x] Viết lại `share-image-button.tsx` theo 3 nguyên tắc: share chỉ cho `pointer: coarse` · không nhánh nào im lặng · luôn có lối không-cần-JS
+- [x] Thiết bị cảm ứng: share hỏng → **điều hướng thật** (`Content-Disposition: attachment`), không dùng `<a download>`
+- [x] Thêm link "Mở ảnh trực tiếp" — chạy được cả khi webview chặn hết automation (ISSUE-003)
+- [x] **`e2e/share-image.spec.ts` (MỚI)** — 4 bài **bấm thật**, bắt sự kiện `download`
+- [x] **ISSUE-028 (P3)** — a11y `/login` đỏ-rồi-xanh do đua với `animate-rise-in`; sửa bằng `contextOptions.reducedMotion = 'reduce'`
+- [x] Chạy lại đủ: typecheck · lint · build · `npm test` **765/765** · `npm run e2e` **130 passed / 8 skipped / 0 failed**
+
 ## OPEN QUESTIONS
 
 Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đầy đủ:

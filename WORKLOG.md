@@ -2038,6 +2038,7 @@ quality gate của Master Spec §42 — **không phải** khi "đã viết xong 
 | **DEC-057** | Thẻ ảnh đổi sang **nền sáng tone logo**, thay bảng hex tối của Phase 6 |
 | **DEC-058** | **Hai tấm ảnh mỗi ngày** — bản `MORNING` và bản `EVENING`; **BR-002 được NỚI** |
 | **DEC-059** | `saveMorningReport` **tự `redirect()`** — sửa hồi quy do DEC-055 gây ra, E2E bắt được |
+| **DEC-060** | Nút xuất ảnh: share sheet **chỉ cho thiết bị cảm ứng**; không nhánh nào im lặng; luôn có lối không-cần-JS |
 
 #### Đã làm gì (theo tầng)
 
@@ -2117,9 +2118,45 @@ chính route đó **không** cứu được"*. **Đọc lại rẻ hơn thử l�
 > xanh** trong lúc lỗi này đang tồn tại. Chỉ E2E bắt được — đúng như ISSUE-016 đã dạy một lần.
 > Một thay đổi đụng vào `redirect()` của RSC **bắt buộc** phải chạy E2E trước khi kết luận.
 
+#### Nửa sau nữa — người dùng thử trên production và tìm ra HAI lỗi thật (DEC-060)
+
+Sau khi `80aef59` lên Vercel, người dùng báo:
+
+1. **Điện thoại: bấm nút xuất ảnh, không có gì xảy ra.** Không ảnh, không lỗi, không hướng dẫn.
+2. **Máy tính: hiện share sheet của Windows, trong đó không có Zalo** — họ chỉ muốn lưu thẳng file.
+
+**Gốc của lỗi 1 — một cái bẫy đáng nhớ.** Bản cũ đặt đường dự phòng trong `catch` của
+`anchor.click()`. Hàm đó **không bao giờ ném lỗi**: khi trình duyệt lặng lẽ **bỏ qua** thuộc tính
+`download` (iOS Safari với `blob:`, webview Zalo), lệnh vẫn "thành công" nên nhánh dự phòng không
+chạy. Tệ hơn, ca này **không phát hiện được bằng feature detection** — `'download' in anchor` vẫn
+trả `true` trên iOS. Vì vậy trên thiết bị cảm ứng nay dùng **điều hướng thật**: server đã đặt
+`Content-Disposition: attachment` nên trình duyệt buộc phải tải hoặc hiện bảng chọn.
+
+**Gốc của lỗi 2:** `navigator.canShare({files})` trả `true` trên Chrome Windows. Nay share sheet chỉ
+dùng khi `pointer: coarse` — vẫn là feature detection, không sniff userAgent (DEC-011 cấm).
+
+**Câu hỏi của người dùng — "tại sao bạn test không ra lỗi này" — có câu trả lời thẳng.** Bộ E2E chỉ
+kiểm nút **có hiện** không (`toBeVisible`), còn ảnh thì gọi thẳng route bằng `page.request.get()`.
+**Không bài nào bấm nút**, nên toàn bộ `handleExport()` chưa từng chạy một lần trong CI: 121 bài
+xanh trong khi nhánh quan trọng nhất của tính năng chưa được chạm tới. Đã dựng
+`e2e/share-image.spec.ts` — 4 bài bấm thật, bắt sự kiện `download`, khoá cả hai hành vi vừa sửa.
+
+> **Luật rút ra, ghi vào CLAUDE.md:** `toBeVisible()` chỉ chứng minh nút **tồn tại**, không chứng
+> minh nút **làm được việc**. Nút nào gọi Web API của trình duyệt (`navigator.share`, `download`,
+> clipboard, camera, notification) **bắt buộc** có một bài E2E bấm thật.
+
+**Bắt thêm ISSUE-028 trong cùng lượt chạy:** bài a11y `/login` đỏ-rồi-xanh vì axe quét trúng giữa
+hiệu ứng `animate-rise-in` — nó đo `#8BA9BE` (2,29:1) thay vì `#0B4A76` (8,66:1). Sửa bằng
+`use.contextOptions.reducedMotion = 'reduce'`; `app/globals.css` đã tôn trọng cờ đó từ DEC-053.
+Không phải che lỗi: màu cuối cùng vẫn đúng bảng DEC-046, và WCAG không xét từng khung hình của một
+hiệu ứng chuyển tiếp.
+
+**Quality gate cuối cùng:** typecheck ✅ · lint ✅ · build ✅ 18 route · `npm test` ✅ **765/765** ·
+`npm run e2e` ✅ **130 passed / 8 skipped / 0 failed**.
+
 #### Còn nợ
 
 | Việc | Vì sao chưa làm |
 |---|---|
-| Kiểm ảnh trong Zalo trên điện thoại thật | ISSUE-003, cần thiết bị thật + link công khai |
+| Kiểm ảnh trong Zalo trên **thiết bị thật** | ISSUE-003 — máy không thay người được ở khâu này |
 | Lighthouse | Cần bản deploy mới |

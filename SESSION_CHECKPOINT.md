@@ -1,6 +1,6 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **14 — XONG, quality gate xanh đủ, ĐÃ COMMIT + PUSH (`80aef59`)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **14 — XONG, gồm cả 2 lỗi production người dùng báo (ISSUE-027/028)** | Last updated: 2026-08-11
 
 ---
 
@@ -22,7 +22,7 @@
 | `npm run lint` | ✅ 0 error, 0 warning |
 | `npx next build` | ✅ 18 route |
 | `npm test` | ✅ **765/765** (unit 575 · integration 57 · rls 133) |
-| `npm run e2e` | ✅ **121 passed / 5 skipped / 0 failed**, 4,9 phút |
+| `npm run e2e` | ✅ **130 passed / 8 skipped / 0 failed**, 5,8 phút *(có 4 bài MỚI bấm thật nút xuất ảnh)* |
 | **Nhìn tận mắt** | ✅ render PNG thật **cả hai biến thể**, sửa bản sáng vì rỗng đáy, render lại |
 
 ⚠ **BỘ E2E BẮT ĐƯỢC MỘT LỖI HỒI QUY THẬT — và đó là điều đáng nhớ nhất của phiên.** Lượt chạy đầu
@@ -966,6 +966,14 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 
 **Từ PHASE 14 (MỚI NHẤT — DEC-055…058, 2026-08-11):**
 
+- **Nút gọi Web API của trình duyệt PHẢI có bài E2E BẤM THẬT.** `toBeVisible()` chỉ chứng minh nút
+  tồn tại. ISSUE-027 lọt ra production với 121 bài E2E xanh, vì không bài nào bấm nút xuất ảnh.
+- **Đừng đặt đường dự phòng trong `catch` của `anchor.click()`** — hàm đó không bao giờ ném lỗi, kể
+  cả khi iOS Safari / webview Zalo lặng lẽ bỏ qua thuộc tính `download`. Và **`'download' in anchor`
+  vẫn trả `true` trên iOS**, nên không phát hiện được bằng feature detection (DEC-060).
+- **`use.contextOptions.reducedMotion = 'reduce'` trong `playwright.config.ts` là CỐ Ý** (ISSUE-028):
+  axe từng đo trúng màu giữa chừng `animate-rise-in`. Ở Playwright 1.62 nó nằm trong `contextOptions`,
+  **không** trực tiếp trong `use`.
 - **`saveMorningReport` TỰ `redirect()` — đừng thêm lại nhánh `ok: true`** (DEC-059). Cách cũ vỡ
   ngay khi DEC-055 cho `/sales/today/morning` quyền tự `redirect()`, và **bỏ `revalidatePath` của
   chính route đó KHÔNG cứu được** — Next re-render route hiện tại dù có revalidate hay không (đã đo
