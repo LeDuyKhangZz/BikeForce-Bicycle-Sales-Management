@@ -171,9 +171,14 @@ export function ChangePasswordForm() {
       </div>
 
       {/* Disable khi đang gửi để chống double submit (rule loading-buttons). */}
-      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        loading={isPending}
+        loadingText="Đang đổi mật khẩu…"
+      >
         <KeyRound aria-hidden="true" className="size-5" />
-        {isPending ? 'Đang đổi mật khẩu…' : 'Đổi mật khẩu'}
+        Đổi mật khẩu
       </Button>
     </form>
   );

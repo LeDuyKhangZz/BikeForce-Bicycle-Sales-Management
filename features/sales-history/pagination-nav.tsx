@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import type { PageInfo } from '@/lib/reports/pagination';
 import { cn } from '@/lib/utils';
 
@@ -78,7 +79,9 @@ function PageLink({ href, icon, label }: PageLinkProps) {
 
   return (
     <Link href={href} className={className}>
-      {icon}
+      <LinkPendingIcon label={`Đang mở ${label.toLocaleLowerCase('vi-VN')}…`} className="size-4">
+        {icon}
+      </LinkPendingIcon>
       {label}
     </Link>
   );

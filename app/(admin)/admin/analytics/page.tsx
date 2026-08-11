@@ -4,6 +4,8 @@ import { CalendarSearch, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
+import { LinkSpinner } from '@/components/ui/link-spinner';
 import { DailyTrendChart } from '@/features/admin-analytics/daily-trend-chart';
 import { requireRole } from '@/features/auth/queries';
 import { AchievementBadge } from '@/features/report-comparison/achievement-badge';
@@ -147,6 +149,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               className={buttonClassName({ variant: 'secondary' })}
             >
               Xem tháng trước
+              <LinkSpinner label="Đang mở tháng trước…" />
             </Link>
           )}
         </Card>
@@ -284,6 +287,7 @@ function MetricTabs({ month, selected }: { month: string; selected: KpiMetric })
                 )}
               >
                 {row.label}
+                <LinkSpinner label={`Đang mở chỉ tiêu ${row.label}…`} />
               </Link>
             </li>
           );
@@ -316,7 +320,9 @@ function MonthLink({
 
   return (
     <Link href={href} className={className}>
-      {icon}
+      <LinkPendingIcon label={`Đang mở ${label.toLocaleLowerCase('vi-VN')}…`} className="size-5">
+        {icon}
+      </LinkPendingIcon>
       <span className="sr-only">{label}</span>
     </Link>
   );

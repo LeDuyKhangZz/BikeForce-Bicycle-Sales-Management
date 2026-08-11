@@ -4,6 +4,7 @@ import { Download, SearchX } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { LinkSpinner } from '@/components/ui/link-spinner';
 import { AdminReportTable } from '@/features/admin-reports/admin-report-table';
 import { ReportFilterBar } from '@/features/admin-reports/report-filter-bar';
 import { requireRole } from '@/features/auth/queries';
@@ -134,6 +135,7 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
       {hasFilters && (
         <Link href="/admin/reports" className={buttonClassName({ variant: 'secondary' })}>
           Xoá lọc
+          <LinkSpinner label="Đang xoá bộ lọc…" />
         </Link>
       )}
     </Card>

@@ -4,6 +4,7 @@ import { CalendarSearch } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { LinkSpinner } from '@/components/ui/link-spinner';
 import { requireRole } from '@/features/auth/queries';
 import { MonthFilter } from '@/features/sales-history/month-filter';
 import { PaginationNav } from '@/features/sales-history/pagination-nav';
@@ -106,10 +107,12 @@ function EmptyState({ month, isCurrentMonth }: { month: string; isCurrentMonth: 
       {isCurrentMonth ? (
         <Link href={MORNING_REPORT_PATH} className={buttonClassName()}>
           Tạo báo cáo đầu ngày
+          <LinkSpinner label="Đang mở báo cáo đầu ngày…" />
         </Link>
       ) : (
         <Link href={SALES_TODAY_PATH} className={buttonClassName({ variant: 'secondary' })}>
           Về trang Hôm nay
+          <LinkSpinner label="Đang về trang Hôm nay…" />
         </Link>
       )}
     </Card>

@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronRight, Clock, XCircle } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardTitle } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { achievedCountLabel, toHistoryRow } from '@/lib/reports/history-row';
 import type { AdminReportListItem } from '@/services/reports';
 
@@ -58,7 +59,9 @@ export function AdminReportTable({ reports, buildHref }: Props) {
                   <KpiBadge kpiAchieved={row.kpiAchieved} achievedCount={row.achievedCount} />
                 </div>
               </div>
-              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+              <LinkPendingIcon label="Đang mở chi tiết báo cáo…" className="size-5">
+                <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+              </LinkPendingIcon>
             </Link>
           </li>
         ))}
@@ -116,7 +119,9 @@ export function AdminReportTable({ reports, buildHref }: Props) {
                   className="inline-flex min-h-11 items-center gap-1 font-medium text-primary"
                 >
                   Xem
-                  <ChevronRight aria-hidden="true" className="size-4" />
+                  <LinkPendingIcon label="Đang mở chi tiết báo cáo…" className="size-4">
+                    <ChevronRight aria-hidden="true" className="size-4" />
+                  </LinkPendingIcon>
                 </Link>
               </td>
             </tr>

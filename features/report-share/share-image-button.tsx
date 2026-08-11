@@ -84,6 +84,8 @@ type Props = {
   variant: ShareCardVariant;
 };
 
+type BusyAction = 'share' | 'download' | 'copy' | null;
+
 const PNG_MIME = 'image/png';
 
 /** Câu xác nhận sau khi đã kích hoạt tải về — nguyên tắc (b). */
@@ -264,7 +266,8 @@ async function fetchShareImage(reportId: string): Promise<ImageFetchResult> {
 }
 
 export function ShareImageButton({ reportId, fileName, variant }: Props) {
-  const [isBusy, setIsBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<BusyAction>(null);
+  const isBusy = busyAction !== null;
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   /**
@@ -365,7 +368,7 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
    * nên người nhận mở ra chỉ thấy màn hình đăng nhập.
    */
   async function handleSendToZalo() {
-    setIsBusy(true);
+    setBusyAction('share');
     setError(null);
     setHint(null);
 
@@ -397,7 +400,7 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
       setIsRestrictedBrowser(true);
       setHint(ZALO_MANUAL_HINT);
     } finally {
-      setIsBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -415,7 +418,7 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
    * dưới vẫn còn nguyên, không có nhánh nào cụt.
    */
   async function handleCopyImage() {
-    setIsBusy(true);
+    setBusyAction('copy');
     setError(null);
     setHint(null);
 
@@ -433,7 +436,7 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
       // Trình duyệt từ chối quyền, hoặc không nhận kiểu `image/png`.
       setError(COPY_FAILED_HINT);
     } finally {
-      setIsBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -459,7 +462,7 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
    * một bảng không hề có Zalo (DEC-060).
    */
   async function handleDownload() {
-    setIsBusy(true);
+    setBusyAction('download');
     setError(null);
     setHint(null);
 
@@ -490,7 +493,7 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
        */
       if (lacksSystemShare()) setIsRestrictedBrowser(true);
     } finally {
-      setIsBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -558,10 +561,11 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
           size="lg"
           onClick={handleSendToZalo}
           disabled={isBusy}
-          aria-busy={isBusy}
+          loading={busyAction === 'share'}
+          loadingText="Đang chuẩn bị ảnh để gửi…"
         >
           <Send aria-hidden="true" className="size-5" />
-          {isBusy ? 'Đang tạo ảnh…' : SEND_TO_ZALO_LABEL[variant]}
+          {SEND_TO_ZALO_LABEL[variant]}
         </Button>
 
         <Button
@@ -569,7 +573,8 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
           size="lg"
           onClick={handleDownload}
           disabled={isBusy}
-          aria-busy={isBusy}
+          loading={busyAction === 'download'}
+          loadingText="Đang tải ảnh về máy…"
         >
           <Download aria-hidden="true" className="size-5" />
           {DOWNLOAD_IMAGE_LABEL}
@@ -582,10 +587,11 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
           size="lg"
           onClick={handleDownload}
           disabled={isBusy}
-          aria-busy={isBusy}
+          loading={busyAction === 'download'}
+          loadingText="Đang tạo tệp ảnh…"
         >
           <Download aria-hidden="true" className="size-5" />
-          {isBusy ? 'Đang tạo ảnh…' : DOWNLOAD_IMAGE_LABEL}
+          {DOWNLOAD_IMAGE_LABEL}
         </Button>
       </div>
 
@@ -623,9 +629,16 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
           </p>
 
           {canCopyImage() && (
-            <Button variant="primary" size="lg" onClick={handleCopyImage} disabled={isBusy}>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={handleCopyImage}
+              disabled={isBusy}
+              loading={busyAction === 'copy'}
+              loadingText="Đang sao chép ảnh…"
+            >
               <Copy aria-hidden="true" className="size-5" />
-              {isBusy ? 'Đang chép ảnh…' : 'Sao chép ảnh để dán vào Zalo'}
+              Sao chép ảnh để dán vào Zalo
             </Button>
           )}
 

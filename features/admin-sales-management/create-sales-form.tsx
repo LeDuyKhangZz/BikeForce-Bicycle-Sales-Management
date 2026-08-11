@@ -251,9 +251,14 @@ export function CreateSalesForm() {
         )}
       </div>
 
-      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        loading={isPending}
+        loadingText="Đang tạo tài khoản…"
+      >
         <UserPlus aria-hidden="true" className="size-5" />
-        {isPending ? 'Đang tạo tài khoản…' : 'Tạo tài khoản'}
+        Tạo tài khoản
       </Button>
     </form>
   );

@@ -1,10 +1,13 @@
 import Link from 'next/link';
+import Form from 'next/form';
 import { FilterX, Search } from 'lucide-react';
 
-import { Button, buttonClassName } from '@/components/ui/button';
+import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LinkSpinner } from '@/components/ui/link-spinner';
+import { PendingSubmitButton } from '@/components/ui/pending-submit-button';
 import {
   ADMIN_REPORT_PARAMS,
   ADMIN_REPORTS_PATH,
@@ -49,7 +52,7 @@ const SELECT_CLASS =
 export function ReportFilterBar({ filters, salesOptions }: Props) {
   return (
     <Card className="flex flex-col gap-4">
-      <form method="get" action={ADMIN_REPORTS_PATH} className="flex flex-col gap-4">
+      <Form action={ADMIN_REPORTS_PATH} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="q">Tìm theo tên Sales</Label>
           <Input
@@ -150,10 +153,10 @@ export function ReportFilterBar({ filters, salesOptions }: Props) {
         </fieldset>
 
         <div className="flex flex-col gap-2 md:flex-row">
-          <Button type="submit" size="lg">
+          <PendingSubmitButton pendingText="Đang lọc báo cáo…">
             <Search aria-hidden="true" className="size-5" />
             Áp dụng bộ lọc
-          </Button>
+          </PendingSubmitButton>
 
           {/* Chỉ hiện khi có gì để xoá — không bày control vô dụng. */}
           {hasActiveFilters(filters) && (
@@ -163,10 +166,11 @@ export function ReportFilterBar({ filters, salesOptions }: Props) {
             >
               <FilterX aria-hidden="true" className="size-5" />
               Xoá lọc
+              <LinkSpinner label="Đang xoá bộ lọc…" />
             </Link>
           )}
         </div>
-      </form>
+      </Form>
     </Card>
   );
 }

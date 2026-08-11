@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight, UserPlus, Users } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
+import { LinkSpinner } from '@/components/ui/link-spinner';
 import { requireRole } from '@/features/auth/queries';
 import { SalesPerformanceTable } from '@/features/admin-sales-management/sales-performance-table';
 import {
@@ -67,6 +69,7 @@ export default async function AdminSalesPage({ searchParams }: Props) {
         <Link href="/admin/sales/new" className={buttonClassName()}>
           <UserPlus aria-hidden="true" className="size-4" />
           Tạo tài khoản
+          <LinkSpinner label="Đang mở form tạo tài khoản…" />
         </Link>
       </div>
 
@@ -97,6 +100,7 @@ export default async function AdminSalesPage({ searchParams }: Props) {
           <Link href="/admin/sales/new" className={buttonClassName()}>
             <UserPlus aria-hidden="true" className="size-4" />
             Tạo tài khoản Sales
+            <LinkSpinner label="Đang mở form tạo tài khoản…" />
           </Link>
         </Card>
       ) : (
@@ -129,7 +133,9 @@ function MonthLink({
 
   return (
     <Link href={href} className={className}>
-      {icon}
+      <LinkPendingIcon label={`Đang mở ${label.toLocaleLowerCase('vi-VN')}…`} className="size-5">
+        {icon}
+      </LinkPendingIcon>
       <span className="sr-only">{label}</span>
     </Link>
   );

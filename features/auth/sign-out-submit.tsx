@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
-import { Loader2, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -30,16 +30,12 @@ export function SignOutSubmit({ className }: { className?: string }) {
     <Button
       type="submit"
       variant="destructive"
-      disabled={pending}
-      aria-busy={pending}
+      loading={pending}
+      loadingText="Đang đăng xuất…"
       className={className}
     >
-      {pending ? (
-        <Loader2 aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
-      ) : (
-        <LogOut aria-hidden="true" className="size-4" />
-      )}
-      {pending ? 'Đang đăng xuất…' : 'Đăng xuất'}
+      <LogOut aria-hidden="true" className="size-4" />
+      Đăng xuất
     </Button>
   );
 }

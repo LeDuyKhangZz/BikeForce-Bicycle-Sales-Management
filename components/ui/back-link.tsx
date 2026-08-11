@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { cn } from '@/lib/utils';
 
 /**
@@ -40,7 +41,9 @@ export function BackLink({ href, children, className }: Props) {
         className,
       )}
     >
-      <ArrowLeft aria-hidden="true" className="size-4" />
+      <LinkPendingIcon label="Đang quay lại…" className="size-4">
+        <ArrowLeft aria-hidden="true" className="size-4" />
+      </LinkPendingIcon>
       {children}
     </Link>
   );

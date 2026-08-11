@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FileQuestion } from 'lucide-react';
 
 import { Card, CardTitle } from '@/components/ui/card';
+import { LinkSpinner } from '@/components/ui/link-spinner';
 import { SALES_HOME } from '@/lib/auth/routes';
 
 /**
@@ -24,6 +25,7 @@ export default function SalesNotFound() {
         className="inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-medium text-primary hover:bg-background"
       >
         Về trang Hôm nay
+        <LinkSpinner label="Đang về trang Hôm nay…" />
       </Link>
     </Card>
   );

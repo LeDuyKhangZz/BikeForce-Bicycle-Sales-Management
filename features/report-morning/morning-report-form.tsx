@@ -304,9 +304,9 @@ export function MorningReportForm({ today }: Props) {
         `env(safe-area-inset-bottom)` để nút không nằm dưới thanh home của iPhone.
       */}
       <div className="sticky bottom-0 -mx-4 mt-2 border-t border-border bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <Button type="submit" size="lg" disabled={isBusy} aria-busy={isBusy}>
+        <Button type="submit" size="lg" loading={isBusy} loadingText="Đang lưu cam kết…">
           <Save aria-hidden="true" className="size-5" />
-          {isBusy ? 'Đang lưu…' : 'Lưu báo cáo đầu ngày'}
+          Lưu báo cáo đầu ngày
         </Button>
         {isDirty && !isBusy && (
           <p className="mt-2 text-center text-xs text-muted-foreground">

@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { formatVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { salesHistoryPath } from '@/lib/reports/history-url';
 import { cn } from '@/lib/utils';
@@ -90,7 +91,9 @@ function MonthNavLink({ href, label, icon }: MonthNavLinkProps) {
 
   return (
     <Link href={href} className={className}>
-      {icon}
+      <LinkPendingIcon label={`Đang mở ${label.toLocaleLowerCase('vi-VN')}…`} className="size-5">
+        {icon}
+      </LinkPendingIcon>
       {/* Nhãn chữ cho screen reader — icon một mình không nói được gì. */}
       <span className="sr-only">{label}</span>
     </Link>

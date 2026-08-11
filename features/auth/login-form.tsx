@@ -163,9 +163,15 @@ export function LoginForm({ nextPath }: Props) {
       </div>
 
       {/* Disable khi đang gửi để chống double submit (rule loading-buttons). */}
-      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending} className="mt-1">
+      <Button
+        type="submit"
+        size="lg"
+        className="mt-1"
+        loading={isPending}
+        loadingText="Đang đăng nhập…"
+      >
         <LogIn aria-hidden="true" className="size-5" />
-        {isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
+        Đăng nhập
       </Button>
     </form>
   );

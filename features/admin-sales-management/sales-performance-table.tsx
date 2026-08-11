@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardTitle } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { AchievementBadge } from '@/features/report-comparison/achievement-badge';
 import { calculateAchievement, formatMetricValue } from '@/lib/kpi';
 import type { SalesPerformanceRow } from '@/services/admin';
@@ -83,7 +84,9 @@ export function SalesPerformanceTable({ rows }: Props) {
                   <AchievementBadge result={view.revenueResult} />
                 </div>
               </div>
-              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+              <LinkPendingIcon label="Đang mở hồ sơ nhân viên…" className="size-5">
+                <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+              </LinkPendingIcon>
             </Link>
           </li>
         ))}
@@ -152,7 +155,9 @@ export function SalesPerformanceTable({ rows }: Props) {
                   className="inline-flex min-h-11 items-center gap-1 font-medium text-primary"
                 >
                   Xem
-                  <ChevronRight aria-hidden="true" className="size-4" />
+                  <LinkPendingIcon label="Đang mở hồ sơ nhân viên…" className="size-4">
+                    <ChevronRight aria-hidden="true" className="size-4" />
+                  </LinkPendingIcon>
                 </Link>
               </td>
             </tr>

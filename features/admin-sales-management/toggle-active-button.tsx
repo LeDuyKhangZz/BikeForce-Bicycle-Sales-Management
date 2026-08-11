@@ -80,15 +80,15 @@ export function ToggleActiveButton({ salesId, salesName, isActive }: Props) {
               <Button
                 type="submit"
                 variant={isActive ? 'destructive' : 'primary'}
-                disabled={isPending}
-                aria-busy={isPending}
+                loading={isPending}
+                loadingText={isActive ? 'Đang vô hiệu hoá…' : 'Đang mở lại…'}
               >
                 {isActive ? (
                   <Lock aria-hidden="true" className="size-4" />
                 ) : (
                   <Unlock aria-hidden="true" className="size-4" />
                 )}
-                {isPending ? 'Đang xử lý…' : isActive ? 'Vô hiệu hoá' : 'Mở lại'}
+                {isActive ? 'Vô hiệu hoá' : 'Mở lại'}
               </Button>
             </form>
 

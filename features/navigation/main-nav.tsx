@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import { BrandLockup } from '@/components/ui/brand-mark';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { cn } from '@/lib/utils';
 import { activeNavKey, type NavItem, type NavKey } from '@/lib/navigation/nav-items';
 
@@ -168,10 +169,15 @@ function NavLink({ item, isActive, layout }: NavLinkProps) {
           className="absolute inset-x-4 top-0 h-1 rounded-b-pill bg-primary"
         />
       )}
-      <Icon
-        aria-hidden="true"
-        className={cn(layout === 'tab' ? 'size-5' : 'size-4', isActive && 'scale-110')}
-      />
+      <LinkPendingIcon
+        label={`Đang mở ${item.label}…`}
+        className={layout === 'tab' ? 'size-5' : 'size-4'}
+      >
+        <Icon
+          aria-hidden="true"
+          className={cn(layout === 'tab' ? 'size-5' : 'size-4', isActive && 'scale-110')}
+        />
+      </LinkPendingIcon>
       <span className={cn(isActive && 'font-semibold')}>{item.label}</span>
     </Link>
   );

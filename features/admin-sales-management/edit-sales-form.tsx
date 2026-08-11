@@ -146,9 +146,9 @@ export function EditSalesForm({ salesId, initialValues }: Props) {
         )}
       </div>
 
-      <Button type="submit" size="lg" disabled={isPending} aria-busy={isPending}>
+      <Button type="submit" size="lg" loading={isPending} loadingText="Đang lưu hồ sơ…">
         <Save aria-hidden="true" className="size-5" />
-        {isPending ? 'Đang lưu…' : 'Lưu hồ sơ'}
+        Lưu hồ sơ
       </Button>
     </form>
   );

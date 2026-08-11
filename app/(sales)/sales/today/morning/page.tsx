@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 
+import { BackLink } from '@/components/ui/back-link';
 import { Card, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
 import { MorningReportForm } from '@/features/report-morning/morning-report-form';
@@ -45,13 +44,7 @@ export default async function MorningReportPage() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <Link
-          href={SALES_TODAY_PATH}
-          className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-primary"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          Về trang Hôm nay
-        </Link>
+        <BackLink href={SALES_TODAY_PATH}>Về trang Hôm nay</BackLink>
 
         <h1 className="text-2xl font-bold tracking-tight text-heading">Báo cáo đầu ngày</h1>
       </div>

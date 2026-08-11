@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -8,6 +9,10 @@ type Size = 'md' | 'lg';
 type Props = ComponentProps<'button'> & {
   variant?: Variant;
   size?: Size;
+  /** Hiện spinner, khoá double-click và công bố trạng thái cho screen reader. */
+  loading?: boolean;
+  /** Nhãn hành động cụ thể, ví dụ "Đang lưu…". */
+  loadingText?: string;
 };
 
 /**
@@ -87,13 +92,41 @@ export function buttonClassName({
   );
 }
 
-export function Button({ variant = 'primary', size = 'md', className, type, ...props }: Props) {
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  className,
+  type,
+  loading = false,
+  loadingText = 'Đang xử lý…',
+  disabled,
+  children,
+  'aria-busy': ariaBusy,
+  ...props
+}: Props) {
   return (
     <button
       // Mặc định `type="button"`: quên `type` trong <form> sẽ vô tình submit.
       type={type ?? 'button'}
       className={buttonClassName({ variant, size, className })}
+      disabled={disabled || loading}
+      aria-busy={loading || ariaBusy}
       {...props}
-    />
+    >
+      {loading ? (
+        <>
+          <Loader2
+            aria-hidden="true"
+            data-loading-spinner="true"
+            className="size-5 shrink-0 animate-spin motion-reduce:animate-none"
+          />
+          <span role="status" aria-live="polite">
+            {loadingText}
+          </span>
+        </>
+      ) : (
+        children
+      )}
+    </button>
   );
 }

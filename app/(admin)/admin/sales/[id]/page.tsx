@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { BackLink } from '@/components/ui/back-link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardTitle } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { requireRole } from '@/features/auth/queries';
 import { AdminReportTable } from '@/features/admin-reports/admin-report-table';
 import { EditSalesForm } from '@/features/admin-sales-management/edit-sales-form';
@@ -165,7 +166,9 @@ export default async function AdminSalesDetailPage({ params, searchParams }: Pro
               className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-medium text-primary"
             >
               Xem tất cả {pageInfo.total} báo cáo của nhân viên này
-              <ChevronRight aria-hidden="true" className="size-4" />
+              <LinkPendingIcon label="Đang mở toàn bộ báo cáo…" className="size-4">
+                <ChevronRight aria-hidden="true" className="size-4" />
+              </LinkPendingIcon>
             </Link>
           )}
         </div>

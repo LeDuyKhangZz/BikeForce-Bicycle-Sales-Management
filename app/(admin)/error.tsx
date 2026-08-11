@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useTransition } from 'react';
 import { TriangleAlert } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [isRetrying, startRetry] = useTransition();
+
   useEffect(() => {
     console.error('[admin-error]', error.digest ?? '', error.message);
   }, [error]);
@@ -26,7 +28,13 @@ export default function AdminError({
       {error.digest && (
         <p className="text-sm text-muted-foreground tabular">Mã lỗi: {error.digest}</p>
       )}
-      <Button onClick={reset}>Thử lại</Button>
+      <Button
+        onClick={() => startRetry(reset)}
+        loading={isRetrying}
+        loadingText="Đang tải lại…"
+      >
+        Thử lại
+      </Button>
     </Card>
   );
 }

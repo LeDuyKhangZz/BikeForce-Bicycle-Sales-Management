@@ -28,15 +28,27 @@ import { cn } from '@/lib/utils';
  *  animation ngoài transform/opacity" của CLAUDE.md §11. `prefers-reduced-motion`
  *  được tôn trọng ở `globals.css`, không phải ở đây.
  */
-export function LinkSpinner({ className }: { className?: string }) {
+export function LinkSpinner({
+  className,
+  label = 'Đang mở trang…',
+}: {
+  className?: string;
+  label?: string;
+}) {
   const { pending } = useLinkStatus();
 
   if (!pending) return null;
 
   return (
-    <Loader2
-      aria-hidden="true"
-      className={cn('size-4 shrink-0 animate-spin motion-reduce:animate-none', className)}
-    />
+    <>
+      <Loader2
+        aria-hidden="true"
+        data-link-loading="true"
+        className={cn('size-4 shrink-0 animate-spin motion-reduce:animate-none', className)}
+      />
+      <span role="status" aria-live="polite" className="sr-only">
+        {label}
+      </span>
+    </>
   );
 }
