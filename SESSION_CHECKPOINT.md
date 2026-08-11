@@ -1,6 +1,56 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **14 — XONG, gồm 3 lỗi/yêu cầu production người dùng báo (ISSUE-027/028/029)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **14 — XONG, gồm 4 lỗi/yêu cầu production người dùng báo (ISSUE-027/028/029/030)** | Last updated: 2026-08-11
+
+---
+
+## ✅ MỚI NHẤT — Entry 022: logo bị cắt (ISSUE-030), đã sửa xong
+
+Người dùng gửi ảnh chụp màn hình: *"sửa lại logo của trang web hiện tại đang bị cắt"*. **Đáy hai
+bánh xe bị chém phẳng ở mọi nơi dùng `BrandMark`.**
+
+| Việc | Trạng thái |
+|---|---|
+| **ISSUE-030** — `viewBox` của `BrandMark` thiếu độ lệch `y` ⇒ cắt mất ~17% chiều cao | ✅ code + hàng rào E2E + docs |
+
+**Ba điều phải nhớ:**
+
+1. **`viewBox` đúng là `"0 13.07 101 74.86"`, KHÔNG phải `"0 0 101 75"`.** Kích thước `101 × 75`
+   luôn đúng; cái từng thiếu là **độ lệch `y = 13,07`**. Hình nằm ở `y ∈ [13,07 · 87,93]` (đã cộng
+   nửa bề rộng nét `8.45 / 2`). Đừng "làm gọn" gốc toạ độ về 0 — đó chính là lỗi.
+2. **Bộ icon PWA và `app/icon.svg` KHÔNG dính lỗi này** — chúng đặt cùng bộ toạ độ vào khung
+   `512 × 512` **có đệm**, đã kiểm bằng mắt. Đừng sinh lại bộ icon để "cho đồng bộ".
+3. **Đừng gỡ `data-brand-mark` khỏi `BrandMark`.** Đó là mốc của luật E2E `logo-clipped`; gỡ ra thì
+   phép đo không tìm thấy gì và báo "0 vi phạm" — xanh oan đúng kiểu bẫy 4.
+
+> **Bài học, lần thứ ba sau DEC-053 và DEC-054:** cả bốn nhóm luật đo được đều **xanh** suốt thời
+> gian logo bị cắt. `viewBox` hẹp hơn nội dung cắt hình trong im lặng tuyệt đối — không lỗi console,
+> không cảnh báo build, không vi phạm axe, layout đúng từng pixel. Người tìm ra vẫn là **người dùng,
+> bằng mắt**. Nay đã có luật thứ năm `logo-clipped` bịt đúng khe này.
+
+| Cổng chất lượng | Kết quả thật (2026-08-11, Entry 022) |
+|---|---|
+| `npm run typecheck` · `npm run lint` · `npm run build` | ✅ exit 0 · 0 error 0 warning · **21 route** |
+| `npx vitest run --project unit` | ✅ **590/590**, 1,96 giây |
+| Luật `logo-clipped` trên DOM thật `/login` | ✅ `375px` và `1440px` — **3/3 logo trọn hình** |
+| **Nhìn tận mắt** | ✅ ảnh chụp `/login` ở `375px` + `1440px`: hai bánh xe tròn đủ |
+| `npm run e2e` đủ bộ | ⏳ **CHƯA chạy** trong phiên này (cần Supabase local + tài khoản seed) |
+
+⚠ **Cây làm việc có công việc PHASE 14 (DEC-064) sửa song song trong cùng phiên** —
+`share-image-button.tsx`, `share-card.ts`, `sales-flow.spec.ts`, `share-image.spec.ts` và một file
+tạm `e2e/_tmp-look.spec.ts`. Entry 022 **không chạm** file nào trong số đó. Lượt `typecheck` đầu tiên
+đỏ hai lỗi ở `share-image-button.tsx` chỉ vì bắt trúng trạng thái giữa chừng của công việc ấy; chạy
+lại thì xanh. **`git status` đầu phiên là ảnh chụp một thời điểm, không phải bảo đảm cây đứng yên.**
+
+### Việc kế tiếp của Entry 022
+
+1. **Chưa commit.** File đã đổi: `components/ui/brand-mark.tsx` · `e2e/ui-quality.spec.ts` ·
+   `docs/05-ui-ux-design.md` · `docs/08-testing-strategy.md` · `docs/12-known-issues.md` ·
+   `WORKLOG.md` · `PROJECT_CHECKLIST.md` · `SESSION_CHECKPOINT.md`. ⚠ Commit **phải chọn đúng
+   những file này**, đừng `git add -A` vì sẽ nuốt luôn công việc DEC-064 đang dở.
+2. Chạy `npm run e2e` (ít nhất `ui-quality.spec.ts` ở `mobile-375`) khi Supabase local đã lên, để
+   luật `logo-clipped` được chạy trong đúng khung của nó.
+3. Deploy rồi **người dùng nhìn lại logo trên điện thoại thật**.
 
 ---
 

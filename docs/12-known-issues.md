@@ -103,7 +103,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-028 | P3 | **CLOSED** | **MỚI 2026-08-11** — bài a11y `/login` đỏ-rồi-xanh vì axe quét trúng giữa hiệu ứng `animate-rise-in`, đo `#8BA9BE` thay vì `#0B4A76`. Sửa bằng `use.contextOptions.reducedMotion = 'reduce'` |
 | ISSUE-029 | **P1** | **CLOSED** | **MỚI 2026-08-11** — trên điện thoại, ảnh **tải vào thư mục Tải xuống chứ không vào Thư viện ảnh**, người dùng không tìm ra file. Gốc: trang web **không có API ghi vào Thư viện ảnh** (giới hạn hệ điều hành) + nhánh dự phòng của DEC-060 trả `attachment` nên ảnh không bao giờ được HIỆN để nhấn giữ. Sửa bằng **DEC-061** + **DEC-062** |
 
-Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **15 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, **ISSUE-029**).
+| ISSUE-030 | P2 | **CLOSED** | **MỚI 2026-08-11** — **logo bị cắt mất đáy hai bánh xe** ở mọi nơi dùng `BrandMark`. `viewBox="0 0 101 75"` đúng KÍCH THƯỚC nhưng thiếu ĐỘ LỆCH y: hình nằm ở `y ∈ [13,07 · 87,93]` nên **12,92 đơn vị (~17% chiều cao) bị chém phẳng**, đồng thời đỉnh thừa một dải trắng bằng đúng chừng ấy. Bộ icon PWA và `app/icon.svg` **vô can** (khung 512×512 có đệm). Sửa bằng `viewBox="0 13.07 101 74.86"` + luật E2E `logo-clipped` |
+
+Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **16 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, ISSUE-029, **ISSUE-030**).
 
 ---
 
@@ -1489,3 +1491,100 @@ trang** kèm câu hướng dẫn nhấn giữ) + DEC-062 (giao diện điện th
 - ⚠ **Còn một vế chưa kiểm được ở đây:** thao tác "Lưu ảnh" khi nhấn giữ là chức năng **của trình
   duyệt thật trên máy thật** — Playwright không mô phỏng được. Vế này gộp chung với ISSUE-003 (kiểm
   trên điện thoại thật + Zalo).
+
+---
+
+### ISSUE-030
+
+**Severity:** P2 | **Status:** **CLOSED** (sửa 2026-08-11)
+**Phát hiện:** người dùng, trên bản deploy production, ngày 2026-08-11 — bằng **ảnh chụp màn hình
+điện thoại**, không phải bằng một phép đo nào.
+
+**Triệu chứng (nguyên văn người dùng):**
+
+> "sửa lại logo của trang web hiện tại đang bị cắt"
+
+Kèm ba ảnh: màn hình `/login`, header `/sales/today`, và sidebar Admin. Ở cả ba, **đáy hai bánh xe
+của logo bị chém phẳng** — nhìn ra ngay khi biết mà tìm, và trông "sai sai" ngay cả khi không biết.
+
+**Nguyên nhân gốc — `viewBox` đúng kích thước nhưng sai gốc toạ độ:**
+
+`components/ui/brand-mark.tsx` ghi `viewBox="0 0 101 75"`. Đo trên DOM thật (`getBBox()` nới thêm
+nửa bề rộng nét `8.45 / 2 = 4.225`, vì `stroke-linecap="round"` thò ra đủ chừng ấy ở mọi đầu mút):
+
+| Cạnh | Mép hình | Mép `viewBox` cũ | Kết quả |
+|---|---|---|---|
+| trên | `y = 13,075` | `y = 0` | thừa **13,08** đơn vị trắng |
+| dưới | `y = 87,921` | `y = 75` | **cắt mất 12,92 đơn vị (~17% chiều cao)** |
+| trái | `x = 0,006` | `x = 0` | khít |
+| phải | `x = 101,005` | `x = 101` | khít (lệch 0,005 — sai số làm tròn) |
+
+Nói cách khác: **kích thước `101 × 75` là đúng**, chỉ thiếu độ lệch `y = 13,07`. Khung nhìn bị tụt
+lên 13 đơn vị so với hình.
+
+**Vì sao lỗi sống sót qua cả Phase 13 — ba lớp bảo vệ đều mù đúng chỗ này:**
+
+1. **Bộ icon vô can nên không có dấu hiệu đối chiếu.** `app/icon.svg` và bốn file
+   `public/icons/*.png` đặt cùng bộ toạ độ vào khung `512 × 512` **có đệm đều bốn phía**, nên chúng
+   hiển thị đủ hình. Chỉ riêng bản inline lấy khung **khít**, và chỉ ở đó độ lệch mới có nghĩa.
+2. **Không phép đo nào của dự án hỏi câu này.** `e2e/ui-quality.spec.ts` đo tương phản, cỡ chạm,
+   tràn ngang, cỡ chữ. Hình bị `viewBox` cắt **không vi phạm cái nào**: không lỗi console, không
+   cảnh báo build, không vi phạm axe, layout vẫn đúng từng pixel — SVG chỉ lặng lẽ vẽ thiếu.
+3. **`aspect-ratio` vẫn "hợp lý".** `101 / 75` và `101 / 74,86` lệch nhau 0,2%, nên bố cục không hề
+   nhảy. Không có triệu chứng phụ nào để lần ra.
+
+Đây đúng là bài học **DEC-053/DEC-054** lặp lại lần thứ ba: *"không vi phạm" ≠ "đúng"*. Bốn nhóm
+luật đo được đều xanh trong suốt thời gian logo bị cắt.
+
+**Cách sửa:**
+
+1. `viewBox="0 13.07 101 74.86"` — giữ nguyên toàn bộ `d=`, chỉ dời khung nhìn. Không đụng tới trình
+   sinh, không đụng tới bộ icon (chúng vốn đã đúng).
+2. Thêm luật **`logo-clipped`** vào `e2e/ui-quality.spec.ts` (luật thứ năm): lấy `getBBox()` của
+   `svg[data-brand-mark]`, nới nửa bề rộng nét, bắt buộc nằm **trọn** trong `viewBox`, dung sai
+   `0,05` đơn vị user. Kèm bộ đếm `marks > 0` để "0 vi phạm" không thể là xanh oan.
+
+**Verification (2026-08-11):**
+- Đo trên DOM thật, cả `375px` và `1440px`, trên `next build` + `next start`: **cả 3 logo trọn hình**
+  (lockup `/login` ở hai khổ + hoa văn nền 416px).
+- Nhìn tận mắt ảnh chụp `/login` ở `375px` và `1440px` — hai bánh xe tròn đủ.
+- Ảnh so sánh trước/sau ở 5 cỡ (28 · 32 · 48 · 200px và lockup): bản cũ chém đáy rõ rệt ở mọi cỡ.
+- `npm run typecheck` · `npm run lint` · `npm run build` (21 route) · `vitest --project unit`
+  **590/590** — tất cả exit 0.
+- ⚠ Bộ E2E đầy đủ **chưa chạy lại** trong phiên này (cần Supabase local + tài khoản seed); luật
+  `logo-clipped` đã được chạy thật bằng đúng đoạn mã đó trên DOM của `/login`.
+
+
+---
+
+### ISSUE-003 — cập nhật 2026-08-11 (DEC-064)
+
+**Triệu chứng người dùng báo trên production:**
+
+> *"các trình duyệt khác thì bình thường nhưng nếu mở link ngay trong zalo sẽ không thể tải ảnh hay
+> chuyển ảnh qua zalo"*
+
+**Kết luận kỹ thuật — đây KHÔNG phải lỗi sửa được bằng code của trang.** Trình duyệt trong Zalo là
+một **WebView nhúng**; ứng dụng chủ quyết định nó được làm gì, và nó cắt cùng lúc cả ba cơ chế mà
+tính năng dựa vào:
+
+| Cơ chế | Vì sao chết trong WebView |
+|---|---|
+| `navigator.share()` | WKWebView (iOS) không phơi Web Share; Android WebView cũng vậy trừ khi app chủ bật |
+| Tải file (`attachment`, `<a download>`) | Android WebView **bỏ qua hoàn toàn** nếu app chủ không cài `DownloadListener` |
+| Nhấn giữ ảnh → "Lưu ảnh" | Menu ngữ cảnh là của app chủ; nhiều in-app browser tắt hẳn |
+
+**Đã làm (DEC-064) — hai đường vòng có thật, hiện ra đúng lúc và chỉ khi cần:**
+
+1. **"Sao chép ảnh để dán vào Zalo"** — clipboard `image/png`. Giữ người dùng **ở trong Zalo**, dán
+   thẳng vào khung chat. Chỉ render khi trình duyệt thật sự có `ClipboardItem`.
+2. **Hướng dẫn "Mở trong trình duyệt" / "Mở trong Safari"** — chắc chắn chạy, đúng như người dùng đã
+   xác nhận.
+
+Phát hiện bằng **capability** (`typeof navigator.share !== 'function'` trên máy cảm ứng), không sniff
+`userAgent`. Ảnh xem trước cũng có `onError` để nếu webview chặn cả việc hiển thị thì vẫn nói ra chứ
+không để người dùng nhìn một ô vỡ.
+
+**Status: vẫn OPEN, nhưng đổi bản chất.** Phần "sản phẩm phải làm gì" đã xong; phần còn lại là
+**kiểm trên thiết bị thật** — hai đường vòng trên chạy được tới đâu trong Zalo Android và Zalo iOS
+thì chỉ máy thật trả lời được. Playwright không mô phỏng nổi WebView của một ứng dụng bên thứ ba.

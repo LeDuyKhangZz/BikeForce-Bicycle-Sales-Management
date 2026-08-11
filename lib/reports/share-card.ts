@@ -68,6 +68,14 @@ const VARIANT_KIND_LABEL: Record<ShareCardVariant, string> = {
 /**
  * Nhãn nút bấm — **từ vựng nghiệp vụ**, nên ở `lib/` chứ không ở component.
  * `/sales/today` và `/sales/reports/[id]` cùng đọc bảng này (AGENTS.md §9).
+ *
+ * ⚠ **PHASE 14 (DEC-064) — bảng này KHÔNG còn dùng cho nút nào.** Giữ lại vì
+ * `shareCardVariantForStatus()` và tài liệu vẫn nhắc tới nó như tên gọi hai biến
+ * thể. Nhãn nút thật nằm ở `SEND_TO_ZALO_LABEL` và `DOWNLOAD_IMAGE_LABEL`.
+ *
+ * Lý do đổi: từ DEC-064, **tấm ảnh luôn hiện sẵn ngay trên màn hình**. Người
+ * dùng nhìn thấy mình đang cầm tấm nào, nên nhãn nút không phải gánh việc đó
+ * nữa — nó quay về mô tả **hành động** ("Tải ảnh về máy"), ngắn và không mơ hồ.
  */
 export const SHARE_IMAGE_LABEL: Record<ShareCardVariant, string> = {
   MORNING: 'Lưu hình báo cáo đầu ngày',
@@ -108,13 +116,25 @@ export const SEND_TO_ZALO_LABEL: Record<ShareCardVariant, string> = {
 };
 
 /**
- * Nút thứ hai của điện thoại — mở ảnh ra để nhấn giữ (DEC-061).
+ * Nút tải ảnh — PHASE 14, **DEC-064**. Có ở **cả** điện thoại lẫn máy tính.
  *
- * Không chia theo biến thể như nhãn trên: "cất ảnh vào máy" là **cùng một việc**
- * dù đang ở tấm sáng hay tấm chiều. Chỉ chia nhãn ở chỗ nào biến thể thật sự đổi
- * nghĩa của hành động.
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO KHÔNG CÒN LÀ "LƯU VÀO THƯ VIỆN ẢNH"
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Bản DEC-061 đặt nhãn "Lưu vào thư viện ảnh" cho một nút chỉ **hiện ảnh ra**
+ *  rồi bảo người dùng nhấn giữ. Người dùng bác thẳng:
+ *
+ *  > *"tôi không thích cách phải giữ ảnh mới tải xuống hay chuyển ảnh đi được,
+ *  > vì nếu làm vậy những người 'mù công nghệ' sẽ không biết làm"*
+ *
+ *  Họ đúng, và nhãn cũ còn **hứa sai**: bấm vào không có gì được lưu vào thư
+ *  viện cả. Nay nút làm đúng một việc mà mọi người đều hiểu — **bấm là tải** —
+ *  và nhãn nói đúng việc đó.
+ *
+ *  Không chia theo biến thể: tải ảnh là **cùng một việc** với tấm sáng lẫn tấm
+ *  chiều, và tấm nào thì ảnh xem trước ngay bên trên đã trả lời.
  */
-export const SAVE_TO_GALLERY_LABEL = 'Lưu vào thư viện ảnh';
+export const DOWNLOAD_IMAGE_LABEL = 'Tải ảnh về máy';
 
 /**
  * `status` đã persist → biến thể ảnh. Là hàm chứ không phải một `Record` để chỗ

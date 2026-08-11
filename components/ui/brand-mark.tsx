@@ -17,6 +17,12 @@ import { cn } from '@/lib/utils';
  *  lệch hình**. Muốn đổi hình thì đổi ở trình sinh rồi xuất lại cả bộ, đừng sửa
  *  tay `d=` ở đây.
  *
+ *  ⚠ Nhưng `viewBox` thì KHÔNG được sinh ra đúng. Bốn file PNG và `app/icon.svg`
+ *  đặt hình vào khung 512×512 nên chúng vô can; riêng bản inline này lấy khung
+ *  KHÍT với hình, và bản đầu tiên chỉ chép được KÍCH THƯỚC mà đánh rơi ĐỘ LỆCH
+ *  (`0 0 101 75` thay vì `0 13.07 101 74.86`) — đáy hai bánh bị chém mất ~17%.
+ *  Xem chú thích ngay tại thuộc tính `viewBox` bên dưới (ISSUE-030).
+ *
  *  ⚠ Đây là LOGO. WCAG 1.4.3/1.4.11 miễn trừ logotype khỏi ngưỡng tương phản,
  *  nên cam #E9A04F (2,19:1 trên trắng) hợp lệ **ở đây và chỉ ở đây**. Đừng lấy
  *  `text-accent` đó đi tô chữ hay icon mang nghĩa.
@@ -31,7 +37,23 @@ type Props = {
 export function BrandMark({ decorative = false, className }: Props) {
   return (
     <svg
-      viewBox="0 0 101 75"
+      // ⚠ GỐC Y LÀ 13.07, KHÔNG PHẢI 0 — đừng "làm gọn" thành `0 0 101 75`.
+      //
+      // Hình xe nằm trong khoảng y ∈ [13.07 · 87.93] (đã tính nửa bề rộng nét
+      // 8.45/2 = 4.225 của `stroke-linecap="round"`). Bản đầu tiên viết
+      // `viewBox="0 0 101 75"` — đúng KÍCH THƯỚC nhưng thiếu ĐỘ LỆCH, nên khung
+      // nhìn tụt lên 13 đơn vị: đáy hai bánh bị chém phẳng mất 12,9 đơn vị
+      // (~17% chiều cao) trong khi đỉnh thừa một dải trắng đúng bằng chừng ấy.
+      // Lỗi này sống sót qua cả Phase 13 vì `app/icon.svg` và bốn file
+      // `public/icons/*.png` được sinh ra ĐÚNG — chỉ riêng khung nhìn ở đây sai,
+      // nên không bộ đo nào của dự án thấy được, chỉ MẮT NGƯỜI mới thấy
+      // (ISSUE-030).
+      viewBox="0 13.07 101 74.86"
+      // Mốc cho luật `logo-clipped` của `e2e/ui-quality.spec.ts`: nó lấy
+      // `getBBox()` của hình, nới ra nửa bề rộng nét, rồi bắt buộc kết quả nằm
+      // TRỌN trong `viewBox`. Gỡ thuộc tính này là gỡ luôn hàng rào — phép đo
+      // sẽ không tìm thấy gì và báo "0 vi phạm" một cách oan uổng.
+      data-brand-mark=""
       // Hình luôn giữ tỉ lệ; kích thước do `className` của nơi gọi quyết định.
       className={cn('h-auto shrink-0', className)}
       // Trang trí thì phải ẩn hẳn khỏi screen reader — đọc "BikeForce" hai lần

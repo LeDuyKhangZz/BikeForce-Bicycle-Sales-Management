@@ -29,9 +29,10 @@ const salesFor = (projectName: string): string => flowSalesEmail(toE2eProject(pr
  * Chi tiết luồng ở `e2e/share-image.spec.ts`.
  */
 const exportButtonFor = (projectName: string, variant: 'MORNING' | 'EVENING'): string => {
-  if (projectName === 'desktop-1440') {
-    return variant === 'MORNING' ? 'Lưu hình báo cáo đầu ngày' : 'Xuất ảnh báo cáo';
-  }
+  // Máy tính không có nút Zalo (DEC-060) và nút tải ảnh dùng chung một nhãn cho
+  // cả hai biến thể (DEC-064) — tấm nào thì ảnh xem trước đã trả lời. Vì vậy chỉ
+  // giao diện điện thoại mới phân biệt được biến thể qua nhãn nút.
+  if (projectName === 'desktop-1440') return 'Tải ảnh về máy';
 
   return variant === 'MORNING' ? 'Gửi cam kết qua Zalo' : 'Gửi kết quả qua Zalo';
 };
@@ -123,9 +124,19 @@ test.describe('Luồng Sales đầu-cuối', () => {
     await expect(
       page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'EVENING') }),
     ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'MORNING') }),
-    ).toHaveCount(0);
+
+    /*
+     * Nhãn bản SÁNG phải biến mất — nhưng phép kiểm này chỉ **có nghĩa trên điện
+     * thoại**: từ DEC-064, nút tải ảnh của máy tính dùng chung một nhãn cho cả
+     * hai biến thể ("Tải ảnh về máy"), nên ở đó không còn nhãn nào để biến mất.
+     * Việc phân biệt tấm nào do **ảnh xem trước** đảm nhiệm, và `share-image.spec.ts`
+     * kiểm nó qua thuộc tính `alt` (tên file mang `CamKet` hoặc `Report`).
+     */
+    if (testInfo.project.name !== 'desktop-1440') {
+      await expect(
+        page.getByRole('button', { name: exportButtonFor(testInfo.project.name, 'MORNING') }),
+      ).toHaveCount(0);
+    }
   });
 
   test('BR-007: chưa cam kết sáng thì không vào được form cuối ngày', async ({

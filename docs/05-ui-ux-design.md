@@ -699,6 +699,7 @@ Chỉ manifest + icon + `display: standalone` để Sales "Thêm vào màn hình
 
 - **`theme_color` = `background_color` = `#FFFFFF`** (DEC-047), **không** phải xanh thương hiệu: thanh trạng thái nối liền header trắng của app, và màn hình chờ trùng nền trắng của icon.
 - Hình icon là **chiếc xe đạp của logo, màu cam `#E9A04F` trên nền trắng** — sinh ra từ cùng bộ toạ độ với `components/ui/brand-mark.tsx` nên logo trên web và icon màn hình chính không thể lệch hình (DEC-046).
+- ⚠ **Cùng toạ độ KHÔNG có nghĩa là cùng khung nhìn — ISSUE-030.** Các file trong bảng trên đặt hình vào khung vuông **có đệm đều bốn phía**, còn `BrandMark` lấy khung **khít**, nên riêng bản inline mới cần độ lệch `y`. Bản đầu ghi `viewBox="0 0 101 75"` (đúng kích thước, thiếu độ lệch) và **chém mất 12,92 đơn vị ~17% chiều cao ở đáy hai bánh xe** suốt từ Phase 13 — trong khi bộ icon vẫn đúng, nên không có gì để đối chiếu. Giá trị đúng là **`viewBox="0 13.07 101 74.86"`**; luật E2E `logo-clipped` khoá nó lại.
 - **`/manifest.webmanifest` phải đọc được khi chưa đăng nhập** — trình duyệt tải nó không kèm cookie. Đã thêm `webmanifest` vào `PUBLIC_FILE` của `middleware.ts`, có bài E2E khoá lại (`e2e/pwa.spec.ts`).
 
 ---
@@ -745,7 +746,7 @@ Danh sách đầy đủ ở `docs/01-business-analysis.md` §OPEN QUESTIONS. Nh�
 | Route | UC / FR | Ghi chú hiển thị |
 |---|---|---|
 | `/login` | UC-01, FR-001 | DEC-017 |
-| `/sales/today` | UC-03, FR-007 | badge trạng thái · bảng đối chiếu 4 chỉ tiêu · **đúng 1 CTA chính** · nút Xuất ảnh khi `COMPLETED` |
+| `/sales/today` | UC-03, FR-007 | badge trạng thái · bảng đối chiếu 4 chỉ tiêu · **đúng 1 CTA chính** · khối xuất ảnh khi đã có báo cáo: **ảnh xem trước LUÔN hiện** + nút *Gửi qua Zalo* (điện thoại) + nút *Tải ảnh về máy* (mọi thiết bị) — DEC-064 |
 | `/sales/today/morning` | UC-04, UC-05, FR-008 | 5 trường bắt buộc · chip cộng nhanh · nút Lưu **sticky** đáy |
 | `/sales/today/evening` | UC-06, FR-013, FR-014 | mỗi ô nhắc lại con số cam kết sáng |
 | `/sales/history` | UC-09, FR-021 | **MỚI** — lọc tháng · card < 768px, `<table>` từ 768px (DEC-019) · phân trang · empty state có icon + CTA |
@@ -986,6 +987,15 @@ Ba ràng buộc không được phá:
 bẫy đã sập một lần — mở `<details>`, đi vào nhánh có dữ liệu, dùng tài khoản vào
 được form, và **xuất bộ đếm** để "0 vi phạm" có mẫu số. **Gỡ điều nào cũng là mù
 lại.**
+
+**Luật thứ năm — `logo-clipped`, thêm 2026-08-11 (ISSUE-030).** Bốn luật trên đo
+*màu và kích thước*; không luật nào hỏi *hình có được vẽ đủ không*. Một `viewBox`
+hẹp hơn nội dung sẽ cắt hình trong im lặng tuyệt đối: không lỗi console, không
+cảnh báo build, không vi phạm axe, layout đúng từng pixel. Logo BikeForce đã bị
+chém mất ~17% chiều cao suốt Phase 13 với cả bốn luật đều xanh. Phép đo mới lấy
+`getBBox()` của `svg[data-brand-mark]`, nới thêm nửa bề rộng nét (vì `getBBox()`
+**không** tính nét, mà `stroke-linecap="round"` thò ra đủ chừng ấy), rồi bắt buộc
+kết quả nằm trọn trong `viewBox`. Kèm bộ đếm `marks > 0` theo đúng bẫy thứ tư.
 
 ---
 

@@ -438,6 +438,10 @@ Ngay cả khi client bị sửa, Route Handler vẫn **tự đọc `status` từ
   ── PHASE 14 — DEC-061 + DEC-062: từ đây luồng TÁCH ĐÔI theo thiết bị ──
   Tách bằng CSS (pointer-coarse), không bằng JavaScript, nên đúng ngay từ khung hình đầu tiên.
 
+  ẢNH XEM TRƯỚC hiện SẴN ở cả hai thiết bị (DEC-064) — img src=...?view=1
+  → người dùng nhìn thấy đúng tấm sắp gửi trước khi bấm bất kỳ nút nào
+  → nó cũng gánh việc mà nhãn nút từng phải gánh (DEC-058): cho biết tấm CAM KẾT hay KẾT QUẢ
+
   ĐIỆN THOẠI (pointer: coarse) — hai nút, hai ý định:
 
     Nút "Gửi qua Zalo"
@@ -449,14 +453,23 @@ Ngay cả khi client bị sửa, Route Handler vẫn **tự đọc `status` từ
     → không có Web Share (webview Zalo, Firefox Android)
       → hiện ảnh trong trang + hướng dẫn 3 bước: lưu ảnh ⇢ mở Zalo ⇢ gửi ảnh đó
 
-    Nút "Lưu vào thư viện ảnh"
-    → hiện img src=/api/reports/:id/share-image?view=1 (route trả inline) ngay trong trang
-    → "Nhấn giữ vào ảnh rồi chọn Lưu ảnh" — đường DUY NHẤT còn lại vào Thư viện ảnh,
-      vì trang web KHÔNG có API nào ghi vào Thư viện của Android/iOS (ISSUE-029)
+    Nút "Tải ảnh về máy"  (DEC-064 — trước đây là "Lưu vào thư viện ảnh", chỉ hiện ảnh rồi
+                            bảo nhấn giữ; người dùng bác vì người không rành máy không biết)
+    → thẻ a download từ blob → tải THẬT bằng một cú bấm, chạy trên Chrome Android và Safari iOS 13+
+    → file vào thư mục Tải xuống + dòng "Đã tải ảnh về máy…"
+    → muốn ảnh vào THƯ VIỆN ẢNH thì đi đường nút Zalo → "Lưu ảnh" trong bảng chia sẻ;
+      trang web KHÔNG có API nào ghi vào Thư viện của Android/iOS (ISSUE-029)
 
-  MÁY TÍNH (pointer: fine) — một nút "Xuất ảnh báo cáo":
+  MÁY TÍNH (pointer: fine) — một nút "Tải ảnh về máy":
     → thẻ a download từ blob → tải file về máy + dòng "Đã tải ảnh về máy…"
     → KHÔNG BAO GIỜ gọi share sheet: bảng chia sẻ của Windows không có Zalo (DEC-060)
+
+  ── WEBVIEW BỊ KHOÁ (trình duyệt trong Zalo, Facebook…) — ISSUE-003, DEC-064 ──
+  Nhận ra bằng CAPABILITY: typeof navigator.share !== 'function' trên máy cảm ứng.
+  WebView cắt cùng lúc cả ba thứ: Web Share · tải file · menu nhấn giữ.
+    → hiện khối đường vòng, thứ tự cố ý:
+      1. "Sao chép ảnh để dán vào Zalo" — clipboard image/png, giữ người dùng Ở TRONG Zalo
+      2. hướng dẫn bấm ⋮ / ••• → "Mở trong trình duyệt" / "Mở trong Safari"
 ```
 
 ### 6.2 Sequence diagram

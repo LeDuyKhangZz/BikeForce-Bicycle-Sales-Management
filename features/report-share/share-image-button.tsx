@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Image as ImageIcon, ExternalLink, Send } from 'lucide-react';
+import { Copy, Download, ExternalLink, Send } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
 import {
-  SAVE_TO_GALLERY_LABEL,
+  DOWNLOAD_IMAGE_LABEL,
   SEND_TO_ZALO_LABEL,
-  SHARE_IMAGE_LABEL,
   shareImagePath,
   shareImageViewPath,
   type ShareCardVariant,
@@ -107,18 +106,63 @@ const DOWNLOADED_HINT = 'Đã tải ảnh về máy. Kiểm tra thư mục Tải
 /** Sau khi bảng chia sẻ của hệ điều hành đã mở. */
 const SHARED_HINT = 'Chọn Zalo trong bảng vừa mở để gửi, hoặc “Lưu ảnh” để cất vào Thư viện.';
 
-/** Khi không có bảng chia sẻ ⇒ ta hiện thẳng ảnh ra trong trang. */
-const LONG_PRESS_HINT = 'Nhấn giữ vào ảnh bên dưới rồi chọn “Lưu ảnh” để lưu vào Thư viện.';
+/*
+ * ⚠ `LONG_PRESS_HINT` ("nhấn giữ vào ảnh rồi chọn Lưu ảnh") **đã bị xoá ở
+ * DEC-064** — đừng thêm lại. Người dùng bác thẳng cách đó: bắt nhấn giữ là bắt
+ * người không rành máy học một thao tác ẩn. Mọi việc nay làm bằng NÚT.
+ *
+ * Nhấn giữ vẫn chạy được trên trình duyệt thật, nhưng nó là **thứ có sẵn của
+ * trình duyệt**, không phải một bước trong hướng dẫn của sản phẩm.
+ */
 
 /**
  * Khi máy không mở được bảng chia sẻ — hay gặp nhất trong webview của Zalo.
  *
- * Câu này phải nói đủ **cả ba bước**, vì đây là lúc người dùng mất phương hướng
- * nhất: lưu ảnh ⇢ mở Zalo ⇢ gửi ảnh vừa lưu. Nói mỗi "không gửi được" là đẩy họ
- * về đúng chỗ đã sinh ra ISSUE-029.
+ * ⚠ **DEC-064 đã viết lại câu này.** Bản trước nói "nhấn giữ vào ảnh bên dưới để
+ * lưu, rồi mở Zalo và gửi ảnh đó" — tức là dạy một thao tác ẩn, đúng thứ người
+ * dùng bác. Nay nó chỉ **trỏ xuống khối nút** ngay bên dưới; mọi việc ở đó đều
+ * làm bằng một cú bấm.
  */
-const ZALO_MANUAL_HINT =
-  'Máy không mở được bảng chia sẻ. Nhấn giữ vào ảnh bên dưới để lưu, rồi mở Zalo và gửi ảnh đó.';
+const ZALO_MANUAL_HINT = 'Máy không mở được bảng chia sẻ. Dùng một trong hai cách bên dưới.';
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ *  ISSUE-003 — TRÌNH DUYỆT **TRONG** ZALO LÀ MỘT MÔI TRƯỜNG KHÁC HẲN
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Người dùng báo ngày 2026-08-11, sau khi DEC-061/062 đã lên production:
+ *
+ *  > *"các trình duyệt khác thì bình thường nhưng nếu mở link ngay trong zalo
+ *  > sẽ không thể tải ảnh hay chuyển ảnh qua zalo"*
+ *
+ *  Đây **không** phải lỗi của trang. Trình duyệt trong Zalo là một **WebView**
+ *  nhúng, và ứng dụng chủ quyết định nó được làm gì. Ba thứ ta vẫn dựa vào đều
+ *  có thể bị cắt cùng lúc, và trong Zalo thì đúng là bị cắt:
+ *
+ *  | Cơ chế | Vì sao chết trong WebView |
+ *  |---|---|
+ *  | `navigator.share()` | WKWebView (iOS) không phơi Web Share ra; Android WebView cũng vậy trừ khi app chủ bật |
+ *  | Tải file (`attachment`, `<a download>`) | Android WebView **bỏ qua hoàn toàn** nếu app chủ không cài `DownloadListener` |
+ *  | Nhấn giữ ảnh → "Lưu ảnh" | Menu ngữ cảnh là của app chủ; nhiều in-app browser tắt hẳn |
+ *
+ *  Không có API nào của web bật lại được ba thứ đó. Nên cách sửa **không phải**
+ *  tìm mẹo mới, mà là mở hai đường vòng có thật:
+ *
+ *    1. **Sao chép ảnh vào clipboard** → người dùng dán thẳng vào khung chat Zalo.
+ *       Đường này giữ họ **ở trong Zalo**, không phải đi đâu cả — nên nó đứng trước.
+ *    2. **Mở bằng trình duyệt hệ thống** → mọi thứ chạy lại bình thường, đúng như
+ *       người dùng đã xác nhận ("các trình duyệt khác thì bình thường").
+ */
+
+/** Đã chép xong — nói rõ việc tiếp theo, đừng chỉ báo "đã sao chép". */
+const COPIED_HINT = 'Đã sao chép ảnh. Mở khung chat Zalo rồi nhấn giữ ô nhập → “Dán” để gửi.';
+
+/** Clipboard bị từ chối — vẫn còn đường mở bằng trình duyệt bên dưới. */
+const COPY_FAILED_HINT =
+  'Trình duyệt này không cho sao chép ảnh. Hãy dùng cách “Mở bằng trình duyệt” bên dưới.';
+
+/** Ảnh không tải nổi trong webview ⇒ mọi đường trong trang đều tắc. */
+const PREVIEW_BLOCKED_HINT =
+  'Trình duyệt này chặn cả việc hiển thị ảnh. Hãy mở trang bằng trình duyệt của máy.';
 
 /**
  * ─────────────────────────────────────────────────────────────────────────
@@ -152,6 +196,26 @@ const MOUSE_ONLY = 'pointer-coarse:hidden';
 
 /** Media query của cùng một luật trên, dùng cho quyết định KHÔNG ảnh hưởng render. */
 const COARSE_POINTER = '(pointer: coarse)';
+
+/**
+ * Máy này có phải một **webview bị khoá** không — ISSUE-003.
+ *
+ * Vẫn là capability detection, KHÔNG đọc `userAgent`: câu hỏi thật sự là "trình
+ * duyệt này có Web Share không", chứ không phải "đây có phải Zalo không". Chrome
+ * trên Android và Safari trên iOS đều **có** `navigator.share`; thiếu nó trên
+ * một máy cảm ứng gần như chắc chắn nghĩa là đang ở trong một in-app browser.
+ *
+ * Sniff `userAgent` sẽ hỏng theo hai chiều: Zalo đổi UA là ta mù, còn Facebook /
+ * Instagram / TikTok cũng khoá y hệt mà ta lại không nhận ra.
+ */
+function lacksSystemShare(): boolean {
+  return typeof navigator.share !== 'function';
+}
+
+/** Trình duyệt có cho ghi ảnh vào clipboard không (đường vòng số 1 của ISSUE-003). */
+function canCopyImage(): boolean {
+  return typeof ClipboardItem === 'function' && typeof navigator.clipboard?.write === 'function';
+}
 
 /**
  * Kết quả lấy ảnh — union thay vì exception, vì Promise này được nạp trước và
@@ -204,16 +268,13 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   /**
-   * Hiện tấm ảnh thật ngay trong trang — DEC-061.
+   * Đang ở trong một webview bị khoá (Zalo, Facebook, TikTok…) — ISSUE-003.
    *
-   * Không hiện sẵn từ đầu. Thẻ `<img>` trỏ vào `?view=1` nên nó là **một lượt
-   * dựng Satori nữa**, tách hẳn với blob đã nạp trước cho bảng chia sẻ — cố ý,
-   * vì thao tác "Lưu ảnh" khi nhấn giữ cần một URL http thật (xem chú thích tại
-   * chỗ render). Phần lớn lượt bấm đi thẳng vào bảng chia sẻ và không cần tới
-   * nó, nên chỉ dựng khi người dùng chủ động xin, hoặc khi đó là đường duy nhất
-   * còn lại.
+   * Chỉ bật sau một cú chạm, nên khối hướng dẫn nó điều khiển **không tồn tại**
+   * trong HTML của server. Nhờ vậy chỗ đó được phép hỏi thẳng trình duyệt xem có
+   * `ClipboardItem` hay không mà không sợ lệch hydrate.
    */
-  const [isPreviewShown, setIsPreviewShown] = useState(false);
+  const [isRestrictedBrowser, setIsRestrictedBrowser] = useState(false);
 
   /** Ảnh đã nạp (hoặc đang nạp). `null` = chưa nạp lần nào, hoặc lần trước hỏng. */
   const imagePromiseRef = useRef<Promise<ImageFetchResult> | null>(null);
@@ -330,9 +391,10 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
         }
       }
 
-      // Webview không có Web Share (hay gặp: trình duyệt trong Zalo, Firefox
-      // Android). Vẫn phải kết thúc bằng một thứ dùng được, không phải im lặng.
-      setIsPreviewShown(true);
+      // Webview không có Web Share — đúng bối cảnh ISSUE-003. Vẫn phải kết thúc
+      // bằng một thứ dùng được, không phải im lặng. Ảnh đã hiện sẵn từ DEC-064
+      // nên ở đây chỉ cần mở khối đường vòng.
+      setIsRestrictedBrowser(true);
       setHint(ZALO_MANUAL_HINT);
     } finally {
       setIsBusy(false);
@@ -340,25 +402,61 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
   }
 
   /**
-   * ── ĐIỆN THOẠI, NÚT 2: LƯU VÀO THƯ VIỆN ẢNH ─────────────────────────────
+   * ── ĐƯỜNG VÒNG SỐ 1 CỦA ISSUE-003: SAO CHÉP ẢNH ─────────────────────────
    *
-   * Không `fetch`, không chờ, không blob: chỉ hiện thẻ `<img>` trỏ vào `?view=1`
-   * rồi nói người dùng nhấn giữ. Trang web **không ghi được vào Thư viện ảnh**
-   * (DEC-061), nên "lưu" ở đây thật sự là "đưa bạn tới đúng thao tác lưu" —
-   * thao tác đó có trên cả Android ("Tải ảnh xuống") lẫn iOS ("Thêm vào Ảnh").
+   * Đây là đường **duy nhất** đưa được tấm ảnh vào một cuộc trò chuyện Zalo mà
+   * người dùng **không phải rời khỏi Zalo**: chép ảnh vào clipboard, rồi họ dán
+   * vào khung chat. Không cần tải file (WebView chặn), không cần bảng chia sẻ
+   * (WebView không có), không cần nhấn giữ (menu ngữ cảnh là của app chủ).
+   *
+   * ⚠ Dùng lại blob đã nạp trước — cùng lý do với `navigator.share()`: quyền
+   * ghi clipboard cũng đòi thao tác chạm còn hiệu lực. Safari còn khắt khe hơn
+   * ở đây, nên nếu đường này hỏng thì khối hướng dẫn "mở bằng trình duyệt" bên
+   * dưới vẫn còn nguyên, không có nhánh nào cụt.
    */
-  function handleSaveToGallery() {
+  async function handleCopyImage() {
+    setIsBusy(true);
     setError(null);
-    setHint(LONG_PRESS_HINT);
-    setIsPreviewShown(true);
+    setHint(null);
+
+    try {
+      const result = await takeShareImage();
+
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+
+      await navigator.clipboard.write([new ClipboardItem({ [PNG_MIME]: result.blob })]);
+      setHint(COPIED_HINT);
+    } catch {
+      // Trình duyệt từ chối quyền, hoặc không nhận kiểu `image/png`.
+      setError(COPY_FAILED_HINT);
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   /**
-   * ── MÁY TÍNH CÓ CHUỘT: TẢI FILE ─────────────────────────────────────────
+   * ── NÚT TẢI ẢNH — CÓ Ở CẢ HAI THIẾT BỊ (DEC-064) ────────────────────────
    *
-   * Không bao giờ gọi share sheet — trên Chrome Windows nó mở một bảng **không
-   * hề có Zalo** (DEC-060). Máy tính cũng không có "thư viện ảnh", nên ở đây chỉ
-   * còn đúng một việc: tải file về.
+   * ⚠ **Trước DEC-064 nút này chỉ có trên máy tính**, còn điện thoại được đưa
+   * một nút "Lưu vào thư viện ảnh" mà thực chất chỉ hiện ảnh ra rồi bảo người
+   * dùng **nhấn giữ**. Người dùng bác thẳng thiết kế đó:
+   *
+   * > *"tôi không thích cách phải giữ ảnh mới tải xuống hay chuyển ảnh đi được,
+   * > vì nếu làm vậy những người 'mù công nghệ' sẽ không biết làm"*
+   *
+   * Họ đúng. `<a download>` với `blob:` **chạy thật** trên Chrome Android và
+   * trên Safari iOS 13+ — không cần nhấn giữ, không cần dạy ai điều gì. Cái nó
+   * không làm được là ghi vào **Thư viện ảnh** (không API nào làm được —
+   * DEC-061); file vào thư mục Tải xuống, và dòng xác nhận nói đúng chỗ đó.
+   *
+   * Muốn ảnh nằm trong Thư viện thì đi đường nút Zalo → "Lưu ảnh" trong bảng
+   * chia sẻ. Đó là lý do hai nút cùng tồn tại chứ không phải một nút gánh cả hai.
+   *
+   * Máy tính vẫn **không bao giờ** gọi share sheet: trên Chrome Windows nó mở
+   * một bảng không hề có Zalo (DEC-060).
    */
   async function handleDownload() {
     setIsBusy(true);
@@ -373,19 +471,69 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
         return;
       }
 
-      if (downloadBlob(result.blob)) {
-        setHint(DOWNLOADED_HINT);
+      if (!downloadBlob(result.blob)) {
+        window.location.href = shareImagePath(reportId);
         return;
       }
 
-      window.location.href = shareImagePath(reportId);
+      setHint(DOWNLOADED_HINT);
+
+      /*
+       * ⚠ `anchor.click()` KHÔNG BAO GIỜ ném lỗi, kể cả khi webview bỏ qua hoàn
+       * toàn thuộc tính `download` (bài học DEC-060). Nên trong một webview bị
+       * khoá, ta **không thể biết** lệnh tải có chạy hay không.
+       *
+       * Không đoán, và cũng không im lặng: mở sẵn khối đường vòng kèm câu "nếu
+       * không thấy ảnh tải về…". Người dùng ở trình duyệt bình thường thấy dòng
+       * xác nhận là đủ và bỏ qua khối này; người trong Zalo có ngay lối khác mà
+       * không phải quay lại hỏi.
+       */
+      if (lacksSystemShare()) setIsRestrictedBrowser(true);
     } finally {
       setIsBusy(false);
     }
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      {/*
+        ── ẢNH XEM TRƯỚC, LUÔN HIỆN — DEC-064 ────────────────────────────────
+
+        Người dùng yêu cầu trực tiếp: *"cách hiển thị ảnh trước khi gửi cho người
+        dùng coi trước tôi rất thích"*. Nó không chỉ dễ chịu mà còn sửa một lỗi
+        thật của bản trước: nhãn nút phải gánh việc nói "đây là tấm nào" (DEC-058),
+        còn nay tấm ảnh tự nói. Nút quay về mô tả **hành động**.
+
+        Ảnh trỏ vào `?view=1` (route trả `inline`) chứ KHÔNG dùng `blob:` đã nạp
+        trước — cố ý. `blob:` phải chờ `fetch` xong mới có, tức là khối này sẽ
+        nhảy vào giữa trang sau một quãng; còn `<img>` với URL thật thì trình
+        duyệt tự lo, giữ đúng chỗ nhờ `aspect-9/16`. Đổi lại là **hai lượt dựng
+        ảnh** mỗi lượt xem trang (một cho `<img>`, một cho blob của nút Zalo) —
+        cái giá đã cân nhắc và chấp nhận, xem DEC-064.
+      */}
+      <figure className="flex flex-col items-center gap-1.5">
+        {/* eslint-disable-next-line @next/next/no-img-element -- `next/image`
+            sẽ đẩy ảnh qua bộ tối ưu `/_next/image`, tức là để một tấm ảnh
+            `private, no-store` của MỘT người đi qua một lớp cache dùng chung
+            (DEC-021). Ảnh này cũng đã đúng kích thước nên không có gì để tối ưu. */}
+        <img
+          src={shareImageViewPath(reportId)}
+          alt={`Ảnh báo cáo dọc 9:16 — ${fileName}`}
+          width={1080}
+          height={1920}
+          className="aspect-9/16 w-full max-w-56 rounded-lg border border-border/70 bg-card object-contain shadow-sm"
+          // Webview có thể chặn cả việc hiển thị. Không bắt được lỗi thì người
+          // dùng nhìn một ô vỡ và không hiểu vì sao (ISSUE-003).
+          onError={() => {
+            setIsRestrictedBrowser(true);
+            setError(PREVIEW_BLOCKED_HINT);
+          }}
+        />
+        <figcaption className="text-center text-xs text-muted-foreground">
+          Ảnh sẽ gửi đi — xem lại trước khi bấm nút bên dưới.
+        </figcaption>
+      </figure>
+
       {/*
         PHASE 13 (DEC-053) — biến thể `accent` (cam logo, chữ TỐI 8,17:1).
 
@@ -395,11 +543,14 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
         mỗi màn hình — cam ở đây không tranh chỗ với nút xanh, nó nói một câu
         khác. Chữ trắng trên cam chỉ 2,19:1 nên BỊ CẤM (DEC-046).
 
-        PHASE 14 (DEC-062) — trên điện thoại chỗ này là HAI nút. Việc "gửi cho
-        người khác" và việc "cất lại cho mình" là hai ý định khác nhau, và mỗi
-        cái đi một đường kỹ thuật hoàn toàn khác. Gộp làm một nút thì người dùng
-        phải đoán, mà đoán sai thì đúng bằng ISSUE-029. Chỉ nút Zalo giữ màu cam:
-        nó vẫn là một CTA duy nhất, nút còn lại là `secondary`.
+        PHASE 14 (DEC-062 + DEC-064) — điện thoại có HAI nút cho HAI đích đến
+        khác nhau, và **cả hai đều bấm-một-cái-là-xong**:
+
+          • Gửi qua Zalo → bảng chia sẻ của máy, chọn Zalo / Messenger / Telegram…
+          • Tải ảnh về máy → file vào thư mục Tải xuống
+
+        Không nút nào bắt người dùng nhấn giữ hay học một thao tác mới — đó là
+        điều người dùng yêu cầu thẳng ở DEC-064.
       */}
       <div className={TOUCH_ONLY}>
         <Button
@@ -413,9 +564,15 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
           {isBusy ? 'Đang tạo ảnh…' : SEND_TO_ZALO_LABEL[variant]}
         </Button>
 
-        <Button variant="secondary" size="lg" onClick={handleSaveToGallery}>
-          <ImageIcon aria-hidden="true" className="size-5" />
-          {SAVE_TO_GALLERY_LABEL}
+        <Button
+          variant="secondary"
+          size="lg"
+          onClick={handleDownload}
+          disabled={isBusy}
+          aria-busy={isBusy}
+        >
+          <Download aria-hidden="true" className="size-5" />
+          {DOWNLOAD_IMAGE_LABEL}
         </Button>
       </div>
 
@@ -427,8 +584,8 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
           disabled={isBusy}
           aria-busy={isBusy}
         >
-          <ImageIcon aria-hidden="true" className="size-5" />
-          {isBusy ? 'Đang tạo ảnh…' : SHARE_IMAGE_LABEL[variant]}
+          <Download aria-hidden="true" className="size-5" />
+          {isBusy ? 'Đang tạo ảnh…' : DOWNLOAD_IMAGE_LABEL}
         </Button>
       </div>
 
@@ -445,35 +602,48 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
       )}
 
       {/*
-        ẢNH THẬT NGAY TRONG TRANG — DEC-061.
+        ── KHỐI ĐƯỜNG VÒNG CHO WEBVIEW BỊ KHOÁ — ISSUE-003 ───────────────────
 
-        Đây là đường vào Thư viện ảnh khi bảng chia sẻ không dùng được. Không có
-        cách nào khác: `<a download>`, `Content-Disposition: attachment` và mọi
-        biến thể của chúng đều chỉ đẩy file vào thư mục Tải xuống.
+        Chỉ hiện khi trình duyệt **thiếu Web Share** trên một máy cảm ứng, tức
+        gần như chắc chắn đang ở trong một in-app browser (Zalo, Facebook…).
+        Trên trình duyệt bình thường khối này không bao giờ xuất hiện, nên nó
+        không làm rối màn hình của đa số người dùng.
 
-        Ảnh trỏ vào `?view=1` (route trả `inline`) chứ KHÔNG dùng `blob:` của
-        lượt `fetch` vừa rồi — cố ý. Thao tác "Lưu ảnh" khi nhấn giữ chạy ổn
-        định với URL http thật trên cả Chrome Android lẫn Safari iOS, còn với
-        `blob:` thì tuỳ phiên bản, và đây đúng là chỗ không được phép "tuỳ".
+        Thứ tự hai đường là cố ý: **sao chép trước**, vì nó giữ người dùng ở
+        trong Zalo — họ đang ở đó và việc họ muốn là gửi cho khách ngay. "Mở
+        bằng trình duyệt" là đường chắc chắn chạy nhưng bắt họ rời ứng dụng.
       */}
-      {isPreviewShown && (
-        <figure className="flex flex-col items-center gap-1.5">
-          {/* eslint-disable-next-line @next/next/no-img-element -- `next/image`
-              sẽ đẩy ảnh qua bộ tối ưu `/_next/image`, tức là để một tấm ảnh
-              `private, no-store` của MỘT người đi qua một lớp cache dùng chung
-              (DEC-021). Ảnh này cũng đã đúng kích thước và chỉ hiện sau một lần
-              chạm, nên không có gì để `next/image` tối ưu. */}
-          <img
-            src={shareImageViewPath(reportId)}
-            alt={`Ảnh báo cáo dọc 9:16 — ${fileName}`}
-            width={1080}
-            height={1920}
-            className="w-full max-w-60 rounded-lg border border-border/70 shadow-sm"
-          />
-          <figcaption className="text-center text-xs text-muted-foreground">
-            Ảnh thật 1080×1920 — nhấn giữ vào ảnh để lưu.
-          </figcaption>
-        </figure>
+      {isRestrictedBrowser && (
+        <div className="flex flex-col gap-2 rounded-lg border border-border/70 bg-status-info-bg p-3">
+          <p className="text-sm font-semibold text-heading">
+            Bạn đang mở trong ứng dụng khác (Zalo, Facebook…)
+          </p>
+          <p className="text-sm text-foreground">
+            Trình duyệt trong ứng dụng chặn tải ảnh và chia sẻ. Hai cách dưới đây vẫn dùng được.
+          </p>
+
+          {canCopyImage() && (
+            <Button variant="primary" size="lg" onClick={handleCopyImage} disabled={isBusy}>
+              <Copy aria-hidden="true" className="size-5" />
+              {isBusy ? 'Đang chép ảnh…' : 'Sao chép ảnh để dán vào Zalo'}
+            </Button>
+          )}
+
+          <p className="text-sm text-foreground">
+            Hoặc bấm{' '}
+            <span className="font-semibold" aria-hidden="true">
+              ⋮
+            </span>{' '}
+            /{' '}
+            <span className="font-semibold" aria-hidden="true">
+              •••
+            </span>{' '}
+            <span className="sr-only">nút thực đơn</span> ở góc trên màn hình rồi chọn{' '}
+            <span className="font-semibold">“Mở trong trình duyệt”</span> (Android) hoặc{' '}
+            <span className="font-semibold">“Mở trong Safari”</span> (iPhone) — ở đó mọi thứ chạy
+            bình thường.
+          </p>
+        </div>
       )}
 
       {/*
@@ -487,11 +657,8 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
         dẫn thẳng tới thao tác nhấn giữ để lưu. `min-h-11` để vùng chạm đạt 44px
         như mọi mục tiêu chạm khác (NFR-007).
 
-        ⚠ Nhãn cố ý nói về **tab mới**, không nói về thư viện — nút "Lưu vào thư
-        viện ảnh" ngay trên đã nhận câu đó rồi. Hai nhãn gần trùng nghĩa đứng
-        cạnh nhau buộc người dùng phải đoán xem chúng khác gì nhau, và đây là
-        chỗ họ đang bối rối sẵn (ISSUE-029). Nhãn này trả lời đúng điều khác
-        biệt duy nhất: nó rời khỏi trang.
+        ⚠ Nhãn cố ý nói về **tab mới** — đó là điều khác biệt duy nhất so với hai
+        nút bên trên, và nói đúng điều khác biệt thì người dùng không phải đoán.
       */}
       <a
         href={shareImageViewPath(reportId)}
@@ -504,17 +671,16 @@ export function ShareImageButton({ reportId, fileName, variant }: Props) {
       </a>
 
       {/*
-        Câu này nói thẳng giới hạn của nền tảng thay vì để người dùng tự khám phá
-        ra bằng cách đi tìm file — đó chính là ISSUE-029. Nó đúng cho cả Android
-        lẫn iOS, nên không tách hai câu theo hệ điều hành.
+        Câu này nói **hai nút khác nhau ở đâu**, không dạy thao tác nào cả —
+        DEC-064. Bản trước bảo người dùng "nhấn giữ vào ảnh rồi chọn Lưu ảnh", và
+        đó đúng là thứ họ bác: một thao tác ẩn mà người không rành máy không biết.
 
-        Giữ MỘT câu: phần "Gửi qua Zalo mở bảng chia sẻ" đã nằm ở `SHARED_HINT`,
-        hiện ra đúng lúc người dùng vừa bấm — nói trước ở đây nữa thành ra một
-        khối chữ bốn dòng mà không ai đọc.
+        Nói "Tải xuống" và "Thư viện ảnh" là hai chỗ khác nhau vẫn cần thiết —
+        đó chính là hiểu lầm đã sinh ra ISSUE-029.
       */}
       <p className="text-center text-xs text-muted-foreground">
-        Ảnh dọc 9:16. Trình duyệt không tự cất ảnh vào Thư viện được — muốn lưu thì nhấn giữ vào ảnh
-        rồi chọn “Lưu ảnh”.
+        Ảnh dọc 9:16. “Tải ảnh” cất file vào thư mục Tải xuống của máy; muốn ảnh nằm trong Thư viện
+        ảnh thì bấm “Gửi qua Zalo” rồi chọn “Lưu ảnh” trong bảng hiện ra.
       </p>
     </div>
   );

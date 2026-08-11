@@ -1892,3 +1892,88 @@ cầu, và siết RLS là thay đổi cần được quyết định riêng.
 **Hệ quả kỹ thuật:** ba trường hồ sơ dọn sang `lib/validation/profile-fields.ts` để form UC-18 và
 form DEC-063 dùng **chung một định nghĩa** — ràng buộc đến từ CHECK constraint của
 `0001_init_enums_profiles.sql`, chép ra hai bản là mở đường cho hai bản trôi khỏi nhau.
+
+---
+
+## DEC-064 — Ảnh xem trước luôn hiện; mọi việc làm bằng NÚT, không bằng thao tác ẩn
+
+**Date:** 2026-08-11
+**Status:** APPROVED (người dùng yêu cầu trực tiếp, bác thẳng thiết kế của DEC-061)
+
+**Nguyên văn hai câu quyết định:**
+
+> *"nhưng tôi không thích cách phải giữ ảnh mới tải xuống hay chuyển ảnh đi được, vì nếu làm vậy
+> những người 'mù công nghệ' sẽ không biết làm."*
+>
+> *"cách hiển thị ảnh trước khi gửi cho người dùng coi trước tôi rất thích nhưng tôi cần nút tải ảnh
+> (bấm vào là tải được ảnh) và nút gửi ảnh zalo bấm vào là cho mình chọn nơi chuyển (có thể chuyển
+> mes zalo tele máy của người dùng cho chuyển đến đâu)."*
+
+**Vì sao DEC-061 sai ở chỗ này, dù kỹ thuật thì đúng:** DEC-061 xác định đúng rằng trang web không
+ghi được vào Thư viện ảnh, và kết luận rằng lối duy nhất còn lại là **nhấn giữ vào ảnh**. Kết luận
+đó đúng về mặt kỹ thuật nhưng sai về mặt sản phẩm: nó biến một giới hạn của nền tảng thành **một
+bước bắt buộc trong hướng dẫn sử dụng**, và người dùng của BikeForce là đội Sales ngoài thị trường,
+không phải người quen mò máy. Một thao tác ẩn mà phải dạy thì coi như tính năng chưa chạy.
+
+**Decision:**
+
+| | Trước (DEC-061/062) | Sau (DEC-064) |
+|---|---|---|
+| Ảnh xem trước | Hiện **sau khi bấm** một nút | **Luôn hiện**, ngay khi mở trang |
+| Nút 1 (điện thoại) | "Gửi cam kết/kết quả qua Zalo" → bảng chia sẻ | *(giữ nguyên)* |
+| Nút 2 (điện thoại) | "Lưu vào thư viện ảnh" → hiện ảnh + bảo nhấn giữ | **"Tải ảnh về máy" → tải THẬT bằng một cú bấm** |
+| Nút máy tính | "Xuất ảnh báo cáo" / "Lưu hình báo cáo đầu ngày" | **"Tải ảnh về máy"** — cùng nhãn với điện thoại |
+| Chữ hướng dẫn | "nhấn giữ vào ảnh rồi chọn Lưu ảnh" | **Không còn câu nào dạy thao tác ẩn** |
+
+**Ba hệ quả đáng ghi:**
+
+1. **`<a download>` với `blob:` chạy thật trên cả Chrome Android lẫn Safari iOS 13+.** Không cần
+   nhấn giữ. Cái nó **không** làm được vẫn là ghi vào Thư viện ảnh — file vào thư mục Tải xuống, và
+   dòng xác nhận nói đúng chỗ đó thay vì để người dùng đi tìm (bài học ISSUE-029 giữ nguyên).
+   Muốn ảnh nằm trong Thư viện thì đi đường nút Zalo → "Lưu ảnh" **trong bảng chia sẻ** — đó là một
+   mục bấm được của hệ điều hành, không phải một cử chỉ ẩn.
+2. **Nhãn nút quay về mô tả HÀNH ĐỘNG.** DEC-058 từng bắt nhãn gánh việc "cho biết đang cầm tấm
+   nào" ("Lưu hình báo cáo đầu ngày" / "Xuất ảnh báo cáo"). Nay **tấm ảnh tự nói điều đó** vì nó
+   luôn nằm ngay trên nút. Nhãn nút Zalo vẫn giữ biến thể vì nó mô tả *gửi cái gì*; nhãn nút tải là
+   một chuỗi duy nhất vì tải là cùng một việc.
+3. **Cái giá đã cân nhắc: hai lượt dựng ảnh mỗi lượt xem trang** — một cho thẻ `<img>` (URL `?view=1`)
+   và một cho blob nạp trước của nút Zalo. Cố ý không gộp: dùng `blob:` cho `<img>` thì khối ảnh chỉ
+   xuất hiện sau khi `fetch` xong, tức nhảy vào giữa trang; còn bỏ nạp trước thì iOS Safari lại từ
+   chối `navigator.share()` (DEC-062). Với quy mô một đội Sales vài người, hai lượt dựng mỗi lượt
+   xem là chấp nhận được; nếu sau này thành vấn đề thì phải là một DEC mới, đừng lặng lẽ bỏ một vế.
+
+**ISSUE-003 — trình duyệt TRONG Zalo, xử lý trong cùng quyết định này.** Người dùng báo: *"các trình
+duyệt khác thì bình thường nhưng nếu mở link ngay trong zalo sẽ không thể tải ảnh hay chuyển ảnh qua
+zalo"*. Đúng, và **không có API web nào sửa được**: trình duyệt trong Zalo là một WebView nhúng, app
+chủ quyết định nó được làm gì, và nó cắt cùng lúc cả ba thứ ta dựa vào —
+
+| Cơ chế | Vì sao chết trong WebView |
+|---|---|
+| `navigator.share()` | WKWebView (iOS) không phơi Web Share; Android WebView cũng vậy trừ khi app chủ bật |
+| Tải file (`attachment`, `<a download>`) | Android WebView **bỏ qua hoàn toàn** nếu app chủ không cài `DownloadListener` |
+| Nhấn giữ ảnh → "Lưu ảnh" | Menu ngữ cảnh là của app chủ; nhiều in-app browser tắt hẳn |
+
+Cách xử lý là mở **hai đường vòng có thật**, hiện ra đúng lúc và chỉ khi cần:
+
+1. **"Sao chép ảnh để dán vào Zalo"** — `navigator.clipboard.write()` với `ClipboardItem` kiểu
+   `image/png`. Người dùng dán thẳng vào khung chat. Đường này **giữ họ ở trong Zalo**, nên nó đứng
+   trước. Nút chỉ render khi trình duyệt thật sự có `ClipboardItem` (kiểm ngay tại chỗ render — khối
+   này không tồn tại trong HTML của server nên không lệch hydrate).
+2. **"Mở trong trình duyệt" / "Mở trong Safari"** — hướng dẫn bấm `⋮` hoặc `•••`. Chắc chắn chạy,
+   đúng như người dùng đã xác nhận ("các trình duyệt khác thì bình thường").
+
+**Phát hiện webview bằng CAPABILITY, không bằng `userAgent`:** điều kiện là `typeof navigator.share
+!== 'function'` trên một máy cảm ứng. Chrome Android và Safari iOS đều **có** `navigator.share`;
+thiếu nó gần như chắc chắn là in-app browser. Sniff UA sẽ hỏng theo hai chiều — Zalo đổi UA là ta
+mù, còn Facebook / Instagram / TikTok cũng khoá y hệt mà ta không nhận ra.
+
+⚠ **Không thể phát hiện "tải file có chạy không".** `anchor.click()` **không bao giờ** ném lỗi kể cả
+khi webview bỏ qua thuộc tính `download` (bài học DEC-060). Vì vậy sau khi bấm tải trong một webview
+bị khoá, khối đường vòng **mở sẵn** kèm câu "nếu không thấy ảnh tải về…" thay vì đoán bừa hoặc im
+lặng.
+
+**Hệ quả bắt buộc nhớ:**
+- **Không** thêm lại bất kỳ câu nào dạy người dùng "nhấn giữ vào ảnh". Nhấn giữ vẫn chạy trên trình
+  duyệt thật, nhưng đó là thứ có sẵn của trình duyệt, **không phải một bước trong hướng dẫn**.
+- **Không** gỡ ảnh xem trước xuống sau một cú bấm nào đó. Nó luôn hiện — người dùng yêu cầu thẳng.
+- **Không** đổi nút tải ảnh thành nút "lưu vào thư viện": nhãn đó **hứa sai**, web không làm được.

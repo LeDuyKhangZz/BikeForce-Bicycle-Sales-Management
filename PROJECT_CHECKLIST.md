@@ -654,7 +654,7 @@ Bốn dòng: Viếng thăm 9/10 điểm (90,0% Gần đạt) · Doanh số 10/50
 ## Phase 14 — Gỡ sửa cam kết sáng · Thẻ ảnh 9:16 đổi nội dung, đổi màu, tách hai biến thể (MỞ 2026-08-11)
 
 **Nguồn:** 4 lượt yêu cầu trực tiếp của người dùng trong phiên 2026-08-11 (kèm 3 ảnh chú thích tay).
-**Quyết định:** DEC-055 · DEC-056 · DEC-057 · DEC-058 · DEC-059 · DEC-060 · **DEC-061 · DEC-062 · DEC-063**. **BR-002 được NỚI** (DEC-058).
+**Quyết định:** DEC-055 · DEC-056 · DEC-057 · DEC-058 · DEC-059 · DEC-060 · **DEC-061 · DEC-062 · DEC-063 · DEC-064**. **BR-002 được NỚI** (DEC-058).
 
 ### 14a. Gỡ hẳn "Sửa cam kết sáng" — DEC-055
 
@@ -794,6 +794,58 @@ xong nó tự động lưu ở đâu đó giờ tôi kiếm không ra"*. Cộng 
 - [x] `npx next build` — 18 route
 - [x] `npm test` đủ 3 project — **784/784** (unit 590 · integration 57 · rls 137)
 - [x] `npm run e2e` — **150 passed / 12 skipped / 0 failed**, 5,1 phút *(162 bài, có 8 bài MỚI của DEC-061/062/063)*
+
+### 14l. Logo bị cắt mất đáy hai bánh xe — ISSUE-030
+
+- [x] Đo được nguyên nhân thật, không đoán: `getBBox()` + nửa bề rộng nét ⇒ hình ở `y ∈ [13,07 · 87,93]`, `viewBox` cũ dừng ở `75`
+- [x] Xác nhận `app/icon.svg` và bốn `public/icons/*.png` **KHÔNG** dính lỗi (khung 512×512 có đệm) — không phải sinh lại bộ icon
+- [x] `viewBox="0 13.07 101 74.86"` trong `components/ui/brand-mark.tsx`, **giữ nguyên toàn bộ `d=`**
+- [x] Luật E2E thứ năm `logo-clipped` + thuộc tính mốc `data-brand-mark` + bộ đếm `marks > 0`
+- [x] `docs/12` (ISSUE-030) · `docs/05` (§15 bộ icon, §14.6 hàng rào) · `docs/08` (§13.3 danh sách luật)
+- [x] `npm run typecheck` — exit 0
+- [x] `npm run lint` — 0 error, 0 warning
+- [x] `npm run build` — 21 route
+- [x] `npx vitest run --project unit` — **590/590**, 1,96 giây
+- [x] Luật `logo-clipped` chạy thật trên DOM `/login` ở `375px` và `1440px` — **3/3 logo trọn hình**
+- [x] **Nhìn tận mắt** ảnh chụp `/login` ở `375px` và `1440px` — hai bánh xe tròn đủ
+- [ ] `npm run e2e` đủ 3 project với luật mới — *cần Supabase local + tài khoản seed, chưa chạy trong phiên này*
+
+### 14l. Bỏ thao tác ẩn: ảnh luôn hiện, mọi việc bằng NÚT — DEC-064 (+ ISSUE-003)
+
+**Nguồn:** hai phản hồi liên tiếp của người dùng sau khi DEC-061/062 lên production:
+*"tôi không thích cách phải giữ ảnh mới tải xuống hay chuyển ảnh đi được, vì nếu làm vậy những người
+'mù công nghệ' sẽ không biết làm"* · *"cách hiển thị ảnh trước khi gửi cho người dùng coi trước tôi
+rất thích nhưng tôi cần nút tải ảnh (bấm vào là tải được ảnh) và nút gửi ảnh zalo bấm vào là cho
+mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể tải ảnh hay chuyển ảnh qua zalo"*.
+
+- [x] **Ảnh xem trước LUÔN hiện** ngay khi mở trang, mọi thiết bị — không còn nấp sau một cú bấm
+- [x] Nút "Lưu vào thư viện ảnh" → **"Tải ảnh về máy"**, bấm một cái là **tải thật** (`<a download>`
+      + `blob:` chạy trên Chrome Android và Safari iOS 13+)
+- [x] Nút tải ảnh nay có ở **cả hai** thiết bị, cùng một nhãn; máy tính bỏ nhãn theo biến thể
+- [x] **Xoá sạch mọi câu dạy "nhấn giữ vào ảnh"** — kể cả trong dòng trạng thái của nhánh dự phòng
+- [x] Nhãn nút quay về mô tả **hành động**; việc "đang cầm tấm nào" do ảnh xem trước gánh
+- [x] **ISSUE-003** — webview của Zalo: nhận ra bằng **capability** (`typeof navigator.share !==
+      'function'` trên máy cảm ứng), KHÔNG sniff `userAgent`
+- [x] Đường vòng 1: **"Sao chép ảnh để dán vào Zalo"** (`ClipboardItem` `image/png`) — giữ người
+      dùng ở trong Zalo; nút chỉ render khi trình duyệt thật sự hỗ trợ
+- [x] Đường vòng 2: hướng dẫn bấm `⋮` / `•••` → **"Mở trong trình duyệt" / "Mở trong Safari"**
+- [x] `<img onError>` — webview chặn cả hiển thị thì nói ra, không để người dùng nhìn ô vỡ
+- [x] Sau khi bấm tải trong webview bị khoá: **mở sẵn khối đường vòng** vì `anchor.click()` không
+      bao giờ ném lỗi nên KHÔNG thể biết lệnh tải có chạy không (bài học DEC-060)
+- [x] `e2e/share-image.spec.ts` viết lại: ảnh hiện sẵn · **không còn chữ "nhấn giữ"** · nút tải bấm
+      là tải thật trên điện thoại · khối đường vòng hiện khi thiếu Web Share
+- [x] `e2e/sales-flow.spec.ts` cập nhật theo nhãn nút mới
+- [x] **Nhìn tận mắt** ở 375px: trạng thái bình thường **và** trạng thái webview bị khoá; kiểm bằng
+      DOM chứ không chỉ bằng ảnh (ảnh `fullPage` ghép sticky header gây hiểu nhầm)
+- [ ] Thử hai đường vòng trên **Zalo thật** (Android + iOS) — ISSUE-003, cần thiết bị
+
+### 14m. Quality gate của 14l
+
+- [x] `npm run typecheck` — exit 0
+- [x] `npm run lint` — 0 error, 0 warning
+- [x] `npx next build` — 18 route
+- [x] `npm test` — **784/784**
+- [x] `npm run e2e` — E2E_064_PLACEHOLDER
 
 ## OPEN QUESTIONS
 

@@ -314,6 +314,11 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** tự thêm feature ngoài MVP (CRM, kho, POS, SKU, GPS, đơn hàng) để dự án "to hơn".
 - ❌ **Không** tự triển khai mục trong `docs/10-future-roadmap.md`.
 - ❌ **Không** rewrite lại bộ tài liệu Phase 0 từ đầu — chỉ cập nhật (xem `DO NOT REDO` trong checkpoint).
+- ❌ **Không** "làm gọn" `viewBox` của `BrandMark` về `0 0 101 75`. Giá trị đúng là
+  **`0 13.07 101 74.86`**: kích thước `101 × 75` luôn đúng, cái từng thiếu là **độ lệch `y = 13,07`**,
+  và thiếu nó thì đáy hai bánh xe bị chém mất ~17% chiều cao. Bộ icon PWA **không** dính lỗi này nên
+  đừng sinh lại chúng "cho đồng bộ". Cũng **không** gỡ `data-brand-mark` — đó là mốc của luật E2E
+  `logo-clipped` (ISSUE-030).
 - ❌ **Không** dùng `<table>` cuộn ngang trên mobile, không dùng emoji làm icon, không thêm animation ngoài transform/opacity 150–300ms.
 - ❌ **Không** đổi bảng màu DEC-046 để "cho tươi hơn" — người dùng đã chốt giữ đúng tone logo. Lớp thẩm mỹ nằm ở **DEC-053** (chiều sâu / bo góc / chuyển động), không ở màu.
 - ❌ **Không** đặt kính mờ (`backdrop-blur`) lên khối có chữ đọc lâu — chỉ header và bottom nav (DEC-053).
@@ -339,6 +344,14 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** hứa "gửi thẳng vào Zalo" trong bất kỳ chữ nào của giao diện. Không có deep link Zalo
   nào nhận file; `navigator.share` mở **bảng chia sẻ của hệ điều hành**, Zalo là một mục trong đó
   (DEC-062).
+- ❌ **Không** thêm lại bất kỳ câu nào dạy người dùng **"nhấn giữ vào ảnh"**. Người dùng đã bác
+  thẳng: người không rành máy không biết thao tác ẩn. Mọi việc làm bằng **NÚT** (DEC-064).
+- ❌ **Không** gỡ **ảnh xem trước** xuống hay đặt nó sau một cú bấm — nó **luôn hiện**, người dùng
+  yêu cầu trực tiếp (DEC-064).
+- ❌ **Không** đặt nhãn "Lưu vào thư viện ảnh" cho nút nào — nhãn đó **hứa sai**, web không ghi vào
+  Thư viện được. Nút tải tên là **"Tải ảnh về máy"** (DEC-064).
+- ❌ **Không** phát hiện webview bằng `userAgent`. Điều kiện là `typeof navigator.share !==
+  'function'` trên máy cảm ứng — Zalo đổi UA là mù, mà Facebook/TikTok cũng khoá y hệt (DEC-064).
 - ❌ **Không** gộp nhãn nút Zalo thành một chuỗi chung. `SEND_TO_ZALO_LABEL` là `Record` theo biến
   thể ("Gửi cam kết…" / "Gửi kết quả…") — gộp lại là làm mất thông tin DEC-058 cố ý đặt vào nhãn.
 - ❌ **Không** bỏ dòng kiểm `profile.role !== 'ADMIN'` trong `updateOwnProfileAction` với lý do "RLS
@@ -359,7 +372,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-063` (decision) · `ISSUE-001..ISSUE-029` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-064` (decision) · `ISSUE-001..ISSUE-030` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
 > **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy

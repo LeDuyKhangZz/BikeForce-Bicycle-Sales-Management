@@ -1201,7 +1201,16 @@ bị từ chối.
 
 Bộ soát là **script dùng-một-lần, không commit** (đúng thông lệ Phase 2–6). Nó đo trực tiếp trên DOM
 đã render, không đọc code đoán: `horizontal-scroll` · `touch-target-size` · `readable-font-size` ·
-`color-contrast`.
+`color-contrast` · **`logo-clipped`**.
+
+> **`logo-clipped` — luật thứ năm, thêm 2026-08-11 (ISSUE-030).** Bốn luật đầu đo *màu và kích
+> thước*; không luật nào hỏi *hình có được vẽ đủ không*. `viewBox` hẹp hơn nội dung cắt hình trong im
+> lặng tuyệt đối — không lỗi console, không cảnh báo build, không vi phạm axe, layout đúng từng
+> pixel — và logo đã bị chém mất ~17% chiều cao suốt Phase 13 với cả bốn luật đều xanh. Phép đo:
+> `getBBox()` của `svg[data-brand-mark]`, nới nửa bề rộng nét (`getBBox()` **không** tính nét, mà
+> `stroke-linecap="round"` thò ra đủ chừng ấy ở mọi đầu mút), bắt buộc nằm trọn trong `viewBox`,
+> dung sai `0,05` đơn vị user. ⚠ Bộ đếm `marks > 0` là **bắt buộc**: gỡ `data-brand-mark` khỏi
+> `BrandMark` sẽ làm phép đo không tìm thấy gì và báo "0 vi phạm" — đúng kiểu xanh oan của bẫy 4.
 
 **Bốn điều bắt buộc làm, mỗi điều tương ứng một lần đo sai đã thật sự xảy ra:**
 

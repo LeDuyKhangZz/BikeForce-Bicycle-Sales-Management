@@ -2263,3 +2263,81 @@ thấy: nhãn nút là chuỗi, và việc ẩn nút là CSS.
 | Nhấn giữ → "Lưu ảnh" trên **điện thoại thật** (Android + iOS) | Là chức năng **của trình duyệt thật**, Playwright không mô phỏng được. Gộp với ISSUE-003 |
 | Siết `profiles_update_self` xuống chỉ còn Admin (migration `0009`) | Ngoài phạm vi người dùng yêu cầu; siết RLS là thay đổi biên giới bảo mật, phải là một DEC riêng |
 | Deploy để người dùng kiểm lại trên máy thật | `git push` cần người dùng chạy |
+
+---
+
+### Entry 022 — Logo bị cắt mất đáy hai bánh xe (ISSUE-030)
+
+**Ngày:** 2026-08-11
+**Nguồn:** người dùng, ba ảnh chụp màn hình điện thoại + một ảnh sidebar Admin — *"sửa lại logo của
+trang web hiện tại đang bị cắt"*.
+**Sinh ra:** **ISSUE-030** (CLOSED trong cùng phiên). **Không** sinh DEC mới: chỉ có một giá trị
+đúng, không có phương án nào để chọn giữa.
+**File đổi:** `components/ui/brand-mark.tsx` · `e2e/ui-quality.spec.ts` · `docs/05` · `docs/08` ·
+`docs/12`.
+
+#### 1. Chẩn đoán — đo, không đoán
+
+`BrandMark` ghi `viewBox="0 0 101 75"`. Dựng hình trong Chromium rồi lấy `getBBox()`, nới thêm nửa bề
+rộng nét (`8.45 / 2 = 4.225`, vì `getBBox()` **không** tính nét mà `stroke-linecap="round"` thò ra đủ
+chừng ấy ở mọi đầu mút):
+
+| Cạnh | Mép hình | `viewBox` cũ | Chênh |
+|---|---|---|---|
+| trên | `13,075` | `0` | thừa **13,08** đơn vị trắng |
+| dưới | `87,921` | `75` | **cắt mất 12,92** (~17% chiều cao) |
+| trái | `0,006` | `0` | khít |
+| phải | `101,005` | `101` | khít (0,005 — sai số làm tròn) |
+
+**Kích thước `101 × 75` là ĐÚNG; cái thiếu là ĐỘ LỆCH `y = 13,07`.** Khung nhìn tụt lên 13 đơn vị so
+với hình, nên đáy hai bánh xe bị chém phẳng còn đỉnh thừa một dải trắng bằng đúng chừng ấy.
+
+#### 2. Vì sao lỗi sống sót qua cả Phase 13 — ba lớp bảo vệ cùng mù một chỗ
+
+1. **Bộ icon vô can nên không có gì để đối chiếu.** `app/icon.svg` và bốn `public/icons/*.png` dùng
+   **cùng bộ toạ độ** nhưng đặt vào khung `512 × 512` **có đệm đều bốn phía** — đã kiểm bằng mắt,
+   chúng hiển thị đủ hình. Chỉ bản inline lấy khung khít, và chỉ ở đó độ lệch mới có nghĩa. Câu
+   "sinh ra từ cùng bộ toạ độ nên không thể lệch hình" trong `docs/05` là **đúng về toạ độ và sai về
+   khung nhìn** — nay đã ghi rõ.
+2. **Không phép đo nào của dự án hỏi câu này.** `ui-quality.spec.ts` đo tương phản, cỡ chạm, tràn
+   ngang, cỡ chữ. Hình bị `viewBox` cắt **không vi phạm cái nào**: không lỗi console, không cảnh báo
+   build, không vi phạm axe, layout đúng từng pixel. SVG chỉ lặng lẽ vẽ thiếu.
+3. **`aspect-ratio` vẫn "hợp lý".** `101/75` và `101/74,86` lệch 0,2% ⇒ bố cục không hề nhảy, không
+   có triệu chứng phụ nào để lần ra.
+
+> Đây là lần thứ **ba** cùng một bài học (sau DEC-053 và DEC-054): **"không vi phạm" ≠ "đúng"**. Bốn
+> nhóm luật đo được đều xanh suốt thời gian logo bị cắt, và người tìm ra vẫn là **người dùng, bằng
+> mắt**.
+
+#### 3. Sửa
+
+1. `viewBox="0 13.07 101 74.86"` — **giữ nguyên toàn bộ `d=`**, chỉ dời khung nhìn. Không đụng trình
+   sinh, không đụng bộ icon (chúng vốn đã đúng).
+2. Luật E2E thứ năm **`logo-clipped`** trong `ui-quality.spec.ts`: `getBBox()` của
+   `svg[data-brand-mark]`, nới nửa bề rộng nét, bắt buộc nằm trọn trong `viewBox`, dung sai `0,05`
+   đơn vị user (≈ 0,016px ở cỡ 32px — hẹp hơn lỗi thật 250 lần). Kèm bộ đếm `marks > 0` theo bẫy 4.
+
+#### 4. Quality gate — chạy thật trong phiên này
+
+| Lệnh | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error 0 warning |
+| `npm run build` | ✅ 21 route |
+| `npx vitest run --project unit` | ✅ **590/590**, 1,96 giây |
+| Luật `logo-clipped` trên DOM thật | ✅ `375px` và `1440px` của `/login`: **3/3 logo trọn hình** |
+| **Nhìn tận mắt** | ✅ ảnh chụp `/login` ở `375px` + `1440px`; ảnh so sánh trước/sau ở 5 cỡ |
+
+⚠ **Một chi tiết của phiên, ghi lại vì nó gây hiểu nhầm mất vài phút:** lượt `typecheck` **đầu tiên**
+đỏ hai lỗi trong `features/report-share/share-image-button.tsx` (`SAVE_TO_GALLERY_LABEL`,
+`handleSaveToGallery`). Đó **không** phải hồi quy của entry này mà là **ảnh chụp giữa chừng** của
+công việc Phase 14 (DEC-064) đang được sửa song song trong cùng cây làm việc — số dòng của file đổi
+giữa hai lần đọc cách nhau chưa tới một phút. Chạy lại thì xanh. Bài học: `git status` đầu phiên là
+**ảnh chụp một thời điểm**, không phải bảo đảm cây làm việc đứng yên.
+
+#### Còn nợ
+
+| Việc | Vì sao chưa làm |
+|---|---|
+| `npm run e2e` đầy đủ với luật `logo-clipped` | Cần Supabase local + tài khoản seed; luật đã được chạy thật bằng đúng đoạn mã đó trên DOM `/login` |
+| Deploy để người dùng nhìn lại trên điện thoại | `git push` cần người dùng chạy |

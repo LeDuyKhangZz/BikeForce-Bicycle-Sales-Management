@@ -33,10 +33,12 @@ import { signIn } from './helpers';
  */
 
 /**
- * Nút của **máy tính** — tải file (DEC-062). Trên điện thoại nút này bị ẩn bằng
- * CSS và thay bằng hai nút bên dưới.
+ * Nút tải ảnh — từ **DEC-064** có ở **cả hai** thiết bị, cùng một nhãn.
+ *
+ * Trước đó điện thoại có nút "Lưu vào thư viện ảnh" chỉ hiện ảnh rồi bảo người
+ * dùng nhấn giữ; người dùng bác vì người không rành máy không biết thao tác đó.
  */
-const EXPORT_BUTTON = 'Xuất ảnh báo cáo';
+const DOWNLOAD_BUTTON = 'Tải ảnh về máy';
 
 /**
  * Nút 1 của **điện thoại**: mở bảng chia sẻ của hệ điều hành (DEC-062).
@@ -46,8 +48,7 @@ const EXPORT_BUTTON = 'Xuất ảnh báo cáo';
  */
 const ZALO_BUTTON = 'Gửi kết quả qua Zalo';
 
-/** Nút 2 của **điện thoại**: hiện ảnh ra để nhấn giữ lưu (DEC-061 + DEC-062). */
-const GALLERY_BUTTON = 'Lưu vào thư viện ảnh';
+
 
 type ShareProbe = {
   called: boolean;
@@ -119,7 +120,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await stubWebShare(page, { supported: false });
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
-    const button = page.getByRole('button', { name: EXPORT_BUTTON });
+    const button = page.getByRole('button', { name: DOWNLOAD_BUTTON });
     await expect(button).toBeVisible();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 60_000 });
@@ -158,22 +159,24 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
 
     const urlBeforeClick = page.url();
 
-    await page.getByRole('button', { name: ZALO_BUTTON }).click();
-
-    // Ảnh thật hiện ngay trong trang, trỏ vào chế độ XEM của route (`inline`).
+    // Ảnh xem trước LUÔN có mặt từ DEC-064 — không phải bấm gì mới thấy.
     const preview = page.getByRole('img', { name: /^Ảnh báo cáo dọc 9:16/ });
     await expect(preview).toBeVisible({ timeout: 60_000 });
     await expect(preview).toHaveAttribute('src', /\/share-image\?view=1$/);
+    // FR-019 vẫn được giữ: tên file đi theo ảnh.
+    await expect(preview).toHaveAttribute('alt', /BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/);
 
-    // FR-019 vẫn được giữ: tên file đi theo ảnh để lần "Lưu ảnh" đặt đúng tên.
-    await expect(preview).toHaveAttribute(
-      'alt',
-      /BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/,
-    );
+    await page.getByRole('button', { name: ZALO_BUTTON }).click();
 
-    // Và phải nói cho người dùng biết thao tác tiếp theo, nếu không họ lại đi
-    // tìm file như đúng lần đã báo lỗi.
-    await expect(page.getByText('Nhấn giữ vào ảnh bên dưới')).toBeVisible();
+    /*
+     * ISSUE-003 — webview bị khoá (Zalo, Facebook…). Không có Web Share nghĩa là
+     * cũng nhiều khả năng không tải được file và không có menu nhấn giữ. Nút phải
+     * mở ra ĐƯỜNG VÒNG chứ không được kết thúc bằng một câu bất lực.
+     */
+    await expect(page.getByText('Bạn đang mở trong ứng dụng khác')).toBeVisible({
+      timeout: 60_000,
+    });
+    await expect(page.getByText('Mở trong trình duyệt')).toBeVisible();
 
     // Không rời trang: bản DEC-060 điều hướng thật, và đó chính là lúc file rơi
     // vào thư mục Tải xuống mà không ai thấy.
@@ -192,7 +195,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
     const downloadPromise = page.waitForEvent('download', { timeout: 60_000 });
-    await page.getByRole('button', { name: EXPORT_BUTTON }).click();
+    await page.getByRole('button', { name: DOWNLOAD_BUTTON }).click();
     await downloadPromise;
 
     const probe = await page.evaluate(() => window.__shareProbe);
@@ -236,52 +239,71 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
    * `matchMedia` thì điện thoại sẽ nhấp nháy nhãn máy tính một nhịp — bài này
    * không bắt được cái nhấp nháy, nhưng bắt được việc nút hiện sai thiết bị.
    */
-  test('điện thoại thấy hai nút Zalo + thư viện, máy tính chỉ thấy nút tải file', async ({
+  test('điện thoại có thêm nút Zalo; nút tải ảnh thì thiết bị nào cũng có', async ({
     page,
   }, testInfo) => {
     await signIn(page, E2E_DONE_SALES_EMAIL);
 
-    const isDesktop = testInfo.project.name === 'desktop-1440';
-
     const zalo = page.getByRole('button', { name: ZALO_BUTTON });
-    const gallery = page.getByRole('button', { name: GALLERY_BUTTON });
-    const download = page.getByRole('button', { name: EXPORT_BUTTON });
 
-    if (isDesktop) {
-      await expect(download).toBeVisible();
+    // DEC-064 — nút tải ảnh có ở CẢ HAI thiết bị, cùng một nhãn. Trước đó điện
+    // thoại có một nút khác hẳn ("Lưu vào thư viện ảnh") chỉ hiện ảnh ra.
+    await expect(page.getByRole('button', { name: DOWNLOAD_BUTTON })).toBeVisible();
+
+    if (testInfo.project.name === 'desktop-1440') {
+      // Bảng chia sẻ của Windows không có Zalo (DEC-060) ⇒ không có nút này.
       await expect(zalo).toBeHidden();
-      await expect(gallery).toBeHidden();
       return;
     }
 
     await expect(zalo).toBeVisible();
-    await expect(gallery).toBeVisible();
-    await expect(download).toBeHidden();
   });
 
   /**
-   * Nút "Lưu vào thư viện ảnh" — DEC-062.
+   * DEC-064 — **ảnh xem trước LUÔN có mặt**, không phải bấm gì mới thấy.
    *
-   * Nút này KHÔNG chờ mạng: nó chỉ hiện thẻ `<img>` trỏ vào `?view=1`. Người
-   * dùng ở ngoài thị trường, mạng yếu, mà việc họ muốn chỉ là nhìn thấy ảnh để
-   * nhấn giữ — bắt họ chờ dựng blob là thừa.
+   * Người dùng yêu cầu trực tiếp: *"cách hiển thị ảnh trước khi gửi cho người
+   * dùng coi trước tôi rất thích"*. Nó cũng gánh luôn việc mà nhãn nút từng phải
+   * gánh (DEC-058): cho biết đang cầm tấm CAM KẾT hay tấm KẾT QUẢ.
    */
-  test('điện thoại: nút thư viện hiện ảnh ngay, không cần bảng chia sẻ', async ({
-    page,
-  }, testInfo) => {
-    test.skip(
-      testInfo.project.name === 'desktop-1440',
-      'Nút này chỉ tồn tại trên giao diện điện thoại.',
-    );
-
+  test('ảnh xem trước hiện sẵn ngay khi mở trang, mọi thiết bị', async ({ page }) => {
     await signIn(page, E2E_DONE_SALES_EMAIL);
-
-    await page.getByRole('button', { name: GALLERY_BUTTON }).click();
 
     const preview = page.getByRole('img', { name: /^Ảnh báo cáo dọc 9:16/ });
     await expect(preview).toBeVisible({ timeout: 60_000 });
     await expect(preview).toHaveAttribute('src', /\/share-image\?view=1$/);
-    await expect(page.getByText('Nhấn giữ vào ảnh bên dưới')).toBeVisible();
+
+    // Không có chữ nào bảo người dùng nhấn giữ — DEC-064 đã bỏ hẳn lối đó.
+    await expect(page.getByText('Nhấn giữ vào ảnh')).toHaveCount(0);
+  });
+
+  /**
+   * Nút tải ảnh trên **điện thoại** — DEC-064.
+   *
+   * Đây là bài khoá lại yêu cầu "bấm một cái là tải được", thay cho thao tác
+   * nhấn giữ mà người dùng đã bác.
+   */
+  test('điện thoại: bấm nút tải ảnh là tải THẬT, không phải nhấn giữ', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'desktop-1440',
+      'Bài này nói về nút tải ảnh trên giao diện điện thoại.',
+    );
+
+    await stubWebShare(page, { supported: true });
+    await signIn(page, E2E_DONE_SALES_EMAIL);
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 60_000 });
+    await page.getByRole('button', { name: DOWNLOAD_BUTTON }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toMatch(/^BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/);
+    await expect(page.getByText('Đã tải ảnh về máy')).toBeVisible();
+
+    // Nút tải KHÔNG được mở bảng chia sẻ — đó là việc của nút Zalo.
+    const probe = await page.evaluate(() => window.__shareProbe);
+    expect(probe?.called, 'nút tải ảnh không được gọi share sheet').toBe(false);
   });
 
   test('luôn có lối lấy ảnh KHÔNG cần JavaScript, và nó DẪN VÀO THƯ VIỆN', async ({ page }) => {

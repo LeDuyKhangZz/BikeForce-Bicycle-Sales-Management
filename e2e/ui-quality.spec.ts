@@ -4,7 +4,8 @@ import { E2E_ADMIN_EMAIL, E2E_DONE_SALES_EMAIL, toE2eProject, uiSalesEmail } fro
 import { signIn, waitForContent } from './helpers';
 
 /**
- * Hàng rào tự động cho bốn luật CRITICAL/HIGH của `ui-ux-pro-max` — PHASE 13.
+ * Hàng rào tự động cho năm luật CRITICAL/HIGH của `ui-ux-pro-max` — PHASE 13,
+ * luật thứ năm (`logo-clipped`) thêm ngày 2026-08-11 theo ISSUE-030.
  *
  * ─────────────────────────────────────────────────────────────────────────
  *  VÌ SAO BÀI NÀY ĐƯỢC COMMIT, KHÁC MỌI BỘ SOÁT TRƯỚC ĐÓ
@@ -41,7 +42,13 @@ import { signIn, waitForContent } from './helpers';
  */
 
 type Finding = { route: string; rule: string; detail: string };
-type Measured = { findings: Finding[]; interactive: number; pairs: number; minRatio: number };
+type Measured = {
+  findings: Finding[];
+  interactive: number;
+  pairs: number;
+  minRatio: number;
+  marks: number;
+};
 
 async function measure(page: Page, route: string): Promise<Measured> {
   return page.evaluate((currentRoute) => {
@@ -81,6 +88,52 @@ async function measure(page: Page, route: string): Promise<Measured> {
       if (r.width === 0 && r.height === 0) continue;
       if (r.height < 44 || r.width < 24) {
         push('touch-target-size', `${Math.round(r.width)}×${Math.round(r.height)} ${describe(el)}`);
+      }
+    }
+
+    /* ── logo-clipped (HIGH) — ISSUE-030 ─────────────────────────────────────
+       Một `viewBox` hẹp hơn hình bên trong sẽ CẮT hình, và cắt trong im lặng:
+       không lỗi console, không cảnh báo build, không vi phạm axe, layout vẫn
+       đúng từng pixel. Bản đầu của `BrandMark` ghi `viewBox="0 0 101 75"` —
+       đúng kích thước nhưng thiếu độ lệch y — nên đáy hai bánh xe bị chém phẳng
+       mất 12,9 đơn vị (~17% chiều cao) suốt từ Phase 13 tới khi NGƯỜI DÙNG
+       nhìn ảnh chụp màn hình và chỉ ra.
+
+       Phép đo: `getBBox()` cho khung hình học của nội dung theo đúng hệ toạ độ
+       `viewBox`; nới thêm nửa bề rộng nét vì `getBBox()` KHÔNG tính nét vẽ, mà
+       `stroke-linecap="round"` thì thò ra đủ nửa bề rộng ở mọi đầu mút.
+
+       Dung sai 0,05 đơn vị user ≈ 0,016px ở cỡ 32px — đủ rộng để bỏ qua sai số
+       làm tròn của khung khít, vẫn hẹp hơn lỗi thật 250 lần.                  */
+    let marks = 0;
+    for (const svg of Array.from(document.querySelectorAll('svg[data-brand-mark]'))) {
+      const rect = svg.getBoundingClientRect();
+      // Ẩn ở breakpoint này (header `lg:hidden` vs sidebar `hidden lg:block`).
+      if (rect.width === 0 || rect.height === 0) continue;
+      marks += 1;
+
+      const box = (svg as SVGSVGElement).getBBox();
+      const view = (svg as SVGSVGElement).viewBox.baseVal;
+      const widths = Array.from(svg.querySelectorAll('*')).map(
+        (node) => parseFloat(getComputedStyle(node).strokeWidth) || 0,
+      );
+      const pad = Math.max(0, ...widths) / 2;
+
+      const over = {
+        trái: view.x - (box.x - pad),
+        trên: view.y - (box.y - pad),
+        phải: box.x + box.width + pad - (view.x + view.width),
+        dưới: box.y + box.height + pad - (view.y + view.height),
+      };
+      const cut = Object.entries(over)
+        .filter(([, amount]) => amount > 0.05)
+        .map(([side, amount]) => `${side} ${amount.toFixed(2)}`);
+
+      if (cut.length > 0) {
+        push(
+          'logo-clipped',
+          `viewBox cắt mất: ${cut.join(', ')} đơn vị — ${describe(svg)}`,
+        );
       }
     }
 
@@ -162,7 +215,7 @@ async function measure(page: Page, route: string): Promise<Measured> {
       }
     }
 
-    return { findings, interactive: interactive.length, pairs, minRatio };
+    return { findings, interactive: interactive.length, pairs, minRatio, marks };
   }, route);
 }
 
@@ -182,10 +235,14 @@ function assertClean(results: readonly Measured[]): void {
   const findings = results.flatMap((r) => r.findings);
   const pairs = results.reduce((sum, r) => sum + r.pairs, 0);
   const interactive = results.reduce((sum, r) => sum + r.interactive, 0);
+  const marks = results.reduce((sum, r) => sum + r.marks, 0);
 
   // Bẫy 4 — chứng minh phép đo CÓ chạy. Một selector gõ sai cũng cho 0 vi phạm.
   expect(pairs, 'không đo được cặp màu nào — phép đo hỏng, không phải giao diện sạch').toBeGreaterThan(50);
   expect(interactive, 'không thấy phần tử tương tác nào — phép đo hỏng').toBeGreaterThan(10);
+  // Mọi route sau đăng nhập đều có logo: mobile ở header, desktop ở sidebar.
+  // Không thấy cái nào nghĩa là `data-brand-mark` đã bị gỡ, không phải logo đã đúng.
+  expect(marks, 'không thấy logo nào — luật logo-clipped đang đo vào khoảng không').toBeGreaterThan(0);
 
   expect(findings.map((f) => `[${f.rule}] ${f.route} — ${f.detail}`)).toEqual([]);
 }
@@ -201,8 +258,10 @@ test.describe('DEC-053 — hàng rào chất lượng giao diện', () => {
     KHÔNG chạy ở `zalo-like`, và đây không phải cắt xén cho nhanh.
 
     `zalo-like` có **đúng cùng viewport 375×812** với `mobile-375`; nó khác duy
-    nhất ở `userAgent`. Bốn luật bài này đo — tương phản, cỡ chạm, tràn ngang,
-    cỡ chữ — đều là hàm của **bề rộng và CSS**, không hàm của UA. Chạy thêm ở
+    nhất ở `userAgent`. Năm luật bài này đo — tương phản, cỡ chạm, tràn ngang,
+    cỡ chữ, logo bị cắt — đều là hàm của **bề rộng và CSS**, không hàm của UA
+    (`logo-clipped` còn chặt hơn: nó chỉ phụ thuộc `viewBox` so với `getBBox()`,
+    hai thứ không đổi theo cả viewport lẫn UA). Chạy thêm ở
     `zalo-like` vì vậy đo lại **y hệt** một lần nữa: không thêm một bit thông tin
     nào, mà tốn gấp rưỡi thời gian.
 
