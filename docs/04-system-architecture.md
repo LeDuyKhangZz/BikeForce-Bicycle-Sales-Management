@@ -379,7 +379,7 @@ sequenceDiagram
     end
 ```
 
-Tên file: `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` — ví dụ `BikeForce_Report_Nguyen-Van-A_2026-08-07.png` (FR-019). Phân phối theo DEC-011 và FR-020.
+Tên file: `Bao_Cao_Ngay_<YYYY-MM-DD>.png` cho bản sáng, `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` cho bản cuối ngày — ví dụ `Bao_Cao_Cuoi_Ngay_2026-08-07.png` (FR-019). Phân phối theo DEC-011 và FR-020.
 
 ### 9.3 Vì sao server-side Satori thắng DOM capture **cho đúng sản phẩm này**
 

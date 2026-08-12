@@ -979,7 +979,7 @@ Tất cả đều là **sự kiện hoặc số liệu do người dùng nhập*
 | **Ngày nghiệp vụ hôm nay** | `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })` / `public.vn_today()` | `lib/date.ts` / DB | BR-005, DEC-009 |
 | **CTA nào hiện trên `/sales/today`** | suy từ `status` của báo cáo hôm nay | Server Component | FR-007 |
 | **Xuất được ảnh nào** | Báo cáo **đã persist**; `status` chọn biến thể (`MORNING_SUBMITTED` → CAM KẾT · `COMPLETED` → KẾT QUẢ) | route handler + UI | BR-002 *(nới bởi DEC-058)*, FR-017 |
-| **Tên file PNG** `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` | `full_name` + `report_date` | route handler | FR-019 |
+| **Tên file PNG** `Bao_Cao_Ngay_<YYYY-MM-DD>.png` / `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` | `status` + `report_date` | route handler | FR-019 |
 
 **Điều quan trọng nhất của bảng này:** cột "Tính ở đâu" **không bao giờ được có hai giá trị cho cùng một hàng**. Nếu một component tự viết lại `actual / target * 100`, đó là vi phạm NFR-012 và phải bị chặn ở code review.
 

@@ -2582,3 +2582,24 @@ Docker/Supabase local; chạy lại đúng quyền dự án thì UC-13 xanh 3/3 
 11 container BikeForce đã chạy. Assertion E2E đầu tiên đỏ ở sai lệch 2px, đúng vai trò test tái hiện.
 
 **Remaining:** không còn việc code trong ISSUE-031; các nợ deployment/Zalo/Lighthouse cũ không đổi.
+
+---
+
+### Entry 027 — FR-019: rút gọn tên file ảnh gửi Zalo
+
+**Date:** 2026-08-12
+
+**Completed:**
+
+1. Xác định dòng chữ dưới ảnh trong Zalo đến từ tên file (`File.name`) mà Web Share API gửi cho hệ điều hành; web không có quyền bắt Zalo ẩn dòng này.
+2. Đổi `shareImageFileName()` sang hai tên ngắn: `Bao_Cao_Ngay_<YYYY-MM-DD>.png` cho bản sáng và `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` cho bản cuối ngày.
+3. Bỏ họ tên Sales khỏi tên file để tránh dòng Zalo quá dài và giảm lộ thông tin cá nhân trong khung chat.
+4. Cập nhật unit test, E2E share/download/header và tài liệu FR-019/DEC-067.
+
+**Files Changed:** `lib/reports/share-card.ts`, `lib/reports/share-card.test.ts`, `e2e/share-image.spec.ts`, `docs/01`, `docs/02`, `docs/03`, `docs/04`, `docs/07`, `docs/08`, `docs/09`, `docs/11`, `docs/12`, `PROJECT_CHECKLIST.md`, `WORKLOG.md`, `SESSION_CHECKPOINT.md`.
+
+**Tests đã chạy thật:** `npm run test:unit -- lib/reports/share-card.test.ts` **41/41 passed**; `npm run typecheck` exit 0; `npm run lint` exit 0. `npm run build` exit 0 trước lượt tăng font header; E2E share-image chưa chạy vì Supabase local/Docker đã mất dữ liệu dự án (`127.0.0.1:54322 ECONNREFUSED`).
+
+**Remaining:** không còn việc code trong phạm vi đổi tên file; không thể kiểm Zalo thật bằng Playwright, vẫn thuộc ISSUE-003.
+
+**Update:** tăng header bảng chỉ tiêu trong ảnh xuất từ 26px/600 lên 34px/700 để dòng `CHỈ TIÊU / CAM KẾT / THỰC ĐẠT / HOÀN THÀNH` rõ hơn trên cả ảnh sáng và chiều.

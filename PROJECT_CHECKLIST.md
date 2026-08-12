@@ -254,8 +254,8 @@ Zalo trên **thiết bị thật** (ISSUE-003 — cần điện thoại + link c
       → 3 file Inter `.ttf` (400/600/700) trong `public/fonts/`, parse bảng `cmap` xác nhận **2849 glyph**, đủ `ừ ẫ ợ ỹ đ Đ Ệ Ỡ` và `₫`. Đọc một lần mỗi tiến trình, ghim bundle bằng `outputFileTracingIncludes`
 - [x] `features/report-share/daily-report-share-card.tsx` dùng chung view model với UI để số liệu không lệch, layout dark `#0B1220` với bảng token đã đo
       → tên file `kebab-case` theo `AGENTS.md §3`. Dùng chung **`lib/reports/metric-rows.ts`** với `AchievementTable` nên hai nơi không thể lệch nhau; mọi con số đi qua `lib/kpi.ts`
-- [x] Header `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"` và `Cache-Control: private, no-store` — FR-019
-      → đo thật trên response: `BikeForce_Report_Le-Duy-Khang_2026-08-08.png`
+- [x] Header `Content-Disposition: attachment; filename="Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png"` / `Bao_Cao_Ngay_<YYYY-MM-DD>.png` và `Cache-Control: private, no-store` — FR-019
+      → tên file gọn để Zalo không hiện họ tên dài dưới ảnh; ví dụ `Bao_Cao_Cuoi_Ngay_2026-08-08.png`
 - [x] Nút "Xuất ảnh" chỉ enable khi báo cáo đã persist với `status = 'COMPLETED'` — FR-017, UC-08
       → mạnh hơn yêu cầu: chưa `COMPLETED` thì **không render** khối nút. `EXPORT_IMAGE_NOT_READY` đã xoá
 - [x] Chia sẻ qua Web Share API khi `navigator.canShare({files})`, fallback `<a download>` — FR-020, DEC-011
@@ -891,6 +891,14 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Kiểm trực quan production build ở 1440×900 và 375×812; preview tạm đã xoá
 - [x] `npm run typecheck`, full `npm run lint` và `npm run build` — exit 0
 - [x] `docs/05`, `docs/08`, `docs/12`, checklist, worklog và checkpoint đã cập nhật
+
+## Bảo trì FR-019 — tên file ảnh Zalo
+
+- [x] Ghi nhận giới hạn nền tảng: Zalo tự hiện `File.name`; web không có API đáng tin cậy để ẩn dòng này
+- [x] `shareImageFileName()` đổi sang `Bao_Cao_Ngay_<YYYY-MM-DD>.png` và `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png`
+- [x] Tên file không chứa họ tên Sales, tránh dòng dài dưới ảnh Zalo và giảm lộ thông tin cá nhân
+- [x] Unit/E2E và docs FR-019/DEC-067 đã cập nhật theo tên mới
+- [x] Header bảng chỉ tiêu trong ảnh xuất tăng lên 34px/700 để rõ hơn khi gửi Zalo
 
 ## OPEN QUESTIONS
 

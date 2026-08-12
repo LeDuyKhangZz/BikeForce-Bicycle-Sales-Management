@@ -599,7 +599,7 @@ Chạy trên **thiết bị thật** với ít nhất một tài khoản SALES v
 - [ ] **Báo cáo đầu ngày lưu được** — tạo báo cáo sáng, reload trang, dữ liệu còn nguyên, status = `MORNING_SUBMITTED` (FR-008, FR-011, UC-04).
 - [ ] **Báo cáo cuối ngày lưu được** — nhập thực đạt, lưu, status chuyển `COMPLETED`, có `evening_submitted_at` (FR-014, FR-015, UC-06).
 - [ ] **Achievement hiển thị đúng** — bảng đối chiếu hiện đủ 4 chỉ tiêu, % tính đúng, cho phép > 100%, **không có `NaN` / `Infinity` / `∞`** ở bất kỳ ô nào (FR-016, BR-004, BR-014, BR-015, UC-07).
-- [ ] **Export ảnh trả về PNG đúng 1080×1920 với dấu tiếng Việt đúng** — tải file về, mở lên, kiểm tra kích thước đúng 1080×1920 px, và các ký tự `ừ ẫ ợ ỹ đ Đ` hiển thị đủ dấu, không bị ô vuông hay mất dấu. Tên file đúng dạng `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-018, FR-019, UC-08, ISSUE-002).
+- [ ] **Export ảnh trả về PNG đúng 1080×1920 với dấu tiếng Việt đúng** — tải file về, mở lên, kiểm tra kích thước đúng 1080×1920 px, và các ký tự `ừ ẫ ợ ỹ đ Đ` hiển thị đủ dấu, không bị ô vuông hay mất dấu. Tên file đúng dạng `Bao_Cao_Ngay_<YYYY-MM-DD>.png` hoặc `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` (FR-018, FR-019, UC-08, ISSUE-002).
 - [ ] **Số liệu Admin dashboard khớp** — đối chiếu 12 chỉ số ở `/admin` với dữ liệu đếm tay trong ngày; số Sales đã/chưa báo cáo phải khớp thực tế (FR-024, AF-01, AF-02, UC-12).
 - [ ] **Zalo in-app browser mở được app** — gửi URL production qua Zalo, mở bằng trình duyệt trong Zalo, đăng nhập và vào được `/sales/today` (NFR-009, ISSUE-003).
 

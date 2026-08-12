@@ -1549,7 +1549,7 @@ persist** quyết định:
 | Khối "Số khách làm việc" | *(không có)* | có |
 | Ghi chú cuối ngày | *(chưa tồn tại)* | có nếu Sales nhập |
 | Nhãn nút | **"Lưu hình báo cáo đầu ngày"** | "Xuất ảnh báo cáo" |
-| Tên file | `BikeForce_CamKet_….png` | `BikeForce_Report_….png` |
+| Tên file | `Bao_Cao_Ngay_<YYYY-MM-DD>.png` | `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` |
 
 Nút buổi sáng đứng **đúng chỗ** nút "Sửa cam kết sáng" vừa bị DEC-055 gỡ.
 
@@ -2061,3 +2061,22 @@ lọc/phân trang thuần, UI `/admin/reports`, integration/E2E liên quan và t
 **Verification:** build/typecheck/lint exit 0; full Vitest **802/802**; integration + RLS liên quan
 **38/38** với fixture 100.002 báo cáo; E2E Admin **36/36** trên ba project; kiểm trực quan 375×812 và
 1440×900 không thấy tràn ngang.
+
+---
+
+## DEC-067 — Tên file ảnh Zalo ngắn, không chứa họ tên Sales
+
+**Date:** 2026-08-12
+
+**Decision:** FR-019 đổi khuôn tên file PNG của ảnh báo cáo từ dạng chứa thương hiệu + họ tên Sales sang hai tên ngắn theo biến thể:
+`Bao_Cao_Ngay_<YYYY-MM-DD>.png` cho bản cam kết đầu ngày và `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` cho bản kết quả cuối ngày. Route ảnh, `new File(...)` của Web Share API, `download` fallback và `alt` ảnh xem trước đều dùng chung `shareImageFileName()`.
+
+**Reason:** Zalo tự hiển thị `File.name` dưới ảnh khi nhận file qua bảng chia sẻ của hệ điều hành. Trang web không có API đáng tin cậy để bắt Zalo ẩn dòng này, nên cách kiểm soát được là đặt tên file ngắn, dễ hiểu và không chứa họ tên Sales. Bỏ họ tên cũng giảm rò rỉ thông tin cá nhân trong giao diện chat, trong khi ngày và biến thể vẫn đủ để phân biệt hai ảnh cùng ngày.
+
+**Alternatives:** bỏ hoàn toàn tên file bị loại vì Web Share API luôn cần một `File.name`; giữ `BikeForce_<variant>_<Ho-Ten>_<date>.png` bị loại vì quá dài và hiện xấu trong Zalo; dùng tên có dấu tiếng Việt bị loại vì `Content-Disposition` và một số thiết bị Android dễ mã hoá/hiển thị không ổn định.
+
+**Impact:** không đổi nội dung ảnh, RLS, route, storage hay quyền truy cập. Chỉ đổi tên file ở helper `lib/reports/share-card.ts`, test unit/E2E và các tài liệu mô tả FR-019.
+
+**Status:** APPROVED (người dùng yêu cầu trực tiếp ngày 2026-08-12)
+
+**Verification:** unit helper `shareImageFileName()` và E2E share/download được cập nhật để khóa mẫu tên mới. Kiểm tra thực tế trong Zalo thật vẫn thuộc ISSUE-003 vì Playwright không điều khiển được app Zalo.

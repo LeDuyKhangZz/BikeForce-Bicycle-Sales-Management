@@ -154,8 +154,8 @@ function HeaderCell({ text, width, align }: { text: string; width: number; align
         display: 'flex',
         width,
         justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
-        fontSize: 26,
-        fontWeight: 600,
+        fontSize: 34,
+        fontWeight: 700,
         color: COLOR.muted,
         letterSpacing: 1,
       }}

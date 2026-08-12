@@ -1,6 +1,18 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **16 — Báo cáo Admin cho dữ liệu lớn (DEC-066)** | Last updated: 2026-08-12
+> Status: ACTIVE | Phase: **Bảo trì FR-019 — tên file ảnh Zalo (DEC-067)** | Last updated: 2026-08-12
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 027 — FR-019/DEC-067)
+
+Người dùng báo ảnh gửi qua Zalo hiện dòng tên file dài như `BikeForce_CamKet_Phan-Thanh-Khai_2026-08-12.png`. Nguyên nhân là Zalo hiển thị `File.name` của file mà Web Share API chuyển cho hệ điều hành; web không có quyền bắt Zalo ẩn dòng này, nên hướng sửa kiểm soát được là đặt tên file ngắn.
+
+**Đã đổi:** `shareImageFileName()` nay trả `Bao_Cao_Ngay_<YYYY-MM-DD>.png` cho bản sáng và `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` cho bản cuối ngày. Tên Sales không còn nằm trong filename, nhưng nội dung ảnh vẫn giữ tên/mã/tuyến như trước.
+
+**UI ảnh xuất:** header bảng chỉ tiêu tăng từ 26px/600 lên 34px/700 cho cả bản sáng và chiều.
+
+**Next Exact Steps:** sau khi deploy, thử trên Zalo thật: bấm "Gửi kết quả qua Zalo" và xác nhận dòng dưới ảnh là `Bao_Cao_Cuoi_Ngay_2026-08-12.png` hoặc bản sáng là `Bao_Cao_Ngay_2026-08-12.png`. Không cần đổi route hay schema.
 
 ---
 
@@ -984,7 +996,7 @@ vì script dùng-một-lần.
 **Xuất ảnh 9:16 chạy thật đầu-cuối (Phase 6).** `next build` + `next start` trỏ vào Supabase local,
 đăng nhập bằng một Sales đã `COMPLETED` → `/sales/today` hiện nút **"Xuất ảnh báo cáo"** (chưa hoàn
 tất thì nút **không xuất hiện**) → bấm → trình duyệt tải về
-`BikeForce_Report_Le-Duy-Khang_2026-08-08.png`, `image/png`, `Cache-Control: private, no-store`,
+`Bao_Cao_Cuoi_Ngay_2026-08-08.png`, `image/png`, `Cache-Control: private, no-store`,
 `IHDR` đúng **1080×1920**. Mở ảnh ra: wordmark BIKEFORCE vàng, ngày `Thứ Bảy, 08/08/2026`, tên viết
 HOA, bảng 4 dòng `125,0% / 80,0% / 83,3% / 100,0%` mỗi dòng kèm **nhãn chữ** ("Vượt mục tiêu" /
 "Gần đạt") chứ không chỉ có màu, khối `125.000.000 ₫`, ghi chú `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ` **đủ dấu**.

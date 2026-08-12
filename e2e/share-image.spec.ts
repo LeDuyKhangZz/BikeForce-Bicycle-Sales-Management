@@ -127,9 +127,9 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await button.click();
     const download = await downloadPromise;
 
-    // FR-019 — tên file đã bỏ dấu, có ngày, đuôi .png. `BikeForce_Report_` là
-    // biến thể KẾT QUẢ; bản sáng dùng `BikeForce_CamKet_` (DEC-058).
-    expect(download.suggestedFilename()).toMatch(/^BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/);
+    // FR-019 — tên file gọn, có ngày, đuôi .png. Bản chiều dùng
+    // `Bao_Cao_Cuoi_Ngay_`; bản sáng dùng `Bao_Cao_Ngay_` (DEC-058).
+    expect(download.suggestedFilename()).toMatch(/^Bao_Cao_Cuoi_Ngay_\d{4}-\d{2}-\d{2}\.png$/);
 
     // Nguyên tắc (b) của DEC-060 — không nhánh nào im lặng.
     await expect(page.getByText('Đã tải ảnh về máy')).toBeVisible();
@@ -164,7 +164,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await expect(preview).toBeVisible({ timeout: 60_000 });
     await expect(preview).toHaveAttribute('src', /\/share-image\?view=1$/);
     // FR-019 vẫn được giữ: tên file đi theo ảnh.
-    await expect(preview).toHaveAttribute('alt', /BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/);
+    await expect(preview).toHaveAttribute('alt', /Bao_Cao_Cuoi_Ngay_\d{4}-\d{2}-\d{2}\.png$/);
 
     await page.getByRole('button', { name: ZALO_BUTTON }).click();
 
@@ -222,7 +222,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     const probe = await page.evaluate(() => window.__shareProbe);
 
     expect(probe?.fileType).toBe('image/png');
-    expect(probe?.fileName).toMatch(/^BikeForce_Report_.+\.png$/);
+    expect(probe?.fileName).toMatch(/^Bao_Cao_Cuoi_Ngay_\d{4}-\d{2}-\d{2}\.png$/);
     // File rỗng nghĩa là blob hỏng — share sheet vẫn mở nhưng Zalo nhận ảnh lỗi.
     expect(probe?.fileSize ?? 0).toBeGreaterThan(1000);
 
@@ -298,7 +298,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await page.getByRole('button', { name: DOWNLOAD_BUTTON }).click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toMatch(/^BikeForce_Report_.+_\d{4}-\d{2}-\d{2}\.png$/);
+    expect(download.suggestedFilename()).toMatch(/^Bao_Cao_Cuoi_Ngay_\d{4}-\d{2}-\d{2}\.png$/);
     await expect(page.getByText('Đã tải ảnh về máy')).toBeVisible();
 
     // Nút tải KHÔNG được mở bảng chia sẻ — đó là việc của nút Zalo.
@@ -347,14 +347,14 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     const viewResponse = await page.request.get(href, { maxRedirects: 0 });
     expect(viewResponse.status()).toBe(200);
     expect(viewResponse.headers()['content-type']).toBe('image/png');
-    expect(viewResponse.headers()['content-disposition']).toMatch(/^inline; filename="BikeForce_/);
+    expect(viewResponse.headers()['content-disposition']).toMatch(/^inline; filename="Bao_Cao_/);
 
     const downloadResponse = await page.request.get(href.replace('?view=1', ''), {
       maxRedirects: 0,
     });
     expect(downloadResponse.status()).toBe(200);
     expect(downloadResponse.headers()['content-disposition']).toMatch(
-      /^attachment; filename="BikeForce_/,
+      /^attachment; filename="Bao_Cao_/,
     );
   });
 });

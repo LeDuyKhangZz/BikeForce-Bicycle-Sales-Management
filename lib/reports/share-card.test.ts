@@ -320,16 +320,16 @@ describe('truncateText — cắt ở tầng dữ liệu vì Satori không có li
 });
 
 describe('shareImageFileName — FR-019', () => {
-  it('bỏ dấu tiếng Việt và thay khoảng trắng bằng dấu nối', () => {
+  it('dùng tên ngắn cho báo cáo cuối ngày', () => {
     expect(shareImageFileName('Nguyễn Văn A', '2026-08-07', 'EVENING')).toBe(
-      'BikeForce_Report_Nguyen-Van-A_2026-08-07.png',
+      'Bao_Cao_Cuoi_Ngay_2026-08-07.png',
     );
   });
 
   it('hai tấm ảnh của CÙNG một ngày có tên khác nhau — DEC-058', () => {
     // Nếu hai tên trùng nhau, tấm chiều ghi đè tấm sáng trong thư mục Tải về.
     expect(shareImageFileName('Nguyễn Văn A', '2026-08-07', 'MORNING')).toBe(
-      'BikeForce_CamKet_Nguyen-Van-A_2026-08-07.png',
+      'Bao_Cao_Ngay_2026-08-07.png',
     );
     expect(shareImageFileName('Nguyễn Văn A', '2026-08-07', 'MORNING')).not.toBe(
       shareImageFileName('Nguyễn Văn A', '2026-08-07', 'EVENING'),
@@ -347,9 +347,9 @@ describe('shareImageFileName — FR-019', () => {
     expect(asciiNameSlug('  Trần   Văn (B) ')).toBe('Tran-Van-B');
   });
 
-  it('tên không còn ký tự ASCII nào vẫn cho ra tên file hợp lệ', () => {
+  it('không đưa tên Sales vào tên file hiển thị trong Zalo', () => {
     expect(shareImageFileName('。。。', '2026-08-07', 'EVENING')).toBe(
-      'BikeForce_Report_Sales_2026-08-07.png',
+      'Bao_Cao_Cuoi_Ngay_2026-08-07.png',
     );
   });
 
@@ -359,9 +359,9 @@ describe('shareImageFileName — FR-019', () => {
       .sort();
 
     expect(names).toEqual([
-      'BikeForce_Report_A_2026-08-07.png',
-      'BikeForce_Report_A_2026-08-09.png',
-      'BikeForce_Report_A_2026-12-01.png',
+      'Bao_Cao_Cuoi_Ngay_2026-08-07.png',
+      'Bao_Cao_Cuoi_Ngay_2026-08-09.png',
+      'Bao_Cao_Cuoi_Ngay_2026-12-01.png',
     ]);
   });
 });

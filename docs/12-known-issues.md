@@ -199,7 +199,7 @@ Quyết định DEC-010 chọn sinh ảnh 9:16 **server-side** bằng `ImageResp
 Rủi ro cụ thể: layout thẻ 9:16 thiết kế ở `docs/05` có thể **không dựng được nguyên vẹn** bằng Satori và phải làm lại giữa Phase 6.
 
 **Expected:**
-`GET /api/reports/[id]/share-image` trả về PNG **đúng 1080×1920**, đúng layout dark đã thiết kế (brand + "DAILY SALES REPORT", ngày, tên NV + mã NV, tuyến, bảng 4 dòng Cam kết/Thực đạt/%, dải KPI tổng quan, ghi chú cuối ngày, footer), đủ dấu tiếng Việt, kèm `Content-Disposition: attachment; filename="BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png"` (FR-019) và `Cache-Control: private, no-store`.
+`GET /api/reports/[id]/share-image` trả về PNG **đúng 1080×1920**, đúng layout dark đã thiết kế (brand + "DAILY SALES REPORT", ngày, tên NV + mã NV, tuyến, bảng 4 dòng Cam kết/Thực đạt/%, dải KPI tổng quan, ghi chú cuối ngày, footer), đủ dấu tiếng Việt, kèm `Content-Disposition: attachment; filename="Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png"` hoặc bản sáng `Bao_Cao_Ngay_<YYYY-MM-DD>.png` (FR-019) và `Cache-Control: private, no-store`.
 
 **Actual (đo thật 2026-08-08):**
 **Rủi ro KHÔNG xảy ra.** Satori dựng đủ bố cục `docs/05 §14` ngay từ prototype đầu tiên. Ảnh xuất ra đúng `1080×1920`, `~73–110 KB`, dấu tiếng Việt render chính xác (`Ừ ẫ ợ ỹ đ Đ Ệ Ỡ`, `Thứ Bảy`, `Viếng thăm`) và ký hiệu `₫` (`U+20AB`) hiển thị đúng glyph.
@@ -223,7 +223,7 @@ Rủi ro cụ thể: layout thẻ 9:16 thiết kế ở `docs/05` có thể **kh
 | Dấu tiếng Việt + `₫` trên ảnh THẬT | fixture local có ghi chú `Ừ ẫ ợ ỹ đ Đ Ệ Ỡ`, xem ảnh xuất ra bằng mắt | ✅ đúng, không rơi font |
 | Glyph coverage của font nhúng | parse bảng `cmap` của cả 3 file `.ttf` | ✅ 2849 glyph, đủ `ừ ẫ ợ ỹ đ Đ Ệ Ỡ ₫ …` |
 | Kích thước PNG | đọc chunk `IHDR` của response thật | ✅ `1080×1920` ở **cả 6** lần đo |
-| Header `Content-Disposition` (FR-019) | request thật qua Chromium | ✅ `attachment; filename="BikeForce_Report_Le-Duy-Khang_2026-08-08.png"` |
+| Header `Content-Disposition` (FR-019) | request thật qua Chromium | ✅ `attachment; filename="Bao_Cao_Cuoi_Ngay_2026-08-08.png"` |
 | `Cache-Control: private, no-store` | request thật | ✅ |
 | BR-002 — báo cáo `MORNING_SUBMITTED` | đăng nhập chính chủ rồi gọi route | ✅ **403** `NOT_COMPLETED` |
 | Bảo mật IDOR — salesA gọi id của salesB | request thật + 6 test RLS `tests/rls/share-image.rls.test.ts` | ✅ **404** `REPORT_NOT_FOUND`, không phân biệt với id không tồn tại |
@@ -1459,7 +1459,7 @@ sửa xong ISSUE-027**.
 
 **File thật sự nằm ở đâu:** thư mục **Tải xuống** của máy —
 `/storage/emulated/0/Download/` trên Android, `Tệp (Files) → Tải xuống` trên iOS. Tên file đúng
-FR-019: `BikeForce_Report_<Ten>_<YYYY-MM-DD>.png` (bản sáng là `BikeForce_CamKet_…`).
+FR-019: `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` (bản sáng là `Bao_Cao_Ngay_…`).
 
 **Nguyên nhân gốc — hai tầng, tầng dưới KHÔNG sửa được bằng code:**
 

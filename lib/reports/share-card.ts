@@ -330,15 +330,15 @@ export function asciiNameSlug(fullName: string): string {
   return slug === '' ? FALLBACK_NAME_SLUG : slug;
 }
 
-/** Đoạn giữa tên file, phân biệt hai tấm ảnh của cùng một ngày (DEC-058). */
-const VARIANT_FILE_TOKEN: Record<ShareCardVariant, string> = {
-  MORNING: 'CamKet',
-  EVENING: 'Report',
+/** Tên file gọn, phân biệt hai tấm ảnh của cùng một ngày (DEC-058). */
+const VARIANT_FILE_NAME: Record<ShareCardVariant, string> = {
+  MORNING: 'Bao_Cao_Ngay',
+  EVENING: 'Bao_Cao_Cuoi_Ngay',
 };
 
 /**
- * `'BikeForce_Report_Nguyen-Van-A_2026-08-07.png'` — FR-019, `docs/07 §4.1`.
- * Bản sáng: `'BikeForce_CamKet_Nguyen-Van-A_2026-08-07.png'`.
+ * `'Bao_Cao_Cuoi_Ngay_2026-08-07.png'` — FR-019, `docs/07 §4.1`.
+ * Bản sáng: `'Bao_Cao_Ngay_2026-08-07.png'`.
  *
  * Ngày dùng NGUYÊN `report_date` dạng `YYYY-MM-DD`: tên file phải sắp xếp được
  * theo thứ tự thời gian khi Sales lưu nhiều ảnh vào cùng một thư mục.
@@ -349,11 +349,11 @@ const VARIANT_FILE_TOKEN: Record<ShareCardVariant, string> = {
  * phát hiện ra sau khi đã gửi nhầm.
  */
 export function shareImageFileName(
-  fullName: string,
+  _fullName: string,
   reportDate: string,
   variant: ShareCardVariant,
 ): string {
-  return `BikeForce_${VARIANT_FILE_TOKEN[variant]}_${asciiNameSlug(fullName)}_${reportDate}.png`;
+  return `${VARIANT_FILE_NAME[variant]}_${reportDate}.png`;
 }
 
 /**

@@ -248,7 +248,7 @@ Priority: **M** = MUST (MVP), **S** = SHOULD, **L** = LATER.
 | FR-016 | Tính % hoàn thành cho 4 chỉ tiêu, cho phép >100%, không NaN/Infinity | M | UC-07 |
 | FR-017 | Nút "Xuất ảnh" chỉ enable khi báo cáo đã persist với status `COMPLETED` | M | UC-08 |
 | FR-018 | Sinh PNG 1080×1920 từ component riêng, không screenshot cả trang | M | UC-08 |
-| FR-019 | Tên file `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` | M | UC-08 |
+| FR-019 | Tên file ngắn: `Bao_Cao_Ngay_<YYYY-MM-DD>.png` cho bản sáng, `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` cho bản cuối ngày | M | UC-08 |
 | FR-020 | Chia sẻ trực tiếp qua Web Share API khi có, fallback tải file | S | UC-08 |
 | FR-021 | Lịch sử báo cáo của chính mình, filter theo tháng, phân trang | M | UC-09 |
 | FR-022 | Trang chi tiết báo cáo của chính mình | M | UC-10 |
@@ -435,7 +435,7 @@ Cam kết sáng **khoá ngay khi gửi**. Không còn nút "Sửa cam kết sán
 7. **Server Action `completeEveningReport` (đề xuất, chưa triển khai):** auth → role/`is_active` → Zod → đọc lại row hiện tại → xác nhận `status = 'MORNING_SUBMITTED'` → `update` đặt các `actual_*`, `evening_note`, `evening_submitted_at = now()`, `status = 'COMPLETED'`.
 8. **Database chốt chặn:** policy `reports_update_own_open` (`USING status = 'MORNING_SUBMITTED'`), trigger `guard_report_transition()` chặn `COMPLETED → MORNING_SUBMITTED` và chặn đổi `sales_id`/`report_date`, CHECK `ck_completed_requires_actuals`.
 9. **Thành công.** Server trả về row đã persist. UI hiện bảng đối chiếu (UC-07) tính bằng `calculateAchievement()` cho 4 chỉ tiêu (FR-016) và **lúc này mới enable nút Xuất ảnh** (§11).
-10. **Xuất ảnh (UC-08).** Client gọi `GET /api/reports/[id]/share-image`; nhận blob PNG 1080×1920; nếu `navigator.canShare({ files })` khả dụng thì mở share sheet (Zalo nằm trong đó), ngược lại tạo `<a download>` với tên file `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019, FR-020, DEC-011).
+10. **Xuất ảnh (UC-08).** Client gọi `GET /api/reports/[id]/share-image`; nhận blob PNG 1080×1920; nếu `navigator.canShare({ files })` khả dụng thì mở share sheet (Zalo nằm trong đó), ngược lại tạo `<a download>` với tên file ngắn theo FR-019: `Bao_Cao_Ngay_<YYYY-MM-DD>.png` hoặc `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` (FR-020, DEC-011).
 
 ### 10.2 Failure branches
 
@@ -502,7 +502,7 @@ flowchart TD
 ```
 
 - Quyền đọc do **RLS** quyết định (`reports_select_own_or_admin`), không do tham số URL — nhờ đó BR-003 và BR-022 được thoả cùng lúc: Sales chỉ lấy được ảnh của mình, Admin lấy được của bất kỳ ai.
-- Response header: `Content-Disposition: attachment; filename="BikeForce_Report_Nguyen-Van-A_2026-08-07.png"` và `Cache-Control: private, no-store`.
+- Response header: `Content-Disposition: attachment; filename="Bao_Cao_Cuoi_Ngay_2026-08-07.png"` và `Cache-Control: private, no-store`.
 - Ảnh **không** lưu lên Supabase Storage (DEC-021) — stream trực tiếp, sinh lại mỗi lần gọi.
 
 ---
@@ -653,7 +653,7 @@ Danh sách hành vi mong đợi cho các tình huống biên. Đây là **đầu
 | 8 | **`target = 0` và `actual > 0`** | `percent = null`, hiển thị **số vượt tuyệt đối** có dấu cộng và đơn vị (`+3 xe`, `+2 điểm`, `+5 khách`, `+3.000.000 ₫`), nhãn "Vượt kế hoạch". Không `∞`. Ở tổng hợp Admin, dòng này bị **loại khỏi mẫu số**, không quy thành 0% hay 100%. BR-015 — **APPROVED**. |
 | 9 | **`actual` vượt `target` nhiều lần** (target 8, actual 100 → 1250,0%) | Hiển thị đúng `1250,0%`, **không clamp về 100%** (BR-004). Thẻ ảnh 9:16 phải chứa nổi chuỗi 4 chữ số phần nguyên mà không tràn/cắt chữ. |
 | 10 | **Doanh thu 12 chữ số** (ví dụ `100000000000` = trần BR-017) | Lưu đúng ở `bigint`. Hiển thị `100.000.000.000 ₫`. Trên thẻ 9:16 phải giảm cỡ chữ hoặc xuống dòng, không tràn khung. Giá trị vượt trần bị Zod + CHECK từ chối kèm message dễ hiểu, không phải lỗi DB thô. |
-| 11 | **Họ tên rất dài** (40+ ký tự, tối đa 100 theo CHECK) | UI **wrap** chứ không `truncate` ở trang chi tiết. Trên thẻ 9:16 giới hạn số dòng an toàn. Tên file PNG: dấu tiếng Việt được chuyển sang dạng không dấu, khoảng trắng thành `-`, loại bỏ ký tự không hợp lệ cho filesystem, giữ đúng khuôn `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019). |
+| 11 | **Họ tên rất dài** (40+ ký tự, tối đa 100 theo CHECK) | UI **wrap** chứ không `truncate` ở trang chi tiết. Trên thẻ 9:16 giới hạn số dòng an toàn. Tên file PNG **không chứa họ tên** để Zalo không hiện một dòng file dài dưới ảnh; chỉ giữ biến thể + ngày theo FR-019. |
 | 12 | **Ghi chú đúng 1000 ký tự** | Lưu được. UI có bộ đếm ký tự; ký tự thứ 1001 bị chặn ở client, và bị Zod + CHECK từ chối nếu lọt (BR-018). Trên thẻ 9:16 ghi chú bị cắt an toàn theo số dòng, không đẩy vỡ layout. |
 | 13 | **Tuyến 300 ký tự** (biên trên của `planned_route`) | Lưu được; hiển thị wrap; thẻ 9:16 cắt an toàn theo dòng. 301 ký tự bị từ chối ở cả 3 tầng. |
 | 14 | **Tài khoản bị Admin deactivate giữa phiên đang đăng nhập** | Lần thao tác kế tiếp bị chặn: middleware/layout phát hiện `is_active = false` → đăng xuất + thông báo rõ lý do; RLS cũng chặn vì `is_active_sales()` trả false (BR-009, FR-005). Không được để Sales tiếp tục ghi dữ liệu chỉ vì cookie còn hạn. |

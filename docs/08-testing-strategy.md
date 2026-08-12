@@ -621,9 +621,9 @@ Luồng theo Master Spec §37: Login → Today → Morning Report → Save → R
 | 24 | Ở `desktop-1440`, kiểm bảng đối chiếu | Render bằng `<table>` thật — DEC-019 |
 | 25 | **Export**: xem nút xuất ảnh khi báo cáo mới ở trạng thái `MORNING_SUBMITTED` | Nút hiện với nhãn **"Lưu hình báo cáo đầu ngày"** — **DEC-058** *(trước đây: disabled)*. Không có báo cáo nào ⇒ **không có nút** |
 | 26 | Sau khi báo cáo đã lưu thành công với `COMPLETED` | Nhãn nút đổi thành **"Xuất ảnh báo cáo"** — BR-002, FR-017, DEC-058 |
-| 27 | Nhấn "Xuất ảnh" và bắt response | Response từ `GET /api/reports/<id>/share-image`: `status === 200`; header `content-type` là **`image/png`**; `content-disposition` chứa `BikeForce_Report_` và kết thúc `.png` — **FR-018**, **FR-019**, DEC-010 |
+| 27 | Nhấn "Xuất ảnh" và bắt response | Response từ `GET /api/reports/<id>/share-image`: `status === 200`; header `content-type` là **`image/png`**; `content-disposition` chứa `Bao_Cao_` và kết thúc `.png` — **FR-018**, **FR-019**, DEC-010 |
 | 28 | Kiểm nội dung nhị phân của response | Độ dài body > 0; 8 byte đầu khớp PNG magic number `89 50 4E 47 0D 0A 1A 0A` — FR-018 |
-| 29 | Kiểm tên file trong `content-disposition` | Khớp mẫu `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png`, họ tên đã bỏ dấu và nối bằng `-` — **FR-019** |
+| 29 | Kiểm tên file trong `content-disposition` | Khớp mẫu `Bao_Cao_Ngay_<YYYY-MM-DD>.png` hoặc `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png`, không chứa họ tên Sales — **FR-019** |
 | 30 | Kiểm bundle của trang | Không có request nào tải thư viện sinh ảnh về client (ảnh sinh server-side) — **NFR-003**, DEC-010 |
 | 31 | Lỗi mạng khi lưu (chặn route bằng `page.route(... abort)`) | Hiện lỗi rõ ràng; **form không bị reset**, dữ liệu người dùng còn nguyên; nút export **vẫn disabled** — **NFR-010**, Master Spec §12 |
 | 32 | Sau khi lỗi, bỏ chặn và bấm lại | Lưu thành công ở lần thử lại — NFR-010 |
@@ -948,7 +948,7 @@ Quy tắc tick: chỉ đánh `[x]` khi test đã **thật sự chạy và xanh**
 - [x] Nút export **enabled** khi status là `COMPLETED`, và bấm được ra file
 - [x] Response `content-type` là **`image/png`**, status 200
 - [x] Chữ ký PNG đúng, và **`IHDR` cho đúng `1080×1920`** — đo trên chính response, không tin tham số truyền vào
-- [x] Tên file khớp `BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png` (FR-019), đã bỏ dấu tiếng Việt
+- [x] Tên file khớp `Bao_Cao_Ngay_<YYYY-MM-DD>.png` / `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` (FR-019), không chứa họ tên Sales
 - [x] Security X2: salesA gọi share-image của salesB → **404** `REPORT_NOT_FOUND`, không phải PNG
 - [x] Security X3: gọi share-image khi report chưa `COMPLETED` (**bằng phiên của chính chủ**) → **403** `NOT_COMPLETED` (BR-002) — ⚠ **kết quả này thuộc về Phase 6 và ĐÃ HẾT HIỆU LỰC** từ PHASE 14: DEC-058 cho phép, nay trả PNG bản CAM KẾT
 - [x] Security X17: header `Cache-Control: private, no-store`

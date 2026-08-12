@@ -433,7 +433,7 @@ Ngay cả khi client bị sửa, Route Handler vẫn **tự đọc `status` từ
 → Render ImageResponse 1080×1920 từ DailyReportShareCard
 → Trả PNG kèm Content-Disposition attachment và Cache-Control private no-store
 → Client nhận blob
-→ Tên file BikeForce_Report_Nguyen-Van-A_2026-08-07.png (FR-019)
+→ Tên file Bao_Cao_Cuoi_Ngay_2026-08-07.png (FR-019)
 
   ── PHASE 14 — DEC-061 + DEC-062: từ đây luồng TÁCH ĐÔI theo thiết bị ──
   Tách bằng CSS (pointer-coarse), không bằng JavaScript, nên đúng ngay từ khung hình đầu tiên.
@@ -508,7 +508,7 @@ sequenceDiagram
     end
 
     alt Nhận HTTP 200
-        C->>C: res.blob rồi tạo File tên BikeForce_Report_Nguyen-Van-A_2026-08-07.png
+        C->>C: res.blob rồi tạo File tên Bao_Cao_Cuoi_Ngay_2026-08-07.png
         alt navigator.canShare với files trả true
             C->>OS: navigator.share kèm file PNG
             OS-->>S: Share sheet mở, Sales chọn Zalo và gửi vào nhóm
@@ -853,7 +853,7 @@ dò ID); chưa đăng nhập → **401 JSON** (DEC-039). Hai nhánh đó không 
 
 **Trigger.** `navigator.share` không tồn tại (phần lớn desktop); `navigator.canShare({ files })` trả `false` (một số webview không cho chia sẻ file); hoặc người dùng mở share sheet rồi bấm huỷ → promise reject với `AbortError`.
 
-**Hệ thống làm gì.** Đây **không phải lỗi**, mà là nhánh fallback đã thiết kế sẵn (FR-020, DEC-011). Không hỗ trợ → tạo `<a download>` với tên file theo FR-019 (`BikeForce_Report_<Ho-Ten>_<YYYY-MM-DD>.png`), click bằng script, rồi `URL.revokeObjectURL()` để giải phóng bộ nhớ. Với `AbortError` do người dùng chủ động huỷ → **nuốt im lặng**, không hiện toast lỗi (báo lỗi khi người dùng cố ý huỷ là phản trải nghiệm).
+**Hệ thống làm gì.** Đây **không phải lỗi**, mà là nhánh fallback đã thiết kế sẵn (FR-020, DEC-011). Không hỗ trợ → tạo `<a download>` với tên file theo FR-019 (`Bao_Cao_Ngay_<YYYY-MM-DD>.png` hoặc `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png`), click bằng script, rồi `URL.revokeObjectURL()` để giải phóng bộ nhớ. Với `AbortError` do người dùng chủ động huỷ → **nuốt im lặng**, không hiện toast lỗi (báo lỗi khi người dùng cố ý huỷ là phản trải nghiệm).
 
 **Người dùng thấy gì.** Nhánh fallback: file PNG được tải về, kèm toast hướng dẫn *"Đã tải ảnh về máy. Mở Zalo và gửi ảnh từ thư viện."* Nhánh huỷ: không có gì thay đổi, nút trở lại trạng thái bấm được. **Rủi ro chưa kiểm chứng:** trong Zalo in-app webview, hành vi tải file đính kèm chưa được xác nhận trên thiết bị thật — **ISSUE-003**, phải test tay ở Phase 6 (NFR-009).
 
