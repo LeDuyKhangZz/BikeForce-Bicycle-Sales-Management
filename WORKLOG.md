@@ -2602,4 +2602,4 @@ Docker/Supabase local; chạy lại đúng quyền dự án thì UC-13 xanh 3/3 
 
 **Remaining:** không còn việc code trong phạm vi đổi tên file; không thể kiểm Zalo thật bằng Playwright, vẫn thuộc ISSUE-003.
 
-**Update:** tăng header bảng chỉ tiêu trong ảnh xuất từ 26px/600 lên 34px/700 để dòng `CHỈ TIÊU / CAM KẾT / THỰC ĐẠT / HOÀN THÀNH` rõ hơn trên cả ảnh sáng và chiều.
+**Update:** tăng header bảng chỉ tiêu trong ảnh xuất từ 26px/600 lên 30px/700, giảm `letterSpacing` và khóa `nowrap` để rõ hơn nhưng không nhảy dòng trên bản chiều.

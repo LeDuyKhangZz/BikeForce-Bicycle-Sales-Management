@@ -10,7 +10,7 @@ Người dùng báo ảnh gửi qua Zalo hiện dòng tên file dài như `BikeF
 
 **Đã đổi:** `shareImageFileName()` nay trả `Bao_Cao_Ngay_<YYYY-MM-DD>.png` cho bản sáng và `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png` cho bản cuối ngày. Tên Sales không còn nằm trong filename, nhưng nội dung ảnh vẫn giữ tên/mã/tuyến như trước.
 
-**UI ảnh xuất:** header bảng chỉ tiêu tăng từ 26px/600 lên 34px/700 cho cả bản sáng và chiều.
+**UI ảnh xuất:** header bảng chỉ tiêu tăng từ 26px/600 lên 30px/700, giảm tracking và khóa không xuống dòng cho cả bản sáng và chiều.
 
 **Next Exact Steps:** sau khi deploy, thử trên Zalo thật: bấm "Gửi kết quả qua Zalo" và xác nhận dòng dưới ảnh là `Bao_Cao_Cuoi_Ngay_2026-08-12.png` hoặc bản sáng là `Bao_Cao_Ngay_2026-08-12.png`. Không cần đổi route hay schema.
 

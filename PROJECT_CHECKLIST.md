@@ -898,7 +898,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `shareImageFileName()` đổi sang `Bao_Cao_Ngay_<YYYY-MM-DD>.png` và `Bao_Cao_Cuoi_Ngay_<YYYY-MM-DD>.png`
 - [x] Tên file không chứa họ tên Sales, tránh dòng dài dưới ảnh Zalo và giảm lộ thông tin cá nhân
 - [x] Unit/E2E và docs FR-019/DEC-067 đã cập nhật theo tên mới
-- [x] Header bảng chỉ tiêu trong ảnh xuất tăng lên 34px/700 để rõ hơn khi gửi Zalo
+- [x] Header bảng chỉ tiêu trong ảnh xuất tăng lên 30px/700, không wrap trên bản chiều
 
 ## OPEN QUESTIONS
 

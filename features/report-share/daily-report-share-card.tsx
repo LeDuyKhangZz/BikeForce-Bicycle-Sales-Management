@@ -154,10 +154,11 @@ function HeaderCell({ text, width, align }: { text: string; width: number; align
         display: 'flex',
         width,
         justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
-        fontSize: 34,
+        fontSize: 30,
         fontWeight: 700,
         color: COLOR.muted,
-        letterSpacing: 1,
+        letterSpacing: 0.6,
+        whiteSpace: 'nowrap',
       }}
     >
       {text}
