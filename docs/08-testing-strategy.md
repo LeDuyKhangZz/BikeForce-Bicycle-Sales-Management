@@ -1,6 +1,6 @@
 # 08 — Testing Strategy
 
-> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -1377,3 +1377,18 @@ axe serious/critical, hàng rào touch target, horizontal overflow và dynamic t
 Kết quả thực tế 2026-08-11: full Vitest **802/802** (32 file); nhóm helper liên quan **102/102**;
 integration + RLS liên quan **38/38** với 100.002 dòng; E2E Admin **36/36** trên đủ ba project;
 build/typecheck/lint exit 0 và build có 20 route.
+
+---
+
+## 16. HÀNG RÀO BỐ CỤC FILTER DESKTOP — ISSUE-031
+
+`e2e/admin-flow.spec.ts` đo bounding box trên project `desktop-1440` ngay khi mở `/admin/reports`:
+
+- ô tìm kiếm “Tìm theo tên Sales” và group “Duyệt nhanh theo tháng” phải lệch `y` không quá 1px;
+- chiều cao hai control phải lệch không quá 1px;
+- kiểm tra nằm trong luồng UC-13 thật, nên vẫn đi qua đăng nhập, middleware, Server Component và dữ liệu
+  Supabase local thay vì render component cô lập.
+
+Ngày 2026-08-12, bài mới đỏ lần đầu với sai lệch **2px**, sau khi chỉnh nút tháng về touch target 44px thì
+chạy lại xanh **1/1** trên `desktop-1440`; cùng luồng trên `mobile-375` cũng xanh **1/1**. Bản preview tạm
+được nhìn ở 1440×900 và 375×812 rồi xoá.

@@ -44,7 +44,7 @@ test.describe('FR-024 / FR-033 — dashboard tổng quan', () => {
 });
 
 test.describe('FR-025 / FR-026 / FR-027 — danh sách và chi tiết báo cáo', () => {
-  test('UC-13 → UC-14: lọc theo Sales rồi mở chi tiết báo cáo của người đó', async ({ page }) => {
+  test('UC-13 → UC-14: lọc theo Sales rồi mở chi tiết báo cáo của người đó', async ({ page }, testInfo) => {
     await page.getByRole('link', { name: 'Báo cáo' }).first().click();
     await expect(page).toHaveURL(/\/admin\/reports/);
     await expectNoHorizontalScroll(page);
@@ -54,6 +54,21 @@ test.describe('FR-025 / FR-026 / FR-027 — danh sách và chi tiết báo cáo'
     const advanced = page.locator('details').filter({ hasText: 'Bộ lọc nâng cao' });
     await expect(advanced).not.toHaveAttribute('open', '');
     await expect(page.getByLabel('Nhân viên')).not.toBeVisible();
+
+    if (testInfo.project.name === 'desktop-1440') {
+      const searchBox = await page.getByLabel('Tìm theo tên Sales').boundingBox();
+      const monthBox = await page
+        .getByRole('group', { name: 'Duyệt nhanh theo tháng' })
+        .boundingBox();
+
+      expect(searchBox).not.toBeNull();
+      expect(monthBox).not.toBeNull();
+
+      if (searchBox !== null && monthBox !== null) {
+        expect(Math.abs(searchBox.y - monthBox.y)).toBeLessThanOrEqual(1);
+        expect(Math.abs(searchBox.height - monthBox.height)).toBeLessThanOrEqual(1);
+      }
+    }
 
     /*
      * Search theo tên Sales (`ilike`) — filter chạy SERVER-SIDE.

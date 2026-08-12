@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -14,6 +14,9 @@ dự định, không ghi trạng thái test/build chưa từng chạy. Format b�
 có bộ lọc progressive disclosure, chip tóm tắt và điều hướng trực tiếp cho dữ liệu lớn. Build/typecheck/lint,
 Vitest **802/802**, 38 integration/RLS test trên fixture 100.002 báo cáo và E2E Admin **36/36** trên ba
 project đều đã xanh.
+
+**BẢO TRÌ UI 2026-08-12 — ISSUE-031 ĐÃ ĐÓNG.** Khối tìm/lọc `/admin/reports` trên laptop đã được cân
+lại hai control, giữ mobile một cột và có E2E đo bounding box để lỗi lệch hàng không tái diễn.
 
 Quy tắc đứng của người dùng vẫn là: hoàn tất thay đổi thì agent **tự commit + push**, không chờ nhắc lại;
 chi tiết vận hành nằm ở `CLAUDE.md § Git`.
@@ -2555,3 +2558,27 @@ Docker/Supabase local; chạy lại đúng quyền dự án thì UC-13 xanh 3/3 
 **Decision:** DEC-066. Không có migration, policy, dependency hay business rule KPI mới.
 
 **Remaining:** không còn code/test trong phạm vi; commit và push `origin/main`.
+
+---
+
+### Entry 026 — Sửa bố cục tìm/lọc báo cáo trên laptop (ISSUE-031)
+
+**Date:** 2026-08-12
+
+**Completed:**
+
+1. Dùng `ui-ux-pro-max` rà responsive form, label, touch target và horizontal overflow.
+2. Xác định nguyên nhân gốc: `md:items-end` căn đáy hai cột có số hàng khác nhau, làm ô tìm kiếm tụt.
+3. Thiết kế lại lưới desktop `3fr / 2fr`, đưa “Tháng này” lên hàng label, thêm icon Search, phân vùng nút
+   tháng và ổn định CTA; giữ nguyên Server Component + GET filter.
+4. Thêm E2E desktop đo trực tiếp vị trí và chiều cao hai control. Test đỏ thật ở sai lệch 2px rồi xanh sau
+   khi chỉnh touch target nút tháng về 44px.
+5. Kiểm trực quan bằng production build ở 1440×900 và 375×812; route preview tạm đã xoá, không commit.
+
+**Tests đã chạy thật:** `npm run typecheck` exit 0; full `npm run lint` exit 0; `npm run build` exit 0,
+20 route; E2E UC-13→UC-14 `desktop-1440` **1/1 passed** và `mobile-375` **1/1 passed**.
+
+**Errors:** Docker mất hơn 90 giây để lên và sandbox không đọc được socket; kiểm tra ngoài sandbox xác nhận
+11 container BikeForce đã chạy. Assertion E2E đầu tiên đỏ ở sai lệch 2px, đúng vai trò test tái hiện.
+
+**Remaining:** không còn việc code trong ISSUE-031; các nợ deployment/Zalo/Lighthouse cũ không đổi.

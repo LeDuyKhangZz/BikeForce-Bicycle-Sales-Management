@@ -1,6 +1,6 @@
 # 12 — Known Issues
 
-> Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
+> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -104,8 +104,9 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-029 | **P1** | **CLOSED** | **MỚI 2026-08-11** — trên điện thoại, ảnh **tải vào thư mục Tải xuống chứ không vào Thư viện ảnh**, người dùng không tìm ra file. Gốc: trang web **không có API ghi vào Thư viện ảnh** (giới hạn hệ điều hành) + nhánh dự phòng của DEC-060 trả `attachment` nên ảnh không bao giờ được HIỆN để nhấn giữ. Sửa bằng **DEC-061** + **DEC-062** |
 
 | ISSUE-030 | P2 | **CLOSED** | **MỚI 2026-08-11** — **logo bị cắt mất đáy hai bánh xe** ở mọi nơi dùng `BrandMark`. `viewBox="0 0 101 75"` đúng KÍCH THƯỚC nhưng thiếu ĐỘ LỆCH y: hình nằm ở `y ∈ [13,07 · 87,93]` nên **12,92 đơn vị (~17% chiều cao) bị chém phẳng**, đồng thời đỉnh thừa một dải trắng bằng đúng chừng ấy. Bộ icon PWA và `app/icon.svg` **vô can** (khung 512×512 có đệm). Sửa bằng `viewBox="0 13.07 101 74.86"` + luật E2E `logo-clipped` |
+| ISSUE-031 | P3 | **CLOSED** | **MỚI 2026-08-12** — thanh tìm kiếm và bộ chuyển tháng ở `/admin/reports` bị lệch dọc trên laptop. Gốc: cột tháng có thêm dòng “Tháng này” nhưng lưới cha dùng `items-end`, nên kéo cả cột tìm kiếm xuống. Thiết kế lại bằng lưới `3fr / 2fr`, đưa “Tháng này” lên hàng label, cân hai control và thêm E2E đo bounding box |
 
-Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **16 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, ISSUE-029, **ISSUE-030**).
+Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **17 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, ISSUE-029, ISSUE-030, **ISSUE-031**).
 
 ---
 
@@ -1554,6 +1555,37 @@ luật đo được đều xanh trong suốt thời gian logo bị cắt.
 - ⚠ Bộ E2E đầy đủ **chưa chạy lại** trong phiên này (cần Supabase local + tài khoản seed); luật
   `logo-clipped` đã được chạy thật bằng đúng đoạn mã đó trên DOM của `/login`.
 
+
+---
+
+### ISSUE-031
+
+**Severity:** P3 | **Status:** **CLOSED** (sửa 2026-08-12)
+
+**Module:** `/admin/reports` · `features/admin-reports/report-filter-bar.tsx`
+
+**Description:** Người dùng báo giao diện điện thoại đã đẹp nhưng thanh tìm kiếm và lọc theo tháng trên
+laptop bị méo, kèm ảnh 1230px cho thấy ô tìm kiếm tụt thấp hơn bộ chuyển tháng và để lại khoảng trắng lớn.
+
+**Expected:** Hai control chính trên desktop nằm cùng hàng, cùng chiều cao, khoảng cách có nhịp rõ; bản
+điện thoại vẫn xếp dọc, touch target tối thiểu 44px và không tràn ngang.
+
+**Actual:** Cột tháng gồm label + control + dòng “Tháng này”, còn cột tìm kiếm chỉ có label + input. Lưới
+cha dùng `md:items-end`, nên cột thấp hơn bị căn theo đáy của cột cao hơn và toàn bộ ô tìm kiếm bị kéo xuống.
+
+**Root Cause:** Sai mô hình căn chỉnh: căn đáy hai **cột có số hàng khác nhau**, thay vì căn hai control
+tương ứng. Đây không phải lỗi của `Input`, breakpoint hay dữ liệu.
+
+**Fix:** Dùng lưới desktop `3fr / 2fr`; đưa trạng thái/lối về “Tháng này” lên cùng hàng label tháng; thêm
+icon Search vào trong input, phân vùng hai nút tháng, cân CTA và tách nhóm hành động bằng viền nhẹ. Không đổi
+logic GET, filter server-side hoặc component nâng cao.
+
+**Verification (2026-08-12):**
+- nhìn trực tiếp bản production build preview ở 1440×900 và 375×812: desktop cân hàng, mobile không tràn;
+- E2E mới đo bounding box đã đỏ thật ở chênh lệch 2px, sửa xong chạy lại **1/1 passed** trên
+  `desktop-1440`; cùng luồng `mobile-375` cũng **1/1 passed**; vị trí và chiều cao hai control desktop
+  đều lệch không quá 1px;
+- `npm run typecheck` exit 0; ESLint hai file sửa exit 0; `npm run build` exit 0, 20 route.
 
 ---
 

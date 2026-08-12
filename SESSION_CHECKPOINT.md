@@ -1,6 +1,26 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **16 — Báo cáo Admin cho dữ liệu lớn (DEC-066)** | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: **16 — Báo cáo Admin cho dữ liệu lớn (DEC-066)** | Last updated: 2026-08-12
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 026 — ISSUE-031 — ĐÃ ĐÓNG)
+
+Người dùng báo khối tìm/lọc `/admin/reports` trên laptop bị méo dù mobile đã đẹp. Nguyên nhân là lưới
+desktop dùng `items-end` cho hai cột có số hàng khác nhau: cột tháng có thêm “Tháng này”, nên kéo cả ô
+tìm kiếm xuống. Đã thiết kế lại bằng UI/UX Pro Max, không đổi nghiệp vụ hoặc data flow.
+
+| Cổng đã chạy | Kết quả thật |
+|---|---|
+| Build / typecheck / full lint | ✅ exit 0; build 20 route |
+| E2E tái hiện | ✅ UC-13→UC-14 desktop 1/1 + mobile 1/1; desktop lượt đầu đỏ ở 2px |
+| Visual | ✅ production build 1440×900 + 375×812; preview tạm đã xoá |
+| Docs | ✅ `docs/05`, `docs/08`, `docs/12`, checklist, worklog, checkpoint |
+
+**Thiết kế hiện hành:** desktop `3fr / 2fr`; ô tìm kiếm và group tháng cùng hàng/cùng chiều cao; “Tháng
+này” nằm cùng hàng label; mobile vẫn một cột. E2E đo bounding box với dung sai 1px — đừng bỏ assertion này.
+
+**Next Exact Steps:** tiếp tục các việc deployment đã ghi từ Entry 025; ISSUE-031 không còn code cần làm.
 
 ---
 

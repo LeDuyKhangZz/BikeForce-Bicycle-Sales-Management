@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -881,6 +881,16 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Kiểm trực quan 375×812 và 1440×900 — không thấy tràn ngang, advanced đóng mặc định
 - [x] E2E Admin — **36/36 passed** trên `mobile-375`, `desktop-1440`, `zalo-like`
 - [x] DEC-066 + docs UI/data flow/testing + checklist/worklog/checkpoint đã cập nhật
+
+## Bảo trì UI — ISSUE-031
+
+- [x] Xác định `md:items-end` trên hai cột khác số hàng là nguyên nhân ô tìm kiếm bị tụt
+- [x] Cân lại lưới desktop, control tìm kiếm và tháng cùng vị trí/cùng chiều cao
+- [x] Giữ mobile một cột, touch target ≥ 44px và không cuộn ngang
+- [x] Thêm E2E `desktop-1440` đo bounding box; bài tái hiện đỏ 2px rồi xanh **1/1**; mobile xanh **1/1**
+- [x] Kiểm trực quan production build ở 1440×900 và 375×812; preview tạm đã xoá
+- [x] `npm run typecheck`, full `npm run lint` và `npm run build` — exit 0
+- [x] `docs/05`, `docs/08`, `docs/12`, checklist, worklog và checkpoint đã cập nhật
 
 ## OPEN QUESTIONS
 

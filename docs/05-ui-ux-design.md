@@ -1,6 +1,6 @@
 # 05 — UI/UX Design
 
-> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 16 | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 > Đáp ứng Master Spec §3, §4, §28, §33, §49.
 
@@ -1149,3 +1149,18 @@ giữ request để quan sát trực tiếp: icon đổi thành spinner nhưng l
 - Mobile có nút trước/sau và ô GET “Đi tới trang”; desktop có đầu/trước/số trang/sau/cuối. Nhãn phạm vi dùng
   dạng “Báo cáo 21–40 trên 2.438”. Mọi link giữ bộ lọc và trang chi tiết giữ `returnTo`.
 - Danh sách vẫn chỉ render 20 dòng nên không dùng infinite scroll hoặc virtualization.
+
+---
+
+## 20. SỬA BỐ CỤC BỘ LỌC LAPTOP (2026-08-12) — ISSUE-031
+
+- Nguyên nhân thanh tìm kiếm trông bị tụt là cột tháng có thêm dòng “Tháng này”, trong khi lưới cha dùng
+  `items-end`; toàn bộ cột tìm kiếm vì vậy bị kéo xuống theo chiều cao lớn hơn của cột bên cạnh.
+- Từ `md`, hai control chính dùng lưới tỷ lệ `3fr / 2fr`; label tháng và lối về tháng hiện tại nằm cùng
+  hàng, còn ô tìm kiếm và bộ chuyển tháng phải có cùng `y` và cùng chiều cao.
+- Ô tìm kiếm có icon Lucide nằm trong control để tăng khả năng nhận diện, không thay label hiển thị.
+  Bộ chuyển tháng giữ ba vùng rõ ràng, hai nút điều hướng tối thiểu 44px và có đường phân cách nhẹ.
+- Nhóm hành động desktop tách khỏi phần điều kiện bằng viền trang trí; CTA có bề rộng ổn định để tránh
+  cảm giác nút bị co hoặc trôi. Ở 375px, toàn bộ vẫn xếp một cột và không cuộn ngang.
+- E2E `desktop-1440` đo trực tiếp bounding box của ô tìm kiếm và group tháng; sai lệch vị trí hoặc chiều
+  cao quá 1px làm test đỏ. Đây là hàng rào tái hiện cho ISSUE-031.
