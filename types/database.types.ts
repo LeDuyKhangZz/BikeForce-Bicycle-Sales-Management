@@ -34,6 +34,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      amis_employee_metrics: {
+        Row: {
+          current_amount: number | null
+          employee_name: string
+          net_sales: number | null
+          no_of_orders: number | null
+          org_unit_name: string | null
+          period_month: string
+          qty_account_in_charge: number | null
+          qty_account_interactive: number | null
+          qty_account_sold: number | null
+          qty_account_sold_this_period: number | null
+          receive_amount: number | null
+          return_sales: number | null
+          sales: number | null
+          synced_at: string
+          target_amount: number | null
+        }
+        Insert: {
+          current_amount?: number | null
+          employee_name: string
+          net_sales?: number | null
+          no_of_orders?: number | null
+          org_unit_name?: string | null
+          period_month: string
+          qty_account_in_charge?: number | null
+          qty_account_interactive?: number | null
+          qty_account_sold?: number | null
+          qty_account_sold_this_period?: number | null
+          receive_amount?: number | null
+          return_sales?: number | null
+          sales?: number | null
+          synced_at?: string
+          target_amount?: number | null
+        }
+        Update: {
+          current_amount?: number | null
+          employee_name?: string
+          net_sales?: number | null
+          no_of_orders?: number | null
+          org_unit_name?: string | null
+          period_month?: string
+          qty_account_in_charge?: number | null
+          qty_account_interactive?: number | null
+          qty_account_sold?: number | null
+          qty_account_sold_this_period?: number | null
+          receive_amount?: number | null
+          return_sales?: number | null
+          sales?: number | null
+          synced_at?: string
+          target_amount?: number | null
+        }
+        Relationships: []
+      }
       daily_reports: {
         Row: {
           actual_customer_visits: number | null
@@ -119,6 +173,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          amis_employee_name: string | null
           created_at: string
           email: string
           employee_code: string | null
@@ -130,6 +185,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amis_employee_name?: string | null
           created_at?: string
           email: string
           employee_code?: string | null
@@ -141,6 +197,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amis_employee_name?: string | null
           created_at?: string
           email?: string
           employee_code?: string | null
@@ -155,7 +212,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      amis_reconciliation: {
+        Row: {
+          amis_current: number | null
+          amis_customer_visits: number | null
+          amis_only: boolean | null
+          amis_orders: number | null
+          amis_receivable: number | null
+          amis_revenue: number | null
+          amis_target: number | null
+          bikeforce_only: boolean | null
+          completed_days: number | null
+          customer_visits_diff: number | null
+          employee_code: string | null
+          full_name: string | null
+          orders_diff: number | null
+          period_month: string | null
+          reported_customer_visits: number | null
+          reported_revenue: number | null
+          reported_sales_quantity: number | null
+          revenue_diff: number | null
+          sales_id: string | null
+          synced_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reports_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_daily_trend: {
@@ -375,4 +464,3 @@ export const Constants = {
     },
   },
 } as const
-

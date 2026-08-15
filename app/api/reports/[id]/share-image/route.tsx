@@ -17,7 +17,11 @@ import {
   shareMonthRange,
 } from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
-import { getReportForShare, listMonthToDateMetrics } from '@/services/reports';
+import {
+  getAmisMetricsForShare,
+  getReportForShare,
+  listMonthToDateMetrics,
+} from '@/services/reports';
 
 /**
  * `GET /api/reports/[id]/share-image` — UC-08, FR-018, FR-019.
@@ -119,6 +123,18 @@ function errorResponse(status: number, code: string, message: string): Response 
   );
 }
 
+/**
+ * `'2026-08-14'` → `'2026-08-01'`, khớp khoá `period_month` của
+ * `amis_employee_metrics` (kiểu `date`, luôn là ngày 01).
+ *
+ * Cắt chuỗi chứ không dựng `Date`: `report_date` đã là ngày nghiệp vụ theo giờ
+ * VN dạng `YYYY-MM-DD`, còn `new Date('2026-08-14')` parse theo UTC rồi có thể
+ * lùi một ngày khi format lại — đúng loại lỗi lệch tháng ở ngày mùng 1.
+ */
+function periodMonthOf(reportDate: string): string {
+  return `${reportDate.slice(0, 7)}-01`;
+}
+
 /** Next 16 truyền `params` dưới dạng Promise cho cả page lẫn route handler. */
 type ShareImageContext = {
   params: Promise<{ id: string }>;
@@ -181,38 +197,56 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * dòng đã persist trong database**, không bao giờ từ dữ liệu client gửi lên.
    * Client cũng KHÔNG chọn được biến thể — `status` quyết định.
    */
-  /*
-   * Cụm lũy kế tháng — PHASE 17, **DEC-068**.
-   *
-   * Một truy vấn THỨ HAI, cố ý tách khỏi `getReportForShare()`: nó đọc nhiều
-   * dòng (tối đa 31) và chỉ lấy 8 cột số, còn truy vấn trên đọc đúng một dòng
-   * đầy đủ. Gộp lại bằng embedded resource sẽ kéo cả tháng dữ liệu chi tiết về
-   * cho một tấm ảnh chỉ cần hai tổng và một phép đếm (NFR-002).
-   *
-   * Cả hai đi qua CÙNG một client chịu RLS, nên Sales không thể mượn `sales_id`
-   * của người khác: policy `reports_select_own_or_admin` trả 0 dòng (BR-003), và
-   * Admin xuất ảnh hộ Sales vẫn cộng đúng (BR-022).
-   *
-   * Mốc dừng do `shareMonthRange()` chọn theo biến thể — bản sáng dừng ở HÔM
-   * QUA vì hôm nay chưa có thực đạt (người dùng chốt 2026-08-14).
-   */
   const variant = shareCardVariantForStatus(report.status);
   const monthRange = shareMonthRange(report.report_date, variant);
 
-  // Khoảng rỗng (ảnh sáng của ngày 01) vẫn hiện cụm với ba số 0 — đó là sự thật.
-  // Chỉ khi truy vấn HỎNG mới bỏ cụm: in `0 ₫` cho một tháng có số liệu là nói
-  // sai trên tấm ảnh gửi cấp trên.
+  /*
+   * ─────────────────────────────────────────────────────────────────────────
+   *  CỤM "TÌNH TRẠNG THỰC HIỆN" — PHASE 19, DEC-070
+   * ─────────────────────────────────────────────────────────────────────────
+   *  HAI truy vấn thêm, mỗi cái phục vụ một nửa của cụm:
+   *
+   *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`. Đây là con số DUY
+   *       NHẤT của cụm không đến từ AMIS: AMIS ghi nhận đã thu bao nhiêu nhưng
+   *       không biết Sales tự đặt mục tiêu công nợ bao nhiêu.
+   *    2. `getAmisMetricsForShare` → sáu con số còn lại, đọc từ bảng cache mà
+   *       `scripts/amis-sync/push_amis.py` đẩy lên.
+   *
+   *  Cả hai đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
+   *  người khác và Admin xuất ảnh hộ Sales vẫn đúng (BR-022).
+   *
+   *  Thiếu MỘT trong hai ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
+   *  trên còn tệ hơn không in gì: người đọc không có cách nào biết nửa nào thiếu.
+   */
   const monthRows =
     monthRange === null || monthRange.isEmpty
       ? []
       : await listMonthToDateMetrics(supabase, report.sales_id, monthRange);
 
-  const monthly =
-    monthRange === null || monthRows === null
-      ? null
-      : { range: monthRange, summary: summarizeMonthToDate(monthRows) };
+  const summary = monthRows === null ? null : summarizeMonthToDate(monthRows);
 
-  const model = buildShareCardModel(report, monthly);
+  // Khoá là TÊN người trên AMIS, không phải `sales_id` — xem chú thích của
+  // `getAmisMetricsForShare`. Chưa map thì hàm trả `null` mà không hỏi database.
+  const amis = await getAmisMetricsForShare(
+    supabase,
+    report.sales.amis_employee_name,
+    periodMonthOf(report.report_date),
+  );
+
+  const performance =
+    amis === null || summary === null
+      ? null
+      : {
+          amisTargetAmount: amis.target_amount,
+amisSalesActual: amis.current_amount,          amisReceiveAmount: amis.receive_amount,
+          amisAccountInCharge: amis.qty_account_in_charge,
+          amisAccountInteractive: amis.qty_account_interactive,
+          amisAccountSold: amis.qty_account_sold_this_period,
+          syncedAt: amis.synced_at,
+          targetRevenue: summary.targetRevenue,
+        };
+
+  const model = buildShareCardModel(report, performance);
   const fileName = shareImageFileName(
     report.sales.full_name,
     report.report_date,

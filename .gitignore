@@ -48,6 +48,7 @@ playwright/.cache/
 .eslintcache
 
 # Logs -----------------------------------------------------------------------
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -66,6 +67,35 @@ yarn-error.log*
 Thumbs.db
 desktop.ini
 
-# Tạm --------------------------------------------------------------------
+# Tạm ------------------------------------------------------------------------
 *.tmp
 .cache/
+
+# ---------------------------------------------------------------------------
+# AMIS sync — TUYỆT ĐỐI KHÔNG COMMIT
+# Repo đang Public. Profile Playwright chứa cookie phiên đăng nhập MISA:
+# ai tải về là vào được tài khoản mà không cần mật khẩu.
+# ---------------------------------------------------------------------------
+
+# Phiên đăng nhập Playwright (nguy hiểm nhất)
+.playwright-amis-profile/
+
+# Token & dump localStorage
+scripts/amis-sync/.env
+**/amis-recon.json
+**/harvest-error.png
+scripts/amis-sync/.login-locked
+scripts/amis-sync/__pycache__/
+
+# Output dữ liệu thật — trong scripts/
+scripts/amis-sync/*.json
+scripts/amis-sync/*.csv
+!scripts/amis-sync/*.example.json
+
+# Output dữ liệu thật — ở project root (script Python ghi ra đây)
+dashboard_raw.json
+customer_stats_raw.json
+receivable_raw.json
+cong_no.csv
+thong_ke_kh.csv
+*_raw.json

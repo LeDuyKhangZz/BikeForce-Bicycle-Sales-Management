@@ -6,3 +6,9 @@
 .env.keys
 .env.local
 .env.*.local
+# AMIS sync (chạy tay, chứa cookie phiên)
+scripts/amis-sync/.env
+scripts/amis-sync/__pycache__/
+scripts/amis-sync/*.json
+scripts/amis-sync/*.csv
+scripts/amis-sync/*.log
