@@ -1,5 +1,5 @@
 import { achievementLabel, type AchievementStatus } from '@/lib/kpi';
-import type { ShareCardMetricRow, ShareCardModel } from '@/lib/reports/share-card';
+import type { ShareCardMetricRow, ShareCardModel, ShareCardProgress } from '@/lib/reports/share-card';
 
 /**
  * Thẻ ảnh chia sẻ 9:16 — bố cục `docs/05 §14`, render bằng **Satori** trong
@@ -160,7 +160,11 @@ const NO_SHRINK = { flexShrink: 0 } as const;
  */
 const ROW_METRICS = {
   MORNING: { paddingY: 44, label: 42, value: 56 },
-  EVENING: { paddingY: 30, label: 36, value: 36 },
+  // ⚠ PHASE 18 (DEC-069): `EVENING.paddingY` hạ 30 → 20 để **bù đúng** chiều cao
+  // thanh tiến độ mới (14px + 10px marginTop = 24px mỗi dòng, tức +96px cho cả
+  // bảng). Không bù thì bản chiều vượt 1920px và chữ chồng lên nhau — ISSUE-032
+  // đã dạy đúng bài này một lần rồi.
+  EVENING: { paddingY: 20, label: 36, value: 36 },
 } as const;
 
 type HeaderCellSpec = {
@@ -196,6 +200,155 @@ function HeaderCell({ text, width, align }: { text: string; width: number; align
       }}
     >
       {text}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Thanh tiến độ + ngọn lửa vượt chỉ tiêu — PHASE 18, DEC-069
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Kích thước thanh. Cố ý **nhỏ**: người dùng dặn thẳng *"thiết kế thanh nhỏ thôi
+ * cẩn thận bị đụng hàng vì ảnh xuất ra hiện tại rất đẹp rồi"*.
+ *
+ * Rộng 200 chứ không phải cả 320px của cột: thanh ngắn hơn cột chữ nên nó đọc ra
+ * là **chú thích của con số**, không phải một thành phần thứ hai tranh chỗ.
+ */
+const PROGRESS = {
+  width: 200,
+  height: 14,
+  /** Viền pill — cũng là thứ khiến "phần chưa đạt" nhìn thấy được. */
+  border: 2,
+  /**
+   * Chỗ dành sẵn cho ngọn lửa ở bên phải — **luôn chiếm chỗ, kể cả khi không
+   * cháy**, và đó là toàn bộ lý do nó tồn tại.
+   *
+   * Lượt render đầu để lửa đẩy thanh sang trái, nên dòng vượt chỉ tiêu có thanh
+   * **lệch 28px** so với ba dòng còn lại — đúng thứ người dùng dặn tránh khi
+   * nói *"cẩn thận bị đụng hàng"*. Giữ ô trống này thì bốn thanh thẳng hàng
+   * tuyệt đối dù dòng nào cháy.
+   */
+  flameSlot: 30,
+} as const;
+
+/** Bán kính pill = nửa chiều cao ⇒ hai đầu tròn hoàn toàn. */
+const PROGRESS_RADIUS = PROGRESS.height / 2;
+
+/** Bề rộng lòng trong, sau khi trừ viền hai bên. */
+const PROGRESS_INNER_WIDTH = PROGRESS.width - PROGRESS.border * 2;
+const PROGRESS_INNER_HEIGHT = PROGRESS.height - PROGRESS.border * 2;
+
+/**
+ * Ngọn lửa của trạng thái **vượt chỉ tiêu** — người dùng yêu cầu trực tiếp.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  BA RÀNG BUỘC ĐÃ CÂN, ĐỌC TRƯỚC KHI "LÀM CHO NÓ NỔI HƠN"
+ * ─────────────────────────────────────────────────────────────────────────
+ *  1. **Không dùng emoji 🔥.** `docs/05` cấm emoji làm icon, và quan trọng hơn:
+ *     font Inter nhúng trong `public/fonts/` **không có glyph emoji** nên Satori
+ *     sẽ vẽ ra ô vuông rỗng trên tấm ảnh gửi khách. Đây là SVG path.
+ *  2. **Không đổi màu thanh sang đỏ.** Xanh `#166534` = đạt là quy ước đã dùng
+ *     khắp thẻ và khắp web; đổi thanh sang đỏ/cam khi vượt là đảo ngược tín hiệu
+ *     ngay trong cùng một ô với chữ xanh. Thanh **vẫn xanh và đầy**; ngọn lửa là
+ *     lớp phủ thêm ở mút phải, nói "đầy đến mức cháy".
+ *  3. **Màu lửa lấy từ tone logo** (`#E9A04F` → `#C2410C`), không phải đỏ tươi —
+ *     để nó hoà vào thẻ chứ không nhảy ra như một sticker.
+ */
+const FLAME = {
+  width: 22,
+  height: 28,
+  /** Lưỡi ngoài — cam logo, sáng nhất ở đỉnh. */
+  outer: '#E9A04F',
+  /** Lưỡi trong — cam cháy đậm, tạo chiều sâu. */
+  inner: '#C2410C',
+} as const;
+
+/**
+ * Ngọn lửa vẽ bằng **hai path SVG** lồng nhau. Satori dựng được `<svg>` với
+ * `path` (nó dùng đúng cơ chế này cho icon), nhưng **không** dựng được
+ * `<linearGradient>` một cách đáng tin — nên chiều sâu ở đây làm bằng hai lớp
+ * màu đặc thay vì gradient.
+ */
+function Flame() {
+  return (
+    <svg width={FLAME.width} height={FLAME.height} viewBox="0 0 22 28">
+      <path
+        d="M11 0.5c1.2 4.6 4.3 6.9 6.2 9.6 1.5 2.1 2.3 4.3 2.3 6.6 0 6.2-4.3 10.8-9.5 10.8S0.5 22.9 0.5 16.7c0-3.1 1.3-5.7 3.3-8.2.5 1.9 1.4 3.1 2.6 3.6-.4-4.6 1.4-8.6 4.6-11.6z"
+        fill={FLAME.outer}
+      />
+      <path
+        d="M11 27.5c-3.2 0-5.6-2.5-5.6-5.8 0-2.6 1.6-4.4 3.2-6.4.7 1 1.4 1.6 2.2 1.9-.3-2.6.6-4.9 2.3-6.7 1 2.4 3.5 4.6 3.5 8.4 0 3.7-2.4 6.6-5.6 6.6z"
+        fill={FLAME.inner}
+      />
+    </svg>
+  );
+}
+
+/**
+ * Thanh tiến độ nhỏ dưới ô "Hoàn thành" — dạng **bullet chart thu gọn**, không
+ * phải gauge: bốn chỉ tiêu xếp dọc trong một cột hẹp thì gauge quá lớn.
+ *
+ * Thanh **không mang thông tin duy nhất**: con số `%` và nhãn chữ ngay trên nó
+ * vẫn nói đủ (luật `color-not-only` của `docs/05 §4.4`). Nó là lớp giúp đọc
+ * lướt — thứ sếp của người dùng yêu cầu.
+ *
+ * `PENDING` thì không vẽ gì: một pill rỗng dưới chữ `'—'` chỉ thêm nhiễu.
+ */
+function ProgressBar({
+  progress,
+  status,
+}: {
+  progress: ShareCardProgress;
+  status: AchievementStatus;
+}) {
+  if (status === 'PENDING') return null;
+
+  const color = STATUS_COLOR[status];
+  const fillWidth = Math.round(PROGRESS_INNER_WIDTH * progress.fill);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
+      <div
+        style={{
+          display: 'flex',
+          width: PROGRESS.width,
+          height: PROGRESS.height,
+          borderRadius: PROGRESS_RADIUS,
+          // Viền cùng màu trạng thái: nó vừa là khung để thấy "còn thiếu bao
+          // nhiêu", vừa đủ tương phản trên CẢ nền trắng lẫn nền sọc #F4F7FA —
+          // một track xám nhạt thì biến mất sau khi Zalo nén ảnh (DEC-057).
+          border: `${PROGRESS.border}px solid ${color}`,
+          backgroundColor: COLOR.background,
+        }}
+      >
+        {/* Chỉ vẽ phần đã đạt khi nó có bề rộng thật — một hộp 0px vẫn để lại
+            vệt bo góc mờ trong Satori. */}
+        {fillWidth > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              width: fillWidth,
+              height: PROGRESS_INNER_HEIGHT,
+              borderRadius: PROGRESS_RADIUS,
+              backgroundColor: color,
+            }}
+          />
+        )}
+      </div>
+
+      {/* Ô lửa: LUÔN chiếm chỗ, chỉ có ruột khi thực sự vượt. Lửa nằm NGOÀI pill
+          vì đặt đè lên thanh sẽ che mất chính phần "đầy" mà nó đang ăn mừng. */}
+      <div
+        style={{
+          display: 'flex',
+          width: PROGRESS.flameSlot,
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}
+      >
+        {progress.isBlazing && <Flame />}
+      </div>
     </div>
   );
 }
@@ -295,6 +448,8 @@ function MetricRow({
           <div style={{ display: 'flex', fontSize: 24, color: COLOR.muted, marginTop: 4 }}>
             {achievementLabel(row.achievement)}
           </div>
+
+          <ProgressBar progress={row.progress} status={row.achievement.status} />
         </div>
       )}
     </div>

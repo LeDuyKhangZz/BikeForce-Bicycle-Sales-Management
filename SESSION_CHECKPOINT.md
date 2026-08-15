@@ -1,6 +1,54 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **17 — Lũy kế tháng trên thẻ ảnh (DEC-068)** | Last updated: 2026-08-14
+> Status: ACTIVE | Phase: **18 — Thanh tiến độ + ngọn lửa (DEC-069)** | Last updated: 2026-08-15
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 029 — PHASE 18, DEC-069 — ĐÃ ĐÓNG)
+
+Sếp của người dùng muốn ô "% Hoàn thành" có **thanh nhỏ** thể hiện mức hoàn thành, và **lửa cháy** khi
+vượt chỉ tiêu. Người dùng dặn kèm: *"thiết kế thanh nhỏ thôi cẩn thận bị đụng hàng vì ảnh xuất ra hiện
+tại rất đẹp rồi"*.
+
+### Nghiệp vụ đã chốt — ĐỪNG HỎI LẠI
+
+| Điểm | Chốt ngày 2026-08-15 |
+|---|---|
+| Ngưỡng cháy | **`percent > 100` NGHIÊM NGẶT.** Đúng `100,0%` **không** cháy — nguyên văn: *"vượt chỉ tiêu là lớn 100% mới được, = 100% thì không được nhé"* |
+| Ca `target = 0 && actual > 0` | Cũng cháy (BR-015 nhánh 2 — vượt kế hoạch) |
+| Phạm vi | Chỉ bản **CHIỀU**; bản sáng không có cột "Hoàn thành" nên không đổi gì |
+
+### Quy cách thanh (`ProgressBar` trong `daily-report-share-card.tsx`)
+
+Pill **200 × 14px**, bo tròn hoàn toàn, **viền 2px màu `status`**, fill đặc cùng màu.
+Ngọn lửa **SVG hai path** (`#E9A04F` ngoài / `#C2410C` trong), 22 × 28px.
+
+⚠ **Ô lửa `PROGRESS.flameSlot = 30px` LUÔN chiếm chỗ, kể cả khi không cháy — đừng "tối ưu" bỏ đi.**
+Lượt render đầu để lửa nằm trong luồng flex và dòng cháy có thanh **lệch 28px** so với ba dòng còn lại.
+Đó đúng là "đụng hàng" mà người dùng dặn tránh.
+
+⚠ **`ROW_METRICS.EVENING.paddingY` = 20** (hạ từ 30) để bù đúng 24px chiều cao thanh mỗi dòng. Nâng lại
+là tái diễn ISSUE-032 (chồng chữ).
+
+⚠ **Không dùng emoji 🔥.** Font Inter nhúng trong `public/fonts/` **không có glyph emoji** ⇒ Satori vẽ ô
+vuông rỗng lên tấm ảnh gửi khách. Lửa là SVG path.
+
+⚠ **Thanh vẫn XANH khi đạt.** Đừng đổi sang đỏ/cam lúc vượt — chữ `%` ngay trên nó đang xanh, đổi màu
+thanh là đảo ngược tín hiệu trong cùng một ô.
+
+| Cổng đã chạy | Kết quả thật |
+|---|---|
+| typecheck / lint / build | ✅ exit 0; 20 route |
+| `npm test` | ✅ **851/851** (33 file) |
+| Nhìn tận mắt | ✅ tấm 4 trạng thái (250% cháy · 100% không cháy · 85% · 30%), tấm ca xấu nhất, tấm **phóng to ngọn lửa** |
+
+### Next Exact Steps
+
+1. Muốn chỉnh kích thước/màu thanh: hằng `PROGRESS` và `FLAME` ở đầu
+   `features/report-share/daily-report-share-card.tsx`. Muốn chỉnh **ngưỡng cháy** hoặc **chiều dài
+   fill**: `buildProgress()` trong `lib/reports/share-card.ts` — **không** sửa trong component.
+2. Nợ chưa làm: E2E khoá thanh/lửa và cụm lũy kế (cần seed nhiều ngày trong tháng).
+3. Nợ cũ không đổi: rotate service role key (ISSUE-011) · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
 
 ---
 

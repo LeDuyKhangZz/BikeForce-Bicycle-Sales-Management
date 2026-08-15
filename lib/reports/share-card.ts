@@ -182,7 +182,65 @@ export type ShareCardMetricRow = {
   readonly actualText: string;
   /** Kết quả thô của `lib/kpi.ts`; component chỉ đọc `display` và `status`. */
   readonly achievement: AchievementResult;
+  /** Thanh tiến độ nhỏ dưới ô "Hoàn thành" — PHASE 18, DEC-069. */
+  readonly progress: ShareCardProgress;
 };
+
+/**
+ * Thanh tiến độ của một dòng chỉ tiêu — PHASE 18, **DEC-069**.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO TÍNH Ở ĐÂY CHỨ KHÔNG PHẢI TRONG COMPONENT
+ * ─────────────────────────────────────────────────────────────────────────
+ *  "Vẽ dài bao nhiêu" và "có cháy hay không" là hai câu hỏi **nghiệp vụ**, và
+ *  câu thứ hai còn dính BR-004 (không clamp `%`) lẫn BR-015 (ca `target = 0`).
+ *  Component chỉ được biết hai con số đã trả lời sẵn (AGENTS.md §1.3).
+ */
+export type ShareCardProgress = {
+  /**
+   * Chiều dài thanh, **đã clamp về `[0, 1]`**.
+   *
+   * ⚠ Clamp CHỈ ở đây, và chỉ cho việc VẼ. `achievement.percent` vẫn giữ giá trị
+   * thật (`300%` in ra `300,0%`) vì BR-004 cấm clamp con số. Một thanh không thể
+   * dài hơn khung của nó, nên phần vượt được kể bằng **ngọn lửa** thay vì bằng
+   * chiều dài.
+   */
+  readonly fill: number;
+  /**
+   * `true` → vẽ ngọn lửa ở mút phải, nghĩa là **thực sự vượt** chỉ tiêu.
+   *
+   * ⚠ **Nghiêm ngặt `> 100`, không phải `>= 100`.** Nếu mọi dòng đạt đúng
+   * `100,0%` cũng bốc cháy thì ngọn lửa mất hết ý nghĩa — nó phải nói được điều
+   * mà cột `%` chưa nói. Ca `target = 0 && actual > 0` (BR-015, `percent = null`
+   * nhưng có `surplus`) **cũng cháy**: làm được trong khi không đặt mục tiêu thì
+   * đúng là vượt kế hoạch.
+   */
+  readonly isBlazing: boolean;
+};
+
+/** Thanh rỗng, không cháy — dùng cho `PENDING` (chưa có số liệu cuối ngày). */
+const EMPTY_PROGRESS: ShareCardProgress = { fill: 0, isBlazing: false };
+
+/**
+ * `AchievementResult` → hình dạng thanh. Hàm thuần, có unit test riêng.
+ *
+ * Không tự chia lại `actual / target`: mọi phép tính đã xong ở `lib/kpi.ts`
+ * (NFR-012). Hàm này chỉ **diễn giải** kết quả đó thành hai con số để vẽ.
+ */
+export function buildProgress(achievement: AchievementResult): ShareCardProgress {
+  // Chưa có số liệu thì không có gì để vẽ — thanh rỗng, và ô "%" đã hiện '—'.
+  if (achievement.status === 'PENDING') return EMPTY_PROGRESS;
+
+  // BR-015 nhánh 2: `target = 0 && actual > 0`. Không có `%` nào tồn tại, nhưng
+  // đây là ca vượt rõ ràng nhất ⇒ thanh đầy và cháy.
+  if (achievement.percent === null) {
+    return { fill: 1, isBlazing: achievement.surplus !== null && achievement.surplus > 0 };
+  }
+
+  const fill = Math.min(Math.max(achievement.percent / 100, 0), 1);
+
+  return { fill, isBlazing: achievement.percent > 100 };
+}
 
 export type ShareCardModel = {
   /** Bản sáng hay bản chiều — quyết định bố cục (DEC-058). */
@@ -281,6 +339,7 @@ export function buildShareCardModel(
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
     const actual = source[row.actualColumn];
+    const achievement = calculateAchievement(target, actual, row.metric);
 
     return {
       // `shortLabel` chứ không `label`: cột nhãn của thẻ ảnh có bề rộng CỐ ĐỊNH
@@ -289,7 +348,8 @@ export function buildShareCardModel(
       label: row.shortLabel,
       targetText: formatMetricValueCompact(target, row.metric),
       actualText: formatMetricValueCompact(actual, row.metric),
-      achievement: calculateAchievement(target, actual, row.metric),
+      achievement,
+      progress: buildProgress(achievement),
     };
   });
 

@@ -2140,3 +2140,58 @@ cả hai nhánh BR-015; `lib/reports/share-card.test.ts` khoá ba dòng, tiêu �
 `lib/date.test.ts` khoá lùi ngày qua tháng/năm nhuận; `tests/rls/share-image.rls.test.ts` chứng minh
 `listMonthToDateMetrics()` bị RLS chặn khi Sales truyền `sales_id` của người khác. Đã **render bốn tấm
 PNG thật và nhìn tận mắt** (thường + xấu nhất, cho cả hai biến thể).
+
+---
+
+## DEC-069 — Thanh tiến độ dưới ô "Hoàn thành", có ngọn lửa khi vượt chỉ tiêu
+
+**Date:** 2026-08-15
+
+**Decision:** Mỗi dòng chỉ tiêu của thẻ ảnh bản **CHIỀU** có thêm một **thanh tiến độ nhỏ** ngay dưới
+nhãn trạng thái, dạng **bullet chart thu gọn**:
+
+| Thành phần | Quy cách |
+|---|---|
+| Pill | 200 × 14px, bo tròn hoàn toàn, viền 2px **màu theo `status`** |
+| Phần đã đạt | tô đặc cùng màu `status`, dài `fill × 196px` |
+| Ngọn lửa | SVG 22 × 28px, hai lớp `#E9A04F` / `#C2410C`, ở ô dành sẵn 30px bên phải |
+| `PENDING` | **không vẽ gì** — pill rỗng dưới chữ `'—'` chỉ thêm nhiễu |
+
+**Ngưỡng cháy — người dùng chốt trực tiếp:** ngọn lửa chỉ xuất hiện khi **`percent > 100` nghiêm ngặt**.
+*"vượt chỉ tiêu là lớn 100% mới được, = 100% thì không được nhé"*. Ca BR-015 nhánh 2 (`target = 0 &&
+actual > 0`, `percent = null` nhưng có `surplus`) **cũng cháy** — làm được trong khi không đặt mục tiêu
+thì đúng là vượt kế hoạch.
+
+**Reason:** sếp của người dùng muốn đọc lướt được mức hoàn thành mà không phải đọc từng con số, và muốn
+thấy ngay ai vượt chỉ tiêu. Con số `%` một mình không cho cảm giác "còn bao xa tới đích".
+
+**Alternatives:**
+- *Gauge / dial:* bị loại — bốn KPI xếp dọc trong cột rộng 320px thì gauge quá lớn; khuyến nghị của
+  `ui-ux-pro-max` cho ca "nhiều KPI, chỗ hẹp" là **bullet chart**.
+- *Emoji 🔥:* bị loại vì hai lý do độc lập — `docs/05` cấm emoji làm icon, và font Inter nhúng trong
+  `public/fonts/` **không có glyph emoji** nên Satori sẽ vẽ ô vuông rỗng lên tấm ảnh gửi khách.
+- *Đổi màu thanh sang đỏ/cam khi vượt:* bị loại. Xanh `#166534` = đạt là quy ước dùng khắp thẻ và web;
+  đổi sang đỏ ngay cạnh chữ xanh là đảo ngược tín hiệu trong cùng một ô. Thanh **vẫn xanh và đầy**,
+  ngọn lửa là lớp phủ thêm.
+- *Thanh dài theo `%` thật (250% → tràn khung):* bị loại — BR-004 cấm clamp **con số**, không cấm clamp
+  **chiều dài hình vẽ**. Phần vượt được kể bằng ngọn lửa.
+- *Lửa đẩy thanh (không có ô dành sẵn):* đã thử và **bị loại sau khi nhìn ảnh** — dòng cháy có thanh
+  lệch 28px so với ba dòng còn lại. Nay ô lửa 30px **luôn chiếm chỗ**, kể cả khi không cháy.
+
+**Impact:**
+- Không đổi schema, RLS, truy vấn hay quyền. Không thêm dependency.
+- `lib/reports/share-card.ts` thêm `ShareCardProgress` + `buildProgress()`; `ShareCardMetricRow` có
+  thêm trường `progress`.
+- `ROW_METRICS.EVENING.paddingY` hạ **30 → 20** để bù đúng 24px chiều cao thanh mỗi dòng — nếu không thì
+  tái diễn ISSUE-032 (chồng chữ).
+- Bản **SÁNG** không đổi gì: nó không có cột "Hoàn thành".
+- Thanh **không mang thông tin duy nhất** — `%` và nhãn chữ vẫn ở nguyên trên nó, giữ luật
+  `color-not-only` của `docs/05 §4.4`.
+
+**Status:** APPROVED (người dùng yêu cầu trực tiếp ngày 2026-08-15, chốt ngưỡng cháy trong cùng phiên)
+
+**Verification:** 10 unit test mới khoá `buildProgress()` — clamp `[0,1]`, ngưỡng `> 100` nghiêm ngặt,
+`99,99%` hiển thị `100,0%` mà **không** cháy, cả hai nhánh BR-015, và lưới quét mọi tổ hợp target/actual
+khó. Vitest **851/851**. Đã **render PNG thật và nhìn tận mắt**: bốn trạng thái thanh trong cùng một tấm
+(250% cháy · đúng 100% không cháy · 85% · 30%), tấm ca xấu nhất, và một tấm phóng to ngọn lửa 220×280 để
+kiểm hình dạng path.

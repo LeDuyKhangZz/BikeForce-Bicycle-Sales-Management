@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 17 — Lũy kế tháng trên thẻ ảnh (DEC-068) | Last updated: 2026-08-14
+> Status: ACTIVE | Phase: 18 — Thanh tiến độ + ngọn lửa vượt chỉ tiêu (DEC-069) | Last updated: 2026-08-15
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -921,6 +921,26 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] DEC-068 + ISSUE-032 + `docs/05`, `docs/07`, `docs/08`, checklist, worklog, checkpoint đã cập nhật
 - [ ] E2E khoá riêng cụm lũy kế (cần seed nhiều ngày trong tháng) — **chưa làm**, không phải "gần đạt"
 - [ ] Kiểm tay trong Zalo trên thiết bị thật (ISSUE-003) — nợ cũ, cần điện thoại + link công khai
+
+## Phase 18 — Thanh tiến độ + ngọn lửa vượt chỉ tiêu (ĐÓNG 2026-08-15, DEC-069)
+
+- [x] Dùng skill `ui-ux-pro-max` (domain `chart` + `ux`) trước khi vẽ; chọn bullet chart thu gọn, không gauge
+- [x] Thanh nhỏ (200×14) đặt dưới nhãn trạng thái của ô "Hoàn thành", chỉ ở bản CHIỀU
+- [x] Viền pill theo màu `status` để thấy được phần chưa đạt, chịu được nén ảnh Zalo
+- [x] **`> 100%` mới cháy; đúng `100,0%` KHÔNG cháy** — người dùng chốt trực tiếp
+- [x] `99,99%` hiển thị `100,0%` nhưng không cháy (ngưỡng xét trên số chưa làm tròn — BR-023)
+- [x] BR-015 nhánh 2 (`target = 0 && actual > 0`) → thanh đầy VÀ cháy
+- [x] `fill` clamp `[0,1]` chỉ để vẽ; con số `%` không clamp (BR-004)
+- [x] Ngọn lửa vẽ bằng **SVG path**, KHÔNG emoji (Inter không có glyph emoji)
+- [x] Màu lửa lấy tone logo `#E9A04F`/`#C2410C`; thanh vẫn xanh khi đạt — không đảo tín hiệu màu
+- [x] Ô lửa 30px **luôn chiếm chỗ** ⇒ bốn thanh thẳng hàng dù dòng nào cháy
+- [x] `EVENING.paddingY` 30 → 20 bù chiều cao thanh, không tái diễn ISSUE-032
+- [x] `PENDING` không vẽ thanh; bản SÁNG không đổi gì
+- [x] 10 unit test mới cho `buildProgress()`; full Vitest **851/851**
+- [x] `npm run typecheck`, `npm run lint`, `npm run build` — exit 0, 20 route
+- [x] **Nhìn tận mắt**: tấm 4 trạng thái, tấm ca xấu nhất, tấm phóng to ngọn lửa
+- [x] DEC-069 + `docs/05` + checklist/worklog/checkpoint/CLAUDE.md đã cập nhật
+- [ ] E2E khoá riêng thanh/lửa — **chưa làm**, cùng nhóm nợ với cụm lũy kế
 
 ## OPEN QUESTIONS
 

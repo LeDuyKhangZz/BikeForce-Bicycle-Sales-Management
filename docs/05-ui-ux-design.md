@@ -649,7 +649,9 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 │  ══════════════════════════════════  │  2px #0B4A76
 │   Viếng thăm  12 điểm  10 điểm 83,3% │  dòng lẻ nền trắng
 │                                Gần đạt│  nhãn chữ #566A7B, 24px
+│                          ▰▰▰▱▱  ▁     │  thanh 200×14 + ô lửa 30px — DEC-069
 │   Doanh số        1tr      5tr 500,0%│  dòng chẵn nền #F4F7FA (sọc)
+│                          ▰▰▰▰▰  🔥    │  vượt >100% ⇒ SVG lửa #E9A04F/#C2410C
 │   Doanh thu       1tr      0 ₫   0,0%│  % vượt #166534 · gần đạt #92400E
 │   Khách hàng  10 khách 5 khách  50,0%│  % chưa đạt #991B1B
 │  ▌┌──────────────────────────────┐   │  vạch cam dọc 10px + nền #FDF1E3
@@ -688,6 +690,10 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 | **Nội dung dài tổng cộng vượt 1920px** | `flexShrink: 0` cho mọi khối bắt buộc; riêng ghi chú co được + `overflow: hidden` | ✅ cắt gọn thay vì **chồng chữ** (ISSUE-032) |
 | **Lũy kế tháng** khi truy vấn hỏng | `buildShareCardModel(source, null)` → bỏ hẳn cụm | ✅ không in `0 ₫` sai sự thật |
 | **Lũy kế tháng** của ảnh sáng ngày 01 | khoảng rỗng (`isEmpty`) → ba số 0 + dòng "Chưa có ngày nào trong tháng" | ✅ không tụt sang tháng trước |
+| **Thanh tiến độ** với `250%` | `buildProgress()` clamp `fill` về 1; con số KHÔNG clamp (BR-004) | ✅ thanh đầy + ngọn lửa, chữ vẫn `250,0%` |
+| **Ngọn lửa** ở đúng `100,0%` | ngưỡng `percent > 100` **nghiêm ngặt** (DEC-069) | ✅ không cháy — người dùng chốt |
+| **Thanh** phải thẳng hàng ở mọi dòng | ô lửa 30px **luôn** chiếm chỗ, kể cả khi không cháy | ✅ bốn thanh thẳng tuyệt đối |
+| Ngọn lửa không có glyph trong Inter | vẽ bằng **SVG path 2 lớp**, tuyệt đối không emoji | ✅ Satori dựng được `<svg><path>` |
 | Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` — nay là đường dùng tiền **duy nhất** của thẻ | ✅ `100tỷ` |
 | Achievement 4 chữ số (`1.250,0%`) hiển thị đủ | không clamp (BR-004) | ✅ |
 | `target = 0` không bao giờ ra `∞`/`NaN` (BR-015) | lấy nguyên `display` của `lib/kpi.ts` | ✅ `actual = 0` → `100,0%`; `actual > 0` → `+3 điểm` + "Vượt kế hoạch" |

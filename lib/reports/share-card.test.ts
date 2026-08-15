@@ -143,6 +143,111 @@ describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
 
 });
 
+describe('Thanh tiến độ + ngọn lửa vượt chỉ tiêu (PHASE 18, DEC-069)', () => {
+  /** Lấy thanh của một dòng theo chỉ số trong `KPI_METRIC_ROWS`. */
+  const progressOf = (overrides: Partial<ShareCardSource>, index: number) =>
+    build(overrides).metrics[index]?.progress;
+
+  it('fill = percent / 100 cho ca thường', () => {
+    // 8,5tr trên cam kết 10tr = 85%.
+    expect(progressOf({ target_revenue: 10_000_000, actual_revenue: 8_500_000 }, 2)).toEqual({
+      fill: 0.85,
+      isBlazing: false,
+    });
+  });
+
+  it('ĐÚNG 100% thì thanh đầy nhưng KHÔNG cháy — người dùng chốt 2026-08-15', () => {
+    // "vượt chỉ tiêu là lớn 100% mới được, = 100% thì không được nhé".
+    expect(progressOf({ target_visit_points: 10, actual_visit_points: 10 }, 0)).toEqual({
+      fill: 1,
+      isBlazing: false,
+    });
+  });
+
+  it('vượt 100% thì cháy, và fill bị CLAMP về 1 dù percent là 250%', () => {
+    const progress = progressOf({ target_visit_points: 10, actual_visit_points: 25 }, 0);
+
+    expect(progress).toEqual({ fill: 1, isBlazing: true });
+    // BR-004 — con số KHÔNG bị clamp, chỉ chiều dài thanh mới bị.
+    expect(build({ target_visit_points: 10, actual_visit_points: 25 }).metrics[0]?.achievement.display).toBe(
+      '250,0%',
+    );
+  });
+
+  it('vượt sát ngưỡng: 100,01% đã cháy', () => {
+    const progress = progressOf({ target_visit_points: 10_000, actual_visit_points: 10_001 }, 0);
+
+    expect(progress?.isBlazing).toBe(true);
+  });
+
+  it('99,99% hiển thị "100,0%" nhưng KHÔNG cháy — ngưỡng xét trên số chưa làm tròn', () => {
+    const overrides = { target_visit_points: 10_000, actual_visit_points: 9_999 };
+
+    expect(build(overrides).metrics[0]?.achievement.display).toBe('100,0%');
+    expect(progressOf(overrides, 0)?.isBlazing).toBe(false);
+  });
+
+  it('BR-015 nhánh 1 — target = 0 và actual = 0: thanh đầy, KHÔNG cháy', () => {
+    expect(progressOf({ target_visit_points: 0, actual_visit_points: 0 }, 0)).toEqual({
+      fill: 1,
+      isBlazing: false,
+    });
+  });
+
+  it('BR-015 nhánh 2 — target = 0 mà vẫn làm được: thanh đầy VÀ cháy', () => {
+    // Không có `%` nào tồn tại (percent = null), nhưng đây là ca vượt rõ nhất.
+    expect(progressOf({ target_sales_amount: 0, actual_sales_amount: 3_000_000 }, 1)).toEqual({
+      fill: 1,
+      isBlazing: true,
+    });
+  });
+
+  it('chưa có số liệu cuối ngày → thanh rỗng, không cháy (component bỏ luôn thanh)', () => {
+    expect(progressOf({ target_visit_points: 10, actual_visit_points: null }, 0)).toEqual({
+      fill: 0,
+      isBlazing: false,
+    });
+  });
+
+  it('fill LUÔN nằm trong [0, 1] với mọi tổ hợp target/actual khó', () => {
+    const AWKWARD = [0, 1, 3, 999, 100_000_000_000] as const;
+
+    for (const target of AWKWARD) {
+      for (const actual of AWKWARD) {
+        const model = build({
+          target_visit_points: target,
+          target_sales_amount: target,
+          target_revenue: target,
+          target_customer_visits: target,
+          actual_visit_points: actual,
+          actual_sales_amount: actual,
+          actual_revenue: actual,
+          actual_customer_visits: actual,
+        });
+
+        for (const row of model.metrics) {
+          expect(row.progress.fill).toBeGreaterThanOrEqual(0);
+          expect(row.progress.fill).toBeLessThanOrEqual(1);
+          expect(Number.isFinite(row.progress.fill)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('bản SÁNG không có cột "Hoàn thành" nên mọi thanh đều rỗng', () => {
+    const model = build({
+      status: 'MORNING_SUBMITTED',
+      actual_visit_points: null,
+      actual_sales_amount: null,
+      actual_revenue: null,
+      actual_customer_visits: null,
+    });
+
+    expect(model.metrics.every((row) => row.progress.fill === 0)).toBe(true);
+    expect(model.metrics.every((row) => !row.progress.isBlazing)).toBe(true);
+  });
+});
+
 describe('buildShareCardModel — cụm lũy kế tháng (PHASE 17, DEC-068)', () => {
   it('ba dòng đúng thứ tự người dùng yêu cầu: doanh số · doanh thu · ngày đạt KPI', () => {
     expect(build().monthly?.rows.map((row) => row.label)).toEqual([

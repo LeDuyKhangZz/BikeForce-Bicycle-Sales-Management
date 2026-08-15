@@ -1,5 +1,5 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 17 — Lũy kế tháng trên thẻ ảnh (DEC-068) | Last updated: 2026-08-14
+> Status: ACTIVE | Phase: 18 — Thanh tiến độ + ngọn lửa vượt chỉ tiêu (DEC-069) | Last updated: 2026-08-15
 
 > **Mốc mới nhất:** DEC-068 đã hoàn tất: thẻ ảnh 9:16 **bỏ khối "Số khách làm việc"** và thêm **cụm lũy
 > kế tháng** (doanh số tháng · doanh thu tháng · **số ngày ĐẠT KPI**) vào **cả hai** biến thể. Mốc cộng:
@@ -388,6 +388,17 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** sửa thẻ ảnh rồi kết luận "xong" mà chưa **render PNG ra và nhìn**, và phải nhìn cả **ca dữ
   liệu dài nhất** (tên 2 dòng · tuyến 2 dòng · ghi chú kịch trần), không chỉ ca đẹp. Đây là lần thứ ba dự
   án học đúng bài này: DEC-053, DEC-054, ISSUE-032.
+- ❌ **Không** cho ngọn lửa của thanh tiến độ cháy ở đúng `100,0%`. Ngưỡng là **`percent > 100` nghiêm
+  ngặt** — người dùng chốt ngày 2026-08-15: *"vượt chỉ tiêu là lớn 100% mới được, = 100% thì không được"*
+  (DEC-069). Ca `target = 0 && actual > 0` vẫn cháy vì BR-015 gọi đó là vượt kế hoạch.
+- ❌ **Không** bỏ ô `PROGRESS.flameSlot` (30px) dù dòng đó không cháy — nó **luôn** phải chiếm chỗ, nếu
+  không thì dòng có lửa bị lệch 28px so với các dòng khác (DEC-069, đã render ra và thấy tận mắt).
+- ❌ **Không** dùng emoji 🔥 cho ngọn lửa, và **không** đổi thanh sang màu đỏ/cam khi vượt. Inter không có
+  glyph emoji ⇒ Satori vẽ ô vuông rỗng; còn đổi màu thanh là đảo ngược tín hiệu ngay cạnh chữ `%` xanh.
+- ❌ **Không** nâng lại `ROW_METRICS.EVENING.paddingY` lên 30. Nó là **20** từ DEC-069 để bù chiều cao
+  thanh tiến độ; nâng lại là tràn khung 1920px (ISSUE-032).
+- ❌ **Không** clamp con số `%` để khớp chiều dài thanh. BR-004 cấm clamp **số**; chỉ `progress.fill` mới
+  bị clamp về `[0,1]`, và phần vượt được kể bằng **ngọn lửa** chứ không bằng chiều dài.
 - ❌ **Không** kiểm chứng UI bằng `next dev` trên máy hiện tại — nó trả `403` cho một chunk lõi nên trang **không hydrate**, mọi nút client chết trong khi giao diện trông bình thường. Dùng `next build` + `next start` (ISSUE-026).
 
 ---
@@ -395,7 +406,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-068` (decision) · `ISSUE-001..ISSUE-032` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-069` (decision) · `ISSUE-001..ISSUE-032` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
 > **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy

@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 17 — Lũy kế tháng trên thẻ ảnh (DEC-068) | Last updated: 2026-08-14
+> Status: ACTIVE | Phase: 18 — Thanh tiến độ + ngọn lửa vượt chỉ tiêu (DEC-069) | Last updated: 2026-08-15
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -2661,3 +2661,43 @@ ngay ở tầng quyền. Cả hai đều là "không đọc được gì"; test 
 
 **Remaining:** E2E chưa khoá riêng cụm lũy kế (cần seed nhiều ngày trong tháng); ISSUE-003 (Zalo thiết bị
 thật) và Lighthouse vẫn là nợ cũ, không thuộc phạm vi phiên này.
+
+---
+
+### Entry 029 — DEC-069: thanh tiến độ + ngọn lửa vượt chỉ tiêu
+
+**Date:** 2026-08-15
+
+**Yêu cầu người dùng:** sếp muốn ô "% Hoàn thành" có **thanh nhỏ bên dưới** thể hiện mức hoàn thành; khi
+**vượt chỉ tiêu** thì ảnh có **lửa cháy** trên thanh đó. Kèm cảnh báo: *"thiết kế thanh nhỏ thôi cẩn thận
+bị đụng hàng vì ảnh xuất ra hiện tại rất đẹp rồi"*. Giữa phiên chốt thêm: **`> 100%` mới cháy, `= 100%`
+thì không**.
+
+**Completed:**
+
+1. Nạp skill `ui-ux-pro-max` (domain `chart` + `ux`) → chọn **bullet chart thu gọn** thay vì gauge (4 KPI
+   dọc trong cột hẹp), và giữ luật `color-not-only`: `%` + nhãn chữ vẫn nguyên trên thanh.
+2. `lib/reports/share-card.ts` — thêm `ShareCardProgress` + `buildProgress()`. Clamp `fill` về `[0,1]`
+   **chỉ để vẽ**; `achievement.percent` giữ nguyên vì BR-004 cấm clamp con số.
+3. Ngưỡng cháy `percent > 100` nghiêm ngặt; ca BR-015 nhánh 2 (`target = 0 && actual > 0`) cũng cháy.
+4. `daily-report-share-card.tsx` — `ProgressBar` (pill 200×14, viền 2px màu `status`) + `Flame` vẽ bằng
+   **SVG hai path**, màu tone logo `#E9A04F`/`#C2410C`. Không dùng emoji: Inter không có glyph emoji.
+5. `ROW_METRICS.EVENING.paddingY` hạ 30 → 20 để bù đúng 24px chiều cao thanh mỗi dòng (chống ISSUE-032).
+
+**Một lỗi tự phát hiện nhờ nhìn ảnh:** lượt render đầu để ngọn lửa nằm trong luồng flex, nên dòng cháy có
+thanh **lệch 28px** so với ba dòng còn lại — đúng thứ người dùng dặn tránh. Sửa bằng ô lửa 30px **luôn
+chiếm chỗ**, kể cả khi không cháy. Bốn thanh nay thẳng hàng tuyệt đối.
+
+**Files Changed:** `lib/reports/share-card.ts`, `lib/reports/share-card.test.ts`,
+`features/report-share/daily-report-share-card.tsx`, `docs/05`, `docs/11`, `PROJECT_CHECKLIST.md`,
+`WORKLOG.md`, `SESSION_CHECKPOINT.md`, `CLAUDE.md`.
+
+**Tests đã chạy thật (2026-08-15):**
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` / `lint` / `build` | ✅ exit 0; 20 route |
+| `npm test` | ✅ **851/851** (33 file) — thêm 10 test cho `buildProgress()` |
+| **Nhìn tận mắt** | ✅ tấm 4 trạng thái (250% cháy · 100% không cháy · 85% · 30%), tấm ca xấu nhất, và tấm **phóng to ngọn lửa 220×280** để kiểm hình dạng path |
+
+**Remaining:** E2E chưa khoá riêng thanh/lửa (thuộc cùng nhóm nợ với cụm lũy kế của Entry 028).
