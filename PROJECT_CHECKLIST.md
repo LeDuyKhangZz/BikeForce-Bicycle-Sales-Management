@@ -940,10 +940,14 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `npm run typecheck`, `npm run lint`, `npm run build` — exit 0, 20 route
 - [x] **Nhìn tận mắt**: tấm 4 trạng thái, tấm ca xấu nhất, tấm phóng to ngọn lửa
 - [x] DEC-069 + `docs/05` + checklist/worklog/checkpoint/CLAUDE.md đã cập nhật
-- [x] **Bản 2 theo ảnh mẫu người dùng:** dải lửa **13 lưỡi SVG bọc dọc thanh**, không phải một ngọn ở mút
+- [x] **Bản 2:** dải lửa 13 lưỡi SVG bọc dọc thanh — người dùng xem rồi bác *"xấu quá"*
+- [x] **Bản 3 (hiện hành):** dải lửa là **ẢNH PNG** do người dùng gửi, `public/images/flame-strip.png`
+- [x] Tách nền bằng hiệu `R − B` (ảnh gốc **không** thực sự trong suốt — hoa văn bàn cờ là pixel thật)
+- [x] Khử vệt bàn cờ ở quầng sáng bằng Gaussian **chỉ ở vùng quầng**, lõi lửa giữ nguyên nên mép không nhoè
+- [x] Cắt bỏ thanh xanh trong ảnh; thanh thật vẫn đổi chiều dài theo `%` và màu theo `status`
+- [x] Nhúng bằng **data URI**; thêm `./public/images/**` vào `outputFileTracingIncludes` (chống `ENOENT` trên Vercel)
+- [x] `flameSrc = null` (thiếu file) ⇒ vẫn vẽ thanh, chỉ mất lửa — không làm hỏng cả tấm ảnh
 - [x] Lửa **không chạm nhãn chữ** — khối thanh chừa sẵn chiều cao ở mọi dòng
-- [x] Lưỡi lửa mảnh (tỉ lệ 12/24); bản dùng path icon "mập" nhìn ra răng cưa đã bị loại
-- [x] Đã nói rõ giới hạn: Satori không có `filter: blur()` ⇒ **không** làm được quầng sáng mờ như ảnh mẫu
 - [x] `shareNoteBudget()` — ngân sách ghi chú **động** theo độ dài tên/tuyến; hết chỗ thì bỏ hẳn ghi chú
 - [x] Ca xấu nhất không còn **chém ngang** khối ghi chú; full Vitest **858/858**
 - [ ] E2E khoá riêng thanh/lửa — **chưa làm**, cùng nhóm nợ với cụm lũy kế

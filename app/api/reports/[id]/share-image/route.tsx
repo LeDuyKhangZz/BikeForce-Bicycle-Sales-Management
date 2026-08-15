@@ -111,6 +111,30 @@ function loadShareFonts(): Promise<ShareFont[]> {
   return fontsPromise;
 }
 
+/**
+ * Dải lửa của thanh tiến độ — PHASE 18, DEC-069.
+ *
+ * Đọc từ đĩa rồi mã hoá **data URI**: Satori không tải ảnh qua mạng lúc render,
+ * và kể cả tải được thì cũng không nên — cùng lý do với font ở ISSUE-002, một
+ * request hỏng là hỏng tấm ảnh đã gửi cho khách.
+ *
+ * Trả `null` khi thiếu file thay vì ném: thẻ vẫn dựng được, chỉ mất hiệu ứng
+ * lửa. Một tấm ảnh thiếu trang trí vẫn dùng được, một tấm ảnh 500 thì không.
+ * `public/images/**` đã được ghim vào bundle qua `outputFileTracingIncludes`.
+ */
+let flamePromise: Promise<string | null> | null = null;
+
+function loadFlameStrip(): Promise<string | null> {
+  flamePromise ??= readFile(join(process.cwd(), 'public', 'images', 'flame-strip.png'))
+    .then((data) => `data:image/png;base64,${data.toString('base64')}`)
+    .catch((error: unknown) => {
+      console.error('[share-image] flame-strip', error);
+      return null;
+    });
+
+  return flamePromise;
+}
+
 /** Lỗi trả về dạng JSON `{ code, message }` — `docs/07 §4.1`. */
 function errorResponse(status: number, code: string, message: string): Response {
   return Response.json(
@@ -220,10 +244,12 @@ export async function GET(request: Request, context: ShareImageContext): Promise
   );
 
   try {
-    return new ImageResponse(<DailyReportShareCard model={model} />, {
+    const [fonts, flameSrc] = await Promise.all([loadShareFonts(), loadFlameStrip()]);
+
+    return new ImageResponse(<DailyReportShareCard model={model} flameSrc={flameSrc} />, {
       width: SHARE_IMAGE_WIDTH,
       height: SHARE_IMAGE_HEIGHT,
-      fonts: await loadShareFonts(),
+      fonts,
       headers: {
         // FR-019 — tên file đã bỏ dấu, khoảng trắng thành `-`. Tên file được
         // giữ ở CẢ HAI chế độ: `inline` vẫn đặt tên cho lần "Lưu ảnh" sau đó.

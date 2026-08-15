@@ -394,9 +394,11 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** bỏ khoảng trống dọc phía trên thanh (`FLAME_STRIP_HEIGHT`) ở những dòng không cháy — mọi
   dòng đều phải cao bằng nhau, nếu không thì dòng có lửa bị lệch so với các dòng khác (DEC-069, đã render
   ra và thấy tận mắt). Cùng lý do: đó cũng là khoảng giữ cho lửa **không chạm nhãn chữ**.
-- ❌ **Không** hứa quầng sáng mờ quanh ngọn lửa: Satori **không có `filter: blur()`**. Cũng đừng nhân bản
-  lưỡi lửa bằng `<g transform>` — Satori không dựng `transform` trên SVG đáng tin, dải lửa phải ghép bằng
-  flexbox (DEC-069).
+- ❌ **Không** vẽ lại dải lửa bằng SVG. Nó là **ảnh** `public/images/flame-strip.png` do người dùng cung
+  cấp; hai bản vẽ tay trước đó đều bị bác ("xấu quá"). Satori **không có `filter: blur()`** nên không thể
+  vẽ ra quầng sáng — **hiệu ứng quang học thì dùng ảnh, hình khối và số liệu thì vẽ** (DEC-069).
+- ❌ **Không** gỡ `./public/images/**` khỏi `outputFileTracingIncludes` trong `next.config.ts`. Thiếu nó
+  thì `next build` vẫn xanh còn hàm trên Vercel ném `ENOENT` — đúng cái bẫy mà `public/fonts/**` đã dạy.
 - ❌ **Không** quay lại đặt `MAX_SHARE_NOTE_CHARS` thành một hằng số cứng. Ngân sách ghi chú **phụ thuộc
   dữ liệu** (tên 2 dòng ăn ~77px, tuyến 2 dòng ăn ~48px) nên phải qua `shareNoteBudget()`. Dự án đã cắt
   hằng số hai lần (232 → 174 → 130) mà ca xấu nhất **vẫn bị chém ngang** — cắt dần không bao giờ tới đích.
