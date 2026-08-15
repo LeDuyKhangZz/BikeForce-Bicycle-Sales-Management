@@ -2730,3 +2730,18 @@ ghép 13 lưỡi SVG và nói thẳng *"xấu quá"*, rồi tự gửi một ả
   `outputFileTracingIncludes`. `flameSrc = null` ⇒ vẫn vẽ thanh, chỉ mất lửa.
 - Ảnh gốc 6,7 MB đã dời khỏi repo; thông số cắt ghi đủ trong DEC-069 để tái lập.
 - typecheck/lint/build exit 0; Vitest **858/858**; đã render và nhìn hai tấm thẻ + một tấm soi riêng dải lửa.
+
+**Bổ sung lần 3 (Entry 029d) — ảnh lửa bản 2.** Người dùng xuất ảnh thật rồi báo hai lỗi và gửi ảnh nguồn
+mới đã hạ bớt chiều cao ngọn lửa:
+
+1. *"cái ngọn cao nhất của lửa bị cắt đi"* — **lỗi của tôi**: crop từ `y = 560` trong khi lửa bắt đầu ở
+   `y = 487`, tức tự tay cắt mất 73px đỉnh để tiết kiệm chiều cao thẻ. Nay crop chừa 8px trên ngọn cao nhất.
+2. *"vầng hào quang nhìn xấu quá"* — ngưỡng tách nền quá thấp nên giữ cả vùng sáng mờ. Ngưỡng nay `warm−28`,
+   loại sạch quầng; mép lửa vẫn mượt vì ở mép `R−B` nhảy 0→200 trong một hai pixel.
+
+Kết quả: `flame-strip.png` 400×99 (28 KB, nhẹ hơn bản trước 40%), hiển thị 200×50. Không còn cần bước làm
+mượt Gaussian vì quầng đã bị loại ở ngưỡng. typecheck/lint/build exit 0; Vitest **858/858**; đã render và
+nhìn lại hai tấm thẻ + một tấm soi riêng dải lửa.
+
+**Bài học ghi vào checkpoint:** khi cắt ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước**
+rồi chừa biên — đừng chọn khung cắt theo ngân sách bố cục.

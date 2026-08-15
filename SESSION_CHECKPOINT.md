@@ -35,8 +35,14 @@ vào thân thanh.
 cháy lệch so với các dòng khác — đúng "đụng hàng" mà người dùng dặn tránh — và lửa sẽ chạm vào nhãn chữ.
 
 ⚠ **Ảnh nguồn không thực sự trong suốt** — hoa văn bàn cờ là pixel xám thật. Đã tách bằng hiệu **`R − B`**
-(nền xám có `R = B` nên triệt tiêu hoàn toàn), rồi làm mượt Gaussian chỉ ở vùng quầng để khử vệt bàn cờ
-còn sót do nén. Thông số cắt đầy đủ ở `docs/11 § DEC-069 bản cuối`; ảnh gốc 6,7 MB **không** nằm trong repo.
+(nền xám có `R = B` nên triệt tiêu hoàn toàn) với ngưỡng **28** — ngưỡng thấp hơn giữ lại quầng hào quang
+mà người dùng đã bác *"nhìn xấu quá"*. Thông số cắt đầy đủ ở `docs/11 § DEC-069 ảnh lửa bản 2`; ảnh gốc
+**không** nằm trong repo.
+
+⚠ **BÀI HỌC — đừng crop ảnh theo ngân sách bố cục.** Lượt đầu tôi crop từ `y = 560` trong khi lửa bắt đầu
+ở `y = 487`, tức **tự tay cắt mất 73px đỉnh lửa** để thẻ đỡ cao; người dùng phát hiện khi xuất ảnh thật.
+Phải **đo bounding box của chủ thể trước** rồi chừa biên, và điều chỉnh ngân sách cho vừa chủ thể — không
+phải ngược lại.
 
 ⚠ **`./public/images/**` phải ở trong `outputFileTracingIncludes`** (`next.config.ts`) — thiếu là Vercel
 ném `ENOENT` dù build xanh.

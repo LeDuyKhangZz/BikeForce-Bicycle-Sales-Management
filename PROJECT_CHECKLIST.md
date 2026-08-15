@@ -943,7 +943,8 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] **Bản 2:** dải lửa 13 lưỡi SVG bọc dọc thanh — người dùng xem rồi bác *"xấu quá"*
 - [x] **Bản 3 (hiện hành):** dải lửa là **ẢNH PNG** do người dùng gửi, `public/images/flame-strip.png`
 - [x] Tách nền bằng hiệu `R − B` (ảnh gốc **không** thực sự trong suốt — hoa văn bàn cờ là pixel thật)
-- [x] Khử vệt bàn cờ ở quầng sáng bằng Gaussian **chỉ ở vùng quầng**, lõi lửa giữ nguyên nên mép không nhoè
+- [x] **Bỏ quầng hào quang** theo yêu cầu người dùng — ngưỡng tách nền nâng lên 28
+- [x] **Giữ trọn đỉnh lửa** — crop chừa 8px trên ngọn cao nhất; lượt đầu tôi cắt mất 73px đỉnh
 - [x] Cắt bỏ thanh xanh trong ảnh; thanh thật vẫn đổi chiều dài theo `%` và màu theo `status`
 - [x] Nhúng bằng **data URI**; thêm `./public/images/**` vào `outputFileTracingIncludes` (chống `ENOENT` trên Vercel)
 - [x] `flameSrc = null` (thiếu file) ⇒ vẫn vẽ thanh, chỉ mất lửa — không làm hỏng cả tấm ảnh

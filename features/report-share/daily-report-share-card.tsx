@@ -267,14 +267,24 @@ const PROGRESS_INNER_HEIGHT = PROGRESS.height - PROGRESS.border * 2;
  *  trong khi lửa có `R ≫ B`. Thanh xanh trong ảnh gốc đã bị cắt bỏ vì thanh
  *  thật phải đổi chiều dài theo `%` và đổi màu theo `status`.
  *
- *  File kết quả: `public/images/flame-strip.png`, 400×106 (2× cỡ hiển thị cho
+ *  ⚠ **HAI LỖI CỦA LƯỢT ĐẦU, đã sửa — đừng lặp lại:**
+ *  1. *Đỉnh lửa bị cụt.* Lượt đầu tôi crop từ `y = 560` trong khi lửa bắt đầu ở
+ *     `y = 487`, tức **tự tay cắt mất 73px đỉnh** để tiết kiệm chiều cao. Người
+ *     dùng phát hiện khi xuất ảnh thật. Nay crop chừa **8px phía trên** ngọn cao
+ *     nhất, và ảnh nguồn cũng đã được người dùng hạ bớt chiều cao lửa.
+ *  2. *Quầng hào quang.* Ngưỡng tách nền cũ (12) giữ lại cả vùng sáng mờ quanh
+ *     lửa; người dùng nói thẳng *"nhìn xấu quá"*. Ngưỡng nay là **28**, loại
+ *     sạch phần mờ mà mép lửa vẫn mượt (ở mép `R − B` nhảy 0→200 trong một hai
+ *     pixel, không chuyển dần như quầng).
+ *
+ *  File kết quả: `public/images/flame-strip.png`, 400×99 (2× cỡ hiển thị cho
  *  nét), đã ghim vào bundle qua `outputFileTracingIncludes` trong `next.config.ts`.
  */
 const FLAME_STRIP = {
   /** Bằng đúng bề ngang thanh — ảnh đã được cắt theo mép thanh của ảnh gốc. */
   width: 200,
-  /** Giữ đúng tỉ lệ 400×106 của file. */
-  height: 53,
+  /** Giữ đúng tỉ lệ 400×99 của file. */
+  height: 50,
 } as const;
 
 /** Chiều cao dải lửa — quyết định khoảng trống phải chừa phía trên thanh. */
