@@ -7,14 +7,17 @@ import { z } from 'zod';
 import { DailyReportShareCard } from '@/features/report-share/daily-report-share-card';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
+import { summarizeMonthToDate } from '@/lib/reports/month-summary';
 import {
   SHARE_IMAGE_VIEW_PARAM,
   SHARE_IMAGE_VIEW_VALUE,
   buildShareCardModel,
+  shareCardVariantForStatus,
   shareImageFileName,
+  shareMonthRange,
 } from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
-import { getReportForShare } from '@/services/reports';
+import { getReportForShare, listMonthToDateMetrics } from '@/services/reports';
 
 /**
  * `GET /api/reports/[id]/share-image` — UC-08, FR-018, FR-019.
@@ -178,7 +181,38 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * dòng đã persist trong database**, không bao giờ từ dữ liệu client gửi lên.
    * Client cũng KHÔNG chọn được biến thể — `status` quyết định.
    */
-  const model = buildShareCardModel(report);
+  /*
+   * Cụm lũy kế tháng — PHASE 17, **DEC-068**.
+   *
+   * Một truy vấn THỨ HAI, cố ý tách khỏi `getReportForShare()`: nó đọc nhiều
+   * dòng (tối đa 31) và chỉ lấy 8 cột số, còn truy vấn trên đọc đúng một dòng
+   * đầy đủ. Gộp lại bằng embedded resource sẽ kéo cả tháng dữ liệu chi tiết về
+   * cho một tấm ảnh chỉ cần hai tổng và một phép đếm (NFR-002).
+   *
+   * Cả hai đi qua CÙNG một client chịu RLS, nên Sales không thể mượn `sales_id`
+   * của người khác: policy `reports_select_own_or_admin` trả 0 dòng (BR-003), và
+   * Admin xuất ảnh hộ Sales vẫn cộng đúng (BR-022).
+   *
+   * Mốc dừng do `shareMonthRange()` chọn theo biến thể — bản sáng dừng ở HÔM
+   * QUA vì hôm nay chưa có thực đạt (người dùng chốt 2026-08-14).
+   */
+  const variant = shareCardVariantForStatus(report.status);
+  const monthRange = shareMonthRange(report.report_date, variant);
+
+  // Khoảng rỗng (ảnh sáng của ngày 01) vẫn hiện cụm với ba số 0 — đó là sự thật.
+  // Chỉ khi truy vấn HỎNG mới bỏ cụm: in `0 ₫` cho một tháng có số liệu là nói
+  // sai trên tấm ảnh gửi cấp trên.
+  const monthRows =
+    monthRange === null || monthRange.isEmpty
+      ? []
+      : await listMonthToDateMetrics(supabase, report.sales_id, monthRange);
+
+  const monthly =
+    monthRange === null || monthRows === null
+      ? null
+      : { range: monthRange, summary: summarizeMonthToDate(monthRows) };
+
+  const model = buildShareCardModel(report, monthly);
   const fileName = shareImageFileName(
     report.sales.full_name,
     report.report_date,

@@ -1,9 +1,12 @@
 # CLAUDE.md — Hướng dẫn bắt buộc cho mọi Claude Code session (BikeForce)
-> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-11
+> Status: ACTIVE | Phase: 17 — Lũy kế tháng trên thẻ ảnh (DEC-068) | Last updated: 2026-08-14
 
-> **Mốc mới nhất:** DEC-066 đã hoàn tất: `/admin/reports` mặc định tháng hiện tại, filter thu gọn và phân
-> trang nhảy trực tiếp; truy vấn vẫn 20 dòng, sort ổn định và đã EXPLAIN trên 100.002 dòng. Quy tắc đứng
-> vẫn là **xong việc tự commit + push, không chờ người dùng nhắc lại**.
+> **Mốc mới nhất:** DEC-068 đã hoàn tất: thẻ ảnh 9:16 **bỏ khối "Số khách làm việc"** và thêm **cụm lũy
+> kế tháng** (doanh số tháng · doanh thu tháng · **số ngày ĐẠT KPI**) vào **cả hai** biến thể. Mốc cộng:
+> từ ngày 01 đến ngày báo cáo với bản chiều, đến **hết hôm trước** với bản sáng. Kèm **ISSUE-032** — thẻ
+> chồng chữ khi nội dung vượt 1920px, lỗi có sẵn, nay khoá bằng `flexShrink: 0`. Vitest **841/841**, E2E
+> ảnh 20 passed, đã render 4 PNG thật để nhìn. Quy tắc đứng vẫn là **xong việc tự commit + push, không
+> chờ người dùng nhắc lại**.
 
 > ## ⚠ NGHIỆP VỤ ĐÃ ĐỔI Ở PHASE 13 — ĐỌC TRƯỚC KHI TIN BẤT KỲ MỤC NÀO BÊN DƯỚI
 >
@@ -369,6 +372,22 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** thêm lại nhánh `403 NOT_COMPLETED` vào route ảnh, và **không** đặt giá trị mặc định cho tham số `variant` của `shareImageFileName()` (DEC-058).
 - ❌ **Không** dùng `<>…</>` trong thẻ ảnh 9:16 — Satori không dựng được Fragment; dùng mảng rồi `.map()`.
 - ❌ **Không** đưa thẻ ảnh 9:16 về nền tối — **DEC-057** đã chuyển nó sang nền sáng tone logo, khớp DEC-046.
+- ❌ **Không** thêm lại khối **"SỐ KHÁCH LÀM VIỆC"** vào thẻ ảnh. Người dùng yêu cầu bỏ trực tiếp ngày
+  2026-08-14 (**DEC-068**); chỗ đó nay là **cụm lũy kế tháng**. `calculateCustomerWorkRate()` vẫn còn
+  trong `lib/kpi.ts` cùng test của nó nhưng **không tầng trình bày nào gọi tới** — đừng xoá, cũng đừng
+  nối lại vào thẻ.
+- ❌ **Không** để bản **sáng** cộng lũy kế tới hết ngày báo cáo. Nó dừng ở **hết ngày HÔM TRƯỚC** vì hôm
+  đó chưa có thực đạt (DEC-068). Việc lùi một ngày là cố ý **dù** cột `actual_*` hôm đó đang `null`:
+  chính khoảng truy vấn là thứ dòng "Tính đến hết ngày…" in ra, để lệch là tấm ảnh **nói sai**.
+- ❌ **Không** tính "số ngày đạt KPI" bằng `sum()`/hàm SQL. Đó là BR-024 áp lên bốn kết quả
+  `calculateAchievement()`, và BR-011 cấm persist `%` ⇒ làm bằng SQL là chép công thức KPI sang Postgres,
+  đúng thứ NFR-012 cấm. `uq_daily_reports_sales_date` chặn trần ở **31 dòng**, cộng ở tầng ứng dụng là đủ rẻ.
+- ❌ **Không** gỡ `flexShrink: 0` (hằng `NO_SHRINK`) khỏi các khối của thẻ ảnh, và **không** nâng lại
+  `MAX_SHARE_NOTE_CHARS` (174) hay `ROW_METRICS.MORNING.paddingY` (44). Thẻ cao **cố định** 1920px; khi
+  nội dung vượt, Yoga nén mọi khối và **chữ chồng lên nhau** — không phép đo nào bắt được (**ISSUE-032**).
+- ❌ **Không** sửa thẻ ảnh rồi kết luận "xong" mà chưa **render PNG ra và nhìn**, và phải nhìn cả **ca dữ
+  liệu dài nhất** (tên 2 dòng · tuyến 2 dòng · ghi chú kịch trần), không chỉ ca đẹp. Đây là lần thứ ba dự
+  án học đúng bài này: DEC-053, DEC-054, ISSUE-032.
 - ❌ **Không** kiểm chứng UI bằng `next dev` trên máy hiện tại — nó trả `403` cho một chunk lõi nên trang **không hydrate**, mọi nút client chết trong khi giao diện trông bình thường. Dùng `next build` + `next start` (ISSUE-026).
 
 ---
@@ -376,7 +395,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 ## 12. THAM CHIẾU NHANH
 
 **Hệ thống ID dùng thống nhất toàn dự án — không đánh số lại, không tự tạo ID mới:**
-`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-064` (decision) · `ISSUE-001..ISSUE-030` (issue) · `AF-01..AF-15` (admin feature proposal).
+`UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-068` (decision) · `ISSUE-001..ISSUE-032` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
 > **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy
@@ -402,8 +421,9 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 **Hàm dùng chung — tên đã chốt, không đặt tên khác, không viết lại:**
 `lib/kpi.ts` → `calculateAchievement(target, actual, metric)` — ⚠ **`target` nay nhận `number | null`** vì báo cáo trước migration `0008` mang `null` ở doanh số (DEC-050) — `getAchievementStatus()`, `formatMetricValue()`, `formatMetricValueCompact()`, `achievementLabel()`, `isKpiAchievedDay()` ·
 `lib/currency.ts` → `formatCurrencyVND()`, `parseCurrencyInput()` ·
-`lib/date.ts` → `getVietnamToday()`, `formatVietnamDate()`, `isValidVietnamDate()` + **nhóm 5 hàm tháng** (`getVietnamMonthRange` — trả **`null`** khi sai định dạng, DEC-040 · `getVietnamCurrentMonth` · `formatVietnamMonth` · `shiftVietnamMonth` · `resolveVietnamMonth`) ·
+`lib/date.ts` → `getVietnamToday()`, `formatVietnamDate()`, `formatVietnamShortDate()` *(DEC-068)*, `isValidVietnamDate()`, `shiftVietnamDate()` *(DEC-068)* + **nhóm 6 hàm tháng** (`getVietnamMonthRange` — trả **`null`** khi sai định dạng, DEC-040 · `getVietnamMonthToDateRange` — nhận **hai** tham số, DEC-068 · `getVietnamCurrentMonth` · `formatVietnamMonth` · `shiftVietnamMonth` · `resolveVietnamMonth`) ·
 `lib/reports/metric-rows.ts` → `KPI_METRIC_ROWS`, `kpiMetricRow()` — nguồn **duy nhất** của “4 chỉ tiêu là gì” ·
+`lib/reports/month-summary.ts` → `summarizeMonthToDate()` — nguồn **duy nhất** của lũy kế tháng trên thẻ ảnh (DEC-068) ·
 `lib/reports/trend-chart.ts` → `buildTrendChart()`, `parseTrendMetric()`.
 
 **Ba Supabase client, ba mục đích, không dùng lẫn:**

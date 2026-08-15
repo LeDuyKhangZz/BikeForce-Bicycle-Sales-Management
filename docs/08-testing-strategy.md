@@ -964,6 +964,30 @@ Quy tắc tick: chỉ đánh `[x]` khi test đã **thật sự chạy và xanh**
 
 > ⚠ **Đính chính:** dòng edge case cũ ghi `12500,0%` và `—` khi `target = 0`. Con số đúng theo `PROJECT_CHECKLIST.md § Phase 6` là **4 chữ số** (`1.250,0%`), và từ **DEC-038** thì `target = 0 && actual > 0` hiện **số vượt tuyệt đối** (`+3 điểm`) chứ không phải `—`.
 
+### Phase 17 — Cụm lũy kế tháng trên thẻ ảnh (DEC-068) · ISSUE-032
+
+> **Đã kiểm chứng thật ngày 2026-08-14.** Toàn bộ mục dưới đây đã chạy và xanh; riêng hai mục cuối cần
+> thiết bị thật/link công khai nên vẫn để `[ ]` như các phase trước.
+
+- [x] `summarizeMonthToDate()` cộng **thực đạt**, ngày mới có cam kết sáng đóng góp `0` chứ không `NaN`
+- [x] "Ngày đạt KPI" đếm theo **BR-024** (đủ 4 chỉ tiêu ≥ 100%), không phải số ngày đã báo cáo
+- [x] Cả hai nhánh `target = 0` của **BR-015** đều tính là ĐẠT; `99,99%` vẫn là **NEAR**, không đạt
+- [x] Cột `target_sales_amount = null` (dòng trước migration `0008`, DEC-050) → không tính đạt, nhưng
+      vẫn cộng tiền thực đạt của ngày đó
+- [x] 31 ngày ở trần BR-017 vẫn là `Number.isSafeInteger` (3,1e12 < 9e15)
+- [x] `shareMonthRange()`: bản chiều dừng ở **ngày báo cáo**, bản sáng dừng ở **hết hôm trước**; ảnh sáng
+      của ngày 01 cho khoảng **rỗng** và **không tụt sang tháng trước**; lùi đúng qua tháng 2 năm nhuận
+- [x] `getVietnamMonthToDateRange()` là hàm **thuần** — xuất lại ảnh cũ ra đúng con số cũ (đóng băng đồng hồ)
+- [x] Truy vấn lũy kế hỏng → `monthly = null` → thẻ **bỏ hẳn cụm**, không in `0 ₫` sai sự thật
+- [x] **RLS:** salesA truyền `sales_id` của salesB vào `listMonthToDateMetrics()` → **mảng rỗng** (BR-003);
+      Admin cộng được cho Sales bất kỳ (BR-022); anon bị chặn ở tầng GRANT → `null` (NFR-004)
+- [x] `listMonthToDateMetrics()` trả **đúng 8 cột**, không kéo thừa (NFR-002)
+- [x] **ISSUE-032 — nhìn tận mắt 4 tấm PNG 1080×1920 thật**: bản sáng + bản chiều, mỗi bản ở ca thường và
+      ca **xấu nhất** (tên 2 dòng · tuyến 2 dòng · ghi chú kịch trần · tiền 12 chữ số · lũy kế 31 ngày).
+      Không còn chồng chữ; footer nguyên vẹn ở cả bốn
+- [ ] E2E Playwright khoá cụm lũy kế (thuộc bộ `share-image.spec.ts`, cần seed nhiều ngày trong tháng)
+- [ ] Kiểm tay trong Zalo trên thiết bị thật (**ISSUE-003**, chưa bao giờ đóng được từ máy dev)
+
 ### Phase 7 — Sales History
 
 - [ ] `getVietnamMonthRange` được dùng đúng cho filter tháng (không lệch ngày đầu/cuối tháng)

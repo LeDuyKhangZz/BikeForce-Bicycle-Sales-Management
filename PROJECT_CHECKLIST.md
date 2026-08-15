@@ -1,6 +1,6 @@
 # BikeForce Project Checklist
 
-> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-12
+> Status: ACTIVE | Phase: 17 — Lũy kế tháng trên thẻ ảnh (DEC-068) | Last updated: 2026-08-14
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 ---
@@ -899,6 +899,28 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Tên file không chứa họ tên Sales, tránh dòng dài dưới ảnh Zalo và giảm lộ thông tin cá nhân
 - [x] Unit/E2E và docs FR-019/DEC-067 đã cập nhật theo tên mới
 - [x] Header bảng chỉ tiêu trong ảnh xuất tăng lên 30px/700, không wrap trên bản chiều
+
+## Phase 17 — Lũy kế tháng trên thẻ ảnh (ĐÓNG 2026-08-14, DEC-068)
+
+- [x] Hỏi và nhận đủ **ba** câu trả lời nghiệp vụ trước khi code: đếm **ngày ĐẠT KPI**, cộng **thực đạt**, mốc từ đầu tháng đến ngày báo cáo
+- [x] Bỏ khối "SỐ KHÁCH LÀM VIỆC" khỏi bản cuối ngày theo yêu cầu trực tiếp của người dùng
+- [x] Cụm lũy kế có ở **CẢ HAI** biến thể, đặt ngay dưới dòng "Khách hàng"
+- [x] Bản chiều cộng tới hết ngày báo cáo; bản sáng cộng tới **hết ngày hôm trước** (hôm đó chưa có thực đạt)
+- [x] Ảnh sáng của ngày 01 cho khoảng rỗng, hiện ba số 0 + "Chưa có ngày nào trong tháng", **không** tụt sang tháng trước
+- [x] "Ngày đạt KPI" đi qua `calculateAchievement()` + `isKpiAchievedDay()` — không chép công thức KPI sang SQL (NFR-012, BR-011)
+- [x] Hai tổng tiền hiển thị **số đầy đủ**, không rút gọn; ngày đạt KPI có đơn vị "ngày"
+- [x] Truy vấn lũy kế hỏng → bỏ hẳn cụm, không in `0 ₫` sai sự thật
+- [x] Truy vấn mới đi qua **cùng** client chịu RLS; `sales_id` là tham số chứ không phải lớp bảo mật
+- [x] Test RLS chứng minh salesA không cộng được dữ liệu của salesB; Admin cộng hộ được (BR-022)
+- [x] **ISSUE-032** — chồng chữ khi nội dung vượt 1920px đã đóng bằng `flexShrink: 0` + ghi chú co được
+- [x] `MAX_SHARE_NOTE_CHARS` 232 → 174 và `ROW_METRICS.MORNING.paddingY` 70 → 44
+- [x] `npm run typecheck`, `npm run lint`, `npm run build` — exit 0, 20 route
+- [x] Full Vitest — **841/841 passed** (33 file)
+- [x] E2E `share-image.spec.ts` — **20 passed / 7 skipped / 0 failed** trên 3 project
+- [x] **Nhìn tận mắt 4 tấm PNG 1080×1920 thật** — sáng/chiều × (ca thường, ca xấu nhất)
+- [x] DEC-068 + ISSUE-032 + `docs/05`, `docs/07`, `docs/08`, checklist, worklog, checkpoint đã cập nhật
+- [ ] E2E khoá riêng cụm lũy kế (cần seed nhiều ngày trong tháng) — **chưa làm**, không phải "gần đạt"
+- [ ] Kiểm tay trong Zalo trên thiết bị thật (ISSUE-003) — nợ cũ, cần điện thoại + link công khai
 
 ## OPEN QUESTIONS
 

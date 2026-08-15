@@ -615,6 +615,17 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 > | Khối nhấn mạnh | "DOANH THU THỰC ĐẠT" (số tiền) | **"SỐ KHÁCH LÀM VIỆC"** (tỉ lệ %) — **DEC-056** |
 > | Nhãn dòng 3 | `Công nợ` | **`Doanh thu`** — **DEC-056** |
 
+> ⚠ **CẬP NHẬT PHASE 17 (2026-08-14) — DEC-068. Đọc trước bảng ở trên: dòng "Khối nhấn mạnh" đã hết hiệu lực.**
+>
+> | | PHASE 14 | **PHASE 17 (hiện hành)** |
+> |---|---|---|
+> | Khối dưới bảng | "SỐ KHÁCH LÀM VIỆC" — chỉ bản chiều | **Cụm LŨY KẾ THÁNG — CẢ HAI biến thể** |
+> | Nội dung | một tỉ lệ % của riêng ngày đó | **Doanh số tháng · Doanh thu tháng · Ngày đạt KPI** |
+> | Mốc cộng | — | từ ngày 01 → **ngày báo cáo** (chiều) / **hết hôm trước** (sáng) |
+>
+> `calculateCustomerWorkRate()` vẫn còn trong `lib/kpi.ts` cùng test của nó, nhưng **không tầng trình bày
+> nào còn gọi tới**. Đừng thêm lại khối cũ — người dùng yêu cầu bỏ trực tiếp.
+
 > ✅ **ĐÃ KIỂM CHỨNG BẰNG MẮT — render PNG thật cả hai biến thể rồi nhìn (2026-08-11).** Lượt render đầu dùng chung một cỡ chữ cho cả hai biến thể: bản sáng chỉ có 4 con số nên nội dung kết thúc ở ~1030/1920 — **gần nửa tấm ảnh là khoảng trắng**, trông như ảnh lỗi. Đã tăng nhịp dòng riêng cho bản sáng (`ROW_METRICS`), render lại, nhìn lại. Không phép đo nào bắt được lỗi này.
 
 > Toàn bộ chuỗi hiển thị do **`lib/reports/share-card.ts`** dựng (hàm thuần, có unit test); component chỉ render và ánh xạ `status → màu`.
@@ -642,11 +653,14 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 │   Doanh thu       1tr      0 ₫   0,0%│  % vượt #166534 · gần đạt #92400E
 │   Khách hàng  10 khách 5 khách  50,0%│  % chưa đạt #991B1B
 │  ▌┌──────────────────────────────┐   │  vạch cam dọc 10px + nền #FDF1E3
-│  ▌│ SỐ KHÁCH LÀM VIỆC            │   │  #97580B, 26px
-│  ▌│ 50,0%   5 khách / 10 điểm    │   │  88px weight 700 · phụ 28px
+│  ▌│ TỔNG THÁNG 08/2026           │   │  #97580B, 26px, letter-spacing 3
+│  ▌│ Tính đến hết ngày 13/08/2026 │   │  #566A7B, 24px — DEC-068
+│  ▌│ Doanh số tháng  330.000.000 ₫│   │  nhãn 32px #0F172A · số 38px #0B4A76
+│  ▌│ Doanh thu tháng  37.000.000 ₫│   │  số tiền dạng ĐẦY ĐỦ, không rút gọn
+│  ▌│ Ngày đạt KPI            5 ngày│  │  BR-024 — đạt cả 4 chỉ tiêu
 │  ▌└──────────────────────────────┘   │
 │   GHI CHÚ                            │  #566A7B, 26px
-│   Khách đóng cửa nhiều, chiều…       │  #0F172A, 34px, tối đa 4 dòng
+│   Khách đóng cửa nhiều, chiều…       │  #0F172A, 32px, tối đa 3 dòng
 │  ──────────────────────────────────  │
 │   BikeForce · Bicycle Sales System   │  #566A7B, 24px, canh giữa
 └──────────────────────────────────────┘
@@ -657,8 +671,12 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 
 1. Chữ dưới wordmark là **`CAM KẾT ĐẦU NGÀY`**.
-2. Bảng chỉ **2 cột** (`CHỈ TIÊU` · `CAM KẾT`), dòng cao hơn và số to hơn hẳn (`paddingY: 70`, nhãn `42px`, số `56px` weight 700 màu `#0B4A76`) — đây là thứ giữ cho tấm ảnh không rỗng đáy.
-3. **Không có** khối "Số khách làm việc" và **không có** ghi chú cuối ngày; thay vào đó là một dòng nhắc `#566A7B` 32px: *"Kết quả thực đạt sẽ được gửi vào cuối ngày."* — người nhận trên Zalo không có ngữ cảnh nào khác ngoài tấm ảnh.
+2. Bảng chỉ **2 cột** (`CHỈ TIÊU` · `CAM KẾT`), dòng cao hơn và số to hơn hẳn (`paddingY: 44`, nhãn `42px`, số `56px` weight 700 màu `#0B4A76`).
+   ⚠ **PHASE 17: `paddingY` hạ từ 70 → 44, đừng nâng lại.** Con số 70 sinh ra để lấp khoảng trắng đáy;
+   từ DEC-068 cụm lũy kế đã chiếm chỗ đó, và giữ 70 khiến bản sáng **tràn quá 1920px** → chồng chữ (ISSUE-032).
+3. **Vẫn có** cụm lũy kế tháng (giống bản chiều, nhưng mốc dừng là **hết ngày hôm trước**), **không có** ghi chú
+   cuối ngày; cuối thẻ là một dòng nhắc `#566A7B` 32px: *"Kết quả thực đạt sẽ được gửi vào cuối ngày."* —
+   người nhận trên Zalo không có ngữ cảnh nào khác ngoài tấm ảnh.
 
 ### 14.3 Ràng buộc bắt buộc
 
@@ -666,7 +684,10 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 |---|---|---|
 | Tên dài 40+ ký tự → xuống dòng, không cắt chữ | không cắt gì cả, để Satori tự wrap | ✅ tên 42 ký tự xuống 2 dòng |
 | Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có `…` | `truncateText(route, 104)` ở tầng dữ liệu | ✅ |
-| Ghi chú 1000 ký tự → cắt ở 4 dòng, có `…` | `truncateText(note, 232)` ở tầng dữ liệu | ✅ |
+| Ghi chú 1000 ký tự → cắt ở 3 dòng, có `…` | `truncateText(note, 174)` ở tầng dữ liệu — hạ từ 232 ở PHASE 17 (ISSUE-032) | ✅ |
+| **Nội dung dài tổng cộng vượt 1920px** | `flexShrink: 0` cho mọi khối bắt buộc; riêng ghi chú co được + `overflow: hidden` | ✅ cắt gọn thay vì **chồng chữ** (ISSUE-032) |
+| **Lũy kế tháng** khi truy vấn hỏng | `buildShareCardModel(source, null)` → bỏ hẳn cụm | ✅ không in `0 ₫` sai sự thật |
+| **Lũy kế tháng** của ảnh sáng ngày 01 | khoảng rỗng (`isEmpty`) → ba số 0 + dòng "Chưa có ngày nào trong tháng" | ✅ không tụt sang tháng trước |
 | Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` — nay là đường dùng tiền **duy nhất** của thẻ | ✅ `100tỷ` |
 | Achievement 4 chữ số (`1.250,0%`) hiển thị đủ | không clamp (BR-004) | ✅ |
 | `target = 0` không bao giờ ra `∞`/`NaN` (BR-015) | lấy nguyên `display` của `lib/kpi.ts` | ✅ `actual = 0` → `100,0%`; `actual > 0` → `+3 điểm` + "Vượt kế hoạch" |

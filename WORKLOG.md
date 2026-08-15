@@ -1,6 +1,6 @@
 # BikeForce Worklog
 
-> Status: ACTIVE | Phase: 16 — Báo cáo Admin cho dữ liệu lớn (DEC-066) | Last updated: 2026-08-12
+> Status: ACTIVE | Phase: 17 — Lũy kế tháng trên thẻ ảnh (DEC-068) | Last updated: 2026-08-14
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 
 File này ghi lại **thực tế đã làm** trong từng phiên làm việc. Không ghi kế hoạch, không ghi
@@ -17,6 +17,12 @@ project đều đã xanh.
 
 **BẢO TRÌ UI 2026-08-12 — ISSUE-031 ĐÃ ĐÓNG.** Khối tìm/lọc `/admin/reports` trên laptop đã được cân
 lại hai control, giữ mobile một cột và có E2E đo bounding box để lỗi lệch hàng không tái diễn.
+
+**PHASE 17 ĐÃ ĐÓNG NGÀY 2026-08-14 (DEC-068).** Thẻ ảnh 9:16 bỏ khối "Số khách làm việc" và thêm **cụm
+lũy kế tháng** (doanh số tháng · doanh thu tháng · ngày đạt KPI) vào **cả hai** biến thể, cộng từ đầu
+tháng đến ngày báo cáo — bản sáng dừng ở hết hôm trước. Kèm theo là **ISSUE-032**: thẻ chồng chữ khi
+nội dung vượt 1920px, lỗi có sẵn từ trước, nay đã khoá bằng `flexShrink: 0`. Vitest **841/841**, E2E ảnh
+**20 passed / 7 skipped**, và đã render 4 tấm PNG thật để nhìn bằng mắt.
 
 Quy tắc đứng của người dùng vẫn là: hoàn tất thay đổi thì agent **tự commit + push**, không chờ nhắc lại;
 chi tiết vận hành nằm ở `CLAUDE.md § Git`.
@@ -2603,3 +2609,55 @@ Docker/Supabase local; chạy lại đúng quyền dự án thì UC-13 xanh 3/3 
 **Remaining:** không còn việc code trong phạm vi đổi tên file; không thể kiểm Zalo thật bằng Playwright, vẫn thuộc ISSUE-003.
 
 **Update:** tăng header bảng chỉ tiêu trong ảnh xuất từ 26px/600 lên 30px/700, giảm `letterSpacing` và khóa `nowrap` để rõ hơn nhưng không nhảy dòng trên bản chiều.
+
+---
+
+### Entry 028 — DEC-068: cụm lũy kế tháng trên thẻ ảnh · ISSUE-032
+
+**Date:** 2026-08-14
+
+**Yêu cầu người dùng:** thêm vào **cả hai** tấm ảnh (đầu ngày và cuối ngày) một cụm dưới dòng "Khách
+hàng" gồm doanh số tổng tháng, doanh thu tổng tháng và số ngày đặt KPI của tháng đang xuất báo cáo;
+đồng thời **bỏ dòng tô vàng "SỐ KHÁCH LÀM VIỆC"** ở ảnh cuối ngày.
+
+**Ba câu hỏi nghiệp vụ đã hỏi và được trả lời trước khi code:**
+
+| Hỏi | Người dùng chốt |
+|---|---|
+| "Số ngày đặt KPI" là gì | **Số ngày ĐẠT KPI** của tháng đang xuất báo cáo (BR-024) |
+| Hai tổng tiền lấy số nào | **Thực đạt** (`actual_*`) |
+| Mốc tính tới đâu | Từ đầu tháng đến ngày báo cáo — **chiều ngày 21 thì gồm cả 21; sáng ngày 21 thì chỉ tới hết 20** vì ngày 21 chưa có thực đạt |
+
+**Completed:**
+
+1. `lib/date.ts` — thêm `formatVietnamShortDate()`, `shiftVietnamDate()` và `getVietnamMonthToDateRange(anchorDate, throughDate)`. Hàm cuối nhận **hai** tham số vì tháng cần cộng và mốc dừng không luôn cùng tháng (ảnh sáng ngày 01 dừng ở 31 tháng trước, nhưng vẫn phải cộng cho tháng này).
+2. `lib/reports/month-summary.ts` (mới) — `summarizeMonthToDate()` thuần: cộng hai tổng thực đạt và đếm ngày đạt KPI qua đúng `calculateAchievement()` + `isKpiAchievedDay()`. Không viết lại công thức nào (NFR-012).
+3. `services/reports.ts` — thêm `listMonthToDateMetrics()` (8 cột, tối đa 31 dòng, bám `idx_daily_reports_sales_date_desc`) và thêm `sales_id` vào `SHARE_REPORT_COLUMNS`.
+4. `lib/reports/share-card.ts` — bỏ `workRate`/`buildWorkRate`, thêm `monthly` + `shareMonthRange()`; `buildShareCardModel()` nay nhận **hai** tham số, `null` nghĩa là bỏ hẳn cụm (truy vấn hỏng) thay vì in `0 ₫` sai sự thật.
+5. `features/report-share/daily-report-share-card.tsx` — gỡ khối cam nhạt cũ, dựng cụm lũy kế ở đúng vị trí đó cho **cả hai** biến thể.
+6. Route ảnh — chọn khoảng theo biến thể rồi cộng; cả hai truy vấn đi qua **cùng** client chịu RLS.
+7. **ISSUE-032** — phát hiện khi render ca xấu nhất: thẻ cao cố định 1920px nên khi nội dung vượt, Yoga nén mọi khối và **chữ chồng lên nhau**. Sửa bằng `flexShrink: 0` cho mọi khối bắt buộc, cho riêng ghi chú co được kèm `overflow: hidden`, hạ `MAX_SHARE_NOTE_CHARS` 232 → 174 và `ROW_METRICS.MORNING.paddingY` 70 → 44.
+
+**Files Changed:** `lib/date.ts`, `lib/date.test.ts`, `lib/reports/month-summary.ts` *(mới)*, `lib/reports/month-summary.test.ts` *(mới)*, `lib/reports/share-card.ts`, `lib/reports/share-card.test.ts`, `services/reports.ts`, `features/report-share/daily-report-share-card.tsx`, `app/api/reports/[id]/share-image/route.tsx`, `tests/rls/share-image.rls.test.ts`, `docs/05`, `docs/07`, `docs/08`, `docs/11`, `docs/12`, `PROJECT_CHECKLIST.md`, `WORKLOG.md`, `SESSION_CHECKPOINT.md`, `CLAUDE.md`.
+
+**Tests đã chạy thật (2026-08-14):**
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npm run build` | ✅ exit 0, 20 route |
+| `npm test` (unit + integration + rls) | ✅ **841/841**, 33 file — trước phiên là 802 |
+| `npx playwright test e2e/share-image.spec.ts` | ✅ **20 passed / 7 skipped / 0 failed** trên 3 project |
+| **Nhìn tận mắt** | ✅ render **4 tấm PNG 1080×1920 thật**: sáng + chiều, mỗi bản ở ca thường và ca xấu nhất |
+
+**Ghi chú hạ tầng:** Supabase local đã bị xoá container từ phiên trước; người dùng cho phép dựng lại. WSL
+`docker-desktop` ở trạng thái `Stopped` ⇒ khởi động lại Docker Desktop rồi `npx supabase start` là đủ,
+**không** cần `wsl --shutdown` và không phải tắt stack của dự án khác.
+
+**Một assertion của chính tôi đã sai và được sửa:** test RLS ban đầu kỳ vọng anon nhận `[]`. Thực tế anon
+nhận `null` vì vai `anon` **không có `GRANT SELECT`** trên `daily_reports` (DEC-031) nên PostgREST từ chối
+ngay ở tầng quyền. Cả hai đều là "không đọc được gì"; test nay khoá đúng điều quan trọng — không có dòng nào.
+
+**Remaining:** E2E chưa khoá riêng cụm lũy kế (cần seed nhiều ngày trong tháng); ISSUE-003 (Zalo thiết bị
+thật) và Lighthouse vẫn là nợ cũ, không thuộc phạm vi phiên này.

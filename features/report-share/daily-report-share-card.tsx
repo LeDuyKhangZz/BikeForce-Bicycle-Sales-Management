@@ -29,8 +29,16 @@ import type { ShareCardMetricRow, ShareCardModel } from '@/lib/reports/share-car
  *    Người dùng nói thẳng bản cũ "tối quá". Bảng màu dưới đây lấy nguyên các
  *    token đã đo của DEC-046, nên ảnh và web nay nói cùng một thứ tiếng màu.
  *  • **DEC-058** — thẻ có **hai biến thể**: `MORNING` (bảng 2 cột, chỉ cam kết)
- *    và `EVENING` (bảng 4 cột + khối "Số khách làm việc"). Biến thể do
- *    `model.variant` quyết định ở tầng dữ liệu; component không tự đoán.
+ *    và `EVENING` (bảng 4 cột, có `%` hoàn thành). Biến thể do `model.variant`
+ *    quyết định ở tầng dữ liệu; component không tự đoán.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  PHASE 17 — DEC-068
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Khối "Số khách làm việc" (DEC-056, chỉ có ở bản chiều) **đã bị gỡ** theo yêu
+ *  cầu trực tiếp của người dùng ngày 2026-08-14. Thay vào đúng vị trí đó là
+ *  **cụm lũy kế tháng** — doanh số tháng, doanh thu tháng, số ngày đạt KPI —
+ *  và cụm này có ở **cả hai** biến thể. Đừng thêm lại khối cũ.
  */
 
 /**
@@ -114,6 +122,25 @@ const MORNING_COLUMN = {
 const ROW_PADDING_X = 16;
 
 /**
+ * **KHOÁ CHỐNG CHỒNG CHỮ — ISSUE-032, PHASE 17. Đừng gỡ khỏi khối nào.**
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Thẻ cao **cố định** 1920px, còn nội dung thì không: tên Sales có thể 2 dòng,
+ *  tuyến 2 dòng, ghi chú 4 dòng. Khi tổng chiều cao vượt 1920, Yoga (bộ layout
+ *  của Satori) làm đúng mặc định của flexbox — **nén mọi con lại** vì
+ *  `flex-shrink` mặc định là 1. Kết quả không phải là "ảnh bị cắt" mà là chữ
+ *  **chồng lên nhau**: tên Sales đè lên ngày, dòng chân đè lên footer. Nhìn
+ *  tấm PNG mới thấy; không assertion nào bắt được (bài học DEC-053/DEC-054).
+ *
+ *  `flexShrink: 0` nói: khối này giữ nguyên chiều cao thật của nó. Đặt cho MỌI
+ *  khối mang thông tin bắt buộc, và để đúng **một** khối co được — ghi chú, thứ
+ *  ít quan trọng nhất trên thẻ — kèm `overflow: 'hidden'` để phần thừa bị cắt
+ *  gọn thay vì tràn đè. Ảnh vì thế xấu đi một chút ở ca cực đoan, nhưng không
+ *  bao giờ vỡ.
+ */
+const NO_SHRINK = { flexShrink: 0 } as const;
+
+/**
  * Nhịp chữ của bảng, KHÁC NHAU giữa hai biến thể — và đây là cỡ chữ đã sửa sau
  * khi **nhìn tận mắt hai tấm PNG render ra**.
  *
@@ -122,10 +149,17 @@ const ROW_PADDING_X = 16;
  * là khoảng trắng**, trông như ảnh bị lỗi chứ không như một thiết kế thoáng.
  * Bản sáng vì thế đọc như một tấm áp phích: dòng cao, số to.
  *
+ * ⚠ **PHASE 17 (DEC-068): `MORNING.paddingY` hạ từ 70 xuống 44 — đừng nâng lại.**
+ * Cụm lũy kế tháng chiếm ~350px ngay dưới bảng, nên khoảng trắng mà con số 70
+ * sinh ra để lấp nay không còn tồn tại. Giữ 70 thì bản sáng **tràn quá 1920px**,
+ * và Satori không cắt bớt: nó nén các khối lại cho tới khi chữ **chồng lên
+ * nhau** — tên Sales đè lên ngày, dòng chân đè lên footer. Lỗi đó không có phép
+ * đo nào bắt được, chỉ nhìn tấm PNG mới thấy (bài học DEC-053/DEC-054).
+ *
  * Bài học DEC-053 lặp lại: bốn nhóm luật đo được đều xanh mà mắt vẫn thấy sai.
  */
 const ROW_METRICS = {
-  MORNING: { paddingY: 70, label: 42, value: 56 },
+  MORNING: { paddingY: 44, label: 42, value: 56 },
   EVENING: { paddingY: 30, label: 36, value: 36 },
 } as const;
 
@@ -295,10 +329,11 @@ export function DailyReportShareCard({ model }: Props) {
           Vạch cam nằm NGANG phía trên chữ, không phải nền của chữ: cam logo chỉ
           được làm nền khi chữ trên nó là chữ tối (DEC-046). */}
       <div
-        style={{ display: 'flex', width: 132, height: 10, backgroundColor: COLOR.accent }}
+        style={{ ...NO_SHRINK, display: 'flex', width: 132, height: 10, backgroundColor: COLOR.accent }}
       />
       <div
         style={{
+          ...NO_SHRINK,
           display: 'flex',
           fontSize: 50,
           fontWeight: 700,
@@ -311,6 +346,7 @@ export function DailyReportShareCard({ model }: Props) {
       </div>
       <div
         style={{
+          ...NO_SHRINK,
           display: 'flex',
           fontSize: 26,
           fontWeight: 600,
@@ -323,29 +359,30 @@ export function DailyReportShareCard({ model }: Props) {
       </div>
 
       <div
-        style={{ display: 'flex', height: 3, backgroundColor: COLOR.heading, marginTop: 26 }}
+        style={{ ...NO_SHRINK, display: 'flex', height: 3, backgroundColor: COLOR.heading, marginTop: 24 }}
       />
 
       {/* ── Ngày nghiệp vụ (BR-005) ────────────────────────────────────────── */}
-      <div style={{ display: 'flex', fontSize: 36, color: COLOR.muted, marginTop: 32 }}>
+      <div style={{ ...NO_SHRINK, display: 'flex', fontSize: 36, color: COLOR.muted, marginTop: 28 }}>
         {model.dateText}
       </div>
 
       {/* ── Sales ──────────────────────────────────────────────────────────── */}
       <div
         style={{
+          ...NO_SHRINK,
           display: 'flex',
           fontSize: 64,
           fontWeight: 700,
           color: COLOR.heading,
-          marginTop: 12,
+          marginTop: 10,
           lineHeight: 1.2,
         }}
       >
         {model.salesName}
       </div>
       {model.employeeCode !== null && (
-        <div style={{ display: 'flex', fontSize: 30, color: COLOR.muted, marginTop: 8 }}>
+        <div style={{ ...NO_SHRINK, display: 'flex', fontSize: 30, color: COLOR.muted, marginTop: 8 }}>
           {model.employeeCode}
         </div>
       )}
@@ -353,11 +390,12 @@ export function DailyReportShareCard({ model }: Props) {
       {model.routeText !== null && (
         <div
           style={{
+            ...NO_SHRINK,
             display: 'flex',
             flexDirection: 'column',
-            marginTop: 32,
-            paddingTop: 26,
-            paddingBottom: 26,
+            marginTop: 26,
+            paddingTop: 22,
+            paddingBottom: 22,
             paddingLeft: 24,
             paddingRight: 24,
             backgroundColor: COLOR.zebra,
@@ -373,7 +411,7 @@ export function DailyReportShareCard({ model }: Props) {
       )}
 
       {/* ── Bảng chỉ tiêu ──────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 36 }}>
+      <div style={{ ...NO_SHRINK, display: 'flex', flexDirection: 'column', marginTop: 30 }}>
         <div
           style={{
             display: 'flex',
@@ -400,9 +438,12 @@ export function DailyReportShareCard({ model }: Props) {
         <div style={{ display: 'flex', width: CONTENT_WIDTH, height: 1, backgroundColor: COLOR.rule }} />
       </div>
 
-      {/* ── Khối nhấn mạnh: "Số khách làm việc" — chỉ có ở bản CHIỀU ────────── */}
-      {model.workRate !== null && (
-        <div style={{ display: 'flex', marginTop: 40 }}>
+      {/* ── Cụm lũy kế tháng — PHASE 17, DEC-068 ────────────────────────────
+          Có ở CẢ HAI biến thể. Chỗ này trước đây là khối "Số khách làm việc"
+          (DEC-056); người dùng yêu cầu bỏ hẳn nó ngày 2026-08-14 vì cấp trên cần
+          thành tích THÁNG, không phải một tỉ lệ của riêng ngày hôm đó. */}
+      {model.monthly !== null && (
+        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: 30 }}>
           {/* Vạch cam dọc: cam logo làm ĐỒ HOẠ, không mang chữ (DEC-046). */}
           <div style={{ display: 'flex', width: 10, backgroundColor: COLOR.accent }} />
           <div
@@ -411,8 +452,8 @@ export function DailyReportShareCard({ model }: Props) {
               flexDirection: 'column',
               flexGrow: 1,
               backgroundColor: COLOR.accentSoft,
-              paddingTop: 34,
-              paddingBottom: 34,
+              paddingTop: 24,
+              paddingBottom: 26,
               paddingLeft: 32,
               paddingRight: 32,
             }}
@@ -424,39 +465,65 @@ export function DailyReportShareCard({ model }: Props) {
                 fontWeight: 600,
                 color: COLOR.accentText,
                 letterSpacing: 3,
+                whiteSpace: 'nowrap',
               }}
             >
-              SỐ KHÁCH LÀM VIỆC
+              {model.monthly.title}
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 6 }}>
-              <div style={{ display: 'flex', fontSize: 88, fontWeight: 700, color: COLOR.body }}>
-                {model.workRate.display}
-              </div>
-              {model.workRate.detailText !== null && (
+            <div style={{ display: 'flex', fontSize: 24, color: COLOR.muted, marginTop: 6 }}>
+              {model.monthly.rangeText}
+            </div>
+
+            {/* Mảng chứ không Fragment — Satori không dựng được `<>…</>`. */}
+            {model.monthly.rows.map((row, index) => (
+              <div
+                key={row.label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'space-between',
+                  // Dòng đầu cách phần tiêu đề rộng hơn khoảng cách giữa ba dòng
+                  // với nhau: cụm phải đọc ra là "một tiêu đề + một danh sách".
+                  marginTop: index === 0 ? 18 : 10,
+                }}
+              >
+                <div style={{ display: 'flex', fontSize: 32, color: COLOR.body }}>{row.label}</div>
                 <div
                   style={{
                     display: 'flex',
-                    fontSize: 28,
-                    color: COLOR.muted,
-                    marginLeft: 20,
-                    paddingBottom: 16,
+                    fontSize: 38,
+                    fontWeight: 700,
+                    color: COLOR.heading,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {model.workRate.detailText}
+                  {row.valueText}
                 </div>
-              )}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* ── Ghi chú cuối ngày ──────────────────────────────────────────────── */}
+      {/* ── Ghi chú cuối ngày ──────────────────────────────────────────────────
+          KHỐI DUY NHẤT được phép co (ISSUE-032): khi tên Sales 2 dòng gặp tuyến
+          2 dòng gặp ghi chú 4 dòng, một thứ phải nhường. Ghi chú là thứ ít quan
+          trọng nhất trên thẻ, và `overflow: 'hidden'` khiến phần thừa bị **cắt
+          gọn** thay vì đè lên footer. */}
       {model.noteText !== null && (
-        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 36 }}>
-          <div style={{ display: 'flex', fontSize: 26, color: COLOR.muted, letterSpacing: 3 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            marginTop: 26,
+            flexShrink: 1,
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ ...NO_SHRINK, display: 'flex', fontSize: 26, color: COLOR.muted, letterSpacing: 3 }}>
             GHI CHÚ
           </div>
-          <div style={{ display: 'flex', fontSize: 34, color: COLOR.body, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ display: 'flex', fontSize: 32, color: COLOR.body, marginTop: 10, lineHeight: 1.4 }}>
             {model.noteText}
           </div>
         </div>
@@ -465,13 +532,22 @@ export function DailyReportShareCard({ model }: Props) {
       {/* Bản sáng nói rõ đây mới là một nửa câu chuyện — người nhận trên Zalo
           không có ngữ cảnh nào khác ngoài tấm ảnh này (DEC-058). */}
       {isMorning && (
-        <div style={{ display: 'flex', fontSize: 32, color: COLOR.muted, marginTop: 44, lineHeight: 1.4 }}>
+        <div
+          style={{
+            ...NO_SHRINK,
+            display: 'flex',
+            fontSize: 32,
+            color: COLOR.muted,
+            marginTop: 36,
+            lineHeight: 1.4,
+          }}
+        >
           Kết quả thực đạt sẽ được gửi vào cuối ngày.
         </div>
       )}
 
       {/* `marginTop: auto` đẩy footer xuống đáy dù nội dung trên dài hay ngắn. */}
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'auto' }}>
+      <div style={{ ...NO_SHRINK, display: 'flex', flexDirection: 'column', marginTop: 'auto' }}>
         <div style={{ display: 'flex', height: 1, backgroundColor: COLOR.rule }} />
         <div
           style={{

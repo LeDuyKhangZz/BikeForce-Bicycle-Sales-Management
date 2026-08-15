@@ -105,8 +105,9 @@ Diễn giải bắt buộc tuân thủ:
 
 | ISSUE-030 | P2 | **CLOSED** | **MỚI 2026-08-11** — **logo bị cắt mất đáy hai bánh xe** ở mọi nơi dùng `BrandMark`. `viewBox="0 0 101 75"` đúng KÍCH THƯỚC nhưng thiếu ĐỘ LỆCH y: hình nằm ở `y ∈ [13,07 · 87,93]` nên **12,92 đơn vị (~17% chiều cao) bị chém phẳng**, đồng thời đỉnh thừa một dải trắng bằng đúng chừng ấy. Bộ icon PWA và `app/icon.svg` **vô can** (khung 512×512 có đệm). Sửa bằng `viewBox="0 13.07 101 74.86"` + luật E2E `logo-clipped` |
 | ISSUE-031 | P3 | **CLOSED** | **MỚI 2026-08-12** — thanh tìm kiếm và bộ chuyển tháng ở `/admin/reports` bị lệch dọc trên laptop. Gốc: cột tháng có thêm dòng “Tháng này” nhưng lưới cha dùng `items-end`, nên kéo cả cột tìm kiếm xuống. Thiết kế lại bằng lưới `3fr / 2fr`, đưa “Tháng này” lên hàng label, cân hai control và thêm E2E đo bounding box |
+| ISSUE-032 | P2 | **CLOSED** | **MỚI 2026-08-14** — thẻ ảnh 9:16 **chồng chữ** khi nội dung vượt 1920px (tên Sales 2 dòng + tuyến 2 dòng + ghi chú kịch trần). Gốc: thẻ cao cố định, `flex-shrink` mặc định là 1 nên Yoga nén mọi khối lại thay vì cắt. **Lỗi có sẵn từ trước DEC-068**, chỉ lộ ra khi render ca xấu nhất. Sửa bằng `flexShrink: 0` cho mọi khối bắt buộc + cho riêng ghi chú co được kèm `overflow: hidden`, hạ `MAX_SHARE_NOTE_CHARS` 232 → 174 và siết nhịp dọc |
 
-Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **17 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, ISSUE-029, ISSUE-030, **ISSUE-031**).
+Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **18 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, ISSUE-029, ISSUE-030, ISSUE-031, **ISSUE-032**).
 
 ---
 
@@ -1670,3 +1671,42 @@ trong `.wslconfig` nói "2 dự án"; nếu máy mở stack thứ ba thì **ho�
 service`) vì cần quyền admin. Nhưng **khởi động Docker Desktop bằng `Start-Process` thì được** — nó
 tự lo phần dịch vụ. Ghi chú cũ ("agent KHÔNG khởi động lại được ⇒ phải nhờ người dùng") **đã hết
 hiệu lực**: đường đúng là qua `Start-Process`, không phải qua `Start-Service`.
+
+---
+
+### ISSUE-032
+
+**Severity:** P2 | **Status:** **CLOSED** (sửa 2026-08-14)
+
+**Module:** `features/report-share/daily-report-share-card.tsx` · `lib/reports/share-card.ts`
+
+**Description:** Thẻ ảnh 9:16 bị **chồng chữ** khi nội dung dài: tên Sales đè lên dòng ngày, mã nhân
+viên đè vào tên, dòng chân đè lên footer. Phát hiện khi render tấm PNG thật cho ca xấu nhất trong lúc
+làm DEC-068 — **không phải lỗi do DEC-068 gây ra**, mà là lỗi có sẵn chưa ai render tới.
+
+**Repro:** một báo cáo `COMPLETED` có tên Sales đủ dài để xuống 2 dòng + tuyến ≥ 104 ký tự (2 dòng) +
+ghi chú kịch trần `MAX_SHARE_NOTE_CHARS`, rồi gọi `GET /api/reports/<id>/share-image`.
+
+**Expected:** ảnh luôn đọc được; nếu thiếu chỗ thì phần ít quan trọng nhất bị cắt bớt.
+
+**Actual:** mọi khối bị nén và chữ chồng lên nhau, tấm ảnh gửi Zalo trông như ảnh hỏng.
+
+**Root Cause:** thẻ có `height: 1920` **cố định** nhưng nội dung thì không. Khi tổng chiều cao con vượt
+1920, Yoga (bộ layout của Satori) làm đúng mặc định flexbox — `flex-shrink: 1` trên MỌI con — nên nó nén
+tất cả lại cho tới khi vừa. Với khối chỉ chứa chữ, "nén" nghĩa là hộp co lại còn chữ thì không, tức là
+chữ tràn ra ngoài hộp và đè lên khối kế tiếp. Satori **không** tự cắt và **không** báo lỗi.
+
+**Fix:**
+1. `flexShrink: 0` (hằng `NO_SHRINK`) cho mọi khối mang thông tin bắt buộc: thương hiệu, ngày, tên, mã
+   nhân viên, tuyến, bảng chỉ tiêu, cụm lũy kế, dòng chân bản sáng, footer.
+2. Đúng **một** khối được co — ghi chú — kèm `overflow: 'hidden'` để phần thừa bị cắt gọn thay vì đè.
+3. Hạ `MAX_SHARE_NOTE_CHARS` từ 232 (4 dòng) xuống **174** (3 dòng) và `ROW_METRICS.MORNING.paddingY`
+   từ 70 xuống **44**, siết các `marginTop` dọc.
+
+**Verification (2026-08-14):** render **bốn** tấm PNG 1080×1920 thật rồi **nhìn tận mắt** — bản sáng và
+bản chiều ở ca thường, cộng ca xấu nhất của cả hai (tên 2 dòng, tuyến 2 dòng, ghi chú kịch trần, tiền 12
+chữ số, lũy kế 31 ngày ở trần BR-017). Không còn chồng chữ ở ca nào; footer nguyên vẹn ở cả bốn.
+
+**Bài học:** đây là lần thứ ba dự án gặp đúng một loại lỗi — **không phép đo nào bắt được, chỉ mắt
+thấy** (DEC-053, DEC-054, nay ISSUE-032). Sửa thẻ ảnh xong thì **phải render PNG ra và nhìn**, và phải
+nhìn cả ca dữ liệu dài nhất chứ không chỉ ca đẹp.

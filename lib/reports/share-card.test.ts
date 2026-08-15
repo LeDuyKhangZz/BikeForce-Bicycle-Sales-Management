@@ -21,7 +21,9 @@ import {
   shareImageFileName,
   shareImagePath,
   shareImageViewPath,
+  shareMonthRange,
   truncateText,
+  type ShareCardMonthlySource,
   type ShareCardSource,
 } from './share-card';
 
@@ -48,8 +50,25 @@ const BASE: ShareCardSource = {
   sales: { full_name: 'Nguyễn Văn A', employee_code: 'NV-0042' },
 };
 
-function build(overrides: Partial<ShareCardSource> = {}) {
-  return buildShareCardModel({ ...BASE, ...overrides });
+/**
+ * Lũy kế tháng mặc định — PHASE 17, DEC-068. Số đã cộng sẵn: view model KHÔNG
+ * cộng gì, phép cộng thuộc `lib/reports/month-summary.ts` và có bộ test riêng.
+ */
+const MONTHLY: ShareCardMonthlySource = {
+  range: { month: '2026-08', from: '2026-08-01', to: '2026-08-06', isEmpty: false },
+  summary: {
+    salesAmount: 320_000_000,
+    revenue: 210_000_000,
+    kpiAchievedDays: 4,
+    reportedDays: 6,
+  },
+};
+
+function build(
+  overrides: Partial<ShareCardSource> = {},
+  monthly: ShareCardMonthlySource | null = MONTHLY,
+) {
+  return buildShareCardModel({ ...BASE, ...overrides }, monthly);
 }
 
 describe('buildShareCardModel — phần đầu thẻ (docs/05 §14)', () => {
@@ -124,37 +143,102 @@ describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
 
 });
 
-describe('buildShareCardModel — khối "Số khách làm việc" (PHASE 14, DEC-056)', () => {
-  it('tỉ lệ = khách thực đạt / điểm đã viếng thăm, lấy nguyên từ lib/kpi', () => {
-    // BASE: 12 khách trên 10 điểm.
-    expect(build().workRate?.display).toBe('120,0%');
+describe('buildShareCardModel — cụm lũy kế tháng (PHASE 17, DEC-068)', () => {
+  it('ba dòng đúng thứ tự người dùng yêu cầu: doanh số · doanh thu · ngày đạt KPI', () => {
+    expect(build().monthly?.rows.map((row) => row.label)).toEqual([
+      'Doanh số tháng',
+      'Doanh thu tháng',
+      'Ngày đạt KPI',
+    ]);
   });
 
-  it('ca của người dùng đưa ra: 5 khách trên 10 điểm = 50,0%', () => {
-    const model = build({ actual_customer_visits: 5, actual_visit_points: 10 });
+  it('hai dòng tiền dùng số ĐẦY ĐỦ, không rút gọn như trong bảng', () => {
+    const rows = build().monthly?.rows;
 
-    expect(model.workRate?.display).toBe('50,0%');
-    expect(model.workRate?.detailText).toBe('5 khách / 10 điểm');
+    // ⚠ Ký tự trước `₫` là NO-BREAK SPACE U+00A0 (docs/08 §3.3).
+    expect(rows?.[0]?.valueText).toBe('320.000.000 ₫');
+    expect(rows?.[1]?.valueText).toBe('210.000.000 ₫');
   });
 
-  it('dòng phụ ghép bằng formatMetricValue — đơn vị vẫn chỉ ghép ở lib/kpi', () => {
-    expect(build().workRate?.detailText).toBe('12 khách / 10 điểm');
+  it('dòng thứ ba đếm NGÀY, không phải phần trăm — BR-024', () => {
+    expect(build().monthly?.rows[2]?.valueText).toBe('4 ngày');
   });
 
-  it('chưa có số liệu cuối ngày → "—" và KHÔNG có dòng phụ', () => {
-    const model = build({ actual_customer_visits: null, actual_visit_points: null });
-
-    expect(model.workRate?.display).toBe('—');
-    expect(model.workRate?.detailText).toBeNull();
+  it('tiêu đề nói rõ đang cộng tháng nào', () => {
+    expect(build().monthly?.title).toBe('TỔNG THÁNG 08/2026');
   });
 
-  it('0 điểm viếng thăm → "—", không bao giờ ∞', () => {
-    const model = build({ actual_customer_visits: 5, actual_visit_points: 0 });
+  it('dòng phụ nói rõ mốc dừng — người nhận Zalo không có ngữ cảnh nào khác', () => {
+    expect(build().monthly?.rangeText).toBe('Tính đến hết ngày 06/08/2026');
+  });
 
-    expect(model.workRate?.display).toBe('—');
-    // Dòng phụ vẫn dựng được vì cả hai vế đều có số thật — nó giải thích ĐÚNG
-    // lý do tỉ lệ trống: mẫu số bằng 0.
-    expect(model.workRate?.detailText).toBe('5 khách / 0 điểm');
+  it('khoảng RỖNG (ảnh sáng của ngày 01) vẫn hiện đủ ba dòng, nói thẳng là chưa có ngày nào', () => {
+    const model = build(
+      {},
+      {
+        range: { month: '2026-09', from: '2026-09-01', to: '2026-08-31', isEmpty: true },
+        summary: { salesAmount: 0, revenue: 0, kpiAchievedDays: 0, reportedDays: 0 },
+      },
+    );
+
+    expect(model.monthly?.rangeText).toBe('Chưa có ngày nào trong tháng');
+    expect(model.monthly?.rows[2]?.valueText).toBe('0 ngày');
+  });
+
+  it('truy vấn hỏng → BỎ HẲN cụm, KHÔNG in 0 ₫ cho một tháng có thể có số liệu', () => {
+    expect(build({}, null).monthly).toBeNull();
+  });
+
+  it('CẢ HAI biến thể đều có cụm — khác hẳn khối "Số khách làm việc" cũ (DEC-056)', () => {
+    const morning = build(
+      { status: 'MORNING_SUBMITTED', actual_sales_amount: null, actual_revenue: null },
+      MONTHLY,
+    );
+
+    expect(morning.monthly).not.toBeNull();
+    expect(build().monthly).not.toBeNull();
+  });
+});
+
+describe('shareMonthRange — mốc dừng theo biến thể (PHASE 17, DEC-068)', () => {
+  it('bản CHIỀU cộng tới hết chính ngày báo cáo', () => {
+    // Câu chốt của người dùng: "chiều ngày 21 tháng 9 → từ ngày 1 đến 21".
+    expect(shareMonthRange('2026-09-21', 'EVENING')).toEqual({
+      month: '2026-09',
+      from: '2026-09-01',
+      to: '2026-09-21',
+      isEmpty: false,
+    });
+  });
+
+  it('bản SÁNG dừng ở HÔM QUA — hôm nay chưa có thực đạt nào', () => {
+    // "sáng ngày 21 tháng 9 thì chỉ cộng đến chỉ số thực đạt của 20".
+    expect(shareMonthRange('2026-09-21', 'MORNING')).toEqual({
+      month: '2026-09',
+      from: '2026-09-01',
+      to: '2026-09-20',
+      isEmpty: false,
+    });
+  });
+
+  it('bản SÁNG của ngày 01 → khoảng rỗng, KHÔNG tụt sang tháng trước', () => {
+    // Mốc dừng rơi vào 31/08 nhưng THÁNG phải cộng vẫn là tháng 9. Suy tháng ra
+    // từ mốc dừng sẽ cộng nhầm nguyên tháng 8 vào một tấm ảnh của tháng 9.
+    expect(shareMonthRange('2026-09-01', 'MORNING')).toEqual({
+      month: '2026-09',
+      from: '2026-09-01',
+      to: '2026-08-31',
+      isEmpty: true,
+    });
+  });
+
+  it('bản SÁNG của ngày 01 tháng 3 lùi đúng qua tháng 2 năm nhuận', () => {
+    expect(shareMonthRange('2028-03-01', 'MORNING')?.to).toBe('2028-02-29');
+  });
+
+  it('ngày rác → null, tầng gọi bỏ cụm thay vì đoán một khoảng', () => {
+    expect(shareMonthRange('2026-02-30', 'EVENING')).toBeNull();
+    expect(shareMonthRange('không-phải-ngày', 'MORNING')).toBeNull();
   });
 });
 
@@ -181,9 +265,9 @@ describe('buildShareCardModel — hai biến thể thẻ (PHASE 14, DEC-058)', (
     expect(build().kindLabel).toBe('KẾT QUẢ CUỐI NGÀY');
   });
 
-  it('bản sáng KHÔNG có khối "Số khách làm việc" — chưa có số để chia', () => {
-    expect(morning().workRate).toBeNull();
-    expect(build().workRate).not.toBeNull();
+  it('bản sáng KHÔNG có cột thực đạt, nhưng VẪN có cụm lũy kế tháng (DEC-068)', () => {
+    expect(morning().variant).toBe('MORNING');
+    expect(morning().monthly).not.toBeNull();
   });
 
   it('bản sáng vẫn đủ 4 dòng cam kết, lấy tuyến KẾ HOẠCH', () => {
@@ -286,8 +370,9 @@ describe('Edge case bắt buộc của Phase 6', () => {
           model.dateText,
           model.salesName,
           model.kindLabel,
-          model.workRate?.display ?? '',
-          model.workRate?.detailText ?? '',
+          model.monthly?.title ?? '',
+          model.monthly?.rangeText ?? '',
+          ...(model.monthly?.rows.flatMap((row) => [row.label, row.valueText]) ?? []),
           ...model.metrics.flatMap((row) => [row.targetText, row.actualText, row.achievement.display]),
         ].join(' | ');
 

@@ -2080,3 +2080,63 @@ lọc/phân trang thuần, UI `/admin/reports`, integration/E2E liên quan và t
 **Status:** APPROVED (người dùng yêu cầu trực tiếp ngày 2026-08-12)
 
 **Verification:** unit helper `shareImageFileName()` và E2E share/download được cập nhật để khóa mẫu tên mới. Kiểm tra thực tế trong Zalo thật vẫn thuộc ISSUE-003 vì Playwright không điều khiển được app Zalo.
+
+---
+
+## DEC-068 — Thẻ ảnh 9:16 bỏ khối "Số khách làm việc", thêm cụm lũy kế tháng
+
+**Date:** 2026-08-14
+
+**Decision:** Thẻ ảnh chia sẻ đổi hai việc cùng lúc, ở **cả hai** biến thể `MORNING` và `EVENING`:
+
+1. **Gỡ khối "Số khách làm việc"** (khối nền cam nhạt của DEC-056) khỏi bản cuối ngày.
+2. **Thêm cụm lũy kế tháng** vào đúng vị trí đó — ngay dưới dòng "Khách hàng" của bảng bốn chỉ tiêu —
+   gồm ba con số của **chính Sales đang xuất ảnh**, trong **tháng của báo cáo đang xuất**:
+
+   | Dòng | Nguồn | Ghi chú |
+   |---|---|---|
+   | Doanh số tháng | tổng `actual_sales_amount` | tiền THỰC ĐẠT, hiển thị số đầy đủ |
+   | Doanh thu tháng | tổng `actual_revenue` | tiền THỰC ĐẠT, hiển thị số đầy đủ |
+   | Ngày đạt KPI | đếm ngày đạt **cả 4** chỉ tiêu ≥ 100% (BR-024) | KHÔNG phải số ngày đã báo cáo |
+
+**Mốc cộng — người dùng chốt trực tiếp:** từ **ngày 01 của tháng chứa báo cáo** đến:
+- **ngày của báo cáo** với bản `EVENING` ("chiều ngày 21 tháng 9 thì lấy từ ngày 1 đến 21, bao gồm cả
+  thực đạt của 21");
+- **hết ngày hôm trước** với bản `MORNING` ("sáng ngày 21 thì chỉ cộng đến thực đạt của 20 vì ngày 21
+  chưa có thực đạt").
+
+Mốc này KHÔNG đọc đồng hồ: xuất lại ảnh của một ngày cũ phải ra đúng con số của ngày đó.
+
+**Reason:** cấp trên của người dùng cần thấy thành tích **cả tháng** ngay trên tấm ảnh gửi Zalo, không
+chỉ kết quả một ngày. Khối "Số khách làm việc" nhường chỗ vì nó là tỉ lệ của riêng ngày hôm đó và
+không nằm trong ba con số được yêu cầu.
+
+**Alternatives:**
+- *Đếm bằng `sum()`/hàm SQL:* bị loại. "Ngày đạt KPI" là BR-024 áp lên bốn kết quả
+  `calculateAchievement()`, và BR-011 cấm persist `%`; làm bằng SQL nghĩa là chép công thức KPI (kèm cả
+  hai nhánh `target = 0` của BR-015) sang Postgres — đúng thứ NFR-012 và AGENTS.md §9 cấm. Trần 31 dòng
+  do `uq_daily_reports_sales_date` khiến chi phí cộng ở tầng ứng dụng bằng không.
+- *Hiển thị số tiền dạng rút gọn (`330tr`) như trong bảng:* bị loại. Đây là con số cấp trên đọc kỹ nhất;
+  cụm chỉ có hai cột trên bề rộng 968px nên không có sức ép chỗ.
+- *Giữ cả khối "Số khách làm việc" lẫn cụm mới:* bị loại — người dùng yêu cầu bỏ, và giữ cả hai thì thẻ
+  tràn quá 1920px.
+- *Đếm "số ngày đã đặt KPI" (số báo cáo trong tháng):* đã hỏi và bị người dùng bác; con số cần là **số
+  ngày ĐẠT**.
+
+**Impact:**
+- **Không** đổi schema, migration, RLS policy hay quyền. Không thêm dependency.
+- `services/reports.ts` thêm `listMonthToDateMetrics()` và thêm `sales_id` vào `SHARE_REPORT_COLUMNS`.
+- `lib/reports/month-summary.ts` (mới) giữ phép cộng/đếm thuần; `lib/date.ts` thêm
+  `formatVietnamShortDate()`, `shiftVietnamDate()`, `getVietnamMonthToDateRange()`.
+- `lib/kpi.ts` giữ nguyên `calculateCustomerWorkRate()` cùng test của nó, nhưng **không tầng trình bày
+  nào còn gọi tới** — không xoá, vì lịch sử quyết định là tài sản dự án.
+- Route ảnh chạy **thêm một truy vấn** đọc tối đa 31 dòng × 8 cột, qua cùng client chịu RLS.
+- Kéo theo **ISSUE-032** (chồng chữ khi nội dung vượt 1920px) và các mốc layout ở `docs/05 §14`.
+
+**Status:** APPROVED (người dùng yêu cầu trực tiếp ngày 2026-08-14, trả lời đủ ba câu hỏi nghiệp vụ)
+
+**Verification:** 641 unit test xanh, trong đó bộ mới `lib/reports/month-summary.test.ts` khoá BR-024 và
+cả hai nhánh BR-015; `lib/reports/share-card.test.ts` khoá ba dòng, tiêu đề, dòng mốc và ca khoảng rỗng;
+`lib/date.test.ts` khoá lùi ngày qua tháng/năm nhuận; `tests/rls/share-image.rls.test.ts` chứng minh
+`listMonthToDateMetrics()` bị RLS chặn khi Sales truyền `sales_id` của người khác. Đã **render bốn tấm
+PNG thật và nhìn tận mắt** (thường + xấu nhất, cho cả hai biến thể).

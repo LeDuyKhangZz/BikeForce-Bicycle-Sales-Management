@@ -12,6 +12,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { MonthToDateRow } from '@/lib/reports/month-summary';
 import { buildPageInfo, pageRange, REPORTS_PAGE_SIZE, type PageInfo } from '@/lib/reports/pagination';
 import type { Database, TablesInsert } from '@/types/database.types';
 
@@ -51,7 +52,12 @@ export type DailyReport = Omit<DailyReportRow, 'created_at' | 'updated_at'>;
 
 /**
  * Đúng tập cột thẻ ảnh 9:16 cần (FR-018) — hẹp hơn `REPORT_COLUMNS` vì ảnh
- * không hiển thị `visit_purpose`, `morning_submitted_at` hay `sales_id`.
+ * không hiển thị `visit_purpose` hay `morning_submitted_at`.
+ *
+ * ⚠ **`sales_id` có mặt từ PHASE 17 (DEC-068)** — trước đó cố ý không có. Thẻ
+ * ảnh nay in thêm cụm lũy kế tháng, và để cộng được thì phải biết cộng cho AI:
+ * `listMonthToDateMetrics()` bên dưới nhận đúng giá trị này. Nó **không** phải
+ * một cơ chế phân quyền — quyền vẫn do RLS quyết định (AGENTS.md §8).
  *
  * `sales:profiles!inner(...)` là embedded resource của PostgREST, đặt bí danh
  * `sales` cho dễ đọc ở tầng trên. `!inner` khiến báo cáo bị loại luôn nếu hồ sơ
@@ -61,6 +67,7 @@ export type DailyReport = Omit<DailyReportRow, 'created_at' | 'updated_at'>;
  */
 const SHARE_REPORT_COLUMNS = [
   'id',
+  'sales_id',
   'report_date',
   'status',
   'planned_route',
@@ -81,6 +88,7 @@ const SHARE_REPORT_COLUMNS = [
 export type ShareReport = Pick<
   DailyReportRow,
   | 'id'
+  | 'sales_id'
   | 'report_date'
   | 'status'
   | 'planned_route'
@@ -198,6 +206,64 @@ export async function getReportForShare(
   if (error) {
     // NFR-014: chi tiết kỹ thuật chỉ ở log server.
     console.error('[getReportForShare]', error.code, error.message);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Đúng 8 cột số mà lũy kế tháng của thẻ ảnh cần — PHASE 17, DEC-068.
+ *
+ * Không kéo `report_date`, `status` hay bất kỳ cột text nào: ba con số của
+ * `summarizeMonthToDate()` không đọc tới chúng, và đây là truy vấn chạy thêm ở
+ * mỗi lần xuất ảnh (NFR-002).
+ */
+const MONTH_TO_DATE_COLUMNS = [
+  'target_visit_points',
+  'target_sales_amount',
+  'target_revenue',
+  'target_customer_visits',
+  'actual_visit_points',
+  'actual_sales_amount',
+  'actual_revenue',
+  'actual_customer_visits',
+].join(', ');
+
+/**
+ * Các ngày đã có báo cáo của MỘT Sales trong khoảng `[from, to]` — PHASE 17,
+ * DEC-068. Nguyên liệu thô của `summarizeMonthToDate()`.
+ *
+ * Truy vấn bám `idx_daily_reports_sales_date_desc` (`sales_id, report_date
+ * desc`): điều kiện `sales_id = $1` cộng một dải `report_date` là đúng hình
+ * dạng index đó phục vụ. `uq_daily_reports_sales_date` chặn trần ở **31 dòng**
+ * cho một tháng, nên ở đây không cần phân trang.
+ *
+ * **`salesId` KHÔNG phải lớp bảo mật** (AGENTS.md §8) — nó chỉ nói cộng cho ai.
+ * RLS `reports_select_own_or_admin` mới là thứ quyết định người gọi thấy được
+ * gì: Sales truyền id của người khác vẫn nhận mảng rỗng (BR-003), Admin xuất
+ * ảnh hộ Sales thì thấy đủ (BR-022).
+ *
+ * `null` = truy vấn HỎNG, khác hẳn `[]` = tháng chưa có ngày nào. Tầng gọi phải
+ * phân biệt: in `0 ₫` cho một tháng thực ra có số liệu là nói sai trên một tấm
+ * ảnh gửi cho cấp trên, nên khi `null` thì thẻ bỏ hẳn cụm lũy kế.
+ */
+export async function listMonthToDateMetrics(
+  supabase: SupabaseClient<Database>,
+  salesId: string,
+  range: { from: string; to: string },
+): Promise<MonthToDateRow[] | null> {
+  const { data, error } = await supabase
+    .from('daily_reports')
+    .select(MONTH_TO_DATE_COLUMNS)
+    .eq('sales_id', salesId)
+    .gte('report_date', range.from)
+    .lte('report_date', range.to)
+    .returns<MonthToDateRow[]>();
+
+  if (error) {
+    // NFR-014: chi tiết kỹ thuật chỉ ở log server.
+    console.error('[listMonthToDateMetrics]', error.code, error.message);
     return null;
   }
 

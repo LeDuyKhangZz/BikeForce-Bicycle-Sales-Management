@@ -16,15 +16,23 @@
  *  Mọi con số đi qua `lib/kpi.ts` — file này KHÔNG tự tính `%` và KHÔNG tự ghép
  *  đơn vị (NFR-012, DEC-038).
  */
+import { formatThousands } from '@/lib/currency';
 import {
   calculateAchievement,
-  calculateCustomerWorkRate,
   formatMetricValue,
   formatMetricValueCompact,
   type AchievementResult,
 } from '@/lib/kpi';
-import { formatVietnamDate } from '@/lib/date';
-import { KPI_METRIC_ROWS, type KpiMetricSource } from '@/lib/reports/metric-rows';
+import {
+  formatVietnamDate,
+  formatVietnamMonth,
+  formatVietnamShortDate,
+  getVietnamMonthToDateRange,
+  shiftVietnamDate,
+  type MonthToDateRange,
+} from '@/lib/date';
+import { KPI_METRIC_ROWS, kpiMetricRow, type KpiMetricSource } from '@/lib/reports/metric-rows';
+import type { MonthToDateSummary } from '@/lib/reports/month-summary';
 import type { Database } from '@/types/database.types';
 
 type DailyReportRow = Database['public']['Tables']['daily_reports']['Row'];
@@ -38,8 +46,17 @@ type ReportStatus = Database['public']['Enums']['report_status'];
  */
 export const MAX_SHARE_ROUTE_CHARS = 104;
 
-/** Tương đương **4 dòng** ở cỡ chữ 30px, cùng cách ước lượng như trên. */
-export const MAX_SHARE_NOTE_CHARS = 232;
+/**
+ * Tương đương **3 dòng** ở cỡ chữ 32px, cùng cách ước lượng như trên.
+ *
+ * ⚠ **PHASE 17 (DEC-068): hạ từ 232 (4 dòng) xuống 174 — đừng nâng lại.** Cụm
+ * lũy kế tháng chiếm thêm ~300px ngay phía trên khối ghi chú. Ở ca xấu nhất
+ * (tên Sales 2 dòng + tuyến 2 dòng + ghi chú kịch trần) tấm chiều vượt quá
+ * 1920px, và Satori không cắt hộ — nó nén các khối cho tới khi chữ chồng lên
+ * nhau (ISSUE-032). `flexShrink: 0` trong component là hàng rào cuối; con số
+ * này là hàng rào đầu, để ghi chú hiếm khi chạm tới hàng rào đó.
+ */
+export const MAX_SHARE_NOTE_CHARS = 174;
 
 /** Dấu báo "còn nữa" — cùng ký tự `…` mà font nhúng đã xác nhận có glyph. */
 const ELLIPSIS = '…';
@@ -182,30 +199,45 @@ export type ShareCardModel = {
   readonly routeText: string | null;
   readonly metrics: readonly ShareCardMetricRow[];
   /**
-   * Khối nhấn mạnh dưới bảng — PHASE 14, **DEC-056**.
+   * Cụm lũy kế tháng dưới bảng — PHASE 17, **DEC-068**. Có ở **cả hai** biến thể.
    *
-   * Trước đây chỗ này là "DOANH THU THỰC ĐẠT" (số tiền đầy đủ). Nó lặp lại đúng
-   * con số đã có ở dòng thứ ba của bảng ngay bên trên, nên nhìn tấm ảnh ra hai
-   * lần cùng một thông tin. Nay là **"Số khách làm việc"** — một tỉ lệ KHÔNG
-   * xuất hiện ở đâu khác trên thẻ.
+   * ⚠ Chỗ này TRƯỚC ĐÂY là khối "Số khách làm việc" (DEC-056, nền cam nhạt).
+   * Người dùng yêu cầu bỏ hẳn khối đó ngày 2026-08-14 và thay bằng thành tích
+   * tháng — sếp của họ cần thấy cả tháng chứ không chỉ một ngày. Đừng thêm lại
+   * khối cũ: `calculateCustomerWorkRate()` vẫn còn trong `lib/kpi.ts` (cùng test
+   * của nó) nhưng **không tầng trình bày nào gọi tới nữa**.
    *
-   * `null` ở bản **sáng**: buổi sáng chưa có số thực đạt nào để chia (DEC-058).
+   * `null` khi truy vấn lũy kế hỏng — khi đó thẻ **bỏ hẳn cụm** thay vì in `0 ₫`.
    */
-  readonly workRate: ShareCardWorkRate | null;
+  readonly monthly: ShareCardMonthly | null;
   readonly noteText: string | null;
 };
 
-export type ShareCardWorkRate = {
-  /** `'50,0%'` | `'—'` — đã đi qua `lib/kpi.ts`, không tự làm tròn ở đây. */
-  readonly display: string;
+/** Một dòng của cụm lũy kế: nhãn trái, số phải. */
+export type ShareCardMonthlyRow = {
+  readonly label: string;
+  readonly valueText: string;
+};
+
+export type ShareCardMonthly = {
+  /** `'TỔNG THÁNG 08/2026'` — in hoa theo nhịp các tiêu đề khối khác của thẻ. */
+  readonly title: string;
   /**
-   * Dòng phụ giải thích tỉ lệ trên: `'5 khách / 10 điểm'`.
+   * Dòng phụ nói rõ mốc cộng: `'Tính đến hết ngày 20/08/2026'`.
    *
-   * `null` khi thiếu một trong hai vế — khi đó `display` cũng là `'—'` và một
-   * dòng "— / —" chỉ làm nhiễu. Cả hai vế đều đi qua `formatMetricValue()` nên
-   * đơn vị vẫn chỉ được ghép ở đúng một nơi (DEC-025).
+   * Bắt buộc phải có, và đây là lý do: tấm ảnh **sáng** ngày 21 cộng đến hết
+   * ngày 20 chứ không phải ngày 21. Không nói ra thì người nhận trên Zalo — vốn
+   * không có ngữ cảnh nào ngoài tấm ảnh — sẽ đọc con số đó là "tính cả hôm nay".
    */
-  readonly detailText: string | null;
+  readonly rangeText: string;
+  readonly rows: readonly ShareCardMonthlyRow[];
+};
+
+/** Đầu vào lũy kế của `buildShareCardModel()`: số đã cộng + mốc đã cộng tới. */
+export type ShareCardMonthlySource = {
+  /** Khoảng đã dùng để cộng — đến thẳng từ `shareMonthRange()`. */
+  readonly range: MonthToDateRange;
+  readonly summary: MonthToDateSummary;
 };
 
 /**
@@ -242,7 +274,10 @@ function optionalText(value: string | null): string | null {
  * Hàm này **thuần**: không đọc đồng hồ, không chạm mạng, không chạm database.
  * Nhờ vậy mọi edge case của Phase 6 là một lời gọi hàm trong unit test.
  */
-export function buildShareCardModel(source: ShareCardSource): ShareCardModel {
+export function buildShareCardModel(
+  source: ShareCardSource,
+  monthly: ShareCardMonthlySource | null,
+): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
     const actual = source[row.actualColumn];
@@ -271,31 +306,87 @@ export function buildShareCardModel(source: ShareCardSource): ShareCardModel {
     employeeCode: optionalText(source.sales.employee_code),
     routeText: route === null ? null : truncateText(route, MAX_SHARE_ROUTE_CHARS),
     metrics,
-    // Bản sáng không có khối tỉ lệ: cả tử lẫn mẫu đều chưa tồn tại. Chặn ở đây
-    // chứ không để component tự đoán — nó không được biết luật này (AGENTS.md §1.3).
-    workRate: variant === 'EVENING' ? buildWorkRate(source) : null,
+    // Cụm lũy kế có ở CẢ HAI biến thể (DEC-068) — khác hẳn khối "Số khách làm
+    // việc" cũ vốn chỉ có ở bản chiều. Bản sáng vẫn có thành tích tháng để khoe,
+    // nó chỉ dừng ở hôm qua thay vì hôm nay.
+    monthly: monthly === null ? null : buildMonthly(monthly),
     noteText: note === null ? null : truncateText(note, MAX_SHARE_NOTE_CHARS),
   };
 }
 
+/* ---------------------------------------------------------------------------
+ * Cụm lũy kế tháng — PHASE 17, DEC-068
+ * ------------------------------------------------------------------------- */
+
 /**
- * Khối "Số khách làm việc" — DEC-056.
- *
- * Phép chia nằm ở `lib/kpi.ts`; hàm này chỉ ghép hai chuỗi đã format. Dòng phụ
- * chỉ dựng khi CẢ HAI vế có số thật: `'— / —'` không giải thích được gì.
+ * Đơn vị của dòng thứ ba. KHÔNG nằm ở `METRIC_UNIT` của `lib/kpi.ts` vì "ngày
+ * đạt KPI" **không phải chỉ tiêu thứ năm**: nó không có cột `target_*`, không
+ * vào bảng bốn dòng, và không có ngưỡng BR-023 nào áp lên nó — cùng lý do
+ * `calculateCustomerWorkRate()` từng đứng riêng (DEC-056).
  */
-function buildWorkRate(source: ShareCardSource): ShareCardWorkRate {
-  const customers = source.actual_customer_visits;
-  const points = source.actual_visit_points;
+const ACHIEVED_DAY_UNIT = 'ngày';
 
-  const { display } = calculateCustomerWorkRate(customers, points);
+/**
+ * Mốc dừng của lũy kế, theo BIẾN THỂ — đây là chỗ câu chốt của người dùng ngày
+ * 2026-08-14 được viết thành code:
+ *
+ * > *"báo cáo được làm chiều ngày 21 tháng 9 thì các chỉ số phải lấy từ ngày 1
+ * > đến 21 (bao gồm cả thực đạt của 21). nếu là sáng ngày 21 tháng 9 thì chỉ
+ * > cộng đến chỉ số thực đạt của 20 vì ngày 21 chưa có thực đạt"*
+ *
+ * ⚠ Việc lùi một ngày ở bản sáng là CỐ Ý và **không thừa**, dù cột `actual_*`
+ * của ngày hôm đó đang `null` nên cộng vào cũng ra 0. Lý do: khoảng truy vấn
+ * chính là thứ dòng "Tính đến hết ngày…" in ra. Nếu để `to = report_date` cho
+ * cả hai biến thể thì tấm ảnh sáng sẽ **nói** rằng nó đã tính cả hôm nay, trong
+ * khi hôm nay chưa có gì để tính — một câu sai trên tấm ảnh gửi cấp trên.
+ *
+ * Trả `null` chỉ khi `reportDate` không phải ngày thật; tầng gọi khi đó bỏ hẳn
+ * cụm lũy kế thay vì đoán bừa một khoảng.
+ */
+export function shareMonthRange(
+  reportDate: string,
+  variant: ShareCardVariant,
+): MonthToDateRange | null {
+  const throughDate =
+    variant === 'EVENING' ? reportDate : shiftVietnamDate(reportDate, -1);
 
-  const detailText =
-    customers === null || points === null
-      ? null
-      : `${formatMetricValue(customers, 'CUSTOMER_VISITS')} / ${formatMetricValue(points, 'VISIT_POINTS')}`;
+  if (throughDate === null) return null;
 
-  return { display, detailText };
+  return getVietnamMonthToDateRange(reportDate, throughDate);
+}
+
+/**
+ * Ba con số đã cộng → ba dòng chữ. Hàm này không cộng gì và không tự ghép đơn vị
+ * tiền: hai vế tiền đi qua `formatMetricValue()` của `lib/kpi.ts` như mọi nơi
+ * khác (DEC-025, AGENTS.md §9).
+ *
+ * Số tiền ở đây dùng dạng **ĐẦY ĐỦ** chứ không rút gọn như trong bảng: cụm này
+ * chỉ có hai cột (nhãn · số) trên cả bề rộng 968px nên không có sức ép chỗ, và
+ * đây là con số cấp trên sẽ đọc kỹ nhất trên tấm ảnh.
+ */
+function buildMonthly({ range, summary }: ShareCardMonthlySource): ShareCardMonthly {
+  return {
+    title: `TỔNG ${formatVietnamMonth(range.month).toLocaleUpperCase('vi-VN')}`,
+    rangeText: range.isEmpty
+      ? // Ảnh sáng của ngày 01: chưa có ngày nào trong tháng để cộng. Nói thẳng
+        // ra, vì ba số 0 mà không có lời giải thích trông như lỗi hệ thống.
+        'Chưa có ngày nào trong tháng'
+      : `Tính đến hết ngày ${formatVietnamShortDate(range.to)}`,
+    rows: [
+      {
+        label: `${kpiMetricRow('SALES_AMOUNT').shortLabel} tháng`,
+        valueText: formatMetricValue(summary.salesAmount, 'SALES_AMOUNT'),
+      },
+      {
+        label: `${kpiMetricRow('REVENUE').shortLabel} tháng`,
+        valueText: formatMetricValue(summary.revenue, 'REVENUE'),
+      },
+      {
+        label: 'Ngày đạt KPI',
+        valueText: `${formatThousands(summary.kpiAchievedDays)} ${ACHIEVED_DAY_UNIT}`,
+      },
+    ],
+  };
 }
 
 /* ---------------------------------------------------------------------------

@@ -1,6 +1,68 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **Bảo trì FR-019 — tên file ảnh Zalo (DEC-067)** | Last updated: 2026-08-12
+> Status: ACTIVE | Phase: **17 — Lũy kế tháng trên thẻ ảnh (DEC-068)** | Last updated: 2026-08-14
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 028 — PHASE 17, DEC-068 + ISSUE-032 — ĐÃ ĐÓNG)
+
+Người dùng yêu cầu: thêm vào **cả hai** tấm ảnh một cụm dưới dòng "Khách hàng" gồm **doanh số tổng
+tháng · doanh thu tổng tháng · số ngày đạt KPI của tháng**, và **bỏ dòng tô vàng "SỐ KHÁCH LÀM VIỆC"**
+ở ảnh cuối ngày.
+
+### Nghiệp vụ đã chốt — ĐỪNG HỎI LẠI
+
+| Điểm | Người dùng chốt ngày 2026-08-14 |
+|---|---|
+| "Số ngày đặt KPI" | **Số ngày ĐẠT KPI** (BR-024 — đủ cả 4 chỉ tiêu ≥ 100%), KHÔNG phải số ngày đã báo cáo |
+| Hai tổng tiền | **Thực đạt** (`actual_sales_amount`, `actual_revenue`) |
+| Mốc cộng | Từ **ngày 01 của tháng chứa báo cáo**. Bản **chiều** cộng tới hết **ngày báo cáo**; bản **sáng** cộng tới **hết ngày HÔM TRƯỚC** — *"sáng ngày 21 thì chỉ cộng đến thực đạt của 20 vì ngày 21 chưa có thực đạt"* |
+| Không đọc đồng hồ | Xuất lại ảnh của ngày cũ phải ra **đúng con số của ngày đó** |
+
+### Cấu trúc code mới
+
+| File | Vai trò |
+|---|---|
+| `lib/date.ts` | thêm `formatVietnamShortDate()`, `shiftVietnamDate()`, `getVietnamMonthToDateRange(anchorDate, throughDate)` |
+| `lib/reports/month-summary.ts` *(mới)* | `summarizeMonthToDate()` — cộng/đếm **thuần**, đi qua `calculateAchievement()` + `isKpiAchievedDay()` |
+| `services/reports.ts` | thêm `listMonthToDateMetrics()`; `SHARE_REPORT_COLUMNS` nay có **`sales_id`** |
+| `lib/reports/share-card.ts` | bỏ `workRate`, thêm `monthly` + `shareMonthRange()`; `buildShareCardModel()` nhận **2 tham số** |
+
+⚠ **`getVietnamMonthToDateRange()` nhận HAI tham số và đó là cố ý.** Ảnh sáng ngày 01 dừng ở `31/08`
+nhưng vẫn phải cộng cho **tháng 9**; suy tháng ra từ mốc dừng là cộng nhầm nguyên tháng trước.
+
+| Cổng đã chạy | Kết quả thật |
+|---|---|
+| typecheck / lint / build | ✅ exit 0; build 20 route |
+| `npm test` | ✅ **841/841** (33 file) — trước phiên là 802 |
+| E2E `share-image.spec.ts` | ✅ **20 passed / 7 skipped / 0 failed** trên 3 project |
+| Nhìn tận mắt | ✅ **4 tấm PNG 1080×1920 thật**: sáng/chiều × (thường, xấu nhất) |
+
+### ⚠ ISSUE-032 — bài học của phiên này
+
+Render ca **xấu nhất** (tên Sales 2 dòng + tuyến 2 dòng + ghi chú kịch trần) thì thẻ ảnh **chồng chữ**:
+tên đè lên ngày, dòng chân đè lên footer. Nguyên nhân: thẻ cao **cố định 1920px**, mà `flex-shrink`
+mặc định là **1**, nên Yoga nén mọi khối lại; hộp co còn chữ thì không. **Lỗi này có sẵn từ trước
+DEC-068** — chưa ai render ca xấu nhất bao giờ.
+
+Đã đóng bằng: `flexShrink: 0` (hằng `NO_SHRINK`) cho **mọi** khối bắt buộc, đúng **một** khối được co là
+ghi chú kèm `overflow: 'hidden'`, `MAX_SHARE_NOTE_CHARS` 232 → **174**, `ROW_METRICS.MORNING.paddingY`
+70 → **44**. **Đừng gỡ `flexShrink: 0` và đừng nâng lại hai con số đó.**
+
+### Next Exact Steps
+
+1. Xem lại hai tấm ảnh trên máy thật sau khi Vercel build xong; nếu muốn đổi chữ, chỗ sửa là
+   `buildMonthly()` trong `lib/reports/share-card.ts` (tiêu đề `TỔNG THÁNG …`, dòng `Tính đến hết ngày …`,
+   ba nhãn), **không** sửa trong component.
+2. Nếu muốn E2E khoá cụm lũy kế: thêm bài vào `e2e/share-image.spec.ts`, cần seed **nhiều ngày** trong
+   cùng tháng cho một Sales rồi so `content-length`/ảnh — hiện chưa có.
+3. Nợ cũ không đổi: rotate service role key (ISSUE-011) · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
+
+### Ghi chú hạ tầng
+
+Supabase local bị xoá container từ phiên trước, người dùng cho phép dựng lại. WSL `docker-desktop` ở
+trạng thái `Stopped` ⇒ chỉ cần khởi động **Docker Desktop** rồi `npx supabase start`; **không** cần
+`wsl --shutdown`, **không** phải tắt stack của dự án khác.
 
 ---
 

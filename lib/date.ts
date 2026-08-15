@@ -109,6 +109,50 @@ export function formatVietnamDate(date: string): string {
   return `${weekday}, ${day}/${month}/${year}`;
 }
 
+/**
+ * `'2026-08-14'` → `'14/08/2026'` — bản NGẮN của `formatVietnamDate()`.
+ *
+ * Thêm ở PHASE 17 (DEC-068) cho dòng phụ "Tính đến ngày …" của cụm lũy kế tháng
+ * trên thẻ ảnh 9:16: ở đó thứ trong tuần không mang thông tin nào, chỉ chiếm chỗ.
+ *
+ * Cùng hợp đồng lỗi với `formatVietnamDate()`: đầu vào rác trả `'—'` chứ không
+ * ném (DEC-033). KHÔNG cắt chuỗi từ `formatVietnamDate()` — một hàm hiển thị
+ * không nên là đầu vào parse của hàm hiển thị khác.
+ */
+export function formatVietnamShortDate(date: string): string {
+  if (typeof date !== 'string' || !isValidVietnamDate(date)) {
+    return INVALID_DATE_DISPLAY;
+  }
+
+  const [year, month, day] = date.split('-') as [string, string, string];
+
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Lùi/tiến `delta` NGÀY: `('2026-09-01', -1)` → `'2026-08-31'`.
+ *
+ * Thêm ở PHASE 17 (DEC-068). Người dùng chốt: tấm ảnh **sáng** ngày 21 chỉ được
+ * cộng lũy kế **đến hết ngày 20**, vì ngày 21 chưa có thực đạt nào. Việc lùi một
+ * ngày đó phải qua đây chứ không được làm bằng phép trừ chuỗi ở tầng gọi — ngày
+ * 01 của tháng lùi sang tháng trước, và tháng trước có 28/29/30/31 ngày.
+ *
+ * `Date.UTC` tự xử lý tràn tháng và năm nhuận. Trả `null` cho đầu vào sai định
+ * dạng, cùng hợp đồng với `shiftVietnamMonth()`.
+ */
+export function shiftVietnamDate(date: string, delta: number): string | null {
+  if (typeof date !== 'string' || !isValidVietnamDate(date)) return null;
+  if (!Number.isInteger(delta)) return null;
+
+  const [year, month, day] = date.split('-') as [string, string, string];
+  const shifted = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day) + delta));
+
+  const shiftedMonth = String(shifted.getUTCMonth() + 1).padStart(2, '0');
+  const shiftedDay = String(shifted.getUTCDate()).padStart(2, '0');
+
+  return `${shifted.getUTCFullYear()}-${shiftedMonth}-${shiftedDay}`;
+}
+
 /* ===========================================================================
  * NHÓM HÀM THÁNG — PHASE 7 (FR-021), dùng lại ở PHASE 9 (FR-028)
  * ========================================================================= */
@@ -248,4 +292,55 @@ export function shiftVietnamMonth(yyyyMM: string, delta: number): string | null 
   const shifted = new Date(Date.UTC(Number(yearPart), Number(monthPart) - 1 + delta, 1));
 
   return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+/** Khoảng "từ đầu tháng đến một mốc" — PHASE 17, DEC-068. Inclusive hai đầu. */
+export type MonthToDateRange = {
+  /** `'YYYY-MM'` — tháng của báo cáo đang xuất ảnh. */
+  month: string;
+  /** Luôn là ngày 01 của `month`. */
+  from: string;
+  /** Mốc cuối, inclusive. Có thể NHỎ HƠN `from` — xem `isEmpty`. */
+  to: string;
+  /**
+   * `true` khi `to < from`, tức khoảng KHÔNG chứa ngày nào.
+   *
+   * Ca thật duy nhất: tấm ảnh **sáng của ngày 01**. Lũy kế lúc đó phải cộng đến
+   * hết ngày 31 tháng trước, mà con số đang tính là của **tháng này** ⇒ chưa có
+   * ngày nào để cộng. Đây là một trạng thái hợp lệ, không phải lỗi — nên nó là
+   * một cờ chứ không phải `null`: tầng gọi vẫn hiện đủ ba dòng bằng 0, chỉ đổi
+   * dòng phụ để không nói dối về mốc thời gian.
+   */
+  isEmpty: boolean;
+};
+
+/**
+ * `('2026-09-21', '2026-09-20')` → `{ month: '2026-09', from: '2026-09-01',
+ * to: '2026-09-20', isEmpty: false }` — PHASE 17, DEC-068.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO HAI THAM SỐ CHỨ KHÔNG PHẢI MỘT
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Tháng cần cộng và mốc cần dừng KHÔNG phải lúc nào cũng nằm cùng một tháng.
+ *  Tấm ảnh sáng ngày `2026-09-01` dừng ở `2026-08-31`: suy tháng ra từ mốc dừng
+ *  sẽ cho ra **tháng 8**, tức cộng nhầm cả tháng trước vào một tấm ảnh của
+ *  tháng 9. `anchorDate` (ngày của báo cáo) quyết định THÁNG; `throughDate`
+ *  quyết định điểm DỪNG. Hai vai trò khác nhau nên là hai tham số.
+ *
+ *  Hàm thuần, không đọc đồng hồ — mốc "hôm nay" không tham gia: xuất lại ảnh
+ *  của một ngày cũ phải ra đúng con số của ngày đó (yêu cầu người dùng chốt
+ *  ngày 2026-08-14).
+ */
+export function getVietnamMonthToDateRange(
+  anchorDate: string,
+  throughDate: string,
+): MonthToDateRange | null {
+  if (!isValidVietnamDate(anchorDate) || !isValidVietnamDate(throughDate)) return null;
+
+  const month = anchorDate.slice(0, 7);
+  const from = `${month}-01`;
+
+  // So sánh chuỗi `YYYY-MM-DD` là so sánh thời gian đúng — đó là lý do dự án
+  // dùng ISO ở mọi nơi (BR-005).
+  return { month, from, to: throughDate, isEmpty: throughDate < from };
 }

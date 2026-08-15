@@ -10,11 +10,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   formatVietnamDate,
   formatVietnamMonth,
+  formatVietnamShortDate,
   getVietnamCurrentMonth,
   getVietnamMonthRange,
+  getVietnamMonthToDateRange,
   getVietnamToday,
   isValidVietnamDate,
   resolveVietnamMonth,
+  shiftVietnamDate,
   shiftVietnamMonth,
 } from './date';
 
@@ -358,5 +361,94 @@ describe('resolveVietnamMonth — chuẩn hoá ?month= từ URL (DEC-040)', () =
   it('tháng 2 năm nhuận qua đường fallback vẫn ra 29 ngày', () => {
     freezeAt('2028-02-15T03:00:00Z');
     expect(resolveVietnamMonth('rác')).toMatchObject({ month: '2028-02', to: '2028-02-29' });
+  });
+});
+
+describe('formatVietnamShortDate — dòng "Tính đến hết ngày…" của thẻ ảnh (DEC-068)', () => {
+  it('bỏ thứ trong tuần, giữ đủ ngày/tháng/năm', () => {
+    expect(formatVietnamShortDate('2026-08-14')).toBe('14/08/2026');
+  });
+
+  it('giữ số 0 đứng đầu — tên ngày trên ảnh phải luôn hai chữ số', () => {
+    expect(formatVietnamShortDate('2026-01-05')).toBe('05/01/2026');
+  });
+
+  it('đầu vào rác trả "—" chứ KHÔNG ném (DEC-033)', () => {
+    expect(formatVietnamShortDate('2026-02-30')).toBe('—');
+    expect(formatVietnamShortDate('hôm nay')).toBe('—');
+  });
+});
+
+describe('shiftVietnamDate — lùi một ngày cho tấm ảnh sáng (DEC-068)', () => {
+  it('lùi trong cùng tháng', () => {
+    expect(shiftVietnamDate('2026-09-21', -1)).toBe('2026-09-20');
+  });
+
+  it('lùi qua đầu tháng thì sang tháng trước, đúng số ngày của tháng đó', () => {
+    expect(shiftVietnamDate('2026-09-01', -1)).toBe('2026-08-31');
+    expect(shiftVietnamDate('2026-07-01', -1)).toBe('2026-06-30');
+  });
+
+  it('lùi qua đầu năm', () => {
+    expect(shiftVietnamDate('2026-01-01', -1)).toBe('2025-12-31');
+  });
+
+  it('tháng 2 năm nhuận và năm không nhuận', () => {
+    expect(shiftVietnamDate('2028-03-01', -1)).toBe('2028-02-29');
+    expect(shiftVietnamDate('2026-03-01', -1)).toBe('2026-02-28');
+  });
+
+  it('tiến ngày cũng đúng — hàm không chỉ dùng cho delta âm', () => {
+    expect(shiftVietnamDate('2026-08-31', 1)).toBe('2026-09-01');
+  });
+
+  it('KHÔNG đọc đồng hồ: kết quả không đổi dù máy đang ở múi giờ nào', () => {
+    freezeAt('2026-09-21T18:30:00Z');
+    expect(shiftVietnamDate('2026-09-21', -1)).toBe('2026-09-20');
+  });
+
+  it('đầu vào sai trả null', () => {
+    expect(shiftVietnamDate('2026-02-30', -1)).toBeNull();
+    expect(shiftVietnamDate('2026-09-21', 1.5)).toBeNull();
+  });
+});
+
+describe('getVietnamMonthToDateRange — lũy kế tháng của thẻ ảnh (DEC-068)', () => {
+  it('từ ngày 01 của tháng chứa báo cáo, đến đúng mốc dừng được truyền vào', () => {
+    expect(getVietnamMonthToDateRange('2026-09-21', '2026-09-21')).toEqual({
+      month: '2026-09',
+      from: '2026-09-01',
+      to: '2026-09-21',
+      isEmpty: false,
+    });
+  });
+
+  it('THÁNG lấy từ ngày báo cáo, KHÔNG lấy từ mốc dừng', () => {
+    // Ảnh sáng ngày 01/09 dừng ở 31/08. Nếu suy tháng ra từ mốc dừng thì cụm
+    // lũy kế của một tấm ảnh tháng 9 sẽ cộng nguyên tháng 8 — sai hoàn toàn.
+    const range = getVietnamMonthToDateRange('2026-09-01', '2026-08-31');
+
+    expect(range?.month).toBe('2026-09');
+    expect(range?.from).toBe('2026-09-01');
+    expect(range?.isEmpty).toBe(true);
+  });
+
+  it('mốc dừng nằm trong tháng thì isEmpty = false, kể cả khi trùng ngày 01', () => {
+    expect(getVietnamMonthToDateRange('2026-09-01', '2026-09-01')?.isEmpty).toBe(false);
+  });
+
+  it('hàm THUẦN — không đọc đồng hồ, xuất lại ảnh cũ vẫn ra đúng khoảng cũ', () => {
+    freezeAt('2027-05-05T03:00:00Z');
+    expect(getVietnamMonthToDateRange('2026-09-10', '2026-09-10')).toEqual({
+      month: '2026-09',
+      from: '2026-09-01',
+      to: '2026-09-10',
+      isEmpty: false,
+    });
+  });
+
+  it('ngày rác ở bất kỳ vế nào cũng trả null', () => {
+    expect(getVietnamMonthToDateRange('2026-02-30', '2026-02-28')).toBeNull();
+    expect(getVietnamMonthToDateRange('2026-02-28', 'rác')).toBeNull();
   });
 });
