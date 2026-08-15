@@ -2701,3 +2701,17 @@ chiếm chỗ**, kể cả khi không cháy. Bốn thanh nay thẳng hàng tuy�
 | **Nhìn tận mắt** | ✅ tấm 4 trạng thái (250% cháy · 100% không cháy · 85% · 30%), tấm ca xấu nhất, và tấm **phóng to ngọn lửa 220×280** để kiểm hình dạng path |
 
 **Remaining:** E2E chưa khoá riêng thanh/lửa (thuộc cùng nhóm nợ với cụm lũy kế của Entry 028).
+
+**Bổ sung cùng ngày (Entry 029b) — dải lửa bọc thanh + ngân sách ghi chú động.** Người dùng xem bản một
+ngọn lửa ở mút phải, đưa ảnh mẫu và nói rõ ý muốn: lửa **cháy bọc cả thanh**, *"nhưng đừng để lửa che
+chữ"*.
+
+- Dải lửa ghép **13 lưỡi SVG** cao thấp so le dọc đúng 200px bề ngang thanh; lửa đứng trước pill trong
+  DOM nên thanh đè lên chân lửa. Khối thanh cao 48px ở **mọi** dòng ⇒ vẫn thẳng hàng, lửa không chạm nhãn.
+- Hai giới hạn Satori đã va phải: **không có `filter: blur()`** (⇒ không làm được quầng sáng mờ như ảnh
+  mẫu, đã nói rõ với người dùng) và **không dựng `transform` trên SVG** (⇒ ghép bằng flexbox).
+- Lượt đầu dùng path icon lửa "mập" cho cả dải → nhìn ra **răng cưa**; đổi sang lưỡi mảnh tỉ lệ 12/24.
+- **`shareNoteBudget()`** — ngân sách ghi chú nay tính từ dữ liệu. Đã hạ hằng số `MAX_SHARE_NOTE_CHARS`
+  hai lần (232 → 174 → 130) mà ca xấu nhất vẫn bị **chém ngang giữa dòng chữ**; thứ thiếu là *chỗ*, mà
+  chỗ phụ thuộc tên/tuyến dài bao nhiêu. Hết ngân sách thì bỏ hẳn khối ghi chú, giữ tuyến.
+- Vitest **858/858**; đã render và nhìn lại ba tấm (bốn dòng cùng cháy · một dòng cháy · ca xấu nhất).

@@ -2195,3 +2195,35 @@ thấy ngay ai vượt chỉ tiêu. Con số `%` một mình không cho cảm gi
 khó. Vitest **851/851**. Đã **render PNG thật và nhìn tận mắt**: bốn trạng thái thanh trong cùng một tấm
 (250% cháy · đúng 100% không cháy · 85% · 30%), tấm ca xấu nhất, và một tấm phóng to ngọn lửa 220×280 để
 kiểm hình dạng path.
+
+### DEC-069 — BỔ SUNG cùng ngày: dải lửa bọc thanh, và ngân sách ghi chú ĐỘNG
+
+Người dùng xem bản đầu (một ngọn lửa nhỏ ở mút phải), đưa ảnh mẫu và nói rõ ý muốn: lửa phải **cháy bọc
+cả thanh**, *"nhưng đừng để lửa che chữ"*. Hai thay đổi kéo theo:
+
+**1. Dải lửa.** Ghép **13 lưỡi lửa** cao thấp so le (20→34px), mỗi lưỡi là một `<svg><path>` hai lớp
+(viền `#C2410C`/`#E9A04F`, lõi `#FCD34D`), xếp bằng flexbox dọc theo đúng 200px bề ngang thanh. Lửa nằm
+**trước pill trong DOM** nên thanh vẽ đè lên chân lửa — dải trông như đang liếm lên từ dưới thanh. Khối
+thanh cao `34 + 14 = 48px` ở **mọi** dòng kể cả không cháy, nên bốn thanh vẫn thẳng hàng và lửa không
+bao giờ chạm nhãn chữ.
+
+*Hai giới hạn của Satori đã va phải:* nó **không** hỗ trợ `transform` trên phần tử SVG đáng tin (nên
+không nhân bản được một ngọn bằng `<g transform>`, phải ghép bằng flexbox), và **không** có
+`filter: blur()` (nên **quầng sáng mờ** quanh lửa như ảnh mẫu là thứ không thể dựng — đã nói rõ với
+người dùng). Lượt đầu dùng path icon lửa "mập" cho cả dải và kết quả nhìn ra **răng cưa** chứ không ra
+lửa; path nay mảnh gấp đôi (tỉ lệ 12/24 thay vì 22/28).
+
+**2. Ngân sách ghi chú động — `shareNoteBudget()`.** Dải lửa ăn thêm ~56px mỗi dòng, và ở ca xấu nhất
+khối ghi chú bị **chém ngang giữa dòng chữ**. Đã hạ hằng số `MAX_SHARE_NOTE_CHARS` hai lần (232 → 174 →
+130) mà vẫn chém — vì thứ thiếu là **chỗ**, và chỗ thì phụ thuộc dữ liệu: tên Sales 2 dòng ăn ~77px,
+tuyến 2 dòng ăn ~48px.
+
+Nay ngân sách tính từ chính dữ liệu: mỗi dòng phát sinh ở phần đầu thẻ trừ đi một dòng ghi chú; hết
+ngân sách thì **bỏ hẳn khối ghi chú**. Ghi chú là thông tin ít quan trọng nhất trên thẻ, và không có nó
+vẫn tốt hơn hẳn một khối bị chém ngang trông như ảnh lỗi. Tuyến thì **giữ nguyên** — nó là thông tin của
+chuyến đi, không phải phần phụ.
+
+**Verification bổ sung:** 7 unit test mới cho `shareNoteBudget()` (đủ 4 tổ hợp dài/ngắn của tên × tuyến,
+ca không có tuyến, ca ngân sách 0 và ràng buộc không bao giờ âm). Vitest **858/858**. Đã render và nhìn
+lại **ba** tấm: bốn dòng cùng cháy, ca hỗn hợp (chỉ một dòng cháy — kiểm thẳng hàng), và ca xấu nhất
+(ghi chú tự ẩn, footer nguyên vẹn).

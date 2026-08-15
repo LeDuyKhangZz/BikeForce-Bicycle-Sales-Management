@@ -391,8 +391,15 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 - ❌ **Không** cho ngọn lửa của thanh tiến độ cháy ở đúng `100,0%`. Ngưỡng là **`percent > 100` nghiêm
   ngặt** — người dùng chốt ngày 2026-08-15: *"vượt chỉ tiêu là lớn 100% mới được, = 100% thì không được"*
   (DEC-069). Ca `target = 0 && actual > 0` vẫn cháy vì BR-015 gọi đó là vượt kế hoạch.
-- ❌ **Không** bỏ ô `PROGRESS.flameSlot` (30px) dù dòng đó không cháy — nó **luôn** phải chiếm chỗ, nếu
-  không thì dòng có lửa bị lệch 28px so với các dòng khác (DEC-069, đã render ra và thấy tận mắt).
+- ❌ **Không** bỏ khoảng trống dọc phía trên thanh (`FLAME_STRIP_HEIGHT`) ở những dòng không cháy — mọi
+  dòng đều phải cao bằng nhau, nếu không thì dòng có lửa bị lệch so với các dòng khác (DEC-069, đã render
+  ra và thấy tận mắt). Cùng lý do: đó cũng là khoảng giữ cho lửa **không chạm nhãn chữ**.
+- ❌ **Không** hứa quầng sáng mờ quanh ngọn lửa: Satori **không có `filter: blur()`**. Cũng đừng nhân bản
+  lưỡi lửa bằng `<g transform>` — Satori không dựng `transform` trên SVG đáng tin, dải lửa phải ghép bằng
+  flexbox (DEC-069).
+- ❌ **Không** quay lại đặt `MAX_SHARE_NOTE_CHARS` thành một hằng số cứng. Ngân sách ghi chú **phụ thuộc
+  dữ liệu** (tên 2 dòng ăn ~77px, tuyến 2 dòng ăn ~48px) nên phải qua `shareNoteBudget()`. Dự án đã cắt
+  hằng số hai lần (232 → 174 → 130) mà ca xấu nhất **vẫn bị chém ngang** — cắt dần không bao giờ tới đích.
 - ❌ **Không** dùng emoji 🔥 cho ngọn lửa, và **không** đổi thanh sang màu đỏ/cam khi vượt. Inter không có
   glyph emoji ⇒ Satori vẽ ô vuông rỗng; còn đổi màu thanh là đảo ngược tín hiệu ngay cạnh chữ `%` xanh.
 - ❌ **Không** nâng lại `ROW_METRICS.EVENING.paddingY` lên 30. Nó là **20** từ DEC-069 để bù chiều cao

@@ -21,14 +21,33 @@ tại rất đẹp rồi"*.
 ### Quy cách thanh (`ProgressBar` trong `daily-report-share-card.tsx`)
 
 Pill **200 × 14px**, bo tròn hoàn toàn, **viền 2px màu `status`**, fill đặc cùng màu.
-Ngọn lửa **SVG hai path** (`#E9A04F` ngoài / `#C2410C` trong), 22 × 28px.
+Khi vượt: **dải lửa 13 lưỡi SVG** bọc dọc thanh (viền `#C2410C`/`#E9A04F`, lõi `#FCD34D`).
 
-⚠ **Ô lửa `PROGRESS.flameSlot = 30px` LUÔN chiếm chỗ, kể cả khi không cháy — đừng "tối ưu" bỏ đi.**
-Lượt render đầu để lửa nằm trong luồng flex và dòng cháy có thanh **lệch 28px** so với ba dòng còn lại.
-Đó đúng là "đụng hàng" mà người dùng dặn tránh.
+> **Bản đầu là một ngọn lửa nhỏ ở mút phải — người dùng bác.** Họ đưa ảnh mẫu và nói rõ: lửa phải **cháy
+> bọc cả thanh**, *"nhưng đừng để lửa che chữ"*. Đừng quay lại bản một ngọn.
 
-⚠ **`ROW_METRICS.EVENING.paddingY` = 20** (hạ từ 30) để bù đúng 24px chiều cao thanh mỗi dòng. Nâng lại
-là tái diễn ISSUE-032 (chồng chữ).
+⚠ **Khối thanh cao `FLAME_STRIP_HEIGHT + 14 = 48px` ở MỌI dòng, kể cả dòng không cháy.** Bỏ khoảng trống
+đó đi thì dòng cháy lệch so với các dòng khác — đúng "đụng hàng" mà người dùng dặn tránh — và lửa sẽ
+chạm vào nhãn chữ.
+
+⚠ **Hai giới hạn của Satori đã va phải, đừng thử lại:** không có `filter: blur()` ⇒ **không thể** làm
+quầng sáng mờ như ảnh mẫu; không dựng `transform` trên SVG đáng tin ⇒ dải lửa phải **ghép bằng flexbox**,
+không nhân bản bằng `<g transform>`.
+
+⚠ **Lưỡi lửa phải MẢNH** (tỉ lệ 12/24). Lượt đầu dùng path icon lửa "mập" (22/28) cho cả dải và nhìn ra
+**răng cưa** chứ không ra lửa.
+
+⚠ **`ROW_METRICS.EVENING.paddingY` = 10** (hạ từ 30) để bù chiều cao khối thanh. Nâng lại là tái diễn
+ISSUE-032 (chồng chữ).
+
+### ⚠ Ngân sách ghi chú nay là ĐỘNG — `shareNoteBudget()`
+
+`MAX_SHARE_NOTE_CHARS` **không còn là trần dùng chung**. Ngân sách tính từ dữ liệu: tên Sales 2 dòng ăn
+~77px, tuyến 2 dòng ăn ~48px, mỗi dòng phát sinh trừ đi một dòng ghi chú; hết ngân sách thì **bỏ hẳn khối
+ghi chú** (tuyến thì giữ).
+
+**Vì sao:** dự án đã cắt hằng số hai lần (232 → 174 → 130) mà ca xấu nhất **vẫn bị chém ngang giữa dòng
+chữ**. Thứ thiếu là *chỗ*, và chỗ phụ thuộc dữ liệu — một hằng số không bao giờ đúng cho mọi ca.
 
 ⚠ **Không dùng emoji 🔥.** Font Inter nhúng trong `public/fonts/` **không có glyph emoji** ⇒ Satori vẽ ô
 vuông rỗng lên tấm ảnh gửi khách. Lửa là SVG path.

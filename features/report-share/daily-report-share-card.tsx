@@ -160,11 +160,11 @@ const NO_SHRINK = { flexShrink: 0 } as const;
  */
 const ROW_METRICS = {
   MORNING: { paddingY: 44, label: 42, value: 56 },
-  // ⚠ PHASE 18 (DEC-069): `EVENING.paddingY` hạ 30 → 20 để **bù đúng** chiều cao
-  // thanh tiến độ mới (14px + 10px marginTop = 24px mỗi dòng, tức +96px cho cả
-  // bảng). Không bù thì bản chiều vượt 1920px và chữ chồng lên nhau — ISSUE-032
-  // đã dạy đúng bài này một lần rồi.
-  EVENING: { paddingY: 20, label: 36, value: 36 },
+  // ⚠ PHASE 18 (DEC-069): `EVENING.paddingY` hạ 30 → 10 để **bù** chiều cao khối
+  // thanh tiến độ (dải lửa 34px + thanh 14px + 8px lề = 56px mỗi dòng). Không bù
+  // thì bản chiều vượt 1920px và chữ chồng lên nhau — ISSUE-032 đã dạy đúng bài
+  // này một lần rồi.
+  EVENING: { paddingY: 10, label: 36, value: 36 },
 } as const;
 
 type HeaderCellSpec = {
@@ -220,16 +220,6 @@ const PROGRESS = {
   height: 14,
   /** Viền pill — cũng là thứ khiến "phần chưa đạt" nhìn thấy được. */
   border: 2,
-  /**
-   * Chỗ dành sẵn cho ngọn lửa ở bên phải — **luôn chiếm chỗ, kể cả khi không
-   * cháy**, và đó là toàn bộ lý do nó tồn tại.
-   *
-   * Lượt render đầu để lửa đẩy thanh sang trái, nên dòng vượt chỉ tiêu có thanh
-   * **lệch 28px** so với ba dòng còn lại — đúng thứ người dùng dặn tránh khi
-   * nói *"cẩn thận bị đụng hàng"*. Giữ ô trống này thì bốn thanh thẳng hàng
-   * tuyệt đối dù dòng nào cháy.
-   */
-  flameSlot: 30,
 } as const;
 
 /** Bán kính pill = nửa chiều cao ⇒ hai đầu tròn hoàn toàn. */
@@ -255,33 +245,109 @@ const PROGRESS_INNER_HEIGHT = PROGRESS.height - PROGRESS.border * 2;
  *  3. **Màu lửa lấy từ tone logo** (`#E9A04F` → `#C2410C`), không phải đỏ tươi —
  *     để nó hoà vào thẻ chứ không nhảy ra như một sticker.
  */
+/**
+ * Ba tầng màu của lửa, xếp từ ngoài vào trong — đúng cách một ngọn lửa thật
+ * sáng dần về lõi. Tất cả đều là **tone cam của logo**, không phải đỏ tươi, để
+ * dải lửa hoà vào thẻ chứ không nhảy ra như một sticker dán thêm.
+ */
 const FLAME = {
-  width: 22,
-  height: 28,
-  /** Lưỡi ngoài — cam logo, sáng nhất ở đỉnh. */
-  outer: '#E9A04F',
-  /** Lưỡi trong — cam cháy đậm, tạo chiều sâu. */
-  inner: '#C2410C',
+  /** Lưỡi ngoài, sẫm nhất — viền của ngọn lửa. */
+  outer: '#C2410C',
+  /** Thân lửa — cam logo. */
+  mid: '#E9A04F',
+  /** Lõi sáng. */
+  core: '#FCD34D',
 } as const;
 
 /**
- * Ngọn lửa vẽ bằng **hai path SVG** lồng nhau. Satori dựng được `<svg>` với
- * `path` (nó dùng đúng cơ chế này cho icon), nhưng **không** dựng được
- * `<linearGradient>` một cách đáng tin — nên chiều sâu ở đây làm bằng hai lớp
- * màu đặc thay vì gradient.
+ * Tỉ lệ gốc của một lưỡi lửa: rộng 12, cao 24 — **mảnh gấp đôi** icon lửa thông
+ * thường (22×28).
+ *
+ * Lượt render đầu dùng đúng path icon "mập" ấy cho cả dải, và kết quả nhìn ra
+ * **răng cưa** chứ không ra lửa: 11 hình tròn trịa chen nhau thì mắt đọc thành
+ * một hàng rào. Lửa thật có lưỡi **cao, mảnh, nhọn đầu** và chênh nhau rõ.
  */
-function Flame() {
+const FLAME_RATIO = 12 / 24;
+
+/** Path lưỡi ngoài — dùng chung cho mọi ngọn, chỉ đổi kích thước và màu. */
+const FLAME_OUTER_PATH =
+  'M6 0c.6 4.2 3.1 6.6 4.4 9.3.9 1.8 1.1 3.4 1.1 4.9 0 5.6-2.4 9.8-5.5 9.8S.5 19.8.5 14.2c0-2.7 1.2-5 2.7-7.2.2 1.7.9 2.8 1.9 3.3C4.7 6.4 5.3 3.1 6 0z';
+
+/** Path lõi — mảnh hơn nữa, nằm ở nửa dưới, cho chiều sâu. */
+const FLAME_CORE_PATH =
+  'M6 23.8c-1.9 0-3.3-1.7-3.3-3.9 0-1.9 1-3.3 1.9-4.8.3.8.7 1.3 1.2 1.5-.2-2 .5-3.6 1.5-4.9.7 1.7 2 3.2 2 5.5 0 2.5-1.4 4.6-3.3 4.6z';
+
+/**
+ * Một ngọn lửa. Satori dựng được `<svg>` với `path` (nó dùng đúng cơ chế này cho
+ * icon), nhưng **không** dựng được `<linearGradient>` hay `filter: blur()` một
+ * cách đáng tin — nên chiều sâu ở đây làm bằng **hai lớp màu đặc**, và quầng
+ * sáng mờ quanh lửa là thứ **không thể có** trên tấm ảnh này.
+ */
+function Flame({ height, outer }: { height: number; outer: string }) {
+  const width = Math.round(height * FLAME_RATIO);
+
   return (
-    <svg width={FLAME.width} height={FLAME.height} viewBox="0 0 22 28">
-      <path
-        d="M11 0.5c1.2 4.6 4.3 6.9 6.2 9.6 1.5 2.1 2.3 4.3 2.3 6.6 0 6.2-4.3 10.8-9.5 10.8S0.5 22.9 0.5 16.7c0-3.1 1.3-5.7 3.3-8.2.5 1.9 1.4 3.1 2.6 3.6-.4-4.6 1.4-8.6 4.6-11.6z"
-        fill={FLAME.outer}
-      />
-      <path
-        d="M11 27.5c-3.2 0-5.6-2.5-5.6-5.8 0-2.6 1.6-4.4 3.2-6.4.7 1 1.4 1.6 2.2 1.9-.3-2.6.6-4.9 2.3-6.7 1 2.4 3.5 4.6 3.5 8.4 0 3.7-2.4 6.6-5.6 6.6z"
-        fill={FLAME.inner}
-      />
+    <svg width={width} height={height} viewBox="0 0 12 24">
+      <path d={FLAME_OUTER_PATH} fill={outer} />
+      <path d={FLAME_CORE_PATH} fill={FLAME.core} />
     </svg>
+  );
+}
+
+/**
+ * Chiều cao từng ngọn trong dải lửa, tính bằng px.
+ *
+ * Cao thấp **so le** và không đối xứng: một dãy ngọn bằng nhau trông như hàng
+ * rào răng cưa chứ không như lửa. Ngọn cao nhất lệch về bên phải — phía "đầu"
+ * thanh, nơi mức hoàn thành chạm trần.
+ */
+const FLAME_STRIP_HEIGHTS = [20, 28, 23, 33, 22, 30, 25, 34, 23, 28, 22, 26, 20] as const;
+
+/**
+ * Hai ngọn liền nhau chồng lấp chừng này px, để chân dải liền mạch trong khi các
+ * đỉnh vẫn tách rời — đúng hình lửa thật.
+ *
+ * ⚠ Số âm = chồng lấp, số **dương** = giãn ra. Ở đây là `-3`, tức các ngọn cách
+ * nhau 3px: 13 ngọn × `height × 0,5` cộng lại ≈ 168px, cộng 12 khe × 3px cho ra
+ * **≈ 204px** — vừa khít thanh 200px. Đổi `FLAME_STRIP_HEIGHTS` thì phải tính
+ * lại, nếu không dải lửa sẽ hụt hoặc thò ra khỏi thanh.
+ */
+const FLAME_OVERLAP = -3;
+
+/** Chiều cao ngọn lớn nhất — quyết định khoảng trống phải chừa phía trên thanh. */
+const FLAME_STRIP_HEIGHT = Math.max(...FLAME_STRIP_HEIGHTS);
+
+/**
+ * **Dải lửa bọc thanh tiến độ** — PHASE 18, bản thứ hai của DEC-069.
+ *
+ * Người dùng đưa ảnh mẫu và nói rõ ý muốn: lửa **cháy bọc cả thanh**, không phải
+ * một ngọn nhỏ ở mút phải như bản đầu — *"nhưng đừng để lửa che chữ"*.
+ *
+ * Dựng bằng cách ghép nhiều `<Flame>` chồng lấp nhau bằng `marginLeft` âm, thay
+ * vì một path dài duy nhất: Satori **không** hỗ trợ `transform` trên phần tử SVG
+ * một cách đáng tin, nên không thể nhân bản một ngọn bằng `<g transform>`. Cách
+ * này chỉ dùng flexbox và `<path>` — hai thứ đã chứng minh chạy được.
+ *
+ * Lửa nằm **sau** pill trong thứ tự DOM ⇒ thanh vẽ đè lên chân lửa, nên dải lửa
+ * trông như đang liếm từ dưới thanh lên chứ không phải một hình dán lên trên.
+ */
+function FlameStrip() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', height: FLAME_STRIP_HEIGHT }}>
+      {FLAME_STRIP_HEIGHTS.map((height, index) => (
+        <div
+          key={`${height}-${index}`}
+          style={{
+            display: 'flex',
+            marginLeft: index === 0 ? 0 : -FLAME_OVERLAP,
+          }}
+        >
+          {/* Ngọn chẵn màu sẫm, ngọn lẻ cam logo: hai sắc xen kẽ tạo cảm giác
+              lớp lang, thứ mà một dải cùng một màu không bao giờ có. */}
+          <Flame height={height} outer={index % 2 === 0 ? FLAME.outer : FLAME.mid} />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -308,7 +374,44 @@ function ProgressBar({
   const fillWidth = Math.round(PROGRESS_INNER_WIDTH * progress.fill);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
+    /*
+     * Khối cao `FLAME_STRIP_HEIGHT + PROGRESS.height` ở **MỌI** dòng, kể cả dòng
+     * không cháy — cùng lý do với ô lửa ngang của bản đầu: chừa chỗ sẵn thì bốn
+     * thanh thẳng hàng tuyệt đối, còn để dải lửa tự đẩy thì riêng dòng vượt chỉ
+     * tiêu bị xô lệch so với ba dòng kia.
+     *
+     * `justifyContent: 'flex-end'` ghim pill xuống đáy khối; phần trống phía
+     * trên chính là chỗ cho lửa liếm lên, và cũng là thứ giữ cho lửa **không
+     * chạm vào nhãn chữ** — điều người dùng dặn thẳng.
+     */
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+        position: 'relative',
+        width: PROGRESS.width,
+        height: FLAME_STRIP_HEIGHT + PROGRESS.height,
+        marginTop: 8,
+      }}
+    >
+      {/* Lửa đứng TRƯỚC pill trong DOM ⇒ Satori vẽ nó xuống dưới, nên thanh đè
+          lên chân lửa và dải trông như đang liếm lên từ dưới thanh. */}
+      {progress.isBlazing && (
+        <div
+          style={{
+            display: 'flex',
+            position: 'absolute',
+            left: 0,
+            // Chân lửa chìm 6px vào thân thanh, không đứng chông chênh trên mép.
+            bottom: PROGRESS.height - 6,
+          }}
+        >
+          <FlameStrip />
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',
@@ -335,19 +438,6 @@ function ProgressBar({
             }}
           />
         )}
-      </div>
-
-      {/* Ô lửa: LUÔN chiếm chỗ, chỉ có ruột khi thực sự vượt. Lửa nằm NGOÀI pill
-          vì đặt đè lên thanh sẽ che mất chính phần "đầy" mà nó đang ăn mừng. */}
-      <div
-        style={{
-          display: 'flex',
-          width: PROGRESS.flameSlot,
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}
-      >
-        {progress.isBlazing && <Flame />}
       </div>
     </div>
   );

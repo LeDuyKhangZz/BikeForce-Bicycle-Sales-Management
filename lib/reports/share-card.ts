@@ -47,16 +47,58 @@ type ReportStatus = Database['public']['Enums']['report_status'];
 export const MAX_SHARE_ROUTE_CHARS = 104;
 
 /**
- * Tương đương **3 dòng** ở cỡ chữ 32px, cùng cách ước lượng như trên.
- *
- * ⚠ **PHASE 17 (DEC-068): hạ từ 232 (4 dòng) xuống 174 — đừng nâng lại.** Cụm
- * lũy kế tháng chiếm thêm ~300px ngay phía trên khối ghi chú. Ở ca xấu nhất
- * (tên Sales 2 dòng + tuyến 2 dòng + ghi chú kịch trần) tấm chiều vượt quá
- * 1920px, và Satori không cắt hộ — nó nén các khối cho tới khi chữ chồng lên
- * nhau (ISSUE-032). `flexShrink: 0` trong component là hàng rào cuối; con số
- * này là hàng rào đầu, để ghi chú hiếm khi chạm tới hàng rào đó.
+ * Số ký tự ghi chú cho **một dòng** ở cỡ chữ 32px trên khung rộng 968px.
+ * Cùng cách ước lượng ~0,52em như `MAX_SHARE_ROUTE_CHARS`.
  */
-export const MAX_SHARE_NOTE_CHARS = 174;
+const NOTE_CHARS_PER_LINE = 62;
+
+/** Số dòng ghi chú tối đa khi phần đầu thẻ ở trạng thái GỌN NHẤT. */
+const NOTE_MAX_LINES = 2;
+
+/** Trần tuyệt đối của ghi chú — 2 dòng. Giữ export vì test và docs tham chiếu. */
+export const MAX_SHARE_NOTE_CHARS = NOTE_CHARS_PER_LINE * NOTE_MAX_LINES;
+
+/**
+ * Ngưỡng ký tự khiến tên Sales / tuyến tràn sang dòng thứ hai.
+ *
+ * Tên in HOA ở cỡ 64px nên "no" chữ rất nhanh; tuyến ở cỡ 34px thì thoáng hơn.
+ * Hai con số này là **ước lượng có chủ đích**, không cần chính xác tuyệt đối:
+ * chúng chỉ dùng để quyết định *"phần đầu thẻ có đang ăn thêm một dòng không"*.
+ */
+const NAME_CHARS_PER_LINE = 26;
+const ROUTE_CHARS_PER_LINE = 52;
+
+/**
+ * Ngân sách ghi chú **động** — PHASE 18, DEC-069.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO KHÔNG THỂ ĐẶT MỘT CON SỐ CỐ ĐỊNH
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Thẻ cao **cố định 1920px** nhưng phần đầu thì không: tên Sales dài xuống 2
+ *  dòng ăn thêm ~77px, tuyến 2 dòng ăn thêm ~48px. Một hằng số `MAX_NOTE` dùng
+ *  chung cho mọi ca vì thế **luôn sai một trong hai chiều** — hoặc phí chỗ ở ca
+ *  gọn, hoặc tràn ở ca dài.
+ *
+ *  Đã trả giá thật để biết điều này: PHASE 17 hạ hằng số 232 → 174, PHASE 18 hạ
+ *  tiếp 174 → 130, mà ca xấu nhất **vẫn bị chém ngang** giữa dòng chữ ghi chú.
+ *  Cắt dần một hằng số không bao giờ tới đích, vì thứ thiếu là chỗ, và chỗ thì
+ *  phụ thuộc dữ liệu.
+ *
+ *  Trả `0` nghĩa là **bỏ hẳn khối ghi chú**. Đó là lựa chọn có chủ đích: ghi chú
+ *  là thông tin ít quan trọng nhất trên thẻ, và một khối bị chém ngang trông
+ *  như ảnh lỗi — tệ hơn hẳn việc không có nó.
+ */
+export function shareNoteBudget(fullName: string, routeText: string | null): number {
+  const nameLines = Math.max(1, Math.ceil(fullName.trim().length / NAME_CHARS_PER_LINE));
+  const routeLines =
+    routeText === null ? 0 : Math.max(1, Math.ceil(routeText.length / ROUTE_CHARS_PER_LINE));
+
+  // Ca chuẩn: tên 1 dòng + tuyến 1 dòng. Mỗi dòng phát sinh thêm ở phần đầu thẻ
+  // ăn mất đúng một dòng ghi chú.
+  const extraLines = nameLines - 1 + Math.max(0, routeLines - 1);
+
+  return Math.max(0, NOTE_MAX_LINES - extraLines) * NOTE_CHARS_PER_LINE;
+}
 
 /** Dấu báo "còn nữa" — cùng ký tự `…` mà font nhúng đã xác nhận có glyph. */
 const ELLIPSIS = '…';
@@ -356,7 +398,12 @@ export function buildShareCardModel(
   const variant = shareCardVariantForStatus(source.status);
 
   const route = optionalText(source.actual_route) ?? optionalText(source.planned_route);
+  const routeText = route === null ? null : truncateText(route, MAX_SHARE_ROUTE_CHARS);
+
   const note = optionalText(source.evening_note);
+  // Ngân sách tính TRÊN CHUỖI ĐÃ CẮT của tuyến, không phải chuỗi gốc: tuyến 300
+  // ký tự vẫn chỉ chiếm 2 dòng sau `truncateText`.
+  const noteBudget = shareNoteBudget(source.sales.full_name, routeText);
 
   return {
     variant,
@@ -364,13 +411,14 @@ export function buildShareCardModel(
     dateText: formatVietnamDate(source.report_date),
     salesName: source.sales.full_name.trim().toLocaleUpperCase('vi-VN'),
     employeeCode: optionalText(source.sales.employee_code),
-    routeText: route === null ? null : truncateText(route, MAX_SHARE_ROUTE_CHARS),
+    routeText,
     metrics,
     // Cụm lũy kế có ở CẢ HAI biến thể (DEC-068) — khác hẳn khối "Số khách làm
     // việc" cũ vốn chỉ có ở bản chiều. Bản sáng vẫn có thành tích tháng để khoe,
     // nó chỉ dừng ở hôm qua thay vì hôm nay.
     monthly: monthly === null ? null : buildMonthly(monthly),
-    noteText: note === null ? null : truncateText(note, MAX_SHARE_NOTE_CHARS),
+    // `noteBudget === 0` ⇒ phần đầu thẻ đã ăn hết chỗ ⇒ bỏ hẳn khối ghi chú.
+    noteText: note === null || noteBudget === 0 ? null : truncateText(note, noteBudget),
   };
 }
 

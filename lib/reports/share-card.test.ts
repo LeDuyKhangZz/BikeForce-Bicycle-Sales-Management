@@ -22,6 +22,7 @@ import {
   shareImagePath,
   shareImageViewPath,
   shareMonthRange,
+  shareNoteBudget,
   truncateText,
   type ShareCardMonthlySource,
   type ShareCardSource,
@@ -141,6 +142,52 @@ describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
     ]);
   });
 
+});
+
+describe('shareNoteBudget — ngân sách ghi chú ĐỘNG (PHASE 18, DEC-069)', () => {
+  const SHORT_NAME = 'Nguyễn Văn A';
+  const LONG_NAME = 'Nguyễn Trần Hoàng Phương Thảo Vy';
+  const SHORT_ROUTE = 'Quận 1 → Quận 3';
+  const LONG_ROUTE = 'Quận Bình Thạnh, Quận Gò Vấp, Quận Phú Nhuận, Quận Tân Bình, Quận Tân Phú, huyện Hóc Môn';
+
+  it('phần đầu thẻ gọn → ghi chú được trọn 2 dòng', () => {
+    expect(shareNoteBudget(SHORT_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS);
+  });
+
+  it('tên Sales xuống 2 dòng → ghi chú chỉ còn 1 dòng', () => {
+    expect(shareNoteBudget(LONG_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS / 2);
+  });
+
+  it('tuyến xuống 2 dòng → ghi chú cũng chỉ còn 1 dòng', () => {
+    expect(shareNoteBudget(SHORT_NAME, LONG_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS / 2);
+  });
+
+  it('CẢ HAI cùng dài → ngân sách 0, tức BỎ HẲN khối ghi chú', () => {
+    // Đây là ca đã render ra và thấy tận mắt: giữ khối ghi chú thì nó bị **chém
+    // ngang** giữa dòng chữ, trông như ảnh lỗi.
+    expect(shareNoteBudget(LONG_NAME, LONG_ROUTE)).toBe(0);
+  });
+
+  it('không có tuyến thì tuyến không ăn dòng nào', () => {
+    expect(shareNoteBudget(SHORT_NAME, null)).toBe(MAX_SHARE_NOTE_CHARS);
+  });
+
+  it('ngân sách không bao giờ âm', () => {
+    expect(shareNoteBudget('N'.repeat(200), 'R'.repeat(200))).toBe(0);
+  });
+
+  it('buildShareCardModel BỎ ghi chú khi ngân sách bằng 0', () => {
+    const model = build({
+      sales: { full_name: LONG_NAME, employee_code: 'KD-1' },
+      planned_route: LONG_ROUTE,
+      actual_route: LONG_ROUTE,
+      evening_note: 'Khách hẹn lại tuần sau, đã gửi báo giá mới.',
+    });
+
+    expect(model.noteText).toBeNull();
+    // Tuyến thì VẪN còn — nó là thông tin của chuyến đi, không phải phần phụ.
+    expect(model.routeText).not.toBeNull();
+  });
 });
 
 describe('Thanh tiến độ + ngọn lửa vượt chỉ tiêu (PHASE 18, DEC-069)', () => {

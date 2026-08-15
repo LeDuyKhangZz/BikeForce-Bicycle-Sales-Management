@@ -940,6 +940,12 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `npm run typecheck`, `npm run lint`, `npm run build` — exit 0, 20 route
 - [x] **Nhìn tận mắt**: tấm 4 trạng thái, tấm ca xấu nhất, tấm phóng to ngọn lửa
 - [x] DEC-069 + `docs/05` + checklist/worklog/checkpoint/CLAUDE.md đã cập nhật
+- [x] **Bản 2 theo ảnh mẫu người dùng:** dải lửa **13 lưỡi SVG bọc dọc thanh**, không phải một ngọn ở mút
+- [x] Lửa **không chạm nhãn chữ** — khối thanh chừa sẵn chiều cao ở mọi dòng
+- [x] Lưỡi lửa mảnh (tỉ lệ 12/24); bản dùng path icon "mập" nhìn ra răng cưa đã bị loại
+- [x] Đã nói rõ giới hạn: Satori không có `filter: blur()` ⇒ **không** làm được quầng sáng mờ như ảnh mẫu
+- [x] `shareNoteBudget()` — ngân sách ghi chú **động** theo độ dài tên/tuyến; hết chỗ thì bỏ hẳn ghi chú
+- [x] Ca xấu nhất không còn **chém ngang** khối ghi chú; full Vitest **858/858**
 - [ ] E2E khoá riêng thanh/lửa — **chưa làm**, cùng nhóm nợ với cụm lũy kế
 
 ## OPEN QUESTIONS

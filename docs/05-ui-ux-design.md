@@ -649,9 +649,10 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 │  ══════════════════════════════════  │  2px #0B4A76
 │   Viếng thăm  12 điểm  10 điểm 83,3% │  dòng lẻ nền trắng
 │                                Gần đạt│  nhãn chữ #566A7B, 24px
-│                          ▰▰▰▱▱  ▁     │  thanh 200×14 + ô lửa 30px — DEC-069
+│                          ▰▰▰▱▱        │  thanh 200×14, khối cao 48px — DEC-069
 │   Doanh số        1tr      5tr 500,0%│  dòng chẵn nền #F4F7FA (sọc)
-│                          ▰▰▰▰▰  🔥    │  vượt >100% ⇒ SVG lửa #E9A04F/#C2410C
+│                       ʌʌʌʌʌʌʌʌʌʌʌ    │  vượt >100% ⇒ DẢI LỬA 13 lưỡi SVG
+│                          ▰▰▰▰▰        │  bọc dọc thanh, không chạm nhãn chữ
 │   Doanh thu       1tr      0 ₫   0,0%│  % vượt #166534 · gần đạt #92400E
 │   Khách hàng  10 khách 5 khách  50,0%│  % chưa đạt #991B1B
 │  ▌┌──────────────────────────────┐   │  vạch cam dọc 10px + nền #FDF1E3
@@ -686,7 +687,8 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 |---|---|---|
 | Tên dài 40+ ký tự → xuống dòng, không cắt chữ | không cắt gì cả, để Satori tự wrap | ✅ tên 42 ký tự xuống 2 dòng |
 | Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có `…` | `truncateText(route, 104)` ở tầng dữ liệu | ✅ |
-| Ghi chú 1000 ký tự → cắt ở 3 dòng, có `…` | `truncateText(note, 174)` ở tầng dữ liệu — hạ từ 232 ở PHASE 17 (ISSUE-032) | ✅ |
+| Ghi chú 1000 ký tự → cắt an toàn, có `…` | `truncateText(note, shareNoteBudget(...))` — **ngân sách ĐỘNG**, tối đa 2 dòng | ✅ |
+| Tên 2 dòng **và** tuyến 2 dòng **và** có ghi chú | `shareNoteBudget()` trả `0` → **bỏ hẳn** khối ghi chú | ✅ không còn bị chém ngang giữa dòng |
 | **Nội dung dài tổng cộng vượt 1920px** | `flexShrink: 0` cho mọi khối bắt buộc; riêng ghi chú co được + `overflow: hidden` | ✅ cắt gọn thay vì **chồng chữ** (ISSUE-032) |
 | **Lũy kế tháng** khi truy vấn hỏng | `buildShareCardModel(source, null)` → bỏ hẳn cụm | ✅ không in `0 ₫` sai sự thật |
 | **Lũy kế tháng** của ảnh sáng ngày 01 | khoảng rỗng (`isEmpty`) → ba số 0 + dòng "Chưa có ngày nào trong tháng" | ✅ không tụt sang tháng trước |
