@@ -955,7 +955,8 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 
 ## Phase 19 — Cụm "Tình trạng thực hiện" từ MISA AMIS (DEC-070, nhánh `feat/amis-auto-token`)
 
-> ⚠ **Phase này CHƯA ĐÓNG và đang nằm trên nhánh.** `main` và production chưa bị đụng.
+> ✅ **ĐÃ MERGE LÊN `main` VÀ DEPLOY 2026-08-16** (`d431d4f`). Phase vẫn **chưa đóng** — còn `docs/02`,
+> E2E hai màn hình đối chiếu, và **đồng bộ MISA chưa chạy lần nào** nên `amis_employee_metrics` đang rỗng.
 > Code tích hợp AMIS do cộng tác viên `NguyenPhust9` viết (`251fa19`); phiên 2026-08-16 gộp `main` vào
 > nhánh, ghi DEC-070 và đưa nhánh từ đỏ về xanh. **Giữ nguyên mọi thứ cộng tác viên đã sửa** — người
 > dùng yêu cầu trực tiếp hai lần.

@@ -1,14 +1,24 @@
 # BikeForce Session Checkpoint
 
 > Status: ACTIVE | Phase: **19 — Cụm "Tình trạng thực hiện" từ MISA AMIS (DEC-070)** | Last updated: 2026-08-16
-> ⚠ Cây làm việc đang ở nhánh `feat/amis-auto-token`, KHÔNG phải `main`.
+> ✅ **ĐÃ LÊN PRODUCTION 2026-08-16** — `main` = `d431d4f`, merge từ `feat/amis-auto-token`.
 
 ---
 
 ## ✅ PHIÊN HIỆN TẠI (Entry 030 — PHASE 19, DEC-070 — nhánh `feat/amis-auto-token`)
 
-⚠ **ĐANG ĐỨNG Ở NHÁNH, KHÔNG PHẢI `main`.** Cây làm việc hiện ở `feat/amis-auto-token`. `main` và
-production **chưa bị đụng một dòng nào** và không được merge vào cho tới khi trả hết nợ ở cuối mục này.
+✅ **ĐÃ MERGE LÊN `main` VÀ DEPLOY** cuối ngày 2026-08-16 (`d431d4f`). Lý do merge: người dùng vào web
+làm báo cáo thật và thấy **y hệt hôm qua** — vì Vercel deploy từ `main`, mà toàn bộ việc AMIS khi đó
+còn nằm trên nhánh. Đây là bài học đáng nhớ: **code trên nhánh KHÔNG bao giờ tự lên web**, reset trình
+duyệt bao nhiêu lần cũng vô ích.
+
+⚠ **BA lớp chặn, không phải một** — session sau gặp câu hỏi "sao web không đổi" thì kiểm đủ cả ba:
+
+| Lớp | Cách kiểm |
+|---|---|
+| Code đã lên `main` chưa | `git log origin/main --oneline -1` |
+| Sales đã map `amis_employee_name` chưa | query `profiles`, `null` ⇒ thẻ **cố ý bỏ hẳn cụm AMIS** |
+| Bảng `amis_employee_metrics` có dòng nào chưa | script `push_amis.py` chạy tay, chưa chạy thì bảng rỗng |
 
 Cộng tác viên `NguyenPhust9` đẩy commit `251fa19` (tích hợp MISA AMIS, 35 file, +5131/−204) lên nhánh
 ngày 2026-08-15. Phiên này gộp `main` vào nhánh, ghi **DEC-070**, và đưa nhánh từ đỏ về xanh hết.
@@ -19,7 +29,9 @@ ngày 2026-08-15. Phiên này gộp `main` vào nhánh, ghi **DEC-070**, và đ�
 |---|---|
 | Cụm dưới bảng của thẻ ảnh | **"TÌNH TRẠNG THỰC HIỆN" lấy số AMIS THAY HẲN cụm lũy kế tháng của DEC-068.** Nguyên văn: *"những gì liên quan đến AMIS thì phải để tại vì đó là những gì bạn tôi sửa trong code"*, kèm ảnh mockup không còn cụm cũ |
 | Giữ code của cộng tác viên | *"nhớ giữ nguyên những gì bạn tôi đã sửa và push lên branch"* — **không** dọn `run_push_amis.bat`, **không** dọn `supabase/snippets/Untitled query 618.sql`, **không** dọn 7 script Python dò API |
-| Đích push | **Nhánh**, không phải `main` |
+| Đích push | Ban đầu là **nhánh**; cuối ngày người dùng chốt **merge lên `main`** để thấy trên web |
+| Ai đẩy migration | **Agent, vĩnh viễn.** *"bạn sẽ luôn là người làm việc này nên đừng bao giờ kêu tôi làm nữa"* — mật khẩu ở `.env.local` |
+| Ai chạy đồng bộ MISA | **Người dùng hoặc cộng tác viên** — script cần đăng nhập MISA bằng tay trên trình duyệt thật |
 
 ### Nhánh đã ĐỎ TỪ TRƯỚC KHI GỘP — đừng đổ cho merge
 
@@ -79,8 +91,18 @@ commit.** Luôn render **cả ca xấu nhất** — ca đẹp không bao giờ l
    và view `amis_reconciliation`. Migration đã áp thật ở cả local lẫn cloud nhưng chưa có bản ghi thiết kế.
 2. **E2E** cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm.
 3. **E2E khoá thanh tiến độ / ngọn lửa** — nợ từ Phase 18, chưa trả.
-4. Chỉ sau 1–3 mới bàn tới merge vào `main`. Migration đã lên cloud nên rào chắn cũ đã gỡ, nhưng
-   `main` vẫn chưa được đụng tới.
+4. ~~Merge vào `main`~~ — **XONG** (`d431d4f`). Đã map `amis_employee_name = 'Lê Duy Khang'` cho hồ sơ
+   `VP-IT-002` để có một tài khoản xem thử được. ⚠ **Giá trị đó là PHỎNG ĐOÁN** — nó phải khớp **chính
+   xác** tên nhân viên bên MISA, chưa ai xác nhận. 11 hồ sơ còn lại vẫn `null`.
+5. **Chạy đồng bộ MISA** (`scripts/amis-sync/push_amis.py`) — việc của người dùng/cộng tác viên, cần
+   đăng nhập MISA bằng tay. Chưa chạy thì `amis_employee_metrics` vẫn **0 dòng** và thẻ ảnh vẫn không
+   có cụm "Tình trạng thực hiện" dù code đã lên web.
+
+### Kết nối thẳng vào Postgres trên cloud (đã dùng được 2026-08-16)
+
+`postgresql://postgres.rnmywhwanpxmipqducqu:<pw>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres`
+với `ssl: { rejectUnauthorized: false }`. Mật khẩu ở `.env.local`. ⚠ Gọi PostgREST bằng key trong
+`.env.local` thì **trả 401** — chưa rõ vì key cũ hay vì cách gọi; dùng đường Postgres ở trên thì chắc.
 
 ---
 
