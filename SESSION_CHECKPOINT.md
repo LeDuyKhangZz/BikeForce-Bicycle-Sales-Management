@@ -1,10 +1,80 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **18 — Thanh tiến độ + ngọn lửa (DEC-069)** | Last updated: 2026-08-15
+> Status: ACTIVE | Phase: **19 — Cụm "Tình trạng thực hiện" từ MISA AMIS (DEC-070)** | Last updated: 2026-08-16
+> ⚠ Cây làm việc đang ở nhánh `feat/amis-auto-token`, KHÔNG phải `main`.
 
 ---
 
-## ✅ PHIÊN HIỆN TẠI (Entry 029 — PHASE 18, DEC-069 — ĐÃ ĐÓNG)
+## ✅ PHIÊN HIỆN TẠI (Entry 030 — PHASE 19, DEC-070 — nhánh `feat/amis-auto-token`)
+
+⚠ **ĐANG ĐỨNG Ở NHÁNH, KHÔNG PHẢI `main`.** Cây làm việc hiện ở `feat/amis-auto-token`. `main` và
+production **chưa bị đụng một dòng nào** và không được merge vào cho tới khi trả hết nợ ở cuối mục này.
+
+Cộng tác viên `NguyenPhust9` đẩy commit `251fa19` (tích hợp MISA AMIS, 35 file, +5131/−204) lên nhánh
+ngày 2026-08-15. Phiên này gộp `main` vào nhánh, ghi **DEC-070**, và đưa nhánh từ đỏ về xanh hết.
+
+### Nghiệp vụ đã chốt — ĐỪNG HỎI LẠI
+
+| Điểm | Chốt ngày 2026-08-16 |
+|---|---|
+| Cụm dưới bảng của thẻ ảnh | **"TÌNH TRẠNG THỰC HIỆN" lấy số AMIS THAY HẲN cụm lũy kế tháng của DEC-068.** Nguyên văn: *"những gì liên quan đến AMIS thì phải để tại vì đó là những gì bạn tôi sửa trong code"*, kèm ảnh mockup không còn cụm cũ |
+| Giữ code của cộng tác viên | *"nhớ giữ nguyên những gì bạn tôi đã sửa và push lên branch"* — **không** dọn `run_push_amis.bat`, **không** dọn `supabase/snippets/Untitled query 618.sql`, **không** dọn 7 script Python dò API |
+| Đích push | **Nhánh**, không phải `main` |
+
+### Nhánh đã ĐỎ TỪ TRƯỚC KHI GỘP — đừng đổ cho merge
+
+`251fa19` gỡ `model.monthly` + `ShareCardMonthlySource` khỏi `lib/reports/share-card.ts` nhưng **không
+chạm** `lib/reports/share-card.test.ts` (lần sửa cuối của file đó là `05528ab`, tức trước cả nhánh) ⇒
+17 lỗi typecheck ⇒ `npm run build` gãy. Đã kiểm bằng `git log -1 --stat <branch> -- <file>`.
+
+### Một lỗ RLS đã bịt — ĐỪNG GỠ
+
+Ba migration `20260815*` **chưa từng được áp** ở local trước phiên này. Áp xong thì phép kiểm quét
+`relforcerowsecurity` của `tests/rls/` đỏ: `amis_employee_metrics` có `enable row level security` + đủ
+hai policy SELECT nhưng **thiếu `force`**, mà `enable` miễn trừ **chủ sở hữu bảng**.
+
+Đã bịt bằng migration MỚI `20260816000000_amis_metrics_force_rls.sql`. **Không sửa thẳng file
+`20260815035946`** — nó đã áp trên máy người viết, sửa tại chỗ là gây lệch trạng thái hai bên.
+
+Hai điểm còn lại của schema mới đã soát và **đều ĐÚNG, đừng "sửa"**:
+
+| Điểm | Kết quả |
+|---|---|
+| View `amis_reconciliation` | có `security_invoker=on` ⇒ chạy bằng quyền NGƯỜI GỌI. Thiếu cờ này là mọi Sales đọc được báo cáo của nhau — vỡ BR-003 |
+| `GRANT` cho `anon` | **không** có `SELECT` trên `amis_employee_metrics` |
+
+### Quality gate — chạy thật ngày 2026-08-16
+
+| Gate | Kết quả |
+|---|---|
+| `npm run build` | ✅ PASS — **22 route** (thêm `/admin/reconciliation`, `/sales/reconciliation`) |
+| `npm run typecheck` | ✅ PASS |
+| `npm run lint` | ✅ 0 error / 0 warning |
+| `npm test` | ✅ **863/863 · 33/33 file · 0 skip** |
+| Migration local | ✅ **12/12** áp sạch (8 cũ + 3 của cộng tác viên + 1 force RLS) |
+
+⚠ Con số 863 cao hơn mốc 841 của phiên trước vì **Supabase local có chạy** (Docker 28.4.0) nên 197 test
+DB/RLS chạy thật thay vì skip. Nếu phiên sau thấy `197 skipped` thì là **Docker chưa bật**, không phải
+hồi quy — dựng lại bằng `Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'` rồi
+`npx supabase start`.
+
+### Next Exact Steps
+
+1. **Render PNG thật rồi NHÌN** cụm "Tình trạng thực hiện" 4 cột. Chưa ai xem tấm ảnh thật của cụm mới
+   — nó rộng 4 cột trong khối 900px, đúng thứ mà không phép đo nào bắt được (bài học DEC-053, DEC-054,
+   ISSUE-032). Phải nhìn **cả ca dữ liệu dài nhất**: tên 2 dòng · tuyến 2 dòng · ghi chú kịch trần.
+2. **Đẩy 4 migration lên Supabase cloud** trước bất kỳ ý định merge nào:
+   `SUPABASE_DB_PASSWORD=<pw> npx supabase db push --yes`. **Thiếu bước này mà merge vào `main` là nút
+   xuất ảnh chết cho toàn đội Sales**, vì `services/reports.ts` đã thêm `profiles.amis_employee_name`
+   vào truy vấn của route ảnh — không riêng cụm mới hỏng, cả tấm ảnh hỏng.
+3. **Viết `docs/02-database-design.md`** cho `amis_employee_metrics`, cột `profiles.amis_employee_name`
+   và view `amis_reconciliation`. Ba migration đã áp thật nhưng chưa có bản ghi thiết kế nào.
+4. **E2E** cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm.
+5. Chỉ sau 1–4 mới bàn tới merge vào `main`.
+
+---
+
+## ✅ Phiên trước đó (Entry 029 — PHASE 18, DEC-069 — ĐÃ ĐÓNG)
 
 Sếp của người dùng muốn ô "% Hoàn thành" có **thanh nhỏ** thể hiện mức hoàn thành, và **lửa cháy** khi
 vượt chỉ tiêu. Người dùng dặn kèm: *"thiết kế thanh nhỏ thôi cẩn thận bị đụng hàng vì ảnh xuất ra hiện

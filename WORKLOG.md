@@ -1961,6 +1961,71 @@ hình × 2 bề rộng trên `next build` + `next start`.
 
 ---
 
+### Entry 030 — Đối soát nhánh `feat/amis-auto-token`: gộp main, ghi DEC-070, bịt một lỗ RLS
+
+**Date:** 2026-08-16
+
+**Yêu cầu người dùng:** *"bạn tôi mới sửa code và nói code trong branch nhá, không phải main nha — pull
+code về push code mới lên giùm tôi với"*, rồi sau khi thấy báo cáo lỗi: *"những gì liên quan đến AMIS thì
+phải để tại vì đó là những gì bạn tôi sửa trong code"* + *"nhớ giữ nguyên những gì bạn tôi đã sửa và push
+lên branch"*. Kèm một ảnh mockup thẻ ảnh có cụm "Tình trạng thực hiện" 4 cột.
+
+**Bối cảnh:** cộng tác viên `NguyenPhust9` đẩy commit `251fa19` lên nhánh `feat/amis-auto-token` ngày
+2026-08-15 — toàn bộ tích hợp MISA AMIS, 35 file, +5131/−204.
+
+**Completed:**
+
+1. **Gộp `main` vào nhánh** (`ddfecdf`). Nhánh cắt ra từ `05528ab` nên thiếu 3 commit cuối của main.
+   Hai xung đột, giữ **cả hai vế** ở cả hai file:
+   - `.gitignore` — khối "Claude Code" của main và khối "AMIS sync" của nhánh là hai mục độc lập.
+   - `daily-report-share-card.tsx` — main đổi dải lửa sang ảnh PNG (`flameSrc`), nhánh thêm công tắc
+     `withFlame`. `ProgressBar` nay nhận cả hai; điều kiện vẽ là
+     `withFlame && isBlazing && flameSrc !== null`.
+2. **Xác minh nhánh đã đỏ TỪ TRƯỚC khi gộp, không phải do gộp.** `251fa19` gỡ `model.monthly` và
+   `ShareCardMonthlySource` khỏi `lib/reports/share-card.ts` nhưng không chạm
+   `lib/reports/share-card.test.ts` (lần sửa cuối của file đó là `05528ab`) ⇒ 17 lỗi typecheck ⇒
+   **`npm run build` gãy**.
+3. **Hỏi người dùng trước khi sửa**, vì gỡ cụm DEC-068 là đảo một quyết định đã `APPROVED` do chính họ
+   yêu cầu ngày 2026-08-14. Người dùng chốt: **AMIS thay hẳn**. Ghi thành **DEC-070**.
+4. `share-card.test.ts` — thay 7 test cụm lũy kế tháng bằng **12 test** cụm "Tình trạng thực hiện":
+   thứ tự 4 dòng theo mockup, chỉ tiêu doanh thu **không** từ AMIS, chỉ tiêu dòng "đã mua hàng" là số
+   khách **đã tương tác**, mốc đồng bộ thay vì ngày báo cáo, ca 2h sáng giờ VN, `synced_at` null / rác,
+   chưa map tên → bỏ cụm, thiếu số lẻ → dòng đó `PENDING`.
+5. `nav-items.test.ts` — Sales 3 → **4**, Admin 4 → **5**. Admin nay **chạm đúng trần 5 mục** của DEC-018.
+6. `amis-recon.ts` — bỏ `any[]`, đặt kiểu `CapturedRequest`. Kiểu mới lộ ra `split('?')[0]` là
+   `string | undefined` dưới `noUncheckedIndexedAccess` — `any` đang che chỗ đó.
+
+**Lỗ RLS tìm ra khi áp migration lần đầu:** ba migration `20260815*` **chưa từng được áp** ở local. Áp
+xong thì phép kiểm quét `relforcerowsecurity` của `tests/rls/` đỏ: `amis_employee_metrics` có `enable row
+level security` + đủ hai policy SELECT nhưng **thiếu `force`**, mà `enable` thì miễn trừ chủ sở hữu bảng.
+Bịt bằng migration mới `20260816000000_amis_metrics_force_rls.sql` — **không** sửa file cũ vì nó đã áp
+trên máy người viết. Soát thêm hai điểm, **cả hai đều đúng**: view `amis_reconciliation` có
+`security_invoker=on` (thiếu cờ này là mọi Sales đọc được báo cáo của nhau — vỡ BR-003), và `anon`
+**không** có `SELECT` trên bảng mới.
+
+**Files Changed:** `lib/reports/share-card.test.ts`, `lib/navigation/nav-items.test.ts`,
+`tests/rls/share-image.rls.test.ts`, `scripts/amis-sync/amis-recon.ts`, `.gitignore`,
+`features/report-share/daily-report-share-card.tsx`,
+`supabase/migrations/20260816000000_amis_metrics_force_rls.sql`, `docs/05`, `docs/11`, `WORKLOG.md`,
+`SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Tests đã chạy thật (2026-08-16):**
+
+| Gate | Trước | Sau |
+|---|---|---|
+| `npm run build` | ❌ Failed to type check | ✅ PASS — **22 route** |
+| `npm run typecheck` | ❌ 17 lỗi | ✅ PASS |
+| `npm run lint` | ❌ 1 error | ✅ 0 error / 0 warning |
+| `npm test` | ❌ 9 đỏ · 197 skip | ✅ **863/863 · 33/33 file · 0 skip** |
+
+Lần này Supabase local **có chạy** (Docker 28.4.0) nên 197 test DB/RLS chạy thật thay vì skip — cao hơn
+mốc 841 của phiên trước đúng ở chỗ đó.
+
+**Còn nợ — chưa merge vào `main` được:** đẩy **4** migration lên cloud (thiếu
+`profiles.amis_employee_name` là **nút xuất ảnh chết cho toàn đội**, vì cột đó nằm trong truy vấn của
+route ảnh) · **render PNG thật rồi nhìn** cụm 4 cột mới · `docs/02` cho bảng `amis_employee_metrics` ·
+E2E cho `/admin/reconciliation` và `/sales/reconciliation`.
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần

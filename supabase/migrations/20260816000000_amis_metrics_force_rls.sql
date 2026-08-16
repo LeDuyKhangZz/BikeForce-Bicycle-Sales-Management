@@ -1,0 +1,21 @@
+-- BikeForce — bật `force row level security` cho `amis_employee_metrics`
+--
+-- Migration `20260815035946_amis_metrics.sql` đã bật `enable row level security`
+-- và khai đủ hai policy SELECT, nhưng THIẾU `force`. Hai bảng nghiệp vụ có sẵn
+-- (`profiles`, `daily_reports`) đều có `force` từ `0001`, và `tests/rls/` có một
+-- phép kiểm quét mọi bảng trong schema `public` đòi đúng điều đó — phép kiểm ấy
+-- đang đỏ vì bảng này.
+--
+-- VÌ SAO `enable` KHÔNG ĐỦ: `enable row level security` miễn trừ **chủ sở hữu
+-- bảng**. Bảng do migration tạo nên chủ sở hữu là `postgres`; thêm `force` là
+-- cách duy nhất khiến chính chủ sở hữu cũng phải đi qua policy. Đây là lằn ranh
+-- mà `docs/06` gọi là "RLS là biên giới bảo mật thật sự" (DEC-004) — bỏ trống nó
+-- ở một bảng thì cả schema chỉ chắc bằng mắt xích yếu nhất.
+--
+-- KHÔNG sửa thẳng vào file `20260815035946`: migration đó đã được áp trên máy
+-- người viết nó và trên máy này, sửa tại chỗ là gây lệch trạng thái giữa hai bên.
+--
+-- Đây là câu lệnh **idempotent về mặt kết quả**: chạy lại trên một bảng đã `force`
+-- không đổi gì.
+
+alter table public.amis_employee_metrics force row level security;

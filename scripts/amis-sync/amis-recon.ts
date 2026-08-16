@@ -11,8 +11,15 @@ const wait = (msg: string) =>
     rl.question(`\n>>> ${msg}\n    Xong thì bấm Enter...`, () => { rl.close(); res(); });
   });
 
+/** Một request AMIS có kèm Bearer token — đúng ba trường được ghi ra file. */
+type CapturedRequest = {
+  url: string;
+  authorization: string;
+  misaHeaders: Record<string, string>;
+};
+
 (async () => {
-  const captured: any[] = [];
+  const captured: CapturedRequest[] = [];
 
   const ctx = await chromium.launchPersistentContext(PROFILE, {
     headless: false,
@@ -26,7 +33,9 @@ const wait = (msg: string) =>
     const h = req.headers();
     if (h['authorization']?.toLowerCase().includes('bearer')) {
       captured.push({
-        url: req.url().split('?')[0],
+        // `split()[0]` là `string | undefined` dưới `noUncheckedIndexedAccess`
+        // dù thực tế luôn có phần tử đầu — lùi về URL nguyên vẹn cho đúng kiểu.
+        url: req.url().split('?')[0] ?? req.url(),
         authorization: h['authorization'].slice(0, 50) + '...',
         misaHeaders: Object.fromEntries(
           Object.entries(h).filter(([k]) => k.startsWith('x-misa') || /device|company|context/i.test(k))

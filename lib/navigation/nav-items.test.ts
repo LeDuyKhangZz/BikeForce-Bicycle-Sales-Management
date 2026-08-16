@@ -18,9 +18,12 @@ import {
 const MAX_NAV_ITEMS = 5;
 
 describe('cấu hình nav — ràng buộc DEC-018', () => {
+  // PHASE 19, DEC-070 thêm mục "Đối chiếu" cho CẢ HAI vai ⇒ Sales 3→4, Admin
+  // 4→5. Admin nay CHẠM ĐÚNG trần 5 mục: thêm mục thứ sáu là vỡ DEC-018, và
+  // `toBeLessThanOrEqual` bên dưới là thứ sẽ bắt được điều đó.
   it.each([
-    ['Sales', SALES_NAV_ITEMS, 3],
-    ['Admin', ADMIN_NAV_ITEMS, 4],
+    ['Sales', SALES_NAV_ITEMS, 4],
+    ['Admin', ADMIN_NAV_ITEMS, 5],
   ])('%s có đúng %s mục', (_label, items, expected) => {
     expect(items).toHaveLength(expected);
     expect(items.length).toBeLessThanOrEqual(MAX_NAV_ITEMS);

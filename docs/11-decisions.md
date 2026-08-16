@@ -2278,3 +2278,107 @@ Không còn cần bước làm mượt Gaussian: quầng đã bị loại ở ng
 **Bài học chung:** khi cắt một ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước** rồi
 chừa biên — đừng chọn khung cắt theo ngân sách bố cục. Ngân sách nên được điều chỉnh cho vừa chủ thể,
 không phải ngược lại.
+
+---
+
+## DEC-070 — Cụm "TÌNH TRẠNG THỰC HIỆN" lấy số từ MISA AMIS, thay cụm lũy kế tháng của DEC-068
+
+**Status:** APPROVED · **Ngày:** 2026-08-16 · **Phase:** 19 · **Nhánh:** `feat/amis-auto-token`
+
+### Bối cảnh
+
+Commit `251fa19` do cộng tác viên `NguyenPhust9` đẩy lên nhánh `feat/amis-auto-token` ngày
+2026-08-15 dựng toàn bộ tích hợp MISA AMIS: 3 migration, bảng `amis_employee_metrics`, cột
+`profiles.amis_employee_name`, hai màn hình đối chiếu, bộ script Python/Playwright hút số từ AMIS,
+và **thay cụm lũy kế tháng trên thẻ ảnh 9:16 bằng một cụm mới lấy số từ AMIS**.
+
+Commit đó **không kèm một `DEC` nào** dù mã nguồn nhắc `DEC-070` hơn 15 chỗ. Tài liệu này là bản ghi
+bổ sung, viết sau khi người dùng xác nhận, để mã nguồn thôi trỏ vào một quyết định không tồn tại.
+
+### Vấn đề
+
+DEC-068 (2026-08-14) đặt cụm **lũy kế tháng** dưới bảng 4 chỉ tiêu: doanh số tháng · doanh thu tháng ·
+số ngày đạt KPI, cộng từ chính bảng `daily_reports`. Cụm đó cũng do người dùng yêu cầu trực tiếp.
+
+Điểm yếu của nó: **cả ba con số đều là số Sales tự khai.** Tấm ảnh gửi cấp trên vì thế chỉ chứng minh
+được "Sales nói mình làm được bao nhiêu", không chứng minh được "hệ thống ghi nhận được bao nhiêu".
+
+### Quyết định
+
+Cụm lũy kế tháng của DEC-068 **bị thay** bằng cụm **"TÌNH TRẠNG THỰC HIỆN"**, có ở **cả hai** biến thể
+thẻ. Bốn dòng, mỗi dòng bốn cột (nhãn · chỉ tiêu · thực đạt · % hoàn thành + thanh tiến độ):
+
+| Dòng | Chỉ tiêu | Thực đạt |
+|---|---|---|
+| Doanh số đã ghi | AMIS `TargetAmount` | AMIS `CurrentAmount` |
+| Doanh thu đã ghi | **`sum(target_revenue)` của tháng — nguồn DUY NHẤT không từ AMIS** | AMIS Kế toán `receive_amount` |
+| SL KH đã ghé thăm | AMIS `QuantityAccountInCharge` | AMIS `QuantityAccountInteractive` |
+| SL KH đã mua hàng | AMIS `QuantityAccountInteractive` | AMIS `QuantityAccountSoldThisPeriod` |
+
+Người dùng chốt ngày 2026-08-16 kèm ảnh mockup, nguyên văn: *"những gì liên quan đến AMIS thì phải để
+tại vì đó là những gì bạn tôi sửa trong code"*. Mockup không còn cụm lũy kế tháng ⇒ đây là **thay**,
+không phải thêm.
+
+### Vì sao chỉ tiêu doanh thu không đến từ AMIS
+
+AMIS biết đã **thu** được bao nhiêu nhưng không lưu **mục tiêu** thu là bao nhiêu. Con số đó vì vậy
+vẫn cộng từ `target_revenue` của chính các báo cáo trong tháng. Đây là chỗ dễ sửa nhầm nhất của cụm:
+kéo nốt nó sang AMIS là mất luôn chỉ tiêu.
+
+### Vì sao khoá là TÊN NGƯỜI
+
+AMIS là hệ thống của MISA, nó không biết gì về `auth.users` của BikeForce và sẽ không bao giờ biết.
+Thứ duy nhất hai bên cùng có là **tên nhân viên**, nên cầu nối là cột `profiles.amis_employee_name` do
+Admin điền tay. Sales chưa được map thì **bỏ hẳn cụm** thay vì in bốn dấu `—`: một khối trống trên tấm
+ảnh gửi cấp trên trông như lỗi hệ thống, còn ghép nhầm số của người khác thì tệ hơn nữa.
+
+### Vì sao phải in mốc đồng bộ
+
+Ba trong bốn nguồn AMIS dùng cookie phiên trình duyệt hết hạn sau ~24h nên **không tự động hoá được
+trên Vercel** — bảng do script `scripts/amis-sync/push_amis.py` chạy tay đẩy lên. Không ai chạy ba
+ngày thì tấm ảnh in số của ba ngày trước. Vì vậy `synced_at` **bắt buộc** hiện ra thành dòng
+`Số liệu MISA tính đến dd/mm/yyyy`; chưa đồng bộ lần nào thì nói thẳng `Chưa rõ mốc đồng bộ từ MISA`.
+
+Mốc này đổi sang giờ VN bằng phép cộng 7 giờ **trước khi** cắt chuỗi, không cắt thẳng 10 ký tự đầu của
+chuỗi ISO: một lần đồng bộ lúc 2h sáng giờ VN được lưu là 19h UTC **hôm trước**, cắt thô sẽ in lùi một
+ngày và người đọc tưởng số cũ hơn thực tế.
+
+### Hệ quả
+
+1. `ShareCardMonthlySource`, `ShareCardMonthly`, `model.monthly` **bị gỡ** khỏi `lib/reports/share-card.ts`.
+   7 unit test của cụm cũ được thay bằng 12 test của cụm mới.
+2. `shareMonthRange()` và `lib/reports/month-summary.ts` **giữ nguyên** — vẫn cần để xác định kỳ tháng.
+3. Nav thêm mục "Đối chiếu" cho **cả hai** vai: Sales 3 → 4 mục, Admin 4 → **5 mục, chạm đúng trần 5
+   mục của DEC-018**. Thêm mục thứ sáu là vỡ DEC-018.
+4. `%` của cụm đi qua **đúng** `calculateAchievement()` mà bảng chính dùng — NFR-012 cấm công thức KPI
+   thứ hai. Cụm gọi `ProgressBar` với `withFlame={false}`: chừa `FLAME_STRIP_HEIGHT` (50px) trên mỗi
+   thanh × 4 dòng = 200px mà thẻ 1920px không có để tiêu (ISSUE-032).
+5. Khối "SỐ KHÁCH LÀM VIỆC" (DEC-056) và cụm lũy kế tháng (DEC-068) **đều đã rời thẻ**. Chỗ đó đã đổi
+   chủ ba lần — đừng khôi phục khối nào cũ.
+
+### Một lỗ RLS đã tìm ra và bịt khi đối soát nhánh (2026-08-16)
+
+Ba migration `20260815*` được áp lần đầu lên DB local ngày 2026-08-16 và làm đỏ phép kiểm quét
+`relforcerowsecurity` của `tests/rls/`. Nguyên nhân: `amis_employee_metrics` có `enable row level
+security` và đủ hai policy SELECT, nhưng **thiếu `force`**.
+
+`enable` miễn trừ **chủ sở hữu bảng**, mà bảng do migration tạo thì chủ sở hữu là `postgres`. Hai bảng
+nghiệp vụ cũ đều có `force` từ `0001`. Đã bịt bằng migration mới
+`20260816000000_amis_metrics_force_rls.sql` — **không** sửa thẳng file cũ, vì migration đó đã áp trên
+máy người viết nó.
+
+Đã soát luôn hai điểm còn lại của schema mới, **cả hai đều đúng**, đừng "sửa" lại:
+
+| Điểm | Kết quả |
+|---|---|
+| View `amis_reconciliation` | có `security_invoker=on` ⇒ chạy bằng quyền NGƯỜI GỌI, RLS của `daily_reports` vẫn áp. Thiếu cờ này thì mọi Sales đọc được báo cáo của nhau — vỡ BR-003 |
+| `GRANT` cho `anon` | **không** có `SELECT` trên `amis_employee_metrics`. `authenticated` có SELECT, `service_role` có đủ DML để script ngoài ghi vào |
+
+### ⚠ Nợ chưa trả — KHÔNG được merge vào `main` khi chưa xong
+
+| Việc | Vì sao chặn |
+|---|---|
+| Đẩy **4** migration (`20260815*` ×3 + `20260816000000`) lên Supabase cloud | `services/reports.ts` thêm `profiles.amis_employee_name` vào truy vấn của route xuất ảnh. Thiếu cột trên cloud ⇒ **nút xuất ảnh chết cho toàn đội Sales**, không riêng cụm mới |
+| Render PNG thật rồi **nhìn** | Cụm mới có 4 cột thay vì 3 dòng của DEC-068. Chưa ai xem tấm ảnh thật — đây là lần thứ tư dự án phải học bài này (DEC-053, DEC-054, ISSUE-032) |
+| Viết `docs/02` cho bảng `amis_employee_metrics` | 3 migration đã áp thật ở local nhưng chưa có bản ghi thiết kế nào |
+| E2E cho hai màn hình `/admin/reconciliation` và `/sales/reconciliation` | Hai route mới, chưa có bài nào chạm |
