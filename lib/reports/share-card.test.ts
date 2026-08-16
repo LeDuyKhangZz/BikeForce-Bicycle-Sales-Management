@@ -16,8 +16,13 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_SHARE_NOTE_CHARS,
   MAX_SHARE_ROUTE_CHARS,
+  SHARE_NAME_FONT_SIZE,
+  SHARE_NAME_MIN_FONT_SIZE,
+  SHARE_ROUTE_FONT_SIZE,
   asciiNameSlug,
   buildShareCardModel,
+  shareNameFontSize,
+  shareRouteFontSize,
   shareImageFileName,
   shareImagePath,
   shareImageViewPath,
@@ -161,18 +166,18 @@ describe('shareNoteBudget — ngân sách ghi chú ĐỘNG (PHASE 18, DEC-069)',
     expect(shareNoteBudget(SHORT_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS);
   });
 
-  it('tên Sales xuống 2 dòng → ghi chú chỉ còn 1 dòng', () => {
-    expect(shareNoteBudget(LONG_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS / 2);
+  it('tên Sales dài KHÔNG còn ăn dòng ghi chú nào — PHASE 19', () => {
+    // `shareNameFontSize()` ép tên về đúng một dòng bằng cách thu cỡ chữ, nên
+    // tên dài không còn là một khoản chi ở phần đầu thẻ.
+    expect(shareNoteBudget(LONG_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS);
   });
 
-  it('tuyến xuống 2 dòng → ghi chú cũng chỉ còn 1 dòng', () => {
+  it('tuyến xuống 2 dòng → ghi chú chỉ còn 1 dòng', () => {
     expect(shareNoteBudget(SHORT_NAME, LONG_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS / 2);
   });
 
-  it('CẢ HAI cùng dài → ngân sách 0, tức BỎ HẲN khối ghi chú', () => {
-    // Đây là ca đã render ra và thấy tận mắt: giữ khối ghi chú thì nó bị **chém
-    // ngang** giữa dòng chữ, trông như ảnh lỗi.
-    expect(shareNoteBudget(LONG_NAME, LONG_ROUTE)).toBe(0);
+  it('tuyến dài tới đâu cũng chỉ trừ ĐÚNG một dòng — tuyến bị ép tối đa 2 dòng', () => {
+    expect(shareNoteBudget(SHORT_NAME, 'R'.repeat(400))).toBe(MAX_SHARE_NOTE_CHARS / 2);
   });
 
   it('không có tuyến thì tuyến không ăn dòng nào', () => {
@@ -180,20 +185,72 @@ describe('shareNoteBudget — ngân sách ghi chú ĐỘNG (PHASE 18, DEC-069)',
   });
 
   it('ngân sách không bao giờ âm', () => {
-    expect(shareNoteBudget('N'.repeat(200), 'R'.repeat(200))).toBe(0);
+    expect(shareNoteBudget('N'.repeat(200), 'R'.repeat(200))).toBeGreaterThanOrEqual(0);
   });
 
-  it('buildShareCardModel BỎ ghi chú khi ngân sách bằng 0', () => {
-    const model = build({
+  it('CÓ cụm AMIS → ngân sách 0, tức BỎ HẲN khối ghi chú (PHASE 19)', () => {
+    // Cụm "Tình trạng thực hiện" cao ~200px, bằng đúng cả khối ghi chú kể cả
+    // nhãn. Đã render ra và thấy: giữ cả hai thì Yoga nén ghi chú còn một mẩu
+    // nhãn "GHI CHÚ" thò ra rồi bị chém ngang.
+    expect(shareNoteBudget(SHORT_NAME, SHORT_ROUTE, true)).toBe(0);
+  });
+
+  it('buildShareCardModel BỎ ghi chú khi có cụm AMIS, nhưng GIỮ khi không có', () => {
+    const overrides = {
       sales: { full_name: LONG_NAME, employee_code: 'KD-1' },
       planned_route: LONG_ROUTE,
       actual_route: LONG_ROUTE,
       evening_note: 'Khách hẹn lại tuần sau, đã gửi báo giá mới.',
-    });
+    };
 
-    expect(model.noteText).toBeNull();
-    // Tuyến thì VẪN còn — nó là thông tin của chuyến đi, không phải phần phụ.
-    expect(model.routeText).not.toBeNull();
+    expect(build(overrides).noteText).toBeNull();
+    expect(build(overrides, null).noteText).not.toBeNull();
+
+    // Tuyến thì VẪN còn ở cả hai — nó là thông tin của chuyến đi, không phải
+    // phần phụ được phép hy sinh.
+    expect(build(overrides).routeText).not.toBeNull();
+  });
+});
+
+describe('Cỡ chữ co theo độ dài (PHASE 19) — chỉ thu khi thật sự cần', () => {
+  it('tên ngắn giữ NGUYÊN 64px — người dùng dặn chỉ giảm khi tên bị xuống dòng', () => {
+    expect(shareNameFontSize('LÊ DUY KHANG')).toBe(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tên đúng 22 ký tự vẫn chưa bị đụng tới', () => {
+    expect(shareNameFontSize('N'.repeat(22))).toBe(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tên 23 ký tự trở lên mới bắt đầu thu', () => {
+    expect(shareNameFontSize('N'.repeat(23))).toBeLessThan(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tên càng dài cỡ chữ càng nhỏ, không bao giờ tăng lại', () => {
+    const sizes = [24, 28, 32, 36, 40].map((n) => shareNameFontSize('N'.repeat(n)));
+
+    for (let i = 1; i < sizes.length; i += 1) {
+      expect(sizes[i]!).toBeLessThanOrEqual(sizes[i - 1]!);
+    }
+  });
+
+  it('có SÀN — tên dài vô lý vẫn không nhỏ hơn 30px', () => {
+    expect(shareNameFontSize('N'.repeat(400))).toBe(SHARE_NAME_MIN_FONT_SIZE);
+  });
+
+  it('model dùng đúng cỡ chữ đã tính, đo trên chuỗi ĐÃ IN HOA', () => {
+    const model = build({ sales: { full_name: 'Nguyễn Trần Hoàng Phương Thảo Vy', employee_code: null } });
+
+    expect(model.nameFontSize).toBe(shareNameFontSize(model.salesName));
+    expect(model.nameFontSize).toBeLessThan(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tuyến ngắn giữ nguyên cỡ chữ, tuyến kịch trần bị thu', () => {
+    expect(shareRouteFontSize('Quận 1 → Quận 3')).toBe(SHARE_ROUTE_FONT_SIZE);
+    expect(shareRouteFontSize('Q'.repeat(MAX_SHARE_ROUTE_CHARS))).toBeLessThan(SHARE_ROUTE_FONT_SIZE);
+  });
+
+  it('không có tuyến thì trả cỡ chữ gốc, không ném', () => {
+    expect(shareRouteFontSize(null)).toBe(SHARE_ROUTE_FONT_SIZE);
   });
 });
 
@@ -522,7 +579,9 @@ describe('Edge case bắt buộc của Phase 6', () => {
 
   it('ghi chú 1000 ký tự bị cắt an toàn và có dấu …', () => {
     const note = 'Khách hẹn lại tuần sau. '.repeat(50).slice(0, 1000);
-    const { noteText } = build({ evening_note: note });
+    // `null` ở tham số hai: từ PHASE 19 cụm AMIS chiếm hết chỗ của ghi chú, nên
+    // phép cắt chỉ quan sát được ở thẻ KHÔNG có cụm.
+    const { noteText } = build({ evening_note: note }, null);
 
     expect(note).toHaveLength(1000);
     expect(noteText?.length).toBeLessThanOrEqual(MAX_SHARE_NOTE_CHARS);
@@ -530,8 +589,8 @@ describe('Edge case bắt buộc của Phase 6', () => {
   });
 
   it('ghi chú rỗng / chỉ khoảng trắng → null, thẻ bỏ hẳn khối ghi chú', () => {
-    expect(build().noteText).toBeNull();
-    expect(build({ evening_note: '   \n  ' }).noteText).toBeNull();
+    expect(build({}, null).noteText).toBeNull();
+    expect(build({ evening_note: '   \n  ' }, null).noteText).toBeNull();
   });
 
   it('doanh thu 12 chữ số vẫn vừa khung nhờ dạng rút gọn trong bảng', () => {

@@ -702,10 +702,11 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 
 | Ràng buộc | Cách xử lý | Kết quả |
 |---|---|---|
-| Tên dài 40+ ký tự → xuống dòng, không cắt chữ | không cắt gì cả, để Satori tự wrap | ✅ tên 42 ký tự xuống 2 dòng |
-| Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có `…` | `truncateText(route, 104)` ở tầng dữ liệu | ✅ |
+| **Tên dài → ÉP VỀ MỘT DÒNG bằng cách thu cỡ chữ** (PHASE 19) | `shareNameFontSize()` — 64px, sàn 30px. **Chỉ thu khi quá 22 ký tự**, người dùng dặn thẳng | ✅ tên 32 ký tự vẫn một dòng, không cắt cụt tên người |
+| Tuyến 300 ký tự → cắt an toàn, tối đa **2 dòng** | `truncateText(route, 104)` **cộng** `shareRouteFontSize()` — 34px, sàn 24px | ✅ 104 ký tự trước đây rơi xuống **3 dòng**, nay đúng 2 |
 | Ghi chú 1000 ký tự → cắt an toàn, có `…` | `truncateText(note, shareNoteBudget(...))` — **ngân sách ĐỘNG**, tối đa 2 dòng | ✅ |
-| Tên 2 dòng **và** tuyến 2 dòng **và** có ghi chú | `shareNoteBudget()` trả `0` → **bỏ hẳn** khối ghi chú | ✅ không còn bị chém ngang giữa dòng |
+| **Có cụm AMIS → BỎ HẲN ghi chú** (PHASE 19) | `shareNoteBudget(..., hasPerformance)` trả `0` | ✅ cụm cao ~200px, bằng đúng cả khối ghi chú — giữ cả hai thì mẩu nhãn "GHI CHÚ" thò ra rồi bị chém |
+| Không có cụm AMIS (chưa map tên) | ngân sách như cũ | ✅ ghi chú vẫn đủ 2 dòng |
 | **Nội dung dài tổng cộng vượt 1920px** | `flexShrink: 0` cho mọi khối bắt buộc; riêng ghi chú co được + `overflow: hidden` | ✅ cắt gọn thay vì **chồng chữ** (ISSUE-032) |
 | **Tình trạng thực hiện** khi Sales chưa map `amis_employee_name` | `buildShareCardModel(source, null)` → bỏ hẳn cụm | ✅ không in bốn dấu `—` trông như lỗi hệ thống |
 | **Tình trạng thực hiện** khi thiếu một số AMIS lẻ | dòng đó `PENDING`, ba dòng kia giữ nguyên | ✅ không kéo cả cụm xuống theo |

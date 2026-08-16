@@ -2026,6 +2026,62 @@ mốc 841 của phiên trước đúng ở chỗ đó.
 route ảnh) · **render PNG thật rồi nhìn** cụm 4 cột mới · `docs/02` cho bảng `amis_employee_metrics` ·
 E2E cho `/admin/reconciliation` và `/sales/reconciliation`.
 
+### Entry 031 — Đẩy 4 migration lên cloud · thẻ ảnh tràn khung 1920px, sửa bằng cỡ chữ co
+
+**Date:** 2026-08-16
+
+**Yêu cầu người dùng:** *"Đẩy 4 migration lên Supabase cloud giúp tôi, **bạn sẽ luôn là người làm việc
+này nên đừng bao giờ kêu tôi làm nữa**, mật khẩu trong env.local"* · *"bạn có cách nào giúp tôi xem ảnh
+báo cáo sáng, chiều hiện tại trông như nào mà không cần vào hệ thống làm báo cáo"* — lý do: tài khoản
+test chưa chắc có map AMIS, còn mượn tài khoản Sales thật thì làm bẩn số liệu production.
+
+**Completed:**
+
+1. **Đẩy 4 migration lên cloud `rnmywhwanpxmipqducqu`.** Kiểm hai lớp: `migration list` **12/12** mọi
+   `local` khớp `remote`; `db diff --linked` không còn `CREATE TABLE` / cột thiếu / view thiếu,
+   `dropStatements` rỗng. Phần sót lại trong diff chỉ là `rls_auto_enable` + `ALTER DEFAULT PRIVILEGES`
+   — đối tượng của chính nền tảng Supabase, **không phải drift**.
+2. **Dựng script render dùng-một-lần** (`npx tsx scripts/preview-share.tsx <thư-mục>`) — 8 tấm PNG
+   1080×1920 từ dữ liệu bịa, **không đăng nhập, không chạm database**. Khả thi vì
+   `buildShareCardModel()` thuần và thẻ chỉ nhận `model` + `flameSrc`.
+3. **Phát hiện thẻ đang GÃY — 863 test vẫn xanh.** Cụm AMIS cao hơn cụm DEC-068 cũ ~200px trong khi thẻ
+   cố định 1920px. Thang đo dựng được: tuyến 2 dòng → chân thẻ cắt nửa; tên 2 dòng → mất chân thẻ; cả
+   hai → **chém mất dòng thứ tư của cụm AMIS**. Ngưỡng gãy là **tên quá 22 ký tự**.
+4. Người dùng chốt hướng sửa: **giữ nguyên thanh tiến độ**, thu cỡ chữ tên cho vừa một dòng, và dặn
+   thêm *"chỉ giảm cỡ chữ khi tên quá dài khiến tên bị xuống dòng"*.
+5. `shareNameFontSize()` (64 → sàn 30) và `shareRouteFontSize()` (34 → sàn 24) trong `lib/`, hai cỡ chữ
+   vào `ShareCardModel` chứ không tính trong component (AGENTS.md §1.3).
+6. `shareNoteBudget()` bỏ vế `nameLines`, thêm tham số `hasPerformance` trả **0**.
+7. 11 unit test mới cho hai hàm cỡ chữ; 4 test cũ cập nhật theo hành vi mới.
+
+**Hai bài học tự vấp phải trong một buổi:** ngưỡng **24** ký tự thu **chưa đủ** (tên vẫn xuống dòng),
+ngưỡng **20** thì **thu oan** tên vốn đã vừa — đúng cái người dùng vừa dặn tránh. Kết cục phải tách làm
+**hai hằng số**: `NAME_CHARS_PER_LINE = 22` trả lời *"có cần thu không"*, `NAME_FIT_CHARS = 20` trả lời
+*"thu bao nhiêu thì chắc chắn vừa"*. Đếm ký tự chỉ là xấp xỉ — cùng 28 ký tự mà chuỗi này vừa, chuỗi kia
+không.
+
+**Lỗi thứ hai chỉ lộ ra ở lượt render thứ tư:** ghi chú bị Yoga nén dở dang nên **mẩu nhãn "GHI CHÚ" thò
+ra rồi bị chém ngang**. Sửa bằng cách cho ngân sách về 0 khi có cụm AMIS — tất-hoặc-không, kiểm được
+bằng unit test.
+
+**Files Changed:** `lib/reports/share-card.ts`, `lib/reports/share-card.test.ts`,
+`features/report-share/daily-report-share-card.tsx`, `docs/05`, `docs/11`, `WORKLOG.md`,
+`SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Tests đã chạy thật (2026-08-16):**
+
+| Gate | Kết quả |
+|---|---|
+| `npm run build` | ✅ exit 0 — 22 route |
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error / 0 warning |
+| `npm test` | ✅ **872/872 · 33/33 file · 0 skip** |
+| Migration cloud | ✅ **12/12**, `db diff` sạch |
+| **Nhìn tận mắt** | ✅ 8 tấm PNG render lại sau khi sửa, xem từng tấm |
+
+**Còn nợ:** `docs/02` cho `amis_employee_metrics` · E2E cho `/admin/reconciliation` và
+`/sales/reconciliation` · E2E khoá thanh/lửa (nợ từ Phase 18).
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần

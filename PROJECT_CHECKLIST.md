@@ -975,8 +975,13 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Soát `GRANT` — `anon` **không** có `SELECT` trên bảng mới
 - [x] `npm run build` exit 0 — **22 route**; `typecheck` exit 0; `lint` 0 error / 0 warning
 - [x] `npm test` — **863/863 · 33/33 file · 0 skip** (Supabase local chạy thật, không skip test DB/RLS)
-- [ ] **Render PNG thật rồi NHÌN** cụm 4 cột — chưa ai xem tấm ảnh thật của cụm mới
-- [ ] Đẩy **4** migration lên Supabase cloud — **chặn merge vào `main`**, thiếu là nút xuất ảnh chết toàn đội
+- [x] **Render PNG thật rồi NHÌN** cụm 4 cột — bắt được lỗi tràn khung mà 863 test không thấy
+- [x] Đẩy **4** migration lên Supabase cloud — **12/12**, `db diff --linked` sạch
+- [x] `shareNameFontSize()` — tên ép về **một dòng**, chỉ thu khi quá 22 ký tự (người dùng dặn thẳng)
+- [x] `shareRouteFontSize()` — tuyến ép tối đa **hai dòng**; 104 ký tự trước đây rơi xuống 3 dòng
+- [x] Thanh tiến độ trong cụm AMIS **giữ nguyên** — người dùng chốt, đừng bỏ để lấy chỗ
+- [x] `shareNoteBudget()` trả 0 khi có cụm AMIS — chống mẩu nhãn "GHI CHÚ" thò ra rồi bị chém
+- [x] 11 unit test mới cho hai hàm cỡ chữ; full Vitest **872/872**
 - [ ] `docs/02-database-design.md` cho `amis_employee_metrics` + `profiles.amis_employee_name` + view
 - [ ] E2E cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm
 - [ ] E2E khoá riêng thanh/lửa — nợ cũ từ Phase 18, chưa trả

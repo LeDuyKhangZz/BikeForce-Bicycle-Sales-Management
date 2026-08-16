@@ -736,7 +736,10 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
         style={{
           ...NO_SHRINK,
           display: 'flex',
-          fontSize: 64,
+          // Cỡ chữ do `shareNameFontSize()` quyết định để tên nằm gọn MỘT dòng
+          // (PHASE 19). Đừng đặt lại hằng 64 ở đây — tên 2 dòng đẩy ghi chú,
+          // chân thẻ rồi cả dòng cuối cụm AMIS ra khỏi khung 1920px.
+          fontSize: model.nameFontSize,
           fontWeight: 700,
           color: COLOR.heading,
           marginTop: 10,
@@ -768,7 +771,17 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           <div style={{ display: 'flex', fontSize: 24, color: COLOR.muted, letterSpacing: 3 }}>
             TUYẾN
           </div>
-          <div style={{ display: 'flex', fontSize: 34, color: COLOR.body, marginTop: 8, lineHeight: 1.4 }}>
+          <div
+            style={{
+              display: 'flex',
+              // Thu để tuyến không quá HAI dòng — `shareRouteFontSize()`. Tuyến
+              // 104 ký tự ở cỡ 34px rơi xuống 3 dòng, đã render ra và đếm.
+              fontSize: model.routeFontSize,
+              color: COLOR.body,
+              marginTop: 8,
+              lineHeight: 1.4,
+            }}
+          >
             {model.routeText}
           </div>
         </div>

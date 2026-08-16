@@ -2382,3 +2382,69 @@ máy người viết nó.
 | Render PNG thật rồi **nhìn** | Cụm mới có 4 cột thay vì 3 dòng của DEC-068. Chưa ai xem tấm ảnh thật — đây là lần thứ tư dự án phải học bài này (DEC-053, DEC-054, ISSUE-032) |
 | Viết `docs/02` cho bảng `amis_employee_metrics` | 3 migration đã áp thật ở local nhưng chưa có bản ghi thiết kế nào |
 | E2E cho hai màn hình `/admin/reconciliation` và `/sales/reconciliation` | Hai route mới, chưa có bài nào chạm |
+
+### DEC-070 — BỔ SUNG: cỡ chữ CO THEO ĐỘ DÀI, và cụm AMIS loại trừ ghi chú
+
+**Ngày:** 2026-08-16 · **Nguồn:** người dùng xem ảnh render thật rồi chốt
+
+#### Lỗi phát hiện được nhờ RENDER RA VÀ NHÌN
+
+Bốn migration lên cloud xong, tôi render 8 tấm PNG thật để người dùng xem. **863 unit test vẫn xanh
+trong khi tấm ảnh đang gãy** — đúng bài học DEC-053/DEC-054/ISSUE-032, lần thứ tư.
+
+Cụm "Tình trạng thực hiện" có 4 dòng kèm thanh tiến độ, cao hơn cụm lũy kế cũ của DEC-068 khoảng
+**200px**, mà thẻ thì cao **cố định 1920px**. Đo được bằng cách dựng thang dữ liệu tăng dần:
+
+| Phần đầu thẻ | Ghi chú | Chân thẻ | Cụm AMIS |
+|---|---|---|---|
+| tên 1 dòng · tuyến 1 dòng | mất | còn | đủ |
+| tên 1 dòng · tuyến 2 dòng | mất | **cắt nửa** | đủ |
+| tên 2 dòng · tuyến 1 dòng | mất | **mất** | đủ |
+| tên 2 dòng · tuyến 2 dòng | mất | mất | **chém dòng 4** |
+| tên 2 dòng · tuyến 3 dòng | mất | mất | **chém sâu** |
+
+Ngưỡng gãy nằm ở **tên Sales quá 22 ký tự** — `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` là họ tên tiếng Việt
+hoàn toàn bình thường, không phải ca hiếm.
+
+#### Quyết định của người dùng
+
+Nguyên văn: *"làm sao để tên của sales chỉ xuất hiện trên 1 dòng thôi, ví dụ tên người đó quá dài thì
+giảm size chữ xuống để tên xuất hiện 1 dòng thôi, còn việc thanh tiến độ % hoàn thành cứ để nguyên như
+hiện tại"*, và ngay sau đó: *"lưu ý chỉ giảm cỡ chữ khi tên quá dài khiến tên bị xuống dòng"*.
+
+⇒ **Giữ nguyên thanh tiến độ.** Lấy lại chỗ bằng cách **thu cỡ chữ**, không bằng cách bỏ nội dung.
+
+#### Đã làm
+
+1. `shareNameFontSize()` — tên về đúng **một dòng**. Từ 64px, sàn 30px.
+2. `shareRouteFontSize()` — tuyến không quá **hai dòng**. Từ 34px, sàn 24px. Cùng nguyên tắc, vì tuyến
+   104 ký tự (đúng `MAX_SHARE_ROUTE_CHARS`) thực tế rơi xuống **3 dòng**.
+3. `shareNoteBudget()` bỏ vế `nameLines` — tên không còn là khoản chi, nên trừ tiếp là trừ hai lần.
+4. `shareNoteBudget(..., hasPerformance)` trả **0** khi có cụm AMIS.
+
+#### ⚠ HAI NGƯỠNG, CỐ Ý KHÁC NHAU — đừng gộp
+
+| Hằng | Giá trị | Trả lời câu hỏi |
+|---|---|---|
+| `NAME_CHARS_PER_LINE` | 22 | *"có cần thu không"* |
+| `NAME_FIT_CHARS` | 20 | *"thu bao nhiêu thì CHẮC CHẮN vừa"* |
+
+Gộp làm một thì hoặc **thu oan** tên vẫn vừa (vi phạm câu dặn của người dùng), hoặc **thu chưa đủ** và
+tên vẫn xuống dòng. Đã dính đúng cả hai lỗi đó trong một buổi: ngưỡng 24 thu chưa đủ, ngưỡng 20 thu oan.
+
+Đếm ký tự chỉ là xấp xỉ — `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` (28 ký tự) ở **54px vẫn xuống dòng**, tức sức
+chứa thật của chuỗi đó chỉ ~20 ký tự quy về 64px, trong khi chuỗi khác cùng độ dài lại vừa. Lấy mức hẹp
+nhất từng đo được. **Muốn đổi thì render ra và đếm, đừng tính lại bằng em-width.**
+
+#### ⚠ Vì sao ghi chú bị bỏ HẲN khi có cụm AMIS
+
+Không phải để tiết kiệm chỗ cho vui. Ghi chú là khối duy nhất **co được** (ISSUE-032), nên khi thiếu chỗ
+Yoga nén nó — và ở mức nén dở dang thì **mẩu nhãn "GHI CHÚ" thò ra rồi bị chém ngang**, đã render ra và
+thấy. Trả `0` biến chuyện đó thành **tất-hoặc-không**, xác định được, kiểm được bằng unit test.
+
+Thẻ **không có** cụm AMIS (Sales chưa map tên) vẫn giữ đủ ghi chú 2 dòng như cũ.
+
+#### Kiểm chứng
+
+8 tấm PNG render lại sau khi sửa, nhìn từng tấm: tên một dòng ở mọi ca, tuyến tối đa hai dòng, cụm AMIS
+đủ bốn dòng, chân thẻ còn nguyên, không còn mẩu chữ thò ra. Vitest **872/872**.

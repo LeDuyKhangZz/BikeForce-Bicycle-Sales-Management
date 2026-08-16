@@ -58,19 +58,29 @@ DB/RLS chạy thật thay vì skip. Nếu phiên sau thấy `197 skipped` thì l
 hồi quy — dựng lại bằng `Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'` rồi
 `npx supabase start`.
 
+### ✅ Đã xong trong lượt sau (Entry 031, cùng ngày)
+
+1. ~~Render PNG thật rồi NHÌN~~ — **XONG, và bắt được lỗi thật.** Thẻ tràn khung 1920px: tên quá 22 ký
+   tự là mất chân thẻ, thêm tuyến 2 dòng là **chém mất dòng thứ tư của cụm AMIS**. 863 test vẫn xanh
+   suốt lúc đó. Đã sửa bằng **cỡ chữ co theo độ dài** (DEC-070 bổ sung), render lại 8 tấm và nhìn từng tấm.
+2. ~~Đẩy 4 migration lên cloud~~ — **XONG, cloud 12/12**, `db diff --linked` sạch. ⚠ Từ nay **việc đẩy
+   migration là của agent, người dùng dặn đừng bao giờ nhắc họ làm nữa** — mật khẩu ở `.env.local`.
+
+### Cách xem thẻ ảnh mà KHÔNG cần đăng nhập, KHÔNG chạm dữ liệu thật
+
+`buildShareCardModel()` là hàm thuần và thẻ chỉ nhận `model` + `flameSrc` — cả đường render không chạm
+database, cookie phiên hay AMIS. Viết `scripts/preview-share.tsx` bịa hai object đầu vào, gọi
+`new ImageResponse(...)` rồi ghi PNG ra scratchpad, chạy bằng `npx tsx`. **Script dùng-một-lần, không
+commit.** Luôn render **cả ca xấu nhất** — ca đẹp không bao giờ lộ lỗi tràn khung.
+
 ### Next Exact Steps
 
-1. **Render PNG thật rồi NHÌN** cụm "Tình trạng thực hiện" 4 cột. Chưa ai xem tấm ảnh thật của cụm mới
-   — nó rộng 4 cột trong khối 900px, đúng thứ mà không phép đo nào bắt được (bài học DEC-053, DEC-054,
-   ISSUE-032). Phải nhìn **cả ca dữ liệu dài nhất**: tên 2 dòng · tuyến 2 dòng · ghi chú kịch trần.
-2. **Đẩy 4 migration lên Supabase cloud** trước bất kỳ ý định merge nào:
-   `SUPABASE_DB_PASSWORD=<pw> npx supabase db push --yes`. **Thiếu bước này mà merge vào `main` là nút
-   xuất ảnh chết cho toàn đội Sales**, vì `services/reports.ts` đã thêm `profiles.amis_employee_name`
-   vào truy vấn của route ảnh — không riêng cụm mới hỏng, cả tấm ảnh hỏng.
-3. **Viết `docs/02-database-design.md`** cho `amis_employee_metrics`, cột `profiles.amis_employee_name`
-   và view `amis_reconciliation`. Ba migration đã áp thật nhưng chưa có bản ghi thiết kế nào.
-4. **E2E** cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm.
-5. Chỉ sau 1–4 mới bàn tới merge vào `main`.
+1. **Viết `docs/02-database-design.md`** cho `amis_employee_metrics`, cột `profiles.amis_employee_name`
+   và view `amis_reconciliation`. Migration đã áp thật ở cả local lẫn cloud nhưng chưa có bản ghi thiết kế.
+2. **E2E** cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm.
+3. **E2E khoá thanh tiến độ / ngọn lửa** — nợ từ Phase 18, chưa trả.
+4. Chỉ sau 1–3 mới bàn tới merge vào `main`. Migration đã lên cloud nên rào chắn cũ đã gỡ, nhưng
+   `main` vẫn chưa được đụng tới.
 
 ---
 
