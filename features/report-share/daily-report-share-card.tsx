@@ -1,5 +1,10 @@
 import { achievementLabel, type AchievementStatus } from '@/lib/kpi';
-import type { ShareCardMetricRow, ShareCardModel, ShareCardProgress } from '@/lib/reports/share-card';
+import type {
+  ShareCardMetricRow,
+  ShareCardModel,
+  ShareCardPerformanceRow,
+  ShareCardProgress,
+} from '@/lib/reports/share-card';
 
 /**
  * Thẻ ảnh chia sẻ 9:16 — bố cục `docs/05 §14`, render bằng **Satori** trong
@@ -33,12 +38,17 @@ import type { ShareCardMetricRow, ShareCardModel, ShareCardProgress } from '@/li
  *    quyết định ở tầng dữ liệu; component không tự đoán.
  *
  * ─────────────────────────────────────────────────────────────────────────
- *  PHASE 17 — DEC-068
+ *  PHASE 19 — DEC-070
  * ─────────────────────────────────────────────────────────────────────────
- *  Khối "Số khách làm việc" (DEC-056, chỉ có ở bản chiều) **đã bị gỡ** theo yêu
- *  cầu trực tiếp của người dùng ngày 2026-08-14. Thay vào đúng vị trí đó là
- *  **cụm lũy kế tháng** — doanh số tháng, doanh thu tháng, số ngày đạt KPI —
- *  và cụm này có ở **cả hai** biến thể. Đừng thêm lại khối cũ.
+ *  Khối dưới bảng đã đổi chủ **ba** lần, đừng khôi phục bản nào cũ:
+ *
+ *    DEC-056 → "Số khách làm việc" (chỉ có ở bản chiều)
+ *    DEC-068 → cụm lũy kế tháng, 3 dòng, cộng từ `daily_reports`
+ *    DEC-070 → **cụm "Tình trạng thực hiện"**, 4 dòng × 4 cột, THỰC ĐẠT lấy từ
+ *              MISA AMIS
+ *
+ *  Điều khiến bản mới khác hẳn: ba trong bốn dòng là con số **hệ thống kế toán
+ *  ghi nhận**, không phải con số Sales tự khai. Đó là thứ cấp trên muốn thấy.
  */
 
 /**
@@ -118,6 +128,20 @@ const MORNING_COLUMN = {
   target: 368,
 } as const;
 
+/**
+ * Bốn cột của cụm "Tình trạng thực hiện" — PHASE 19, DEC-070.
+ *
+ * Hẹp hơn bảng chính vì cụm nằm trong một khối có vạch cam 10px và lề trong
+ * 32px mỗi bên: `968 − 10 − 64 = 894px`. Bốn số dưới đây cộng lại **đúng 894**.
+ * Đổi một cột thì phải bù ở cột khác, nếu không Satori đẩy cột cuối tràn ra.
+ */
+const PERF_COLUMN = {
+  metric: 300,
+  target: 178,
+  actual: 178,
+  achievement: 238,
+} as const;
+
 /** Đệm ngang trong lòng mỗi dòng bảng, để chữ không dính sát mép sọc. */
 const ROW_PADDING_X = 16;
 
@@ -150,11 +174,10 @@ const NO_SHRINK = { flexShrink: 0 } as const;
  * Bản sáng vì thế đọc như một tấm áp phích: dòng cao, số to.
  *
  * ⚠ **PHASE 17 (DEC-068): `MORNING.paddingY` hạ từ 70 xuống 44 — đừng nâng lại.**
- * Cụm lũy kế tháng chiếm ~350px ngay dưới bảng, nên khoảng trắng mà con số 70
- * sinh ra để lấp nay không còn tồn tại. Giữ 70 thì bản sáng **tràn quá 1920px**,
- * và Satori không cắt bớt: nó nén các khối lại cho tới khi chữ **chồng lên
- * nhau** — tên Sales đè lên ngày, dòng chân đè lên footer. Lỗi đó không có phép
- * đo nào bắt được, chỉ nhìn tấm PNG mới thấy (bài học DEC-053/DEC-054).
+ * Cụm dưới bảng chiếm ~330px ngay dưới bảng, nên khoảng trắng mà con số 70 sinh
+ * ra để lấp nay không còn tồn tại. Giữ 70 thì bản sáng **tràn quá 1920px**, và
+ * Satori không cắt bớt: nó nén các khối lại cho tới khi chữ **chồng lên nhau**.
+ * Lỗi đó không có phép đo nào bắt được, chỉ nhìn tấm PNG mới thấy.
  *
  * Bài học DEC-053 lặp lại: bốn nhóm luật đo được đều xanh mà mắt vẫn thấy sai.
  */
@@ -185,6 +208,17 @@ const EVENING_HEADER: readonly HeaderCellSpec[] = [
   { text: 'HOÀN THÀNH', width: EVENING_COLUMN.achievement, align: 'right' },
 ];
 
+/**
+ * Tiêu đề cột của cụm "Tình trạng thực hiện". Ô đầu để TRỐNG có chủ ý: nhãn
+ * dòng ở đây là tên chỉ số ("Doanh số đã ghi"), không phải một cột cần đặt tên.
+ */
+const PERFORMANCE_HEADER: readonly HeaderCellSpec[] = [
+  { text: '', width: PERF_COLUMN.metric, align: 'left' },
+  { text: 'CHỈ TIÊU', width: PERF_COLUMN.target, align: 'right' },
+  { text: 'THỰC ĐẠT', width: PERF_COLUMN.actual, align: 'right' },
+  { text: '% HOÀN THÀNH', width: PERF_COLUMN.achievement, align: 'right' },
+];
+
 function HeaderCell({ text, width, align }: { text: string; width: number; align: 'left' | 'right' }) {
   return (
     <div
@@ -193,6 +227,26 @@ function HeaderCell({ text, width, align }: { text: string; width: number; align
         width,
         justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
         fontSize: 30,
+        fontWeight: 700,
+        color: COLOR.muted,
+        letterSpacing: 0.6,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {text}
+    </div>
+  );
+}
+
+/** Cùng ô tiêu đề nhưng cỡ nhỏ hơn — cụm dưới là phụ, không tranh chỗ với bảng. */
+function SmallHeaderCell({ text, width, align }: { text: string; width: number; align: 'left' | 'right' }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        width,
+        justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
+        fontSize: 20,
         fontWeight: 700,
         color: COLOR.muted,
         letterSpacing: 0.6,
@@ -299,15 +353,24 @@ const FLAME_STRIP_HEIGHT = FLAME_STRIP.height;
  * lướt — thứ sếp của người dùng yêu cầu.
  *
  * `PENDING` thì không vẽ gì: một pill rỗng dưới chữ `'—'` chỉ thêm nhiễu.
+ *
+ * ⚠ **`withFlame` — PHASE 19, DEC-070.** Cụm "Tình trạng thực hiện" gọi hàm này
+ * với `false`, và đó là một quyết định về CHỖ chứ không về thẩm mỹ: chừa sẵn
+ * `FLAME_STRIP_HEIGHT` (**50px** kể từ khi dải lửa thành ảnh PNG) trên mỗi thanh
+ * × 4 dòng = **200px** chiều cao mà cụm không có để tiêu. Bật lửa ở cụm dưới thì
+ * thẻ tràn 1920px và chữ chồng lên nhau (ISSUE-032). Bảng chính giữ nguyên lửa
+ * vì nó là phần chính của tấm ảnh.
  */
 function ProgressBar({
   progress,
   status,
   flameSrc,
+  withFlame = true,
 }: {
   progress: ShareCardProgress;
   status: AchievementStatus;
   flameSrc: string | null;
+  withFlame?: boolean;
 }) {
   if (status === 'PENDING') return null;
 
@@ -333,8 +396,8 @@ function ProgressBar({
         alignItems: 'flex-end',
         position: 'relative',
         width: PROGRESS.width,
-        height: FLAME_STRIP_HEIGHT + PROGRESS.height,
-        marginTop: 8,
+        height: withFlame ? FLAME_STRIP_HEIGHT + PROGRESS.height : PROGRESS.height,
+        marginTop: withFlame ? 8 : 6,
       }}
     >
       {/* Lửa đứng TRƯỚC pill trong DOM ⇒ Satori vẽ nó xuống dưới, nên thanh đè
@@ -343,7 +406,7 @@ function ProgressBar({
           `flameSrc === null` nghĩa là không đọc được file ảnh: khi đó bỏ lửa
           nhưng **vẫn vẽ thanh**. Một tấm ảnh thiếu hiệu ứng vẫn dùng được; một
           tấm ảnh 500 thì không. */}
-      {progress.isBlazing && flameSrc !== null && (
+      {withFlame && progress.isBlazing && flameSrc !== null && (
         <div
           style={{
             display: 'flex',
@@ -504,6 +567,95 @@ function MetricRow({
   );
 }
 
+/**
+ * Một dòng của cụm "Tình trạng thực hiện" — PHASE 19, DEC-070.
+ *
+ * Dùng lại `ProgressBar` và `STATUS_COLOR` của bảng chính: hai cụm trên cùng
+ * một tấm ảnh phải nói cùng một thứ tiếng màu, nếu không người đọc phải học hai
+ * quy ước trong một lần nhìn.
+ *
+ * Không có nhãn chữ (`achievementLabel`) như bảng chính — cụm này đã có bốn
+ * dòng và không còn chỗ theo chiều dọc. Luật `color-not-only` vẫn thoả: con số
+ * `%` ngay đó là thông tin, màu chỉ là lớp nhấn.
+ */
+function PerformanceRow({ row }: { row: ShareCardPerformanceRow }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: 14 }}>
+      <div
+        style={{
+          display: 'flex',
+          width: PERF_COLUMN.metric,
+          fontSize: 26,
+          color: COLOR.body,
+        }}
+      >
+        {row.label}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          width: PERF_COLUMN.target,
+          justifyContent: 'flex-end',
+          fontSize: 26,
+          color: COLOR.muted,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {row.targetText}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          width: PERF_COLUMN.actual,
+          justifyContent: 'flex-end',
+          fontSize: 26,
+          fontWeight: 700,
+          color: COLOR.body,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {row.actualText}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: PERF_COLUMN.achievement,
+          alignItems: 'flex-end',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            fontSize: 30,
+            fontWeight: 700,
+            color: STATUS_COLOR[row.achievement.status],
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {row.achievement.display}
+        </div>
+
+        {/* `withFlame={false}` — xem chú thích của `ProgressBar`: chừa chỗ cho
+            lửa ở bốn dòng nữa là 200px mà cụm này không có.
+
+            `flameSrc={null}` chứ không kéo data URI xuống tận đây: `withFlame`
+            đã tắt lửa nên tấm ảnh 400×99 sẽ không bao giờ được vẽ, truyền nó
+            xuống chỉ là một prop chết đi qua hai tầng component. */}
+        <ProgressBar
+          progress={row.progress}
+          status={row.achievement.status}
+          flameSrc={null}
+          withFlame={false}
+        />
+      </div>
+    </div>
+  );
+}
+
 type Props = {
   model: ShareCardModel;
   /**
@@ -584,7 +736,10 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
         style={{
           ...NO_SHRINK,
           display: 'flex',
-          fontSize: 64,
+          // Cỡ chữ do `shareNameFontSize()` quyết định để tên nằm gọn MỘT dòng
+          // (PHASE 19). Đừng đặt lại hằng 64 ở đây — tên 2 dòng đẩy ghi chú,
+          // chân thẻ rồi cả dòng cuối cụm AMIS ra khỏi khung 1920px.
+          fontSize: model.nameFontSize,
           fontWeight: 700,
           color: COLOR.heading,
           marginTop: 10,
@@ -616,7 +771,17 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           <div style={{ display: 'flex', fontSize: 24, color: COLOR.muted, letterSpacing: 3 }}>
             TUYẾN
           </div>
-          <div style={{ display: 'flex', fontSize: 34, color: COLOR.body, marginTop: 8, lineHeight: 1.4 }}>
+          <div
+            style={{
+              display: 'flex',
+              // Thu để tuyến không quá HAI dòng — `shareRouteFontSize()`. Tuyến
+              // 104 ký tự ở cỡ 34px rơi xuống 3 dòng, đã render ra và đếm.
+              fontSize: model.routeFontSize,
+              color: COLOR.body,
+              marginTop: 8,
+              lineHeight: 1.4,
+            }}
+          >
             {model.routeText}
           </div>
         </div>
@@ -656,12 +821,12 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
         <div style={{ display: 'flex', width: CONTENT_WIDTH, height: 1, backgroundColor: COLOR.rule }} />
       </div>
 
-      {/* ── Cụm lũy kế tháng — PHASE 17, DEC-068 ────────────────────────────
-          Có ở CẢ HAI biến thể. Chỗ này trước đây là khối "Số khách làm việc"
-          (DEC-056); người dùng yêu cầu bỏ hẳn nó ngày 2026-08-14 vì cấp trên cần
-          thành tích THÁNG, không phải một tỉ lệ của riêng ngày hôm đó. */}
-      {model.monthly !== null && (
-        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: 30 }}>
+      {/* ── Tình trạng thực hiện — PHASE 19, DEC-070 ────────────────────────
+          Ba trong bốn dòng lấy THỰC ĐẠT từ MISA AMIS, không phải từ số Sales tự
+          khai. Chỗ này trước đây là cụm lũy kế tháng (DEC-068), và trước nữa là
+          khối "Số khách làm việc" (DEC-056). Đừng khôi phục bản nào cũ. */}
+      {model.performance !== null && (
+        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: 26 }}>
           {/* Vạch cam dọc: cam logo làm ĐỒ HOẠ, không mang chữ (DEC-046). */}
           <div style={{ display: 'flex', width: 10, backgroundColor: COLOR.accent }} />
           <div
@@ -670,8 +835,8 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
               flexDirection: 'column',
               flexGrow: 1,
               backgroundColor: COLOR.accentSoft,
-              paddingTop: 24,
-              paddingBottom: 26,
+              paddingTop: 22,
+              paddingBottom: 24,
               paddingLeft: 32,
               paddingRight: 32,
             }}
@@ -686,38 +851,28 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {model.monthly.title}
+              {model.performance.title}
             </div>
-            <div style={{ display: 'flex', fontSize: 24, color: COLOR.muted, marginTop: 6 }}>
-              {model.monthly.rangeText}
+            <div style={{ display: 'flex', fontSize: 22, color: COLOR.muted, marginTop: 6 }}>
+              {model.performance.rangeText}
             </div>
 
             {/* Mảng chứ không Fragment — Satori không dựng được `<>…</>`. */}
-            {model.monthly.rows.map((row, index) => (
-              <div
-                key={row.label}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  justifyContent: 'space-between',
-                  // Dòng đầu cách phần tiêu đề rộng hơn khoảng cách giữa ba dòng
-                  // với nhau: cụm phải đọc ra là "một tiêu đề + một danh sách".
-                  marginTop: index === 0 ? 18 : 10,
-                }}
-              >
-                <div style={{ display: 'flex', fontSize: 32, color: COLOR.body }}>{row.label}</div>
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 38,
-                    fontWeight: 700,
-                    color: COLOR.heading,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {row.valueText}
-                </div>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 16 }}>
+              {PERFORMANCE_HEADER.map((cell) => (
+                <SmallHeaderCell
+                  key={cell.text === '' ? 'metric' : cell.text}
+                  text={cell.text}
+                  width={cell.width}
+                  align={cell.align}
+                />
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', height: 1, backgroundColor: COLOR.accent, marginTop: 6 }} />
+
+            {model.performance.rows.map((row) => (
+              <PerformanceRow key={row.label} row={row} />
             ))}
           </div>
         </div>
@@ -733,7 +888,7 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            marginTop: 26,
+            marginTop: 22,
             flexShrink: 1,
             overflow: 'hidden',
           }}
@@ -756,7 +911,7 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
             display: 'flex',
             fontSize: 32,
             color: COLOR.muted,
-            marginTop: 36,
+            marginTop: 30,
             lineHeight: 1.4,
           }}
         >

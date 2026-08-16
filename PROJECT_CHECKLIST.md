@@ -953,6 +953,39 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Ca xấu nhất không còn **chém ngang** khối ghi chú; full Vitest **858/858**
 - [ ] E2E khoá riêng thanh/lửa — **chưa làm**, cùng nhóm nợ với cụm lũy kế
 
+## Phase 19 — Cụm "Tình trạng thực hiện" từ MISA AMIS (DEC-070, nhánh `feat/amis-auto-token`)
+
+> ⚠ **Phase này CHƯA ĐÓNG và đang nằm trên nhánh.** `main` và production chưa bị đụng.
+> Code tích hợp AMIS do cộng tác viên `NguyenPhust9` viết (`251fa19`); phiên 2026-08-16 gộp `main` vào
+> nhánh, ghi DEC-070 và đưa nhánh từ đỏ về xanh. **Giữ nguyên mọi thứ cộng tác viên đã sửa** — người
+> dùng yêu cầu trực tiếp hai lần.
+
+- [x] Gộp `main` vào nhánh (`ddfecdf`); hai xung đột `.gitignore` + `daily-report-share-card.tsx` giữ **cả hai vế**
+- [x] `ProgressBar` nhận cả `flameSrc` (ảnh PNG của DEC-069) lẫn `withFlame` (công tắc của DEC-070)
+- [x] Xác minh nhánh **đã đỏ từ trước khi gộp** — `251fa19` gỡ `model.monthly` mà không sửa file test
+- [x] Hỏi người dùng trước khi đảo DEC-068; nhận chốt **"AMIS thay hẳn"** kèm ảnh mockup
+- [x] Ghi **DEC-070** vào `docs/11` — mã nguồn nhắc DEC-070 hơn 15 chỗ nhưng chưa có bản ghi nào
+- [x] `docs/05 §14` cập nhật: sơ đồ thẻ, ba bảng "đã hết hiệu lực", ràng buộc của cụm mới
+- [x] 12 unit test cho cụm mới thay 7 test cụm cũ (thứ tự dòng · nguồn chỉ tiêu · mốc đồng bộ · ca lỗi)
+- [x] `nav-items.test.ts` — Sales 3 → 4, Admin 4 → **5, chạm đúng trần DEC-018**
+- [x] `amis-recon.ts` — bỏ `any[]`; kiểu mới lộ ra `split('?')[0]` là `string | undefined`
+- [x] **Áp 3 migration `20260815*` lần đầu ở local** — trước phiên này chúng chưa từng chạy
+- [x] **Bịt lỗ RLS:** `amis_employee_metrics` thiếu `force row level security`; thêm migration MỚI `20260816000000`
+- [x] Soát view `amis_reconciliation` — có `security_invoker=on`, RLS bảng gốc vẫn áp (BR-003 an toàn)
+- [x] Soát `GRANT` — `anon` **không** có `SELECT` trên bảng mới
+- [x] `npm run build` exit 0 — **22 route**; `typecheck` exit 0; `lint` 0 error / 0 warning
+- [x] `npm test` — **863/863 · 33/33 file · 0 skip** (Supabase local chạy thật, không skip test DB/RLS)
+- [x] **Render PNG thật rồi NHÌN** cụm 4 cột — bắt được lỗi tràn khung mà 863 test không thấy
+- [x] Đẩy **4** migration lên Supabase cloud — **12/12**, `db diff --linked` sạch
+- [x] `shareNameFontSize()` — tên ép về **một dòng**, chỉ thu khi quá 22 ký tự (người dùng dặn thẳng)
+- [x] `shareRouteFontSize()` — tuyến ép tối đa **hai dòng**; 104 ký tự trước đây rơi xuống 3 dòng
+- [x] Thanh tiến độ trong cụm AMIS **giữ nguyên** — người dùng chốt, đừng bỏ để lấy chỗ
+- [x] `shareNoteBudget()` trả 0 khi có cụm AMIS — chống mẩu nhãn "GHI CHÚ" thò ra rồi bị chém
+- [x] 11 unit test mới cho hai hàm cỡ chữ; full Vitest **872/872**
+- [ ] `docs/02-database-design.md` cho `amis_employee_metrics` + `profiles.amis_employee_name` + view
+- [ ] E2E cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm
+- [ ] E2E khoá riêng thanh/lửa — nợ cũ từ Phase 18, chưa trả
+
 ## OPEN QUESTIONS
 
 Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đầy đủ:

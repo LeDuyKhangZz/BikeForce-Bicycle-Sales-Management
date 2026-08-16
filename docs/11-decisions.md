@@ -2278,3 +2278,173 @@ Không còn cần bước làm mượt Gaussian: quầng đã bị loại ở ng
 **Bài học chung:** khi cắt một ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước** rồi
 chừa biên — đừng chọn khung cắt theo ngân sách bố cục. Ngân sách nên được điều chỉnh cho vừa chủ thể,
 không phải ngược lại.
+
+---
+
+## DEC-070 — Cụm "TÌNH TRẠNG THỰC HIỆN" lấy số từ MISA AMIS, thay cụm lũy kế tháng của DEC-068
+
+**Status:** APPROVED · **Ngày:** 2026-08-16 · **Phase:** 19 · **Nhánh:** `feat/amis-auto-token`
+
+### Bối cảnh
+
+Commit `251fa19` do cộng tác viên `NguyenPhust9` đẩy lên nhánh `feat/amis-auto-token` ngày
+2026-08-15 dựng toàn bộ tích hợp MISA AMIS: 3 migration, bảng `amis_employee_metrics`, cột
+`profiles.amis_employee_name`, hai màn hình đối chiếu, bộ script Python/Playwright hút số từ AMIS,
+và **thay cụm lũy kế tháng trên thẻ ảnh 9:16 bằng một cụm mới lấy số từ AMIS**.
+
+Commit đó **không kèm một `DEC` nào** dù mã nguồn nhắc `DEC-070` hơn 15 chỗ. Tài liệu này là bản ghi
+bổ sung, viết sau khi người dùng xác nhận, để mã nguồn thôi trỏ vào một quyết định không tồn tại.
+
+### Vấn đề
+
+DEC-068 (2026-08-14) đặt cụm **lũy kế tháng** dưới bảng 4 chỉ tiêu: doanh số tháng · doanh thu tháng ·
+số ngày đạt KPI, cộng từ chính bảng `daily_reports`. Cụm đó cũng do người dùng yêu cầu trực tiếp.
+
+Điểm yếu của nó: **cả ba con số đều là số Sales tự khai.** Tấm ảnh gửi cấp trên vì thế chỉ chứng minh
+được "Sales nói mình làm được bao nhiêu", không chứng minh được "hệ thống ghi nhận được bao nhiêu".
+
+### Quyết định
+
+Cụm lũy kế tháng của DEC-068 **bị thay** bằng cụm **"TÌNH TRẠNG THỰC HIỆN"**, có ở **cả hai** biến thể
+thẻ. Bốn dòng, mỗi dòng bốn cột (nhãn · chỉ tiêu · thực đạt · % hoàn thành + thanh tiến độ):
+
+| Dòng | Chỉ tiêu | Thực đạt |
+|---|---|---|
+| Doanh số đã ghi | AMIS `TargetAmount` | AMIS `CurrentAmount` |
+| Doanh thu đã ghi | **`sum(target_revenue)` của tháng — nguồn DUY NHẤT không từ AMIS** | AMIS Kế toán `receive_amount` |
+| SL KH đã ghé thăm | AMIS `QuantityAccountInCharge` | AMIS `QuantityAccountInteractive` |
+| SL KH đã mua hàng | AMIS `QuantityAccountInteractive` | AMIS `QuantityAccountSoldThisPeriod` |
+
+Người dùng chốt ngày 2026-08-16 kèm ảnh mockup, nguyên văn: *"những gì liên quan đến AMIS thì phải để
+tại vì đó là những gì bạn tôi sửa trong code"*. Mockup không còn cụm lũy kế tháng ⇒ đây là **thay**,
+không phải thêm.
+
+### Vì sao chỉ tiêu doanh thu không đến từ AMIS
+
+AMIS biết đã **thu** được bao nhiêu nhưng không lưu **mục tiêu** thu là bao nhiêu. Con số đó vì vậy
+vẫn cộng từ `target_revenue` của chính các báo cáo trong tháng. Đây là chỗ dễ sửa nhầm nhất của cụm:
+kéo nốt nó sang AMIS là mất luôn chỉ tiêu.
+
+### Vì sao khoá là TÊN NGƯỜI
+
+AMIS là hệ thống của MISA, nó không biết gì về `auth.users` của BikeForce và sẽ không bao giờ biết.
+Thứ duy nhất hai bên cùng có là **tên nhân viên**, nên cầu nối là cột `profiles.amis_employee_name` do
+Admin điền tay. Sales chưa được map thì **bỏ hẳn cụm** thay vì in bốn dấu `—`: một khối trống trên tấm
+ảnh gửi cấp trên trông như lỗi hệ thống, còn ghép nhầm số của người khác thì tệ hơn nữa.
+
+### Vì sao phải in mốc đồng bộ
+
+Ba trong bốn nguồn AMIS dùng cookie phiên trình duyệt hết hạn sau ~24h nên **không tự động hoá được
+trên Vercel** — bảng do script `scripts/amis-sync/push_amis.py` chạy tay đẩy lên. Không ai chạy ba
+ngày thì tấm ảnh in số của ba ngày trước. Vì vậy `synced_at` **bắt buộc** hiện ra thành dòng
+`Số liệu MISA tính đến dd/mm/yyyy`; chưa đồng bộ lần nào thì nói thẳng `Chưa rõ mốc đồng bộ từ MISA`.
+
+Mốc này đổi sang giờ VN bằng phép cộng 7 giờ **trước khi** cắt chuỗi, không cắt thẳng 10 ký tự đầu của
+chuỗi ISO: một lần đồng bộ lúc 2h sáng giờ VN được lưu là 19h UTC **hôm trước**, cắt thô sẽ in lùi một
+ngày và người đọc tưởng số cũ hơn thực tế.
+
+### Hệ quả
+
+1. `ShareCardMonthlySource`, `ShareCardMonthly`, `model.monthly` **bị gỡ** khỏi `lib/reports/share-card.ts`.
+   7 unit test của cụm cũ được thay bằng 12 test của cụm mới.
+2. `shareMonthRange()` và `lib/reports/month-summary.ts` **giữ nguyên** — vẫn cần để xác định kỳ tháng.
+3. Nav thêm mục "Đối chiếu" cho **cả hai** vai: Sales 3 → 4 mục, Admin 4 → **5 mục, chạm đúng trần 5
+   mục của DEC-018**. Thêm mục thứ sáu là vỡ DEC-018.
+4. `%` của cụm đi qua **đúng** `calculateAchievement()` mà bảng chính dùng — NFR-012 cấm công thức KPI
+   thứ hai. Cụm gọi `ProgressBar` với `withFlame={false}`: chừa `FLAME_STRIP_HEIGHT` (50px) trên mỗi
+   thanh × 4 dòng = 200px mà thẻ 1920px không có để tiêu (ISSUE-032).
+5. Khối "SỐ KHÁCH LÀM VIỆC" (DEC-056) và cụm lũy kế tháng (DEC-068) **đều đã rời thẻ**. Chỗ đó đã đổi
+   chủ ba lần — đừng khôi phục khối nào cũ.
+
+### Một lỗ RLS đã tìm ra và bịt khi đối soát nhánh (2026-08-16)
+
+Ba migration `20260815*` được áp lần đầu lên DB local ngày 2026-08-16 và làm đỏ phép kiểm quét
+`relforcerowsecurity` của `tests/rls/`. Nguyên nhân: `amis_employee_metrics` có `enable row level
+security` và đủ hai policy SELECT, nhưng **thiếu `force`**.
+
+`enable` miễn trừ **chủ sở hữu bảng**, mà bảng do migration tạo thì chủ sở hữu là `postgres`. Hai bảng
+nghiệp vụ cũ đều có `force` từ `0001`. Đã bịt bằng migration mới
+`20260816000000_amis_metrics_force_rls.sql` — **không** sửa thẳng file cũ, vì migration đó đã áp trên
+máy người viết nó.
+
+Đã soát luôn hai điểm còn lại của schema mới, **cả hai đều đúng**, đừng "sửa" lại:
+
+| Điểm | Kết quả |
+|---|---|
+| View `amis_reconciliation` | có `security_invoker=on` ⇒ chạy bằng quyền NGƯỜI GỌI, RLS của `daily_reports` vẫn áp. Thiếu cờ này thì mọi Sales đọc được báo cáo của nhau — vỡ BR-003 |
+| `GRANT` cho `anon` | **không** có `SELECT` trên `amis_employee_metrics`. `authenticated` có SELECT, `service_role` có đủ DML để script ngoài ghi vào |
+
+### ⚠ Nợ chưa trả — KHÔNG được merge vào `main` khi chưa xong
+
+| Việc | Vì sao chặn |
+|---|---|
+| Đẩy **4** migration (`20260815*` ×3 + `20260816000000`) lên Supabase cloud | `services/reports.ts` thêm `profiles.amis_employee_name` vào truy vấn của route xuất ảnh. Thiếu cột trên cloud ⇒ **nút xuất ảnh chết cho toàn đội Sales**, không riêng cụm mới |
+| Render PNG thật rồi **nhìn** | Cụm mới có 4 cột thay vì 3 dòng của DEC-068. Chưa ai xem tấm ảnh thật — đây là lần thứ tư dự án phải học bài này (DEC-053, DEC-054, ISSUE-032) |
+| Viết `docs/02` cho bảng `amis_employee_metrics` | 3 migration đã áp thật ở local nhưng chưa có bản ghi thiết kế nào |
+| E2E cho hai màn hình `/admin/reconciliation` và `/sales/reconciliation` | Hai route mới, chưa có bài nào chạm |
+
+### DEC-070 — BỔ SUNG: cỡ chữ CO THEO ĐỘ DÀI, và cụm AMIS loại trừ ghi chú
+
+**Ngày:** 2026-08-16 · **Nguồn:** người dùng xem ảnh render thật rồi chốt
+
+#### Lỗi phát hiện được nhờ RENDER RA VÀ NHÌN
+
+Bốn migration lên cloud xong, tôi render 8 tấm PNG thật để người dùng xem. **863 unit test vẫn xanh
+trong khi tấm ảnh đang gãy** — đúng bài học DEC-053/DEC-054/ISSUE-032, lần thứ tư.
+
+Cụm "Tình trạng thực hiện" có 4 dòng kèm thanh tiến độ, cao hơn cụm lũy kế cũ của DEC-068 khoảng
+**200px**, mà thẻ thì cao **cố định 1920px**. Đo được bằng cách dựng thang dữ liệu tăng dần:
+
+| Phần đầu thẻ | Ghi chú | Chân thẻ | Cụm AMIS |
+|---|---|---|---|
+| tên 1 dòng · tuyến 1 dòng | mất | còn | đủ |
+| tên 1 dòng · tuyến 2 dòng | mất | **cắt nửa** | đủ |
+| tên 2 dòng · tuyến 1 dòng | mất | **mất** | đủ |
+| tên 2 dòng · tuyến 2 dòng | mất | mất | **chém dòng 4** |
+| tên 2 dòng · tuyến 3 dòng | mất | mất | **chém sâu** |
+
+Ngưỡng gãy nằm ở **tên Sales quá 22 ký tự** — `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` là họ tên tiếng Việt
+hoàn toàn bình thường, không phải ca hiếm.
+
+#### Quyết định của người dùng
+
+Nguyên văn: *"làm sao để tên của sales chỉ xuất hiện trên 1 dòng thôi, ví dụ tên người đó quá dài thì
+giảm size chữ xuống để tên xuất hiện 1 dòng thôi, còn việc thanh tiến độ % hoàn thành cứ để nguyên như
+hiện tại"*, và ngay sau đó: *"lưu ý chỉ giảm cỡ chữ khi tên quá dài khiến tên bị xuống dòng"*.
+
+⇒ **Giữ nguyên thanh tiến độ.** Lấy lại chỗ bằng cách **thu cỡ chữ**, không bằng cách bỏ nội dung.
+
+#### Đã làm
+
+1. `shareNameFontSize()` — tên về đúng **một dòng**. Từ 64px, sàn 30px.
+2. `shareRouteFontSize()` — tuyến không quá **hai dòng**. Từ 34px, sàn 24px. Cùng nguyên tắc, vì tuyến
+   104 ký tự (đúng `MAX_SHARE_ROUTE_CHARS`) thực tế rơi xuống **3 dòng**.
+3. `shareNoteBudget()` bỏ vế `nameLines` — tên không còn là khoản chi, nên trừ tiếp là trừ hai lần.
+4. `shareNoteBudget(..., hasPerformance)` trả **0** khi có cụm AMIS.
+
+#### ⚠ HAI NGƯỠNG, CỐ Ý KHÁC NHAU — đừng gộp
+
+| Hằng | Giá trị | Trả lời câu hỏi |
+|---|---|---|
+| `NAME_CHARS_PER_LINE` | 22 | *"có cần thu không"* |
+| `NAME_FIT_CHARS` | 20 | *"thu bao nhiêu thì CHẮC CHẮN vừa"* |
+
+Gộp làm một thì hoặc **thu oan** tên vẫn vừa (vi phạm câu dặn của người dùng), hoặc **thu chưa đủ** và
+tên vẫn xuống dòng. Đã dính đúng cả hai lỗi đó trong một buổi: ngưỡng 24 thu chưa đủ, ngưỡng 20 thu oan.
+
+Đếm ký tự chỉ là xấp xỉ — `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` (28 ký tự) ở **54px vẫn xuống dòng**, tức sức
+chứa thật của chuỗi đó chỉ ~20 ký tự quy về 64px, trong khi chuỗi khác cùng độ dài lại vừa. Lấy mức hẹp
+nhất từng đo được. **Muốn đổi thì render ra và đếm, đừng tính lại bằng em-width.**
+
+#### ⚠ Vì sao ghi chú bị bỏ HẲN khi có cụm AMIS
+
+Không phải để tiết kiệm chỗ cho vui. Ghi chú là khối duy nhất **co được** (ISSUE-032), nên khi thiếu chỗ
+Yoga nén nó — và ở mức nén dở dang thì **mẩu nhãn "GHI CHÚ" thò ra rồi bị chém ngang**, đã render ra và
+thấy. Trả `0` biến chuyện đó thành **tất-hoặc-không**, xác định được, kiểm được bằng unit test.
+
+Thẻ **không có** cụm AMIS (Sales chưa map tên) vẫn giữ đủ ghi chú 2 dòng như cũ.
+
+#### Kiểm chứng
+
+8 tấm PNG render lại sau khi sửa, nhìn từng tấm: tên một dòng ở mọi ca, tuyến tối đa hai dòng, cụm AMIS
+đủ bốn dòng, chân thẻ còn nguyên, không còn mẩu chữ thò ra. Vitest **872/872**.

@@ -16,28 +16,27 @@
  *  Mọi con số đi qua `lib/kpi.ts` — file này KHÔNG tự tính `%` và KHÔNG tự ghép
  *  đơn vị (NFR-012, DEC-038).
  */
-import { formatThousands } from '@/lib/currency';
 import {
   calculateAchievement,
-  formatMetricValue,
   formatMetricValueCompact,
   type AchievementResult,
 } from '@/lib/kpi';
 import {
   formatVietnamDate,
-  formatVietnamMonth,
   formatVietnamShortDate,
   getVietnamMonthToDateRange,
   shiftVietnamDate,
   type MonthToDateRange,
 } from '@/lib/date';
-import { KPI_METRIC_ROWS, kpiMetricRow, type KpiMetricSource } from '@/lib/reports/metric-rows';
-import type { MonthToDateSummary } from '@/lib/reports/month-summary';
+import { KPI_METRIC_ROWS, type KpiMetricSource } from '@/lib/reports/metric-rows';
 import type { Database } from '@/types/database.types';
 
 type DailyReportRow = Database['public']['Tables']['daily_reports']['Row'];
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ReportStatus = Database['public']['Enums']['report_status'];
+
+/** Tên chỉ tiêu như `lib/kpi.ts` khai — lấy qua chữ ký hàm để không gõ lại union. */
+type KpiMetricName = Parameters<typeof calculateAchievement>[2];
 
 /**
  * Số ký tự tối đa của tuyến trước khi cắt — tương đương **2 dòng** ở cỡ chữ
@@ -59,14 +58,124 @@ const NOTE_MAX_LINES = 2;
 export const MAX_SHARE_NOTE_CHARS = NOTE_CHARS_PER_LINE * NOTE_MAX_LINES;
 
 /**
- * Ngưỡng ký tự khiến tên Sales / tuyến tràn sang dòng thứ hai.
+ * Ngưỡng ký tự vừa **một dòng** ở cỡ chữ chuẩn.
  *
- * Tên in HOA ở cỡ 64px nên "no" chữ rất nhanh; tuyến ở cỡ 34px thì thoáng hơn.
- * Hai con số này là **ước lượng có chủ đích**, không cần chính xác tuyệt đối:
- * chúng chỉ dùng để quyết định *"phần đầu thẻ có đang ăn thêm một dòng không"*.
+ * ⚠ **Hai con số này đã được HIỆU CHỈNH ngày 2026-08-16 bằng cách render PNG
+ * thật rồi đếm.** Giá trị cũ (26 và 52) là ước lượng ~0,52em và **cả hai đều
+ * lạc quan hơn thực tế**: tên `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` (28 ký tự) xuống 2
+ * dòng ngay, còn tuyến 104 ký tự — đúng bằng `MAX_SHARE_ROUTE_CHARS`, tức lẽ ra
+ * vừa 2 dòng — lại rớt xuống **3 dòng**. Đừng nâng lại theo lý thuyết em-width;
+ * muốn đổi thì render ra và đếm.
  */
-const NAME_CHARS_PER_LINE = 26;
-const ROUTE_CHARS_PER_LINE = 52;
+const NAME_CHARS_PER_LINE = 22;
+const ROUTE_CHARS_PER_LINE = 46;
+
+/**
+ * Sức chứa dùng để TÍNH MỨC THU, thấp hơn ngưỡng "vẫn vừa" ở trên.
+ *
+ * ⚠ **Hai con số này cố ý KHÁC NHAU, đừng gộp lại.** Ngưỡng trên trả lời *"có
+ * cần thu không"*; con số này trả lời *"thu bao nhiêu thì chắc chắn vừa"*. Gộp
+ * làm một thì hoặc thu oan tên vẫn vừa, hoặc thu chưa đủ và tên vẫn xuống dòng —
+ * đã dính đúng cả hai lỗi đó trong một buổi chiều.
+ *
+ * Vì sao phải chừa biên: đếm ký tự chỉ là xấp xỉ. `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO`
+ * (28 ký tự) ở 54px **vẫn xuống dòng**, tức sức chứa thật của chuỗi đó chỉ
+ * ~20 ký tự quy về 64px, trong khi chuỗi khác cùng độ dài lại vừa. Lấy mức hẹp
+ * nhất từng đo được.
+ */
+const NAME_FIT_CHARS = 20;
+const ROUTE_FIT_CHARS = 44;
+
+/* ---------------------------------------------------------------------------
+ * CỠ CHỮ CO THEO ĐỘ DÀI — PHASE 19, người dùng chốt 2026-08-16
+ *
+ * *"làm sao để tên của sales chỉ xuất hiện trên 1 dòng thôi, ví dụ tên người đó
+ * quá dài thì giảm size chữ xuống để tên xuất hiện 1 dòng thôi"*
+ *
+ * Vì sao đây là cách đúng: thẻ cao CỐ ĐỊNH 1920px, nên mỗi dòng phát sinh ở phần
+ * đầu thẻ là một khoản chi mà khối khác phải trả — và khối trả tiền là ghi chú
+ * rồi tới chân thẻ, rồi tới chính số liệu (đã render ra và thấy tận mắt). Thu cỡ
+ * chữ giữ được TOÀN BỘ nội dung; cắt cụt tên người trên tấm ảnh gửi cấp trên thì
+ * không.
+ * ------------------------------------------------------------------------- */
+
+/** Cỡ chữ tên Sales ở ca thường — vẫn là thứ đọc được đầu tiên trên thẻ. */
+export const SHARE_NAME_FONT_SIZE = 64;
+
+/**
+ * Sàn cỡ chữ tên. Dưới mức này tên thôi giữ vai trò tiêu đề của tấm ảnh.
+ *
+ * 30px vẫn to hơn dòng ngày (36px thì tương đương) và đủ cho tên **42 ký tự** —
+ * dài hơn mọi họ tên tiếng Việt thực tế, kể cả họ kép bốn chữ.
+ */
+export const SHARE_NAME_MIN_FONT_SIZE = 30;
+
+/** Cỡ chữ tuyến ở ca thường. */
+export const SHARE_ROUTE_FONT_SIZE = 34;
+
+/** Sàn cỡ chữ tuyến — tuyến là dòng phụ nên chịu được nhỏ hơn tên. */
+export const SHARE_ROUTE_MIN_FONT_SIZE = 24;
+
+/**
+ * Thu cỡ chữ tuyến tính theo tỉ lệ vượt: `n` ký tự cần vừa `perLine × maxLines`
+ * chỗ, mà bề rộng chữ tỉ lệ thuận với cỡ chữ ⇒ nhân cỡ chữ với đúng tỉ lệ đó.
+ *
+ * `Math.floor` chứ không `round`: làm tròn lên là chấp nhận rủi ro tràn thêm một
+ * dòng, mà một dòng thừa ở đây làm gãy cả tấm ảnh.
+ */
+function fitFontSize(
+  text: string,
+  base: number,
+  min: number,
+  noShrinkChars: number,
+  fitChars: number,
+): number {
+  const length = text.trim().length;
+
+  // CHỈ thu khi thật sự cần — người dùng dặn thẳng: *"chỉ giảm cỡ chữ khi tên
+  // quá dài khiến tên bị xuống dòng"*. Chuỗi vừa một dòng ra khỏi đây với cỡ
+  // chữ gốc, không suy suyển một pixel.
+  if (length <= noShrinkChars) return base;
+
+  return Math.max(min, Math.floor((base * fitChars) / length));
+}
+
+/**
+ * Cỡ chữ tên Sales sao cho tên nằm gọn **một dòng**.
+ *
+ * Nhận chuỗi ĐÃ IN HOA — đó là chuỗi thật sự được vẽ, và chữ hoa rộng hơn chữ
+ * thường nên đo trên chuỗi gốc là đo sai.
+ *
+ * Tên từ **22 ký tự trở xuống giữ nguyên 64px**, và đó là đa số tuyệt đối họ tên
+ * tiếng Việt — trong thực tế hàm này gần như không bao giờ đụng tới cỡ chữ.
+ */
+export function shareNameFontSize(upperCaseName: string): number {
+  return fitFontSize(
+    upperCaseName,
+    SHARE_NAME_FONT_SIZE,
+    SHARE_NAME_MIN_FONT_SIZE,
+    NAME_CHARS_PER_LINE,
+    NAME_FIT_CHARS,
+  );
+}
+
+/**
+ * Cỡ chữ tuyến sao cho tuyến không quá **hai dòng**.
+ *
+ * Không ép về 1 dòng như tên: tuyến 104 ký tự mà nhét một dòng thì cỡ chữ rơi
+ * xuống ~15px, nhỏ hơn cả chữ chân thẻ. Hai dòng là mức `docs/05 §14` vẫn vẽ.
+ */
+export function shareRouteFontSize(routeText: string | null): number {
+  if (routeText === null) return SHARE_ROUTE_FONT_SIZE;
+
+  return fitFontSize(
+    routeText,
+    SHARE_ROUTE_FONT_SIZE,
+    SHARE_ROUTE_MIN_FONT_SIZE,
+    ROUTE_CHARS_PER_LINE * 2,
+    ROUTE_FIT_CHARS * 2,
+  );
+}
 
 /**
  * Ngân sách ghi chú **động** — PHASE 18, DEC-069.
@@ -87,15 +196,35 @@ const ROUTE_CHARS_PER_LINE = 52;
  *  Trả `0` nghĩa là **bỏ hẳn khối ghi chú**. Đó là lựa chọn có chủ đích: ghi chú
  *  là thông tin ít quan trọng nhất trên thẻ, và một khối bị chém ngang trông
  *  như ảnh lỗi — tệ hơn hẳn việc không có nó.
+ *
+ * ⚠ **PHASE 19 — TÊN KHÔNG CÒN TỐN DÒNG PHỤ.** `shareNameFontSize()` ép tên về
+ * đúng **một dòng** bằng cách thu cỡ chữ, nên vế `nameLines` cũ đã bị bỏ khỏi
+ * công thức này. Đừng thêm lại: giữ nó là trừ hai lần cho một khoản chi không
+ * còn tồn tại, và ghi chú bị cắt oan ở mọi Sales có tên dài.
+ *
+ * Tuyến thì vẫn tốn: `shareRouteFontSize()` chỉ ép nó **không quá hai dòng**,
+ * chứ không về một dòng — tuyến 104 ký tự nhét một dòng thì cỡ chữ còn ~15px.
  */
-export function shareNoteBudget(fullName: string, routeText: string | null): number {
-  const nameLines = Math.max(1, Math.ceil(fullName.trim().length / NAME_CHARS_PER_LINE));
-  const routeLines =
-    routeText === null ? 0 : Math.max(1, Math.ceil(routeText.length / ROUTE_CHARS_PER_LINE));
+export function shareNoteBudget(
+  fullName: string,
+  routeText: string | null,
+  hasPerformance = false,
+): number {
+  void fullName;
 
-  // Ca chuẩn: tên 1 dòng + tuyến 1 dòng. Mỗi dòng phát sinh thêm ở phần đầu thẻ
-  // ăn mất đúng một dòng ghi chú.
-  const extraLines = nameLines - 1 + Math.max(0, routeLines - 1);
+  // Cụm "Tình trạng thực hiện" cao ~200px — bằng đúng cả khối ghi chú kể cả
+  // nhãn. Hai thứ KHÔNG cùng nằm vừa trong 1920px, đã render ra và thấy: giữ cả
+  // hai thì ghi chú bị Yoga nén còn một mẩu nhãn "GHI CHÚ" thò ra rồi bị chém
+  // ngang — trông hỏng hơn hẳn việc không có ghi chú.
+  if (hasPerformance) return 0;
+
+  const routeLines =
+    routeText === null
+      ? 0
+      : Math.min(2, Math.max(1, Math.ceil(routeText.length / ROUTE_CHARS_PER_LINE)));
+
+  // Ca chuẩn: tuyến 1 dòng. Dòng tuyến thứ hai ăn mất đúng một dòng ghi chú.
+  const extraLines = Math.max(0, routeLines - 1);
 
   return Math.max(0, NOTE_MAX_LINES - extraLines) * NOTE_CHARS_PER_LINE;
 }
@@ -113,7 +242,6 @@ const ELLIPSIS = '…';
  * |---|---|---|
  * | Điều kiện | `status = 'MORNING_SUBMITTED'` | `status = 'COMPLETED'` |
  * | Bảng | 2 cột (chỉ tiêu · cam kết) | 4 cột, có `%` hoàn thành |
- * | Khối nhấn mạnh | *(không có)* | "Số khách làm việc" |
  * | Ghi chú cuối ngày | *(chưa tồn tại)* | có nếu Sales nhập |
  */
 export type ShareCardVariant = 'MORNING' | 'EVENING';
@@ -293,51 +421,38 @@ export type ShareCardModel = {
   readonly dateText: string;
   /** Tên đã viết HOA theo thiết kế `docs/05 §14`. */
   readonly salesName: string;
+  /**
+   * Cỡ chữ tên, đã thu để tên nằm gọn **một dòng** — PHASE 19.
+   *
+   * Ở model chứ không ở component: đây là phép tính bố cục có thể sai, và
+   * `AGENTS.md §1.3` bắt mọi thứ có thể sai phải kiểm được bằng unit test.
+   */
+  readonly nameFontSize: number;
   /** `null` khi Sales chưa có mã nhân viên — khi đó không render dòng đó. */
   readonly employeeCode: string | null;
   /** Tuyến THỰC TẾ, lùi về tuyến kế hoạch nếu cuối ngày không nhập lại. */
   readonly routeText: string | null;
+  /** Cỡ chữ tuyến, đã thu để tuyến không quá **hai dòng** — PHASE 19. */
+  readonly routeFontSize: number;
   readonly metrics: readonly ShareCardMetricRow[];
   /**
-   * Cụm lũy kế tháng dưới bảng — PHASE 17, **DEC-068**. Có ở **cả hai** biến thể.
+   * Cụm "Tình trạng thực hiện" dưới bảng — PHASE 19, **DEC-070**. Có ở **cả
+   * hai** biến thể.
    *
-   * ⚠ Chỗ này TRƯỚC ĐÂY là khối "Số khách làm việc" (DEC-056, nền cam nhạt).
-   * Người dùng yêu cầu bỏ hẳn khối đó ngày 2026-08-14 và thay bằng thành tích
-   * tháng — sếp của họ cần thấy cả tháng chứ không chỉ một ngày. Đừng thêm lại
-   * khối cũ: `calculateCustomerWorkRate()` vẫn còn trong `lib/kpi.ts` (cùng test
-   * của nó) nhưng **không tầng trình bày nào gọi tới nữa**.
+   * ⚠ Chỗ này đã đổi chủ HAI lần. DEC-056 đặt khối "Số khách làm việc"; DEC-068
+   * thay bằng cụm lũy kế tháng (doanh số / doanh thu / ngày đạt KPI) cộng từ
+   * `daily_reports`; DEC-070 thay tiếp bằng cụm này. Đừng khôi phục khối nào cũ.
    *
-   * `null` khi truy vấn lũy kế hỏng — khi đó thẻ **bỏ hẳn cụm** thay vì in `0 ₫`.
+   * Khác biệt cốt lõi so với DEC-068: ba trong bốn dòng lấy THỰC ĐẠT từ **MISA
+   * AMIS** chứ không từ số Sales tự khai. Đó chính là điều người dùng muốn cấp
+   * trên nhìn thấy — con số hệ thống ghi nhận, không phải con số tự báo.
+   *
+   * `null` khi Sales chưa map `amis_employee_name`, hoặc tháng đó chưa được đồng
+   * bộ. Khi đó thẻ **bỏ hẳn cụm** thay vì in bốn dấu `—`: một khối trống trên
+   * tấm ảnh gửi cấp trên trông như lỗi hệ thống.
    */
-  readonly monthly: ShareCardMonthly | null;
+  readonly performance: ShareCardPerformance | null;
   readonly noteText: string | null;
-};
-
-/** Một dòng của cụm lũy kế: nhãn trái, số phải. */
-export type ShareCardMonthlyRow = {
-  readonly label: string;
-  readonly valueText: string;
-};
-
-export type ShareCardMonthly = {
-  /** `'TỔNG THÁNG 08/2026'` — in hoa theo nhịp các tiêu đề khối khác của thẻ. */
-  readonly title: string;
-  /**
-   * Dòng phụ nói rõ mốc cộng: `'Tính đến hết ngày 20/08/2026'`.
-   *
-   * Bắt buộc phải có, và đây là lý do: tấm ảnh **sáng** ngày 21 cộng đến hết
-   * ngày 20 chứ không phải ngày 21. Không nói ra thì người nhận trên Zalo — vốn
-   * không có ngữ cảnh nào ngoài tấm ảnh — sẽ đọc con số đó là "tính cả hôm nay".
-   */
-  readonly rangeText: string;
-  readonly rows: readonly ShareCardMonthlyRow[];
-};
-
-/** Đầu vào lũy kế của `buildShareCardModel()`: số đã cộng + mốc đã cộng tới. */
-export type ShareCardMonthlySource = {
-  /** Khoảng đã dùng để cộng — đến thẳng từ `shareMonthRange()`. */
-  readonly range: MonthToDateRange;
-  readonly summary: MonthToDateSummary;
 };
 
 /**
@@ -376,7 +491,7 @@ function optionalText(value: string | null): string | null {
  */
 export function buildShareCardModel(
   source: ShareCardSource,
-  monthly: ShareCardMonthlySource | null,
+  performance: ShareCardPerformanceSource | null,
 ): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
@@ -400,39 +515,185 @@ export function buildShareCardModel(
   const route = optionalText(source.actual_route) ?? optionalText(source.planned_route);
   const routeText = route === null ? null : truncateText(route, MAX_SHARE_ROUTE_CHARS);
 
+  const salesName = source.sales.full_name.trim().toLocaleUpperCase('vi-VN');
+
   const note = optionalText(source.evening_note);
   // Ngân sách tính TRÊN CHUỖI ĐÃ CẮT của tuyến, không phải chuỗi gốc: tuyến 300
   // ký tự vẫn chỉ chiếm 2 dòng sau `truncateText`.
-  const noteBudget = shareNoteBudget(source.sales.full_name, routeText);
+  const noteBudget = shareNoteBudget(source.sales.full_name, routeText, performance !== null);
 
   return {
     variant,
     kindLabel: VARIANT_KIND_LABEL[variant],
     dateText: formatVietnamDate(source.report_date),
-    salesName: source.sales.full_name.trim().toLocaleUpperCase('vi-VN'),
+    salesName,
+    // Đo trên chuỗi ĐÃ IN HOA — đó là chuỗi thật sự được vẽ.
+    nameFontSize: shareNameFontSize(salesName),
     employeeCode: optionalText(source.sales.employee_code),
     routeText,
+    // Đo trên chuỗi ĐÃ CẮT: tuyến 300 ký tự chỉ còn 104 sau `truncateText`, thu
+    // cỡ chữ theo chuỗi gốc là thu thừa cho một đoạn không bao giờ được vẽ.
+    routeFontSize: shareRouteFontSize(routeText),
     metrics,
-    // Cụm lũy kế có ở CẢ HAI biến thể (DEC-068) — khác hẳn khối "Số khách làm
-    // việc" cũ vốn chỉ có ở bản chiều. Bản sáng vẫn có thành tích tháng để khoe,
-    // nó chỉ dừng ở hôm qua thay vì hôm nay.
-    monthly: monthly === null ? null : buildMonthly(monthly),
+    // Cụm này có ở CẢ HAI biến thể: số AMIS là luỹ kế tháng, không phụ thuộc
+    // việc hôm nay Sales đã nhập thực đạt hay chưa.
+    performance: performance === null ? null : buildPerformance(performance),
     // `noteBudget === 0` ⇒ phần đầu thẻ đã ăn hết chỗ ⇒ bỏ hẳn khối ghi chú.
     noteText: note === null || noteBudget === 0 ? null : truncateText(note, noteBudget),
   };
 }
 
 /* ---------------------------------------------------------------------------
- * Cụm lũy kế tháng — PHASE 17, DEC-068
+ * Cụm TÌNH TRẠNG THỰC HIỆN — PHASE 19, DEC-070
+ *
+ * Thay cho cụm lũy kế tháng của DEC-068. Bốn dòng, mỗi dòng bốn cột: nhãn ·
+ * chỉ tiêu · thực đạt · % hoàn thành (kèm thanh tiến độ).
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  BA ĐIỀU PHẢI BIẾT VỀ NGUỒN SỐ
+ * ─────────────────────────────────────────────────────────────────────────
+ *  1. **Số là LUỸ KẾ THÁNG, không phải số của ngày trên thẻ.** AMIS chỉ báo cáo
+ *     theo tháng. Dòng `rangeText` vì thế bắt buộc phải có — người nhận trên
+ *     Zalo không có ngữ cảnh nào khác ngoài tấm ảnh.
+ *  2. **Số phụ thuộc lần ĐỒNG BỘ gần nhất, không phải thời điểm xuất ảnh.**
+ *     Script `scripts/amis-sync/push_amis.py` chạy tay vì ba trong bốn nguồn
+ *     AMIS dùng cookie phiên trình duyệt hết hạn sau ~24h. Không ai chạy ba
+ *     ngày thì ảnh in số của ba ngày trước — nên `synced_at` phải hiện ra.
+ *  3. **Chỉ tiêu doanh thu KHÔNG đến từ AMIS.** AMIS biết đã thu bao nhiêu
+ *     nhưng không biết mục tiêu; con số đó cộng từ `target_revenue` của chính
+ *     các báo cáo trong tháng.
  * ------------------------------------------------------------------------- */
 
+/** Một dòng: nhãn · chỉ tiêu · thực đạt · % hoàn thành + thanh tiến độ. */
+export type ShareCardPerformanceRow = {
+  readonly label: string;
+  readonly targetText: string;
+  readonly actualText: string;
+  readonly achievement: AchievementResult;
+  readonly progress: ShareCardProgress;
+};
+
+export type ShareCardPerformance = {
+  /** `'TÌNH TRẠNG THỰC HIỆN'`. */
+  readonly title: string;
+  /** `'Số liệu MISA tính đến 15/08/2026'` — mốc ĐỒNG BỘ, không phải ngày báo cáo. */
+  readonly rangeText: string;
+  readonly rows: readonly ShareCardPerformanceRow[];
+};
+
+/** Đầu vào: sáu con số AMIS + tổng chỉ tiêu doanh thu cộng từ báo cáo trong tháng. */
+export type ShareCardPerformanceSource = {
+  /** Mục tiêu doanh số — dashboard AMIS `TargetAmount`. */
+  readonly amisTargetAmount: number | null;
 /**
- * Đơn vị của dòng thứ ba. KHÔNG nằm ở `METRIC_UNIT` của `lib/kpi.ts` vì "ngày
- * đạt KPI" **không phải chỉ tiêu thứ năm**: nó không có cột `target_*`, không
- * vào bảng bốn dòng, và không có ngưỡng BR-023 nào áp lên nó — cùng lý do
- * `calculateCustomerWorkRate()` từng đứng riêng (DEC-056).
+   * Doanh số đã thực hiện — dashboard AMIS `CurrentAmount`.
+   *
+   * ⚠ Phải là `current_amount`, KHÔNG phải `net_sales` của report 119. Hai con
+   * số đo hai thứ khác nhau: dashboard lọc "Đã ghi + Từ chối ghi", report 119
+   * chỉ "Đã ghi" — chênh ~50 triệu ở kỳ 08/2026.
+   */
+  readonly amisSalesActual: number | null;
+  /** Công nợ đã thu — AMIS Kế toán `receive_amount`. */
+  readonly amisReceiveAmount: number | null;
+  /** SL khách phụ trách — report 119 `QuantityAccountInCharge`. */
+  readonly amisAccountInCharge: number | null;
+  /** SL khách đã tương tác — report 119 `QuantityAccountInteractive`. */
+  readonly amisAccountInteractive: number | null;
+  /** SL khách mua trong kỳ — report 119 `QuantityAccountSoldThisPeriod`. */
+  readonly amisAccountSold: number | null;
+  /** ISO timestamp lần đồng bộ gần nhất; `null` ⇒ nói thẳng là chưa đồng bộ. */
+  readonly syncedAt: string | null;
+  /** Tổng `target_revenue` của tháng — con số DUY NHẤT không đến từ AMIS. */
+  readonly targetRevenue: number;
+};
+
+/** Lệch múi giờ VN so với UTC, tính bằng mili giây. */
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+/**
+ * `synced_at` (timestamptz UTC) → `'YYYY-MM-DD'` theo giờ VN.
+ *
+ * Không cắt thẳng 10 ký tự đầu của chuỗi ISO: một lần đồng bộ lúc 21h giờ VN
+ * được lưu là 14h UTC **cùng ngày**, nhưng đồng bộ lúc 2h sáng giờ VN thì lưu
+ * là 19h UTC **hôm trước** — cắt thô sẽ in lùi một ngày và người đọc tưởng số
+ * cũ hơn thực tế.
  */
-const ACHIEVED_DAY_UNIT = 'ngày';
+function vietnamDatePart(isoTimestamp: string): string | null {
+  const parsed = Date.parse(isoTimestamp);
+  if (Number.isNaN(parsed)) return null;
+
+  return new Date(parsed + VN_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/**
+ * Một dòng của cụm. Đi qua ĐÚNG `calculateAchievement()` mà bảng chính dùng —
+ * không có công thức `%` thứ hai nào trong dự án này (NFR-012).
+ */
+function buildPerformanceRow(
+  label: string,
+  target: number | null,
+  actual: number | null,
+  metric: KpiMetricName,
+): ShareCardPerformanceRow {
+  const achievement = calculateAchievement(target, actual, metric);
+
+  return {
+    label,
+    // Dạng RÚT GỌN như bảng chính: cụm có bốn cột trong một khối chỉ rộng
+    // 900px sau khi trừ lề trong, không đủ chỗ cho số tiền đầy đủ.
+    targetText: formatMetricValueCompact(target, metric),
+    actualText: formatMetricValueCompact(actual, metric),
+    achievement,
+    progress: buildProgress(achievement),
+  };
+}
+
+function buildPerformance(source: ShareCardPerformanceSource): ShareCardPerformance {
+  const syncedDate = source.syncedAt === null ? null : vietnamDatePart(source.syncedAt);
+
+  return {
+    title: 'TÌNH TRẠNG THỰC HIỆN',
+    rangeText:
+      syncedDate === null
+        ? // Nói thẳng ra thay vì im lặng: bốn con số không rõ tính đến bao giờ
+          // thì vô dụng với người đọc.
+          'Chưa rõ mốc đồng bộ từ MISA'
+        : `Số liệu MISA tính đến ${formatVietnamShortDate(syncedDate)}`,
+    rows: [
+      buildPerformanceRow(
+        'Doanh số đã ghi',
+        source.amisTargetAmount,
+        source.amisSalesActual,
+        'SALES_AMOUNT',
+      ),
+      buildPerformanceRow(
+        'Doanh thu đã ghi',
+        source.targetRevenue,
+        source.amisReceiveAmount,
+        'REVENUE',
+      ),
+      buildPerformanceRow(
+        'SL KH đã ghé thăm',
+        source.amisAccountInCharge,
+        source.amisAccountInteractive,
+        'CUSTOMER_VISITS',
+      ),
+      // Chỉ tiêu của dòng này là số khách ĐÃ TƯƠNG TÁC — tức "đã gặp thì phải
+      // bán được". Không phải số khách phụ trách: đòi bán cho toàn bộ danh sách
+      // phụ trách trong một tháng là một mục tiêu không ai đặt.
+      buildPerformanceRow(
+        'SL KH đã mua hàng',
+        source.amisAccountInteractive,
+        source.amisAccountSold,
+        'CUSTOMER_VISITS',
+      ),
+    ],
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Khoảng lũy kế tháng — PHASE 17, DEC-068 (giữ nguyên ở DEC-070)
+ * ------------------------------------------------------------------------- */
 
 /**
  * Mốc dừng của lũy kế, theo BIẾN THỂ — đây là chỗ câu chốt của người dùng ngày
@@ -443,13 +704,14 @@ const ACHIEVED_DAY_UNIT = 'ngày';
  * > cộng đến chỉ số thực đạt của 20 vì ngày 21 chưa có thực đạt"*
  *
  * ⚠ Việc lùi một ngày ở bản sáng là CỐ Ý và **không thừa**, dù cột `actual_*`
- * của ngày hôm đó đang `null` nên cộng vào cũng ra 0. Lý do: khoảng truy vấn
- * chính là thứ dòng "Tính đến hết ngày…" in ra. Nếu để `to = report_date` cho
- * cả hai biến thể thì tấm ảnh sáng sẽ **nói** rằng nó đã tính cả hôm nay, trong
- * khi hôm nay chưa có gì để tính — một câu sai trên tấm ảnh gửi cấp trên.
+ * của ngày hôm đó đang `null` nên cộng vào cũng ra 0.
+ *
+ * ⚠ **PHASE 19 (DEC-070) — khoảng này nay CHỈ còn dùng cho `targetRevenue`.**
+ * Ba con số kia đến từ AMIS và AMIS chốt theo tháng lịch, không theo mốc này.
+ * Vì vậy dòng "tính đến…" trên thẻ nay in `synced_at` chứ không in `range.to`.
  *
  * Trả `null` chỉ khi `reportDate` không phải ngày thật; tầng gọi khi đó bỏ hẳn
- * cụm lũy kế thay vì đoán bừa một khoảng.
+ * cụm thay vì đoán bừa một khoảng.
  */
 export function shareMonthRange(
   reportDate: string,
@@ -461,40 +723,6 @@ export function shareMonthRange(
   if (throughDate === null) return null;
 
   return getVietnamMonthToDateRange(reportDate, throughDate);
-}
-
-/**
- * Ba con số đã cộng → ba dòng chữ. Hàm này không cộng gì và không tự ghép đơn vị
- * tiền: hai vế tiền đi qua `formatMetricValue()` của `lib/kpi.ts` như mọi nơi
- * khác (DEC-025, AGENTS.md §9).
- *
- * Số tiền ở đây dùng dạng **ĐẦY ĐỦ** chứ không rút gọn như trong bảng: cụm này
- * chỉ có hai cột (nhãn · số) trên cả bề rộng 968px nên không có sức ép chỗ, và
- * đây là con số cấp trên sẽ đọc kỹ nhất trên tấm ảnh.
- */
-function buildMonthly({ range, summary }: ShareCardMonthlySource): ShareCardMonthly {
-  return {
-    title: `TỔNG ${formatVietnamMonth(range.month).toLocaleUpperCase('vi-VN')}`,
-    rangeText: range.isEmpty
-      ? // Ảnh sáng của ngày 01: chưa có ngày nào trong tháng để cộng. Nói thẳng
-        // ra, vì ba số 0 mà không có lời giải thích trông như lỗi hệ thống.
-        'Chưa có ngày nào trong tháng'
-      : `Tính đến hết ngày ${formatVietnamShortDate(range.to)}`,
-    rows: [
-      {
-        label: `${kpiMetricRow('SALES_AMOUNT').shortLabel} tháng`,
-        valueText: formatMetricValue(summary.salesAmount, 'SALES_AMOUNT'),
-      },
-      {
-        label: `${kpiMetricRow('REVENUE').shortLabel} tháng`,
-        valueText: formatMetricValue(summary.revenue, 'REVENUE'),
-      },
-      {
-        label: 'Ngày đạt KPI',
-        valueText: `${formatThousands(summary.kpiAchievedDays)} ${ACHIEVED_DAY_UNIT}`,
-      },
-    ],
-  };
 }
 
 /* ---------------------------------------------------------------------------

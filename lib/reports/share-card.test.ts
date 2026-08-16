@@ -16,15 +16,20 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_SHARE_NOTE_CHARS,
   MAX_SHARE_ROUTE_CHARS,
+  SHARE_NAME_FONT_SIZE,
+  SHARE_NAME_MIN_FONT_SIZE,
+  SHARE_ROUTE_FONT_SIZE,
   asciiNameSlug,
   buildShareCardModel,
+  shareNameFontSize,
+  shareRouteFontSize,
   shareImageFileName,
   shareImagePath,
   shareImageViewPath,
   shareMonthRange,
   shareNoteBudget,
   truncateText,
-  type ShareCardMonthlySource,
+  type ShareCardPerformanceSource,
   type ShareCardSource,
 } from './share-card';
 
@@ -52,24 +57,31 @@ const BASE: ShareCardSource = {
 };
 
 /**
- * Lũy kế tháng mặc định — PHASE 17, DEC-068. Số đã cộng sẵn: view model KHÔNG
- * cộng gì, phép cộng thuộc `lib/reports/month-summary.ts` và có bộ test riêng.
+ * Số MISA AMIS mặc định — PHASE 19, DEC-070.
+ *
+ * Bảy con số vào thẳng view model, không qua phép cộng nào: sáu con đầu do
+ * `scripts/amis-sync/push_amis.py` đẩy lên `amis_employee_metrics`, còn
+ * `targetRevenue` do `services/reports.ts` cộng từ `target_revenue` của các báo
+ * cáo trong tháng. Đặt bốn tỉ lệ LỆCH NHAU (84% · 70% · 80% · 50%) để mỗi dòng
+ * rơi vào một trạng thái BR-023 khác nhau, nhờ vậy một test nhầm dòng là lộ ngay.
  */
-const MONTHLY: ShareCardMonthlySource = {
-  range: { month: '2026-08', from: '2026-08-01', to: '2026-08-06', isEmpty: false },
-  summary: {
-    salesAmount: 320_000_000,
-    revenue: 210_000_000,
-    kpiAchievedDays: 4,
-    reportedDays: 6,
-  },
+const PERFORMANCE: ShareCardPerformanceSource = {
+  amisTargetAmount: 500_000_000,
+  amisSalesActual: 420_000_000,
+  amisReceiveAmount: 210_000_000,
+  amisAccountInCharge: 120,
+  amisAccountInteractive: 96,
+  amisAccountSold: 48,
+  // 14:00 UTC = 21:00 giờ VN cùng ngày — ca "an toàn", không lệch ngày.
+  syncedAt: '2026-08-15T14:00:00Z',
+  targetRevenue: 300_000_000,
 };
 
 function build(
   overrides: Partial<ShareCardSource> = {},
-  monthly: ShareCardMonthlySource | null = MONTHLY,
+  performance: ShareCardPerformanceSource | null = PERFORMANCE,
 ) {
-  return buildShareCardModel({ ...BASE, ...overrides }, monthly);
+  return buildShareCardModel({ ...BASE, ...overrides }, performance);
 }
 
 describe('buildShareCardModel — phần đầu thẻ (docs/05 §14)', () => {
@@ -154,18 +166,18 @@ describe('shareNoteBudget — ngân sách ghi chú ĐỘNG (PHASE 18, DEC-069)',
     expect(shareNoteBudget(SHORT_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS);
   });
 
-  it('tên Sales xuống 2 dòng → ghi chú chỉ còn 1 dòng', () => {
-    expect(shareNoteBudget(LONG_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS / 2);
+  it('tên Sales dài KHÔNG còn ăn dòng ghi chú nào — PHASE 19', () => {
+    // `shareNameFontSize()` ép tên về đúng một dòng bằng cách thu cỡ chữ, nên
+    // tên dài không còn là một khoản chi ở phần đầu thẻ.
+    expect(shareNoteBudget(LONG_NAME, SHORT_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS);
   });
 
-  it('tuyến xuống 2 dòng → ghi chú cũng chỉ còn 1 dòng', () => {
+  it('tuyến xuống 2 dòng → ghi chú chỉ còn 1 dòng', () => {
     expect(shareNoteBudget(SHORT_NAME, LONG_ROUTE)).toBe(MAX_SHARE_NOTE_CHARS / 2);
   });
 
-  it('CẢ HAI cùng dài → ngân sách 0, tức BỎ HẲN khối ghi chú', () => {
-    // Đây là ca đã render ra và thấy tận mắt: giữ khối ghi chú thì nó bị **chém
-    // ngang** giữa dòng chữ, trông như ảnh lỗi.
-    expect(shareNoteBudget(LONG_NAME, LONG_ROUTE)).toBe(0);
+  it('tuyến dài tới đâu cũng chỉ trừ ĐÚNG một dòng — tuyến bị ép tối đa 2 dòng', () => {
+    expect(shareNoteBudget(SHORT_NAME, 'R'.repeat(400))).toBe(MAX_SHARE_NOTE_CHARS / 2);
   });
 
   it('không có tuyến thì tuyến không ăn dòng nào', () => {
@@ -173,20 +185,72 @@ describe('shareNoteBudget — ngân sách ghi chú ĐỘNG (PHASE 18, DEC-069)',
   });
 
   it('ngân sách không bao giờ âm', () => {
-    expect(shareNoteBudget('N'.repeat(200), 'R'.repeat(200))).toBe(0);
+    expect(shareNoteBudget('N'.repeat(200), 'R'.repeat(200))).toBeGreaterThanOrEqual(0);
   });
 
-  it('buildShareCardModel BỎ ghi chú khi ngân sách bằng 0', () => {
-    const model = build({
+  it('CÓ cụm AMIS → ngân sách 0, tức BỎ HẲN khối ghi chú (PHASE 19)', () => {
+    // Cụm "Tình trạng thực hiện" cao ~200px, bằng đúng cả khối ghi chú kể cả
+    // nhãn. Đã render ra và thấy: giữ cả hai thì Yoga nén ghi chú còn một mẩu
+    // nhãn "GHI CHÚ" thò ra rồi bị chém ngang.
+    expect(shareNoteBudget(SHORT_NAME, SHORT_ROUTE, true)).toBe(0);
+  });
+
+  it('buildShareCardModel BỎ ghi chú khi có cụm AMIS, nhưng GIỮ khi không có', () => {
+    const overrides = {
       sales: { full_name: LONG_NAME, employee_code: 'KD-1' },
       planned_route: LONG_ROUTE,
       actual_route: LONG_ROUTE,
       evening_note: 'Khách hẹn lại tuần sau, đã gửi báo giá mới.',
-    });
+    };
 
-    expect(model.noteText).toBeNull();
-    // Tuyến thì VẪN còn — nó là thông tin của chuyến đi, không phải phần phụ.
-    expect(model.routeText).not.toBeNull();
+    expect(build(overrides).noteText).toBeNull();
+    expect(build(overrides, null).noteText).not.toBeNull();
+
+    // Tuyến thì VẪN còn ở cả hai — nó là thông tin của chuyến đi, không phải
+    // phần phụ được phép hy sinh.
+    expect(build(overrides).routeText).not.toBeNull();
+  });
+});
+
+describe('Cỡ chữ co theo độ dài (PHASE 19) — chỉ thu khi thật sự cần', () => {
+  it('tên ngắn giữ NGUYÊN 64px — người dùng dặn chỉ giảm khi tên bị xuống dòng', () => {
+    expect(shareNameFontSize('LÊ DUY KHANG')).toBe(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tên đúng 22 ký tự vẫn chưa bị đụng tới', () => {
+    expect(shareNameFontSize('N'.repeat(22))).toBe(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tên 23 ký tự trở lên mới bắt đầu thu', () => {
+    expect(shareNameFontSize('N'.repeat(23))).toBeLessThan(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tên càng dài cỡ chữ càng nhỏ, không bao giờ tăng lại', () => {
+    const sizes = [24, 28, 32, 36, 40].map((n) => shareNameFontSize('N'.repeat(n)));
+
+    for (let i = 1; i < sizes.length; i += 1) {
+      expect(sizes[i]!).toBeLessThanOrEqual(sizes[i - 1]!);
+    }
+  });
+
+  it('có SÀN — tên dài vô lý vẫn không nhỏ hơn 30px', () => {
+    expect(shareNameFontSize('N'.repeat(400))).toBe(SHARE_NAME_MIN_FONT_SIZE);
+  });
+
+  it('model dùng đúng cỡ chữ đã tính, đo trên chuỗi ĐÃ IN HOA', () => {
+    const model = build({ sales: { full_name: 'Nguyễn Trần Hoàng Phương Thảo Vy', employee_code: null } });
+
+    expect(model.nameFontSize).toBe(shareNameFontSize(model.salesName));
+    expect(model.nameFontSize).toBeLessThan(SHARE_NAME_FONT_SIZE);
+  });
+
+  it('tuyến ngắn giữ nguyên cỡ chữ, tuyến kịch trần bị thu', () => {
+    expect(shareRouteFontSize('Quận 1 → Quận 3')).toBe(SHARE_ROUTE_FONT_SIZE);
+    expect(shareRouteFontSize('Q'.repeat(MAX_SHARE_ROUTE_CHARS))).toBeLessThan(SHARE_ROUTE_FONT_SIZE);
+  });
+
+  it('không có tuyến thì trả cỡ chữ gốc, không ném', () => {
+    expect(shareRouteFontSize(null)).toBe(SHARE_ROUTE_FONT_SIZE);
   });
 });
 
@@ -295,60 +359,112 @@ describe('Thanh tiến độ + ngọn lửa vượt chỉ tiêu (PHASE 18, DEC-0
   });
 });
 
-describe('buildShareCardModel — cụm lũy kế tháng (PHASE 17, DEC-068)', () => {
-  it('ba dòng đúng thứ tự người dùng yêu cầu: doanh số · doanh thu · ngày đạt KPI', () => {
-    expect(build().monthly?.rows.map((row) => row.label)).toEqual([
-      'Doanh số tháng',
-      'Doanh thu tháng',
-      'Ngày đạt KPI',
+describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19, DEC-070)', () => {
+  it('bốn dòng đúng thứ tự và nhãn của mockup người dùng gửi', () => {
+    expect(build().performance?.rows.map((row) => row.label)).toEqual([
+      'Doanh số đã ghi',
+      'Doanh thu đã ghi',
+      'SL KH đã ghé thăm',
+      'SL KH đã mua hàng',
     ]);
   });
 
-  it('hai dòng tiền dùng số ĐẦY ĐỦ, không rút gọn như trong bảng', () => {
-    const rows = build().monthly?.rows;
-
-    // ⚠ Ký tự trước `₫` là NO-BREAK SPACE U+00A0 (docs/08 §3.3).
-    expect(rows?.[0]?.valueText).toBe('320.000.000 ₫');
-    expect(rows?.[1]?.valueText).toBe('210.000.000 ₫');
+  it('tiêu đề cố định, không kèm tên tháng như cụm DEC-068 đã bỏ', () => {
+    expect(build().performance?.title).toBe('TÌNH TRẠNG THỰC HIỆN');
   });
 
-  it('dòng thứ ba đếm NGÀY, không phải phần trăm — BR-024', () => {
-    expect(build().monthly?.rows[2]?.valueText).toBe('4 ngày');
+  it('bốn cột số dùng dạng RÚT GỌN — cụm có 4 cột trong một khối hẹp', () => {
+    const rows = build().performance?.rows;
+
+    expect(rows?.map((row) => row.targetText)).toEqual(['500tr', '300tr', '120 khách', '96 khách']);
+    expect(rows?.map((row) => row.actualText)).toEqual(['420tr', '210tr', '96 khách', '48 khách']);
   });
 
-  it('tiêu đề nói rõ đang cộng tháng nào', () => {
-    expect(build().monthly?.title).toBe('TỔNG THÁNG 08/2026');
+  it('`%` đi qua ĐÚNG calculateAchievement của bảng chính — không có công thức thứ hai (NFR-012)', () => {
+    const rows = build().performance?.rows;
+
+    expect(rows?.map((row) => row.achievement.display)).toEqual([
+      '84,0%',
+      '70,0%',
+      '80,0%',
+      '50,0%',
+    ]);
+    // BR-023 trên bốn tỉ lệ lệch nhau: 84 và 80 là NEAR, 70 và 50 là MISSED.
+    expect(rows?.map((row) => row.achievement.status)).toEqual([
+      'NEAR',
+      'MISSED',
+      'NEAR',
+      'MISSED',
+    ]);
   });
 
-  it('dòng phụ nói rõ mốc dừng — người nhận Zalo không có ngữ cảnh nào khác', () => {
-    expect(build().monthly?.rangeText).toBe('Tính đến hết ngày 06/08/2026');
+  it('chỉ tiêu DOANH THU cộng từ báo cáo, KHÔNG từ AMIS — con số duy nhất như vậy', () => {
+    // AMIS biết đã thu được bao nhiêu nhưng không biết mục tiêu là bao nhiêu.
+    const model = build({}, { ...PERFORMANCE, targetRevenue: 700_000_000 });
+
+    expect(model.performance?.rows[1]?.targetText).toBe('700tr');
+    // Ba dòng kia không nhúc nhích khi đổi con số của báo cáo.
+    expect(model.performance?.rows[0]?.targetText).toBe('500tr');
   });
 
-  it('khoảng RỖNG (ảnh sáng của ngày 01) vẫn hiện đủ ba dòng, nói thẳng là chưa có ngày nào', () => {
-    const model = build(
-      {},
-      {
-        range: { month: '2026-09', from: '2026-09-01', to: '2026-08-31', isEmpty: true },
-        summary: { salesAmount: 0, revenue: 0, kpiAchievedDays: 0, reportedDays: 0 },
-      },
-    );
+  it('chỉ tiêu dòng "đã mua hàng" là số khách ĐÃ TƯƠNG TÁC, không phải số khách phụ trách', () => {
+    // Đòi bán cho toàn bộ 120 khách phụ trách trong một tháng là mục tiêu không
+    // ai đặt; mốc đúng là 96 khách đã gặp được.
+    const rows = build().performance?.rows;
 
-    expect(model.monthly?.rangeText).toBe('Chưa có ngày nào trong tháng');
-    expect(model.monthly?.rows[2]?.valueText).toBe('0 ngày');
+    expect(rows?.[3]?.targetText).toBe('96 khách');
+    expect(rows?.[2]?.targetText).toBe('120 khách');
   });
 
-  it('truy vấn hỏng → BỎ HẲN cụm, KHÔNG in 0 ₫ cho một tháng có thể có số liệu', () => {
-    expect(build({}, null).monthly).toBeNull();
+  it('dòng phụ in mốc ĐỒNG BỘ, không phải ngày báo cáo — số có thể cũ vài ngày', () => {
+    // Báo cáo là ngày 07/08 nhưng lần đồng bộ gần nhất là 15/08.
+    expect(build().performance?.rangeText).toBe('Số liệu MISA tính đến 15/08/2026');
   });
 
-  it('CẢ HAI biến thể đều có cụm — khác hẳn khối "Số khách làm việc" cũ (DEC-056)', () => {
+  it('đồng bộ lúc 2h sáng giờ VN KHÔNG bị in lùi một ngày', () => {
+    // 19:00 UTC ngày 15 = 02:00 giờ VN ngày 16. Cắt thô 10 ký tự chuỗi ISO sẽ ra
+    // 15/08 và người đọc tưởng số cũ hơn thực tế.
+    const model = build({}, { ...PERFORMANCE, syncedAt: '2026-08-15T19:00:00Z' });
+
+    expect(model.performance?.rangeText).toBe('Số liệu MISA tính đến 16/08/2026');
+  });
+
+  it('chưa đồng bộ lần nào → nói thẳng ra, không im lặng bỏ dòng phụ', () => {
+    const model = build({}, { ...PERFORMANCE, syncedAt: null });
+
+    expect(model.performance?.rangeText).toBe('Chưa rõ mốc đồng bộ từ MISA');
+    // Bốn dòng số vẫn còn — chỉ mốc thời gian là chưa biết.
+    expect(model.performance?.rows).toHaveLength(4);
+  });
+
+  it('timestamp rác cũng rơi về "chưa rõ mốc" thay vì in Invalid Date', () => {
+    const model = build({}, { ...PERFORMANCE, syncedAt: 'hôm qua' });
+
+    expect(model.performance?.rangeText).toBe('Chưa rõ mốc đồng bộ từ MISA');
+  });
+
+  it('chưa map amis_employee_name → BỎ HẲN cụm, không in bốn dấu gạch', () => {
+    // Một khối trống trên tấm ảnh gửi cấp trên trông như lỗi hệ thống.
+    expect(build({}, null).performance).toBeNull();
+  });
+
+  it('thiếu số AMIS lẻ tẻ thì dòng đó PENDING, cụm vẫn còn', () => {
+    const model = build({}, { ...PERFORMANCE, amisSalesActual: null });
+
+    expect(model.performance).not.toBeNull();
+    expect(model.performance?.rows[0]?.achievement.status).toBe('PENDING');
+    // Ba dòng còn lại không bị kéo theo.
+    expect(model.performance?.rows[1]?.achievement.status).toBe('MISSED');
+  });
+
+  it('CẢ HAI biến thể đều có cụm — số AMIS là luỹ kế tháng, không đợi thực đạt hôm nay', () => {
     const morning = build(
       { status: 'MORNING_SUBMITTED', actual_sales_amount: null, actual_revenue: null },
-      MONTHLY,
+      PERFORMANCE,
     );
 
-    expect(morning.monthly).not.toBeNull();
-    expect(build().monthly).not.toBeNull();
+    expect(morning.performance).not.toBeNull();
+    expect(build().performance).not.toBeNull();
   });
 });
 
@@ -417,9 +533,9 @@ describe('buildShareCardModel — hai biến thể thẻ (PHASE 14, DEC-058)', (
     expect(build().kindLabel).toBe('KẾT QUẢ CUỐI NGÀY');
   });
 
-  it('bản sáng KHÔNG có cột thực đạt, nhưng VẪN có cụm lũy kế tháng (DEC-068)', () => {
+  it('bản sáng KHÔNG có cột thực đạt, nhưng VẪN có cụm tình trạng thực hiện (DEC-070)', () => {
     expect(morning().variant).toBe('MORNING');
-    expect(morning().monthly).not.toBeNull();
+    expect(morning().performance).not.toBeNull();
   });
 
   it('bản sáng vẫn đủ 4 dòng cam kết, lấy tuyến KẾ HOẠCH', () => {
@@ -463,7 +579,9 @@ describe('Edge case bắt buộc của Phase 6', () => {
 
   it('ghi chú 1000 ký tự bị cắt an toàn và có dấu …', () => {
     const note = 'Khách hẹn lại tuần sau. '.repeat(50).slice(0, 1000);
-    const { noteText } = build({ evening_note: note });
+    // `null` ở tham số hai: từ PHASE 19 cụm AMIS chiếm hết chỗ của ghi chú, nên
+    // phép cắt chỉ quan sát được ở thẻ KHÔNG có cụm.
+    const { noteText } = build({ evening_note: note }, null);
 
     expect(note).toHaveLength(1000);
     expect(noteText?.length).toBeLessThanOrEqual(MAX_SHARE_NOTE_CHARS);
@@ -471,8 +589,8 @@ describe('Edge case bắt buộc của Phase 6', () => {
   });
 
   it('ghi chú rỗng / chỉ khoảng trắng → null, thẻ bỏ hẳn khối ghi chú', () => {
-    expect(build().noteText).toBeNull();
-    expect(build({ evening_note: '   \n  ' }).noteText).toBeNull();
+    expect(build({}, null).noteText).toBeNull();
+    expect(build({ evening_note: '   \n  ' }, null).noteText).toBeNull();
   });
 
   it('doanh thu 12 chữ số vẫn vừa khung nhờ dạng rút gọn trong bảng', () => {
@@ -522,9 +640,14 @@ describe('Edge case bắt buộc của Phase 6', () => {
           model.dateText,
           model.salesName,
           model.kindLabel,
-          model.monthly?.title ?? '',
-          model.monthly?.rangeText ?? '',
-          ...(model.monthly?.rows.flatMap((row) => [row.label, row.valueText]) ?? []),
+          model.performance?.title ?? '',
+          model.performance?.rangeText ?? '',
+          ...(model.performance?.rows.flatMap((row) => [
+            row.label,
+            row.targetText,
+            row.actualText,
+            row.achievement.display,
+          ]) ?? []),
           ...model.metrics.flatMap((row) => [row.targetText, row.actualText, row.achievement.display]),
         ].join(' | ');
 

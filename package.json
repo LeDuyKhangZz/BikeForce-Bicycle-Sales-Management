@@ -42,11 +42,13 @@
     "@types/react-dom": "19.2.4",
     "@vitejs/plugin-react": "6.0.5",
     "@vitest/coverage-v8": "4.1.10",
+    "dotenv": "^17.4.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.0",
     "pg": "8.22.0",
     "supabase": "2.111.0",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.12",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

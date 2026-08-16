@@ -1961,6 +1961,127 @@ hình × 2 bề rộng trên `next build` + `next start`.
 
 ---
 
+### Entry 030 — Đối soát nhánh `feat/amis-auto-token`: gộp main, ghi DEC-070, bịt một lỗ RLS
+
+**Date:** 2026-08-16
+
+**Yêu cầu người dùng:** *"bạn tôi mới sửa code và nói code trong branch nhá, không phải main nha — pull
+code về push code mới lên giùm tôi với"*, rồi sau khi thấy báo cáo lỗi: *"những gì liên quan đến AMIS thì
+phải để tại vì đó là những gì bạn tôi sửa trong code"* + *"nhớ giữ nguyên những gì bạn tôi đã sửa và push
+lên branch"*. Kèm một ảnh mockup thẻ ảnh có cụm "Tình trạng thực hiện" 4 cột.
+
+**Bối cảnh:** cộng tác viên `NguyenPhust9` đẩy commit `251fa19` lên nhánh `feat/amis-auto-token` ngày
+2026-08-15 — toàn bộ tích hợp MISA AMIS, 35 file, +5131/−204.
+
+**Completed:**
+
+1. **Gộp `main` vào nhánh** (`ddfecdf`). Nhánh cắt ra từ `05528ab` nên thiếu 3 commit cuối của main.
+   Hai xung đột, giữ **cả hai vế** ở cả hai file:
+   - `.gitignore` — khối "Claude Code" của main và khối "AMIS sync" của nhánh là hai mục độc lập.
+   - `daily-report-share-card.tsx` — main đổi dải lửa sang ảnh PNG (`flameSrc`), nhánh thêm công tắc
+     `withFlame`. `ProgressBar` nay nhận cả hai; điều kiện vẽ là
+     `withFlame && isBlazing && flameSrc !== null`.
+2. **Xác minh nhánh đã đỏ TỪ TRƯỚC khi gộp, không phải do gộp.** `251fa19` gỡ `model.monthly` và
+   `ShareCardMonthlySource` khỏi `lib/reports/share-card.ts` nhưng không chạm
+   `lib/reports/share-card.test.ts` (lần sửa cuối của file đó là `05528ab`) ⇒ 17 lỗi typecheck ⇒
+   **`npm run build` gãy**.
+3. **Hỏi người dùng trước khi sửa**, vì gỡ cụm DEC-068 là đảo một quyết định đã `APPROVED` do chính họ
+   yêu cầu ngày 2026-08-14. Người dùng chốt: **AMIS thay hẳn**. Ghi thành **DEC-070**.
+4. `share-card.test.ts` — thay 7 test cụm lũy kế tháng bằng **12 test** cụm "Tình trạng thực hiện":
+   thứ tự 4 dòng theo mockup, chỉ tiêu doanh thu **không** từ AMIS, chỉ tiêu dòng "đã mua hàng" là số
+   khách **đã tương tác**, mốc đồng bộ thay vì ngày báo cáo, ca 2h sáng giờ VN, `synced_at` null / rác,
+   chưa map tên → bỏ cụm, thiếu số lẻ → dòng đó `PENDING`.
+5. `nav-items.test.ts` — Sales 3 → **4**, Admin 4 → **5**. Admin nay **chạm đúng trần 5 mục** của DEC-018.
+6. `amis-recon.ts` — bỏ `any[]`, đặt kiểu `CapturedRequest`. Kiểu mới lộ ra `split('?')[0]` là
+   `string | undefined` dưới `noUncheckedIndexedAccess` — `any` đang che chỗ đó.
+
+**Lỗ RLS tìm ra khi áp migration lần đầu:** ba migration `20260815*` **chưa từng được áp** ở local. Áp
+xong thì phép kiểm quét `relforcerowsecurity` của `tests/rls/` đỏ: `amis_employee_metrics` có `enable row
+level security` + đủ hai policy SELECT nhưng **thiếu `force`**, mà `enable` thì miễn trừ chủ sở hữu bảng.
+Bịt bằng migration mới `20260816000000_amis_metrics_force_rls.sql` — **không** sửa file cũ vì nó đã áp
+trên máy người viết. Soát thêm hai điểm, **cả hai đều đúng**: view `amis_reconciliation` có
+`security_invoker=on` (thiếu cờ này là mọi Sales đọc được báo cáo của nhau — vỡ BR-003), và `anon`
+**không** có `SELECT` trên bảng mới.
+
+**Files Changed:** `lib/reports/share-card.test.ts`, `lib/navigation/nav-items.test.ts`,
+`tests/rls/share-image.rls.test.ts`, `scripts/amis-sync/amis-recon.ts`, `.gitignore`,
+`features/report-share/daily-report-share-card.tsx`,
+`supabase/migrations/20260816000000_amis_metrics_force_rls.sql`, `docs/05`, `docs/11`, `WORKLOG.md`,
+`SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Tests đã chạy thật (2026-08-16):**
+
+| Gate | Trước | Sau |
+|---|---|---|
+| `npm run build` | ❌ Failed to type check | ✅ PASS — **22 route** |
+| `npm run typecheck` | ❌ 17 lỗi | ✅ PASS |
+| `npm run lint` | ❌ 1 error | ✅ 0 error / 0 warning |
+| `npm test` | ❌ 9 đỏ · 197 skip | ✅ **863/863 · 33/33 file · 0 skip** |
+
+Lần này Supabase local **có chạy** (Docker 28.4.0) nên 197 test DB/RLS chạy thật thay vì skip — cao hơn
+mốc 841 của phiên trước đúng ở chỗ đó.
+
+**Còn nợ — chưa merge vào `main` được:** đẩy **4** migration lên cloud (thiếu
+`profiles.amis_employee_name` là **nút xuất ảnh chết cho toàn đội**, vì cột đó nằm trong truy vấn của
+route ảnh) · **render PNG thật rồi nhìn** cụm 4 cột mới · `docs/02` cho bảng `amis_employee_metrics` ·
+E2E cho `/admin/reconciliation` và `/sales/reconciliation`.
+
+### Entry 031 — Đẩy 4 migration lên cloud · thẻ ảnh tràn khung 1920px, sửa bằng cỡ chữ co
+
+**Date:** 2026-08-16
+
+**Yêu cầu người dùng:** *"Đẩy 4 migration lên Supabase cloud giúp tôi, **bạn sẽ luôn là người làm việc
+này nên đừng bao giờ kêu tôi làm nữa**, mật khẩu trong env.local"* · *"bạn có cách nào giúp tôi xem ảnh
+báo cáo sáng, chiều hiện tại trông như nào mà không cần vào hệ thống làm báo cáo"* — lý do: tài khoản
+test chưa chắc có map AMIS, còn mượn tài khoản Sales thật thì làm bẩn số liệu production.
+
+**Completed:**
+
+1. **Đẩy 4 migration lên cloud `rnmywhwanpxmipqducqu`.** Kiểm hai lớp: `migration list` **12/12** mọi
+   `local` khớp `remote`; `db diff --linked` không còn `CREATE TABLE` / cột thiếu / view thiếu,
+   `dropStatements` rỗng. Phần sót lại trong diff chỉ là `rls_auto_enable` + `ALTER DEFAULT PRIVILEGES`
+   — đối tượng của chính nền tảng Supabase, **không phải drift**.
+2. **Dựng script render dùng-một-lần** (`npx tsx scripts/preview-share.tsx <thư-mục>`) — 8 tấm PNG
+   1080×1920 từ dữ liệu bịa, **không đăng nhập, không chạm database**. Khả thi vì
+   `buildShareCardModel()` thuần và thẻ chỉ nhận `model` + `flameSrc`.
+3. **Phát hiện thẻ đang GÃY — 863 test vẫn xanh.** Cụm AMIS cao hơn cụm DEC-068 cũ ~200px trong khi thẻ
+   cố định 1920px. Thang đo dựng được: tuyến 2 dòng → chân thẻ cắt nửa; tên 2 dòng → mất chân thẻ; cả
+   hai → **chém mất dòng thứ tư của cụm AMIS**. Ngưỡng gãy là **tên quá 22 ký tự**.
+4. Người dùng chốt hướng sửa: **giữ nguyên thanh tiến độ**, thu cỡ chữ tên cho vừa một dòng, và dặn
+   thêm *"chỉ giảm cỡ chữ khi tên quá dài khiến tên bị xuống dòng"*.
+5. `shareNameFontSize()` (64 → sàn 30) và `shareRouteFontSize()` (34 → sàn 24) trong `lib/`, hai cỡ chữ
+   vào `ShareCardModel` chứ không tính trong component (AGENTS.md §1.3).
+6. `shareNoteBudget()` bỏ vế `nameLines`, thêm tham số `hasPerformance` trả **0**.
+7. 11 unit test mới cho hai hàm cỡ chữ; 4 test cũ cập nhật theo hành vi mới.
+
+**Hai bài học tự vấp phải trong một buổi:** ngưỡng **24** ký tự thu **chưa đủ** (tên vẫn xuống dòng),
+ngưỡng **20** thì **thu oan** tên vốn đã vừa — đúng cái người dùng vừa dặn tránh. Kết cục phải tách làm
+**hai hằng số**: `NAME_CHARS_PER_LINE = 22` trả lời *"có cần thu không"*, `NAME_FIT_CHARS = 20` trả lời
+*"thu bao nhiêu thì chắc chắn vừa"*. Đếm ký tự chỉ là xấp xỉ — cùng 28 ký tự mà chuỗi này vừa, chuỗi kia
+không.
+
+**Lỗi thứ hai chỉ lộ ra ở lượt render thứ tư:** ghi chú bị Yoga nén dở dang nên **mẩu nhãn "GHI CHÚ" thò
+ra rồi bị chém ngang**. Sửa bằng cách cho ngân sách về 0 khi có cụm AMIS — tất-hoặc-không, kiểm được
+bằng unit test.
+
+**Files Changed:** `lib/reports/share-card.ts`, `lib/reports/share-card.test.ts`,
+`features/report-share/daily-report-share-card.tsx`, `docs/05`, `docs/11`, `WORKLOG.md`,
+`SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Tests đã chạy thật (2026-08-16):**
+
+| Gate | Kết quả |
+|---|---|
+| `npm run build` | ✅ exit 0 — 22 route |
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error / 0 warning |
+| `npm test` | ✅ **872/872 · 33/33 file · 0 skip** |
+| Migration cloud | ✅ **12/12**, `db diff` sạch |
+| **Nhìn tận mắt** | ✅ 8 tấm PNG render lại sau khi sửa, xem từng tấm |
+
+**Còn nợ:** `docs/02` cho `amis_employee_metrics` · E2E cho `/admin/reconciliation` và
+`/sales/reconciliation` · E2E khoá thanh/lửa (nợ từ Phase 18).
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần
