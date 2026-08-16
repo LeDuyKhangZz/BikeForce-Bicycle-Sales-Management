@@ -651,8 +651,8 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 │                                Gần đạt│  nhãn chữ #566A7B, 24px
 │                          ▰▰▰▱▱        │  thanh 200×14, khối cao 48px — DEC-069
 │   Doanh số        1tr      5tr 500,0%│  dòng chẵn nền #F4F7FA (sọc)
-│                       ʌʌʌʌʌʌʌʌʌʌʌ    │  vượt >100% ⇒ DẢI LỬA 13 lưỡi SVG
-│                          ▰▰▰▰▰        │  bọc dọc thanh, không chạm nhãn chữ
+│                       🔥🔥🔥🔥🔥🔥    │  vượt >100% ⇒ ẢNH flame-strip.png
+│                          ▰▰▰▰▰        │  200×53, bọc dọc thanh, không chạm chữ
 │   Doanh thu       1tr      0 ₫   0,0%│  % vượt #166534 · gần đạt #92400E
 │   Khách hàng  10 khách 5 khách  50,0%│  % chưa đạt #991B1B
 │  ▌┌──────────────────────────────┐   │  vạch cam dọc 10px + nền #FDF1E3
@@ -695,7 +695,8 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 | **Thanh tiến độ** với `250%` | `buildProgress()` clamp `fill` về 1; con số KHÔNG clamp (BR-004) | ✅ thanh đầy + ngọn lửa, chữ vẫn `250,0%` |
 | **Ngọn lửa** ở đúng `100,0%` | ngưỡng `percent > 100` **nghiêm ngặt** (DEC-069) | ✅ không cháy — người dùng chốt |
 | **Thanh** phải thẳng hàng ở mọi dòng | ô lửa 30px **luôn** chiếm chỗ, kể cả khi không cháy | ✅ bốn thanh thẳng tuyệt đối |
-| Ngọn lửa không có glyph trong Inter | vẽ bằng **SVG path 2 lớp**, tuyệt đối không emoji | ✅ Satori dựng được `<svg><path>` |
+| Hiệu ứng lửa cần quầng sáng mềm | dùng **ảnh PNG** `public/images/flame-strip.png`, không vẽ tay | ✅ Satori không có `filter: blur()` nên vẽ tay không ra quầng |
+| Ảnh lửa thiếu/không đọc được | `flameSrc = null` → vẫn vẽ thanh, chỉ mất lửa | ✅ không bao giờ làm hỏng cả tấm ảnh |
 | Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` — nay là đường dùng tiền **duy nhất** của thẻ | ✅ `100tỷ` |
 | Achievement 4 chữ số (`1.250,0%`) hiển thị đủ | không clamp (BR-004) | ✅ |
 | `target = 0` không bao giờ ra `∞`/`NaN` (BR-015) | lấy nguyên `display` của `lib/kpi.ts` | ✅ `actual = 0` → `100,0%`; `actual > 0` → `+3 điểm` + "Vượt kế hoạch" |

@@ -21,21 +21,31 @@ tại rất đẹp rồi"*.
 ### Quy cách thanh (`ProgressBar` trong `daily-report-share-card.tsx`)
 
 Pill **200 × 14px**, bo tròn hoàn toàn, **viền 2px màu `status`**, fill đặc cùng màu.
-Khi vượt: **dải lửa 13 lưỡi SVG** bọc dọc thanh (viền `#C2410C`/`#E9A04F`, lõi `#FCD34D`).
+Khi vượt: **ảnh** `public/images/flame-strip.png` (200 × 53 hiển thị) đặt chồng lên, chân lửa chìm 8px
+vào thân thanh.
 
-> **Bản đầu là một ngọn lửa nhỏ ở mút phải — người dùng bác.** Họ đưa ảnh mẫu và nói rõ: lửa phải **cháy
-> bọc cả thanh**, *"nhưng đừng để lửa che chữ"*. Đừng quay lại bản một ngọn.
+> **Đã qua BA bản, đừng quay lại hai bản đầu.** (1) Một ngọn lửa SVG ở mút phải — người dùng bác, muốn
+> lửa **bọc cả thanh**. (2) Ghép 13 lưỡi lửa SVG — người dùng xem rồi nói thẳng *"xấu quá"* và **tự gửi
+> ảnh lửa** để dùng thay. (3) Ảnh PNG — bản hiện hành.
+>
+> **Bài học:** Satori **không có `filter: blur()`** nên không vẽ nổi quầng sáng hay chuyển sắc mềm —
+> thiếu đúng hai thứ làm nên hình ảnh lửa. **Hiệu ứng quang học thì dùng ảnh, hình khối và số liệu thì vẽ.**
 
-⚠ **Khối thanh cao `FLAME_STRIP_HEIGHT + 14 = 48px` ở MỌI dòng, kể cả dòng không cháy.** Bỏ khoảng trống
-đó đi thì dòng cháy lệch so với các dòng khác — đúng "đụng hàng" mà người dùng dặn tránh — và lửa sẽ
-chạm vào nhãn chữ.
+⚠ **Khối thanh cao `53 + 14 = 67px` ở MỌI dòng, kể cả dòng không cháy.** Bỏ khoảng trống đó đi thì dòng
+cháy lệch so với các dòng khác — đúng "đụng hàng" mà người dùng dặn tránh — và lửa sẽ chạm vào nhãn chữ.
 
-⚠ **Hai giới hạn của Satori đã va phải, đừng thử lại:** không có `filter: blur()` ⇒ **không thể** làm
-quầng sáng mờ như ảnh mẫu; không dựng `transform` trên SVG đáng tin ⇒ dải lửa phải **ghép bằng flexbox**,
-không nhân bản bằng `<g transform>`.
+⚠ **Ảnh nguồn không thực sự trong suốt** — hoa văn bàn cờ là pixel xám thật. Đã tách bằng hiệu **`R − B`**
+(nền xám có `R = B` nên triệt tiêu hoàn toàn) với ngưỡng **28** — ngưỡng thấp hơn giữ lại quầng hào quang
+mà người dùng đã bác *"nhìn xấu quá"*. Thông số cắt đầy đủ ở `docs/11 § DEC-069 ảnh lửa bản 2`; ảnh gốc
+**không** nằm trong repo.
 
-⚠ **Lưỡi lửa phải MẢNH** (tỉ lệ 12/24). Lượt đầu dùng path icon lửa "mập" (22/28) cho cả dải và nhìn ra
-**răng cưa** chứ không ra lửa.
+⚠ **BÀI HỌC — đừng crop ảnh theo ngân sách bố cục.** Lượt đầu tôi crop từ `y = 560` trong khi lửa bắt đầu
+ở `y = 487`, tức **tự tay cắt mất 73px đỉnh lửa** để thẻ đỡ cao; người dùng phát hiện khi xuất ảnh thật.
+Phải **đo bounding box của chủ thể trước** rồi chừa biên, và điều chỉnh ngân sách cho vừa chủ thể — không
+phải ngược lại.
+
+⚠ **`./public/images/**` phải ở trong `outputFileTracingIncludes`** (`next.config.ts`) — thiếu là Vercel
+ném `ENOENT` dù build xanh.
 
 ⚠ **`ROW_METRICS.EVENING.paddingY` = 10** (hạ từ 30) để bù chiều cao khối thanh. Nâng lại là tái diễn
 ISSUE-032 (chồng chữ).

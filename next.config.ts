@@ -25,7 +25,10 @@ const nextConfig: NextConfig = {
    * ~1MB vào bundle của route dù request có gọi tới hay không.
    */
   outputFileTracingIncludes: {
-    '/api/reports/[id]/share-image': ['./public/fonts/**'],
+    // ⚠ `public/images/**` thêm ở PHASE 18 (DEC-069) cho **dải lửa** của thanh
+    // tiến độ — cùng lý do với font: nó cũng được đọc bằng `fs` lúc render, nên
+    // thiếu dòng này thì ảnh vẫn build xanh mà hàm trên Vercel ném `ENOENT`.
+    '/api/reports/[id]/share-image': ['./public/fonts/**', './public/images/**'],
   },
 };
 

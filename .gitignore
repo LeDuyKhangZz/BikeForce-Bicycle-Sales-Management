@@ -67,6 +67,11 @@ yarn-error.log*
 Thumbs.db
 desktop.ini
 
+# Claude Code ----------------------------------------------------------------
+# Quyền chạy lệnh là cấu hình của MÁY, không phải của dự án — mỗi người một
+# thói quen và một mức tin cậy khác nhau, nên không commit.
+.claude/settings.local.json
+
 # Tạm ------------------------------------------------------------------------
 *.tmp
 .cache/

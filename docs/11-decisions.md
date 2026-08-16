@@ -2227,3 +2227,54 @@ chuyến đi, không phải phần phụ.
 ca không có tuyến, ca ngân sách 0 và ràng buộc không bao giờ âm). Vitest **858/858**. Đã render và nhìn
 lại **ba** tấm: bốn dòng cùng cháy, ca hỗn hợp (chỉ một dòng cháy — kiểm thẳng hàng), và ca xấu nhất
 (ghi chú tự ẩn, footer nguyên vẹn).
+
+### DEC-069 — BẢN CUỐI: dải lửa là một ẢNH PNG do người dùng cung cấp
+
+Người dùng xem bản ghép 13 lưỡi lửa SVG và nói thẳng **"xấu quá"**, rồi tự gửi một ảnh lửa để dùng thay.
+
+**Vì sao hình vẽ tay không thể đẹp bằng:** Satori **không có `filter: blur()`**, nên mọi thứ nó vẽ đều
+là mảng màu sắc nét — không quầng sáng, không chuyển sắc mềm, tức thiếu đúng hai thứ làm nên hình ảnh
+lửa. Một tấm PNG mang sẵn cả hai trong pixel của nó. Đây là ranh giới nên nhớ: **hiệu ứng quang học thì
+dùng ảnh, hình khối và số liệu thì vẽ.**
+
+**Xử lý ảnh nguồn (2528×1686):**
+
+| Bước | Cách làm |
+|---|---|
+| Tách nền | Ảnh **không** thực sự trong suốt — hoa văn bàn cờ là pixel xám thật (alpha toàn 255). Tách bằng hiệu **`R − B`**: nền xám luôn có `R = B` nên hiệu triệt tiêu hoàn toàn hoa văn, còn lửa thì `R ≫ B`. `α = clamp((R−B)/170, 0, 1)` |
+| Khử vệt bàn cờ ở quầng | Nền gốc lệch ±2 mức do nén ⇒ quầng còn vệt rất mờ. Làm mượt Gaussian bán kính 26 **chỉ ở vùng quầng** (`α < 0,9`); lõi lửa giữ nguyên nên mép không nhoè |
+| Bỏ thanh xanh | Mask `G > R+18 && G > B+18`. Thanh thật phải đổi chiều dài theo `%` và đổi màu theo `status` nên không thể là ảnh tĩnh |
+| Cắt | `(396, 560) → (2108, 1014)` — ngang bằng đúng mép thanh trong ảnh gốc; dọc dừng ở **giữa** thanh để chân lửa chìm vào thanh thật |
+| Xuất | `public/images/flame-strip.png`, **400×106** (2× cỡ hiển thị 200×53), 47 KB |
+
+**Nhúng:** Route Handler đọc file bằng `fs`, mã hoá **data URI**, truyền xuống component qua prop
+`flameSrc` — Satori không tải ảnh qua mạng lúc render, cùng lý do với font ở ISSUE-002. Đã thêm
+`./public/images/**` vào `outputFileTracingIncludes`; thiếu dòng đó thì build vẫn xanh mà hàm trên
+Vercel ném `ENOENT`. `flameSrc = null` (không đọc được file) ⇒ **vẫn vẽ thanh**, chỉ mất lửa.
+
+`FLAME_STRIP_HEIGHT` từ 34 lên **53px**, vẫn chừa sẵn ở mọi dòng nên bốn thanh thẳng hàng và lửa không
+chạm nhãn chữ. Ảnh gốc đã được dời khỏi repo (6,7 MB) — thông số cắt ở trên đủ để tái lập.
+
+**Verification:** typecheck/lint/build exit 0; Vitest **858/858**; đã render và **nhìn tận mắt** hai tấm
+(một dòng cháy — kiểm thẳng hàng; bốn dòng cùng cháy), cộng một tấm ghép riêng dải lửa trên nền trắng để
+soi vết bàn cờ trước khi nhúng.
+
+### DEC-069 — ẢNH LỬA bản 2: bỏ quầng hào quang, giữ trọn đỉnh lửa
+
+Người dùng xuất ảnh thật rồi báo hai lỗi của bản ảnh đầu, và **tự gửi ảnh nguồn mới đã hạ bớt chiều cao
+ngọn lửa**:
+
+| Lỗi | Nguyên nhân | Sửa |
+|---|---|---|
+| *"cái ngọn cao nhất của lửa bị cắt đi"* | **Lỗi của tôi:** crop từ `y = 560` trong khi lửa bắt đầu ở `y = 487` — tự tay cắt mất **73px đỉnh** để tiết kiệm chiều cao thẻ | Crop chừa **8px phía trên** ngọn cao nhất (`y = 592`, lửa bắt đầu `600`) |
+| *"vầng hào quang nhìn xấu quá"* | Ngưỡng tách nền quá thấp (`warm − 12`) nên giữ lại cả vùng sáng mờ quanh lửa | Ngưỡng nay **`warm − 28`**, loại sạch phần mờ. Mép lửa vẫn mượt vì ở đó `R − B` nhảy 0→200 trong một hai pixel, không chuyển dần như quầng |
+
+Không còn cần bước làm mượt Gaussian: quầng đã bị loại ở ngưỡng nên không còn gì để lộ vệt bàn cờ.
+
+**Thông số bản hiện hành:** nguồn `2528×1686`, lửa `y 600…`, thanh xanh `y 954–1075`; crop
+`(395, 592) → (2108, 1014)`; xuất `public/images/flame-strip.png` **400×99** (28 KB), hiển thị
+**200×50**. `FLAME_STRIP.height` = 50.
+
+**Bài học chung:** khi cắt một ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước** rồi
+chừa biên — đừng chọn khung cắt theo ngân sách bố cục. Ngân sách nên được điều chỉnh cho vừa chủ thể,
+không phải ngược lại.

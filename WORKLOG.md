@@ -2715,3 +2715,33 @@ chữ"*.
   hai lần (232 → 174 → 130) mà ca xấu nhất vẫn bị **chém ngang giữa dòng chữ**; thứ thiếu là *chỗ*, mà
   chỗ phụ thuộc tên/tuyến dài bao nhiêu. Hết ngân sách thì bỏ hẳn khối ghi chú, giữ tuyến.
 - Vitest **858/858**; đã render và nhìn lại ba tấm (bốn dòng cùng cháy · một dòng cháy · ca xấu nhất).
+
+**Bổ sung lần 2 cùng ngày (Entry 029c) — dải lửa nay là ẢNH, không phải hình vẽ.** Người dùng xem bản
+ghép 13 lưỡi SVG và nói thẳng *"xấu quá"*, rồi tự gửi một ảnh lửa để gắn vào.
+
+- **Vì sao vẽ tay không thể đẹp bằng:** Satori không có `filter: blur()` ⇒ mọi thứ nó vẽ đều sắc nét,
+  không quầng sáng, không chuyển sắc mềm — thiếu đúng hai thứ làm nên hình ảnh lửa.
+- Ảnh nguồn (2528×1686) **không thực sự trong suốt**: hoa văn bàn cờ là pixel xám thật. Tách nền bằng
+  hiệu **`R − B`** (nền xám có `R = B` nên triệt tiêu hoàn toàn hoa văn, lửa thì `R ≫ B`), rồi Gaussian
+  bán kính 26 **chỉ ở vùng quầng** để khử vệt bàn cờ còn sót do nén ±2 mức.
+- Cắt bỏ thanh xanh trong ảnh (mask xanh lá) vì thanh thật phải đổi chiều dài theo `%` và màu theo
+  `status`. Cắt `(396,560)→(2108,1014)`, xuất `public/images/flame-strip.png` 400×106 (47 KB).
+- Route đọc file rồi truyền **data URI** qua prop `flameSrc`; thêm `./public/images/**` vào
+  `outputFileTracingIncludes`. `flameSrc = null` ⇒ vẫn vẽ thanh, chỉ mất lửa.
+- Ảnh gốc 6,7 MB đã dời khỏi repo; thông số cắt ghi đủ trong DEC-069 để tái lập.
+- typecheck/lint/build exit 0; Vitest **858/858**; đã render và nhìn hai tấm thẻ + một tấm soi riêng dải lửa.
+
+**Bổ sung lần 3 (Entry 029d) — ảnh lửa bản 2.** Người dùng xuất ảnh thật rồi báo hai lỗi và gửi ảnh nguồn
+mới đã hạ bớt chiều cao ngọn lửa:
+
+1. *"cái ngọn cao nhất của lửa bị cắt đi"* — **lỗi của tôi**: crop từ `y = 560` trong khi lửa bắt đầu ở
+   `y = 487`, tức tự tay cắt mất 73px đỉnh để tiết kiệm chiều cao thẻ. Nay crop chừa 8px trên ngọn cao nhất.
+2. *"vầng hào quang nhìn xấu quá"* — ngưỡng tách nền quá thấp nên giữ cả vùng sáng mờ. Ngưỡng nay `warm−28`,
+   loại sạch quầng; mép lửa vẫn mượt vì ở mép `R−B` nhảy 0→200 trong một hai pixel.
+
+Kết quả: `flame-strip.png` 400×99 (28 KB, nhẹ hơn bản trước 40%), hiển thị 200×50. Không còn cần bước làm
+mượt Gaussian vì quầng đã bị loại ở ngưỡng. typecheck/lint/build exit 0; Vitest **858/858**; đã render và
+nhìn lại hai tấm thẻ + một tấm soi riêng dải lửa.
+
+**Bài học ghi vào checkpoint:** khi cắt ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước**
+rồi chừa biên — đừng chọn khung cắt theo ngân sách bố cục.
