@@ -101,8 +101,17 @@ commit.** Luôn render **cả ca xấu nhất** — ca đẹp không bao giờ l
 ### Kết nối thẳng vào Postgres trên cloud (đã dùng được 2026-08-16)
 
 `postgresql://postgres.rnmywhwanpxmipqducqu:<pw>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres`
-với `ssl: { rejectUnauthorized: false }`. Mật khẩu ở `.env.local`. ⚠ Gọi PostgREST bằng key trong
-`.env.local` thì **trả 401** — chưa rõ vì key cũ hay vì cách gọi; dùng đường Postgres ở trên thì chắc.
+với `ssl: { rejectUnauthorized: false }`. Mật khẩu ở `.env.local`.
+
+### ⚠ BẪY: PostgREST trả 401/403 trên `profiles` KHÔNG có nghĩa là key hỏng
+
+Mã lỗi là **`42501` = thiếu quyền**, không phải lỗi xác thực. `service_role` **cố ý không có một quyền
+nào** trên `profiles` và `daily_reports` (DEC-031) — nó chỉ có `SELECT/INSERT/UPDATE/DELETE` trên đúng
+`amis_employee_metrics`. Đã kiểm ngày 2026-08-16: đọc/upsert/xoá trên bảng đó đều **200/201/204**.
+
+Vậy nên **đừng lấy 401 trên `profiles` làm bằng chứng key bị rotate** — tôi đã kết luận nhầm đúng như
+vậy một lần. Muốn thử key thì thử trên bảng mà vai đó thật sự có quyền. Đọc `profiles` thì dùng đường
+Postgres ở trên.
 
 ---
 
