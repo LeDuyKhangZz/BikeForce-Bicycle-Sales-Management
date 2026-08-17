@@ -2914,3 +2914,49 @@ nhìn lại hai tấm thẻ + một tấm soi riêng dải lửa.
 
 **Bài học ghi vào checkpoint:** khi cắt ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước**
 rồi chừa biên — đừng chọn khung cắt theo ngân sách bố cục.
+
+---
+
+## Entry 031 — 2026-08-17 — DEC-071: chỉ tiêu THÁNG do Admin giao
+
+**Người dùng báo (gấp):** ô "CHỈ TIÊU" của dòng *Doanh thu đã ghi* trên thẻ ảnh in **200tr**, trong khi
+bảng KPI công ty tháng 8/2026 ghi **640tr** cho Ngô Thế San. Yêu cầu: sửa **thẳng trên database** trước,
+mỗi Sales một con số riêng theo bảng KPI; sau đó mới lên kế hoạch làm module nhập KPI ở trang Admin.
+Nhắn bổ sung giữa chừng: **đổi cả doanh thu lẫn doanh số**, và **chỉ set cho tháng 8**.
+
+### Nguyên nhân
+
+DEC-070 lấy chỉ tiêu doanh thu bằng cách **cộng `daily_reports.target_revenue`** của các ngày trong
+tháng. Đó là tổng **cam kết NGÀY** Sales tự gõ (DEC-030), không phải chỉ tiêu THÁNG công ty giao. Không
+có chỗ nào trong database chứa chỉ tiêu tháng — nên không thể "sửa số" mà không tạo chỗ chứa nó.
+
+### Đã làm
+
+| Việc | Chi tiết |
+|---|---|
+| Migration `20260817120000_sales_monthly_targets.sql` | Bảng mới + RLS (đọc: own-or-admin; ghi: **chỉ Admin**) + trigger `updated_at` + index kỳ |
+| Đẩy cloud | ✅ `supabase db push --yes` — `migration list` trước đó khớp 13/13, sau đó 14/14 |
+| Nạp dữ liệu kỳ `2026-08-01` | ✅ **9/9 Sales** khớp bảng KPI, ghi bằng script tạm rồi xoá |
+| `services/reports.ts` | thêm `getMonthlyTargets()` — khoá `sales_id`, đi qua client chịu RLS |
+| `lib/reports/share-card.ts` | `ShareCardPerformanceSource` thêm 2 trường; cả hai dòng tiền dùng `?? đường lùi` |
+| `app/api/.../share-image/route.tsx` | truy vấn thứ ba, chạy song song với AMIS bằng `Promise.all` |
+| `types/database.types.ts` | sinh lại bằng `supabase gen types --linked` — diff **chỉ thêm**, 47 dòng |
+
+### Không nạp được, đã báo người dùng
+
+Hai dòng **"Quỳnh hỗ trợ + văn phòng"** của bảng KPI: `Nguyễn Thị Như Quỳnh` **có trên AMIS nhưng chưa
+có hồ sơ BikeForce**, nên không có `sales_id` để gắn chỉ tiêu. Cần tạo tài khoản trước.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npm run build` | ✅ exit 0, 20 route |
+| `npx vitest run --project unit` | ✅ **680/680** (19 file); riêng `share-card.test.ts` **83/83** |
+| Nhìn tận mắt | ✅ render PNG 1080×1920 với đúng số production của Ngô Thế San — cụm in `800tr` / **`640tr`**, bố cục không vỡ |
+| Integration / RLS | ⏳ **CHƯA CHẠY** — cần Docker + Supabase local, người dùng yêu cầu gấp. **Nợ lại** |
+
+⚠ Ba test mới khoá đúng ba điểm dễ hỏng: chỉ tiêu tháng **thắng** cả hai đường lùi · giao **một** trong
+hai thì dòng kia vẫn lùi · chỉ tiêu **`0`** không bị coi là "chưa giao" (`??` chứ không `||`).

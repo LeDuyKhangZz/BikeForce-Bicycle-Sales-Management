@@ -57,13 +57,16 @@ const BASE: ShareCardSource = {
 };
 
 /**
- * Số MISA AMIS mặc định — PHASE 19, DEC-070.
+ * Số MISA AMIS mặc định — PHASE 19, DEC-070 (bổ sung DEC-071).
  *
- * Bảy con số vào thẳng view model, không qua phép cộng nào: sáu con đầu do
+ * Các con số vào thẳng view model, không qua phép cộng nào: nhóm `amis*` do
  * `scripts/amis-sync/push_amis.py` đẩy lên `amis_employee_metrics`, còn
  * `targetRevenue` do `services/reports.ts` cộng từ `target_revenue` của các báo
  * cáo trong tháng. Đặt bốn tỉ lệ LỆCH NHAU (84% · 70% · 80% · 50%) để mỗi dòng
  * rơi vào một trạng thái BR-023 khác nhau, nhờ vậy một test nhầm dòng là lộ ngay.
+ *
+ * Hai chỉ tiêu tháng để `null` ở đây để mặc định giữ nguyên bốn tỉ lệ đó; nhóm
+ * test riêng của DEC-071 bên dưới mới bật chúng lên.
  */
 const PERFORMANCE: ShareCardPerformanceSource = {
   amisTargetAmount: 500_000_000,
@@ -74,6 +77,8 @@ const PERFORMANCE: ShareCardPerformanceSource = {
   amisAccountSold: 48,
   // 14:00 UTC = 21:00 giờ VN cùng ngày — ca "an toàn", không lệch ngày.
   syncedAt: '2026-08-15T14:00:00Z',
+  monthlyTargetSalesAmount: null,
+  monthlyTargetRevenue: null,
   targetRevenue: 300_000_000,
 };
 
@@ -398,13 +403,48 @@ describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19,
     ]);
   });
 
-  it('chỉ tiêu DOANH THU cộng từ báo cáo, KHÔNG từ AMIS — con số duy nhất như vậy', () => {
+  it('chưa giao chỉ tiêu tháng → doanh thu cộng từ báo cáo, KHÔNG từ AMIS', () => {
     // AMIS biết đã thu được bao nhiêu nhưng không biết mục tiêu là bao nhiêu.
     const model = build({}, { ...PERFORMANCE, targetRevenue: 700_000_000 });
 
     expect(model.performance?.rows[1]?.targetText).toBe('700tr');
     // Ba dòng kia không nhúc nhích khi đổi con số của báo cáo.
     expect(model.performance?.rows[0]?.targetText).toBe('500tr');
+  });
+
+  it('chỉ tiêu tháng của Admin THẮNG cả AMIS lẫn tổng cam kết ngày (DEC-071)', () => {
+    // Đây là lỗi thật đã lên ảnh production: bảng KPI công ty ghi 640tr doanh thu
+    // cho Ngô Thế San nhưng ảnh in 200tr, vì 200tr là tổng cam kết NGÀY của anh.
+    const model = build(
+      {},
+      {
+        ...PERFORMANCE,
+        monthlyTargetSalesAmount: 800_000_000,
+        monthlyTargetRevenue: 640_000_000,
+      },
+    );
+
+    expect(model.performance?.rows[0]?.targetText).toBe('800tr');
+    expect(model.performance?.rows[1]?.targetText).toBe('640tr');
+    // Hai dòng khách không đi qua bảng chỉ tiêu tháng.
+    expect(model.performance?.rows[2]?.targetText).toBe('120 khách');
+    expect(model.performance?.rows[3]?.targetText).toBe('96 khách');
+  });
+
+  it('giao MỘT trong hai thì dòng còn lại vẫn dùng đường lùi', () => {
+    const model = build({}, { ...PERFORMANCE, monthlyTargetRevenue: 640_000_000 });
+
+    expect(model.performance?.rows[1]?.targetText).toBe('640tr');
+    // Doanh số chưa giao ⇒ giữ `target_amount` của AMIS.
+    expect(model.performance?.rows[0]?.targetText).toBe('500tr');
+  });
+
+  it('chỉ tiêu tháng bằng 0 là con số HỢP LỆ, không rơi về đường lùi', () => {
+    // `??` chứ không `||`. BR-015 có hẳn nhánh cho `target = 0`: đã thu được tiền
+    // trong khi chỉ tiêu là 0 thì đó là VƯỢT KẾ HOẠCH, `percent` bằng `null`.
+    const model = build({}, { ...PERFORMANCE, monthlyTargetRevenue: 0 });
+
+    expect(model.performance?.rows[1]?.achievement.percent).toBeNull();
   });
 
   it('chỉ tiêu dòng "đã mua hàng" là số khách ĐÃ TƯƠNG TÁC, không phải số khách phụ trách', () => {

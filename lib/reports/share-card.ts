@@ -581,7 +581,10 @@ export type ShareCardPerformance = {
   readonly rows: readonly ShareCardPerformanceRow[];
 };
 
-/** Đầu vào: sáu con số AMIS + tổng chỉ tiêu doanh thu cộng từ báo cáo trong tháng. */
+/**
+ * Đầu vào: sáu con số AMIS + hai chỉ tiêu tháng của Admin + tổng chỉ tiêu doanh
+ * thu cộng từ báo cáo trong tháng (đường lùi khi Admin chưa giao chỉ tiêu).
+ */
 export type ShareCardPerformanceSource = {
   /** Mục tiêu doanh số — dashboard AMIS `TargetAmount`. */
   readonly amisTargetAmount: number | null;
@@ -603,7 +606,21 @@ export type ShareCardPerformanceSource = {
   readonly amisAccountSold: number | null;
   /** ISO timestamp lần đồng bộ gần nhất; `null` ⇒ nói thẳng là chưa đồng bộ. */
   readonly syncedAt: string | null;
-  /** Tổng `target_revenue` của tháng — con số DUY NHẤT không đến từ AMIS. */
+  /**
+   * Chỉ tiêu THÁNG do Admin giao — `sales_monthly_targets` (DEC-071).
+   *
+   * Đây là hai con số của bảng KPI công ty, và chúng **thắng** hai đường cũ:
+   * `amisTargetAmount` của AMIS và tổng cam kết ngày `targetRevenue`. `null` ⇒
+   * chưa giao chỉ tiêu tháng cho người này, khi đó rơi về đường cũ.
+   */
+  readonly monthlyTargetSalesAmount: number | null;
+  readonly monthlyTargetRevenue: number | null;
+  /**
+   * Tổng `target_revenue` của tháng — cộng từ cam kết NGÀY của Sales.
+   *
+   * Chỉ còn là đường lùi khi `monthlyTargetRevenue` là `null`: con số này là
+   * tổng những gì Sales tự hứa, không phải chỉ tiêu công ty giao.
+   */
   readonly targetRevenue: number;
 };
 
@@ -660,15 +677,18 @@ function buildPerformance(source: ShareCardPerformanceSource): ShareCardPerforma
           'Chưa rõ mốc đồng bộ từ MISA'
         : `Số liệu MISA tính đến ${formatVietnamShortDate(syncedDate)}`,
     rows: [
+      // Hai dòng tiền lấy chỉ tiêu từ bảng KPI tháng của Admin (DEC-071); chỉ khi
+      // chưa giao mới rơi về đường cũ. `??` chứ không `||`: chỉ tiêu 0 là con số
+      // hợp lệ (BR-015 có hẳn nhánh cho `target = 0`).
       buildPerformanceRow(
         'Doanh số đã ghi',
-        source.amisTargetAmount,
+        source.monthlyTargetSalesAmount ?? source.amisTargetAmount,
         source.amisSalesActual,
         'SALES_AMOUNT',
       ),
       buildPerformanceRow(
         'Doanh thu đã ghi',
-        source.targetRevenue,
+        source.monthlyTargetRevenue ?? source.targetRevenue,
         source.amisReceiveAmount,
         'REVENUE',
       ),

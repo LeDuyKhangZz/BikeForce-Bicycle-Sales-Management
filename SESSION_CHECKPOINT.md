@@ -1,7 +1,45 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **19 — Cụm "Tình trạng thực hiện" từ MISA AMIS (DEC-070)** | Last updated: 2026-08-16
-> ✅ **ĐÃ LÊN PRODUCTION 2026-08-16** — `main` = `d431d4f`, merge từ `feat/amis-auto-token`.
+> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-17
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 031 — DEC-071 — chỉ tiêu tháng)
+
+Người dùng báo gấp: ô "CHỈ TIÊU" của dòng *Doanh thu đã ghi* in **200tr** trong khi bảng KPI công ty
+tháng 8/2026 ghi **640tr** cho Ngô Thế San. Nguyên nhân: DEC-070 **cộng cam kết NGÀY** của Sales thay
+vì đọc chỉ tiêu THÁNG — mà chỉ tiêu tháng khi đó **chưa tồn tại ở đâu trong database**.
+
+### Đã làm — bảng `sales_monthly_targets` (DEC-071)
+
+| Thứ | Trạng thái |
+|---|---|
+| Migration `20260817120000_sales_monthly_targets.sql` | ✅ đã đẩy **cloud**, `migration list` nay 14/14 |
+| Dữ liệu kỳ `2026-08-01` | ✅ **9/9 Sales** khớp bảng KPI người dùng gửi |
+| Thẻ ảnh | ✅ **cả hai** dòng tiền đọc bảng mới trước, `?? đường lùi` |
+| typecheck · lint · build · unit | ✅ exit 0 · 0 warning · 20 route · **680/680** |
+| Nhìn tận mắt | ✅ PNG thật in `800tr` / `640tr` |
+| Integration + RLS | ⏳ **NỢ** — cần Docker + Supabase local |
+
+### ⚠ ĐỪNG LÀM LẠI / ĐỪNG LÀM SAI
+
+1. **`??` chứ không `||`** khi chọn giữa chỉ tiêu tháng và đường lùi — chỉ tiêu `0` là hợp lệ (BR-015).
+2. **Thiếu chỉ tiêu tháng KHÔNG bỏ cụm AMIS.** Chỉ thiếu `amis` hoặc `summary` mới bỏ (DEC-070).
+3. **Sales không được ghi bảng này.** Ba policy ghi chỉ cho `is_admin()`. Cam kết NGÀY vẫn của Sales.
+4. **`Nguyễn Thị Như Quỳnh` chưa có hồ sơ BikeForce** ⇒ hai dòng "Quỳnh hỗ trợ + văn phòng" của bảng KPI
+   **chưa nạp được**. Phải tạo tài khoản trước, đừng gán bừa vào hồ sơ khác.
+5. Chỉ nạp **tháng 8/2026**. Người dùng nói rõ: *"này là set kpi của tháng 8 thôi nha"*.
+
+### Next Exact Steps
+
+1. **Dựng module `/admin/targets`** — màn hình để Admin nhập chỉ tiêu tháng, đã hẹn với người dùng ngay
+   trong phiên này. Bảng + ba policy ghi đã sẵn sàng; chỉ còn Server Action + form. Gợi ý: một bảng
+   `sales × (doanh số, doanh thu)` cho một tháng chọn được, dùng lại khuôn filter tháng của
+   `/admin/reports` (DEC-066).
+2. **Trả nợ integration/RLS test** cho bảng mới: Sales đọc được dòng của mình, **không** đọc được dòng
+   người khác, **không** ghi được dòng nào; Admin ghi được.
+3. Tạo hồ sơ cho `Nguyễn Thị Như Quỳnh` rồi nạp nốt 2 dòng KPI còn thiếu.
+4. Nợ cũ không đổi: rotate service role key (ISSUE-011) · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
 
 ---
 

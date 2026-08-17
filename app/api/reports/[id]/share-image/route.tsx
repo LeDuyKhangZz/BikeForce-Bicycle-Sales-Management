@@ -19,6 +19,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import {
   getAmisMetricsForShare,
+  getMonthlyTargets,
   getReportForShare,
   listMonthToDateMetrics,
 } from '@/services/reports';
@@ -228,19 +229,21 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * ─────────────────────────────────────────────────────────────────────────
    *  CỤM "TÌNH TRẠNG THỰC HIỆN" — PHASE 19, DEC-070
    * ─────────────────────────────────────────────────────────────────────────
-   *  HAI truy vấn thêm, mỗi cái phục vụ một nửa của cụm:
+   *  BA truy vấn thêm:
    *
-   *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`. Đây là con số DUY
-   *       NHẤT của cụm không đến từ AMIS: AMIS ghi nhận đã thu bao nhiêu nhưng
-   *       không biết Sales tự đặt mục tiêu công nợ bao nhiêu.
-   *    2. `getAmisMetricsForShare` → sáu con số còn lại, đọc từ bảng cache mà
+   *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`, nay chỉ còn là
+   *       ĐƯỜNG LÙI khi Admin chưa giao chỉ tiêu tháng (DEC-071).
+   *    2. `getAmisMetricsForShare` → sáu con số thực đạt, đọc từ bảng cache mà
    *       `scripts/amis-sync/push_amis.py` đẩy lên.
+   *    3. `getMonthlyTargets` → hai chỉ tiêu THÁNG công ty giao. Chúng thắng cả
+   *       `target_amount` của AMIS lẫn tổng cam kết ngày ở (1).
    *
-   *  Cả hai đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
+   *  Cả ba đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
    *  người khác và Admin xuất ảnh hộ Sales vẫn đúng (BR-022).
    *
-   *  Thiếu MỘT trong hai ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
+   *  Thiếu (1) HOẶC (2) ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
    *  trên còn tệ hơn không in gì: người đọc không có cách nào biết nửa nào thiếu.
+   *  Thiếu (3) thì KHÔNG bỏ cụm — cụm vẫn đủ nghĩa với chỉ tiêu đường lùi.
    */
   const monthRows =
     monthRange === null || monthRange.isEmpty
@@ -249,24 +252,32 @@ export async function GET(request: Request, context: ShareImageContext): Promise
 
   const summary = monthRows === null ? null : summarizeMonthToDate(monthRows);
 
+  const periodMonth = periodMonthOf(report.report_date);
+
   // Khoá là TÊN người trên AMIS, không phải `sales_id` — xem chú thích của
   // `getAmisMetricsForShare`. Chưa map thì hàm trả `null` mà không hỏi database.
-  const amis = await getAmisMetricsForShare(
-    supabase,
-    report.sales.amis_employee_name,
-    periodMonthOf(report.report_date),
-  );
+  //
+  // `getMonthlyTargets` thì ngược lại, khoá bằng `sales_id`: chỉ tiêu tháng là
+  // dữ liệu của BikeForce, do Admin giao (DEC-071). Thiếu nó KHÔNG bỏ cụm —
+  // hai dòng tiền rơi về đường cũ (AMIS `target_amount` và tổng cam kết ngày).
+  const [amis, monthlyTargets] = await Promise.all([
+    getAmisMetricsForShare(supabase, report.sales.amis_employee_name, periodMonth),
+    getMonthlyTargets(supabase, report.sales_id, periodMonth),
+  ]);
 
   const performance =
     amis === null || summary === null
       ? null
       : {
           amisTargetAmount: amis.target_amount,
-amisSalesActual: amis.current_amount,          amisReceiveAmount: amis.receive_amount,
+          amisSalesActual: amis.current_amount,
+          amisReceiveAmount: amis.receive_amount,
           amisAccountInCharge: amis.qty_account_in_charge,
           amisAccountInteractive: amis.qty_account_interactive,
           amisAccountSold: amis.qty_account_sold_this_period,
           syncedAt: amis.synced_at,
+          monthlyTargetSalesAmount: monthlyTargets?.target_sales_amount ?? null,
+          monthlyTargetRevenue: monthlyTargets?.target_revenue ?? null,
           targetRevenue: summary.targetRevenue,
         };
 

@@ -2448,3 +2448,55 @@ Thẻ **không có** cụm AMIS (Sales chưa map tên) vẫn giữ đủ ghi ch�
 
 8 tấm PNG render lại sau khi sửa, nhìn từng tấm: tên một dòng ở mọi ca, tuyến tối đa hai dòng, cụm AMIS
 đủ bốn dòng, chân thẻ còn nguyên, không còn mẩu chữ thò ra. Vitest **872/872**.
+
+---
+
+## DEC-071 — Chỉ tiêu THÁNG do Admin giao, tách khỏi cam kết ngày của Sales
+
+**Ngày:** 2026-08-17 · **Status:** APPROVED · **Người chốt:** người dùng (yêu cầu trực tiếp, kèm ảnh
+bảng "TỔNG HỢP DOANH THU & DOANH SỐ THEO NHÂN VIÊN" tháng 8/2026)
+
+### Vấn đề
+
+Cụm "Tình trạng thực hiện" trên thẻ ảnh in **sai chỉ tiêu**. Ngô Thế San có chỉ tiêu doanh thu tháng
+**640.000.000 ₫** theo bảng KPI công ty, nhưng ảnh in **200tr** — vì DEC-070 lấy chỉ tiêu bằng cách
+**cộng `daily_reports.target_revenue`** của các ngày trong tháng. Con số đó là tổng **cam kết NGÀY** do
+Sales tự gõ (DEC-030), không phải chỉ tiêu THÁNG công ty giao. Hai thứ khác nhau về bản chất.
+
+Chỉ tiêu doanh số thì AMIS có sẵn (`amis_employee_metrics.target_amount`) và trùng bảng KPI, nhưng đó
+là **trùng may mắn**: AMIS là hệ của MISA, không ai cam kết nó sẽ luôn khớp bảng KPI của công ty.
+
+### Quyết định
+
+Thêm bảng `public.sales_monthly_targets` — **chỉ tiêu THÁNG do Admin giao**, khoá `(period_month,
+sales_id)`, hai cột `target_sales_amount` / `target_revenue` (bigint VND, BR-010).
+
+Trên thẻ ảnh, **cả hai** dòng tiền của cụm lấy chỉ tiêu từ bảng này trước:
+
+| Dòng | Chỉ tiêu (mới) | Đường lùi khi chưa giao |
+|---|---|---|
+| Doanh số đã ghi | `sales_monthly_targets.target_sales_amount` | `amis_employee_metrics.target_amount` |
+| Doanh thu đã ghi | `sales_monthly_targets.target_revenue` | tổng `daily_reports.target_revenue` (DEC-070) |
+
+Hai dòng khách **không đổi** — chỉ tiêu của chúng vẫn là số khách phụ trách / đã tương tác của AMIS.
+
+### Ba điểm phải nhớ
+
+1. **`??` chứ không `||`.** Chỉ tiêu `0` là con số hợp lệ — BR-015 có hẳn nhánh cho `target = 0`. Dùng
+   `||` là biến "giao chỉ tiêu 0" thành "chưa giao".
+2. **Thiếu chỉ tiêu tháng KHÔNG bỏ cụm.** Khác `amis`/`summary`: thiếu một trong hai cái đó thì cụm mất
+   nghĩa nên bỏ hẳn (DEC-070), còn thiếu chỉ tiêu tháng thì cụm vẫn đủ nghĩa với đường lùi.
+3. **Sales không tự đặt chỉ tiêu tháng.** Policy ghi chỉ cho `is_admin()`; Sales chỉ `select` dòng của
+   mình để thẻ ảnh dựng được. Cam kết NGÀY vẫn do Sales tự đặt như DEC-030.
+
+### Dữ liệu đã nạp
+
+Kỳ **2026-08-01**, đúng 9 Sales có trong bảng KPI **và** có tài khoản BikeForce. Hai dòng "Quỳnh hỗ trợ
++ văn phòng" của bảng KPI **chưa nạp được** — `Nguyễn Thị Như Quỳnh` có trên AMIS nhưng **chưa có hồ sơ
+BikeForce**. `Lê Duy Khang (test)` không có trong bảng KPI nên để trống, và vì vậy vẫn chạy đường lùi —
+đó là ca kiểm chứng sống cho nhánh fallback.
+
+### Việc kế tiếp (đã hẹn với người dùng)
+
+Dựng **module `/admin/targets`** để Admin nhập chỉ tiêu tháng trên giao diện, không phải sửa database.
+Bảng và **cả ba policy ghi** đã viết sẵn từ migration này chính là để module đó cắm vào ngay.
