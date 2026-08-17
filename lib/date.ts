@@ -110,6 +110,58 @@ export function formatVietnamDate(date: string): string {
 }
 
 /**
+ * Định dạng MỘT MỐC THỜI GIAN (có giờ phút) theo giờ TP.HCM.
+ *
+ * Khác `weekdayFormatter` ở trên cố ý dùng `UTC`: chỗ này nhận `timestamptz`
+ * THẬT — một điểm trên trục thời gian — nên phải quy đổi sang `Asia/Ho_Chi_Minh`
+ * mới ra giờ mà người Việt đang nhìn đồng hồ thấy.
+ *
+ * `hour12: false` vì `vi-VN` mặc định có thể chèn "SA/CH", thứ không ai viết
+ * trong báo cáo nội bộ.
+ */
+const vietnamDateTimeFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Ho_Chi_Minh',
+  hour12: false,
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/**
+ * ISO timestamp → `'17/08/2026 09:26'` theo giờ TP.HCM — PHASE 19.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO PHẢI CÓ HÀM NÀY THAY VÌ GỌI `toLocaleString()` TẠI CHỖ
+ * ─────────────────────────────────────────────────────────────────────────
+ *  `new Date(x).toLocaleString('vi-VN')` **không** kèm `timeZone` sẽ lấy múi giờ
+ *  của MÁY CHẠY. Trên Vercel máy chạy là **UTC**, nên trang Admin từng in
+ *  `02:26` cho một lần đồng bộ lúc `09:26` giờ VN — sai đúng 7 tiếng, và sai
+ *  âm thầm vì trên máy lập trình viên (múi giờ VN) nó lại hiện đúng.
+ *
+ *  Đầu vào rác trả `'—'` chứ không ném (DEC-033), cùng hợp đồng lỗi với
+ *  `formatVietnamDate()`.
+ */
+export function formatVietnamDateTime(isoTimestamp: string): string {
+  if (typeof isoTimestamp !== 'string') return INVALID_DATE_DISPLAY;
+
+  const parsed = Date.parse(isoTimestamp);
+  if (Number.isNaN(parsed)) return INVALID_DATE_DISPLAY;
+
+  // Ghép TAY từ `formatToParts` thay vì tin thứ tự của locale: `vi-VN` xếp giờ
+  // TRƯỚC ngày (`09:26 17/08/2026`), còn câu "Đồng bộ lần cuối: …" đọc xuôi hơn
+  // khi ngày đứng trước. Thứ tự do dự án quyết định, không do ICU.
+  const parts = new Map(
+    vietnamDateTimeFormatter.formatToParts(new Date(parsed)).map((p) => [p.type, p.value]),
+  );
+
+  const get = (type: Intl.DateTimeFormatPartTypes): string => parts.get(type) ?? '';
+
+  return `${get('day')}/${get('month')}/${get('year')} ${get('hour')}:${get('minute')}`;
+}
+
+/**
  * `'2026-08-14'` → `'14/08/2026'` — bản NGẮN của `formatVietnamDate()`.
  *
  * Thêm ở PHASE 17 (DEC-068) cho dòng phụ "Tính đến ngày …" của cụm lũy kế tháng
