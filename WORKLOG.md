@@ -2082,6 +2082,54 @@ bằng unit test.
 **Còn nợ:** `docs/02` cho `amis_employee_metrics` · E2E cho `/admin/reconciliation` và
 `/sales/reconciliation` · E2E khoá thanh/lửa (nợ từ Phase 18).
 
+### Entry 032 — Rollback một báo cáo production sau khi test ảnh Zalo trên thiết bị thật
+
+**Date:** 2026-08-17
+
+**Yêu cầu người dùng:** *"ví dụ bây giờ tôi bấm hoàn cuối ngày, nhập các số liệu sau đó xuất ảnh báo cáo
+cuối ngày ra zalo (vì tôi cần ảnh báo cáo cuối này ngay bây giờ để xem và test) thì sau khi làm xong tôi
+nói bạn, bạn có thể rollback hoàn tác giúp tôi trên csdl ko?"* — sau đó hỏi thêm *"bạn có cần lưu lại
+tình trạng báo cáo hiện tại của ngô thế san trên hệ thống hay gì ko?"*
+
+**Bối cảnh:** đây là ISSUE-003 (kiểm ảnh 9:16 trong Zalo trên điện thoại thật) — việc bắt buộc phải làm
+trên production vì cần link công khai. Báo cáo bị mượn: Ngô Thế San (`KD-MTR1-01`), ngày `2026-08-17`,
+`id = 94be3ab3-ad1c-4e07-8a5a-f6654350797f`.
+
+**Completed:**
+
+1. **Chụp ảnh dòng TRƯỚC khi người dùng bấm** — 22 cột ra JSON, qua pooler
+   `aws-0-ap-southeast-1.pooler.supabase.com:5432` bằng `pg`. Câu hỏi thứ hai của người dùng là thứ cứu
+   cả việc: sau khi `status = 'COMPLETED'` thì **không còn nguồn nào biết dòng đó vốn trông ra sao**.
+2. **Phát hiện rollback KHÔNG chạy được bằng một câu `UPDATE`** — xem mục dưới.
+3. Chạy rollback, `rowCount = 1`, rồi **chụp lại và so từng cột**: **22/22 trùng khớp** bản gốc.
+
+**Cái bẫy thật, ghi lại để không phải học lần hai:** `guard_report_transition()`
+(`0003_functions_triggers.sql:205`) **ném exception thẳng** khi thấy `COMPLETED → MORNING_SUBMITTED`.
+Trigger **không phải RLS** — quyền `postgres` với `rolbypassrls` **không** vượt qua được nó, và cũng
+không có role nào vượt được trừ khi tắt trigger. Đây chính là BR-008 được database ép, và nó đã làm
+đúng việc của nó.
+
+Thủ tục đúng, và là **ngoại lệ một lần**: trong **một transaction**, tắt tạm `trg_daily_reports_guard_transition`
+**và** `trg_daily_reports_set_updated_at` → một câu `UPDATE` duy nhất (`ck_completed_requires_actuals`
+đánh giá trên dòng sau lệnh, nên không có trạng thái trung gian) → bật lại → `commit`. Gói trong
+transaction nghĩa là **hàng rào không bao giờ hở ra ngoài**, và chốt `rowCount !== 1` thì huỷ sạch.
+Tắt luôn trigger `set_updated_at` là để `updated_at` về đúng mốc gốc — nếu không, dòng sẽ mang dấu vết
+của một lần sửa mà không ai giải thích được.
+
+**Không có gì khác phải dọn:** ảnh PNG sinh runtime, không vào storage (DEC-021) ·
+`amis_reconciliation` là **view** nên tự đúng lại · `amis_employee_metrics` do script đồng bộ ghi,
+luồng báo cáo không chạm vào.
+
+**Files Changed:** không có file source nào. Chỉ `WORKLOG.md` + `SESSION_CHECKPOINT.md`. Ba script
+(`snapshot.mjs`, `rollback.mjs`, `check-owner.mjs`) là **dùng-một-lần, để ở scratchpad, không commit**.
+
+**BR-008 / BR-013 / BR-019 vẫn nguyên hiệu lực với ứng dụng.** Không dòng code nào đổi, không policy
+nào nới, không migration nào thêm. Việc này là can thiệp thủ công cấp DBA theo yêu cầu trực tiếp của
+người dùng, **không phải tiền lệ cho một tính năng "sửa lại báo cáo"** — muốn có tính năng đó thì theo
+DEC-026 phải làm audit log trước (AF-12) và phải có `DEC` mới.
+
+**Chưa xác minh:** người dùng chưa nói ảnh hiển thị trong Zalo có đạt không ⇒ **ISSUE-003 vẫn để OPEN**.
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần
