@@ -95,7 +95,10 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
     key: 'ADMIN_SALES',
     label: 'Sales',
     href: '/admin/sales',
-    matchPrefixes: ['/admin/sales'],
+    // `/admin/targets` (DEC-071) cố ý KHÔNG có tab riêng: bottom nav đã chạm
+    // trần 5 mục của DEC-018, và giao chỉ tiêu là việc thuộc về quản lý nhân
+    // viên. Vào từ nút trên `/admin/sales`; tab Sales vẫn sáng khi đang ở đó.
+    matchPrefixes: ['/admin/sales', '/admin/targets'],
   },
   {
     key: 'ADMIN_ACCOUNT',

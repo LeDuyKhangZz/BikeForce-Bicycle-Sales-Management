@@ -17,9 +17,9 @@ import {
   shareMonthRange,
 } from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
+import { getMonthlyTargets } from '@/services/monthly-targets';
 import {
   getAmisMetricsForShare,
-  getMonthlyTargets,
   getReportForShare,
   listMonthToDateMetrics,
 } from '@/services/reports';

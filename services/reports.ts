@@ -359,50 +359,11 @@ export async function getAmisMetricsForShare(
   return data;
 }
 
-/* ===========================================================================
- * CHỈ TIÊU THÁNG DO ADMIN GIAO — DEC-071
- * ========================================================================= */
-
-export type MonthlyTargets = Pick<
-  Database['public']['Tables']['sales_monthly_targets']['Row'],
-  'target_sales_amount' | 'target_revenue'
->;
-
-/**
- * Chỉ tiêu THÁNG của một Sales — bảng `sales_monthly_targets` (DEC-071).
- *
- * Khác `daily_reports.target_*` ở chỗ ai đặt: cột kia là cam kết NGÀY do Sales
- * tự gõ vào buổi sáng (DEC-030), bảng này là chỉ tiêu THÁNG công ty giao. Cụm
- * "Tình trạng thực hiện" so số MISA với chỉ tiêu tháng, nên phải đọc ở đây —
- * cộng cam kết ngày lại chỉ ra tổng lời hứa của Sales, không phải chỉ tiêu.
- *
- * Khoá là `sales_id` (không phải tên như AMIS) vì cả hai đầu đều là dữ liệu của
- * BikeForce. Đi qua client chịu RLS: `monthly_targets_select_own_or_admin` cho
- * Sales thấy dòng của mình và Admin thấy tất cả.
- *
- * `null` ⇒ chưa giao chỉ tiêu tháng đó, hoặc RLS chặn. Tầng gọi không cần phân
- * biệt: cả hai đều dẫn tới việc dùng đường lùi cũ.
+/*
+ * ⚠ Chỉ tiêu THÁNG (`sales_monthly_targets`) **không** ở file này — nó ở
+ * `services/monthly-targets.ts`. Bảng đó không phải báo cáo: nó do Admin nhập ở
+ * `/admin/targets`, không sinh ra từ luồng báo cáo ngày (DEC-071).
  */
-export async function getMonthlyTargets(
-  supabase: SupabaseClient<Database>,
-  salesId: string,
-  periodMonth: string,
-): Promise<MonthlyTargets | null> {
-  const { data, error } = await supabase
-    .from('sales_monthly_targets')
-    .select('target_sales_amount, target_revenue')
-    .eq('sales_id', salesId)
-    .eq('period_month', periodMonth)
-    .maybeSingle<MonthlyTargets>();
-
-  if (error) {
-    // NFR-014: chi tiết kỹ thuật chỉ ở log server.
-    console.error('[getMonthlyTargets]', error.code, error.message);
-    return null;
-  }
-
-  return data;
-}
 
 /**
  * Một báo cáo theo `id`, đủ mọi cột nghiệp vụ — UC-10, FR-022 (Phase 7).

@@ -987,6 +987,36 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [ ] E2E cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm
 - [ ] E2E khoá riêng thanh/lửa — nợ cũ từ Phase 18, chưa trả
 
+---
+
+## Phase 20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)
+
+> Lỗi khởi nguồn: thẻ ảnh in chỉ tiêu doanh thu **200tr** trong khi bảng KPI công ty ghi **640tr** —
+> vì DEC-070 cộng cam kết NGÀY của Sales thay vì đọc chỉ tiêu THÁNG, mà chỉ tiêu tháng khi đó **chưa
+> tồn tại ở đâu trong database**.
+
+### 20a. Chỗ chứa chỉ tiêu + sửa thẻ ảnh (2026-08-17)
+
+- [x] Migration `20260817120000_sales_monthly_targets.sql` — bảng, CHECK ngày 01, RLS, trigger, index
+- [x] RLS: đọc own-or-admin; **ba** policy ghi chỉ cho `is_admin()`; GRANT deny-by-default
+- [x] Đẩy cloud — `migration list` **14/14**
+- [x] Nạp chỉ tiêu kỳ `2026-08-01` cho **9/9** Sales có trong cả bảng KPI lẫn `profiles`
+- [x] `services/monthly-targets.ts` + thẻ ảnh dùng `?? đường lùi` cho **cả hai** dòng tiền
+- [x] `types/database.types.ts` sinh lại bằng `supabase gen types --linked` — diff chỉ thêm
+- [x] typecheck · lint · build (20 route) · unit **680/680**; render PNG thật và **nhìn**: `800tr` / `640tr`
+- [ ] Integration + RLS test cho bảng mới — **nợ**, cần Docker + Supabase local
+
+### 20b. Màn hình `/admin/targets` (2026-08-18)
+
+- [x] `app/(admin)/admin/targets/page.tsx` — 3 truy vấn song song, `key={month}` reset state khi đổi tháng
+- [x] `features/admin-targets/monthly-targets-form.tsx` — lưới thẻ, dòng Tổng, nút chép tháng trước
+- [x] `features/admin-targets/actions.ts` — **đọc lại `listSalesOptions()` ở server**, không duyệt key FormData
+- [x] `lib/validation/monthly-targets.ts` + **9 unit test**: ô trống ⇒ `null` (chưa giao), `0` là hợp lệ
+- [x] Cửa vào là nút trên `/admin/sales` — **không** thêm tab thứ 6, DEC-018 vẫn trần 5 mục
+- [x] Gỡ `UC-22` mà phiên này lỡ tự cấp — dãy `UC` là dãy đóng (CLAUDE.md §12)
+- [x] `docs/05` · `docs/06` · `docs/07` · `docs/11` đã ghi
+- [x] build (21 route) · typecheck · lint · unit **689/689** · **E2E 7/7** `mobile-375` · nhìn 375px + 1440px
+
 ## OPEN QUESTIONS
 
 Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đầy đủ:

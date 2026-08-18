@@ -1,10 +1,48 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-17
+> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-18
 
 ---
 
-## ✅ PHIÊN HIỆN TẠI (Entry 031 — DEC-071 — chỉ tiêu tháng)
+## ✅ PHIÊN HIỆN TẠI (Entry 032 — DEC-071 phần 2 — màn hình `/admin/targets`)
+
+Người dùng yêu cầu module để Admin tự nhập KPI tháng, **kèm nút giữ nguyên KPI khi sang tháng mới**.
+Bảng và ba policy ghi đã dựng sẵn ở Entry 031 nên phiên này **không sửa schema dòng nào**.
+
+| Thứ | Trạng thái |
+|---|---|
+| `/admin/targets` | ✅ route thứ **21**, Server Component + Server Action + form client |
+| Nút "chép chỉ tiêu tháng trước" | ✅ **chỉ điền ô, KHÔNG tự lưu** — bấm nhầm không đè được số đã gõ |
+| Cửa vào | ✅ nút trên `/admin/sales`; **không** thêm tab thứ 6 (DEC-018 trần 5 mục) |
+| typecheck · lint · build · unit | ✅ exit 0 · 0 warning · 21 route · **689/689** |
+| Nhìn tận mắt | ✅ `375×812` + `1440×900` trên production build, không cuộn ngang |
+| E2E `monthly-targets.spec.ts` | ✅ **7/7 passed** trên `mobile-375` |
+
+### ⚠ ĐỪNG LÀM SAI Ở MÀN HÌNH NÀY
+
+1. **Nút chép không được tự lưu.** Bảng không có lịch sử phiên bản.
+2. **Đừng duyệt key của `FormData`** để biết ghi cho ai — phải đọc lại `listSalesOptions()` ở server,
+   nếu không tạo được chỉ tiêu cho `profile` không phải Sales.
+3. **Ô trống ⇒ `null` (chưa giao), KHÔNG phải `0`.** Dùng `??` chứ không `||` ở mọi chỗ chọn đường lùi.
+4. **Đừng thêm tab thứ 6 vào bottom nav** — sửa DEC-018 thì phải hỏi người dùng trước.
+5. **Đừng tự cấp `UC-22`** cho màn hình này. Phiên này đã lỡ làm và tự gỡ; dãy `UC` là dãy đóng.
+6. **Bẫy Playwright:** `getByRole('heading', { name })` khớp **chuỗi con, không phân biệt hoa thường**.
+   `'Chỉ tiêu tháng'` trúng luôn card *"Giữ nguyên chỉ tiêu tháng trước"* ⇒ vỡ strict mode, và lỗi đọc
+   **y như trang bị treo**. Thêm `level: 1`.
+
+### Next Exact Steps
+
+1. **Nạp chỉ tiêu thật cho tháng 9/2026** bằng chính màn hình mới: mở `/admin/targets?month=2026-09`,
+   bấm **"Chép chỉ tiêu Tháng 08/2026"**, kiểm dòng Tổng phải ra `6.900.000.000` / `5.520.000.000`
+   rồi bấm Lưu. Đây cũng là lượt nghiệm thu thật của nút chép.
+2. **Trả nợ integration/RLS test** cho `sales_monthly_targets`: Sales đọc được dòng của mình, **không**
+   đọc dòng người khác, **không** ghi được; Admin ghi được.
+3. Tạo hồ sơ cho `Nguyễn Thị Như Quỳnh` rồi nạp nốt 2 dòng KPI còn thiếu của bảng tháng 8.
+4. Nợ cũ không đổi: rotate service role key (ISSUE-011) · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
+
+---
+
+## ✅ Phiên trước đó (Entry 031 — DEC-071 — chỗ chứa chỉ tiêu tháng)
 
 Người dùng báo gấp: ô "CHỈ TIÊU" của dòng *Doanh thu đã ghi* in **200tr** trong khi bảng KPI công ty
 tháng 8/2026 ghi **640tr** cho Ngô Thế San. Nguyên nhân: DEC-070 **cộng cam kết NGÀY** của Sales thay

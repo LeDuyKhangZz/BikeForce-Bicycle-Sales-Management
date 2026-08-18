@@ -1214,3 +1214,30 @@ giữ request để quan sát trực tiếp: icon đổi thành spinner nhưng l
   cảm giác nút bị co hoặc trôi. Ở 375px, toàn bộ vẫn xếp một cột và không cuộn ngang.
 - E2E `desktop-1440` đo trực tiếp bounding box của ô tìm kiếm và group tháng; sai lệch vị trí hoặc chiều
   cao quá 1px làm test đỏ. Đây là hàng rào tái hiện cho ISSUE-031.
+
+---
+
+## Màn hình `/admin/targets` — Chỉ tiêu tháng (DEC-071)
+
+**Cửa vào:** nút **"Chỉ tiêu tháng"** ở đầu `/admin/sales`, cạnh nút "Tạo tài khoản". **Không** có tab
+riêng ở bottom nav — nav Admin đã chạm trần 5 mục của DEC-018.
+
+**Bố cục, từ 375px lên:**
+
+| Khối | Mô tả |
+|---|---|
+| Điều hướng tháng | Card một hàng: `‹` · tên tháng · `›`. **Cho phép sang tháng sau** (đặt kế hoạch), khác `/admin/analytics` |
+| Khối "Giữ nguyên chỉ tiêu tháng trước" | Card riêng, đặt **trên** lưới nhập vì đó là việc làm đầu tiên của mỗi đầu tháng. Nút tắt khi tháng trước chưa có số |
+| Lưới nhập | Một **thẻ cho mỗi Sales** — 1 cột ở mobile, `md:grid-cols-2`. Trong thẻ: tên + mã NV, rồi 2 ô tiền (`sm:grid-cols-2`) |
+| Dòng Tổng | Cộng runtime hai cột, để Admin so thẳng với dòng "Tổng" của bảng KPI công ty |
+| Nút Lưu | Cuối trang, `size="lg"`, có trạng thái pending |
+
+⚠ **Không dùng `<table>` cho lưới nhập.** 11 Sales × 2 ô tiền trong một bảng là cuộn ngang chắc chắn ở
+375px — thứ bị cấm tuyệt đối. Thẻ xếp dọc là khuôn đã dùng cho `/admin/analytics` ở `< 768px`.
+
+⚠ **Ô để trống là trạng thái HỢP LỆ** (`placeholder="Chưa giao"`), khác mọi ô tiền khác của dự án vốn
+đều `required`. Vì vậy màn hình này **không** dùng `CurrencyField`: ô đó `required` và kèm ba chip cộng
+nhanh — 22 ô mỗi ô ba chip thì trang chỉ còn là một rừng nút. Việc format vẫn đi qua `lib/currency.ts`.
+
+⚠ **Nhãn ô có phần `sr-only` mang tên người.** 22 ô cùng nhãn "Chỉ tiêu doanh số" thì trình đọc màn hình
+không cho biết đang ở dòng của ai.

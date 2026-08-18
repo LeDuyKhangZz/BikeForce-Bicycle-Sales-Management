@@ -2960,3 +2960,61 @@ có hồ sơ BikeForce**, nên không có `sales_id` để gắn chỉ tiêu. C�
 
 ⚠ Ba test mới khoá đúng ba điểm dễ hỏng: chỉ tiêu tháng **thắng** cả hai đường lùi · giao **một** trong
 hai thì dòng kia vẫn lùi · chỉ tiêu **`0`** không bị coi là "chưa giao" (`??` chứ không `||`).
+
+---
+
+## Entry 032 — 2026-08-18 — Màn hình `/admin/targets` (DEC-071, phần 2)
+
+**Người dùng yêu cầu:** *"tạo 1 module KPI để Admin có thể set KPI cho từng sale trong 1 tháng của
+doanh số và doanh thu. có nút giữ nguyên kpi khi chuyển sang tháng mới"*.
+
+Entry 031 đã dựng sẵn bảng `sales_monthly_targets` cùng **ba policy ghi cho `is_admin()`** đúng để
+phần này cắm vào — nên phiên này **không sửa schema một dòng nào**.
+
+### Đã làm
+
+| File | Vai trò |
+|---|---|
+| `app/(admin)/admin/targets/page.tsx` *(mới)* | Server Component; 3 truy vấn song song; `key={month}` reset state khi đổi tháng |
+| `features/admin-targets/monthly-targets-form.tsx` *(mới)* | Lưới thẻ 1 cột → `md:grid-cols-2`; nút chép tháng trước; dòng Tổng |
+| `features/admin-targets/actions.ts` *(mới)* | `saveMonthlyTargetsAction` — một `upsert` cho cả tháng |
+| `lib/validation/monthly-targets.ts` *(mới)* + test | Hàm thuần kiểm ô, đặt tên field; **9 unit test** |
+| `services/monthly-targets.ts` *(mới)* | Data access DUY NHẤT của bảng; `getMonthlyTargets` chuyển từ `services/reports.ts` sang |
+| `lib/admin/messages.ts` | thêm `MONTHLY_TARGET_MESSAGES` (ở `lib/` vì ISSUE-016) |
+| `lib/navigation/nav-items.ts` | `/admin/targets` vào `matchPrefixes` của `ADMIN_SALES` |
+| `app/(admin)/admin/sales/page.tsx` | nút **"Chỉ tiêu tháng"** — cửa vào của màn hình mới |
+| `e2e/monthly-targets.spec.ts` *(mới)* | 7 bài, gồm bài **bấm thật** nút chép (ISSUE-027) |
+
+### Ba điều đã cân nhắc rồi mới chọn
+
+1. **Nút chép chỉ ĐIỀN ô, không tự lưu.** Bảng không có lịch sử phiên bản; bấm nhầm mà tự ghi là đè
+   chỉ tiêu vừa gõ tay, không có đường lùi. Có bài E2E khoá đúng điều này: bấm chép → tải lại → ô phải
+   trở về giá trị trong database.
+2. **Server Action đọc lại `listSalesOptions()`, không duyệt key của `FormData`.** Duyệt key cho client
+   chọn ghi cho ai — Admin vốn có quyền ghi mọi dòng nên không phải leo thang quyền, nhưng nó tạo được
+   chỉ tiêu cho `profile` **không phải Sales**; khoá ngoại không chặn vì chỉ đòi `profiles(id)` tồn tại.
+3. **Không thêm tab thứ 6 vào bottom nav.** DEC-018 chốt trần 5 mục và nav Admin đã chạm trần. Cửa vào
+   là nút trên `/admin/sales`; `matchPrefixes` giữ tab Sales sáng khi đang ở `/admin/targets`.
+
+### ⚠ Lỗi của chính phiên này, đã tự sửa
+
+**Tự cấp `UC-22`** cho màn hình mới ở 5 file. Dãy `UC` là **dãy đóng** (CLAUDE.md §12) — chỉ người dùng
+mới mở được. Đã gỡ sạch trong phiên; nếu sau này muốn có ID use case thì phải hỏi trước.
+
+### ⚠ Bẫy Playwright mất 3 lượt chạy mới ra
+
+`getByRole('heading', { name: 'Chỉ tiêu tháng' })` khớp **chuỗi con, không phân biệt hoa thường** ⇒ nó
+trúng luôn `CardTitle` *"Giữ nguyên **chỉ tiêu tháng** trước"* và vỡ strict mode. Triệu chứng đọc như
+trang bị treo (*"waiting for … to be visible"*), nên tôi đi tìm nhầm hướng ở tầng server một lúc. Cách
+sửa: thêm `level: 1`. Ghi lại đây vì bài E2E nào của dự án cũng có thể dính.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npm run build` | ✅ exit 0, **21 route** (thêm `/admin/targets`) |
+| `npx vitest run --project unit` | ✅ **689/689** (20 file) — trước phiên 680 |
+| Nhìn tận mắt | ✅ chụp `375×812` và `1440×900` trên **production build**; `scrollWidth === clientWidth` ở cả hai ⇒ không cuộn ngang |
+| E2E `monthly-targets.spec.ts` | ✅ **7/7 passed** trên `mobile-375` (15,7 phút gồm cả `next build` của webServer) |

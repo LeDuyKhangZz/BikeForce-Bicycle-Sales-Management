@@ -2496,7 +2496,41 @@ Kỳ **2026-08-01**, đúng 9 Sales có trong bảng KPI **và** có tài khoả
 BikeForce**. `Lê Duy Khang (test)` không có trong bảng KPI nên để trống, và vì vậy vẫn chạy đường lùi —
 đó là ca kiểm chứng sống cho nhánh fallback.
 
-### Việc kế tiếp (đã hẹn với người dùng)
+### Màn hình `/admin/targets` — làm ngay sau đó, cùng ngày 2026-08-17
 
-Dựng **module `/admin/targets`** để Admin nhập chỉ tiêu tháng trên giao diện, không phải sửa database.
-Bảng và **cả ba policy ghi** đã viết sẵn từ migration này chính là để module đó cắm vào ngay.
+Người dùng yêu cầu tiếp: *"tạo 1 module KPI để Admin có thể set KPI cho từng sale trong 1 tháng của
+doanh số và doanh thu. có nút giữ nguyên kpi khi chuyển sang tháng mới"*. Đã dựng, dùng đúng bảng và ba
+policy ghi mà migration trên đã chuẩn bị sẵn — **không sửa schema thêm lần nào**.
+
+| Thành phần | Vai trò |
+|---|---|
+| `app/(admin)/admin/targets/page.tsx` | Server Component, đọc 3 truy vấn song song (danh sách Sales · chỉ tiêu tháng đang xem · chỉ tiêu tháng liền trước) |
+| `features/admin-targets/monthly-targets-form.tsx` | Client Component: lưới thẻ, nút "chép tháng trước", dòng Tổng |
+| `features/admin-targets/actions.ts` | Server Action `saveMonthlyTargetsAction` — một `upsert` cho cả tháng |
+| `lib/validation/monthly-targets.ts` | Hàm thuần kiểm ô + đặt tên field, có unit test |
+| `services/monthly-targets.ts` | Data access DUY NHẤT của bảng; `getMonthlyTargets` chuyển từ `services/reports.ts` sang đây |
+
+#### Bốn quyết định thiết kế, và lý do
+
+1. **Nút "giữ nguyên chỉ tiêu tháng trước" chỉ ĐIỀN Ô, không tự lưu.** Bảng không có lịch sử phiên bản,
+   nên một cú bấm nhầm mà tự ghi sẽ đè chỉ tiêu vừa gõ tay mà không có đường lùi. Điền-rồi-xem-lại thì
+   lỡ tay vẫn cứu được bằng cách rời trang.
+2. **Server Action đọc lại danh sách Sales, không duyệt key của `FormData`.** Duyệt key cho client chọn
+   **ghi cho ai**; Admin vốn có quyền ghi mọi dòng nên đây không phải leo thang quyền, nhưng nó cho phép
+   tạo chỉ tiêu cho một `profile` **không phải Sales** — khoá ngoại không chặn được vì nó chỉ đòi
+   `profiles(id)` tồn tại.
+3. **Ô trống ghi thành `null`, không bị bỏ qua.** Đó là cách Admin **thu hồi** một chỉ tiêu giao nhầm.
+   Bỏ qua ô trống thì con số cũ nằm lại database mãi mà giao diện không còn hiện nó.
+4. **Trang này CHO phép mở tháng sau**, khác `/admin/analytics`. Trang kia xem số liệu đã xảy ra nên
+   chặn tương lai theo BR-021; trang này **đặt kế hoạch**, giao chỉ tiêu trước khi tháng tới là bình thường.
+
+#### ⚠ Không có tab riêng ở bottom nav — CỐ Ý
+
+Nav Admin đã **chạm trần 5 mục của DEC-018**. Thêm mục thứ sáu là sửa một quyết định đang `APPROVED`
+mà không có xác nhận của người dùng. Cửa vào là nút **"Chỉ tiêu tháng"** trên `/admin/sales`, và
+`/admin/targets` được thêm vào `matchPrefixes` của mục `ADMIN_SALES` để tab Sales vẫn sáng khi đang ở đó.
+
+#### ⚠ KHÔNG cấp `UC-22` cho màn hình này
+
+Dãy `UC` là **dãy đóng** (CLAUDE.md §12). Phiên này đã lỡ viết `UC-22` vào 5 file rồi tự gỡ ngay trong
+phiên. Muốn có ID use case cho nó thì phải hỏi người dùng trước.
