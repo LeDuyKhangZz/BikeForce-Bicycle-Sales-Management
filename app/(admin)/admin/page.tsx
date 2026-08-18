@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
+import { ChevronRight, Target } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MissingReportAlerts } from '@/features/admin-dashboard/missing-report-alerts';
 import { OverviewTiles } from '@/features/admin-dashboard/overview-tiles';
@@ -49,6 +52,17 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/*
+        Lối vào "Chỉ tiêu tháng" (DEC-071). Đặt ở ĐÂY, trên `Suspense`, vì hai lý do:
+
+        1. Nó KHÔNG phụ thuộc dữ liệu nên hiện ngay lập tức, không nằm sau skeleton.
+        2. `/admin/targets` không có tab riêng ở bottom nav — nav Admin đã chạm trần
+           5 mục của DEC-018. Người dùng mở màn Tổng quan mà không thấy module KPI
+           đâu là chuyện đã xảy ra thật ngày 2026-08-18; cửa vào trên `/admin/sales`
+           một mình là chưa đủ để tìm ra.
+      */}
+      <MonthlyTargetsShortcut month={today.slice(0, 7)} />
+
+      {/*
         Streaming: khối số liệu hiện ngay khi truy vấn xong, không chờ nhau.
         Skeleton bắt buộc cho khối tải > 300ms (rule progressive-loading).
       */}
@@ -87,6 +101,37 @@ async function DashboardContent({ today }: { today: string }) {
       <OverviewTiles overview={overview} />
       <MissingReportAlerts alerts={alerts} />
     </>
+  );
+}
+
+/**
+ * Thẻ dẫn sang `/admin/targets` — DEC-071.
+ *
+ * Cả thẻ là một `<Link>` chứ không phải một nút nhỏ trong góc: đây là màn hình
+ * đầu tiên Admin thấy sau khi đăng nhập, và giao chỉ tiêu là việc đầu tháng.
+ * Vùng chạm vì vậy rộng bằng cả thẻ, thừa xa sàn 44px.
+ */
+function MonthlyTargetsShortcut({ month }: { month: string }) {
+  return (
+    <Link
+      href={`/admin/targets?month=${month}`}
+      className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors duration-150 hover:bg-background"
+    >
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-status-info-bg text-status-info-fg">
+        <Target aria-hidden="true" className="size-5" />
+      </span>
+
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-base font-semibold text-heading">Chỉ tiêu tháng</span>
+        <span className="text-sm text-muted-foreground">
+          Giao chỉ tiêu doanh số và doanh thu cho từng nhân viên
+        </span>
+      </span>
+
+      <LinkPendingIcon label="Đang mở chỉ tiêu tháng…" className="ml-auto size-5 shrink-0">
+        <ChevronRight aria-hidden="true" className="size-5 text-muted-foreground" />
+      </LinkPendingIcon>
+    </Link>
   );
 }
 
