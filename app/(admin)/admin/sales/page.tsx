@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Target, UserPlus, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserPlus, Users } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -66,25 +66,15 @@ export default async function AdminSalesPage({ searchParams }: Props) {
           </p>
         </div>
 
-        {/* Hai lối đi của khu vực nhân viên. `/admin/targets` cố ý không có tab
-            riêng ở bottom nav — nav Admin đã chạm trần 5 mục của DEC-018, nên
-            đây là cửa vào của nó (DEC-071). */}
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/admin/targets?month=${month}`}
-            className={buttonClassName({ variant: 'secondary' })}
-          >
-            <Target aria-hidden="true" className="size-4" />
-            Chỉ tiêu tháng
-            <LinkSpinner label="Đang mở chỉ tiêu tháng…" />
-          </Link>
-
-          <Link href="/admin/sales/new" className={buttonClassName()}>
-            <UserPlus aria-hidden="true" className="size-4" />
-            Tạo tài khoản
-            <LinkSpinner label="Đang mở form tạo tài khoản…" />
-          </Link>
-        </div>
+        {/* ⚠ KHÔNG thêm lại nút "Chỉ tiêu tháng" ở đây. Nó từng nằm đúng chỗ này
+            và người dùng bác thẳng ngày 2026-08-18: chỉ tiêu là **module riêng**,
+            có mục điều hướng riêng (DEC-072), không phải một nút phụ của trang
+            nhân viên. */}
+        <Link href="/admin/sales/new" className={buttonClassName()}>
+          <UserPlus aria-hidden="true" className="size-4" />
+          Tạo tài khoản
+          <LinkSpinner label="Đang mở form tạo tài khoản…" />
+        </Link>
       </div>
 
       <Card className="flex items-center justify-between gap-2 py-2">

@@ -8,6 +8,7 @@ import {
   Home,
   LayoutDashboard,
   Scale,
+  Target,
   User,
   Users,
   type LucideIcon,
@@ -52,6 +53,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_REPORTS: FileText,
   ADMIN_RECONCILIATION: Scale,
   ADMIN_SALES: Users,
+  ADMIN_TARGETS: Target,
   ADMIN_ACCOUNT: User,
 };
 

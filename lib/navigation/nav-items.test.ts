@@ -14,19 +14,34 @@ import {
   type NavItem,
 } from './nav-items';
 
-/** Trần 5 mục của DEC-018 — vượt là bottom nav không còn chạm được trên 375px. */
-const MAX_NAV_ITEMS = 5;
+/**
+ * Trần **6 mục** — DEC-018 nới bởi **DEC-072**, người dùng yêu cầu trực tiếp.
+ *
+ * ⚠ Đây là trần THẬT, không phải con số cho đẹp: ở 375px, 6 mục chia nhau ~62px
+ * mỗi mục. Mục thứ bảy đưa xuống ~53px, hẹp hơn sàn 44px cộng lề chạm hai bên,
+ * và nhãn chữ sẽ vỡ ba dòng. Muốn thêm nữa thì phải đổi kiểu điều hướng chứ
+ * không phải nới tiếp con số này.
+ */
+const MAX_NAV_ITEMS = 6;
 
-describe('cấu hình nav — ràng buộc DEC-018', () => {
-  // PHASE 19, DEC-070 thêm mục "Đối chiếu" cho CẢ HAI vai ⇒ Sales 3→4, Admin
-  // 4→5. Admin nay CHẠM ĐÚNG trần 5 mục: thêm mục thứ sáu là vỡ DEC-018, và
-  // `toBeLessThanOrEqual` bên dưới là thứ sẽ bắt được điều đó.
+describe('cấu hình nav — ràng buộc DEC-018 (nới bởi DEC-072)', () => {
   it.each([
     ['Sales', SALES_NAV_ITEMS, 4],
-    ['Admin', ADMIN_NAV_ITEMS, 5],
+    ['Admin', ADMIN_NAV_ITEMS, 6],
   ])('%s có đúng %s mục', (_label, items, expected) => {
     expect(items).toHaveLength(expected);
     expect(items.length).toBeLessThanOrEqual(MAX_NAV_ITEMS);
+  });
+
+  // Nhãn dài là thứ làm vỡ bottom nav trước cả số lượng mục. Ngưỡng lấy từ mục
+  // dài nhất đang có ("Tổng quan" — 9 ký tự), không phải một con số bịa ra.
+  it.each([
+    ['Sales', SALES_NAV_ITEMS],
+    ['Admin', ADMIN_NAV_ITEMS],
+  ])('%s: nhãn đủ ngắn để bottom nav 375px không vỡ', (_label, items) => {
+    for (const item of items) {
+      expect(item.label.length, item.label).toBeLessThanOrEqual(9);
+    }
   });
 
   it.each([
