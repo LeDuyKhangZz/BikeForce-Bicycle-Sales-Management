@@ -940,13 +940,82 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `npm run typecheck`, `npm run lint`, `npm run build` — exit 0, 20 route
 - [x] **Nhìn tận mắt**: tấm 4 trạng thái, tấm ca xấu nhất, tấm phóng to ngọn lửa
 - [x] DEC-069 + `docs/05` + checklist/worklog/checkpoint/CLAUDE.md đã cập nhật
-- [x] **Bản 2 theo ảnh mẫu người dùng:** dải lửa **13 lưỡi SVG bọc dọc thanh**, không phải một ngọn ở mút
+- [x] **Bản 2:** dải lửa 13 lưỡi SVG bọc dọc thanh — người dùng xem rồi bác *"xấu quá"*
+- [x] **Bản 3 (hiện hành):** dải lửa là **ẢNH PNG** do người dùng gửi, `public/images/flame-strip.png`
+- [x] Tách nền bằng hiệu `R − B` (ảnh gốc **không** thực sự trong suốt — hoa văn bàn cờ là pixel thật)
+- [x] **Bỏ quầng hào quang** theo yêu cầu người dùng — ngưỡng tách nền nâng lên 28
+- [x] **Giữ trọn đỉnh lửa** — crop chừa 8px trên ngọn cao nhất; lượt đầu tôi cắt mất 73px đỉnh
+- [x] Cắt bỏ thanh xanh trong ảnh; thanh thật vẫn đổi chiều dài theo `%` và màu theo `status`
+- [x] Nhúng bằng **data URI**; thêm `./public/images/**` vào `outputFileTracingIncludes` (chống `ENOENT` trên Vercel)
+- [x] `flameSrc = null` (thiếu file) ⇒ vẫn vẽ thanh, chỉ mất lửa — không làm hỏng cả tấm ảnh
 - [x] Lửa **không chạm nhãn chữ** — khối thanh chừa sẵn chiều cao ở mọi dòng
-- [x] Lưỡi lửa mảnh (tỉ lệ 12/24); bản dùng path icon "mập" nhìn ra răng cưa đã bị loại
-- [x] Đã nói rõ giới hạn: Satori không có `filter: blur()` ⇒ **không** làm được quầng sáng mờ như ảnh mẫu
 - [x] `shareNoteBudget()` — ngân sách ghi chú **động** theo độ dài tên/tuyến; hết chỗ thì bỏ hẳn ghi chú
 - [x] Ca xấu nhất không còn **chém ngang** khối ghi chú; full Vitest **858/858**
 - [ ] E2E khoá riêng thanh/lửa — **chưa làm**, cùng nhóm nợ với cụm lũy kế
+
+## Phase 19 — Cụm "Tình trạng thực hiện" từ MISA AMIS (DEC-070, nhánh `feat/amis-auto-token`)
+
+> ✅ **ĐÃ MERGE LÊN `main` VÀ DEPLOY 2026-08-16** (`d431d4f`). Phase vẫn **chưa đóng** — còn `docs/02`,
+> E2E hai màn hình đối chiếu, và **đồng bộ MISA chưa chạy lần nào** nên `amis_employee_metrics` đang rỗng.
+> Code tích hợp AMIS do cộng tác viên `NguyenPhust9` viết (`251fa19`); phiên 2026-08-16 gộp `main` vào
+> nhánh, ghi DEC-070 và đưa nhánh từ đỏ về xanh. **Giữ nguyên mọi thứ cộng tác viên đã sửa** — người
+> dùng yêu cầu trực tiếp hai lần.
+
+- [x] Gộp `main` vào nhánh (`ddfecdf`); hai xung đột `.gitignore` + `daily-report-share-card.tsx` giữ **cả hai vế**
+- [x] `ProgressBar` nhận cả `flameSrc` (ảnh PNG của DEC-069) lẫn `withFlame` (công tắc của DEC-070)
+- [x] Xác minh nhánh **đã đỏ từ trước khi gộp** — `251fa19` gỡ `model.monthly` mà không sửa file test
+- [x] Hỏi người dùng trước khi đảo DEC-068; nhận chốt **"AMIS thay hẳn"** kèm ảnh mockup
+- [x] Ghi **DEC-070** vào `docs/11` — mã nguồn nhắc DEC-070 hơn 15 chỗ nhưng chưa có bản ghi nào
+- [x] `docs/05 §14` cập nhật: sơ đồ thẻ, ba bảng "đã hết hiệu lực", ràng buộc của cụm mới
+- [x] 12 unit test cho cụm mới thay 7 test cụm cũ (thứ tự dòng · nguồn chỉ tiêu · mốc đồng bộ · ca lỗi)
+- [x] `nav-items.test.ts` — Sales 3 → 4, Admin 4 → **5, chạm đúng trần DEC-018**
+- [x] `amis-recon.ts` — bỏ `any[]`; kiểu mới lộ ra `split('?')[0]` là `string | undefined`
+- [x] **Áp 3 migration `20260815*` lần đầu ở local** — trước phiên này chúng chưa từng chạy
+- [x] **Bịt lỗ RLS:** `amis_employee_metrics` thiếu `force row level security`; thêm migration MỚI `20260816000000`
+- [x] Soát view `amis_reconciliation` — có `security_invoker=on`, RLS bảng gốc vẫn áp (BR-003 an toàn)
+- [x] Soát `GRANT` — `anon` **không** có `SELECT` trên bảng mới
+- [x] `npm run build` exit 0 — **22 route**; `typecheck` exit 0; `lint` 0 error / 0 warning
+- [x] `npm test` — **863/863 · 33/33 file · 0 skip** (Supabase local chạy thật, không skip test DB/RLS)
+- [x] **Render PNG thật rồi NHÌN** cụm 4 cột — bắt được lỗi tràn khung mà 863 test không thấy
+- [x] Đẩy **4** migration lên Supabase cloud — **12/12**, `db diff --linked` sạch
+- [x] `shareNameFontSize()` — tên ép về **một dòng**, chỉ thu khi quá 22 ký tự (người dùng dặn thẳng)
+- [x] `shareRouteFontSize()` — tuyến ép tối đa **hai dòng**; 104 ký tự trước đây rơi xuống 3 dòng
+- [x] Thanh tiến độ trong cụm AMIS **giữ nguyên** — người dùng chốt, đừng bỏ để lấy chỗ
+- [x] `shareNoteBudget()` trả 0 khi có cụm AMIS — chống mẩu nhãn "GHI CHÚ" thò ra rồi bị chém
+- [x] 11 unit test mới cho hai hàm cỡ chữ; full Vitest **872/872**
+- [ ] `docs/02-database-design.md` cho `amis_employee_metrics` + `profiles.amis_employee_name` + view
+- [ ] E2E cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm
+- [ ] E2E khoá riêng thanh/lửa — nợ cũ từ Phase 18, chưa trả
+
+---
+
+## Phase 20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)
+
+> Lỗi khởi nguồn: thẻ ảnh in chỉ tiêu doanh thu **200tr** trong khi bảng KPI công ty ghi **640tr** —
+> vì DEC-070 cộng cam kết NGÀY của Sales thay vì đọc chỉ tiêu THÁNG, mà chỉ tiêu tháng khi đó **chưa
+> tồn tại ở đâu trong database**.
+
+### 20a. Chỗ chứa chỉ tiêu + sửa thẻ ảnh (2026-08-17)
+
+- [x] Migration `20260817120000_sales_monthly_targets.sql` — bảng, CHECK ngày 01, RLS, trigger, index
+- [x] RLS: đọc own-or-admin; **ba** policy ghi chỉ cho `is_admin()`; GRANT deny-by-default
+- [x] Đẩy cloud — `migration list` **14/14**
+- [x] Nạp chỉ tiêu kỳ `2026-08-01` cho **9/9** Sales có trong cả bảng KPI lẫn `profiles`
+- [x] `services/monthly-targets.ts` + thẻ ảnh dùng `?? đường lùi` cho **cả hai** dòng tiền
+- [x] `types/database.types.ts` sinh lại bằng `supabase gen types --linked` — diff chỉ thêm
+- [x] typecheck · lint · build (20 route) · unit **680/680**; render PNG thật và **nhìn**: `800tr` / `640tr`
+- [ ] Integration + RLS test cho bảng mới — **nợ**, cần Docker + Supabase local
+
+### 20b. Màn hình `/admin/targets` (2026-08-18)
+
+- [x] `app/(admin)/admin/targets/page.tsx` — 3 truy vấn song song, `key={month}` reset state khi đổi tháng
+- [x] `features/admin-targets/monthly-targets-form.tsx` — lưới thẻ, dòng Tổng, nút chép tháng trước
+- [x] `features/admin-targets/actions.ts` — **đọc lại `listSalesOptions()` ở server**, không duyệt key FormData
+- [x] `lib/validation/monthly-targets.ts` + **9 unit test**: ô trống ⇒ `null` (chưa giao), `0` là hợp lệ
+- [x] Cửa vào là nút trên `/admin/sales` — **không** thêm tab thứ 6, DEC-018 vẫn trần 5 mục
+- [x] Gỡ `UC-22` mà phiên này lỡ tự cấp — dãy `UC` là dãy đóng (CLAUDE.md §12)
+- [x] `docs/05` · `docs/06` · `docs/07` · `docs/11` đã ghi
+- [x] build (21 route) · typecheck · lint · unit **689/689** · **E2E 7/7** `mobile-375` · nhìn 375px + 1440px
 
 ## OPEN QUESTIONS
 

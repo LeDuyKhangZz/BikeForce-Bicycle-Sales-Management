@@ -23,3 +23,18 @@ export const SALES_ADMIN_MESSAGES = {
   FORBIDDEN: 'Bạn không có quyền thực hiện thao tác này.',
   FAILED: 'Không thực hiện được lúc này. Vui lòng thử lại.',
 } as const;
+
+/**
+ * Chuỗi của màn hình "Chỉ tiêu tháng" — DEC-071.
+ *
+ * Cùng lý do phải nằm ở `lib/`: `features/admin-targets/actions.ts` mang
+ * `'use server'` nên không được export hằng số (ISSUE-016).
+ */
+export const MONTHLY_TARGET_MESSAGES = {
+  SAVED: 'Đã lưu chỉ tiêu tháng.',
+  VALIDATION: 'Vui lòng kiểm tra lại các ô được đánh dấu.',
+  INVALID_MONTH: 'Tháng không hợp lệ.',
+  NO_SALES: 'Chưa có nhân viên Sales nào để giao chỉ tiêu.',
+  FORBIDDEN: 'Bạn không có quyền đặt chỉ tiêu.',
+  FAILED: 'Không lưu được lúc này. Vui lòng thử lại.',
+} as const;

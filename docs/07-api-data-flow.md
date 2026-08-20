@@ -573,3 +573,29 @@ filter và cụm số trang; thay filter bỏ `page`, còn mọi liên kết ph�
 
 CSV vẫn dùng cùng bộ lọc đã chuẩn hoá và giữ trần 5.000 dòng. Không đổi schema. `EXPLAIN ANALYZE` với
 100.002 báo cáo mô phỏng xác nhận truy vấn tháng/mới nhất dùng index hiện hữu và không cần full sort.
+
+---
+
+## `saveMonthlyTargetsAction` — lưu chỉ tiêu tháng (DEC-071)
+
+`features/admin-targets/actions.ts` · gọi từ `MonthlyTargetsForm` qua `useActionState`.
+
+| Bước | Chi tiết |
+|---|---|
+| Input | `month` (`YYYY-MM`) + `target_sales_amount__<salesId>` / `target_revenue__<salesId>` cho từng Sales |
+| Validate tháng | `getVietnamMonthRange()` trả `null` ⇒ `VALIDATION`. Không viết regex tháng thứ hai (DEC-040) |
+| Permission | `getUser()` → `getSessionProfile()` → `is_active` (BR-009) → `role === 'ADMIN'` |
+| Nguồn danh sách | **`listSalesOptions()` ở server**, KHÔNG duyệt key của `FormData` — xem cảnh báo dưới |
+| Validate ô | `parseMonthlyTargetInput()`; `''` ⇒ `null` (chưa giao), **không** phải `0` |
+| Ghi | Một `upsert` `onConflict: 'period_month,sales_id'` cho cả tháng, client anon chịu RLS |
+| Output | `ActionResult<{ notice, month }>`; lỗi ô trả `fieldErrors` khoá bằng đúng tên field |
+
+⚠ **Dòng có ô hỏng bị loại khỏi lượt ghi**, và toàn bộ action trả `VALIDATION` — không ghi một nửa dòng,
+vì đó là để lại chỉ tiêu lệch cho đúng người đang bị báo lỗi.
+
+⚠ **Không duyệt key của `FormData`.** Làm vậy là để client quyết định ghi cho ai. Admin vốn có quyền ghi
+mọi dòng nên đây không phải leo thang quyền, nhưng nó cho phép tạo chỉ tiêu cho một `profile` **không
+phải Sales** — khoá ngoại chỉ đòi `profiles(id)` tồn tại nên không chặn được.
+
+⚠ **Một `upsert`, không phải N lần `insert`/`update`.** 12 Sales là 12 round-trip, và lỗi ở dòng thứ 7
+để lại một tháng ghi dở.

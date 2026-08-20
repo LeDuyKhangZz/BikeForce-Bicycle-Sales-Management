@@ -626,6 +626,19 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 > `calculateCustomerWorkRate()` vẫn còn trong `lib/kpi.ts` cùng test của nó, nhưng **không tầng trình bày
 > nào còn gọi tới**. Đừng thêm lại khối cũ — người dùng yêu cầu bỏ trực tiếp.
 
+> ⚠ **CẬP NHẬT PHASE 19 (2026-08-16) — DEC-070. Hai bảng ở trên đều đã hết hiệu lực ở dòng "Khối dưới bảng".**
+>
+> | | PHASE 17 | **PHASE 19 (hiện hành)** |
+> |---|---|---|
+> | Khối dưới bảng | cụm **LŨY KẾ THÁNG** | cụm **"TÌNH TRẠNG THỰC HIỆN"** — vẫn CẢ HAI biến thể |
+> | Nguồn số | `daily_reports` — Sales **tự khai** | **MISA AMIS** cho 3/4 chỉ tiêu — số hệ thống ghi nhận |
+> | Hình dạng | 3 dòng × 2 cột (nhãn · số) | **4 dòng × 4 cột** (nhãn · chỉ tiêu · thực đạt · % + thanh) |
+> | Mốc thời gian | "Tính đến hết ngày dd/mm/yyyy" | **"Số liệu MISA tính đến dd/mm/yyyy"** — mốc ĐỒNG BỘ, không phải ngày báo cáo |
+>
+> Chỗ này đã đổi chủ **ba lần** (DEC-056 → DEC-068 → DEC-070). Đừng khôi phục khối nào cũ.
+> `lib/reports/month-summary.ts` và `shareMonthRange()` vẫn còn và vẫn dùng — chúng xác định KỲ THÁNG,
+> không phải cụm hiển thị.
+
 > ✅ **ĐÃ KIỂM CHỨNG BẰNG MẮT — render PNG thật cả hai biến thể rồi nhìn (2026-08-11).** Lượt render đầu dùng chung một cỡ chữ cho cả hai biến thể: bản sáng chỉ có 4 con số nên nội dung kết thúc ở ~1030/1920 — **gần nửa tấm ảnh là khoảng trắng**, trông như ảnh lỗi. Đã tăng nhịp dòng riêng cho bản sáng (`ROW_METRICS`), render lại, nhìn lại. Không phép đo nào bắt được lỗi này.
 
 > Toàn bộ chuỗi hiển thị do **`lib/reports/share-card.ts`** dựng (hàm thuần, có unit test); component chỉ render và ánh xạ `status → màu`.
@@ -651,16 +664,18 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 │                                Gần đạt│  nhãn chữ #566A7B, 24px
 │                          ▰▰▰▱▱        │  thanh 200×14, khối cao 48px — DEC-069
 │   Doanh số        1tr      5tr 500,0%│  dòng chẵn nền #F4F7FA (sọc)
-│                       ʌʌʌʌʌʌʌʌʌʌʌ    │  vượt >100% ⇒ DẢI LỬA 13 lưỡi SVG
-│                          ▰▰▰▰▰        │  bọc dọc thanh, không chạm nhãn chữ
+│                       🔥🔥🔥🔥🔥🔥    │  vượt >100% ⇒ ẢNH flame-strip.png
+│                          ▰▰▰▰▰        │  200×53, bọc dọc thanh, không chạm chữ
 │   Doanh thu       1tr      0 ₫   0,0%│  % vượt #166534 · gần đạt #92400E
 │   Khách hàng  10 khách 5 khách  50,0%│  % chưa đạt #991B1B
 │  ▌┌──────────────────────────────┐   │  vạch cam dọc 10px + nền #FDF1E3
-│  ▌│ TỔNG THÁNG 08/2026           │   │  #97580B, 26px, letter-spacing 3
-│  ▌│ Tính đến hết ngày 13/08/2026 │   │  #566A7B, 24px — DEC-068
-│  ▌│ Doanh số tháng  330.000.000 ₫│   │  nhãn 32px #0F172A · số 38px #0B4A76
-│  ▌│ Doanh thu tháng  37.000.000 ₫│   │  số tiền dạng ĐẦY ĐỦ, không rút gọn
-│  ▌│ Ngày đạt KPI            5 ngày│  │  BR-024 — đạt cả 4 chỉ tiêu
+│  ▌│ TÌNH TRẠNG THỰC HIỆN         │   │  #97580B, 26px, letter-spacing 3
+│  ▌│ Số liệu MISA tính đến 15/08/26│  │  #566A7B, 24px — mốc ĐỒNG BỘ, DEC-070
+│  ▌│           Chỉ tiêu Thực đạt %│   │  header 4 cột, #566A7B 26px
+│  ▌│ Doanh số đã ghi 500tr 420tr 84%│ │  nhãn 26px · số 26px · % 30px weight 700
+│  ▌│ Doanh thu đã ghi 300tr 210tr 70%││  chỉ tiêu cột này KHÔNG từ AMIS
+│  ▌│ SL KH đã ghé thăm 120 96  80%│   │  thanh tiến độ withFlame={false}
+│  ▌│ SL KH đã mua hàng  96  48  50%│  │  — chừa 200px cho lửa là tràn 1920px
 │  ▌└──────────────────────────────┘   │
 │   GHI CHÚ                            │  #566A7B, 26px
 │   Khách đóng cửa nhiều, chiều…       │  #0F172A, 32px, tối đa 3 dòng
@@ -677,7 +692,9 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 2. Bảng chỉ **2 cột** (`CHỈ TIÊU` · `CAM KẾT`), dòng cao hơn và số to hơn hẳn (`paddingY: 44`, nhãn `42px`, số `56px` weight 700 màu `#0B4A76`).
    ⚠ **PHASE 17: `paddingY` hạ từ 70 → 44, đừng nâng lại.** Con số 70 sinh ra để lấp khoảng trắng đáy;
    từ DEC-068 cụm lũy kế đã chiếm chỗ đó, và giữ 70 khiến bản sáng **tràn quá 1920px** → chồng chữ (ISSUE-032).
-3. **Vẫn có** cụm lũy kế tháng (giống bản chiều, nhưng mốc dừng là **hết ngày hôm trước**), **không có** ghi chú
+3. **Vẫn có** cụm "Tình trạng thực hiện" — **giống hệt bản chiều, không lùi mốc** (DEC-070): số AMIS là
+   luỹ kế tháng theo lần đồng bộ gần nhất, nó không phụ thuộc việc hôm nay Sales đã nhập thực đạt hay
+   chưa. Đây là chỗ khác DEC-068, vốn phải lùi bản sáng về hết ngày hôm trước. **Không có** ghi chú
    cuối ngày; cuối thẻ là một dòng nhắc `#566A7B` 32px: *"Kết quả thực đạt sẽ được gửi vào cuối ngày."* —
    người nhận trên Zalo không có ngữ cảnh nào khác ngoài tấm ảnh.
 
@@ -685,17 +702,21 @@ Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 
 | Ràng buộc | Cách xử lý | Kết quả |
 |---|---|---|
-| Tên dài 40+ ký tự → xuống dòng, không cắt chữ | không cắt gì cả, để Satori tự wrap | ✅ tên 42 ký tự xuống 2 dòng |
-| Tuyến 300 ký tự → cắt an toàn ở 2 dòng, có `…` | `truncateText(route, 104)` ở tầng dữ liệu | ✅ |
+| **Tên dài → ÉP VỀ MỘT DÒNG bằng cách thu cỡ chữ** (PHASE 19) | `shareNameFontSize()` — 64px, sàn 30px. **Chỉ thu khi quá 22 ký tự**, người dùng dặn thẳng | ✅ tên 32 ký tự vẫn một dòng, không cắt cụt tên người |
+| Tuyến 300 ký tự → cắt an toàn, tối đa **2 dòng** | `truncateText(route, 104)` **cộng** `shareRouteFontSize()` — 34px, sàn 24px | ✅ 104 ký tự trước đây rơi xuống **3 dòng**, nay đúng 2 |
 | Ghi chú 1000 ký tự → cắt an toàn, có `…` | `truncateText(note, shareNoteBudget(...))` — **ngân sách ĐỘNG**, tối đa 2 dòng | ✅ |
-| Tên 2 dòng **và** tuyến 2 dòng **và** có ghi chú | `shareNoteBudget()` trả `0` → **bỏ hẳn** khối ghi chú | ✅ không còn bị chém ngang giữa dòng |
+| **Có cụm AMIS → BỎ HẲN ghi chú** (PHASE 19) | `shareNoteBudget(..., hasPerformance)` trả `0` | ✅ cụm cao ~200px, bằng đúng cả khối ghi chú — giữ cả hai thì mẩu nhãn "GHI CHÚ" thò ra rồi bị chém |
+| Không có cụm AMIS (chưa map tên) | ngân sách như cũ | ✅ ghi chú vẫn đủ 2 dòng |
 | **Nội dung dài tổng cộng vượt 1920px** | `flexShrink: 0` cho mọi khối bắt buộc; riêng ghi chú co được + `overflow: hidden` | ✅ cắt gọn thay vì **chồng chữ** (ISSUE-032) |
-| **Lũy kế tháng** khi truy vấn hỏng | `buildShareCardModel(source, null)` → bỏ hẳn cụm | ✅ không in `0 ₫` sai sự thật |
-| **Lũy kế tháng** của ảnh sáng ngày 01 | khoảng rỗng (`isEmpty`) → ba số 0 + dòng "Chưa có ngày nào trong tháng" | ✅ không tụt sang tháng trước |
+| **Tình trạng thực hiện** khi Sales chưa map `amis_employee_name` | `buildShareCardModel(source, null)` → bỏ hẳn cụm | ✅ không in bốn dấu `—` trông như lỗi hệ thống |
+| **Tình trạng thực hiện** khi thiếu một số AMIS lẻ | dòng đó `PENDING`, ba dòng kia giữ nguyên | ✅ không kéo cả cụm xuống theo |
+| **Mốc đồng bộ** chưa có / rác | `synced_at = null` hoặc parse hỏng → "Chưa rõ mốc đồng bộ từ MISA" | ✅ nói thẳng, không in `Invalid Date` |
+| **Mốc đồng bộ** lúc 2h sáng giờ VN | cộng 7 giờ **trước khi** cắt chuỗi ISO | ✅ không in lùi một ngày |
 | **Thanh tiến độ** với `250%` | `buildProgress()` clamp `fill` về 1; con số KHÔNG clamp (BR-004) | ✅ thanh đầy + ngọn lửa, chữ vẫn `250,0%` |
 | **Ngọn lửa** ở đúng `100,0%` | ngưỡng `percent > 100` **nghiêm ngặt** (DEC-069) | ✅ không cháy — người dùng chốt |
 | **Thanh** phải thẳng hàng ở mọi dòng | ô lửa 30px **luôn** chiếm chỗ, kể cả khi không cháy | ✅ bốn thanh thẳng tuyệt đối |
-| Ngọn lửa không có glyph trong Inter | vẽ bằng **SVG path 2 lớp**, tuyệt đối không emoji | ✅ Satori dựng được `<svg><path>` |
+| Hiệu ứng lửa cần quầng sáng mềm | dùng **ảnh PNG** `public/images/flame-strip.png`, không vẽ tay | ✅ Satori không có `filter: blur()` nên vẽ tay không ra quầng |
+| Ảnh lửa thiếu/không đọc được | `flameSrc = null` → vẫn vẽ thanh, chỉ mất lửa | ✅ không bao giờ làm hỏng cả tấm ảnh |
 | Doanh thu 12 chữ số vẫn trong khung | `formatCompactVND()` — nay là đường dùng tiền **duy nhất** của thẻ | ✅ `100tỷ` |
 | Achievement 4 chữ số (`1.250,0%`) hiển thị đủ | không clamp (BR-004) | ✅ |
 | `target = 0` không bao giờ ra `∞`/`NaN` (BR-015) | lấy nguyên `display` của `lib/kpi.ts` | ✅ `actual = 0` → `100,0%`; `actual > 0` → `+3 điểm` + "Vượt kế hoạch" |
@@ -1193,3 +1214,30 @@ giữ request để quan sát trực tiếp: icon đổi thành spinner nhưng l
   cảm giác nút bị co hoặc trôi. Ở 375px, toàn bộ vẫn xếp một cột và không cuộn ngang.
 - E2E `desktop-1440` đo trực tiếp bounding box của ô tìm kiếm và group tháng; sai lệch vị trí hoặc chiều
   cao quá 1px làm test đỏ. Đây là hàng rào tái hiện cho ISSUE-031.
+
+---
+
+## Màn hình `/admin/targets` — Chỉ tiêu tháng (DEC-071)
+
+**Cửa vào:** nút **"Chỉ tiêu tháng"** ở đầu `/admin/sales`, cạnh nút "Tạo tài khoản". **Không** có tab
+riêng ở bottom nav — nav Admin đã chạm trần 5 mục của DEC-018.
+
+**Bố cục, từ 375px lên:**
+
+| Khối | Mô tả |
+|---|---|
+| Điều hướng tháng | Card một hàng: `‹` · tên tháng · `›`. **Cho phép sang tháng sau** (đặt kế hoạch), khác `/admin/analytics` |
+| Khối "Giữ nguyên chỉ tiêu tháng trước" | Card riêng, đặt **trên** lưới nhập vì đó là việc làm đầu tiên của mỗi đầu tháng. Nút tắt khi tháng trước chưa có số |
+| Lưới nhập | Một **thẻ cho mỗi Sales** — 1 cột ở mobile, `md:grid-cols-2`. Trong thẻ: tên + mã NV, rồi 2 ô tiền (`sm:grid-cols-2`) |
+| Dòng Tổng | Cộng runtime hai cột, để Admin so thẳng với dòng "Tổng" của bảng KPI công ty |
+| Nút Lưu | Cuối trang, `size="lg"`, có trạng thái pending |
+
+⚠ **Không dùng `<table>` cho lưới nhập.** 11 Sales × 2 ô tiền trong một bảng là cuộn ngang chắc chắn ở
+375px — thứ bị cấm tuyệt đối. Thẻ xếp dọc là khuôn đã dùng cho `/admin/analytics` ở `< 768px`.
+
+⚠ **Ô để trống là trạng thái HỢP LỆ** (`placeholder="Chưa giao"`), khác mọi ô tiền khác của dự án vốn
+đều `required`. Vì vậy màn hình này **không** dùng `CurrencyField`: ô đó `required` và kèm ba chip cộng
+nhanh — 22 ô mỗi ô ba chip thì trang chỉ còn là một rừng nút. Việc format vẫn đi qua `lib/currency.ts`.
+
+⚠ **Nhãn ô có phần `sr-only` mang tên người.** 22 ô cùng nhãn "Chỉ tiêu doanh số" thì trình đọc màn hình
+không cho biết đang ở dòng của ai.

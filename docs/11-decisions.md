@@ -2227,3 +2227,310 @@ chuyến đi, không phải phần phụ.
 ca không có tuyến, ca ngân sách 0 và ràng buộc không bao giờ âm). Vitest **858/858**. Đã render và nhìn
 lại **ba** tấm: bốn dòng cùng cháy, ca hỗn hợp (chỉ một dòng cháy — kiểm thẳng hàng), và ca xấu nhất
 (ghi chú tự ẩn, footer nguyên vẹn).
+
+### DEC-069 — BẢN CUỐI: dải lửa là một ẢNH PNG do người dùng cung cấp
+
+Người dùng xem bản ghép 13 lưỡi lửa SVG và nói thẳng **"xấu quá"**, rồi tự gửi một ảnh lửa để dùng thay.
+
+**Vì sao hình vẽ tay không thể đẹp bằng:** Satori **không có `filter: blur()`**, nên mọi thứ nó vẽ đều
+là mảng màu sắc nét — không quầng sáng, không chuyển sắc mềm, tức thiếu đúng hai thứ làm nên hình ảnh
+lửa. Một tấm PNG mang sẵn cả hai trong pixel của nó. Đây là ranh giới nên nhớ: **hiệu ứng quang học thì
+dùng ảnh, hình khối và số liệu thì vẽ.**
+
+**Xử lý ảnh nguồn (2528×1686):**
+
+| Bước | Cách làm |
+|---|---|
+| Tách nền | Ảnh **không** thực sự trong suốt — hoa văn bàn cờ là pixel xám thật (alpha toàn 255). Tách bằng hiệu **`R − B`**: nền xám luôn có `R = B` nên hiệu triệt tiêu hoàn toàn hoa văn, còn lửa thì `R ≫ B`. `α = clamp((R−B)/170, 0, 1)` |
+| Khử vệt bàn cờ ở quầng | Nền gốc lệch ±2 mức do nén ⇒ quầng còn vệt rất mờ. Làm mượt Gaussian bán kính 26 **chỉ ở vùng quầng** (`α < 0,9`); lõi lửa giữ nguyên nên mép không nhoè |
+| Bỏ thanh xanh | Mask `G > R+18 && G > B+18`. Thanh thật phải đổi chiều dài theo `%` và đổi màu theo `status` nên không thể là ảnh tĩnh |
+| Cắt | `(396, 560) → (2108, 1014)` — ngang bằng đúng mép thanh trong ảnh gốc; dọc dừng ở **giữa** thanh để chân lửa chìm vào thanh thật |
+| Xuất | `public/images/flame-strip.png`, **400×106** (2× cỡ hiển thị 200×53), 47 KB |
+
+**Nhúng:** Route Handler đọc file bằng `fs`, mã hoá **data URI**, truyền xuống component qua prop
+`flameSrc` — Satori không tải ảnh qua mạng lúc render, cùng lý do với font ở ISSUE-002. Đã thêm
+`./public/images/**` vào `outputFileTracingIncludes`; thiếu dòng đó thì build vẫn xanh mà hàm trên
+Vercel ném `ENOENT`. `flameSrc = null` (không đọc được file) ⇒ **vẫn vẽ thanh**, chỉ mất lửa.
+
+`FLAME_STRIP_HEIGHT` từ 34 lên **53px**, vẫn chừa sẵn ở mọi dòng nên bốn thanh thẳng hàng và lửa không
+chạm nhãn chữ. Ảnh gốc đã được dời khỏi repo (6,7 MB) — thông số cắt ở trên đủ để tái lập.
+
+**Verification:** typecheck/lint/build exit 0; Vitest **858/858**; đã render và **nhìn tận mắt** hai tấm
+(một dòng cháy — kiểm thẳng hàng; bốn dòng cùng cháy), cộng một tấm ghép riêng dải lửa trên nền trắng để
+soi vết bàn cờ trước khi nhúng.
+
+### DEC-069 — ẢNH LỬA bản 2: bỏ quầng hào quang, giữ trọn đỉnh lửa
+
+Người dùng xuất ảnh thật rồi báo hai lỗi của bản ảnh đầu, và **tự gửi ảnh nguồn mới đã hạ bớt chiều cao
+ngọn lửa**:
+
+| Lỗi | Nguyên nhân | Sửa |
+|---|---|---|
+| *"cái ngọn cao nhất của lửa bị cắt đi"* | **Lỗi của tôi:** crop từ `y = 560` trong khi lửa bắt đầu ở `y = 487` — tự tay cắt mất **73px đỉnh** để tiết kiệm chiều cao thẻ | Crop chừa **8px phía trên** ngọn cao nhất (`y = 592`, lửa bắt đầu `600`) |
+| *"vầng hào quang nhìn xấu quá"* | Ngưỡng tách nền quá thấp (`warm − 12`) nên giữ lại cả vùng sáng mờ quanh lửa | Ngưỡng nay **`warm − 28`**, loại sạch phần mờ. Mép lửa vẫn mượt vì ở đó `R − B` nhảy 0→200 trong một hai pixel, không chuyển dần như quầng |
+
+Không còn cần bước làm mượt Gaussian: quầng đã bị loại ở ngưỡng nên không còn gì để lộ vệt bàn cờ.
+
+**Thông số bản hiện hành:** nguồn `2528×1686`, lửa `y 600…`, thanh xanh `y 954–1075`; crop
+`(395, 592) → (2108, 1014)`; xuất `public/images/flame-strip.png` **400×99** (28 KB), hiển thị
+**200×50**. `FLAME_STRIP.height` = 50.
+
+**Bài học chung:** khi cắt một ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước** rồi
+chừa biên — đừng chọn khung cắt theo ngân sách bố cục. Ngân sách nên được điều chỉnh cho vừa chủ thể,
+không phải ngược lại.
+
+---
+
+## DEC-070 — Cụm "TÌNH TRẠNG THỰC HIỆN" lấy số từ MISA AMIS, thay cụm lũy kế tháng của DEC-068
+
+**Status:** APPROVED · **Ngày:** 2026-08-16 · **Phase:** 19 · **Nhánh:** `feat/amis-auto-token`
+
+### Bối cảnh
+
+Commit `251fa19` do cộng tác viên `NguyenPhust9` đẩy lên nhánh `feat/amis-auto-token` ngày
+2026-08-15 dựng toàn bộ tích hợp MISA AMIS: 3 migration, bảng `amis_employee_metrics`, cột
+`profiles.amis_employee_name`, hai màn hình đối chiếu, bộ script Python/Playwright hút số từ AMIS,
+và **thay cụm lũy kế tháng trên thẻ ảnh 9:16 bằng một cụm mới lấy số từ AMIS**.
+
+Commit đó **không kèm một `DEC` nào** dù mã nguồn nhắc `DEC-070` hơn 15 chỗ. Tài liệu này là bản ghi
+bổ sung, viết sau khi người dùng xác nhận, để mã nguồn thôi trỏ vào một quyết định không tồn tại.
+
+### Vấn đề
+
+DEC-068 (2026-08-14) đặt cụm **lũy kế tháng** dưới bảng 4 chỉ tiêu: doanh số tháng · doanh thu tháng ·
+số ngày đạt KPI, cộng từ chính bảng `daily_reports`. Cụm đó cũng do người dùng yêu cầu trực tiếp.
+
+Điểm yếu của nó: **cả ba con số đều là số Sales tự khai.** Tấm ảnh gửi cấp trên vì thế chỉ chứng minh
+được "Sales nói mình làm được bao nhiêu", không chứng minh được "hệ thống ghi nhận được bao nhiêu".
+
+### Quyết định
+
+Cụm lũy kế tháng của DEC-068 **bị thay** bằng cụm **"TÌNH TRẠNG THỰC HIỆN"**, có ở **cả hai** biến thể
+thẻ. Bốn dòng, mỗi dòng bốn cột (nhãn · chỉ tiêu · thực đạt · % hoàn thành + thanh tiến độ):
+
+| Dòng | Chỉ tiêu | Thực đạt |
+|---|---|---|
+| Doanh số đã ghi | AMIS `TargetAmount` | AMIS `CurrentAmount` |
+| Doanh thu đã ghi | **`sum(target_revenue)` của tháng — nguồn DUY NHẤT không từ AMIS** | AMIS Kế toán `receive_amount` |
+| SL KH đã ghé thăm | AMIS `QuantityAccountInCharge` | AMIS `QuantityAccountInteractive` |
+| SL KH đã mua hàng | AMIS `QuantityAccountInteractive` | AMIS `QuantityAccountSoldThisPeriod` |
+
+Người dùng chốt ngày 2026-08-16 kèm ảnh mockup, nguyên văn: *"những gì liên quan đến AMIS thì phải để
+tại vì đó là những gì bạn tôi sửa trong code"*. Mockup không còn cụm lũy kế tháng ⇒ đây là **thay**,
+không phải thêm.
+
+### Vì sao chỉ tiêu doanh thu không đến từ AMIS
+
+AMIS biết đã **thu** được bao nhiêu nhưng không lưu **mục tiêu** thu là bao nhiêu. Con số đó vì vậy
+vẫn cộng từ `target_revenue` của chính các báo cáo trong tháng. Đây là chỗ dễ sửa nhầm nhất của cụm:
+kéo nốt nó sang AMIS là mất luôn chỉ tiêu.
+
+### Vì sao khoá là TÊN NGƯỜI
+
+AMIS là hệ thống của MISA, nó không biết gì về `auth.users` của BikeForce và sẽ không bao giờ biết.
+Thứ duy nhất hai bên cùng có là **tên nhân viên**, nên cầu nối là cột `profiles.amis_employee_name` do
+Admin điền tay. Sales chưa được map thì **bỏ hẳn cụm** thay vì in bốn dấu `—`: một khối trống trên tấm
+ảnh gửi cấp trên trông như lỗi hệ thống, còn ghép nhầm số của người khác thì tệ hơn nữa.
+
+### Vì sao phải in mốc đồng bộ
+
+Ba trong bốn nguồn AMIS dùng cookie phiên trình duyệt hết hạn sau ~24h nên **không tự động hoá được
+trên Vercel** — bảng do script `scripts/amis-sync/push_amis.py` chạy tay đẩy lên. Không ai chạy ba
+ngày thì tấm ảnh in số của ba ngày trước. Vì vậy `synced_at` **bắt buộc** hiện ra thành dòng
+`Số liệu MISA tính đến dd/mm/yyyy`; chưa đồng bộ lần nào thì nói thẳng `Chưa rõ mốc đồng bộ từ MISA`.
+
+Mốc này đổi sang giờ VN bằng phép cộng 7 giờ **trước khi** cắt chuỗi, không cắt thẳng 10 ký tự đầu của
+chuỗi ISO: một lần đồng bộ lúc 2h sáng giờ VN được lưu là 19h UTC **hôm trước**, cắt thô sẽ in lùi một
+ngày và người đọc tưởng số cũ hơn thực tế.
+
+### Hệ quả
+
+1. `ShareCardMonthlySource`, `ShareCardMonthly`, `model.monthly` **bị gỡ** khỏi `lib/reports/share-card.ts`.
+   7 unit test của cụm cũ được thay bằng 12 test của cụm mới.
+2. `shareMonthRange()` và `lib/reports/month-summary.ts` **giữ nguyên** — vẫn cần để xác định kỳ tháng.
+3. Nav thêm mục "Đối chiếu" cho **cả hai** vai: Sales 3 → 4 mục, Admin 4 → **5 mục, chạm đúng trần 5
+   mục của DEC-018**. Thêm mục thứ sáu là vỡ DEC-018.
+4. `%` của cụm đi qua **đúng** `calculateAchievement()` mà bảng chính dùng — NFR-012 cấm công thức KPI
+   thứ hai. Cụm gọi `ProgressBar` với `withFlame={false}`: chừa `FLAME_STRIP_HEIGHT` (50px) trên mỗi
+   thanh × 4 dòng = 200px mà thẻ 1920px không có để tiêu (ISSUE-032).
+5. Khối "SỐ KHÁCH LÀM VIỆC" (DEC-056) và cụm lũy kế tháng (DEC-068) **đều đã rời thẻ**. Chỗ đó đã đổi
+   chủ ba lần — đừng khôi phục khối nào cũ.
+
+### Một lỗ RLS đã tìm ra và bịt khi đối soát nhánh (2026-08-16)
+
+Ba migration `20260815*` được áp lần đầu lên DB local ngày 2026-08-16 và làm đỏ phép kiểm quét
+`relforcerowsecurity` của `tests/rls/`. Nguyên nhân: `amis_employee_metrics` có `enable row level
+security` và đủ hai policy SELECT, nhưng **thiếu `force`**.
+
+`enable` miễn trừ **chủ sở hữu bảng**, mà bảng do migration tạo thì chủ sở hữu là `postgres`. Hai bảng
+nghiệp vụ cũ đều có `force` từ `0001`. Đã bịt bằng migration mới
+`20260816000000_amis_metrics_force_rls.sql` — **không** sửa thẳng file cũ, vì migration đó đã áp trên
+máy người viết nó.
+
+Đã soát luôn hai điểm còn lại của schema mới, **cả hai đều đúng**, đừng "sửa" lại:
+
+| Điểm | Kết quả |
+|---|---|
+| View `amis_reconciliation` | có `security_invoker=on` ⇒ chạy bằng quyền NGƯỜI GỌI, RLS của `daily_reports` vẫn áp. Thiếu cờ này thì mọi Sales đọc được báo cáo của nhau — vỡ BR-003 |
+| `GRANT` cho `anon` | **không** có `SELECT` trên `amis_employee_metrics`. `authenticated` có SELECT, `service_role` có đủ DML để script ngoài ghi vào |
+
+### ⚠ Nợ chưa trả — KHÔNG được merge vào `main` khi chưa xong
+
+| Việc | Vì sao chặn |
+|---|---|
+| Đẩy **4** migration (`20260815*` ×3 + `20260816000000`) lên Supabase cloud | `services/reports.ts` thêm `profiles.amis_employee_name` vào truy vấn của route xuất ảnh. Thiếu cột trên cloud ⇒ **nút xuất ảnh chết cho toàn đội Sales**, không riêng cụm mới |
+| Render PNG thật rồi **nhìn** | Cụm mới có 4 cột thay vì 3 dòng của DEC-068. Chưa ai xem tấm ảnh thật — đây là lần thứ tư dự án phải học bài này (DEC-053, DEC-054, ISSUE-032) |
+| Viết `docs/02` cho bảng `amis_employee_metrics` | 3 migration đã áp thật ở local nhưng chưa có bản ghi thiết kế nào |
+| E2E cho hai màn hình `/admin/reconciliation` và `/sales/reconciliation` | Hai route mới, chưa có bài nào chạm |
+
+### DEC-070 — BỔ SUNG: cỡ chữ CO THEO ĐỘ DÀI, và cụm AMIS loại trừ ghi chú
+
+**Ngày:** 2026-08-16 · **Nguồn:** người dùng xem ảnh render thật rồi chốt
+
+#### Lỗi phát hiện được nhờ RENDER RA VÀ NHÌN
+
+Bốn migration lên cloud xong, tôi render 8 tấm PNG thật để người dùng xem. **863 unit test vẫn xanh
+trong khi tấm ảnh đang gãy** — đúng bài học DEC-053/DEC-054/ISSUE-032, lần thứ tư.
+
+Cụm "Tình trạng thực hiện" có 4 dòng kèm thanh tiến độ, cao hơn cụm lũy kế cũ của DEC-068 khoảng
+**200px**, mà thẻ thì cao **cố định 1920px**. Đo được bằng cách dựng thang dữ liệu tăng dần:
+
+| Phần đầu thẻ | Ghi chú | Chân thẻ | Cụm AMIS |
+|---|---|---|---|
+| tên 1 dòng · tuyến 1 dòng | mất | còn | đủ |
+| tên 1 dòng · tuyến 2 dòng | mất | **cắt nửa** | đủ |
+| tên 2 dòng · tuyến 1 dòng | mất | **mất** | đủ |
+| tên 2 dòng · tuyến 2 dòng | mất | mất | **chém dòng 4** |
+| tên 2 dòng · tuyến 3 dòng | mất | mất | **chém sâu** |
+
+Ngưỡng gãy nằm ở **tên Sales quá 22 ký tự** — `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` là họ tên tiếng Việt
+hoàn toàn bình thường, không phải ca hiếm.
+
+#### Quyết định của người dùng
+
+Nguyên văn: *"làm sao để tên của sales chỉ xuất hiện trên 1 dòng thôi, ví dụ tên người đó quá dài thì
+giảm size chữ xuống để tên xuất hiện 1 dòng thôi, còn việc thanh tiến độ % hoàn thành cứ để nguyên như
+hiện tại"*, và ngay sau đó: *"lưu ý chỉ giảm cỡ chữ khi tên quá dài khiến tên bị xuống dòng"*.
+
+⇒ **Giữ nguyên thanh tiến độ.** Lấy lại chỗ bằng cách **thu cỡ chữ**, không bằng cách bỏ nội dung.
+
+#### Đã làm
+
+1. `shareNameFontSize()` — tên về đúng **một dòng**. Từ 64px, sàn 30px.
+2. `shareRouteFontSize()` — tuyến không quá **hai dòng**. Từ 34px, sàn 24px. Cùng nguyên tắc, vì tuyến
+   104 ký tự (đúng `MAX_SHARE_ROUTE_CHARS`) thực tế rơi xuống **3 dòng**.
+3. `shareNoteBudget()` bỏ vế `nameLines` — tên không còn là khoản chi, nên trừ tiếp là trừ hai lần.
+4. `shareNoteBudget(..., hasPerformance)` trả **0** khi có cụm AMIS.
+
+#### ⚠ HAI NGƯỠNG, CỐ Ý KHÁC NHAU — đừng gộp
+
+| Hằng | Giá trị | Trả lời câu hỏi |
+|---|---|---|
+| `NAME_CHARS_PER_LINE` | 22 | *"có cần thu không"* |
+| `NAME_FIT_CHARS` | 20 | *"thu bao nhiêu thì CHẮC CHẮN vừa"* |
+
+Gộp làm một thì hoặc **thu oan** tên vẫn vừa (vi phạm câu dặn của người dùng), hoặc **thu chưa đủ** và
+tên vẫn xuống dòng. Đã dính đúng cả hai lỗi đó trong một buổi: ngưỡng 24 thu chưa đủ, ngưỡng 20 thu oan.
+
+Đếm ký tự chỉ là xấp xỉ — `NGUYỄN THỊ HOÀNG PHƯƠNG THẢO` (28 ký tự) ở **54px vẫn xuống dòng**, tức sức
+chứa thật của chuỗi đó chỉ ~20 ký tự quy về 64px, trong khi chuỗi khác cùng độ dài lại vừa. Lấy mức hẹp
+nhất từng đo được. **Muốn đổi thì render ra và đếm, đừng tính lại bằng em-width.**
+
+#### ⚠ Vì sao ghi chú bị bỏ HẲN khi có cụm AMIS
+
+Không phải để tiết kiệm chỗ cho vui. Ghi chú là khối duy nhất **co được** (ISSUE-032), nên khi thiếu chỗ
+Yoga nén nó — và ở mức nén dở dang thì **mẩu nhãn "GHI CHÚ" thò ra rồi bị chém ngang**, đã render ra và
+thấy. Trả `0` biến chuyện đó thành **tất-hoặc-không**, xác định được, kiểm được bằng unit test.
+
+Thẻ **không có** cụm AMIS (Sales chưa map tên) vẫn giữ đủ ghi chú 2 dòng như cũ.
+
+#### Kiểm chứng
+
+8 tấm PNG render lại sau khi sửa, nhìn từng tấm: tên một dòng ở mọi ca, tuyến tối đa hai dòng, cụm AMIS
+đủ bốn dòng, chân thẻ còn nguyên, không còn mẩu chữ thò ra. Vitest **872/872**.
+
+---
+
+## DEC-071 — Chỉ tiêu THÁNG do Admin giao, tách khỏi cam kết ngày của Sales
+
+**Ngày:** 2026-08-17 · **Status:** APPROVED · **Người chốt:** người dùng (yêu cầu trực tiếp, kèm ảnh
+bảng "TỔNG HỢP DOANH THU & DOANH SỐ THEO NHÂN VIÊN" tháng 8/2026)
+
+### Vấn đề
+
+Cụm "Tình trạng thực hiện" trên thẻ ảnh in **sai chỉ tiêu**. Ngô Thế San có chỉ tiêu doanh thu tháng
+**640.000.000 ₫** theo bảng KPI công ty, nhưng ảnh in **200tr** — vì DEC-070 lấy chỉ tiêu bằng cách
+**cộng `daily_reports.target_revenue`** của các ngày trong tháng. Con số đó là tổng **cam kết NGÀY** do
+Sales tự gõ (DEC-030), không phải chỉ tiêu THÁNG công ty giao. Hai thứ khác nhau về bản chất.
+
+Chỉ tiêu doanh số thì AMIS có sẵn (`amis_employee_metrics.target_amount`) và trùng bảng KPI, nhưng đó
+là **trùng may mắn**: AMIS là hệ của MISA, không ai cam kết nó sẽ luôn khớp bảng KPI của công ty.
+
+### Quyết định
+
+Thêm bảng `public.sales_monthly_targets` — **chỉ tiêu THÁNG do Admin giao**, khoá `(period_month,
+sales_id)`, hai cột `target_sales_amount` / `target_revenue` (bigint VND, BR-010).
+
+Trên thẻ ảnh, **cả hai** dòng tiền của cụm lấy chỉ tiêu từ bảng này trước:
+
+| Dòng | Chỉ tiêu (mới) | Đường lùi khi chưa giao |
+|---|---|---|
+| Doanh số đã ghi | `sales_monthly_targets.target_sales_amount` | `amis_employee_metrics.target_amount` |
+| Doanh thu đã ghi | `sales_monthly_targets.target_revenue` | tổng `daily_reports.target_revenue` (DEC-070) |
+
+Hai dòng khách **không đổi** — chỉ tiêu của chúng vẫn là số khách phụ trách / đã tương tác của AMIS.
+
+### Ba điểm phải nhớ
+
+1. **`??` chứ không `||`.** Chỉ tiêu `0` là con số hợp lệ — BR-015 có hẳn nhánh cho `target = 0`. Dùng
+   `||` là biến "giao chỉ tiêu 0" thành "chưa giao".
+2. **Thiếu chỉ tiêu tháng KHÔNG bỏ cụm.** Khác `amis`/`summary`: thiếu một trong hai cái đó thì cụm mất
+   nghĩa nên bỏ hẳn (DEC-070), còn thiếu chỉ tiêu tháng thì cụm vẫn đủ nghĩa với đường lùi.
+3. **Sales không tự đặt chỉ tiêu tháng.** Policy ghi chỉ cho `is_admin()`; Sales chỉ `select` dòng của
+   mình để thẻ ảnh dựng được. Cam kết NGÀY vẫn do Sales tự đặt như DEC-030.
+
+### Dữ liệu đã nạp
+
+Kỳ **2026-08-01**, đúng 9 Sales có trong bảng KPI **và** có tài khoản BikeForce. Hai dòng "Quỳnh hỗ trợ
++ văn phòng" của bảng KPI **chưa nạp được** — `Nguyễn Thị Như Quỳnh` có trên AMIS nhưng **chưa có hồ sơ
+BikeForce**. `Lê Duy Khang (test)` không có trong bảng KPI nên để trống, và vì vậy vẫn chạy đường lùi —
+đó là ca kiểm chứng sống cho nhánh fallback.
+
+### Màn hình `/admin/targets` — làm ngay sau đó, cùng ngày 2026-08-17
+
+Người dùng yêu cầu tiếp: *"tạo 1 module KPI để Admin có thể set KPI cho từng sale trong 1 tháng của
+doanh số và doanh thu. có nút giữ nguyên kpi khi chuyển sang tháng mới"*. Đã dựng, dùng đúng bảng và ba
+policy ghi mà migration trên đã chuẩn bị sẵn — **không sửa schema thêm lần nào**.
+
+| Thành phần | Vai trò |
+|---|---|
+| `app/(admin)/admin/targets/page.tsx` | Server Component, đọc 3 truy vấn song song (danh sách Sales · chỉ tiêu tháng đang xem · chỉ tiêu tháng liền trước) |
+| `features/admin-targets/monthly-targets-form.tsx` | Client Component: lưới thẻ, nút "chép tháng trước", dòng Tổng |
+| `features/admin-targets/actions.ts` | Server Action `saveMonthlyTargetsAction` — một `upsert` cho cả tháng |
+| `lib/validation/monthly-targets.ts` | Hàm thuần kiểm ô + đặt tên field, có unit test |
+| `services/monthly-targets.ts` | Data access DUY NHẤT của bảng; `getMonthlyTargets` chuyển từ `services/reports.ts` sang đây |
+
+#### Bốn quyết định thiết kế, và lý do
+
+1. **Nút "giữ nguyên chỉ tiêu tháng trước" chỉ ĐIỀN Ô, không tự lưu.** Bảng không có lịch sử phiên bản,
+   nên một cú bấm nhầm mà tự ghi sẽ đè chỉ tiêu vừa gõ tay mà không có đường lùi. Điền-rồi-xem-lại thì
+   lỡ tay vẫn cứu được bằng cách rời trang.
+2. **Server Action đọc lại danh sách Sales, không duyệt key của `FormData`.** Duyệt key cho client chọn
+   **ghi cho ai**; Admin vốn có quyền ghi mọi dòng nên đây không phải leo thang quyền, nhưng nó cho phép
+   tạo chỉ tiêu cho một `profile` **không phải Sales** — khoá ngoại không chặn được vì nó chỉ đòi
+   `profiles(id)` tồn tại.
+3. **Ô trống ghi thành `null`, không bị bỏ qua.** Đó là cách Admin **thu hồi** một chỉ tiêu giao nhầm.
+   Bỏ qua ô trống thì con số cũ nằm lại database mãi mà giao diện không còn hiện nó.
+4. **Trang này CHO phép mở tháng sau**, khác `/admin/analytics`. Trang kia xem số liệu đã xảy ra nên
+   chặn tương lai theo BR-021; trang này **đặt kế hoạch**, giao chỉ tiêu trước khi tháng tới là bình thường.
+
+#### ⚠ Không có tab riêng ở bottom nav — CỐ Ý
+
+Nav Admin đã **chạm trần 5 mục của DEC-018**. Thêm mục thứ sáu là sửa một quyết định đang `APPROVED`
+mà không có xác nhận của người dùng. Cửa vào là nút **"Chỉ tiêu tháng"** trên `/admin/sales`, và
+`/admin/targets` được thêm vào `matchPrefixes` của mục `ADMIN_SALES` để tab Sales vẫn sáng khi đang ở đó.
+
+#### ⚠ KHÔNG cấp `UC-22` cho màn hình này
+
+Dãy `UC` là **dãy đóng** (CLAUDE.md §12). Phiên này đã lỡ viết `UC-22` vào 5 file rồi tự gỡ ngay trong
+phiên. Muốn có ID use case cho nó thì phải hỏi người dùng trước.

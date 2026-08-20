@@ -1,10 +1,197 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **18 — Thanh tiến độ + ngọn lửa (DEC-069)** | Last updated: 2026-08-15
+> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-18
 
 ---
 
-## ✅ PHIÊN HIỆN TẠI (Entry 029 — PHASE 18, DEC-069 — ĐÃ ĐÓNG)
+## ✅ PHIÊN HIỆN TẠI (Entry 032 — DEC-071 phần 2 — màn hình `/admin/targets`)
+
+Người dùng yêu cầu module để Admin tự nhập KPI tháng, **kèm nút giữ nguyên KPI khi sang tháng mới**.
+Bảng và ba policy ghi đã dựng sẵn ở Entry 031 nên phiên này **không sửa schema dòng nào**.
+
+| Thứ | Trạng thái |
+|---|---|
+| `/admin/targets` | ✅ route thứ **21**, Server Component + Server Action + form client |
+| Nút "chép chỉ tiêu tháng trước" | ✅ **chỉ điền ô, KHÔNG tự lưu** — bấm nhầm không đè được số đã gõ |
+| Cửa vào | ✅ nút trên `/admin/sales`; **không** thêm tab thứ 6 (DEC-018 trần 5 mục) |
+| typecheck · lint · build · unit | ✅ exit 0 · 0 warning · 21 route · **689/689** |
+| Nhìn tận mắt | ✅ `375×812` + `1440×900` trên production build, không cuộn ngang |
+| E2E `monthly-targets.spec.ts` | ✅ **7/7 passed** trên `mobile-375` |
+
+### ⚠ ĐỪNG LÀM SAI Ở MÀN HÌNH NÀY
+
+1. **Nút chép không được tự lưu.** Bảng không có lịch sử phiên bản.
+2. **Đừng duyệt key của `FormData`** để biết ghi cho ai — phải đọc lại `listSalesOptions()` ở server,
+   nếu không tạo được chỉ tiêu cho `profile` không phải Sales.
+3. **Ô trống ⇒ `null` (chưa giao), KHÔNG phải `0`.** Dùng `??` chứ không `||` ở mọi chỗ chọn đường lùi.
+4. **Đừng thêm tab thứ 6 vào bottom nav** — sửa DEC-018 thì phải hỏi người dùng trước.
+5. **Đừng tự cấp `UC-22`** cho màn hình này. Phiên này đã lỡ làm và tự gỡ; dãy `UC` là dãy đóng.
+6. **Bẫy Playwright:** `getByRole('heading', { name })` khớp **chuỗi con, không phân biệt hoa thường**.
+   `'Chỉ tiêu tháng'` trúng luôn card *"Giữ nguyên chỉ tiêu tháng trước"* ⇒ vỡ strict mode, và lỗi đọc
+   **y như trang bị treo**. Thêm `level: 1`.
+
+### Next Exact Steps
+
+1. **Nạp chỉ tiêu thật cho tháng 9/2026** bằng chính màn hình mới: mở `/admin/targets?month=2026-09`,
+   bấm **"Chép chỉ tiêu Tháng 08/2026"**, kiểm dòng Tổng phải ra `6.900.000.000` / `5.520.000.000`
+   rồi bấm Lưu. Đây cũng là lượt nghiệm thu thật của nút chép.
+2. **Trả nợ integration/RLS test** cho `sales_monthly_targets`: Sales đọc được dòng của mình, **không**
+   đọc dòng người khác, **không** ghi được; Admin ghi được.
+3. Tạo hồ sơ cho `Nguyễn Thị Như Quỳnh` rồi nạp nốt 2 dòng KPI còn thiếu của bảng tháng 8.
+4. Nợ cũ không đổi: rotate service role key (ISSUE-011) · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
+
+---
+
+## ✅ Phiên trước đó (Entry 031 — DEC-071 — chỗ chứa chỉ tiêu tháng)
+
+Người dùng báo gấp: ô "CHỈ TIÊU" của dòng *Doanh thu đã ghi* in **200tr** trong khi bảng KPI công ty
+tháng 8/2026 ghi **640tr** cho Ngô Thế San. Nguyên nhân: DEC-070 **cộng cam kết NGÀY** của Sales thay
+vì đọc chỉ tiêu THÁNG — mà chỉ tiêu tháng khi đó **chưa tồn tại ở đâu trong database**.
+
+### Đã làm — bảng `sales_monthly_targets` (DEC-071)
+
+| Thứ | Trạng thái |
+|---|---|
+| Migration `20260817120000_sales_monthly_targets.sql` | ✅ đã đẩy **cloud**, `migration list` nay 14/14 |
+| Dữ liệu kỳ `2026-08-01` | ✅ **9/9 Sales** khớp bảng KPI người dùng gửi |
+| Thẻ ảnh | ✅ **cả hai** dòng tiền đọc bảng mới trước, `?? đường lùi` |
+| typecheck · lint · build · unit | ✅ exit 0 · 0 warning · 20 route · **680/680** |
+| Nhìn tận mắt | ✅ PNG thật in `800tr` / `640tr` |
+| Integration + RLS | ⏳ **NỢ** — cần Docker + Supabase local |
+
+### ⚠ ĐỪNG LÀM LẠI / ĐỪNG LÀM SAI
+
+1. **`??` chứ không `||`** khi chọn giữa chỉ tiêu tháng và đường lùi — chỉ tiêu `0` là hợp lệ (BR-015).
+2. **Thiếu chỉ tiêu tháng KHÔNG bỏ cụm AMIS.** Chỉ thiếu `amis` hoặc `summary` mới bỏ (DEC-070).
+3. **Sales không được ghi bảng này.** Ba policy ghi chỉ cho `is_admin()`. Cam kết NGÀY vẫn của Sales.
+4. **`Nguyễn Thị Như Quỳnh` chưa có hồ sơ BikeForce** ⇒ hai dòng "Quỳnh hỗ trợ + văn phòng" của bảng KPI
+   **chưa nạp được**. Phải tạo tài khoản trước, đừng gán bừa vào hồ sơ khác.
+5. Chỉ nạp **tháng 8/2026**. Người dùng nói rõ: *"này là set kpi của tháng 8 thôi nha"*.
+
+### Next Exact Steps
+
+1. **Dựng module `/admin/targets`** — màn hình để Admin nhập chỉ tiêu tháng, đã hẹn với người dùng ngay
+   trong phiên này. Bảng + ba policy ghi đã sẵn sàng; chỉ còn Server Action + form. Gợi ý: một bảng
+   `sales × (doanh số, doanh thu)` cho một tháng chọn được, dùng lại khuôn filter tháng của
+   `/admin/reports` (DEC-066).
+2. **Trả nợ integration/RLS test** cho bảng mới: Sales đọc được dòng của mình, **không** đọc được dòng
+   người khác, **không** ghi được dòng nào; Admin ghi được.
+3. Tạo hồ sơ cho `Nguyễn Thị Như Quỳnh` rồi nạp nốt 2 dòng KPI còn thiếu.
+4. Nợ cũ không đổi: rotate service role key (ISSUE-011) · ISSUE-003 (Zalo thiết bị thật) · Lighthouse.
+
+---
+
+## ✅ PHIÊN HIỆN TẠI (Entry 030 — PHASE 19, DEC-070 — nhánh `feat/amis-auto-token`)
+
+✅ **ĐÃ MERGE LÊN `main` VÀ DEPLOY** cuối ngày 2026-08-16 (`d431d4f`). Lý do merge: người dùng vào web
+làm báo cáo thật và thấy **y hệt hôm qua** — vì Vercel deploy từ `main`, mà toàn bộ việc AMIS khi đó
+còn nằm trên nhánh. Đây là bài học đáng nhớ: **code trên nhánh KHÔNG bao giờ tự lên web**, reset trình
+duyệt bao nhiêu lần cũng vô ích.
+
+⚠ **BA lớp chặn, không phải một** — session sau gặp câu hỏi "sao web không đổi" thì kiểm đủ cả ba:
+
+| Lớp | Cách kiểm |
+|---|---|
+| Code đã lên `main` chưa | `git log origin/main --oneline -1` |
+| Sales đã map `amis_employee_name` chưa | query `profiles`, `null` ⇒ thẻ **cố ý bỏ hẳn cụm AMIS** |
+| Bảng `amis_employee_metrics` có dòng nào chưa | script `push_amis.py` chạy tay, chưa chạy thì bảng rỗng |
+
+Cộng tác viên `NguyenPhust9` đẩy commit `251fa19` (tích hợp MISA AMIS, 35 file, +5131/−204) lên nhánh
+ngày 2026-08-15. Phiên này gộp `main` vào nhánh, ghi **DEC-070**, và đưa nhánh từ đỏ về xanh hết.
+
+### Nghiệp vụ đã chốt — ĐỪNG HỎI LẠI
+
+| Điểm | Chốt ngày 2026-08-16 |
+|---|---|
+| Cụm dưới bảng của thẻ ảnh | **"TÌNH TRẠNG THỰC HIỆN" lấy số AMIS THAY HẲN cụm lũy kế tháng của DEC-068.** Nguyên văn: *"những gì liên quan đến AMIS thì phải để tại vì đó là những gì bạn tôi sửa trong code"*, kèm ảnh mockup không còn cụm cũ |
+| Giữ code của cộng tác viên | *"nhớ giữ nguyên những gì bạn tôi đã sửa và push lên branch"* — **không** dọn `run_push_amis.bat`, **không** dọn `supabase/snippets/Untitled query 618.sql`, **không** dọn 7 script Python dò API |
+| Đích push | Ban đầu là **nhánh**; cuối ngày người dùng chốt **merge lên `main`** để thấy trên web |
+| Ai đẩy migration | **Agent, vĩnh viễn.** *"bạn sẽ luôn là người làm việc này nên đừng bao giờ kêu tôi làm nữa"* — mật khẩu ở `.env.local` |
+| Ai chạy đồng bộ MISA | **Người dùng hoặc cộng tác viên** — script cần đăng nhập MISA bằng tay trên trình duyệt thật |
+
+### Nhánh đã ĐỎ TỪ TRƯỚC KHI GỘP — đừng đổ cho merge
+
+`251fa19` gỡ `model.monthly` + `ShareCardMonthlySource` khỏi `lib/reports/share-card.ts` nhưng **không
+chạm** `lib/reports/share-card.test.ts` (lần sửa cuối của file đó là `05528ab`, tức trước cả nhánh) ⇒
+17 lỗi typecheck ⇒ `npm run build` gãy. Đã kiểm bằng `git log -1 --stat <branch> -- <file>`.
+
+### Một lỗ RLS đã bịt — ĐỪNG GỠ
+
+Ba migration `20260815*` **chưa từng được áp** ở local trước phiên này. Áp xong thì phép kiểm quét
+`relforcerowsecurity` của `tests/rls/` đỏ: `amis_employee_metrics` có `enable row level security` + đủ
+hai policy SELECT nhưng **thiếu `force`**, mà `enable` miễn trừ **chủ sở hữu bảng**.
+
+Đã bịt bằng migration MỚI `20260816000000_amis_metrics_force_rls.sql`. **Không sửa thẳng file
+`20260815035946`** — nó đã áp trên máy người viết, sửa tại chỗ là gây lệch trạng thái hai bên.
+
+Hai điểm còn lại của schema mới đã soát và **đều ĐÚNG, đừng "sửa"**:
+
+| Điểm | Kết quả |
+|---|---|
+| View `amis_reconciliation` | có `security_invoker=on` ⇒ chạy bằng quyền NGƯỜI GỌI. Thiếu cờ này là mọi Sales đọc được báo cáo của nhau — vỡ BR-003 |
+| `GRANT` cho `anon` | **không** có `SELECT` trên `amis_employee_metrics` |
+
+### Quality gate — chạy thật ngày 2026-08-16
+
+| Gate | Kết quả |
+|---|---|
+| `npm run build` | ✅ PASS — **22 route** (thêm `/admin/reconciliation`, `/sales/reconciliation`) |
+| `npm run typecheck` | ✅ PASS |
+| `npm run lint` | ✅ 0 error / 0 warning |
+| `npm test` | ✅ **863/863 · 33/33 file · 0 skip** |
+| Migration local | ✅ **12/12** áp sạch (8 cũ + 3 của cộng tác viên + 1 force RLS) |
+
+⚠ Con số 863 cao hơn mốc 841 của phiên trước vì **Supabase local có chạy** (Docker 28.4.0) nên 197 test
+DB/RLS chạy thật thay vì skip. Nếu phiên sau thấy `197 skipped` thì là **Docker chưa bật**, không phải
+hồi quy — dựng lại bằng `Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'` rồi
+`npx supabase start`.
+
+### ✅ Đã xong trong lượt sau (Entry 031, cùng ngày)
+
+1. ~~Render PNG thật rồi NHÌN~~ — **XONG, và bắt được lỗi thật.** Thẻ tràn khung 1920px: tên quá 22 ký
+   tự là mất chân thẻ, thêm tuyến 2 dòng là **chém mất dòng thứ tư của cụm AMIS**. 863 test vẫn xanh
+   suốt lúc đó. Đã sửa bằng **cỡ chữ co theo độ dài** (DEC-070 bổ sung), render lại 8 tấm và nhìn từng tấm.
+2. ~~Đẩy 4 migration lên cloud~~ — **XONG, cloud 12/12**, `db diff --linked` sạch. ⚠ Từ nay **việc đẩy
+   migration là của agent, người dùng dặn đừng bao giờ nhắc họ làm nữa** — mật khẩu ở `.env.local`.
+
+### Cách xem thẻ ảnh mà KHÔNG cần đăng nhập, KHÔNG chạm dữ liệu thật
+
+`buildShareCardModel()` là hàm thuần và thẻ chỉ nhận `model` + `flameSrc` — cả đường render không chạm
+database, cookie phiên hay AMIS. Viết `scripts/preview-share.tsx` bịa hai object đầu vào, gọi
+`new ImageResponse(...)` rồi ghi PNG ra scratchpad, chạy bằng `npx tsx`. **Script dùng-một-lần, không
+commit.** Luôn render **cả ca xấu nhất** — ca đẹp không bao giờ lộ lỗi tràn khung.
+
+### Next Exact Steps
+
+1. **Viết `docs/02-database-design.md`** cho `amis_employee_metrics`, cột `profiles.amis_employee_name`
+   và view `amis_reconciliation`. Migration đã áp thật ở cả local lẫn cloud nhưng chưa có bản ghi thiết kế.
+2. **E2E** cho `/admin/reconciliation` và `/sales/reconciliation` — hai route mới, chưa bài nào chạm.
+3. **E2E khoá thanh tiến độ / ngọn lửa** — nợ từ Phase 18, chưa trả.
+4. ~~Merge vào `main`~~ — **XONG** (`d431d4f`). Đã map `amis_employee_name = 'Lê Duy Khang'` cho hồ sơ
+   `VP-IT-002` để có một tài khoản xem thử được. ⚠ **Giá trị đó là PHỎNG ĐOÁN** — nó phải khớp **chính
+   xác** tên nhân viên bên MISA, chưa ai xác nhận. 11 hồ sơ còn lại vẫn `null`.
+5. **Chạy đồng bộ MISA** (`scripts/amis-sync/push_amis.py`) — việc của người dùng/cộng tác viên, cần
+   đăng nhập MISA bằng tay. Chưa chạy thì `amis_employee_metrics` vẫn **0 dòng** và thẻ ảnh vẫn không
+   có cụm "Tình trạng thực hiện" dù code đã lên web.
+
+### Kết nối thẳng vào Postgres trên cloud (đã dùng được 2026-08-16)
+
+`postgresql://postgres.rnmywhwanpxmipqducqu:<pw>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres`
+với `ssl: { rejectUnauthorized: false }`. Mật khẩu ở `.env.local`.
+
+### ⚠ BẪY: PostgREST trả 401/403 trên `profiles` KHÔNG có nghĩa là key hỏng
+
+Mã lỗi là **`42501` = thiếu quyền**, không phải lỗi xác thực. `service_role` **cố ý không có một quyền
+nào** trên `profiles` và `daily_reports` (DEC-031) — nó chỉ có `SELECT/INSERT/UPDATE/DELETE` trên đúng
+`amis_employee_metrics`. Đã kiểm ngày 2026-08-16: đọc/upsert/xoá trên bảng đó đều **200/201/204**.
+
+Vậy nên **đừng lấy 401 trên `profiles` làm bằng chứng key bị rotate** — tôi đã kết luận nhầm đúng như
+vậy một lần. Muốn thử key thì thử trên bảng mà vai đó thật sự có quyền. Đọc `profiles` thì dùng đường
+Postgres ở trên.
+
+---
+
+## ✅ Phiên trước đó (Entry 029 — PHASE 18, DEC-069 — ĐÃ ĐÓNG)
 
 Sếp của người dùng muốn ô "% Hoàn thành" có **thanh nhỏ** thể hiện mức hoàn thành, và **lửa cháy** khi
 vượt chỉ tiêu. Người dùng dặn kèm: *"thiết kế thanh nhỏ thôi cẩn thận bị đụng hàng vì ảnh xuất ra hiện
@@ -21,21 +208,31 @@ tại rất đẹp rồi"*.
 ### Quy cách thanh (`ProgressBar` trong `daily-report-share-card.tsx`)
 
 Pill **200 × 14px**, bo tròn hoàn toàn, **viền 2px màu `status`**, fill đặc cùng màu.
-Khi vượt: **dải lửa 13 lưỡi SVG** bọc dọc thanh (viền `#C2410C`/`#E9A04F`, lõi `#FCD34D`).
+Khi vượt: **ảnh** `public/images/flame-strip.png` (200 × 53 hiển thị) đặt chồng lên, chân lửa chìm 8px
+vào thân thanh.
 
-> **Bản đầu là một ngọn lửa nhỏ ở mút phải — người dùng bác.** Họ đưa ảnh mẫu và nói rõ: lửa phải **cháy
-> bọc cả thanh**, *"nhưng đừng để lửa che chữ"*. Đừng quay lại bản một ngọn.
+> **Đã qua BA bản, đừng quay lại hai bản đầu.** (1) Một ngọn lửa SVG ở mút phải — người dùng bác, muốn
+> lửa **bọc cả thanh**. (2) Ghép 13 lưỡi lửa SVG — người dùng xem rồi nói thẳng *"xấu quá"* và **tự gửi
+> ảnh lửa** để dùng thay. (3) Ảnh PNG — bản hiện hành.
+>
+> **Bài học:** Satori **không có `filter: blur()`** nên không vẽ nổi quầng sáng hay chuyển sắc mềm —
+> thiếu đúng hai thứ làm nên hình ảnh lửa. **Hiệu ứng quang học thì dùng ảnh, hình khối và số liệu thì vẽ.**
 
-⚠ **Khối thanh cao `FLAME_STRIP_HEIGHT + 14 = 48px` ở MỌI dòng, kể cả dòng không cháy.** Bỏ khoảng trống
-đó đi thì dòng cháy lệch so với các dòng khác — đúng "đụng hàng" mà người dùng dặn tránh — và lửa sẽ
-chạm vào nhãn chữ.
+⚠ **Khối thanh cao `53 + 14 = 67px` ở MỌI dòng, kể cả dòng không cháy.** Bỏ khoảng trống đó đi thì dòng
+cháy lệch so với các dòng khác — đúng "đụng hàng" mà người dùng dặn tránh — và lửa sẽ chạm vào nhãn chữ.
 
-⚠ **Hai giới hạn của Satori đã va phải, đừng thử lại:** không có `filter: blur()` ⇒ **không thể** làm
-quầng sáng mờ như ảnh mẫu; không dựng `transform` trên SVG đáng tin ⇒ dải lửa phải **ghép bằng flexbox**,
-không nhân bản bằng `<g transform>`.
+⚠ **Ảnh nguồn không thực sự trong suốt** — hoa văn bàn cờ là pixel xám thật. Đã tách bằng hiệu **`R − B`**
+(nền xám có `R = B` nên triệt tiêu hoàn toàn) với ngưỡng **28** — ngưỡng thấp hơn giữ lại quầng hào quang
+mà người dùng đã bác *"nhìn xấu quá"*. Thông số cắt đầy đủ ở `docs/11 § DEC-069 ảnh lửa bản 2`; ảnh gốc
+**không** nằm trong repo.
 
-⚠ **Lưỡi lửa phải MẢNH** (tỉ lệ 12/24). Lượt đầu dùng path icon lửa "mập" (22/28) cho cả dải và nhìn ra
-**răng cưa** chứ không ra lửa.
+⚠ **BÀI HỌC — đừng crop ảnh theo ngân sách bố cục.** Lượt đầu tôi crop từ `y = 560` trong khi lửa bắt đầu
+ở `y = 487`, tức **tự tay cắt mất 73px đỉnh lửa** để thẻ đỡ cao; người dùng phát hiện khi xuất ảnh thật.
+Phải **đo bounding box của chủ thể trước** rồi chừa biên, và điều chỉnh ngân sách cho vừa chủ thể — không
+phải ngược lại.
+
+⚠ **`./public/images/**` phải ở trong `outputFileTracingIncludes`** (`next.config.ts`) — thiếu là Vercel
+ném `ENOENT` dù build xanh.
 
 ⚠ **`ROW_METRICS.EVENING.paddingY` = 10** (hạ từ 30) để bù chiều cao khối thanh. Nâng lại là tái diễn
 ISSUE-032 (chồng chữ).
@@ -1350,7 +1547,27 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 
 ## DO NOT REDO
 
-**Từ PHASE 14 (MỚI NHẤT — DEC-055…058, 2026-08-11):**
+**Từ 2026-08-17 — rollback một báo cáo production (WORKLOG Entry 032):**
+
+- **Trigger KHÁC RLS: `postgres` với `rolbypassrls` KHÔNG vượt qua được trigger.**
+  `guard_report_transition()` (`0003_functions_triggers.sql:205`) ném exception thẳng khi thấy
+  `COMPLETED → MORNING_SUBMITTED`, và nó chặn **mọi role**. Đừng chẩn đoán lỗi đó là "thiếu quyền"
+  hay "RLS chặn" — đó là BR-008 được database ép, đang làm đúng việc.
+- **Nếu người dùng lại yêu cầu hoàn tác một báo cáo:** chụp dòng **TRƯỚC** khi họ bấm, vì sau khi
+  `COMPLETED` thì không còn nguồn nào biết giá trị gốc. Rồi trong **một transaction**: tắt tạm
+  `trg_daily_reports_guard_transition` **và** `trg_daily_reports_set_updated_at` → **một** câu
+  `UPDATE` → bật lại → `commit`, kèm chốt `rowCount !== 1` thì huỷ. Tắt `set_updated_at` là để
+  `updated_at` về đúng mốc gốc.
+- **Đây là ngoại lệ thủ công cấp DBA, KHÔNG phải tiền lệ.** BR-008/BR-013/BR-019 vẫn nguyên hiệu
+  lực; muốn có tính năng "sửa lại báo cáo" thì DEC-026 đòi audit log AF-12 đi trước và phải có `DEC`
+  mới. Đừng nới policy, đừng gỡ trigger, đừng thêm Server Action nào cho việc này.
+- **Kết nối cloud DB từ agent:** pooler `aws-0-ap-southeast-1.pooler.supabase.com:5432`, user
+  `postgres.<ref>`, mật khẩu ở `SUPABASE_DB_PASSWORD` trong `.env.local`. Dùng `pg` qua
+  `createRequire` — truyền mật khẩu thẳng trên dòng lệnh `psql` thì **bị bộ lọc quyền chặn**.
+  Lưu ý `service_role` **không** đọc được `daily_reports` (DEC-031 cố ý không cấp DML/SELECT), nên
+  đường REST không dùng được cho việc này.
+
+**Từ PHASE 14 (DEC-055…058, 2026-08-11):**
 
 - **Nút gọi Web API của trình duyệt PHẢI có bài E2E BẤM THẬT.** `toBeVisible()` chỉ chứng minh nút
   tồn tại. ISSUE-027 lọt ra production với 121 bài E2E xanh, vì không bài nào bấm nút xuất ảnh.

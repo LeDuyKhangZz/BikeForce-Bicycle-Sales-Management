@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   formatVietnamDate,
   formatVietnamMonth,
+  formatVietnamDateTime,
   formatVietnamShortDate,
   getVietnamCurrentMonth,
   getVietnamMonthRange,
@@ -376,6 +377,35 @@ describe('formatVietnamShortDate — dòng "Tính đến hết ngày…" của t
   it('đầu vào rác trả "—" chứ KHÔNG ném (DEC-033)', () => {
     expect(formatVietnamShortDate('2026-02-30')).toBe('—');
     expect(formatVietnamShortDate('hôm nay')).toBe('—');
+  });
+});
+
+describe('formatVietnamDateTime — mốc đồng bộ AMIS theo giờ TP.HCM (PHASE 19)', () => {
+  it('quy đổi UTC sang giờ VN, KHÔNG in nguyên giờ máy chạy', () => {
+    // Đây là lỗi thật đã lên production: trang Admin in `02:26` cho một lần
+    // đồng bộ lúc 09:26 giờ VN, vì `toLocaleString('vi-VN')` trần lấy múi giờ
+    // của máy chạy — trên Vercel là UTC.
+    expect(formatVietnamDateTime('2026-08-17T02:26:18Z')).toBe('17/08/2026 09:26');
+  });
+
+  it('mốc sau 17:00 UTC rơi sang NGÀY HÔM SAU theo giờ VN', () => {
+    expect(formatVietnamDateTime('2026-08-17T19:00:00Z')).toBe('18/08/2026 02:00');
+  });
+
+  it('nửa đêm giờ VN', () => {
+    expect(formatVietnamDateTime('2026-08-16T17:00:00Z')).toBe('17/08/2026 00:00');
+  });
+
+  it('dùng đồng hồ 24 giờ, không kèm SA/CH', () => {
+    const text = formatVietnamDateTime('2026-08-17T10:30:00Z');
+
+    expect(text).toBe('17/08/2026 17:30');
+    expect(text).not.toMatch(/SA|CH|AM|PM/i);
+  });
+
+  it('đầu vào rác trả "—" chứ KHÔNG ném (DEC-033)', () => {
+    expect(formatVietnamDateTime('hôm qua')).toBe('—');
+    expect(formatVietnamDateTime('')).toBe('—');
   });
 });
 

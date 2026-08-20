@@ -810,3 +810,24 @@ Không lớp nào thay được lớp nào:
 | Sales / inactive / anon gọi thẳng 5 RPC Admin | **0 dòng / toàn số 0** — 31 bài RLS |
 
 Toàn bộ chạy ở cả ba project Playwright (`mobile-375`, `desktop-1440`, `zalo-like`).
+
+---
+
+## `sales_monthly_targets` — chỉ tiêu tháng (DEC-071)
+
+| Hành động | ADMIN | SALES | anon |
+|---|---|---|---|
+| Xem chỉ tiêu của **chính mình** | ✅ | ✅ | ❌ |
+| Xem chỉ tiêu của **người khác** | ✅ | ❌ | ❌ |
+| Thêm / sửa / xoá | ✅ | ❌ | ❌ |
+
+Ép ở **ba** lớp, theo thứ tự từ ngoài vào: `requireRole('ADMIN')` ở `/admin/targets` (chuyển hướng) →
+kiểm `profile.role !== 'ADMIN'` trong `saveMonthlyTargetsAction` (trả `ActionResult`, **không**
+`redirect()` vì form dùng `useActionState`) → **RLS** `monthly_targets_{insert,update,delete}_admin`,
+biên giới thật.
+
+⚠ Sales **đọc được** chỉ tiêu của mình là chủ ý, không phải nới lỏng: route ảnh 9:16 chạy bằng phiên của
+chính Sales đó, nên không có quyền đọc thì thẻ ảnh mất cụm "Tình trạng thực hiện".
+
+⚠ Đường ghi **không** dùng service role. `monthly_targets_*_admin` đã cho phép Admin làm đúng việc cần
+làm; dùng `lib/supabase/admin.ts` ở đây là tắt mô hình bảo mật cho tiện (DEC-005).

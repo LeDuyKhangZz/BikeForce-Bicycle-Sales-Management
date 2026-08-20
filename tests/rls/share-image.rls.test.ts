@@ -45,7 +45,13 @@ describe('getReportForShare() — UC-08, FR-018', () => {
     expect(report).not.toBeNull();
     expect(report?.id).toBe(fx.reports.salesA);
     // Chứng minh embedded resource `sales:profiles!inner(...)` đúng tên quan hệ.
-    expect(report?.sales).toEqual({ full_name: 'RLS Sales A', employee_code: 'RLS-A' });
+    // `amis_employee_name` vào truy vấn từ PHASE 19 (DEC-070) — fixture chưa map
+    // tên AMIS nên là `null`, và `toEqual` đòi khớp ĐỦ khoá nên phải kể ra đây.
+    expect(report?.sales).toEqual({
+      full_name: 'RLS Sales A',
+      employee_code: 'RLS-A',
+      amis_employee_name: null,
+    });
   });
 
   it('trả về `status` để route handler chọn BIẾN THỂ ảnh — fixture đang MORNING_SUBMITTED', async () => {

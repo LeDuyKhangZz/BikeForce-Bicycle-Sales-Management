@@ -90,6 +90,13 @@ async function DashboardContent({ today }: { today: string }) {
   );
 }
 
+/*
+ * ⚠ KHÔNG thêm lại thẻ tắt "Chỉ tiêu tháng" ở trang này. Nó từng nằm ngay dưới
+ * tiêu đề vì `/admin/targets` chưa có mục điều hướng riêng; từ DEC-072 nó là
+ * **module riêng** có mục "Chỉ tiêu" trên nav, nên thẻ tắt chỉ còn là chỗ thứ hai
+ * nói cùng một việc trên đúng màn hình cần gọn nhất.
+ */
+
 function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-4">

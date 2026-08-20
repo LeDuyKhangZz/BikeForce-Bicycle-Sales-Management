@@ -1247,3 +1247,27 @@ Limit (actual rows=20 loops=1)
 | `GET /rest/v1/{profiles,daily_reports}` bằng `anon` | **`401` + `42501 permission denied for table`** — deny-by-default còn nguyên |
 
 ⚠ **Seed KHÔNG được đẩy** (`"seeds":[]` trong kết quả `db push`) — đúng thiết kế, `supabase/seed.sql` là **LOCAL ONLY**. Cloud vì vậy **chưa có user nào**; tài khoản Admin đầu tiên phải tạo theo runbook `docs/09 §10`.
+
+---
+
+## Bảng `sales_monthly_targets` — chỉ tiêu tháng do Admin giao (DEC-071)
+
+Nguồn của **cột "CHỈ TIÊU"** ở hai dòng tiền trong cụm "Tình trạng thực hiện" của thẻ ảnh.
+
+| Cột | Kiểu | Ghi chú |
+|---|---|---|
+| `period_month` | `date not null` | Luôn ngày 01, cùng quy ước `amis_employee_metrics`. CHECK ép `extract(day) = 1` |
+| `sales_id` | `uuid not null` | → `profiles(id)`, `on delete cascade` |
+| `target_sales_amount` | `bigint` | Chỉ tiêu doanh số tháng, VND nguyên (BR-010). `null` ⇒ dùng `amis.target_amount` |
+| `target_revenue` | `bigint` | Chỉ tiêu doanh thu công nợ tháng. `null` ⇒ cộng `daily_reports.target_revenue` |
+| `updated_at` / `updated_by` | `timestamptz` / `uuid` | `updated_at` do trigger `set_updated_at()` của `0003` |
+
+**Khoá chính:** `(period_month, sales_id)` — một Sales có đúng một dòng chỉ tiêu cho một tháng.
+
+**RLS:** `monthly_targets_select_own_or_admin` cho đọc (Sales thấy dòng của mình, Admin thấy tất cả);
+ba policy ghi `monthly_targets_{insert,update,delete}_admin` **chỉ** cho `is_admin()`. GRANT theo khuôn
+deny-by-default của `profiles`/`daily_reports`: `revoke all` khỏi `anon` + `authenticated` rồi cấp lại.
+
+⚠ **Đừng nhầm với `daily_reports.target_*`.** Cột kia là **cam kết NGÀY** do Sales tự gõ buổi sáng
+(DEC-030); bảng này là **chỉ tiêu THÁNG** công ty giao. Cộng cam kết ngày lại **không** ra chỉ tiêu
+tháng — đó chính là lỗi mà DEC-071 sửa.

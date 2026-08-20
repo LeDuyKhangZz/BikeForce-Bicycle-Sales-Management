@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.15"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -209,6 +214,48 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sales_monthly_targets: {
+        Row: {
+          period_month: string
+          sales_id: string
+          target_revenue: number | null
+          target_sales_amount: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          period_month: string
+          sales_id: string
+          target_revenue?: number | null
+          target_sales_amount?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          period_month?: string
+          sales_id?: string
+          target_revenue?: number | null
+          target_sales_amount?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_monthly_targets_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_monthly_targets_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

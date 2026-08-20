@@ -1961,6 +1961,175 @@ hình × 2 bề rộng trên `next build` + `next start`.
 
 ---
 
+### Entry 030 — Đối soát nhánh `feat/amis-auto-token`: gộp main, ghi DEC-070, bịt một lỗ RLS
+
+**Date:** 2026-08-16
+
+**Yêu cầu người dùng:** *"bạn tôi mới sửa code và nói code trong branch nhá, không phải main nha — pull
+code về push code mới lên giùm tôi với"*, rồi sau khi thấy báo cáo lỗi: *"những gì liên quan đến AMIS thì
+phải để tại vì đó là những gì bạn tôi sửa trong code"* + *"nhớ giữ nguyên những gì bạn tôi đã sửa và push
+lên branch"*. Kèm một ảnh mockup thẻ ảnh có cụm "Tình trạng thực hiện" 4 cột.
+
+**Bối cảnh:** cộng tác viên `NguyenPhust9` đẩy commit `251fa19` lên nhánh `feat/amis-auto-token` ngày
+2026-08-15 — toàn bộ tích hợp MISA AMIS, 35 file, +5131/−204.
+
+**Completed:**
+
+1. **Gộp `main` vào nhánh** (`ddfecdf`). Nhánh cắt ra từ `05528ab` nên thiếu 3 commit cuối của main.
+   Hai xung đột, giữ **cả hai vế** ở cả hai file:
+   - `.gitignore` — khối "Claude Code" của main và khối "AMIS sync" của nhánh là hai mục độc lập.
+   - `daily-report-share-card.tsx` — main đổi dải lửa sang ảnh PNG (`flameSrc`), nhánh thêm công tắc
+     `withFlame`. `ProgressBar` nay nhận cả hai; điều kiện vẽ là
+     `withFlame && isBlazing && flameSrc !== null`.
+2. **Xác minh nhánh đã đỏ TỪ TRƯỚC khi gộp, không phải do gộp.** `251fa19` gỡ `model.monthly` và
+   `ShareCardMonthlySource` khỏi `lib/reports/share-card.ts` nhưng không chạm
+   `lib/reports/share-card.test.ts` (lần sửa cuối của file đó là `05528ab`) ⇒ 17 lỗi typecheck ⇒
+   **`npm run build` gãy**.
+3. **Hỏi người dùng trước khi sửa**, vì gỡ cụm DEC-068 là đảo một quyết định đã `APPROVED` do chính họ
+   yêu cầu ngày 2026-08-14. Người dùng chốt: **AMIS thay hẳn**. Ghi thành **DEC-070**.
+4. `share-card.test.ts` — thay 7 test cụm lũy kế tháng bằng **12 test** cụm "Tình trạng thực hiện":
+   thứ tự 4 dòng theo mockup, chỉ tiêu doanh thu **không** từ AMIS, chỉ tiêu dòng "đã mua hàng" là số
+   khách **đã tương tác**, mốc đồng bộ thay vì ngày báo cáo, ca 2h sáng giờ VN, `synced_at` null / rác,
+   chưa map tên → bỏ cụm, thiếu số lẻ → dòng đó `PENDING`.
+5. `nav-items.test.ts` — Sales 3 → **4**, Admin 4 → **5**. Admin nay **chạm đúng trần 5 mục** của DEC-018.
+6. `amis-recon.ts` — bỏ `any[]`, đặt kiểu `CapturedRequest`. Kiểu mới lộ ra `split('?')[0]` là
+   `string | undefined` dưới `noUncheckedIndexedAccess` — `any` đang che chỗ đó.
+
+**Lỗ RLS tìm ra khi áp migration lần đầu:** ba migration `20260815*` **chưa từng được áp** ở local. Áp
+xong thì phép kiểm quét `relforcerowsecurity` của `tests/rls/` đỏ: `amis_employee_metrics` có `enable row
+level security` + đủ hai policy SELECT nhưng **thiếu `force`**, mà `enable` thì miễn trừ chủ sở hữu bảng.
+Bịt bằng migration mới `20260816000000_amis_metrics_force_rls.sql` — **không** sửa file cũ vì nó đã áp
+trên máy người viết. Soát thêm hai điểm, **cả hai đều đúng**: view `amis_reconciliation` có
+`security_invoker=on` (thiếu cờ này là mọi Sales đọc được báo cáo của nhau — vỡ BR-003), và `anon`
+**không** có `SELECT` trên bảng mới.
+
+**Files Changed:** `lib/reports/share-card.test.ts`, `lib/navigation/nav-items.test.ts`,
+`tests/rls/share-image.rls.test.ts`, `scripts/amis-sync/amis-recon.ts`, `.gitignore`,
+`features/report-share/daily-report-share-card.tsx`,
+`supabase/migrations/20260816000000_amis_metrics_force_rls.sql`, `docs/05`, `docs/11`, `WORKLOG.md`,
+`SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Tests đã chạy thật (2026-08-16):**
+
+| Gate | Trước | Sau |
+|---|---|---|
+| `npm run build` | ❌ Failed to type check | ✅ PASS — **22 route** |
+| `npm run typecheck` | ❌ 17 lỗi | ✅ PASS |
+| `npm run lint` | ❌ 1 error | ✅ 0 error / 0 warning |
+| `npm test` | ❌ 9 đỏ · 197 skip | ✅ **863/863 · 33/33 file · 0 skip** |
+
+Lần này Supabase local **có chạy** (Docker 28.4.0) nên 197 test DB/RLS chạy thật thay vì skip — cao hơn
+mốc 841 của phiên trước đúng ở chỗ đó.
+
+**Còn nợ — chưa merge vào `main` được:** đẩy **4** migration lên cloud (thiếu
+`profiles.amis_employee_name` là **nút xuất ảnh chết cho toàn đội**, vì cột đó nằm trong truy vấn của
+route ảnh) · **render PNG thật rồi nhìn** cụm 4 cột mới · `docs/02` cho bảng `amis_employee_metrics` ·
+E2E cho `/admin/reconciliation` và `/sales/reconciliation`.
+
+### Entry 031 — Đẩy 4 migration lên cloud · thẻ ảnh tràn khung 1920px, sửa bằng cỡ chữ co
+
+**Date:** 2026-08-16
+
+**Yêu cầu người dùng:** *"Đẩy 4 migration lên Supabase cloud giúp tôi, **bạn sẽ luôn là người làm việc
+này nên đừng bao giờ kêu tôi làm nữa**, mật khẩu trong env.local"* · *"bạn có cách nào giúp tôi xem ảnh
+báo cáo sáng, chiều hiện tại trông như nào mà không cần vào hệ thống làm báo cáo"* — lý do: tài khoản
+test chưa chắc có map AMIS, còn mượn tài khoản Sales thật thì làm bẩn số liệu production.
+
+**Completed:**
+
+1. **Đẩy 4 migration lên cloud `rnmywhwanpxmipqducqu`.** Kiểm hai lớp: `migration list` **12/12** mọi
+   `local` khớp `remote`; `db diff --linked` không còn `CREATE TABLE` / cột thiếu / view thiếu,
+   `dropStatements` rỗng. Phần sót lại trong diff chỉ là `rls_auto_enable` + `ALTER DEFAULT PRIVILEGES`
+   — đối tượng của chính nền tảng Supabase, **không phải drift**.
+2. **Dựng script render dùng-một-lần** (`npx tsx scripts/preview-share.tsx <thư-mục>`) — 8 tấm PNG
+   1080×1920 từ dữ liệu bịa, **không đăng nhập, không chạm database**. Khả thi vì
+   `buildShareCardModel()` thuần và thẻ chỉ nhận `model` + `flameSrc`.
+3. **Phát hiện thẻ đang GÃY — 863 test vẫn xanh.** Cụm AMIS cao hơn cụm DEC-068 cũ ~200px trong khi thẻ
+   cố định 1920px. Thang đo dựng được: tuyến 2 dòng → chân thẻ cắt nửa; tên 2 dòng → mất chân thẻ; cả
+   hai → **chém mất dòng thứ tư của cụm AMIS**. Ngưỡng gãy là **tên quá 22 ký tự**.
+4. Người dùng chốt hướng sửa: **giữ nguyên thanh tiến độ**, thu cỡ chữ tên cho vừa một dòng, và dặn
+   thêm *"chỉ giảm cỡ chữ khi tên quá dài khiến tên bị xuống dòng"*.
+5. `shareNameFontSize()` (64 → sàn 30) và `shareRouteFontSize()` (34 → sàn 24) trong `lib/`, hai cỡ chữ
+   vào `ShareCardModel` chứ không tính trong component (AGENTS.md §1.3).
+6. `shareNoteBudget()` bỏ vế `nameLines`, thêm tham số `hasPerformance` trả **0**.
+7. 11 unit test mới cho hai hàm cỡ chữ; 4 test cũ cập nhật theo hành vi mới.
+
+**Hai bài học tự vấp phải trong một buổi:** ngưỡng **24** ký tự thu **chưa đủ** (tên vẫn xuống dòng),
+ngưỡng **20** thì **thu oan** tên vốn đã vừa — đúng cái người dùng vừa dặn tránh. Kết cục phải tách làm
+**hai hằng số**: `NAME_CHARS_PER_LINE = 22` trả lời *"có cần thu không"*, `NAME_FIT_CHARS = 20` trả lời
+*"thu bao nhiêu thì chắc chắn vừa"*. Đếm ký tự chỉ là xấp xỉ — cùng 28 ký tự mà chuỗi này vừa, chuỗi kia
+không.
+
+**Lỗi thứ hai chỉ lộ ra ở lượt render thứ tư:** ghi chú bị Yoga nén dở dang nên **mẩu nhãn "GHI CHÚ" thò
+ra rồi bị chém ngang**. Sửa bằng cách cho ngân sách về 0 khi có cụm AMIS — tất-hoặc-không, kiểm được
+bằng unit test.
+
+**Files Changed:** `lib/reports/share-card.ts`, `lib/reports/share-card.test.ts`,
+`features/report-share/daily-report-share-card.tsx`, `docs/05`, `docs/11`, `WORKLOG.md`,
+`SESSION_CHECKPOINT.md`, `PROJECT_CHECKLIST.md`.
+
+**Tests đã chạy thật (2026-08-16):**
+
+| Gate | Kết quả |
+|---|---|
+| `npm run build` | ✅ exit 0 — 22 route |
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error / 0 warning |
+| `npm test` | ✅ **872/872 · 33/33 file · 0 skip** |
+| Migration cloud | ✅ **12/12**, `db diff` sạch |
+| **Nhìn tận mắt** | ✅ 8 tấm PNG render lại sau khi sửa, xem từng tấm |
+
+**Còn nợ:** `docs/02` cho `amis_employee_metrics` · E2E cho `/admin/reconciliation` và
+`/sales/reconciliation` · E2E khoá thanh/lửa (nợ từ Phase 18).
+
+### Entry 032 — Rollback một báo cáo production sau khi test ảnh Zalo trên thiết bị thật
+
+**Date:** 2026-08-17
+
+**Yêu cầu người dùng:** *"ví dụ bây giờ tôi bấm hoàn cuối ngày, nhập các số liệu sau đó xuất ảnh báo cáo
+cuối ngày ra zalo (vì tôi cần ảnh báo cáo cuối này ngay bây giờ để xem và test) thì sau khi làm xong tôi
+nói bạn, bạn có thể rollback hoàn tác giúp tôi trên csdl ko?"* — sau đó hỏi thêm *"bạn có cần lưu lại
+tình trạng báo cáo hiện tại của ngô thế san trên hệ thống hay gì ko?"*
+
+**Bối cảnh:** đây là ISSUE-003 (kiểm ảnh 9:16 trong Zalo trên điện thoại thật) — việc bắt buộc phải làm
+trên production vì cần link công khai. Báo cáo bị mượn: Ngô Thế San (`KD-MTR1-01`), ngày `2026-08-17`,
+`id = 94be3ab3-ad1c-4e07-8a5a-f6654350797f`.
+
+**Completed:**
+
+1. **Chụp ảnh dòng TRƯỚC khi người dùng bấm** — 22 cột ra JSON, qua pooler
+   `aws-0-ap-southeast-1.pooler.supabase.com:5432` bằng `pg`. Câu hỏi thứ hai của người dùng là thứ cứu
+   cả việc: sau khi `status = 'COMPLETED'` thì **không còn nguồn nào biết dòng đó vốn trông ra sao**.
+2. **Phát hiện rollback KHÔNG chạy được bằng một câu `UPDATE`** — xem mục dưới.
+3. Chạy rollback, `rowCount = 1`, rồi **chụp lại và so từng cột**: **22/22 trùng khớp** bản gốc.
+
+**Cái bẫy thật, ghi lại để không phải học lần hai:** `guard_report_transition()`
+(`0003_functions_triggers.sql:205`) **ném exception thẳng** khi thấy `COMPLETED → MORNING_SUBMITTED`.
+Trigger **không phải RLS** — quyền `postgres` với `rolbypassrls` **không** vượt qua được nó, và cũng
+không có role nào vượt được trừ khi tắt trigger. Đây chính là BR-008 được database ép, và nó đã làm
+đúng việc của nó.
+
+Thủ tục đúng, và là **ngoại lệ một lần**: trong **một transaction**, tắt tạm `trg_daily_reports_guard_transition`
+**và** `trg_daily_reports_set_updated_at` → một câu `UPDATE` duy nhất (`ck_completed_requires_actuals`
+đánh giá trên dòng sau lệnh, nên không có trạng thái trung gian) → bật lại → `commit`. Gói trong
+transaction nghĩa là **hàng rào không bao giờ hở ra ngoài**, và chốt `rowCount !== 1` thì huỷ sạch.
+Tắt luôn trigger `set_updated_at` là để `updated_at` về đúng mốc gốc — nếu không, dòng sẽ mang dấu vết
+của một lần sửa mà không ai giải thích được.
+
+**Không có gì khác phải dọn:** ảnh PNG sinh runtime, không vào storage (DEC-021) ·
+`amis_reconciliation` là **view** nên tự đúng lại · `amis_employee_metrics` do script đồng bộ ghi,
+luồng báo cáo không chạm vào.
+
+**Files Changed:** không có file source nào. Chỉ `WORKLOG.md` + `SESSION_CHECKPOINT.md`. Ba script
+(`snapshot.mjs`, `rollback.mjs`, `check-owner.mjs`) là **dùng-một-lần, để ở scratchpad, không commit**.
+
+**BR-008 / BR-013 / BR-019 vẫn nguyên hiệu lực với ứng dụng.** Không dòng code nào đổi, không policy
+nào nới, không migration nào thêm. Việc này là can thiệp thủ công cấp DBA theo yêu cầu trực tiếp của
+người dùng, **không phải tiền lệ cho một tính năng "sửa lại báo cáo"** — muốn có tính năng đó thì theo
+DEC-026 phải làm audit log trước (AF-12) và phải có `DEC` mới.
+
+**Chưa xác minh:** người dùng chưa nói ảnh hiển thị trong Zalo có đạt không ⇒ **ISSUE-003 vẫn để OPEN**.
+
 ## Quy ước ghi worklog
 
 Mọi session sau **append** một entry mới xuống cuối mục `## Nhật ký`, đánh số tăng dần
@@ -2715,3 +2884,137 @@ chữ"*.
   hai lần (232 → 174 → 130) mà ca xấu nhất vẫn bị **chém ngang giữa dòng chữ**; thứ thiếu là *chỗ*, mà
   chỗ phụ thuộc tên/tuyến dài bao nhiêu. Hết ngân sách thì bỏ hẳn khối ghi chú, giữ tuyến.
 - Vitest **858/858**; đã render và nhìn lại ba tấm (bốn dòng cùng cháy · một dòng cháy · ca xấu nhất).
+
+**Bổ sung lần 2 cùng ngày (Entry 029c) — dải lửa nay là ẢNH, không phải hình vẽ.** Người dùng xem bản
+ghép 13 lưỡi SVG và nói thẳng *"xấu quá"*, rồi tự gửi một ảnh lửa để gắn vào.
+
+- **Vì sao vẽ tay không thể đẹp bằng:** Satori không có `filter: blur()` ⇒ mọi thứ nó vẽ đều sắc nét,
+  không quầng sáng, không chuyển sắc mềm — thiếu đúng hai thứ làm nên hình ảnh lửa.
+- Ảnh nguồn (2528×1686) **không thực sự trong suốt**: hoa văn bàn cờ là pixel xám thật. Tách nền bằng
+  hiệu **`R − B`** (nền xám có `R = B` nên triệt tiêu hoàn toàn hoa văn, lửa thì `R ≫ B`), rồi Gaussian
+  bán kính 26 **chỉ ở vùng quầng** để khử vệt bàn cờ còn sót do nén ±2 mức.
+- Cắt bỏ thanh xanh trong ảnh (mask xanh lá) vì thanh thật phải đổi chiều dài theo `%` và màu theo
+  `status`. Cắt `(396,560)→(2108,1014)`, xuất `public/images/flame-strip.png` 400×106 (47 KB).
+- Route đọc file rồi truyền **data URI** qua prop `flameSrc`; thêm `./public/images/**` vào
+  `outputFileTracingIncludes`. `flameSrc = null` ⇒ vẫn vẽ thanh, chỉ mất lửa.
+- Ảnh gốc 6,7 MB đã dời khỏi repo; thông số cắt ghi đủ trong DEC-069 để tái lập.
+- typecheck/lint/build exit 0; Vitest **858/858**; đã render và nhìn hai tấm thẻ + một tấm soi riêng dải lửa.
+
+**Bổ sung lần 3 (Entry 029d) — ảnh lửa bản 2.** Người dùng xuất ảnh thật rồi báo hai lỗi và gửi ảnh nguồn
+mới đã hạ bớt chiều cao ngọn lửa:
+
+1. *"cái ngọn cao nhất của lửa bị cắt đi"* — **lỗi của tôi**: crop từ `y = 560` trong khi lửa bắt đầu ở
+   `y = 487`, tức tự tay cắt mất 73px đỉnh để tiết kiệm chiều cao thẻ. Nay crop chừa 8px trên ngọn cao nhất.
+2. *"vầng hào quang nhìn xấu quá"* — ngưỡng tách nền quá thấp nên giữ cả vùng sáng mờ. Ngưỡng nay `warm−28`,
+   loại sạch quầng; mép lửa vẫn mượt vì ở mép `R−B` nhảy 0→200 trong một hai pixel.
+
+Kết quả: `flame-strip.png` 400×99 (28 KB, nhẹ hơn bản trước 40%), hiển thị 200×50. Không còn cần bước làm
+mượt Gaussian vì quầng đã bị loại ở ngưỡng. typecheck/lint/build exit 0; Vitest **858/858**; đã render và
+nhìn lại hai tấm thẻ + một tấm soi riêng dải lửa.
+
+**Bài học ghi vào checkpoint:** khi cắt ảnh có chủ thể chạm mép, phải **đo bounding box của chủ thể trước**
+rồi chừa biên — đừng chọn khung cắt theo ngân sách bố cục.
+
+---
+
+## Entry 031 — 2026-08-17 — DEC-071: chỉ tiêu THÁNG do Admin giao
+
+**Người dùng báo (gấp):** ô "CHỈ TIÊU" của dòng *Doanh thu đã ghi* trên thẻ ảnh in **200tr**, trong khi
+bảng KPI công ty tháng 8/2026 ghi **640tr** cho Ngô Thế San. Yêu cầu: sửa **thẳng trên database** trước,
+mỗi Sales một con số riêng theo bảng KPI; sau đó mới lên kế hoạch làm module nhập KPI ở trang Admin.
+Nhắn bổ sung giữa chừng: **đổi cả doanh thu lẫn doanh số**, và **chỉ set cho tháng 8**.
+
+### Nguyên nhân
+
+DEC-070 lấy chỉ tiêu doanh thu bằng cách **cộng `daily_reports.target_revenue`** của các ngày trong
+tháng. Đó là tổng **cam kết NGÀY** Sales tự gõ (DEC-030), không phải chỉ tiêu THÁNG công ty giao. Không
+có chỗ nào trong database chứa chỉ tiêu tháng — nên không thể "sửa số" mà không tạo chỗ chứa nó.
+
+### Đã làm
+
+| Việc | Chi tiết |
+|---|---|
+| Migration `20260817120000_sales_monthly_targets.sql` | Bảng mới + RLS (đọc: own-or-admin; ghi: **chỉ Admin**) + trigger `updated_at` + index kỳ |
+| Đẩy cloud | ✅ `supabase db push --yes` — `migration list` trước đó khớp 13/13, sau đó 14/14 |
+| Nạp dữ liệu kỳ `2026-08-01` | ✅ **9/9 Sales** khớp bảng KPI, ghi bằng script tạm rồi xoá |
+| `services/reports.ts` | thêm `getMonthlyTargets()` — khoá `sales_id`, đi qua client chịu RLS |
+| `lib/reports/share-card.ts` | `ShareCardPerformanceSource` thêm 2 trường; cả hai dòng tiền dùng `?? đường lùi` |
+| `app/api/.../share-image/route.tsx` | truy vấn thứ ba, chạy song song với AMIS bằng `Promise.all` |
+| `types/database.types.ts` | sinh lại bằng `supabase gen types --linked` — diff **chỉ thêm**, 47 dòng |
+
+### Không nạp được, đã báo người dùng
+
+Hai dòng **"Quỳnh hỗ trợ + văn phòng"** của bảng KPI: `Nguyễn Thị Như Quỳnh` **có trên AMIS nhưng chưa
+có hồ sơ BikeForce**, nên không có `sales_id` để gắn chỉ tiêu. Cần tạo tài khoản trước.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npm run build` | ✅ exit 0, 20 route |
+| `npx vitest run --project unit` | ✅ **680/680** (19 file); riêng `share-card.test.ts` **83/83** |
+| Nhìn tận mắt | ✅ render PNG 1080×1920 với đúng số production của Ngô Thế San — cụm in `800tr` / **`640tr`**, bố cục không vỡ |
+| Integration / RLS | ⏳ **CHƯA CHẠY** — cần Docker + Supabase local, người dùng yêu cầu gấp. **Nợ lại** |
+
+⚠ Ba test mới khoá đúng ba điểm dễ hỏng: chỉ tiêu tháng **thắng** cả hai đường lùi · giao **một** trong
+hai thì dòng kia vẫn lùi · chỉ tiêu **`0`** không bị coi là "chưa giao" (`??` chứ không `||`).
+
+---
+
+## Entry 032 — 2026-08-18 — Màn hình `/admin/targets` (DEC-071, phần 2)
+
+**Người dùng yêu cầu:** *"tạo 1 module KPI để Admin có thể set KPI cho từng sale trong 1 tháng của
+doanh số và doanh thu. có nút giữ nguyên kpi khi chuyển sang tháng mới"*.
+
+Entry 031 đã dựng sẵn bảng `sales_monthly_targets` cùng **ba policy ghi cho `is_admin()`** đúng để
+phần này cắm vào — nên phiên này **không sửa schema một dòng nào**.
+
+### Đã làm
+
+| File | Vai trò |
+|---|---|
+| `app/(admin)/admin/targets/page.tsx` *(mới)* | Server Component; 3 truy vấn song song; `key={month}` reset state khi đổi tháng |
+| `features/admin-targets/monthly-targets-form.tsx` *(mới)* | Lưới thẻ 1 cột → `md:grid-cols-2`; nút chép tháng trước; dòng Tổng |
+| `features/admin-targets/actions.ts` *(mới)* | `saveMonthlyTargetsAction` — một `upsert` cho cả tháng |
+| `lib/validation/monthly-targets.ts` *(mới)* + test | Hàm thuần kiểm ô, đặt tên field; **9 unit test** |
+| `services/monthly-targets.ts` *(mới)* | Data access DUY NHẤT của bảng; `getMonthlyTargets` chuyển từ `services/reports.ts` sang |
+| `lib/admin/messages.ts` | thêm `MONTHLY_TARGET_MESSAGES` (ở `lib/` vì ISSUE-016) |
+| `lib/navigation/nav-items.ts` | `/admin/targets` vào `matchPrefixes` của `ADMIN_SALES` |
+| `app/(admin)/admin/sales/page.tsx` | nút **"Chỉ tiêu tháng"** — cửa vào của màn hình mới |
+| `e2e/monthly-targets.spec.ts` *(mới)* | 7 bài, gồm bài **bấm thật** nút chép (ISSUE-027) |
+
+### Ba điều đã cân nhắc rồi mới chọn
+
+1. **Nút chép chỉ ĐIỀN ô, không tự lưu.** Bảng không có lịch sử phiên bản; bấm nhầm mà tự ghi là đè
+   chỉ tiêu vừa gõ tay, không có đường lùi. Có bài E2E khoá đúng điều này: bấm chép → tải lại → ô phải
+   trở về giá trị trong database.
+2. **Server Action đọc lại `listSalesOptions()`, không duyệt key của `FormData`.** Duyệt key cho client
+   chọn ghi cho ai — Admin vốn có quyền ghi mọi dòng nên không phải leo thang quyền, nhưng nó tạo được
+   chỉ tiêu cho `profile` **không phải Sales**; khoá ngoại không chặn vì chỉ đòi `profiles(id)` tồn tại.
+3. **Không thêm tab thứ 6 vào bottom nav.** DEC-018 chốt trần 5 mục và nav Admin đã chạm trần. Cửa vào
+   là nút trên `/admin/sales`; `matchPrefixes` giữ tab Sales sáng khi đang ở `/admin/targets`.
+
+### ⚠ Lỗi của chính phiên này, đã tự sửa
+
+**Tự cấp `UC-22`** cho màn hình mới ở 5 file. Dãy `UC` là **dãy đóng** (CLAUDE.md §12) — chỉ người dùng
+mới mở được. Đã gỡ sạch trong phiên; nếu sau này muốn có ID use case thì phải hỏi trước.
+
+### ⚠ Bẫy Playwright mất 3 lượt chạy mới ra
+
+`getByRole('heading', { name: 'Chỉ tiêu tháng' })` khớp **chuỗi con, không phân biệt hoa thường** ⇒ nó
+trúng luôn `CardTitle` *"Giữ nguyên **chỉ tiêu tháng** trước"* và vỡ strict mode. Triệu chứng đọc như
+trang bị treo (*"waiting for … to be visible"*), nên tôi đi tìm nhầm hướng ở tầng server một lúc. Cách
+sửa: thêm `level: 1`. Ghi lại đây vì bài E2E nào của dự án cũng có thể dính.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 error, 0 warning |
+| `npm run build` | ✅ exit 0, **21 route** (thêm `/admin/targets`) |
+| `npx vitest run --project unit` | ✅ **689/689** (20 file) — trước phiên 680 |
+| Nhìn tận mắt | ✅ chụp `375×812` và `1440×900` trên **production build**; `scrollWidth === clientWidth` ở cả hai ⇒ không cuộn ngang |
+| E2E `monthly-targets.spec.ts` | ✅ **7/7 passed** trên `mobile-375` (15,7 phút gồm cả `next build` của webServer) |

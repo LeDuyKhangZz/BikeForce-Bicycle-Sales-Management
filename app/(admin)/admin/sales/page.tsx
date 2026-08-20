@@ -66,6 +66,10 @@ export default async function AdminSalesPage({ searchParams }: Props) {
           </p>
         </div>
 
+        {/* ⚠ KHÔNG thêm lại nút "Chỉ tiêu tháng" ở đây. Nó từng nằm đúng chỗ này
+            và người dùng bác thẳng ngày 2026-08-18: chỉ tiêu là **module riêng**,
+            có mục điều hướng riêng (DEC-072), không phải một nút phụ của trang
+            nhân viên. */}
         <Link href="/admin/sales/new" className={buttonClassName()}>
           <UserPlus aria-hidden="true" className="size-4" />
           Tạo tài khoản
