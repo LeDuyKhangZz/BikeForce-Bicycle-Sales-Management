@@ -59,6 +59,10 @@ export type DailyReport = Omit<DailyReportRow, 'created_at' | 'updated_at'>;
  * `listMonthToDateMetrics()` bên dưới nhận đúng giá trị này. Nó **không** phải
  * một cơ chế phân quyền — quyền vẫn do RLS quyết định (AGENTS.md §8).
  *
+ * ⚠ **`amis_employee_name` có mặt từ PHASE 19 (DEC-070).** Đó là cầu nối duy
+ * nhất giữa một hồ sơ BikeForce và một dòng số liệu MISA AMIS: AMIS không biết
+ * gì về `auth.users`, nó chỉ có tên người. Cột này do Admin điền tay.
+ *
  * `sales:profiles!inner(...)` là embedded resource của PostgREST, đặt bí danh
  * `sales` cho dễ đọc ở tầng trên. `!inner` khiến báo cáo bị loại luôn nếu hồ sơ
  * Sales không đọc được — RLS trên `profiles` (`profiles_select_self_or_admin`)
@@ -81,7 +85,7 @@ const SHARE_REPORT_COLUMNS = [
   'actual_revenue',
   'actual_customer_visits',
   'evening_note',
-  'sales:profiles!inner(full_name, employee_code)',
+  'sales:profiles!inner(full_name, employee_code, amis_employee_name)',
 ].join(', ');
 
 /** Dữ liệu đủ để dựng thẻ ảnh 9:16 — báo cáo + tên/mã của Sales sở hữu nó. */
@@ -103,7 +107,10 @@ export type ShareReport = Pick<
   | 'actual_customer_visits'
   | 'evening_note'
 > & {
-  sales: Pick<Database['public']['Tables']['profiles']['Row'], 'full_name' | 'employee_code'>;
+  sales: Pick<
+    Database['public']['Tables']['profiles']['Row'],
+    'full_name' | 'employee_code' | 'amis_employee_name'
+  >;
 };
 
 /**
@@ -215,7 +222,7 @@ export async function getReportForShare(
 /**
  * Đúng 8 cột số mà lũy kế tháng của thẻ ảnh cần — PHASE 17, DEC-068.
  *
- * Không kéo `report_date`, `status` hay bất kỳ cột text nào: ba con số của
+ * Không kéo `report_date`, `status` hay bất kỳ cột text nào: các con số của
  * `summarizeMonthToDate()` không đọc tới chúng, và đây là truy vấn chạy thêm ở
  * mỗi lần xuất ảnh (NFR-002).
  */
@@ -246,7 +253,7 @@ const MONTH_TO_DATE_COLUMNS = [
  *
  * `null` = truy vấn HỎNG, khác hẳn `[]` = tháng chưa có ngày nào. Tầng gọi phải
  * phân biệt: in `0 ₫` cho một tháng thực ra có số liệu là nói sai trên một tấm
- * ảnh gửi cho cấp trên, nên khi `null` thì thẻ bỏ hẳn cụm lũy kế.
+ * ảnh gửi cho cấp trên, nên khi `null` thì thẻ bỏ hẳn cụm.
  */
 export async function listMonthToDateMetrics(
   supabase: SupabaseClient<Database>,
@@ -264,6 +271,88 @@ export async function listMonthToDateMetrics(
   if (error) {
     // NFR-014: chi tiết kỹ thuật chỉ ở log server.
     console.error('[listMonthToDateMetrics]', error.code, error.message);
+    return null;
+  }
+
+  return data;
+}
+
+/* ===========================================================================
+ * SỐ LIỆU MISA AMIS — PHASE 19, DEC-070
+ * ========================================================================= */
+
+/**
+ * Đúng bảy cột cụm "Tình trạng thực hiện" của thẻ ảnh cần.
+ *
+ * Bảng `amis_employee_metrics` có 14 cột; sáu cột còn lại (`sales`,
+ * `return_sales`, `no_of_orders`, `qty_account_sold`, `current_amount`,
+ * `org_unit_name`) phục vụ màn hình đối chiếu của Admin chứ không lên ảnh.
+ */
+const AMIS_METRIC_COLUMNS = [
+  'target_amount',
+  'current_amount',
+  'net_sales',
+  'receive_amount',
+  'qty_account_in_charge',
+  'qty_account_interactive',
+  'qty_account_sold_this_period',
+  'synced_at',
+].join(', ');
+
+export type AmisShareMetrics = Pick<
+  Database['public']['Tables']['amis_employee_metrics']['Row'],
+  | 'target_amount'
+  | 'current_amount'
+  | 'net_sales'
+  | 'receive_amount'
+  | 'qty_account_in_charge'
+  | 'qty_account_interactive'
+  | 'qty_account_sold_this_period'
+  | 'synced_at'
+>;
+
+/**
+ * Số luỹ kế tháng do MISA AMIS ghi nhận — PHASE 19, **DEC-070**.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO KHOÁ LÀ TÊN NGƯỜI, KHÔNG PHẢI `sales_id`
+ * ─────────────────────────────────────────────────────────────────────────
+ *  AMIS là hệ thống của MISA, nó không biết gì về `auth.users` của BikeForce và
+ *  sẽ không bao giờ biết. Thứ duy nhất hai bên cùng có là **tên nhân viên**, nên
+ *  cầu nối là cột `profiles.amis_employee_name` do Admin điền tay.
+ *
+ *  Hệ quả phải chấp nhận: Sales chưa được map thì không có cụm này trên ảnh. Đó
+ *  là hành vi ĐÚNG — thà không có còn hơn ghép nhầm số của người khác vào tấm
+ *  ảnh gửi cấp trên.
+ *
+ *  Bảng do script ngoài (`scripts/amis-sync/push_amis.py`) đẩy lên chứ không do
+ *  ứng dụng ghi: ba trong bốn nguồn AMIS dùng cookie phiên trình duyệt hết hạn
+ *  sau ~24h, không tự động hoá được trên Vercel. Vì vậy `synced_at` phải được
+ *  in lên ảnh — người đọc cần biết số này cũ tới mức nào.
+ *
+ * `null` mang BA nghĩa cùng lúc — chưa map tên, chưa đồng bộ tháng đó, hoặc RLS
+ * chặn (`amis_metrics_select_own`). Cả ba dẫn tới cùng một hành vi hiển thị nên
+ * tầng gọi không cần phân biệt.
+ */
+export async function getAmisMetricsForShare(
+  supabase: SupabaseClient<Database>,
+  employeeName: string | null,
+  periodMonth: string,
+): Promise<AmisShareMetrics | null> {
+  // Chưa map thì không hỏi database: một truy vấn chắc chắn rỗng là truy vấn
+  // thừa ở mỗi lần xuất ảnh (NFR-002).
+  if (employeeName === null || employeeName.trim() === '') return null;
+
+  const { data, error } = await supabase
+    .from('amis_employee_metrics')
+    .select(AMIS_METRIC_COLUMNS)
+    .eq('employee_name', employeeName)
+    .eq('period_month', periodMonth)
+    .maybeSingle<AmisShareMetrics>();
+
+  if (error) {
+    // NFR-014: chi tiết kỹ thuật chỉ ở log server.
+    console.error('[getAmisMetricsForShare]', error.code, error.message);
     return null;
   }
 

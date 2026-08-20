@@ -18,9 +18,11 @@
 export type NavKey =
   | 'SALES_TODAY'
   | 'SALES_HISTORY'
+  | 'SALES_RECONCILIATION'
   | 'SALES_ACCOUNT'
   | 'ADMIN_OVERVIEW'
   | 'ADMIN_REPORTS'
+  | 'ADMIN_RECONCILIATION'
   | 'ADMIN_SALES'
   | 'ADMIN_ACCOUNT';
 
@@ -37,7 +39,7 @@ export type NavItem = {
   readonly matchPrefixes: readonly string[];
 };
 
-/** Bottom nav Sales — đúng 3 mục, dưới trần 5 mục của DEC-018. */
+/** Bottom nav Sales — 4 mục, dưới trần 5 mục của DEC-018. */
 export const SALES_NAV_ITEMS: readonly NavItem[] = [
   {
     key: 'SALES_TODAY',
@@ -54,6 +56,12 @@ export const SALES_NAV_ITEMS: readonly NavItem[] = [
     matchPrefixes: ['/sales/history', '/sales/reports'],
   },
   {
+    key: 'SALES_RECONCILIATION',
+    label: 'Đối chiếu',
+    href: '/sales/reconciliation',
+    matchPrefixes: ['/sales/reconciliation'],
+  },
+  {
     key: 'SALES_ACCOUNT',
     label: 'Tài khoản',
     href: '/sales/account',
@@ -61,7 +69,7 @@ export const SALES_NAV_ITEMS: readonly NavItem[] = [
   },
 ];
 
-/** Bottom nav Admin — đúng 4 mục (DEC-018), dùng từ Phase 8. */
+/** Bottom nav Admin — 5 mục, chạm trần 5 mục của DEC-018. */
 export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   {
     key: 'ADMIN_OVERVIEW',
@@ -76,6 +84,12 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
     label: 'Báo cáo',
     href: '/admin/reports',
     matchPrefixes: ['/admin/reports', '/admin/analytics'],
+  },
+  {
+    key: 'ADMIN_RECONCILIATION',
+    label: 'Đối chiếu',
+    href: '/admin/reconciliation',
+    matchPrefixes: ['/admin/reconciliation'],
   },
   {
     key: 'ADMIN_SALES',

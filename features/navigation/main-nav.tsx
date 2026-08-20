@@ -7,6 +7,7 @@ import {
   History,
   Home,
   LayoutDashboard,
+  Scale,
   User,
   Users,
   type LucideIcon,
@@ -45,9 +46,11 @@ import { activeNavKey, type NavItem, type NavKey } from '@/lib/navigation/nav-it
 const NAV_ICON: Record<NavKey, LucideIcon> = {
   SALES_TODAY: Home,
   SALES_HISTORY: History,
+  SALES_RECONCILIATION: Scale,
   SALES_ACCOUNT: User,
   ADMIN_OVERVIEW: LayoutDashboard,
   ADMIN_REPORTS: FileText,
+  ADMIN_RECONCILIATION: Scale,
   ADMIN_SALES: Users,
   ADMIN_ACCOUNT: User,
 };

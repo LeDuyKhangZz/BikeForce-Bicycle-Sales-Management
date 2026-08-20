@@ -69,3 +69,12 @@ desktop.ini
 # Tạm --------------------------------------------------------------------
 *.tmp
 .cache/
+
+# AMIS sync (chay tay, chua cookie phien)
+scripts/amis-sync/.env
+scripts/amis-sync/__pycache__/
+scripts/amis-sync/*.json
+scripts/amis-sync/*.csv
+scripts/amis-sync/*.log
+
+.playwright-amis-profile/
