@@ -587,7 +587,7 @@ export type ShareCardPerformance = {
   /** `'Số liệu MISA tính đến 15/08/2026'` — mốc ĐỒNG BỘ, không phải ngày báo cáo. */
   readonly rangeText: string;
   readonly rows: readonly ShareCardPerformanceRow[];
-  /** Ba số liệu phụ được gom thành một dải ngang để không làm tràn thẻ 9:16. */
+  /** Ba số liệu phụ nối tiếp bảng theo ba dòng canh giữa, mỗi dòng chỉ có tên + thực đạt. */
   readonly supplementaryMetrics: readonly ShareCardSupplementaryMetric[];
 };
 
@@ -737,13 +737,13 @@ function buildPerformance(source: ShareCardPerformanceSource): ShareCardPerforma
       ),
     ],
     supplementaryMetrics: [
-      { label: 'SỐ ĐƠN', valueText: formatOrderCount(source.amisOrderCount) },
+      { label: 'SL ĐH đã ghi', valueText: formatOrderCount(source.amisOrderCount) },
       {
-        label: 'TB / ĐƠN',
+        label: 'Giá trị trung bình 1 đơn',
         valueText: formatMetricValueCompact(averageOrderValue, 'SALES_AMOUNT'),
       },
       {
-        label: 'HÀNG TRẢ LẠI',
+        label: 'Giá trị hàng hóa trả hàng',
         valueText: formatMetricValueCompact(source.amisReturnAmount, 'SALES_AMOUNT'),
       },
     ],

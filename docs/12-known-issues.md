@@ -1744,3 +1744,31 @@ tràn ảnh. Khôi phục các rule `.gitignore` bảo vệ dữ liệu AMIS và
 Render PNG thật 1080×1920 với tên Sales dài: đủ bảng, dải số liệu phụ và footer, không chồng/cắt chữ.
 Integration/RLS chưa chạy vì Supabase local `127.0.0.1:54322` đang tắt; lần chạy full đã ghi đúng
 `ECONNREFUSED`, không ghi PASS.
+
+---
+
+### ISSUE-034
+
+**Severity:** P2
+
+**Status:** CLOSED — 2026-08-21
+**Module:** thẻ ảnh chia sẻ 9:16
+
+**Description:** Dải ngang ba số liệu AMIS của ISSUE-033 dùng nhãn rút gọn, không đúng nội dung đầy đủ mà
+người dùng muốn: **SL ĐH đã ghi · Giá trị trung bình 1 đơn · Giá trị hàng hóa trả hàng**.
+
+**Expected:** ba số liệu chỉ thể hiện tên + giá trị thực đạt, chữ đủ lớn và canh giữa; không có chỉ tiêu hay
+phần trăm giả; nhãn “Giá trị hàng hóa trả hàng” nằm trọn một hàng; footer còn nguyên.
+
+**Actual:** nhãn bị rút gọn thành **SỐ ĐƠN · TB / ĐƠN · HÀNG TRẢ LẠI**. Thử nhét ba nhãn đầy đủ trên một
+hàng ngang buộc cỡ chữ xuống 16px, khó đọc sau khi ảnh bị thu/nén trên điện thoại.
+
+**Root Cause:** cách xử lý khẩn cấp của ISSUE-033 ưu tiên giữ chiều cao 1920px nhưng chưa có xác nhận cuối
+về nội dung và phân cấp ba số liệu phụ.
+
+**Fix:** dùng ba dòng canh giữa, mỗi dòng chỉ render nhãn 22px + giá trị thực đạt 26px; giữ `nowrap`; giảm
+`MORNING.paddingY` từ `44 → 32` để trả lại 96px cho cụm mới và footer. Không thêm `ORDER_COUNT` vào
+`KpiMetric`, không tạo target/% giả.
+
+**Verification:** typecheck + lint exit 0 · unit **695/695** · production build exit 0, 23 route. Render PNG
+thật 1080×1920: ba nhãn đầy đủ, nhãn cuối đúng một dòng, câu nhắc bản sáng và footer đều nằm trọn ảnh.

@@ -3051,3 +3051,28 @@ gọn và không để nội dung phụ phá khung cố định.
 
 **Next Exact Steps:** commit và push bản sửa bằng tài khoản chủ Vercel; vào Activity/Deployments kiểm tra
 deployment mới. Khi Docker/Supabase local được bật, chạy lại `npm run test:db` và E2E ảnh liên quan.
+
+---
+
+## Entry 034 — 2026-08-21 — Trình bày ba số liệu thực đạt theo nhãn đầy đủ (ISSUE-034)
+
+Người dùng xác nhận ba số liệu AMIS chỉ có giá trị thực đạt, không có chỉ tiêu hay `% hoàn thành`, đồng
+thời yêu cầu giữ nguyên nhãn đầy đủ. Đã thử render cả ba trên một hàng ngang như ảnh tham chiếu; bố cục vừa
+khung nhưng cỡ nhãn phải hạ xuống 16px, quá nhỏ khi ảnh được xem trên điện thoại.
+
+Theo phương án người dùng cho phép, bản cuối dùng ba dòng canh giữa: **SL ĐH đã ghi · Giá trị trung bình
+1 đơn · Giá trị hàng hóa trả hàng**. Mỗi dòng chỉ có nhãn 22px + số thực đạt 26px đậm. `nowrap` giữ nhãn
+cuối trên một hàng; `MORNING.paddingY` giảm 44 → 32 để đủ câu nhắc và footer. `ui-ux-pro-max` ảnh hưởng
+trực tiếp đến lựa chọn này: ưu tiên độ đọc sau khi ảnh bị thu/nén thay vì cố nhét nội dung vào ba ô nhỏ.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| Unit toàn dự án | ✅ **695/695**, 20 file |
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 |
+| `npm run build` | ✅ exit 0, **23 route** |
+| PNG 1080×1920 | ✅ render + nhìn thật; ba nhãn đầy đủ, footer còn nguyên |
+
+**Next Exact Steps:** commit/push `main`, rồi xác nhận Vercel deploy commit mới.

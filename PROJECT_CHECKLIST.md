@@ -1029,6 +1029,16 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `npm run typecheck` · `npm run lint` · `npm run test:unit` (**695/695**) · `npm run build` (23 route)
 - [ ] Integration/RLS — chưa chạy vì Supabase local `127.0.0.1:54322` đang tắt
 
+## Bố cục ba số liệu thực đạt — ISSUE-034 (2026-08-21)
+
+- [x] Dùng đúng ba nhãn đầy đủ theo yêu cầu người dùng
+- [x] Mỗi số liệu một dòng canh giữa, chỉ có tên + giá trị thực đạt
+- [x] Không render chỉ tiêu/% không áp dụng; không thêm target/% giả
+- [x] `Giá trị hàng hóa trả hàng` nằm đúng một hàng ở cỡ 22px
+- [x] `MORNING.paddingY` 44 → 32 để giữ câu nhắc và footer trong ảnh 1080×1920
+- [x] Typecheck · lint · unit **695/695** · production build **23 route** đều sạch
+- [x] Render và nhìn PNG thật 1080×1920: không chồng/cắt chữ, footer còn nguyên
+
 ## OPEN QUESTIONS
 
 Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đầy đủ:

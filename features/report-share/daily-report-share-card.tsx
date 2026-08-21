@@ -174,16 +174,17 @@ const NO_SHRINK = { flexShrink: 0 } as const;
  * là khoảng trắng**, trông như ảnh bị lỗi chứ không như một thiết kế thoáng.
  * Bản sáng vì thế đọc như một tấm áp phích: dòng cao, số to.
  *
- * ⚠ **PHASE 17 (DEC-068): `MORNING.paddingY` hạ từ 70 xuống 44 — đừng nâng lại.**
- * Cụm dưới bảng chiếm ~330px ngay dưới bảng, nên khoảng trắng mà con số 70 sinh
- * ra để lấp nay không còn tồn tại. Giữ 70 thì bản sáng **tràn quá 1920px**, và
+ * ⚠ **PHASE 20: `MORNING.paddingY` hạ tiếp từ 44 xuống 32.** Ba số liệu AMIS phụ nay
+ * nằm trên ba dòng canh giữa để đủ cỡ chữ đọc được sau khi Zalo nén ảnh. Phần đệm
+ * giảm 12px mỗi cạnh × 4 dòng trả lại 96px cho cụm này và footer. Nâng lại sẽ làm
+ * bản sáng **tràn quá 1920px**, và
  * Satori không cắt bớt: nó nén các khối lại cho tới khi chữ **chồng lên nhau**.
  * Lỗi đó không có phép đo nào bắt được, chỉ nhìn tấm PNG mới thấy.
  *
  * Bài học DEC-053 lặp lại: bốn nhóm luật đo được đều xanh mà mắt vẫn thấy sai.
  */
 const ROW_METRICS = {
-  MORNING: { paddingY: 44, label: 42, value: 56 },
+  MORNING: { paddingY: 32, label: 42, value: 56 },
   // ⚠ PHASE 18 (DEC-069): `EVENING.paddingY` hạ 30 → 10 để **bù** chiều cao khối
   // thanh tiến độ (dải lửa 34px + thanh 14px + 8px lề = 56px mỗi dòng). Không bù
   // thì bản chiều vượt 1920px và chữ chồng lên nhau — ISSUE-032 đã dạy đúng bài
@@ -658,8 +659,9 @@ function PerformanceRow({ row }: { row: ShareCardPerformanceRow }) {
 }
 
 /**
- * Ba số liệu AMIS không có chỉ tiêu được gom thành một dải ngang. Nếu dựng như
- * ba dòng KPI giả với hai cột dấu gạch, thẻ vượt 1920px và mất footer.
+ * Ba số liệu AMIS không có chỉ tiêu nằm trên ba dòng canh giữa. Không ép chúng vào ba ô
+ * ngang vì nhãn đầy đủ của Hình 2 buộc cỡ chữ xuống quá nhỏ khi ảnh bị thu trên điện thoại.
+ * Mỗi dòng chỉ có tên + giá trị thực đạt, không dựng target/% giả.
  */
 function SupplementaryMetrics({
   metrics,
@@ -670,30 +672,30 @@ function SupplementaryMetrics({
     <div
       style={{
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         borderTop: `1px solid ${COLOR.accent}`,
         marginTop: 14,
-        paddingTop: 12,
+        paddingTop: 4,
       }}
     >
-      {metrics.map((metric, index) => (
+      {metrics.map((metric) => (
         <div
           key={metric.label}
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '33.333%',
-            borderLeft: index === 0 ? '0px solid transparent' : `1px solid ${COLOR.rule}`,
+            width: '100%',
+            marginTop: 8,
           }}
         >
           <div
             style={{
               display: 'flex',
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: 600,
               color: COLOR.muted,
-              letterSpacing: 1,
               whiteSpace: 'nowrap',
             }}
           >
@@ -705,7 +707,7 @@ function SupplementaryMetrics({
               fontSize: 26,
               fontWeight: 700,
               color: COLOR.body,
-              marginLeft: 10,
+              marginLeft: 14,
               whiteSpace: 'nowrap',
             }}
           >

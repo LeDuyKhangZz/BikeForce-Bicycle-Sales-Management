@@ -676,6 +676,9 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 │  ▌│ Doanh thu đã ghi 300tr 210tr 70%││  chỉ tiêu cột này KHÔNG từ AMIS
 │  ▌│ SL KH đã ghé thăm 120 96  80%│   │  thanh tiến độ withFlame={false}
 │  ▌│ SL KH đã mua hàng  96  48  50%│  │  — chừa 200px cho lửa là tràn 1920px
+│  ▌│          SL ĐH đã ghi  7 đơn      │  ba dòng canh giữa, chỉ tên + thực đạt
+│  ▌│  Giá trị trung bình 1 đơn  10,7tr │  nhãn 22px · giá trị 26px weight 700
+│  ▌│ Giá trị hàng hóa trả hàng  1,5tr  │  nhãn đầy đủ, bắt buộc đúng một dòng
 │  ▌└──────────────────────────────┘   │
 │   GHI CHÚ                            │  #566A7B, 26px
 │   Khách đóng cửa nhiều, chiều…       │  #0F172A, 32px, tối đa 3 dòng
@@ -688,20 +691,23 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 
 Bảng `% hoàn thành` vẫn giữ đúng **bốn dòng KPI** của DEC-070/BR-024. Ba số liệu mới từ AMIS
 (`no_of_orders`, giá trị trung bình một đơn, `return_sales`) không có chỉ tiêu thật nên **không** được
-đưa vào `KpiMetric`, không dựng target giả và không tính `%` giả. Chúng nằm trong một dải ngang duy nhất
-ngay dưới bốn dòng: **SỐ ĐƠN · TB / ĐƠN · HÀNG TRẢ LẠI**.
+đưa vào `KpiMetric`, không dựng target giả và không tính `%` giả. Theo yêu cầu giao diện ngày 2026-08-21,
+chúng nối tiếp ngay dưới bốn dòng KPI thành ba dòng: **SL ĐH đã ghi** · **Giá trị trung bình 1 đơn** ·
+**Giá trị hàng hóa trả hàng**. Mỗi dòng chỉ có **tên + giá trị thực đạt** và được canh giữa; không render
+hai cột không áp dụng để tránh tạo cảm giác đây là KPI có chỉ tiêu/%.
 
-Cách gom ngang là ràng buộc bố cục, không chỉ là trang trí: dựng thành ba dòng riêng làm thẻ vượt 1920px
-và cắt mất footer. Bản sửa đã render PNG 1080×1920 thật với tên Sales dài và xác nhận footer còn nguyên.
+Nhãn dùng cỡ 22px cùng `whiteSpace: nowrap`, nên **“Giá trị hàng hóa trả hàng” luôn nằm trên một hàng**
+mà vẫn đủ lớn để đọc sau khi Zalo nén ảnh. Để ba dòng mới không đẩy footer khỏi ảnh, nhịp dọc bảng sáng giảm từ
+`paddingY: 44` xuống `32`; bản sửa đã render PNG 1080×1920 thật và xác nhận đủ bảy dòng cùng footer.
 
 ### 14.2 Bản SÁNG — `MORNING` (`status = 'MORNING_SUBMITTED'`)
 
 Cùng phần đầu và phần chân. Khác đúng ba chỗ:
 
 1. Chữ dưới wordmark là **`CAM KẾT ĐẦU NGÀY`**.
-2. Bảng chỉ **2 cột** (`CHỈ TIÊU` · `CAM KẾT`), dòng cao hơn và số to hơn hẳn (`paddingY: 44`, nhãn `42px`, số `56px` weight 700 màu `#0B4A76`).
-   ⚠ **PHASE 17: `paddingY` hạ từ 70 → 44, đừng nâng lại.** Con số 70 sinh ra để lấp khoảng trắng đáy;
-   từ DEC-068 cụm lũy kế đã chiếm chỗ đó, và giữ 70 khiến bản sáng **tràn quá 1920px** → chồng chữ (ISSUE-032).
+2. Bảng chỉ **2 cột** (`CHỈ TIÊU` · `CAM KẾT`), dòng cao hơn và số to hơn hẳn (`paddingY: 32`, nhãn `42px`, số `56px` weight 700 màu `#0B4A76`).
+   ⚠ `paddingY` đã hạ `70 → 44 → 32`. Mức `32` dành chỗ cho đủ bảy dòng của cụm AMIS mà vẫn giữ
+   footer trong ảnh; nâng lại khiến bản sáng **tràn quá 1920px** → chồng/cắt chữ (ISSUE-032, ISSUE-034).
 3. **Vẫn có** cụm "Tình trạng thực hiện" — **giống hệt bản chiều, không lùi mốc** (DEC-070): số AMIS là
    luỹ kế tháng theo lần đồng bộ gần nhất, nó không phụ thuộc việc hôm nay Sales đã nhập thực đạt hay
    chưa. Đây là chỗ khác DEC-068, vốn phải lùi bản sáng về hết ngày hôm trước. **Không có** ghi chú

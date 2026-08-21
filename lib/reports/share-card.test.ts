@@ -367,7 +367,7 @@ describe('Thanh tiến độ + ngọn lửa vượt chỉ tiêu (PHASE 18, DEC-0
 });
 
 describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19, DEC-070)', () => {
-  it('bốn dòng KPI đúng thứ tự và ba số liệu AMIS nằm trong dải phụ', () => {
+  it('bốn dòng KPI đúng thứ tự và ba số liệu AMIS nối tiếp bảng', () => {
     expect(build().performance?.rows.map((row) => row.label)).toEqual([
       'Doanh số đã ghi',
       'Doanh thu đã ghi',
@@ -375,9 +375,9 @@ describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19,
       'SL KH đã mua hàng',
     ]);
     expect(build().performance?.supplementaryMetrics.map((metric) => metric.label)).toEqual([
-      'SỐ ĐƠN',
-      'TB / ĐƠN',
-      'HÀNG TRẢ LẠI',
+      'SL ĐH đã ghi',
+      'Giá trị trung bình 1 đơn',
+      'Giá trị hàng hóa trả hàng',
     ]);
   });
 

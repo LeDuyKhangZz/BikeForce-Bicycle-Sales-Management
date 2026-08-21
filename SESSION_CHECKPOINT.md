@@ -1983,3 +1983,17 @@ sai — **Redeploy** là đủ, không phải sửa gì.
 
 **Next Exact Steps:** commit/push bản sửa bằng tài khoản chủ Vercel để trigger deployment; xác nhận commit
 mới xuất hiện trong Vercel Activity. Sau khi bật Supabase local, chạy `npm run test:db` và E2E share image.
+
+---
+
+## CHECKPOINT 2026-08-21 — ISSUE-034, ba số liệu thực đạt canh giữa
+
+- Ba số liệu phụ chỉ có **giá trị thực đạt**, nên không render cột chỉ tiêu hay `%` không áp dụng.
+- Nhãn chuẩn: **SL ĐH đã ghi · Giá trị trung bình 1 đơn · Giá trị hàng hóa trả hàng**.
+- Bản ba ô ngang với nhãn đầy đủ đã render thử nhưng cỡ 16px khó đọc; bản chốt dùng ba dòng canh giữa.
+- Nhãn 22px, giá trị 26px đậm, `nowrap`; nhãn cuối nằm đúng một hàng.
+- `ROW_METRICS.MORNING.paddingY` giảm `44 → 32` để đủ chỗ cho câu nhắc và footer.
+- Đã render và nhìn PNG thật 1080×1920: không chồng/cắt chữ, footer còn nguyên.
+- Đã chạy: typecheck + lint exit 0 · unit **695/695** · production build exit 0, 23 route.
+
+**Next Exact Steps:** commit/push `main`; xác nhận deployment Vercel của commit mới hoàn tất.
