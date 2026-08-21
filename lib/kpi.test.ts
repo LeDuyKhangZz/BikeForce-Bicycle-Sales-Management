@@ -15,6 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   achievementLabel,
   calculateAchievement,
+  calculateAverageOrderValue,
   calculateCustomerWorkRate,
   formatMetricValue,
   formatMetricValueCompact,
@@ -405,5 +406,19 @@ describe('calculateCustomerWorkRate — "Số khách làm việc" (PHASE 14, DEC
         expect(display).not.toContain('Infinity');
       }
     }
+  });
+});
+
+describe('calculateAverageOrderValue — số liệu dẫn xuất AMIS', () => {
+  it('chia doanh số thực đạt cho số đơn', () => {
+    expect(calculateAverageOrderValue(420_000_000, 12)).toBe(35_000_000);
+  });
+
+  it('số đơn bằng 0 hoặc thiếu dữ liệu trả null, không trả Infinity/NaN', () => {
+    expect(calculateAverageOrderValue(420_000_000, 0)).toBeNull();
+    expect(calculateAverageOrderValue(null, 12)).toBeNull();
+    expect(calculateAverageOrderValue(420_000_000, null)).toBeNull();
+    expect(calculateAverageOrderValue(Number.NaN, 12)).toBeNull();
+    expect(calculateAverageOrderValue(420_000_000, Number.POSITIVE_INFINITY)).toBeNull();
   });
 });

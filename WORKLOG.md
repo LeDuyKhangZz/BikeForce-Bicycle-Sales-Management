@@ -3018,3 +3018,36 @@ sửa: thêm `level: 1`. Ghi lại đây vì bài E2E nào của dự án cũng 
 | `npx vitest run --project unit` | ✅ **689/689** (20 file) — trước phiên 680 |
 | Nhìn tận mắt | ✅ chụp `375×812` và `1440×900` trên **production build**; `scrollWidth === clientWidth` ở cả hai ⇒ không cuộn ngang |
 | E2E `monthly-targets.spec.ts` | ✅ **7/7 passed** trên `mobile-375` (15,7 phút gồm cả `next build` của webServer) |
+
+---
+
+## Entry 033 — 2026-08-21 — Sửa build sau khi pull code cộng tác viên (ISSUE-033)
+
+Đã fetch/pull 3 commit `a13dc62` · `3cde6aa` · `dbcbde8` của `NguyenPhust9`. GitHub cho thấy commit
+cũ `eff5621` có Vercel status thành công, còn cả ba commit mới không có status/check nào; khả năng cao
+deployment bị chặn ở bước xác thực tác giả. Đồng thời build local tái hiện lỗi TypeScript thật nên dù
+authorize thì bản đó vẫn không thể lên Production.
+
+Nguyên nhân trực tiếp: `dbcbde8` thêm `ORDER_COUNT` vào `KpiMetric`, trong khi kiểu này và
+`KPI_METRIC_ROWS` là hợp đồng đúng bốn KPI ngày. Số đơn AMIS không có cặp cột target/actual. Merge trước
+đó còn ghi đè một số thay đổi đã chốt của DEC-070/071/072 bằng bản local cũ.
+
+Đã sửa theo ISSUE-033: khôi phục hợp đồng cũ, tách số đơn thành dữ liệu tham khảo, thêm phép tính giá trị
+trung bình đơn có guard mẫu số 0, giữ `no_of_orders`/`return_sales`, và gom ba số phụ thành một dải ngang
+trên thẻ. Lần render đầu với ba dòng riêng đã cắt mất footer; lần render sau ở 1080×1920 xác nhận dải
+ngang cùng footer đều đầy đủ. `ui-ux-pro-max` củng cố quyết định ưu tiên phân cấp nội dung, định dạng số
+gọn và không để nội dung phụ phá khung cố định.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 |
+| `npm run test:unit` | ✅ **695/695**, 20 file |
+| `npm run build` | ✅ exit 0, **23 route** |
+| PNG 1080×1920 | ✅ render và nhìn thật; tên dài, dải số phụ, footer đều nguyên |
+| Full Vitest | ⚠ 698 unit pass; integration/RLS không chạy vì `ECONNREFUSED 127.0.0.1:54322` |
+
+**Next Exact Steps:** commit và push bản sửa bằng tài khoản chủ Vercel; vào Activity/Deployments kiểm tra
+deployment mới. Khi Docker/Supabase local được bật, chạy lại `npm run test:db` và E2E ảnh liên quan.

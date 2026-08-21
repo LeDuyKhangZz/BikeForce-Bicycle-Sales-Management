@@ -1017,6 +1017,18 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `docs/05` · `docs/06` · `docs/07` · `docs/11` đã ghi
 - [x] build (21 route) · typecheck · lint · unit **689/689** · **E2E 7/7** `mobile-375` · nhìn 375px + 1440px
 
+## Repair sau merge cộng tác viên — ISSUE-033 (2026-08-21)
+
+- [x] Fetch và fast-forward `main` từ `eff5621` lên `dbcbde8` (3 commit mới của `NguyenPhust9`)
+- [x] Xác nhận 3 commit mới không có Vercel status; commit cũ `eff5621` có deployment success
+- [x] Tái hiện `next build` lỗi vì `ORDER_COUNT` làm `KpiMetric` không còn đúng bốn KPI ngày
+- [x] Tách số đơn khỏi `KpiMetric`; giữ `no_of_orders`, `return_sales` và giá trị trung bình một đơn
+- [x] Khôi phục DEC-070/071/072 cùng `.gitignore`, định dạng giờ VN và flame PNG bị merge ghi đè
+- [x] Unit test: mẫu số 0/thiếu/NaN/Infinity không lọt ra UI; ba số liệu phụ không có target/% giả
+- [x] Render PNG thật 1080×1920: dải ngang ba số liệu phụ và footer đều còn nguyên
+- [x] `npm run typecheck` · `npm run lint` · `npm run test:unit` (**695/695**) · `npm run build` (23 route)
+- [ ] Integration/RLS — chưa chạy vì Supabase local `127.0.0.1:54322` đang tắt
+
 ## OPEN QUESTIONS
 
 Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đầy đủ:

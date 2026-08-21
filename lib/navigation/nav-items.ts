@@ -24,6 +24,7 @@ export type NavKey =
   | 'ADMIN_REPORTS'
   | 'ADMIN_RECONCILIATION'
   | 'ADMIN_SALES'
+  | 'ADMIN_TARGETS'
   | 'ADMIN_ACCOUNT';
 
 export type NavItem = {
@@ -69,7 +70,18 @@ export const SALES_NAV_ITEMS: readonly NavItem[] = [
   },
 ];
 
-/** Bottom nav Admin — 5 mục, chạm trần 5 mục của DEC-018. */
+/**
+ * Bottom nav Admin — **6 mục** kể từ DEC-072.
+ *
+ * ⚠ Trần cũ là 5 (DEC-018). Người dùng yêu cầu trực tiếp ngày 2026-08-18 đưa
+ * "Chỉ tiêu" thành **module riêng có mục điều hướng riêng**, sau khi mở màn Tổng
+ * quan và không tìm thấy module KPI đâu — nguyên văn: *"tôi đã nói tôi cần nó là
+ * 1 module riêng mà, để nó ra thành 1 module riêng ngay, không để đầu trang sale
+ * như vậy"*. Trần nay là **6**, ghi ở DEC-072.
+ *
+ * ⚠ **Nhãn phải NGẮN.** Ở 375px, 6 mục chia nhau ~62px mỗi mục. Nhãn dài hơn
+ * "Chỉ tiêu" sẽ xuống ba dòng và làm lệch chiều cao cả hàng.
+ */
 export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   {
     key: 'ADMIN_OVERVIEW',
@@ -96,6 +108,14 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
     label: 'Sales',
     href: '/admin/sales',
     matchPrefixes: ['/admin/sales'],
+  },
+  {
+    // Đứng cạnh "Sales" vì cùng nói về nhân viên: một bên là người, một bên là
+    // chỉ tiêu giao cho người đó.
+    key: 'ADMIN_TARGETS',
+    label: 'Chỉ tiêu',
+    href: '/admin/targets',
+    matchPrefixes: ['/admin/targets'],
   },
   {
     key: 'ADMIN_ACCOUNT',

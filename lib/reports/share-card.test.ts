@@ -75,6 +75,8 @@ const PERFORMANCE: ShareCardPerformanceSource = {
   amisAccountInCharge: 120,
   amisAccountInteractive: 96,
   amisAccountSold: 48,
+  amisOrderCount: 12,
+  amisReturnAmount: 30_000_000,
   // 14:00 UTC = 21:00 giờ VN cùng ngày — ca "an toàn", không lệch ngày.
   syncedAt: '2026-08-15T14:00:00Z',
   monthlyTargetSalesAmount: null,
@@ -365,12 +367,17 @@ describe('Thanh tiến độ + ngọn lửa vượt chỉ tiêu (PHASE 18, DEC-0
 });
 
 describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19, DEC-070)', () => {
-  it('bốn dòng đúng thứ tự và nhãn của mockup người dùng gửi', () => {
+  it('bốn dòng KPI đúng thứ tự và ba số liệu AMIS nằm trong dải phụ', () => {
     expect(build().performance?.rows.map((row) => row.label)).toEqual([
       'Doanh số đã ghi',
       'Doanh thu đã ghi',
       'SL KH đã ghé thăm',
       'SL KH đã mua hàng',
+    ]);
+    expect(build().performance?.supplementaryMetrics.map((metric) => metric.label)).toEqual([
+      'SỐ ĐƠN',
+      'TB / ĐƠN',
+      'HÀNG TRẢ LẠI',
     ]);
   });
 
@@ -401,6 +408,24 @@ describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19,
       'NEAR',
       'MISSED',
     ]);
+  });
+
+  it('dải số liệu AMIS bổ sung hiển thị số đơn, trung bình đơn và hàng trả lại', () => {
+    expect(build().performance?.supplementaryMetrics.map((metric) => metric.valueText)).toEqual([
+      '12 đơn',
+      '35tr',
+      '30tr',
+    ]);
+  });
+
+  it('số đơn bằng 0 không làm giá trị trung bình thành Infinity', () => {
+    const metrics = build(
+      {},
+      { ...PERFORMANCE, amisOrderCount: 0 },
+    ).performance?.supplementaryMetrics;
+
+    expect(metrics?.[0]?.valueText).toBe('0 đơn');
+    expect(metrics?.[1]?.valueText).toBe('—');
   });
 
   it('chưa giao chỉ tiêu tháng → doanh thu cộng từ báo cáo, KHÔNG từ AMIS', () => {
@@ -473,8 +498,9 @@ describe('buildShareCardModel — cụm "Tình trạng thực hiện" (PHASE 19,
     const model = build({}, { ...PERFORMANCE, syncedAt: null });
 
     expect(model.performance?.rangeText).toBe('Chưa rõ mốc đồng bộ từ MISA');
-    // Bốn dòng số vẫn còn — chỉ mốc thời gian là chưa biết.
+    // Bốn dòng KPI và dải ba số liệu phụ vẫn còn — chỉ mốc thời gian là chưa biết.
     expect(model.performance?.rows).toHaveLength(4);
+    expect(model.performance?.supplementaryMetrics).toHaveLength(3);
   });
 
   it('timestamp rác cũng rơi về "chưa rõ mốc" thay vì in Invalid Date', () => {
@@ -687,6 +713,10 @@ describe('Edge case bắt buộc của Phase 6', () => {
             row.targetText,
             row.actualText,
             row.achievement.display,
+          ]) ?? []),
+          ...(model.performance?.supplementaryMetrics.flatMap((metric) => [
+            metric.label,
+            metric.valueText,
           ]) ?? []),
           ...model.metrics.flatMap((row) => [row.targetText, row.actualText, row.achievement.display]),
         ].join(' | ');

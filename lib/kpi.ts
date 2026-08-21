@@ -50,7 +50,8 @@ export type AchievementStatus = 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING';
  * cũ (hậu tố `_sales_quantity`) vẫn nằm trong database nhưng là **di sản** —
  * không code nào ở tầng này được đọc nó nữa.
  */
-export type KpiMetric = 'VISIT_POINTS' | 'SALES_AMOUNT' | 'REVENUE' | 'CUSTOMER_VISITS' | 'ORDER_COUNT';
+export type KpiMetric = 'VISIT_POINTS' | 'SALES_AMOUNT' | 'REVENUE' | 'CUSTOMER_VISITS';
+
 /** Hai chỉ tiêu đo bằng TIỀN — chúng đi đường `formatCurrencyVND` (DEC-050). */
 type MoneyMetric = 'SALES_AMOUNT' | 'REVENUE';
 
@@ -89,7 +90,6 @@ const EMPTY_DISPLAY = '—';
 const METRIC_UNIT: Record<Exclude<KpiMetric, 'SALES_AMOUNT' | 'REVENUE'>, string> = {
   VISIT_POINTS: 'điểm',
   CUSTOMER_VISITS: 'khách',
-  ORDER_COUNT: 'đơn',
 };
 
 const STATUS_LABEL: Record<AchievementStatus, string> = {
@@ -288,6 +288,14 @@ export function calculateCustomerWorkRate(
   return { percent, display: formatPercent(percent) };
 }
 
+/**
+ * Giá trị trung bình một đơn hàng = doanh số thực đạt / số đơn AMIS.
+ *
+ * Đây là chỉ số dẫn xuất để hiển thị, không phải KPI thứ năm của báo cáo ngày:
+ * nó không có cặp cột `target_*` / `actual_*` và không tham gia BR-024.
+ * Dữ liệu thiếu, âm, không hữu hạn hoặc số đơn bằng 0 đều trả `null` để không
+ * cho `NaN` / `Infinity` lọt ra thẻ ảnh.
+ */
 export function calculateAverageOrderValue(
   salesActual: number | null,
   orderCount: number | null,

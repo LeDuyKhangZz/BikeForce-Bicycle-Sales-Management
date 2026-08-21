@@ -17,6 +17,7 @@ import {
   shareMonthRange,
 } from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
+import { getMonthlyTargets } from '@/services/monthly-targets';
 import {
   getAmisMetricsForShare,
   getReportForShare,
@@ -115,6 +116,30 @@ function loadShareFonts(): Promise<ShareFont[]> {
   return fontsPromise;
 }
 
+/**
+ * Dải lửa của thanh tiến độ — PHASE 18, DEC-069.
+ *
+ * Đọc từ đĩa rồi mã hoá **data URI**: Satori không tải ảnh qua mạng lúc render,
+ * và kể cả tải được thì cũng không nên — cùng lý do với font ở ISSUE-002, một
+ * request hỏng là hỏng tấm ảnh đã gửi cho khách.
+ *
+ * Trả `null` khi thiếu file thay vì ném: thẻ vẫn dựng được, chỉ mất hiệu ứng
+ * lửa. Một tấm ảnh thiếu trang trí vẫn dùng được, một tấm ảnh 500 thì không.
+ * `public/images/**` đã được ghim vào bundle qua `outputFileTracingIncludes`.
+ */
+let flamePromise: Promise<string | null> | null = null;
+
+function loadFlameStrip(): Promise<string | null> {
+  flamePromise ??= readFile(join(process.cwd(), 'public', 'images', 'flame-strip.png'))
+    .then((data) => `data:image/png;base64,${data.toString('base64')}`)
+    .catch((error: unknown) => {
+      console.error('[share-image] flame-strip', error);
+      return null;
+    });
+
+  return flamePromise;
+}
+
 /** Lỗi trả về dạng JSON `{ code, message }` — `docs/07 §4.1`. */
 function errorResponse(status: number, code: string, message: string): Response {
   return Response.json(
@@ -204,19 +229,21 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * ─────────────────────────────────────────────────────────────────────────
    *  CỤM "TÌNH TRẠNG THỰC HIỆN" — PHASE 19, DEC-070
    * ─────────────────────────────────────────────────────────────────────────
-   *  HAI truy vấn thêm, mỗi cái phục vụ một nửa của cụm:
+   *  BA truy vấn thêm:
    *
-   *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`. Đây là con số DUY
-   *       NHẤT của cụm không đến từ AMIS: AMIS ghi nhận đã thu bao nhiêu nhưng
-   *       không biết Sales tự đặt mục tiêu công nợ bao nhiêu.
-   *    2. `getAmisMetricsForShare` → sáu con số còn lại, đọc từ bảng cache mà
+   *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`, nay chỉ còn là
+   *       ĐƯỜNG LÙI khi Admin chưa giao chỉ tiêu tháng (DEC-071).
+   *    2. `getAmisMetricsForShare` → sáu con số thực đạt, đọc từ bảng cache mà
    *       `scripts/amis-sync/push_amis.py` đẩy lên.
+   *    3. `getMonthlyTargets` → hai chỉ tiêu THÁNG công ty giao. Chúng thắng cả
+   *       `target_amount` của AMIS lẫn tổng cam kết ngày ở (1).
    *
-   *  Cả hai đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
+   *  Cả ba đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
    *  người khác và Admin xuất ảnh hộ Sales vẫn đúng (BR-022).
    *
-   *  Thiếu MỘT trong hai ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
+   *  Thiếu (1) HOẶC (2) ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
    *  trên còn tệ hơn không in gì: người đọc không có cách nào biết nửa nào thiếu.
+   *  Thiếu (3) thì KHÔNG bỏ cụm — cụm vẫn đủ nghĩa với chỉ tiêu đường lùi.
    */
   const monthRows =
     monthRange === null || monthRange.isEmpty
@@ -225,15 +252,20 @@ export async function GET(request: Request, context: ShareImageContext): Promise
 
   const summary = monthRows === null ? null : summarizeMonthToDate(monthRows);
 
+  const periodMonth = periodMonthOf(report.report_date);
+
   // Khoá là TÊN người trên AMIS, không phải `sales_id` — xem chú thích của
   // `getAmisMetricsForShare`. Chưa map thì hàm trả `null` mà không hỏi database.
-  const amis = await getAmisMetricsForShare(
-    supabase,
-    report.sales.amis_employee_name,
-    periodMonthOf(report.report_date),
-  );
+  //
+  // `getMonthlyTargets` thì ngược lại, khoá bằng `sales_id`: chỉ tiêu tháng là
+  // dữ liệu của BikeForce, do Admin giao (DEC-071). Thiếu nó KHÔNG bỏ cụm —
+  // hai dòng tiền rơi về đường cũ (AMIS `target_amount` và tổng cam kết ngày).
+  const [amis, monthlyTargets] = await Promise.all([
+    getAmisMetricsForShare(supabase, report.sales.amis_employee_name, periodMonth),
+    getMonthlyTargets(supabase, report.sales_id, periodMonth),
+  ]);
 
- const performance =
+  const performance =
     amis === null || summary === null
       ? null
       : {
@@ -246,6 +278,8 @@ export async function GET(request: Request, context: ShareImageContext): Promise
           amisOrderCount: amis.no_of_orders,
           amisReturnAmount: amis.return_sales,
           syncedAt: amis.synced_at,
+          monthlyTargetSalesAmount: monthlyTargets?.target_sales_amount ?? null,
+          monthlyTargetRevenue: monthlyTargets?.target_revenue ?? null,
           targetRevenue: summary.targetRevenue,
         };
 
@@ -257,10 +291,12 @@ export async function GET(request: Request, context: ShareImageContext): Promise
   );
 
   try {
-    return new ImageResponse(<DailyReportShareCard model={model} />, {
+    const [fonts, flameSrc] = await Promise.all([loadShareFonts(), loadFlameStrip()]);
+
+    return new ImageResponse(<DailyReportShareCard model={model} flameSrc={flameSrc} />, {
       width: SHARE_IMAGE_WIDTH,
       height: SHARE_IMAGE_HEIGHT,
-      fonts: await loadShareFonts(),
+      fonts,
       headers: {
         // FR-019 — tên file đã bỏ dấu, khoảng trắng thành `-`. Tên file được
         // giữ ở CẢ HAI chế độ: `inline` vẫn đặt tên cho lần "Lưu ảnh" sau đó.

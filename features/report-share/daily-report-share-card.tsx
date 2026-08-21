@@ -4,6 +4,7 @@ import type {
   ShareCardModel,
   ShareCardPerformanceRow,
   ShareCardProgress,
+  ShareCardSupplementaryMetric,
 } from '@/lib/reports/share-card';
 
 /**
@@ -284,118 +285,65 @@ const PROGRESS_INNER_WIDTH = PROGRESS.width - PROGRESS.border * 2;
 const PROGRESS_INNER_HEIGHT = PROGRESS.height - PROGRESS.border * 2;
 
 /**
- * Ba tầng màu của lửa, xếp từ ngoài vào trong — đúng cách một ngọn lửa thật
- * sáng dần về lõi. Tất cả đều là **tone cam của logo**, không phải đỏ tươi, để
- * dải lửa hoà vào thẻ chứ không nhảy ra như một sticker dán thêm.
+ * Ngọn lửa của trạng thái **vượt chỉ tiêu** — người dùng yêu cầu trực tiếp.
  *
- * ⚠ **Không dùng emoji 🔥.** `docs/05` cấm emoji làm icon, và quan trọng hơn:
- * font Inter nhúng trong `public/fonts/` **không có glyph emoji** nên Satori sẽ
- * vẽ ra ô vuông rỗng trên tấm ảnh gửi khách. Đây là SVG path.
- *
- * ⚠ **Không đổi màu thanh sang đỏ khi vượt.** Xanh `#166534` = đạt là quy ước
- * đã dùng khắp thẻ và khắp web; đổi sang đỏ/cam là đảo ngược tín hiệu ngay
- * trong cùng một ô với chữ xanh. Thanh **vẫn xanh và đầy**; lửa là lớp phủ thêm.
+ * ─────────────────────────────────────────────────────────────────────────
+ *  BA RÀNG BUỘC ĐÃ CÂN, ĐỌC TRƯỚC KHI "LÀM CHO NÓ NỔI HƠN"
+ * ─────────────────────────────────────────────────────────────────────────
+ *  1. **Không dùng emoji 🔥.** `docs/05` cấm emoji làm icon, và quan trọng hơn:
+ *     font Inter nhúng trong `public/fonts/` **không có glyph emoji** nên Satori
+ *     sẽ vẽ ra ô vuông rỗng trên tấm ảnh gửi khách. Đây là SVG path.
+ *  2. **Không đổi màu thanh sang đỏ.** Xanh `#166534` = đạt là quy ước đã dùng
+ *     khắp thẻ và khắp web; đổi thanh sang đỏ/cam khi vượt là đảo ngược tín hiệu
+ *     ngay trong cùng một ô với chữ xanh. Thanh **vẫn xanh và đầy**; ngọn lửa là
+ *     lớp phủ thêm ở mút phải, nói "đầy đến mức cháy".
+ *  3. **Màu lửa lấy từ tone logo** (`#E9A04F` → `#C2410C`), không phải đỏ tươi —
+ *     để nó hoà vào thẻ chứ không nhảy ra như một sticker.
  */
-const FLAME = {
-  /** Lưỡi ngoài, sẫm nhất — viền của ngọn lửa. */
-  outer: '#C2410C',
-  /** Thân lửa — cam logo. */
-  mid: '#E9A04F',
-  /** Lõi sáng. */
-  core: '#FCD34D',
+/**
+ * **Dải lửa là một ẢNH PNG, không phải hình vẽ** — PHASE 18, bản thứ ba của
+ * DEC-069.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *  VÌ SAO BỎ HẲN HAI BẢN TỰ VẼ TRƯỚC ĐÓ
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Bản 1 — một ngọn lửa SVG ở mút phải: người dùng bác, muốn lửa **bọc cả thanh**.
+ *  Bản 2 — ghép 13 lưỡi lửa SVG dọc thanh: người dùng xem rồi nói thẳng
+ *  *"xấu quá"*, và tự gửi một ảnh lửa để dùng thay.
+ *
+ *  Lý do bản vẽ tay không thể đẹp bằng: Satori **không có `filter: blur()`**,
+ *  nên mọi thứ nó vẽ đều là mảng màu sắc nét — không có quầng sáng, không có
+ *  chuyển sắc mềm, tức là thiếu đúng hai thứ làm nên hình ảnh lửa. Một tấm PNG
+ *  thì mang sẵn cả hai trong pixel của nó.
+ *
+ *  Ảnh nguồn do người dùng gửi (2528×1686). Nền của nó **không thực sự trong
+ *  suốt** — hoa văn bàn cờ là pixel xám thật — nên đã phải tách nền bằng hiệu
+ *  `R − B`: nền xám luôn có `R = B` nên hiệu này triệt tiêu hoàn toàn hoa văn,
+ *  trong khi lửa có `R ≫ B`. Thanh xanh trong ảnh gốc đã bị cắt bỏ vì thanh
+ *  thật phải đổi chiều dài theo `%` và đổi màu theo `status`.
+ *
+ *  ⚠ **HAI LỖI CỦA LƯỢT ĐẦU, đã sửa — đừng lặp lại:**
+ *  1. *Đỉnh lửa bị cụt.* Lượt đầu tôi crop từ `y = 560` trong khi lửa bắt đầu ở
+ *     `y = 487`, tức **tự tay cắt mất 73px đỉnh** để tiết kiệm chiều cao. Người
+ *     dùng phát hiện khi xuất ảnh thật. Nay crop chừa **8px phía trên** ngọn cao
+ *     nhất, và ảnh nguồn cũng đã được người dùng hạ bớt chiều cao lửa.
+ *  2. *Quầng hào quang.* Ngưỡng tách nền cũ (12) giữ lại cả vùng sáng mờ quanh
+ *     lửa; người dùng nói thẳng *"nhìn xấu quá"*. Ngưỡng nay là **28**, loại
+ *     sạch phần mờ mà mép lửa vẫn mượt (ở mép `R − B` nhảy 0→200 trong một hai
+ *     pixel, không chuyển dần như quầng).
+ *
+ *  File kết quả: `public/images/flame-strip.png`, 400×99 (2× cỡ hiển thị cho
+ *  nét), đã ghim vào bundle qua `outputFileTracingIncludes` trong `next.config.ts`.
+ */
+const FLAME_STRIP = {
+  /** Bằng đúng bề ngang thanh — ảnh đã được cắt theo mép thanh của ảnh gốc. */
+  width: 200,
+  /** Giữ đúng tỉ lệ 400×99 của file. */
+  height: 50,
 } as const;
 
-/**
- * Tỉ lệ gốc của một lưỡi lửa: rộng 12, cao 24 — **mảnh gấp đôi** icon lửa thông
- * thường (22×28).
- *
- * Lượt render đầu dùng đúng path icon "mập" ấy cho cả dải, và kết quả nhìn ra
- * **răng cưa** chứ không ra lửa: 11 hình tròn trịa chen nhau thì mắt đọc thành
- * một hàng rào. Lửa thật có lưỡi **cao, mảnh, nhọn đầu** và chênh nhau rõ.
- */
-const FLAME_RATIO = 12 / 24;
-
-/** Path lưỡi ngoài — dùng chung cho mọi ngọn, chỉ đổi kích thước và màu. */
-const FLAME_OUTER_PATH =
-  'M6 0c.6 4.2 3.1 6.6 4.4 9.3.9 1.8 1.1 3.4 1.1 4.9 0 5.6-2.4 9.8-5.5 9.8S.5 19.8.5 14.2c0-2.7 1.2-5 2.7-7.2.2 1.7.9 2.8 1.9 3.3C4.7 6.4 5.3 3.1 6 0z';
-
-/** Path lõi — mảnh hơn nữa, nằm ở nửa dưới, cho chiều sâu. */
-const FLAME_CORE_PATH =
-  'M6 23.8c-1.9 0-3.3-1.7-3.3-3.9 0-1.9 1-3.3 1.9-4.8.3.8.7 1.3 1.2 1.5-.2-2 .5-3.6 1.5-4.9.7 1.7 2 3.2 2 5.5 0 2.5-1.4 4.6-3.3 4.6z';
-
-/**
- * Một ngọn lửa. Satori dựng được `<svg>` với `path` (nó dùng đúng cơ chế này cho
- * icon), nhưng **không** dựng được `<linearGradient>` hay `filter: blur()` một
- * cách đáng tin — nên chiều sâu ở đây làm bằng **hai lớp màu đặc**, và quầng
- * sáng mờ quanh lửa là thứ **không thể có** trên tấm ảnh này.
- */
-function Flame({ height, outer }: { height: number; outer: string }) {
-  const width = Math.round(height * FLAME_RATIO);
-
-  return (
-    <svg width={width} height={height} viewBox="0 0 12 24">
-      <path d={FLAME_OUTER_PATH} fill={outer} />
-      <path d={FLAME_CORE_PATH} fill={FLAME.core} />
-    </svg>
-  );
-}
-
-/**
- * Chiều cao từng ngọn trong dải lửa, tính bằng px.
- *
- * Cao thấp **so le** và không đối xứng: một dãy ngọn bằng nhau trông như hàng
- * rào răng cưa chứ không như lửa. Ngọn cao nhất lệch về bên phải — phía "đầu"
- * thanh, nơi mức hoàn thành chạm trần.
- */
-const FLAME_STRIP_HEIGHTS = [20, 28, 23, 33, 22, 30, 25, 34, 23, 28, 22, 26, 20] as const;
-
-/**
- * Hai ngọn liền nhau chồng lấp chừng này px, để chân dải liền mạch trong khi các
- * đỉnh vẫn tách rời — đúng hình lửa thật.
- *
- * ⚠ Số âm = chồng lấp, số **dương** = giãn ra. Ở đây là `-3`, tức các ngọn cách
- * nhau 3px: 13 ngọn × `height × 0,5` cộng lại ≈ 168px, cộng 12 khe × 3px cho ra
- * **≈ 204px** — vừa khít thanh 200px. Đổi `FLAME_STRIP_HEIGHTS` thì phải tính
- * lại, nếu không dải lửa sẽ hụt hoặc thò ra khỏi thanh.
- */
-const FLAME_OVERLAP = -3;
-
-/** Chiều cao ngọn lớn nhất — quyết định khoảng trống phải chừa phía trên thanh. */
-const FLAME_STRIP_HEIGHT = Math.max(...FLAME_STRIP_HEIGHTS);
-
-/**
- * **Dải lửa bọc thanh tiến độ** — PHASE 18, bản thứ hai của DEC-069.
- *
- * Người dùng đưa ảnh mẫu và nói rõ ý muốn: lửa **cháy bọc cả thanh**, không phải
- * một ngọn nhỏ ở mút phải như bản đầu — *"nhưng đừng để lửa che chữ"*.
- *
- * Dựng bằng cách ghép nhiều `<Flame>` chồng lấp nhau bằng `marginLeft` âm, thay
- * vì một path dài duy nhất: Satori **không** hỗ trợ `transform` trên phần tử SVG
- * một cách đáng tin, nên không thể nhân bản một ngọn bằng `<g transform>`. Cách
- * này chỉ dùng flexbox và `<path>` — hai thứ đã chứng minh chạy được.
- *
- * Lửa nằm **sau** pill trong thứ tự DOM ⇒ thanh vẽ đè lên chân lửa, nên dải lửa
- * trông như đang liếm từ dưới thanh lên chứ không phải một hình dán lên trên.
- */
-function FlameStrip() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', height: FLAME_STRIP_HEIGHT }}>
-      {FLAME_STRIP_HEIGHTS.map((height, index) => (
-        <div
-          key={`${height}-${index}`}
-          style={{
-            display: 'flex',
-            marginLeft: index === 0 ? 0 : -FLAME_OVERLAP,
-          }}
-        >
-          {/* Ngọn chẵn màu sẫm, ngọn lẻ cam logo: hai sắc xen kẽ tạo cảm giác
-              lớp lang, thứ mà một dải cùng một màu không bao giờ có. */}
-          <Flame height={height} outer={index % 2 === 0 ? FLAME.outer : FLAME.mid} />
-        </div>
-      ))}
-    </div>
-  );
-}
+/** Chiều cao dải lửa — quyết định khoảng trống phải chừa phía trên thanh. */
+const FLAME_STRIP_HEIGHT = FLAME_STRIP.height;
 
 /**
  * Thanh tiến độ nhỏ dưới ô "Hoàn thành" — dạng **bullet chart thu gọn**, không
@@ -409,17 +357,20 @@ function FlameStrip() {
  *
  * ⚠ **`withFlame` — PHASE 19, DEC-070.** Cụm "Tình trạng thực hiện" gọi hàm này
  * với `false`, và đó là một quyết định về CHỖ chứ không về thẩm mỹ: chừa sẵn
- * `FLAME_STRIP_HEIGHT` (34px) trên mỗi thanh × 4 dòng = **136px** chiều cao mà
- * cụm không có để tiêu. Bật lửa ở cụm dưới thì thẻ tràn 1920px và chữ chồng lên
- * nhau (ISSUE-032). Bảng chính giữ nguyên lửa vì nó là phần chính của tấm ảnh.
+ * `FLAME_STRIP_HEIGHT` (**50px** kể từ khi dải lửa thành ảnh PNG) trên mỗi thanh
+ * × 4 dòng = **200px** chiều cao mà cụm không có để tiêu. Bật lửa ở cụm dưới thì
+ * thẻ tràn 1920px và chữ chồng lên nhau (ISSUE-032). Bảng chính giữ nguyên lửa
+ * vì nó là phần chính của tấm ảnh.
  */
 function ProgressBar({
   progress,
   status,
+  flameSrc,
   withFlame = true,
 }: {
   progress: ShareCardProgress;
   status: AchievementStatus;
+  flameSrc: string | null;
   withFlame?: boolean;
 }) {
   if (status === 'PENDING') return null;
@@ -451,18 +402,29 @@ function ProgressBar({
       }}
     >
       {/* Lửa đứng TRƯỚC pill trong DOM ⇒ Satori vẽ nó xuống dưới, nên thanh đè
-          lên chân lửa và dải trông như đang liếm lên từ dưới thanh. */}
-      {withFlame && progress.isBlazing && (
+          lên chân lửa và dải trông như đang liếm lên từ dưới thanh.
+
+          `flameSrc === null` nghĩa là không đọc được file ảnh: khi đó bỏ lửa
+          nhưng **vẫn vẽ thanh**. Một tấm ảnh thiếu hiệu ứng vẫn dùng được; một
+          tấm ảnh 500 thì không. */}
+      {withFlame && progress.isBlazing && flameSrc !== null && (
         <div
           style={{
             display: 'flex',
             position: 'absolute',
             left: 0,
-            // Chân lửa chìm 6px vào thân thanh, không đứng chông chênh trên mép.
-            bottom: PROGRESS.height - 6,
+            // Chân lửa chìm 8px vào thân thanh, không đứng chông chênh trên mép.
+            bottom: PROGRESS.height - 8,
           }}
         >
-          <FlameStrip />
+          {/* eslint-disable-next-line @next/next/no-img-element -- Satori chỉ
+              hiểu `<img>` thô; `next/image` là component của trình duyệt. */}
+          <img
+            src={flameSrc}
+            width={FLAME_STRIP.width}
+            height={FLAME_STRIP.height}
+            alt=""
+          />
         </div>
       )}
 
@@ -508,10 +470,12 @@ function MetricRow({
   row,
   zebra,
   variant,
+  flameSrc,
 }: {
   row: ShareCardMetricRow;
   zebra: boolean;
   variant: ShareCardModel['variant'];
+  flameSrc: string | null;
 }) {
   const isMorning = variant === 'MORNING';
   const size = ROW_METRICS[variant];
@@ -593,7 +557,11 @@ function MetricRow({
             {achievementLabel(row.achievement)}
           </div>
 
-          <ProgressBar progress={row.progress} status={row.achievement.status} />
+          <ProgressBar
+            progress={row.progress}
+            status={row.achievement.status}
+            flameSrc={flameSrc}
+          />
         </div>
       )}
     </div>
@@ -673,10 +641,15 @@ function PerformanceRow({ row }: { row: ShareCardPerformanceRow }) {
         </div>
 
         {/* `withFlame={false}` — xem chú thích của `ProgressBar`: chừa chỗ cho
-            lửa ở bốn dòng nữa là 136px mà cụm này không có. */}
+            lửa ở bốn dòng nữa là 200px mà cụm này không có.
+
+            `flameSrc={null}` chứ không kéo data URI xuống tận đây: `withFlame`
+            đã tắt lửa nên tấm ảnh 400×99 sẽ không bao giờ được vẽ, truyền nó
+            xuống chỉ là một prop chết đi qua hai tầng component. */}
         <ProgressBar
           progress={row.progress}
           status={row.achievement.status}
+          flameSrc={null}
           withFlame={false}
         />
       </div>
@@ -684,11 +657,80 @@ function PerformanceRow({ row }: { row: ShareCardPerformanceRow }) {
   );
 }
 
+/**
+ * Ba số liệu AMIS không có chỉ tiêu được gom thành một dải ngang. Nếu dựng như
+ * ba dòng KPI giả với hai cột dấu gạch, thẻ vượt 1920px và mất footer.
+ */
+function SupplementaryMetrics({
+  metrics,
+}: {
+  metrics: readonly ShareCardSupplementaryMetric[];
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        borderTop: `1px solid ${COLOR.accent}`,
+        marginTop: 14,
+        paddingTop: 12,
+      }}
+    >
+      {metrics.map((metric, index) => (
+        <div
+          key={metric.label}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '33.333%',
+            borderLeft: index === 0 ? '0px solid transparent' : `1px solid ${COLOR.rule}`,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 18,
+              fontWeight: 600,
+              color: COLOR.muted,
+              letterSpacing: 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {metric.label}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 26,
+              fontWeight: 700,
+              color: COLOR.body,
+              marginLeft: 10,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {metric.valueText}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type Props = {
   model: ShareCardModel;
+  /**
+   * Dải lửa dạng **data URI** (`data:image/png;base64,…`), do Route Handler đọc
+   * từ đĩa rồi truyền xuống — component chạy trong Satori nên không có `fs`, và
+   * Satori cũng không tải ảnh qua mạng lúc render (cùng lý do với font ở
+   * ISSUE-002: một request hỏng là hỏng tấm ảnh đã gửi cho khách).
+   *
+   * `null` = không đọc được file ⇒ thẻ vẫn dựng, chỉ không có lửa.
+   */
+  flameSrc: string | null;
 };
 
-export function DailyReportShareCard({ model }: Props) {
+export function DailyReportShareCard({ model, flameSrc }: Props) {
   const isMorning = model.variant === 'MORNING';
 
   return (
@@ -755,7 +797,10 @@ export function DailyReportShareCard({ model }: Props) {
         style={{
           ...NO_SHRINK,
           display: 'flex',
-          fontSize: 64,
+          // Cỡ chữ do `shareNameFontSize()` quyết định để tên nằm gọn MỘT dòng
+          // (PHASE 19). Đừng đặt lại hằng 64 ở đây — tên 2 dòng đẩy ghi chú,
+          // chân thẻ rồi cả dòng cuối cụm AMIS ra khỏi khung 1920px.
+          fontSize: model.nameFontSize,
           fontWeight: 700,
           color: COLOR.heading,
           marginTop: 10,
@@ -787,7 +832,17 @@ export function DailyReportShareCard({ model }: Props) {
           <div style={{ display: 'flex', fontSize: 24, color: COLOR.muted, letterSpacing: 3 }}>
             TUYẾN
           </div>
-          <div style={{ display: 'flex', fontSize: 34, color: COLOR.body, marginTop: 8, lineHeight: 1.4 }}>
+          <div
+            style={{
+              display: 'flex',
+              // Thu để tuyến không quá HAI dòng — `shareRouteFontSize()`. Tuyến
+              // 104 ký tự ở cỡ 34px rơi xuống 3 dòng, đã render ra và đếm.
+              fontSize: model.routeFontSize,
+              color: COLOR.body,
+              marginTop: 8,
+              lineHeight: 1.4,
+            }}
+          >
             {model.routeText}
           </div>
         </div>
@@ -815,7 +870,13 @@ export function DailyReportShareCard({ model }: Props) {
         <div style={{ display: 'flex', width: CONTENT_WIDTH, height: 2, backgroundColor: COLOR.heading }} />
 
         {model.metrics.map((row, index) => (
-          <MetricRow key={row.label} row={row} zebra={index % 2 === 1} variant={model.variant} />
+          <MetricRow
+            key={row.label}
+            row={row}
+            zebra={index % 2 === 1}
+            variant={model.variant}
+            flameSrc={flameSrc}
+          />
         ))}
 
         <div style={{ display: 'flex', width: CONTENT_WIDTH, height: 1, backgroundColor: COLOR.rule }} />
@@ -874,6 +935,8 @@ export function DailyReportShareCard({ model }: Props) {
             {model.performance.rows.map((row) => (
               <PerformanceRow key={row.label} row={row} />
             ))}
+
+            <SupplementaryMetrics metrics={model.performance.supplementaryMetrics} />
           </div>
         </div>
       )}

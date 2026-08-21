@@ -684,6 +684,16 @@ Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `k
 └──────────────────────────────────────┘
 ```
 
+#### Cập nhật sửa merge 2026-08-21 — ba số liệu AMIS bổ sung
+
+Bảng `% hoàn thành` vẫn giữ đúng **bốn dòng KPI** của DEC-070/BR-024. Ba số liệu mới từ AMIS
+(`no_of_orders`, giá trị trung bình một đơn, `return_sales`) không có chỉ tiêu thật nên **không** được
+đưa vào `KpiMetric`, không dựng target giả và không tính `%` giả. Chúng nằm trong một dải ngang duy nhất
+ngay dưới bốn dòng: **SỐ ĐƠN · TB / ĐƠN · HÀNG TRẢ LẠI**.
+
+Cách gom ngang là ràng buộc bố cục, không chỉ là trang trí: dựng thành ba dòng riêng làm thẻ vượt 1920px
+và cắt mất footer. Bản sửa đã render PNG 1080×1920 thật với tên Sales dài và xác nhận footer còn nguyên.
+
 ### 14.2 Bản SÁNG — `MORNING` (`status = 'MORNING_SUBMITTED'`)
 
 Cùng phần đầu và phần chân. Khác đúng ba chỗ:

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { ReconciliationTable } from "@/features/admin-reconciliation/reconciliation-table";
+import { formatVietnamDateTime } from "@/lib/date";
 import type { ReconciliationRow } from "@/lib/reports/amis-reconciliation";
 
 export const metadata = { title: "Đối chiếu AMIS" };
@@ -36,15 +37,11 @@ export default async function ReconciliationPage() {
         <h1 className="text-xl font-semibold text-slate-900">Đối chiếu AMIS</h1>
         <p className="text-sm text-slate-600">
           So sánh số nhân viên tự nhập (cộng cả tháng) với số MISA AMIS ghi nhận.
-          {lastSync && (
-<>
-              {" "}
-              Đồng bộ lần cuối:{" "}
-              {new Date(lastSync).toLocaleString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-              })}
-              .
-            </>          )}
+          {/* `formatVietnamDateTime` chứ KHÔNG phải `toLocaleString('vi-VN')`
+              trần: thiếu `timeZone` thì nó lấy múi giờ của máy chạy, mà trên
+              Vercel máy chạy là UTC — trang này đã in 02:26 cho lần đồng bộ lúc
+              09:26 giờ VN. Lỗi im lặng, vì máy lập trình viên ở VN nhìn vẫn đúng. */}
+          {lastSync && <> Đồng bộ lần cuối: {formatVietnamDateTime(lastSync)} (giờ TP.HCM).</>}
         </p>
       </header>
 

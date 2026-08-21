@@ -1966,3 +1966,20 @@ sai — **Redeploy** là đủ, không phải sửa gì.
    trạng thái đúng. Đã ghi điều kiện kích hoạt cho v2 vào `docs/10-future-roadmap.md`.
 4. **AF-12 (audit log) chưa cần** vì không ai được sửa sau khi hoàn tất. Nếu sau này mở quyền sửa,
    **phải làm audit log trước**, và phải tạo `DEC` mới thay vì sửa DEC-026.
+
+---
+
+## CHECKPOINT 2026-08-21 — ISSUE-033, build sau merge cộng tác viên
+
+- Local `main` đã pull và đồng bộ `origin/main` tại `dbcbde8` trước khi sửa.
+- Ba commit mới của `NguyenPhust9` không có Vercel status/check; commit trước `eff5621` có status success.
+- Lỗi build đã sửa: `ORDER_COUNT` không còn nằm trong `KpiMetric`; bốn KPI ngày vẫn là nguồn chuẩn duy nhất.
+- Giữ ba số AMIS mới trên ảnh: **SỐ ĐƠN · TB / ĐƠN · HÀNG TRẢ LẠI**, trình bày thành một dải ngang.
+- Đã khôi phục các phần DEC-070/071/072 bị merge ghi đè: chỉ tiêu tháng Admin, module điều hướng Chỉ tiêu,
+  cỡ chữ co của ảnh, flame PNG, giờ Việt Nam và các rule `.gitignore` bảo vệ dữ liệu AMIS.
+- Cổng thật: typecheck ✅ · lint ✅ · unit 695/695 ✅ · build 23 route ✅.
+- Render PNG 1080×1920 ✅: footer còn nguyên; không chồng/cắt chữ. Artifact kiểm tra đã dọn.
+- Full integration/RLS **chưa PASS**: Supabase local tắt, kết nối `127.0.0.1:54322` bị từ chối.
+
+**Next Exact Steps:** commit/push bản sửa bằng tài khoản chủ Vercel để trigger deployment; xác nhận commit
+mới xuất hiện trong Vercel Activity. Sau khi bật Supabase local, chạy `npm run test:db` và E2E share image.

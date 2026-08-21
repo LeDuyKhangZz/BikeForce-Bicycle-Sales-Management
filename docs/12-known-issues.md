@@ -1710,3 +1710,37 @@ chữ số, lũy kế 31 ngày ở trần BR-017). Không còn chồng chữ ở
 **Bài học:** đây là lần thứ ba dự án gặp đúng một loại lỗi — **không phép đo nào bắt được, chỉ mắt
 thấy** (DEC-053, DEC-054, nay ISSUE-032). Sửa thẻ ảnh xong thì **phải render PNG ra và nhìn**, và phải
 nhìn cả ca dữ liệu dài nhất chứ không chỉ ca đẹp.
+
+---
+
+### ISSUE-033
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-08-21
+**Module:** KPI engine · thẻ ảnh 9:16 · Git/Vercel
+
+**Description:** Ba commit của cộng tác viên kết thúc ở `dbcbde8` thêm `ORDER_COUNT` vào `KpiMetric`
+và đồng thời giải quyết merge bằng bản local cũ ở một số file. `KpiMetric` là union của đúng bốn KPI
+báo cáo ngày, nên `Record<KpiMetric, KpiMetricRow>` lập tức thiếu ánh xạ `ORDER_COUNT`; các test thẻ ảnh
+cũng tham chiếu API đã bị ghi đè. Vercel không thể build bản mới.
+
+**Expected:** Số đơn AMIS được hiển thị như số liệu tham khảo; bốn KPI ngày, chỉ tiêu tháng Admin,
+module điều hướng "Chỉ tiêu", định dạng giờ VN và bố cục ảnh đã chốt vẫn nguyên vẹn.
+
+**Actual:** `next build` lỗi TypeScript tại `lib/reports/metric-rows.ts` và `share-card.test.ts`. Bản dựng
+thử đầu tiên sau khi thêm ba dòng AMIS còn vượt 1920px, cắt mất footer.
+
+**Root Cause:** `ORDER_COUNT` không có cặp cột `target_*` / `actual_*` trong `daily_reports` nhưng bị đưa
+vào kiểu KPI toàn phần; merge giữ bản local cũ thay vì giữ hai vế của DEC-070/071/072; thay đổi chưa chạy
+build/test và chưa render PNG thật trước khi push.
+
+**Fix:** Khôi phục các hợp đồng đã chốt; tách số đơn khỏi `KpiMetric`; thêm
+`calculateAverageOrderValue()` có guard mẫu số 0; giữ `no_of_orders`/`return_sales` trong service; gom ba
+số liệu phụ thành một dải ngang **SỐ ĐƠN · TB / ĐƠN · HÀNG TRẢ LẠI** để không tạo target/% giả và không
+tràn ảnh. Khôi phục các rule `.gitignore` bảo vệ dữ liệu AMIS và cấu hình máy cá nhân.
+
+**Verification:** `typecheck` exit 0 · lint exit 0 · unit **695/695** · production build exit 0, 23 route.
+Render PNG thật 1080×1920 với tên Sales dài: đủ bảng, dải số liệu phụ và footer, không chồng/cắt chữ.
+Integration/RLS chưa chạy vì Supabase local `127.0.0.1:54322` đang tắt; lần chạy full đã ghi đúng
+`ECONNREFUSED`, không ghi PASS.
