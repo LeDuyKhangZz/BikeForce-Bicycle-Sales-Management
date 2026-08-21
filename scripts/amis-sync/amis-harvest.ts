@@ -9,15 +9,20 @@
  *           -> mo browser, dang nhap CA HAI trang (co the phai nhap OTP).
  *
  * Cac lan sau: npx tsx scripts/amis-sync/amis-harvest.ts
+ *
+ * Neu he thong bao THIEU token (phien dang nhap trong profile da het han),
+ * script se ghi canh bao ro rang vao scripts/amis-sync/alert.log va
+ * thoat voi ma loi khac 0, thay vi im lang that bai nhu truoc.
  */
 
 import { chromium, type BrowserContext } from '@playwright/test';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = resolve(HERE, '.env');
+const ALERT_PATH = resolve(HERE, 'alert.log');
 const PROFILE_DIR = resolve(HERE, '../../.playwright-amis-profile');
 
 const CRM_URL = 'https://amisapp.misa.vn/crm/dashboard/main';
@@ -74,6 +79,15 @@ function expiryOf(jwt: string): string {
   }
 }
 
+/** Ghi 1 dong canh bao co dau thoi gian vao alert.log. */
+function logAlert(message: string): void {
+  const stamp = new Date().toLocaleString('vi-VN');
+  const line = `[${stamp}] ${message}\n`;
+  appendFileSync(ALERT_PATH, line, { encoding: 'utf8' });
+  console.error(`\n!! CANH BAO: ${message}`);
+  console.error(`   (da ghi vao ${ALERT_PATH})`);
+}
+
 /** p_session_key nam trong body, truong "parameters" ma hoa base64. */
 function sessionKeyFromBody(body: string | null): string | undefined {
   if (!body) return undefined;
@@ -113,6 +127,15 @@ async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
     .join('; ');
 
   console.log(`   token=${got.crmToken ? 'OK' : 'THIEU'}, cookie=${got.crmCookie ? 'OK' : 'THIEU'}`);
+
+  if (!loginMode && !got.crmToken) {
+    logAlert(
+      'CRM (amisapp.misa.vn): khong lay duoc token o che do tu dong. ' +
+      'Phien dang nhap trong profile co the da het han. ' +
+      'Hay chay: npx tsx scripts/amis-sync/amis-harvest.ts --login',
+    );
+  }
+
   await page.close();
 }
 
@@ -148,6 +171,15 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     `context=${got.actContext ? 'OK' : 'THIEU'}, ` +
     `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}`,
   );
+
+  if (!loginMode && !got.actToken) {
+    logAlert(
+      'KE TOAN (actapp.misa.vn): khong lay duoc token o che do tu dong. ' +
+      'Phien dang nhap trong profile co the da het han. ' +
+      'Hay chay: npx tsx scripts/amis-sync/amis-harvest.ts --login',
+    );
+  }
+
   await page.close();
 }
 
@@ -176,7 +208,9 @@ async function main(): Promise<void> {
   if (got.actSessionKey) updates['ACT_SESSION_KEY'] = got.actSessionKey;
 
   if (Object.keys(updates).length === 0) {
-    console.error('\nKhong lay duoc gi. Chay lai voi --login.');
+    const msg = 'Khong lay duoc gi tu ca 2 he. Chay lai voi --login.';
+    console.error(`\n${msg}`);
+    if (!loginMode) logAlert(msg);
     process.exit(1);
   }
 
@@ -186,10 +220,21 @@ async function main(): Promise<void> {
   if (got.actToken) console.log(`  ACT het han: ${expiryOf(got.actToken)}`);
 
   // CRM la nguon chinh — thieu no thi coi nhu that bai.
-  if (!got.crmToken) process.exit(1);
+  if (!got.crmToken) {
+    if (!loginMode) {
+      logAlert('CRM token van THIEU sau khi chay xong — can dang nhap lai (--login).');
+    }
+    process.exit(1);
+  }
+
+  // KE TOAN thieu thi khong chan qua trinh, nhung phai canh bao ro.
+  if (!got.actToken && !loginMode) {
+    logAlert('ACT (KE TOAN) token van THIEU sau khi chay xong — can dang nhap lai (--login).');
+  }
 }
 
 main().catch((e) => {
   console.error(e);
+  if (!loginMode) logAlert(`Loi khong luong truoc: ${e instanceof Error ? e.message : String(e)}`);
   process.exit(1);
 });

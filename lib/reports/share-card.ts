@@ -18,6 +18,7 @@
  */
 import {
   calculateAchievement,
+  calculateAverageOrderValue,
   formatMetricValueCompact,
   type AchievementResult,
 } from '@/lib/kpi';
@@ -425,6 +426,7 @@ export function buildShareCardModel(
  * ------------------------------------------------------------------------- */
 
 /** Một dòng: nhãn · chỉ tiêu · thực đạt · % hoàn thành + thanh tiến độ. */
+const EMPTY_DISPLAY = '—';
 export type ShareCardPerformanceRow = {
   readonly label: string;
   readonly targetText: string;
@@ -461,6 +463,9 @@ export type ShareCardPerformanceSource = {
   readonly amisAccountInteractive: number | null;
   /** SL khách mua trong kỳ — report 119 `QuantityAccountSoldThisPeriod`. */
   readonly amisAccountSold: number | null;
+  readonly amisOrderCount: number | null; 
+  readonly amisReturnAmount: number | null;
+
   /** ISO timestamp lần đồng bộ gần nhất; `null` ⇒ nói thẳng là chưa đồng bộ. */
   readonly syncedAt: string | null;
   /** Tổng `target_revenue` của tháng — con số DUY NHẤT không đến từ AMIS. */
@@ -510,6 +515,7 @@ function buildPerformanceRow(
 
 function buildPerformance(source: ShareCardPerformanceSource): ShareCardPerformance {
   const syncedDate = source.syncedAt === null ? null : vietnamDatePart(source.syncedAt);
+    const avgOrderValue = calculateAverageOrderValue(source.amisSalesActual, source.amisOrderCount);
 
   return {
     title: 'TÌNH TRẠNG THỰC HIỆN',
@@ -547,6 +553,21 @@ function buildPerformance(source: ShareCardPerformanceSource): ShareCardPerforma
         source.amisAccountSold,
         'CUSTOMER_VISITS',
       ),
+            buildPerformanceRow('SL ĐH đã ghi', source.amisAccountInteractive, source.amisOrderCount, 'ORDER_COUNT'),
+      {
+        label: 'Giá trị trung bình 1 đơn',
+        targetText: EMPTY_DISPLAY,
+        actualText: formatMetricValueCompact(avgOrderValue, 'SALES_AMOUNT'),
+        achievement: { percent: null, status: 'PENDING', display: EMPTY_DISPLAY, surplus: null },
+        progress: EMPTY_PROGRESS,
+      },
+      {
+        label: 'Giá trị HH trả hàng',
+        targetText: EMPTY_DISPLAY,
+        actualText: formatMetricValueCompact(source.amisReturnAmount, 'SALES_AMOUNT'),
+        achievement: { percent: null, status: 'PENDING', display: EMPTY_DISPLAY, surplus: null },
+        progress: EMPTY_PROGRESS,
+      },
     ],
   };
 }

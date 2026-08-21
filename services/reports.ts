@@ -296,6 +296,8 @@ const AMIS_METRIC_COLUMNS = [
   'qty_account_in_charge',
   'qty_account_interactive',
   'qty_account_sold_this_period',
+  'no_of_orders',
+  'return_sales',
   'synced_at',
 ].join(', ');
 
@@ -308,6 +310,8 @@ export type AmisShareMetrics = Pick<
   | 'qty_account_in_charge'
   | 'qty_account_interactive'
   | 'qty_account_sold_this_period'
+  | 'no_of_orders'
+  | 'return_sales'
   | 'synced_at'
 >;
 

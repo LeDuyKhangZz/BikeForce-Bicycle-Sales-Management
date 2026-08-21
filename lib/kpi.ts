@@ -50,8 +50,7 @@ export type AchievementStatus = 'EXCEEDED' | 'NEAR' | 'MISSED' | 'PENDING';
  * cũ (hậu tố `_sales_quantity`) vẫn nằm trong database nhưng là **di sản** —
  * không code nào ở tầng này được đọc nó nữa.
  */
-export type KpiMetric = 'VISIT_POINTS' | 'SALES_AMOUNT' | 'REVENUE' | 'CUSTOMER_VISITS';
-
+export type KpiMetric = 'VISIT_POINTS' | 'SALES_AMOUNT' | 'REVENUE' | 'CUSTOMER_VISITS' | 'ORDER_COUNT';
 /** Hai chỉ tiêu đo bằng TIỀN — chúng đi đường `formatCurrencyVND` (DEC-050). */
 type MoneyMetric = 'SALES_AMOUNT' | 'REVENUE';
 
@@ -90,6 +89,7 @@ const EMPTY_DISPLAY = '—';
 const METRIC_UNIT: Record<Exclude<KpiMetric, 'SALES_AMOUNT' | 'REVENUE'>, string> = {
   VISIT_POINTS: 'điểm',
   CUSTOMER_VISITS: 'khách',
+  ORDER_COUNT: 'đơn',
 };
 
 const STATUS_LABEL: Record<AchievementStatus, string> = {
@@ -286,6 +286,16 @@ export function calculateCustomerWorkRate(
   // KHÔNG clamp — cùng lý do với BR-004: một điểm viếng thăm có thể gặp nhiều
   // khách, nên vượt 100% là kết quả thật chứ không phải lỗi nhập liệu.
   return { percent, display: formatPercent(percent) };
+}
+
+export function calculateAverageOrderValue(
+  salesActual: number | null,
+  orderCount: number | null,
+): number | null {
+  if (salesActual === null || !isUsableNumber(salesActual)) return null;
+  if (orderCount === null || !isUsableNumber(orderCount) || orderCount === 0) return null;
+
+  return salesActual / orderCount;
 }
 
 /**

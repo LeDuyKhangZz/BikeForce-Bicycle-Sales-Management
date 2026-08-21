@@ -233,15 +233,18 @@ export async function GET(request: Request, context: ShareImageContext): Promise
     periodMonthOf(report.report_date),
   );
 
-  const performance =
+ const performance =
     amis === null || summary === null
       ? null
       : {
           amisTargetAmount: amis.target_amount,
-amisSalesActual: amis.current_amount,          amisReceiveAmount: amis.receive_amount,
+          amisSalesActual: amis.current_amount,
+          amisReceiveAmount: amis.receive_amount,
           amisAccountInCharge: amis.qty_account_in_charge,
           amisAccountInteractive: amis.qty_account_interactive,
           amisAccountSold: amis.qty_account_sold_this_period,
+          amisOrderCount: amis.no_of_orders,
+          amisReturnAmount: amis.return_sales,
           syncedAt: amis.synced_at,
           targetRevenue: summary.targetRevenue,
         };
