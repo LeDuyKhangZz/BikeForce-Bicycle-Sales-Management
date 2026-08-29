@@ -53,6 +53,17 @@ export function slugifyFilename(name: string): string {
     .toLowerCase();
 }
 
+/** Định dạng số tiền kiểu Việt Nam: 1.234.567 (chấm ngăn nghìn, không thập phân). */
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('vi-VN').format(Math.round(value));
+}
+
+/** Định dạng phần trăm hoàn thành mục tiêu: current/target * 100. */
+export function formatPercent(current: number, target: number): string {
+  if (!target) return PLACEHOLDER;
+  return `${((current / target) * 100).toFixed(1)}%`;
+}
+
 /**
  * Interface tối giản cho 2D context — tương thích với cả:
  * - CanvasRenderingContext2D (trình duyệt)
@@ -92,6 +103,7 @@ function roundRect(ctx: Canvas2DLike, x: number, y: number, w: number, h: number
 export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void {
   const w = CARD_WIDTH;
   const h = CARD_HEIGHT;
+  const amis = report.amis;
 
   ctx.fillStyle = COLORS.background;
   roundRect(ctx, 0, 0, w, h, 16);
@@ -168,7 +180,16 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
 
   ctx.fillStyle = COLORS.textMuted;
   ctx.font = '400 10px ReportFont';
-  ctx.fillText(`Số liệu MISA tính đến ${PLACEHOLDER}`, tableX + 12, tableTop - 6);
+  const syncedLabel = amis
+    ? new Date(amis.syncedAt).toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : PLACEHOLDER;
+  ctx.fillText(`Số liệu MISA tính đến ${syncedLabel}`, tableX + 12, tableTop - 6);
 
   const col1X = tableX + 12;
   const col2X = tableX + tableW * 0.52;
@@ -180,9 +201,17 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   ctx.fillText('THỰC ĐẠT', col2X, tableTop + 21);
   ctx.fillText('% HOÀN THÀNH', col3X, tableTop + 21);
 
-  const monthRows: Array<{ label: string }> = [
-    { label: 'Doanh số đã ghi' },
-    { label: 'Doanh thu đã ghi' },
+  const monthRows: Array<{ label: string; value: string; percent: string }> = [
+    {
+      label: 'Doanh số đã ghi',
+      value: amis ? formatCurrency(amis.currentAmount) : PLACEHOLDER,
+      percent: amis ? formatPercent(amis.currentAmount, amis.targetAmount) : PLACEHOLDER,
+    },
+    {
+      label: 'Doanh thu đã ghi',
+      value: amis ? formatCurrency(amis.netSales) : PLACEHOLDER,
+      percent: PLACEHOLDER,
+    },
   ];
 
   monthRows.forEach((row, index) => {
@@ -201,10 +230,10 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
     ctx.font = '600 13px ReportFont-Bold';
     ctx.fillText(row.label, col1X, textY);
 
-    ctx.fillStyle = COLORS.placeholder;
+    ctx.fillStyle = amis ? COLORS.textDark : COLORS.placeholder;
     ctx.font = '700 13px ReportFont-Bold';
-    ctx.fillText(PLACEHOLDER, col2X, textY);
-    ctx.fillText(PLACEHOLDER, col3X, textY);
+    ctx.fillText(row.value, col2X, textY);
+    ctx.fillText(row.percent, col3X, textY);
   });
 
   // --- Tình trạng thực hiện trong ngày ---
@@ -254,17 +283,26 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   roundRect(ctx, innerBoxX, innerBoxY, innerBoxW, bottomBoxH, 10);
   ctx.fill();
 
-  const orderRows: Array<{ label: string }> = [
-    { label: 'SL ĐH đã ghi' },
-    { label: 'Giá trị trung bình 1 đơn' },
-    { label: 'Giá trị hàng hóa trả hàng' },
+  const orderRows: Array<{ label: string; value: string }> = [
+    {
+      label: 'SL ĐH đã ghi',
+      value: amis ? formatCurrency(amis.noOfOrders) : PLACEHOLDER,
+    },
+    {
+      label: 'Giá trị trung bình 1 đơn',
+      value: amis && amis.noOfOrders > 0 ? formatCurrency(amis.netSales / amis.noOfOrders) : PLACEHOLDER,
+    },
+    {
+      label: 'Giá trị hàng hóa trả hàng',
+      value: amis ? formatCurrency(amis.returnSales) : PLACEHOLDER,
+    },
   ];
   ctx.textAlign = 'center';
   orderRows.forEach((row, index) => {
     const rowY = innerBoxY + 20 + index * 20;
     ctx.fillStyle = COLORS.bottomBoxText;
     ctx.font = index === 0 ? '700 12px ReportFont-Bold' : '400 11px ReportFont';
-    ctx.fillText(`${row.label}  ${PLACEHOLDER}`, innerBoxX + innerBoxW / 2, rowY);
+    ctx.fillText(`${row.label}  ${row.value}`, innerBoxX + innerBoxW / 2, rowY);
   });
   ctx.textAlign = 'left';
 }

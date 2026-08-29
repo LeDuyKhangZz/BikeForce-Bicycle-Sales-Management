@@ -23,8 +23,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-import requests
-from dotenv import load_dotenv
+import requests # type: ignore
+from dotenv import load_dotenv # type: ignore
 
 # Tái sử dụng nguyên logic đã kiểm chứng từ các script cũ.
 import test_amis_revenue as revenue_mod

@@ -56,6 +56,7 @@ function parseRow(cells: string[]): SaleWorkReport | null {
     outgoingCalls: numberAfter(calls, 'Cuộc gọi đi'),
     missedCalls: numberAfter(calls, 'Cuộc gọi nhỡ'),
     callDuration: calls.match(/Thời lượng\s*:\s*([^\n]+)/i)?.[1]?.trim() ?? '0 phút',
+    amis: null,
   };
 }
 

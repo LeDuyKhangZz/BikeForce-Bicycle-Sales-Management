@@ -9,6 +9,16 @@ export type SaleWorkReport = {
   outgoingCalls: number;
   missedCalls: number;
   callDuration: string;
+  // --- Số liệu AMIS (có thể null nếu chưa map được nhân viên hoặc chưa có dữ liệu tháng này) ---
+  amis: {
+    netSales: number;
+    sales: number;
+    returnSales: number;
+    noOfOrders: number;
+    targetAmount: number;
+    currentAmount: number;
+    syncedAt: string;
+  } | null;
 };
 
 // Kiểu dữ liệu thô trả về từ Supabase (snake_case, đúng tên cột trong bảng).
@@ -21,6 +31,27 @@ type SaleWorkReportRow = {
   outgoing_calls: number;
   missed_calls: number;
   call_duration: string;
+};
+
+type AmisEmployeeMetricRow = {
+  employee_name: string;
+  net_sales: number | null;
+  sales: number | null;
+  return_sales: number | null;
+  no_of_orders: number | null;
+  target_amount: number | null;
+  current_amount: number | null;
+  synced_at: string;
+};
+
+/**
+ * Map tên tài khoản SaleWork (Zalo) -> tên nhân viên trong AMIS (report 119).
+ * Hai hệ thống đặt tên khác nhau nên phải khai báo tay tại đây.
+ * Thêm dòng mới khi có tài khoản SaleWork mới cần gắn số liệu AMIS.
+ */
+export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
+  'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
+  'Giao - Kế Toán bán hàng': 'Trần Thị Quỳnh Giao',
 };
 
 /**
@@ -45,7 +76,7 @@ function getSupabaseAdminClient() {
   });
 }
 
-function toSaleWorkReport(row: SaleWorkReportRow): SaleWorkReport {
+function toSaleWorkReport(row: SaleWorkReportRow): Omit<SaleWorkReport, 'amis'> {
   return {
     accountName: row.account_name,
     conversations: row.conversations,
@@ -58,28 +89,78 @@ function toSaleWorkReport(row: SaleWorkReportRow): SaleWorkReport {
   };
 }
 
+function toAmisData(row: AmisEmployeeMetricRow): SaleWorkReport['amis'] {
+  return {
+    netSales: row.net_sales ?? 0,
+    sales: row.sales ?? 0,
+    returnSales: row.return_sales ?? 0,
+    noOfOrders: row.no_of_orders ?? 0,
+    targetAmount: row.target_amount ?? 0,
+    currentAmount: row.current_amount ?? 0,
+    syncedAt: row.synced_at,
+  };
+}
+
+/** '2026-08-01' cho tháng hiện tại theo giờ VN — khớp cách push_amis.py ghi period_month. */
+function currentPeriodMonth(): string {
+  const now = new Date();
+  const vnNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+  const y = vnNow.getFullYear();
+  const m = String(vnNow.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}-01`;
+}
+
 /**
  * ✅ Đã chuyển từ đọc file data/salework-report.json (chỉ tồn tại cục bộ,
  * không có trên Vercel) sang đọc từ bảng Supabase — nơi cả localhost và
  * production đều đọc chung một nguồn dữ liệu thật.
  *
- * Vì đây là lệnh gọi mạng, hàm giờ là async — MỌI nơi gọi getSaleWorkReport()
- * phải thêm await.
+ * Giờ còn join thêm số liệu AMIS (amis_employee_metrics) theo tháng hiện tại,
+ * qua bảng mapping tĩnh AMIS_EMPLOYEE_MAP.
  */
 export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
   try {
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
+
+    const { data: saleworkData, error: saleworkError } = await supabase
       .from('salework_reports')
       .select('*')
       .order('account_name', { ascending: true });
 
-    if (error) {
-      console.error('[getSaleWorkReport] Lỗi truy vấn Supabase:', error.message);
+    if (saleworkError) {
+      console.error('[getSaleWorkReport] Lỗi truy vấn salework_reports:', saleworkError.message);
       return [];
     }
 
-    return (data ?? []).map(toSaleWorkReport);
+    const baseReports = (saleworkData ?? []).map(toSaleWorkReport);
+
+    // Lấy số liệu AMIS của tháng hiện tại cho các nhân viên đã map.
+    const employeeNames = Array.from(new Set(Object.values(AMIS_EMPLOYEE_MAP)));
+    const period = currentPeriodMonth();
+
+    const { data: amisData, error: amisError } = await supabase
+      .from('amis_employee_metrics')
+      .select('*')
+      .eq('period_month', period)
+      .in('employee_name', employeeNames);
+
+    if (amisError) {
+      console.error('[getSaleWorkReport] Lỗi truy vấn amis_employee_metrics:', amisError.message);
+    }
+
+    const amisByEmployeeName = new Map<string, AmisEmployeeMetricRow>();
+    for (const row of amisData ?? []) {
+      amisByEmployeeName.set(row.employee_name, row as AmisEmployeeMetricRow);
+    }
+
+    return baseReports.map((report) => {
+      const employeeName = AMIS_EMPLOYEE_MAP[report.accountName];
+      const amisRow = employeeName ? amisByEmployeeName.get(employeeName) : undefined;
+      return {
+        ...report,
+        amis: amisRow ? toAmisData(amisRow) : null,
+      };
+    });
   } catch (error) {
     console.error('[getSaleWorkReport]', error instanceof Error ? error.message : error);
     return [];
