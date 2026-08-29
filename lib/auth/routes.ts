@@ -47,7 +47,11 @@ const API_PREFIX = '/api';
 export function isApiPath(pathname: string): boolean {
   return pathname === API_PREFIX || pathname.startsWith(`${API_PREFIX}/`);
 }
+const SELF_AUTHENTICATED_API_PATHS: readonly string[] = ['/api/salework/report-image'];
 
+export function isSelfAuthenticatedApiPath(pathname: string): boolean {
+  return SELF_AUTHENTICATED_API_PATHS.includes(pathname);
+}
 /** Sau khi đăng nhập, mỗi role về đúng dashboard của mình. */
 export function dashboardPathFor(role: UserRole): string {
   return role === 'ADMIN' ? ADMIN_HOME : SALES_HOME;

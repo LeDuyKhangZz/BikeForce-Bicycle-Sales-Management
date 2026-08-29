@@ -7,6 +7,7 @@ import {
   dashboardPathFor,
   isApiPath,
   isPublicPath,
+  isSelfAuthenticatedApiPath,
   requiredRoleForPath,
   sanitizeNextPath,
 } from '@/lib/auth/routes';
@@ -51,6 +52,8 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (PUBLIC_FILE.test(pathname)) return NextResponse.next();
+
+  if (isSelfAuthenticatedApiPath(pathname)) return NextResponse.next();
 
   let response = NextResponse.next({ request });
 
