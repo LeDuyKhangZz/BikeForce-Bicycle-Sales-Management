@@ -95,7 +95,7 @@ async function saveReportsToSupabase(reports: SaleWorkReport[]): Promise<void> {
 
 async function main(): Promise<void> {
   const context = await chromium.launchPersistentContext(PROFILE_PATH, {
-    headless: false,
+    headless: !!process.env.CI,
     locale: 'vi-VN',
     timezoneId: 'Asia/Ho_Chi_Minh',
     viewport: { width: 1440, height: 900 },
