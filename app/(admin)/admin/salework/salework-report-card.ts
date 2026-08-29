@@ -1,4 +1,20 @@
 import type { SaleWorkReport } from '@/services/salework';
+import { GlobalFonts } from '@napi-rs/canvas';
+import path from 'node:path';
+
+let fontsRegistered = false;
+function ensureFontsRegistered() {
+  if (fontsRegistered) return;
+  GlobalFonts.registerFromPath(
+    path.join(process.cwd(), 'public/fonts/NotoSans-Regular.ttf'),
+    'ReportFont'
+  );
+  GlobalFonts.registerFromPath(
+    path.join(process.cwd(), 'public/fonts/NotoSans-Bold.ttf'),
+    'ReportFont-Bold'
+  );
+  fontsRegistered = true;
+}
 
 export const CARD_WIDTH = 480;
 export const CARD_HEIGHT = 780;
@@ -60,7 +76,7 @@ export function slugifyFilename(name: string): string {
  */
 export interface Canvas2DLike {
   fillStyle: string | CanvasGradient | CanvasPattern;
-strokeStyle: string | CanvasGradient | CanvasPattern;
+  strokeStyle: string | CanvasGradient | CanvasPattern;
   lineWidth: number;
   font: string;
   textAlign: string;
@@ -90,6 +106,8 @@ function roundRect(ctx: Canvas2DLike, x: number, y: number, w: number, h: number
 
 /** Vẽ toàn bộ thẻ báo cáo "Báo cáo cuối ngày" cho 1 tài khoản lên context đã cho. */
 export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void {
+  ensureFontsRegistered(); // Bắt buộc: đăng ký font trước khi vẽ, nếu không server (Vercel/Linux) sẽ không có "Arial" và fillText sẽ không vẽ được gì.
+
   const w = CARD_WIDTH;
   const h = CARD_HEIGHT;
 
@@ -105,12 +123,12 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
 
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = COLORS.brand;
-  ctx.font = '700 26px Arial, sans-serif';
+  ctx.font = '700 26px ReportFont-Bold';
   ctx.fillText('BIKEFORCE', PAD, y);
 
   y += 24;
   ctx.fillStyle = COLORS.accent;
-  ctx.font = '600 14px Arial, sans-serif';
+  ctx.font = '600 14px ReportFont-Bold';
   ctx.fillText('Báo cáo cuối ngày', PAD, y);
 
   y += 16;
@@ -123,7 +141,7 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
 
   y += 28;
   ctx.fillStyle = COLORS.textDark;
-  ctx.font = '400 13px Arial, sans-serif';
+  ctx.font = '400 13px ReportFont';
   ctx.fillText(getVietnameseDateLabel(new Date()), PAD, y);
 
   // Tên telesale = tên tài khoản (tự giảm cỡ chữ nếu tên quá dài)
@@ -131,23 +149,23 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   ctx.fillStyle = COLORS.brand;
   const maxNameWidth = w - PAD * 2;
   let nameFontSize = 26;
-  ctx.font = `700 ${nameFontSize}px Arial, sans-serif`;
+  ctx.font = `700 ${nameFontSize}px ReportFont-Bold`;
   while (ctx.measureText(report.accountName).width > maxNameWidth && nameFontSize > 15) {
     nameFontSize -= 1;
-    ctx.font = `700 ${nameFontSize}px Arial, sans-serif`;
+    ctx.font = `700 ${nameFontSize}px ReportFont-Bold`;
   }
   ctx.fillText(report.accountName, PAD, y);
 
   // Mã telesale
   y += 22;
   ctx.fillStyle = COLORS.placeholder;
-  ctx.font = '400 13px Arial, sans-serif';
+  ctx.font = '400 13px ReportFont';
   ctx.fillText(`Mã telesale: ${getTelesaleCode(report.accountName)}`, PAD, y);
 
   // --- Tình trạng thực hiện trong tháng ---
   y += 34;
   ctx.fillStyle = COLORS.accent;
-  ctx.font = '700 15px Arial, sans-serif';
+  ctx.font = '700 15px ReportFont-Bold';
   ctx.fillText('Tình trạng thực hiện trong tháng', PAD, y);
 
   y += 22;
@@ -167,7 +185,7 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   ctx.stroke();
 
   ctx.fillStyle = COLORS.textMuted;
-  ctx.font = '400 10px Arial, sans-serif';
+  ctx.font = '400 10px ReportFont';
   ctx.fillText(`Số liệu MISA tính đến ${PLACEHOLDER}`, tableX + 12, tableTop - 6);
 
   const col1X = tableX + 12;
@@ -175,7 +193,7 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   const col3X = tableX + tableW * 0.76;
 
   ctx.fillStyle = COLORS.textMuted;
-  ctx.font = '600 11px Arial, sans-serif';
+  ctx.font = '600 11px ReportFont-Bold';
   ctx.fillText('CHỈ TIÊU', col1X, tableTop + 21);
   ctx.fillText('THỰC ĐẠT', col2X, tableTop + 21);
   ctx.fillText('% HOÀN THÀNH', col3X, tableTop + 21);
@@ -198,11 +216,11 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
     }
 
     ctx.fillStyle = COLORS.textDark;
-    ctx.font = '600 13px Arial, sans-serif';
+    ctx.font = '600 13px ReportFont-Bold';
     ctx.fillText(row.label, col1X, textY);
 
     ctx.fillStyle = COLORS.placeholder;
-    ctx.font = '700 13px Arial, sans-serif';
+    ctx.font = '700 13px ReportFont-Bold';
     ctx.fillText(PLACEHOLDER, col2X, textY);
     ctx.fillText(PLACEHOLDER, col3X, textY);
   });
@@ -210,7 +228,7 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   // --- Tình trạng thực hiện trong ngày ---
   y = tableTop + tableH + 32;
   ctx.fillStyle = COLORS.accent;
-  ctx.font = '700 15px Arial, sans-serif';
+  ctx.font = '700 15px ReportFont-Bold';
   ctx.fillText('Tình trạng thực hiện trong ngày', PAD, y);
 
   y += 12;
@@ -237,10 +255,10 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   let itemY = boxTop + listTopPad;
   lineItems.forEach((item) => {
     ctx.fillStyle = COLORS.orangeBoxText;
-    ctx.font = '400 14px Arial, sans-serif';
+    ctx.font = '400 14px ReportFont';
     ctx.fillText(item.label, boxX + 18, itemY);
 
-    ctx.font = '700 14px Arial, sans-serif';
+    ctx.font = '700 14px ReportFont-Bold';
     const valueWidth = ctx.measureText(item.value).width;
     ctx.fillText(item.value, boxX + boxW - 18 - valueWidth, itemY);
 
@@ -263,7 +281,7 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   orderRows.forEach((row, index) => {
     const rowY = innerBoxY + 20 + index * 20;
     ctx.fillStyle = COLORS.bottomBoxText;
-    ctx.font = index === 0 ? '700 12px Arial, sans-serif' : '400 11px Arial, sans-serif';
+    ctx.font = index === 0 ? '700 12px ReportFont-Bold' : '400 11px ReportFont';
     ctx.fillText(`${row.label}  ${PLACEHOLDER}`, innerBoxX + innerBoxW / 2, rowY);
   });
   ctx.textAlign = 'left';
