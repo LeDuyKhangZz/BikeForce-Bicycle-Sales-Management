@@ -1017,6 +1017,13 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `docs/05` · `docs/06` · `docs/07` · `docs/11` đã ghi
 - [x] build (21 route) · typecheck · lint · unit **689/689** · **E2E 7/7** `mobile-375` · nhìn 375px + 1440px
 
+## Admin module switcher - SaleWork (2026-08-28)
+
+- [x] Nút chuyển module SaleWork chỉ xuất hiện trong Admin header
+- [x] Route mẫu `/admin/salework` tự kiểm tra `requireRole('ADMIN')`
+- [x] Không thêm mục mới vào bottom nav Admin
+- [ ] Bổ sung nghiệp vụ SaleWork thật sau khi có yêu cầu chi tiết
+
 ## Repair sau merge cộng tác viên — ISSUE-033 (2026-08-21)
 
 - [x] Fetch và fast-forward `main` từ `eff5621` lên `dbcbde8` (3 commit mới của `NguyenPhust9`)

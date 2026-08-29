@@ -480,7 +480,7 @@ Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
 | | Mobile (< 1024px) | Desktop (≥ 1024px) |
 |---|---|---|
 | **Sales** | Bottom tab 3 mục: **Hôm nay** (`Home`) · **Lịch sử** (`History`) · **Tài khoản** (`User`) | Sidebar trái cố định, cùng 3 mục |
-| **Admin** | Bottom tab 4 mục: **Tổng quan** (`LayoutDashboard`) · **Báo cáo** (`FileText`) · **Sales** (`Users`) · **Tài khoản** (`User`) | Sidebar trái cố định, cùng 4 mục |
+| **Admin** | Bottom tab các mục nghiệp vụ hiện có; nút chuyển module **SaleWork** (`ArrowRightLeft`) nằm ở header | Sidebar trái cố định; nút chuyển module **SaleWork** nằm ở header |
 
 **Không bao giờ hiển thị đồng thời bottom nav và sidebar** (`avoid-mixed-patterns`).
 
@@ -497,6 +497,7 @@ Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
 | `state-preservation` | Quay lại `/sales/history` hay `/admin/reports` phải khôi phục tháng đang lọc, trang đang xem và vị trí cuộn |
 | `deep-linking` | Mọi màn hình quan trọng có URL riêng, chia sẻ và bookmark được |
 | `persistent-nav` | Điều hướng chính luôn tới được từ trang sâu |
+| `module-switcher` | Chỉ Admin thấy nút chuyển từ BikeForce sang module SaleWork tại header; SaleWork dùng route riêng `/admin/salework` và không thêm tab bottom nav |
 | `destructive-nav-separation` | Đăng xuất nằm ở `/…/account`, tách khỏi các mục điều hướng thường |
 | `focus-on-route-change` | Sau khi chuyển trang, focus chuyển về vùng nội dung chính |
 | `skip-links` | Có link "Bỏ qua điều hướng" cho người dùng bàn phím |

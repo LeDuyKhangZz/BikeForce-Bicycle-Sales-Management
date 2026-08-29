@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
+import { ArrowRightLeft } from 'lucide-react';
 
 import { BrandMark } from '@/components/ui/brand-mark';
+import { buttonClassName } from '@/components/ui/button';
 import { MainNav } from '@/features/navigation/main-nav';
 import { HeaderSignOut } from '@/features/auth/header-sign-out';
 import { requireRole } from '@/features/auth/queries';
@@ -45,6 +48,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               {profile.full_name}
             </p>
           </div>
+          <Link
+            href="/admin/salework"
+            aria-label="Chuyển sang SaleWork"
+            title="Chuyển sang SaleWork"
+            className={buttonClassName({ variant: 'secondary', className: 'shrink-0 px-3 sm:px-4' })}
+          >
+            <ArrowRightLeft aria-hidden="true" className="size-4" />
+            <span>SaleWork</span>
+          </Link>
           <HeaderSignOut />
         </div>
       </header>

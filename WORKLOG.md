@@ -3076,3 +3076,23 @@ trực tiếp đến lựa chọn này: ưu tiên độ đọc sau khi ảnh b�
 | PNG 1080×1920 | ✅ render + nhìn thật; ba nhãn đầy đủ, footer còn nguyên |
 
 **Next Exact Steps:** commit/push `main`, rồi xác nhận Vercel deploy commit mới.
+
+---
+
+## Entry 035 - 2026-08-28 - Them nut chuyen module SaleWork
+
+Da them nut `SaleWork` trong header cua Admin de chuyen toi route `/admin/salework`.
+Route mau tu goi `requireRole('ADMIN')`, vi vay Sales khong the truy cap module nay. Khong them
+tab moi vao bottom nav Admin; nghiep vu SaleWork se duoc bo sung sau.
+
+### Cong da chay
+
+| Cong | Ket qua |
+|---|---|
+| `npm run typecheck` | PASS - exit 0 |
+| `get_errors` cho hai file vua sua | Khong co loi |
+| `npm run build` | PASS - exit 0, 24 route |
+| `npm run test:unit` | PASS - 695/695 |
+| `npm run lint` | BLOCKED - `node_modules` thieu module `typescript-eslint`; `npm ci` bi Windows khoa file `lightningcss` |
+
+**Next Exact Steps:** dung lai `node_modules` khi file native khong con bi khoa, chay lint; sau do bo sung nghiep vu SaleWork theo dac ta.

@@ -75,6 +75,8 @@ desktop.ini
 # Tạm ------------------------------------------------------------------------
 *.tmp
 .cache/
+.salework-browser-profile/
+data/salework-report.json
 
 # ---------------------------------------------------------------------------
 # AMIS sync — TUYỆT ĐỐI KHÔNG COMMIT

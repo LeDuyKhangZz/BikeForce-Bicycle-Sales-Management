@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "salework:sync": "tsx scripts/salework-sync.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -23,6 +24,7 @@
     "db:types": "supabase gen types typescript --db-url \"postgresql://postgres:postgres@127.0.0.1:54322/postgres?sslmode=disable\" --schema public > types/database.types.ts"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.8",
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.112.2",
     "lucide-react": "1.29.0",
@@ -51,5 +53,8 @@
     "tsx": "^4.23.12",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas-win32-x64-msvc": "^1.0.8"
   }
 }

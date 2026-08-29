@@ -1,6 +1,28 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-18
+> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-28
+
+## ✅ PHIÊN HIỆN TẠI - nút chuyển module SaleWork (2026-08-28)
+
+Đã thêm nút **SaleWork** trong header của route group Admin và route mẫu `/admin/salework`.
+Nút chỉ có thể xuất hiện sau khi `AdminLayout` vượt qua `requireRole('ADMIN')`; chính trang mẫu
+cũng kiểm tra lại quyền. Không thêm tab mới vào bottom nav.
+
+### Trạng thái
+
+| Thứ | Trạng thái |
+|---|---|
+| Nút chuyển module trong Admin header | ✅ |
+| Trang mẫu `/admin/salework` | ✅ |
+| typecheck | ✅ exit 0 |
+| lint | ⚠ bị chặn bởi `node_modules` hỏng: thiếu module nội bộ của `typescript-eslint`; `npm ci` bị Windows khóa file `lightningcss` |
+| build | ✅ exit 0, **24 route** |
+| unit | ✅ **695/695** |
+
+### Next Exact Steps
+
+1. Dựng lại `node_modules` khi file native `lightningcss` không còn bị tiến trình khác khóa, rồi chạy `npm run lint`.
+2. Bổ sung màn hình SaleWork thật khi có đặc tả nghiệp vụ.
 
 ---
 
