@@ -1,20 +1,4 @@
 import type { SaleWorkReport } from '@/services/salework';
-import { GlobalFonts } from '@napi-rs/canvas';
-import path from 'node:path';
-
-let fontsRegistered = false;
-function ensureFontsRegistered() {
-  if (fontsRegistered) return;
-  GlobalFonts.registerFromPath(
-    path.join(process.cwd(), 'public/fonts/NotoSans-Regular.ttf'),
-    'ReportFont'
-  );
-  GlobalFonts.registerFromPath(
-    path.join(process.cwd(), 'public/fonts/NotoSans-Bold.ttf'),
-    'ReportFont-Bold'
-  );
-  fontsRegistered = true;
-}
 
 export const CARD_WIDTH = 480;
 export const CARD_HEIGHT = 780;
@@ -106,8 +90,6 @@ function roundRect(ctx: Canvas2DLike, x: number, y: number, w: number, h: number
 
 /** Vẽ toàn bộ thẻ báo cáo "Báo cáo cuối ngày" cho 1 tài khoản lên context đã cho. */
 export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void {
-  ensureFontsRegistered(); // Bắt buộc: đăng ký font trước khi vẽ, nếu không server (Vercel/Linux) sẽ không có "Arial" và fillText sẽ không vẽ được gì.
-
   const w = CARD_WIDTH;
   const h = CARD_HEIGHT;
 
