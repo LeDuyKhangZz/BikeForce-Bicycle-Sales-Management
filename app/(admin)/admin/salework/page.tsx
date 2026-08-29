@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 
 export default async function SaleWorkPage() {
   await requireRole('ADMIN');
-  const reports = getSaleWorkReport();
+  // ✅ Đã sửa: getSaleWorkReport() giờ là async (đọc từ Supabase) nên cần await.
+  const reports = await getSaleWorkReport();
 
   return (
     <div className="flex flex-col gap-6">

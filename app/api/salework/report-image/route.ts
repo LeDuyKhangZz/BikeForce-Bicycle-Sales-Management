@@ -29,7 +29,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const reports = getSaleWorkReport();
+  // ✅ Đã sửa: getSaleWorkReport() giờ là async (đọc từ Supabase) nên cần await.
+  const reports = await getSaleWorkReport();
   const url = new URL(request.url);
   const accountName = url.searchParams.get('account');
 
