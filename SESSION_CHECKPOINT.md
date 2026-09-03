@@ -1,6 +1,52 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **20 — Chỉ tiêu THÁNG do Admin giao (DEC-071)** | Last updated: 2026-08-28
+> Status: ACTIVE | Phase: **SaleWork — nối dữ liệu AMIS** | Last updated: 2026-09-03
+
+## ✅ PHIÊN HIỆN TẠI — dashboard doanh số AMIS (2026-09-03)
+
+Đã sửa nguyên nhân script chỉ trả một người: dùng `THỐNG ĐẠT GROUP` ID 1, nhận `[NAM THANG]` và gửi
+đúng `Period=13/14/0`. Abraham nay nối với `Kế Toán Bán Hàng`; mục tiêu AMIS không áp dụng giữ là `—`.
+
+Gọi thật `python test_amis_revenue.py 2026 8` trả HTTP 200, **15 người**; dòng cần dùng là
+`Kế Toán Bán Hàng · — · 458.661.000 · —`, khớp ảnh người dùng cung cấp.
+
+### Trạng thái
+
+| Thứ | Trạng thái |
+|---|---|
+| Python compile + assertion kỳ/đơn vị | ✅ |
+| Gọi AMIS thật tháng 08/2026 | ✅ 15 người |
+| Typecheck | ✅ exit 0 |
+| Lint · unit · build sau thay đổi mới | ⏳ đang chạy |
+
+### Next Exact Steps
+
+1. Nhận nguồn dữ liệu cho dòng “Doanh thu đã ghi”.
+2. Hoàn tất mapping còn lại rồi chạy `push_amis.py` một lượt có chủ đích.
+
+---
+
+## ✅ PHIÊN HIỆN TẠI — tách cột chỉ tiêu trên ảnh SaleWork (2026-09-03)
+
+Ảnh xuất tại `/admin/salework` đã đổi bảng tháng từ ba cột đặt nhãn sai nghĩa thành bốn cột:
+`NỘI DUNG · CHỈ TIÊU · THỰC ĐẠT · % HOÀN THÀNH`. Dòng doanh số dùng `amis.targetAmount` làm chỉ tiêu;
+dòng doanh thu để `—` vì model hiện chưa có chỉ tiêu doanh thu tháng hợp lệ.
+
+### Trạng thái
+
+| Thứ | Trạng thái |
+|---|---|
+| Bố cục và dữ liệu cột chỉ tiêu | ✅ đã sửa |
+| Render PNG 960×1560 | ✅ bốn cột rõ, không chồng chữ |
+| typecheck · lint | ✅ exit 0 · exit 0 |
+| unit | ✅ 696/696, 21 file |
+| production build | ✅ exit 0, 25 route |
+
+### Next Exact Steps
+
+1. Nếu nghiệp vụ cung cấp chỉ tiêu doanh thu tháng, bổ sung trường nguồn rồi mới tính `%` dòng doanh thu.
+
+---
 
 ## ✅ PHIÊN HIỆN TẠI - nút chuyển module SaleWork (2026-08-28)
 

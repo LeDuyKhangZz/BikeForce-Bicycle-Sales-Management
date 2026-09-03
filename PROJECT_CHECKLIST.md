@@ -1022,6 +1022,9 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Nút chuyển module SaleWork chỉ xuất hiện trong Admin header
 - [x] Route mẫu `/admin/salework` tự kiểm tra `requireRole('ADMIN')`
 - [x] Không thêm mục mới vào bottom nav Admin
+- [x] Ảnh xuất SaleWork tách cột `NỘI DUNG` và cột số `CHỈ TIÊU`; doanh số hiện đúng `target_amount`
+- [x] Dashboard doanh số lấy `THỐNG ĐẠT GROUP`, nhận tháng/năm và gửi đúng `Period=13/14/0`
+- [x] Abraham nối đúng dòng AMIS `Kế Toán Bán Hàng`; giá trị không áp dụng giữ là `—`
 - [ ] Bổ sung nghiệp vụ SaleWork thật sau khi có yêu cầu chi tiết
 
 ## Repair sau merge cộng tác viên — ISSUE-033 (2026-08-21)

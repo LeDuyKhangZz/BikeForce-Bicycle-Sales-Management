@@ -15,7 +15,7 @@ export type SaleWorkReport = {
     sales: number;
     returnSales: number;
     noOfOrders: number;
-    targetAmount: number;
+    targetAmount: number | null;
     currentAmount: number;
     syncedAt: string;
   } | null;
@@ -50,7 +50,7 @@ type AmisEmployeeMetricRow = {
  * Thêm dòng mới khi có tài khoản SaleWork mới cần gắn số liệu AMIS.
  */
 export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
-  'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
+  'Abraham Kế Toán Bánhàng': 'Kế Toán Bán Hàng',
   'Giao - Kế Toán bán hàng': 'Trần Thị Quỳnh Giao',
 };
 
@@ -95,7 +95,7 @@ function toAmisData(row: AmisEmployeeMetricRow): SaleWorkReport['amis'] {
     sales: row.sales ?? 0,
     returnSales: row.return_sales ?? 0,
     noOfOrders: row.no_of_orders ?? 0,
-    targetAmount: row.target_amount ?? 0,
+    targetAmount: row.target_amount,
     currentAmount: row.current_amount ?? 0,
     syncedAt: row.synced_at,
   };

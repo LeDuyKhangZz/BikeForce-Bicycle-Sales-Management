@@ -502,6 +502,14 @@ Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
 | `focus-on-route-change` | Sau khi chuyển trang, focus chuyển về vùng nội dung chính |
 | `skip-links` | Có link "Bỏ qua điều hướng" cho người dùng bàn phím |
 
+### 10.3 Ảnh xuất báo cáo SaleWork
+
+Khối "Tình trạng thực hiện trong tháng" trên ảnh xuất từ `/admin/salework` dùng đúng bốn cột:
+**Nội dung · Chỉ tiêu · Thực đạt · % hoàn thành**. Cột "Nội dung" chứa tên dòng; "Chỉ tiêu" là
+một cột số độc lập, không được dùng làm nhãn cho tên dòng. Với dữ liệu hiện có, dòng doanh số lấy chỉ
+tiêu từ AMIS `target_amount`; dòng doanh thu hiển thị `—` ở cột chỉ tiêu và phần trăm cho đến khi có
+nguồn chỉ tiêu doanh thu tháng hợp lệ.
+
 ---
 
 ## 11. Accessibility (Master Spec §49 — *accessibility* · NFR-007)

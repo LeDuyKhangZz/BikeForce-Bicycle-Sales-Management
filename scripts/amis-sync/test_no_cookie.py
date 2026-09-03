@@ -178,6 +178,7 @@ def test_dashboard(year: int, month: int) -> None:
     print("=" * 72)
 
     from_date, to_date = revenue.month_range_vn(year, month)
+    period = revenue.dashboard_period(year, month)
 
     base = {
         "Accept": "application/json, text/plain, */*",
@@ -200,7 +201,7 @@ def test_dashboard(year: int, month: int) -> None:
     body = {
         "DashboardType": revenue.DASHBOARD_TYPE,
         "IsGetNew": True,
-        "Param": revenue.build_param(from_date, to_date),
+        "Param": revenue.build_param(from_date, to_date, period),
         "DashboardID": revenue.DASHBOARD_ID,
         "DashboardName": revenue.DASHBOARD_FULL_NAME,
     }

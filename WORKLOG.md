@@ -3096,3 +3096,52 @@ tab moi vao bottom nav Admin; nghiep vu SaleWork se duoc bo sung sau.
 | `npm run lint` | BLOCKED - `node_modules` thieu module `typescript-eslint`; `npm ci` bi Windows khoa file `lightningcss` |
 
 **Next Exact Steps:** dung lai `node_modules` khi file native khong con bi khoa, chay lint; sau do bo sung nghiep vu SaleWork theo dac ta.
+
+---
+
+## Entry 036 — 2026-09-03 — Tách cột chỉ tiêu trên ảnh xuất SaleWork
+
+Người dùng chỉ ra tiêu đề `CHỈ TIÊU` đang nằm trên cột chứa tên dòng, làm ảnh đọc như thể “Doanh số
+đã ghi” và “Doanh thu đã ghi” là chỉ tiêu. Đã đổi bảng tháng trên ảnh xuất `/admin/salework` thành bốn
+cột độc lập: `NỘI DUNG · CHỈ TIÊU · THỰC ĐẠT · % HOÀN THÀNH`.
+
+Dòng doanh số hiện `amis.targetAmount` ở cột chỉ tiêu và `amis.currentAmount` ở cột thực đạt. Dòng
+doanh thu chưa có nguồn chỉ tiêu tháng tương ứng trong `SaleWorkReport`, nên để `—` thay vì lấy một
+trường thực đạt khác làm mục tiêu giả.
+
+### Cổng đã chạy
+
+| Cổng | Kết quả |
+|---|---|
+| Render PNG SaleWork 960×1560 | ✅ nhìn thật; bốn cột tách rõ, không chồng chữ |
+| `npm run typecheck` | ✅ exit 0 |
+| `npm run lint` | ✅ exit 0 |
+| `npm run test:unit` | ✅ **696/696**, 21 file; có test hồi quy vị trí cột mới |
+| `npm run build` | ✅ exit 0, **25 route**; lần đầu bị chặn mạng khi tải Inter, chạy lại có mạng thì pass |
+
+**Next Exact Steps:** nếu nghiệp vụ cung cấp chỉ tiêu doanh thu tháng, bổ sung nguồn dữ liệu chính thức
+rồi mới hiển thị chỉ tiêu và tính `%` cho dòng doanh thu.
+
+---
+
+## Entry 037 — 2026-09-03 — Sửa bộ lọc và kỳ dashboard doanh số AMIS
+
+Tái hiện việc script chỉ trả một người: request đang lọc `VẠN THỊNH` ID 4 và kỳ bị cố định
+`Period=13`, trong khi ảnh nguồn là `THỐNG ĐẠT GROUP` của tháng trước. Đã đổi cấu hình cục bộ về ID 1,
+thêm đối số `[NAM THANG]`, suy đúng mã kỳ `13/14/0` và dùng chung logic trong luồng đẩy Supabase.
+
+Mapping `Abraham Kế Toán Bánhàng` được đổi sang `Kế Toán Bán Hàng`. `TargetAmount` không được giao nay
+giữ là `null`/`—`, không biến thành mục tiêu 0.
+
+### Cổng đã chạy — kết quả thật
+
+| Cổng | Kết quả |
+|---|---|
+| Python compile | ✅ 3 script sạch |
+| Assertion kỳ + đơn vị | ✅ `13/14/0`, ID 1, `THỐNG ĐẠT GROUP` |
+| Gọi AMIS thật `2026 8` | ✅ HTTP 200, **15 người** |
+| Dòng `Kế Toán Bán Hàng` | ✅ `— · 458.661.000 · —` |
+| `npm run typecheck` | ✅ exit 0 |
+
+**Next Exact Steps:** tiếp tục nhận nguồn cho dòng “Doanh thu đã ghi”, sau đó nối các cột còn lại vào
+ảnh SaleWork và chạy đồng bộ Supabase một lượt.

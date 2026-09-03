@@ -48,7 +48,6 @@ DASHBOARD_URL = (
 )
 
 # ---- Bo loc nghiep vu (giu nguyen y het Dashboard dang dung) ----
-PERIOD = 13                      # 13 = "Thang nay"
 ANALYSIS_TYPE = 2                # 2  = "Co cau to chuc"
 REPORT_TYPE = "5"                # "Gia tri don hang"
 REVENUE_STATUS_IDS = "3,4"       # "Da ghi, Tu choi ghi"
@@ -85,6 +84,18 @@ def month_range_vn(year: int, month: int) -> tuple[datetime, datetime]:
     return start, next_start - timedelta(milliseconds=1)
 
 
+def dashboard_period(year: int, month: int, now_vn: datetime | None = None) -> int:
+    """Mã kỳ AMIS: 13 tháng này, 14 tháng trước, 0 cho tháng tùy chọn."""
+    current = now_vn or datetime.now(VN_TZ)
+    previous = current.replace(day=1) - timedelta(days=1)
+
+    if (year, month) == (current.year, current.month):
+        return 13
+    if (year, month) == (previous.year, previous.month):
+        return 14
+    return 0
+
+
 def to_number(value: Any) -> float:
     try:
         return float(value or 0)
@@ -112,19 +123,19 @@ def find_employee_data(node: Any) -> list[dict[str, Any]] | None:
 
 # ------------------------------------------------------------ GOI API
 
-def build_param(from_date: datetime, to_date: datetime) -> str:
+def build_param(from_date: datetime, to_date: datetime, period: int) -> str:
     """Dung chuoi Param.
 
     QUAN TRONG: AMIS nhan Param duoi dang JSON string long trong JSON,
     khong phai object -> phai json.dumps() truoc khi nhet vao body.
     """
     param = {
-        "Period": PERIOD,
+        "Period": period,
         "ToDate": iso_ms(to_date),
         "DateData": {
             "FromDate": iso_ms(from_date),
             "ToDate": iso_ms(to_date),
-            "Period": PERIOD,
+            "Period": period,
         },
         "FromDate": iso_ms(from_date),
         "IsGetNew": False,
@@ -166,7 +177,11 @@ def build_param(from_date: datetime, to_date: datetime) -> str:
     return json.dumps(param, ensure_ascii=False)
 
 
-def fetch_dashboard(from_date: datetime, to_date: datetime) -> dict[str, Any]:
+def fetch_dashboard(
+    from_date: datetime,
+    to_date: datetime,
+    period: int,
+) -> dict[str, Any]:
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
@@ -186,7 +201,7 @@ def fetch_dashboard(from_date: datetime, to_date: datetime) -> dict[str, Any]:
     body = {
         "DashboardType": DASHBOARD_TYPE,
         "IsGetNew": True,
-        "Param": build_param(from_date, to_date),
+        "Param": build_param(from_date, to_date, period),
         "DashboardID": DASHBOARD_ID,
         "DashboardName": DASHBOARD_FULL_NAME,
     }
@@ -259,13 +274,27 @@ def main() -> None:
         stop("Thieu AMIS_BEARER_TOKEN trong .env")
   
 
+    args = sys.argv[1:]
     now_vn = datetime.now(VN_TZ)
-    from_date, to_date = month_range_vn(now_vn.year, now_vn.month)
+
+    if len(args) == 0:
+        year, month = now_vn.year, now_vn.month
+    elif len(args) == 2:
+        try:
+            year, month = int(args[0]), int(args[1])
+            month_range_vn(year, month)
+        except (TypeError, ValueError):
+            stop("Thang/nam khong hop le. Vi du: python test_amis_revenue.py 2026 8")
+    else:
+        stop("Cach chay: python test_amis_revenue.py [NAM THANG]")
+
+    from_date, to_date = month_range_vn(year, month)
+    period = dashboard_period(year, month, now_vn)
 
     print("=" * 68)
     print(f"Widget   : {DASHBOARD_FULL_NAME}")
     print(f"Endpoint : .../Dashboard/{DASHBOARD_TYPE}/data   (DashboardID={DASHBOARD_ID})")
-    print(f"Ky       : {now_vn.month:02d}/{now_vn.year}")
+    print(f"Ky       : {month:02d}/{year} (Period={period})")
     print(f"FromDate : {iso_ms(from_date)}   ({from_date:%d/%m/%Y %H:%M} VN)")
     print(f"ToDate   : {iso_ms(to_date)}   ({to_date:%d/%m/%Y %H:%M} VN)")
     print(f"Don vi   : {ORG_UNIT_TEXT}")
@@ -273,7 +302,7 @@ def main() -> None:
     print(f"Trang thai: Da ghi + Tu choi ghi")
     print("=" * 68)
 
-    payload = fetch_dashboard(from_date, to_date)
+    payload = fetch_dashboard(from_date, to_date, period)
 
     with open("dashboard_raw.json", "w", encoding="utf-8") as fp:
         json.dump(payload, fp, ensure_ascii=False, indent=2)

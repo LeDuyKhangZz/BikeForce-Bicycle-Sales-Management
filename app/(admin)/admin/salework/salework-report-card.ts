@@ -191,24 +191,38 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
     : PLACEHOLDER;
   ctx.fillText(`Số liệu MISA tính đến ${syncedLabel}`, tableX + 12, tableTop - 6);
 
-  const col1X = tableX + 12;
-  const col2X = tableX + tableW * 0.52;
-  const col3X = tableX + tableW * 0.76;
+  const contentX = tableX + 12;
+  const targetRightX = tableX + tableW * 0.58;
+  const actualRightX = tableX + tableW * 0.79;
+  const percentRightX = tableX + tableW - 8;
 
   ctx.fillStyle = COLORS.textMuted;
-  ctx.font = '600 11px ReportFont-Bold';
-  ctx.fillText('CHỈ TIÊU', col1X, tableTop + 21);
-  ctx.fillText('THỰC ĐẠT', col2X, tableTop + 21);
-  ctx.fillText('% HOÀN THÀNH', col3X, tableTop + 21);
+  ctx.font = '600 9px ReportFont-Bold';
+  ctx.textAlign = 'left';
+  ctx.fillText('NỘI DUNG', contentX, tableTop + 21);
+  ctx.textAlign = 'right';
+  ctx.fillText('CHỈ TIÊU', targetRightX, tableTop + 21);
+  ctx.fillText('THỰC ĐẠT', actualRightX, tableTop + 21);
+  ctx.fillText('% HOÀN THÀNH', percentRightX, tableTop + 21);
 
-  const monthRows: Array<{ label: string; value: string; percent: string }> = [
+  const monthRows: Array<{ label: string; target: string; value: string; percent: string }> = [
     {
       label: 'Doanh số đã ghi',
+      target:
+        amis?.targetAmount !== null && amis?.targetAmount !== undefined && amis.targetAmount > 0
+          ? formatCurrency(amis.targetAmount)
+          : PLACEHOLDER,
       value: amis ? formatCurrency(amis.currentAmount) : PLACEHOLDER,
-      percent: amis ? formatPercent(amis.currentAmount, amis.targetAmount) : PLACEHOLDER,
+      percent:
+        amis?.targetAmount !== null && amis?.targetAmount !== undefined && amis.targetAmount > 0
+          ? formatPercent(amis.currentAmount, amis.targetAmount)
+          : PLACEHOLDER,
     },
     {
       label: 'Doanh thu đã ghi',
+      // SaleWork chưa có trường chỉ tiêu doanh thu tháng tương ứng với `netSales`.
+      // Không lấy một số thực đạt khác làm chỉ tiêu chỉ để lấp đầy ô.
+      target: PLACEHOLDER,
       value: amis ? formatCurrency(amis.netSales) : PLACEHOLDER,
       percent: PLACEHOLDER,
     },
@@ -228,13 +242,17 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
 
     ctx.fillStyle = COLORS.textDark;
     ctx.font = '600 13px ReportFont-Bold';
-    ctx.fillText(row.label, col1X, textY);
+    ctx.textAlign = 'left';
+    ctx.fillText(row.label, contentX, textY);
 
     ctx.fillStyle = amis ? COLORS.textDark : COLORS.placeholder;
-    ctx.font = '700 13px ReportFont-Bold';
-    ctx.fillText(row.value, col2X, textY);
-    ctx.fillText(row.percent, col3X, textY);
+    ctx.font = '700 11px ReportFont-Bold';
+    ctx.textAlign = 'right';
+    ctx.fillText(row.target, targetRightX, textY);
+    ctx.fillText(row.value, actualRightX, textY);
+    ctx.fillText(row.percent, percentRightX, textY);
   });
+  ctx.textAlign = 'left';
 
   // --- Tình trạng thực hiện trong ngày ---
   y = tableTop + tableH + 32;

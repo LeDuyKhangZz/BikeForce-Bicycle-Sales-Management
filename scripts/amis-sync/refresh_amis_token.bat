@@ -10,8 +10,7 @@ REM  vao scripts\amis-sync\alert.log va ban phai chay tay:
 REM     npx tsx scripts/amis-sync/amis-harvest.ts --login
 REM ===================================================================
 
-cd /d "C:\Users\PC\Desktop\CRM\BikeForce-Bicycle-Sales-Management"
-
+cd /d "C:\Users\Acer\Downloads\BikeForce-Bicycle-Sales-Management\BikeForce-Bicycle-Sales-Management"
 echo [%date% %time%] Bat dau lay token AMIS... >> scripts\amis-sync\refresh.log
 
 npx tsx scripts/amis-sync/amis-harvest.ts >> scripts\amis-sync\refresh.log 2>&1

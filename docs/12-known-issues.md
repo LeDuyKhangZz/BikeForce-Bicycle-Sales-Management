@@ -106,6 +106,7 @@ Diễn giải bắt buộc tuân thủ:
 | ISSUE-030 | P2 | **CLOSED** | **MỚI 2026-08-11** — **logo bị cắt mất đáy hai bánh xe** ở mọi nơi dùng `BrandMark`. `viewBox="0 0 101 75"` đúng KÍCH THƯỚC nhưng thiếu ĐỘ LỆCH y: hình nằm ở `y ∈ [13,07 · 87,93]` nên **12,92 đơn vị (~17% chiều cao) bị chém phẳng**, đồng thời đỉnh thừa một dải trắng bằng đúng chừng ấy. Bộ icon PWA và `app/icon.svg` **vô can** (khung 512×512 có đệm). Sửa bằng `viewBox="0 13.07 101 74.86"` + luật E2E `logo-clipped` |
 | ISSUE-031 | P3 | **CLOSED** | **MỚI 2026-08-12** — thanh tìm kiếm và bộ chuyển tháng ở `/admin/reports` bị lệch dọc trên laptop. Gốc: cột tháng có thêm dòng “Tháng này” nhưng lưới cha dùng `items-end`, nên kéo cả cột tìm kiếm xuống. Thiết kế lại bằng lưới `3fr / 2fr`, đưa “Tháng này” lên hàng label, cân hai control và thêm E2E đo bounding box |
 | ISSUE-032 | P2 | **CLOSED** | **MỚI 2026-08-14** — thẻ ảnh 9:16 **chồng chữ** khi nội dung vượt 1920px (tên Sales 2 dòng + tuyến 2 dòng + ghi chú kịch trần). Gốc: thẻ cao cố định, `flex-shrink` mặc định là 1 nên Yoga nén mọi khối lại thay vì cắt. **Lỗi có sẵn từ trước DEC-068**, chỉ lộ ra khi render ca xấu nhất. Sửa bằng `flexShrink: 0` cho mọi khối bắt buộc + cho riêng ghi chú co được kèm `overflow: hidden`, hạ `MAX_SHARE_NOTE_CHARS` 232 → 174 và siết nhịp dọc |
+| ISSUE-035 | P1 | **CLOSED** | **MỚI 2026-09-03** — script dashboard chỉ trả 1 người vì `.env` lọc `VẠN THỊNH` và mã kỳ bị cố định `13`; Abraham còn map nhầm sang Nguyễn Thị Như Quỳnh. Đã đổi sang `THỐNG ĐẠT GROUP`, mã kỳ động và map `Kế Toán Bán Hàng`; gọi thật tháng 08/2026 trả 15 người, đúng `458.661.000` cho Abraham |
 
 Tổng: **14 OPEN** (1 × P1 — ISSUE-011, 2 × P2 — ISSUE-003 và ISSUE-019, 11 × P3), **0 FIXING**, **0 VERIFY**, **18 CLOSED** (ISSUE-001, ISSUE-002, ISSUE-004, ISSUE-005, ISSUE-006, ISSUE-008, ISSUE-013, ISSUE-014, ISSUE-015, ISSUE-016, ISSUE-018, ISSUE-025, ISSUE-027, ISSUE-028, ISSUE-029, ISSUE-030, ISSUE-031, **ISSUE-032**).
 
@@ -1772,3 +1773,33 @@ về nội dung và phân cấp ba số liệu phụ.
 
 **Verification:** typecheck + lint exit 0 · unit **695/695** · production build exit 0, 23 route. Render PNG
 thật 1080×1920: ba nhãn đầy đủ, nhãn cuối đúng một dòng, câu nhắc bản sáng và footer đều nằm trọn ảnh.
+
+---
+
+### ISSUE-035
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-03
+**Module:** đồng bộ AMIS CRM · ảnh xuất SaleWork
+
+**Description:** Chạy trực tiếp script lấy dashboard “Doanh số đã ghi CÓ TÍNH TRẢ HÀNG” chỉ trả một
+nhân viên (`Tô Kim Sang`), trong khi bảng trên AMIS của `THỐNG ĐẠT GROUP` có nhiều dòng. Tài khoản
+SaleWork `Abraham Kế Toán Bánhàng` cũng đang nối sai sang `Nguyễn Thị Như Quỳnh`.
+
+**Expected:** kỳ 08/2026 lấy toàn bộ bảng của `THỐNG ĐẠT GROUP`; dòng `Kế Toán Bán Hàng` có thực đạt
+`458.661.000`, chỉ tiêu và phần trăm là `—`.
+
+**Actual:** `.env` đặt `OrganizationUnitID=4`, tên `VẠN THỊNH`; script trực tiếp luôn gửi `Period=13`
+dù ngày yêu cầu thuộc tháng trước; kết quả chỉ còn một người trong đơn vị con.
+
+**Root Cause:** bộ lọc tổ chức cục bộ còn cấu hình thử nghiệm của `VẠN THỊNH`, mã kỳ dashboard được
+khai báo hằng thay vì suy ra từ tháng/năm, và mapping SaleWork chưa theo tài khoản kế toán tổng.
+
+**Fix:** đổi đơn vị cục bộ sang ID 1 / `THỐNG ĐẠT GROUP`; thêm đối số `[NAM THANG]`; suy `Period=13`
+cho tháng này, `14` cho tháng trước, `0` cho kỳ tùy chọn; dùng cùng logic trong `push_amis.py` và
+`test_no_cookie.py`; map Abraham sang `Kế Toán Bán Hàng`; giữ mục tiêu không áp dụng dưới dạng `null`.
+
+**Verification:** `python test_amis_revenue.py 2026 8` gọi AMIS thật nhận HTTP 200 và **15 dòng**;
+`Kế Toán Bán Hàng` trả `— · 458.661.000 · —`; tổng thực hiện `2.718.370.075`. Python compile sạch,
+assertion cho ba mã kỳ và ID/tên đơn vị pass; typecheck pass.

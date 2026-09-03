@@ -160,6 +160,16 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     console.log('   -> Dang nhap neu duoc hoi, cho bang bao cao hien ra.');
   }
 
+  // Tu dong bam nut "Xem bao cao" trong popup "Chon tham so" neu no xuat hien.
+  // Playwright thao tac tren DOM, khong bi anh huong boi viec cua so hien
+  // thi bi cat/khong thay nut bang mat thuong.
+  await page
+    .getByRole('button', { name: 'Xem báo cáo' })
+    .click({ timeout: loginMode ? 300_000 : 30_000 })
+    .catch(() => {
+      console.log('   -> Khong thay nut "Xem bao cao" (co the da bam roi hoac popup khac cau truc).');
+    });
+
   const deadline = Date.now() + (loginMode ? 300_000 : 90_000);
   while (!got.actToken && Date.now() < deadline) {
     await page.waitForTimeout(1000);
@@ -190,7 +200,12 @@ async function main(): Promise<void> {
     headless: !loginMode,
     locale: 'vi-VN',
     timezoneId: 'Asia/Ho_Chi_Minh',
-    viewport: { width: 1440, height: 900 },
+    // Che do login: khong ep kich thuoc co dinh (de tranh cua so to hon
+    // man hinh that, khien footer/nut bam bi day ra ngoai vung nhin thay
+    // duoc). De Chromium tu mo va maximize theo man hinh that.
+    // Che do tu dong (headless): dung viewport co dinh nhu binh thuong.
+    viewport: loginMode ? null : { width: 1920, height: 1080 },
+    args: loginMode ? ['--start-maximized'] : [],
   });
 
   const got: Harvested = {};

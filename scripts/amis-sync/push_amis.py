@@ -178,7 +178,7 @@ def pull_nvkd(year: int, month: int, period: int) -> dict[str, dict[str, Any]]:
 
 # ------------------------------------------ NGUON 2: dashboard doanh so (CRM)
 
-def pull_revenue(year: int, month: int) -> dict[str, dict[str, float]]:
+def pull_revenue(year: int, month: int) -> dict[str, dict[str, Any]]:
     """Mục tiêu / đã thực hiện theo nhân viên.
 
     ⚠ `current_amount` là con số thẻ ảnh dùng cho dòng "Doanh số đã ghi", KHÔNG
@@ -187,18 +187,22 @@ def pull_revenue(year: int, month: int) -> dict[str, dict[str, float]]:
     dashboard với `net_sales` của report cho ra tỉ lệ sai (11,2% thay vì 17,4%).
     """
     from_date, to_date = revenue_mod.month_range_vn(year, month)
-    payload = revenue_mod.fetch_dashboard(from_date, to_date)
+    period = revenue_mod.dashboard_period(year, month)
+    payload = revenue_mod.fetch_dashboard(from_date, to_date, period)
     rows = revenue_mod.find_employee_data(payload) or []
 
-    result: dict[str, dict[str, float]] = {}
+    result: dict[str, dict[str, Any]] = {}
 
     for row in rows:
         name = str(row.get("FullName") or "").strip()
         if not name:
             continue
 
+        target_amount = to_number(row.get("TargetAmount"))
         result[name] = {
-            "target_amount": to_number(row.get("TargetAmount")),
+            # Dashboard dùng dấu "—" khi nhân viên không được giao mục tiêu.
+            # Lưu NULL thay vì 0 để ảnh cũng giữ đúng ý nghĩa "không áp dụng".
+            "target_amount": target_amount if target_amount > 0 else None,
             "current_amount": to_number(row.get("CurrentAmount")),
         }
 

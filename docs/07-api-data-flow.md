@@ -600,3 +600,19 @@ phải Sales** — khoá ngoại chỉ đòi `profiles(id)` tồn tại nên kh�
 
 ⚠ **Một `upsert`, không phải N lần `insert`/`update`.** 12 Sales là 12 round-trip, và lỗi ở dòng thứ 7
 để lại một tháng ghi dở.
+
+---
+
+## 15. Đồng bộ dashboard doanh số cho SaleWork
+
+Luồng chạy cục bộ: `amis-harvest.ts` lấy token/cookie → `push_amis.py` gọi
+`test_amis_revenue.py` → ghi `target_amount` và `current_amount` vào
+`amis_employee_metrics`. Dashboard dùng **Cơ cấu tổ chức = THỐNG ĐẠT GROUP** (`OrganizationUnitID=1`).
+
+Script thử hỗ trợ `python test_amis_revenue.py [NAM THANG]`. Mã `Period` phải khớp kỳ: `13` cho tháng
+hiện tại, `14` cho tháng trước và `0` cho kỳ tùy chọn; cùng mã phải xuất hiện ở cả `Param.Period` và
+`Param.DateData.Period`. Không được cố định `13`, vì AMIS có thể ưu tiên mã kỳ và trả dữ liệu tháng
+hiện tại dù `FromDate`/`ToDate` đang chỉ sang tháng khác.
+
+Tài khoản SaleWork `Abraham Kế Toán Bánhàng` nối với dòng AMIS `Kế Toán Bán Hàng`. Khi AMIS không
+giao `TargetAmount`, pipeline lưu `null` và ảnh hiển thị `—`, không đổi thành mục tiêu `0`.
