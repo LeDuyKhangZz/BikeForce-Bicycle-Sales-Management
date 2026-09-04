@@ -6,7 +6,9 @@ import { z } from 'zod';
 
 import { DailyReportShareCard } from '@/features/report-share/daily-report-share-card';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
+import { getVietnamToday } from '@/lib/date';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
+import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { summarizeMonthToDate } from '@/lib/reports/month-summary';
 import {
   SHARE_IMAGE_VIEW_PARAM,
@@ -20,6 +22,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { getMonthlyTargets } from '@/services/monthly-targets';
 import { getSessionProfile } from '@/services/profiles';
+import { getSaleWorkReportByAccountName } from '@/services/salework';
 import {
   getAmisMetricsForShare,
   getReportForShare,
@@ -276,9 +279,14 @@ export async function GET(request: Request, context: ShareImageContext): Promise
   // `getMonthlyTargets` thì ngược lại, khoá bằng `sales_id`: chỉ tiêu tháng là
   // dữ liệu của BikeForce, do Admin giao (DEC-071). Thiếu nó KHÔNG bỏ cụm —
   // hai dòng tiền rơi về đường cũ (AMIS `target_amount` và tổng cam kết ngày).
-  const [amis, monthlyTargets] = await Promise.all([
+  const saleWorkAccountName = getSaleWorkAccountName(report.sales.full_name);
+  const isCurrentSaleWorkDate = report.report_date === getVietnamToday();
+  const [amis, monthlyTargets, saleWorkReport] = await Promise.all([
     getAmisMetricsForShare(supabase, report.sales.amis_employee_name, periodMonth),
     getMonthlyTargets(supabase, report.sales_id, periodMonth),
+    saleWorkAccountName === null || !isCurrentSaleWorkDate
+      ? Promise.resolve(null)
+      : getSaleWorkReportByAccountName(saleWorkAccountName),
   ]);
 
   const performance =
@@ -299,7 +307,19 @@ export async function GET(request: Request, context: ShareImageContext): Promise
           targetRevenue: summary.targetRevenue,
         };
 
-  const model = buildShareCardModel(report, performance, variant);
+  const saleWork =
+    saleWorkAccountName === null
+      ? null
+      : {
+          conversations: saleWorkReport?.conversations ?? null,
+          sentMessages: saleWorkReport?.sentMessages ?? null,
+          receivedMessages: saleWorkReport?.receivedMessages ?? null,
+          outgoingCalls: saleWorkReport?.outgoingCalls ?? null,
+          incomingCalls: saleWorkReport?.incomingCalls ?? null,
+          callDuration: saleWorkReport?.callDuration ?? null,
+        };
+
+  const model = buildShareCardModel(report, performance, variant, saleWork);
   const fileName = shareImageFileName(
     report.sales.full_name,
     report.report_date,

@@ -1427,3 +1427,11 @@ Admin, mở nút **Xem trước**, xác nhận danh sách tên, bấm một dòn
 ảnh tải thành công. Đồng thời khóa ba ca từ chối trên route ảnh SaleWork: Sales, anon và inactive.
 View-model phải có unit chứng minh `MORNING_SUBMITTED` + override `EVENING` cho mẫu cuối ngày với toàn
 bộ `actual_* = null`, nhưng đường ảnh Sales bình thường vẫn không bị đổi biến thể.
+Helper phân nhóm phải kiểm: nhiều Sales hôm nay giữ nguyên thứ tự; báo cáo ngày trước, ngày khác và
+không có báo cáo đều rơi xuống nhóm cuối.
+
+### 17.1. Chỉ số SaleWork trong ảnh Sales
+
+Unit phải khóa đủ năm ánh xạ tên và đúng thứ tự sáu dòng; null/chuỗi thời lượng rỗng phải ra `—`. Visual
+QA phải render thật cả MORNING và EVENING ở 1080×1920, có đồng thời KPI + SaleWork + MISA, rồi xác nhận
+đủ header/footer và không có chữ bị cắt/chồng.

@@ -649,3 +649,14 @@ truy vấn inline trong component.
 `MainNav` nhận thêm `sidebarItems` tùy chọn. Admin truyền `ADMIN_SIDEBAR_ITEMS` chứa SaleWork; tập này
 chỉ render trong sidebar desktop và vẫn tham gia tính trạng thái active. Bottom nav tiếp tục chỉ render
 `ADMIN_NAV_ITEMS`, nên không vượt trần sáu mục ở 375px.
+
+Thứ tự preview nằm trong helper thuần `lib/reports/preview-order.ts`: nhận ngày nghiệp vụ từ
+`getVietnamToday()` và chia danh sách thành `reportedToday`/`others`. Component chỉ render ba section
+theo thứ tự Sales hôm nay → SaleWork → Sales còn lại, không tự tính ngày trong `.tsx`.
+
+### Nguồn SaleWork trong thẻ ảnh Sales
+
+Ánh xạ hồ sơ Sales → tài khoản SaleWork nằm tại `lib/salework/sales-account-map.ts` và đồng thời là nguồn
+danh sách cho script đồng bộ, tránh khai báo hai bản. Route `share-image` chỉ đọc SaleWork sau khi báo cáo
+đã qua auth + RLS; `lib/reports/share-card.ts` dựng sáu chuỗi hiển thị, còn component Satori chỉ render.
+Không thêm cột database và không đưa truy vấn vào `.tsx`.

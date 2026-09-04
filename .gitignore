@@ -75,7 +75,7 @@ desktop.ini
 # Tạm ------------------------------------------------------------------------
 *.tmp
 .cache/
-.salework-browser-profile/
+.salework-browser-profile*/
 data/salework-report.json
 
 # ---------------------------------------------------------------------------

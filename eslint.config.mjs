@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "test-results/**",
     "playwright-report/**",
+    // Hồ sơ Chrome cục bộ của luồng SaleWork chứa extension/cache sinh tự động.
+    ".salework-browser-profile*/**",
     // File generate bằng `supabase gen types typescript` — không sửa tay, không lint.
     "types/database.types.ts",
     // Artifact runtime do `supabase start` sinh ra (bundle edge function đã

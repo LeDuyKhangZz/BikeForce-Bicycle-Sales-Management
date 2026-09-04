@@ -1065,12 +1065,26 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Nút chuyển module **SaleWork** nằm ở sidebar trái desktop; link trong trang preview chỉ hiện mobile
 - [x] Danh sách Sales hiện tên, mã, báo cáo gần nhất và đủ hai nút **Đầu ngày / Cuối ngày**
 - [x] Báo cáo mới có cam kết sáng vẫn preview cuối ngày; số thực đạt còn thiếu hiện `—`/chờ số liệu
+- [x] Thứ tự hiển thị: Sales báo cáo hôm nay → telesale/SaleWork → Sales ngày trước/chưa có báo cáo
+- [x] Ngày ưu tiên lấy từ `getVietnamToday()`; component không tự tính ngày
 - [x] Danh sách telesale SaleWork hiện tên tài khoản và nút preview bên cạnh
 - [x] Preview dùng ảnh thật hiện hữu; không sao chép công thức KPI hoặc logic dựng ảnh
 - [x] Route ảnh SaleWork chấp nhận phiên Admin hoạt động nhưng không lộ API key n8n
 - [x] Nhân viên chưa có dữ liệu vẫn hiện trong danh sách với trạng thái không khả dụng
-- [x] Typecheck · lint · full unit **713/713** · production build **26 route**
+- [x] Typecheck · lint · full unit **715/715** · production build **26 route**
 - [ ] E2E và kiểm trực quan 375px/1440px — chưa chạy vì Supabase local/Docker đang tắt và in-app Browser không khả dụng
+
+## Sáu chỉ số SaleWork trong báo cáo Sales (2026-09-04)
+
+- [x] Ánh xạ đủ 5 hồ sơ Sales sang đúng tài khoản SaleWork do người dùng cung cấp
+- [x] Script đồng bộ chọn thêm 5 tài khoản; không chỉ ánh xạ ở màn hình
+- [x] Script gõ từng tên trong ô tìm kiếm, chọn đúng tab **Tin nhắn** và chờ đủ 7 tên trước khi đọc bảng
+- [x] Chạy đồng bộ thật: **7/7 tài khoản** đã ghi Supabase; Bà Rịa có dữ liệu thật, không dùng số 0 giả
+- [x] Bản đầu ngày và cuối ngày hiển thị đủ 6 dòng Zalo/cuộc gọi, dữ liệu thiếu hiện `—`
+- [x] Không thêm input và không lưu trùng dữ liệu SaleWork vào `daily_reports`
+- [x] Typecheck · lint · full unit **724/724**
+- [x] Render và nhìn PNG thật MORNING + EVENING 1080×1920: đủ KPI, SaleWork, MISA và footer
+- [x] Production build sạch, **26 route**
 
 ## OPEN QUESTIONS
 

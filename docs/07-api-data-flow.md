@@ -672,3 +672,19 @@ override này khi phiên hiện tại là Admin active; báo cáo chưa hoàn t�
 giá trị `actual_* = null` hiện `—`/chờ số liệu. Đường xuất ảnh bình thường của Sales không đổi và vẫn
 để `status` quyết định biến thể. Khi chọn telesale, trình duyệt tải
 `/api/salework/report-image?account=...` bằng cookie Admin, không đưa API key vào HTML hoặc URL.
+
+`groupSalesPreviewsByToday()` chạy trong Server Component sau khi hai nguồn hoàn tất. Nó chỉ so sánh
+chuỗi ngày chuẩn `YYYY-MM-DD` với `getVietnamToday()`, giữ nguyên thứ tự tên trong mỗi nhóm và không
+đưa phép tính ngày vào component.
+
+### 16.3. Sáu chỉ số SaleWork trên ảnh Sales
+
+`scripts/salework-sync.ts` chọn thêm năm tài khoản được ánh xạ và UPSERT cùng tám cột snapshot hiện hữu.
+Script mở đúng tab **Tin nhắn**, gõ từng tên vào ô tìm kiếm trước khi chọn để không phụ thuộc danh sách
+ảo hóa, rồi sau khi bấm **Tổng hợp** phải chờ bảng chứa đủ cả bảy tài khoản. Không được chỉ chờ dòng đầu
+tiên hiện ra vì bảng kết quả cũ có thể vẫn còn trong DOM và dẫn đến ghi snapshot thiếu tài khoản.
+Khi dựng ảnh, route lấy tên tài khoản bằng `getSaleWorkAccountName(full_name)`, gọi
+`getSaleWorkReportByAccountName()`, rồi chỉ chuyển sáu trường cần thiết vào `buildShareCardModel()`.
+Không có snapshot thì truyền sáu giá trị null để view-model hiển thị `—`; không ghi ngược vào báo cáo ngày.
+Snapshot SaleWork hiện chỉ lưu số của ngày đồng bộ gần nhất, nên báo cáo khác ngày Việt Nam hôm nay không
+được ghép số hiện tại vào quá khứ; sáu dòng của nhân viên đã ánh xạ sẽ hiển thị `—`.

@@ -3270,12 +3270,24 @@ Route ảnh SaleWork giữ API key cho n8n, đồng thời cho phép phiên Admi
 |---|---|
 | Typecheck | ✅ exit 0 |
 | Lint | ✅ exit 0 |
-| Full unit | ✅ 713/713 |
+| Full unit | ✅ 715/715 |
 | Production build | ✅ exit 0, 26 route |
 | E2E / Visual 375px, 1440px | Chưa chạy — Supabase local/Docker đang tắt và in-app Browser không khả dụng |
 
 **Next Exact Steps:** bật Docker + Supabase local, chạy E2E Admin cho hai nút preview và ba ca từ chối
 route SaleWork (Sales/anon/inactive); kiểm trực quan 375px và 1440px khi Browser khả dụng.
+
+---
+
+## Entry 042 — 2026-09-04 — Ghép sáu chỉ số SaleWork vào báo cáo Sales
+
+Đã thêm ánh xạ 5 Sales → tài khoản SaleWork và dùng cùng danh sách đó trong script đồng bộ. Route ảnh
+đọc snapshot SaleWork sau bước auth/RLS, đưa hội thoại, tin gửi/nhận, gọi đi, gọi đến đã nghe và thời lượng
+vào view-model; không thêm field nhập tay hay cột `daily_reports`. Có ánh xạ nhưng chưa đồng bộ thì hiện `—`.
+
+Bố cục Satori có chế độ gọn khi xuất hiện khối SaleWork. Đã render và nhìn trực tiếp cả ảnh MORNING lẫn
+EVENING 1080×1920: toàn bộ KPI, sáu dòng SaleWork, cụm MISA và footer đều còn nguyên, không cắt/chồng chữ.
+Typecheck và lint sạch; full unit **724/724**; production build thành công với **26 route**.
 
 Ngoại lệ `variant=MORNING|EVENING` được route ảnh giới hạn cho phiên Admin active. Đường xuất ảnh bình thường
 của Sales vẫn để trạng thái persisted quyết định biến thể.
@@ -3285,3 +3297,23 @@ của Sales vẫn để trạng thái persisted quyết định biến thể.
 Theo yêu cầu người dùng, SaleWork được chuyển thành mục riêng trong sidebar trái ở desktop. `MainNav`
 nhận `sidebarItems` tách khỏi danh sách bottom nav, nên mobile vẫn giữ đúng sáu mục. Vì mobile không có
 sidebar, link “Xem bảng SaleWork” trong trang preview được giữ lại nhưng ẩn từ breakpoint `lg`.
+
+### Bổ sung thứ tự ưu tiên danh sách preview
+
+Màn hình nay chia thành ba section theo đúng thứ tự: Sales có báo cáo hôm nay → telesale/SaleWork →
+Sales chỉ có báo cáo ngày trước hoặc chưa có dữ liệu. Ngày hôm nay lấy bằng `getVietnamToday()` ở
+Server Component. Helper thuần `groupSalesPreviewsByToday()` có unit test và giữ thứ tự tên trong nhóm.
+
+### Sửa script SaleWork quét đủ 7 tài khoản
+
+Đã dùng Playwright Codegen ghi lại thao tác thật của người dùng và sửa script theo đúng chuỗi: mở tab
+**Tin nhắn**, gõ từng tên vào ô tìm kiếm, chọn kết quả rồi bấm **Tổng hợp**. Tên tài khoản Khải trên
+SaleWork là `Abraham Khải Khánh Hoà`, khác dấu với mapping ban đầu `Hòa`.
+
+Lượt đầu chỉ ghi 6 tài khoản không phải vì Bà Rịa không có hoạt động, mà vì script chỉ chờ một dòng
+table hiện ra và đọc nhầm DOM kết quả cũ trước khi request Tổng hợp hoàn tất. Không dùng fallback số 0.
+Script nay chờ bảng chứa đủ cả 7 tên rồi mới parse và UPSERT.
+
+Chạy thật `npm run salework:sync` exit 0: **7 tài khoản SaleWork** và **1 snapshot CRM Report 70** đã
+được cập nhật lên Supabase. Đọc file đối soát xác nhận `Abraham Bà Rịa - Vũng Tàu` có `54` hội thoại,
+`404` tin gửi, `84` tin nhận, `1` gọi đến và thời lượng `30.00 giây`. Typecheck và lint sạch.

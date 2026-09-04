@@ -4,6 +4,7 @@ import type {
   ShareCardModel,
   ShareCardPerformanceRow,
   ShareCardProgress,
+  ShareCardSaleWorkMetric,
   ShareCardSupplementaryMetric,
 } from '@/lib/reports/share-card';
 
@@ -472,22 +473,27 @@ function MetricRow({
   zebra,
   variant,
   flameSrc,
+  compact,
 }: {
   row: ShareCardMetricRow;
   zebra: boolean;
   variant: ShareCardModel['variant'];
   flameSrc: string | null;
+  compact: boolean;
 }) {
   const isMorning = variant === 'MORNING';
   const size = ROW_METRICS[variant];
+  const paddingY = compact ? 4 : size.paddingY;
+  const labelSize = compact && isMorning ? 36 : size.label;
+  const valueSize = compact && isMorning ? 46 : size.value;
 
   return (
     <div
       style={{
         display: 'flex',
         alignItems: 'flex-start',
-        paddingTop: size.paddingY,
-        paddingBottom: size.paddingY,
+        paddingTop: paddingY,
+        paddingBottom: paddingY,
         paddingLeft: ROW_PADDING_X,
         paddingRight: ROW_PADDING_X,
         backgroundColor: zebra ? COLOR.zebra : COLOR.background,
@@ -497,7 +503,7 @@ function MetricRow({
         style={{
           display: 'flex',
           width: isMorning ? MORNING_COLUMN.metric : EVENING_COLUMN.metric,
-          fontSize: size.label,
+          fontSize: labelSize,
           color: COLOR.body,
         }}
       >
@@ -509,7 +515,7 @@ function MetricRow({
           display: 'flex',
           width: isMorning ? MORNING_COLUMN.target : EVENING_COLUMN.target,
           justifyContent: 'flex-end',
-          fontSize: size.value,
+          fontSize: valueSize,
           // Bản sáng: cam kết là con số DUY NHẤT của dòng ⇒ nó là số chính, in
           // đậm. Bản chiều: nó là mốc để so, nên nhường phần nhấn cho "Thực đạt".
           fontWeight: isMorning ? 700 : 400,
@@ -525,7 +531,7 @@ function MetricRow({
             display: 'flex',
             width: EVENING_COLUMN.actual,
             justifyContent: 'flex-end',
-            fontSize: size.value,
+            fontSize: valueSize,
             fontWeight: 700,
             color: COLOR.body,
           }}
@@ -562,6 +568,7 @@ function MetricRow({
             progress={row.progress}
             status={row.achievement.status}
             flameSrc={flameSrc}
+            withFlame={!compact}
           />
         </div>
       )}
@@ -580,9 +587,9 @@ function MetricRow({
  * dòng và không còn chỗ theo chiều dọc. Luật `color-not-only` vẫn thoả: con số
  * `%` ngay đó là thông tin, màu chỉ là lớp nhấn.
  */
-function PerformanceRow({ row }: { row: ShareCardPerformanceRow }) {
+function PerformanceRow({ row, compact }: { row: ShareCardPerformanceRow; compact: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: compact ? 6 : 14 }}>
       <div
         style={{
           display: 'flex',
@@ -665,8 +672,10 @@ function PerformanceRow({ row }: { row: ShareCardPerformanceRow }) {
  */
 function SupplementaryMetrics({
   metrics,
+  compact,
 }: {
   metrics: readonly ShareCardSupplementaryMetric[];
+  compact: boolean;
 }) {
   return (
     <div
@@ -675,8 +684,8 @@ function SupplementaryMetrics({
         flexDirection: 'column',
         alignItems: 'center',
         borderTop: `1px solid ${COLOR.accent}`,
-        marginTop: 14,
-        paddingTop: 4,
+        marginTop: compact ? 8 : 14,
+        paddingTop: compact ? 2 : 4,
       }}
     >
       {metrics.map((metric) => (
@@ -687,7 +696,7 @@ function SupplementaryMetrics({
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
-            marginTop: 8,
+            marginTop: compact ? 4 : 8,
           }}
         >
           <div
@@ -719,6 +728,65 @@ function SupplementaryMetrics({
   );
 }
 
+/** Sáu dòng SaleWork gọn để vẫn nằm trọn trong khung ảnh 9:16 cố định. */
+function SaleWorkMetrics({ metrics }: { metrics: readonly ShareCardSaleWorkMetric[] }) {
+  return (
+    <div
+      style={{
+        ...NO_SHRINK,
+        display: 'flex',
+        flexDirection: 'column',
+        marginTop: 20,
+        borderTop: `2px solid ${COLOR.heading}`,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 24,
+          fontWeight: 600,
+          color: COLOR.heading,
+          letterSpacing: 3,
+          paddingTop: 12,
+          paddingBottom: 6,
+        }}
+      >
+        HOẠT ĐỘNG SALEWORK
+      </div>
+      {metrics.map((metric, index) => (
+        <div
+          key={metric.label}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            minHeight: 31,
+            paddingLeft: 16,
+            paddingRight: 16,
+            backgroundColor: index % 2 === 1 ? COLOR.zebra : COLOR.background,
+          }}
+        >
+          <div style={{ display: 'flex', fontSize: 20, color: COLOR.muted }}>
+            {metric.label}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 22,
+              fontWeight: 700,
+              color: COLOR.body,
+              marginLeft: 16,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {metric.valueText}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type Props = {
   model: ShareCardModel;
   /**
@@ -734,6 +802,7 @@ type Props = {
 
 export function DailyReportShareCard({ model, flameSrc }: Props) {
   const isMorning = model.variant === 'MORNING';
+  const isSaleWorkLayout = model.saleWorkMetrics !== null;
 
   return (
     <div
@@ -878,18 +947,21 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
             zebra={index % 2 === 1}
             variant={model.variant}
             flameSrc={flameSrc}
+            compact={isSaleWorkLayout}
           />
         ))}
 
         <div style={{ display: 'flex', width: CONTENT_WIDTH, height: 1, backgroundColor: COLOR.rule }} />
       </div>
 
+      {model.saleWorkMetrics !== null && <SaleWorkMetrics metrics={model.saleWorkMetrics} />}
+
       {/* ── Tình trạng thực hiện — PHASE 19, DEC-070 ────────────────────────
           Ba trong bốn dòng lấy THỰC ĐẠT từ MISA AMIS, không phải từ số Sales tự
           khai. Chỗ này trước đây là cụm lũy kế tháng (DEC-068), và trước nữa là
           khối "Số khách làm việc" (DEC-056). Đừng khôi phục bản nào cũ. */}
       {model.performance !== null && (
-        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: 26 }}>
+        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: isSaleWorkLayout ? 16 : 26 }}>
           {/* Vạch cam dọc: cam logo làm ĐỒ HOẠ, không mang chữ (DEC-046). */}
           <div style={{ display: 'flex', width: 10, backgroundColor: COLOR.accent }} />
           <div
@@ -898,8 +970,8 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
               flexDirection: 'column',
               flexGrow: 1,
               backgroundColor: COLOR.accentSoft,
-              paddingTop: 22,
-              paddingBottom: 24,
+              paddingTop: isSaleWorkLayout ? 12 : 22,
+              paddingBottom: isSaleWorkLayout ? 12 : 24,
               paddingLeft: 32,
               paddingRight: 32,
             }}
@@ -921,7 +993,13 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
             </div>
 
             {/* Mảng chứ không Fragment — Satori không dựng được `<>…</>`. */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 16 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                marginTop: isSaleWorkLayout ? 8 : 16,
+              }}
+            >
               {PERFORMANCE_HEADER.map((cell) => (
                 <SmallHeaderCell
                   key={cell.text === '' ? 'metric' : cell.text}
@@ -935,10 +1013,13 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
             <div style={{ display: 'flex', height: 1, backgroundColor: COLOR.accent, marginTop: 6 }} />
 
             {model.performance.rows.map((row) => (
-              <PerformanceRow key={row.label} row={row} />
+              <PerformanceRow key={row.label} row={row} compact={isSaleWorkLayout} />
             ))}
 
-            <SupplementaryMetrics metrics={model.performance.supplementaryMetrics} />
+            <SupplementaryMetrics
+              metrics={model.performance.supplementaryMetrics}
+              compact={isSaleWorkLayout}
+            />
           </div>
         </div>
       )}

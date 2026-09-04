@@ -1281,3 +1281,12 @@ không cho biết đang ở dòng của ai.
 - Preview hiện dưới danh sách trong khung dọc co theo bề rộng, tối đa 540px; ảnh giữ đúng tỉ lệ, không
   sinh cuộn ngang ở 375px.
 - Nút mang `aria-label` có tên nhân viên; trạng thái báo cáo có chữ, không truyền đạt chỉ bằng màu.
+- Thứ tự section cố định: **Sales đã báo cáo hôm nay** (nhãn Ưu tiên) → **telesale/SaleWork** →
+  **Sales chưa báo cáo hôm nay** (báo cáo ngày trước hoặc chưa có dữ liệu).
+
+### Sáu dòng SaleWork trên ảnh báo cáo Sales
+
+- Khối **HOẠT ĐỘNG SALEWORK** có sáu dòng nhãn trái/giá trị phải và xuất hiện trên cả mẫu đầu ngày, cuối ngày.
+- Giá trị chưa đồng bộ dùng `—`; không tạo input vì đây là dữ liệu hệ thống.
+- Khi có khối này, bảng KPI và cụm MISA dùng nhịp gọn hơn nhưng vẫn giữ đủ chữ, số và footer trong ảnh
+  1080×1920. Hai biến thể đã được render PNG thật để kiểm tra không cắt/chồng nội dung.

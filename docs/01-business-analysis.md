@@ -887,3 +887,12 @@ báo cáo gần nhất và cung cấp riêng hai nút đầu ngày/cuối ngày.
 đạt chưa nhập; ô thiếu hiện `—`/chờ số liệu.
 Với telesale, hệ thống hiện ảnh báo cáo SaleWork đã đồng bộ. Nhân viên chưa từng báo cáo vẫn có trong
 danh sách nhưng nút ở trạng thái không khả dụng. Đây là quyền **chỉ đọc**, không thêm quyền sửa dữ liệu.
+
+Thứ tự ưu tiên của màn hình: Sales có báo cáo đúng ngày Việt Nam hôm nay → telesale/SaleWork → Sales
+chỉ có báo cáo ngày trước hoặc chưa từng báo cáo. Thứ tự này giúp Admin nhìn ngay người đã làm việc hôm nay.
+
+### Bổ sung chỉ số SaleWork vào báo cáo Sales
+
+Bản đầu ngày và cuối ngày của Sales đã được ánh xạ hiển thị thêm sáu số tự động: hội thoại tương tác,
+tin nhắn gửi, tin nhắn nhận, cuộc gọi đi, cuộc gọi đến đã nghe và tổng thời gian nghe máy. Sales không
+nhập tay và các số này không được lưu vào `daily_reports`; thiếu lần đồng bộ thì hiển thị `—`.

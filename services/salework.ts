@@ -206,3 +206,11 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     return [];
   }
 }
+
+/** Đọc một tài khoản đã biết tên; dùng cho việc ghép số SaleWork vào báo cáo Sales. */
+export async function getSaleWorkReportByAccountName(
+  accountName: string,
+): Promise<SaleWorkReport | null> {
+  const reports = await getSaleWorkReport();
+  return reports.find((report) => report.accountName === accountName) ?? null;
+}

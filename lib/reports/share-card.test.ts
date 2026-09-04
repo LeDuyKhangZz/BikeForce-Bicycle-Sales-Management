@@ -20,6 +20,7 @@ import {
   SHARE_NAME_MIN_FONT_SIZE,
   SHARE_ROUTE_FONT_SIZE,
   asciiNameSlug,
+  buildSaleWorkMetrics,
   buildShareCardModel,
   shareNameFontSize,
   shareRouteFontSize,
@@ -32,6 +33,41 @@ import {
   type ShareCardPerformanceSource,
   type ShareCardSource,
 } from './share-card';
+
+describe('buildSaleWorkMetrics — dữ liệu tự động từ SaleWork', () => {
+  it('dựng đúng sáu dòng theo nguồn Zalo và cuộc gọi', () => {
+    expect(
+      buildSaleWorkMetrics({
+        conversations: 1_234,
+        sentMessages: 200,
+        receivedMessages: 180,
+        outgoingCalls: 15,
+        incomingCalls: 8,
+        callDuration: '01:23:45',
+      }),
+    ).toEqual([
+      { label: 'Số lượng hội thoại tương tác', valueText: '1.234' },
+      { label: 'Số lượng tin nhắn đã gửi', valueText: '200' },
+      { label: 'Số lượng tin nhắn đã nhận', valueText: '180' },
+      { label: 'Số lượng cuộc gọi đã gọi', valueText: '15' },
+      { label: 'Số lượng cuộc gọi đến đã nghe', valueText: '8' },
+      { label: 'Tổng thời gian đã nghe máy', valueText: '01:23:45' },
+    ]);
+  });
+
+  it('hiển thị gạch ngang khi lần đồng bộ chưa có giá trị', () => {
+    expect(
+      buildSaleWorkMetrics({
+        conversations: null,
+        sentMessages: null,
+        receivedMessages: null,
+        outgoingCalls: null,
+        incomingCalls: null,
+        callDuration: '  ',
+      }).map((metric) => metric.valueText),
+    ).toEqual(['—', '—', '—', '—', '—', '—']);
+  });
+});
 
 /**
  * Một báo cáo đã `COMPLETED` "bình thường" — mọi test bên dưới chỉ ghi đè đúng

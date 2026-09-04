@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 
 import { EmployeePreviewList } from '@/features/admin-report-previews/employee-preview-list';
 import { requireRole } from '@/features/auth/queries';
+import { getVietnamToday } from '@/lib/date';
+import { groupSalesPreviewsByToday } from '@/lib/reports/preview-order';
 import { createClient } from '@/lib/supabase/server';
 import { listSalesLatestReportPreviewOptions } from '@/services/profiles';
 import { getSaleWorkReport } from '@/services/salework';
@@ -23,6 +25,7 @@ export default async function AdminReportPreviewsPage({ searchParams }: Props) {
     getSaleWorkReport(),
     searchParams,
   ]);
+  const { reportedToday, others } = groupSalesPreviewsByToday(sales, getVietnamToday());
 
   return (
     <div className="flex flex-col gap-4">
@@ -36,7 +39,8 @@ export default async function AdminReportPreviewsPage({ searchParams }: Props) {
       </div>
 
       <EmployeePreviewList
-        sales={sales}
+        reportedToday={reportedToday}
+        otherSales={others}
         saleWorkReports={saleWorkReports}
         selectedDailyReportId={params.daily ?? null}
         selectedDailyVariant={params.variant === 'MORNING' ? 'MORNING' : 'EVENING'}

@@ -850,3 +850,7 @@ Route ảnh SaleWork vẫn giữ đường API key cho n8n, đồng thời chấ
 
 Tham số `variant=MORNING|EVENING` trên route ảnh ngày là ngoại lệ chỉ dành cho preview Admin. Route
 gọi `getUser()` rồi kiểm lại hồ sơ active/role trước khi đọc báo cáo; Sales cố truyền tham số nhận 403.
+
+Sáu chỉ số SaleWork chỉ được ghép sau khi route đã đọc thành công báo cáo theo quyền hiện tại. Vì vậy Sales
+chỉ nhận số gắn với ảnh của chính mình, còn Admin nhận số khi xem báo cáo được RLS cho phép; route không trả
+danh sách tài khoản SaleWork hay dữ liệu thô bổ sung cho client.

@@ -454,8 +454,42 @@ export type ShareCardModel = {
    * tấm ảnh gửi cấp trên trông như lỗi hệ thống.
    */
   readonly performance: ShareCardPerformance | null;
+  /** Sáu chỉ số Zalo/cuộc gọi đọc tự động từ SaleWork; `null` khi Sales chưa được ánh xạ. */
+  readonly saleWorkMetrics: readonly ShareCardSaleWorkMetric[] | null;
   readonly noteText: string | null;
 };
+
+export type ShareCardSaleWorkSource = {
+  readonly conversations: number | null;
+  readonly sentMessages: number | null;
+  readonly receivedMessages: number | null;
+  readonly outgoingCalls: number | null;
+  readonly incomingCalls: number | null;
+  readonly callDuration: string | null;
+};
+
+export type ShareCardSaleWorkMetric = {
+  readonly label: string;
+  readonly valueText: string;
+};
+
+function formatSaleWorkCount(value: number | null): string {
+  return value === null || !Number.isFinite(value) || value < 0 ? '—' : formatThousands(value);
+}
+
+/** Dựng sáu dòng SaleWork tại tầng dữ liệu để component ảnh chỉ đảm nhiệm trình bày. */
+export function buildSaleWorkMetrics(
+  source: ShareCardSaleWorkSource,
+): readonly ShareCardSaleWorkMetric[] {
+  return [
+    { label: 'Số lượng hội thoại tương tác', valueText: formatSaleWorkCount(source.conversations) },
+    { label: 'Số lượng tin nhắn đã gửi', valueText: formatSaleWorkCount(source.sentMessages) },
+    { label: 'Số lượng tin nhắn đã nhận', valueText: formatSaleWorkCount(source.receivedMessages) },
+    { label: 'Số lượng cuộc gọi đã gọi', valueText: formatSaleWorkCount(source.outgoingCalls) },
+    { label: 'Số lượng cuộc gọi đến đã nghe', valueText: formatSaleWorkCount(source.incomingCalls) },
+    { label: 'Tổng thời gian đã nghe máy', valueText: optionalText(source.callDuration) ?? '—' },
+  ];
+}
 
 /**
  * Cắt chuỗi ở ranh giới TỪ, không cắt giữa một từ.
@@ -495,6 +529,7 @@ export function buildShareCardModel(
   source: ShareCardSource,
   performance: ShareCardPerformanceSource | null,
   variantOverride: ShareCardVariant | null = null,
+  saleWork: ShareCardSaleWorkSource | null = null,
 ): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
@@ -541,6 +576,7 @@ export function buildShareCardModel(
     // Cụm này có ở CẢ HAI biến thể: số AMIS là luỹ kế tháng, không phụ thuộc
     // việc hôm nay Sales đã nhập thực đạt hay chưa.
     performance: performance === null ? null : buildPerformance(performance),
+    saleWorkMetrics: saleWork === null ? null : buildSaleWorkMetrics(saleWork),
     // `noteBudget === 0` ⇒ phần đầu thẻ đã ăn hết chỗ ⇒ bỏ hẳn khối ghi chú.
     noteText: note === null || noteBudget === 0 ? null : truncateText(note, noteBudget),
   };

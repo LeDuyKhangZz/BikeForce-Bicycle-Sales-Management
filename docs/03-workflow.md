@@ -1089,3 +1089,12 @@ danh sách. Mỗi Sales có hai lựa chọn đầu ngày/cuối ngày. Báo cá
 riêng phiên Admin được chọn biến thể, kể cả mẫu cuối ngày khi row còn `MORNING_SUBMITTED`. Ảnh SaleWork
 chỉ chấp nhận API key của n8n
 hoặc phiên Admin đang hoạt động. Không có bước ghi hay thay đổi báo cáo.
+
+Sau khi lấy dữ liệu, Server Component dùng `getVietnamToday()` để chia Sales thành hai nhóm. Nhóm có
+`daily_reports[0].report_date === today` render trước, SaleWork render ở giữa, nhóm còn lại render cuối.
+
+### Ghép SaleWork vào ảnh báo cáo Sales
+
+Sau khi route ảnh đã xác thực phiên và đọc được báo cáo qua RLS, hệ thống ánh xạ tên Sales sang tài khoản
+SaleWork, đọc snapshot đã đồng bộ và dựng sáu dòng chỉ đọc. Cả bản đầu ngày lẫn cuối ngày dùng cùng nguồn;
+không có ánh xạ thì giữ mẫu cũ, có ánh xạ nhưng chưa có snapshot thì sáu giá trị hiện `—`.

@@ -2137,9 +2137,30 @@ chạy đầu trong Task Scheduler và `scripts/amis-sync/auto-sync.log`.
 - Mỗi nhân viên có đủ hai nút **Đầu ngày / Cuối ngày**; row chưa hoàn tất vẫn dựng mẫu cuối ngày và hiện `—` ở ô thiếu.
 - Danh sách telesale SaleWork có nút preview riêng và link về bảng SaleWork đầy đủ.
 - SaleWork là mục riêng ở sidebar trái desktop; link trong trang preview chỉ hiện trên mobile.
+- Thứ tự preview: Sales báo cáo hôm nay → telesale/SaleWork → Sales ngày trước/chưa có báo cáo.
+- Phân nhóm bằng `getVietnamToday()` + `lib/reports/preview-order.ts`, không tính ngày trong component.
 - Route ảnh SaleWork nhận API key n8n hoặc phiên Admin active; URL phía UI không chứa secret.
-- Typecheck và lint sạch; full unit **713/713**; production build thành công với **26 route**.
+- Typecheck và lint sạch; full unit **715/715**; production build thành công với **26 route**.
 - Chưa chạy E2E/visual vì Supabase local/Docker đang tắt và in-app Browser không khả dụng; không ghi PASS giả.
 
 **Next Exact Steps:** bật Docker + Supabase local, chạy E2E Admin + security của route SaleWork, sau đó
 nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
+
+---
+
+## CHECKPOINT 2026-09-04 — Chỉ số SaleWork trên báo cáo Sales
+
+- 5 ánh xạ Sales/SaleWork nằm tại một nguồn chuẩn và script sync đã chọn thêm cả 5 tài khoản.
+- Tên SaleWork chính xác của Phan Thành Khải là `Abraham Khải Khánh Hoà` (`Hoà`, không phải `Hòa`).
+- Script làm đúng chuỗi thao tác đã ghi bằng Playwright Codegen: vào tab Tin nhắn, gõ từng tên, chọn
+  kết quả, bấm Tổng hợp và chờ bảng chứa đủ 7 tên trước khi đọc.
+- Đã chạy thật thành công **7/7 tài khoản**. `Abraham Bà Rịa - Vũng Tàu` có `54` hội thoại, `404` tin
+  gửi, `84` tin nhận, `1` gọi đến và `30.00 giây` tại thời điểm xác minh; không ghi fallback số 0.
+- Cả ảnh đầu ngày/cuối ngày có 6 dòng: hội thoại, tin gửi, tin nhận, gọi đi, gọi đến đã nghe, thời lượng.
+- Dữ liệu chỉ đọc từ snapshot SaleWork; không persist vào `daily_reports`; thiếu snapshot hiển thị `—`.
+- View-model dựng nhãn/giá trị; component chỉ render và bật layout gọn khi có SaleWork.
+- Unit **724/724**, typecheck, lint và production build **26 route** đều sạch.
+- PNG MORNING + EVENING 1080×1920 đã render/nhìn thật, đủ header/footer và không cắt/chồng chữ.
+
+**Next Exact Steps:** kiểm tra preview của từng Sales sau snapshot 7/7; lịch tiếp theo dùng
+`npm run reports:sync` với phiên SaleWork hiện hữu.

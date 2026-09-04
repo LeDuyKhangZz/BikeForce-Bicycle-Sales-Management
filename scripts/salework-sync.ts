@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
 import type { SaleWorkReport } from '../services/salework';
+import { SALES_SALEWORK_ACCOUNT_NAMES } from '../lib/salework/sales-account-map';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 
@@ -30,6 +31,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 const TARGET_ACCOUNT_NAMES = [
   'Abraham Kế Toán Bánhàng',
   'Giao - Kế Toán bán hàng',
+  ...SALES_SALEWORK_ACCOUNT_NAMES,
 ];
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
 
@@ -96,6 +98,9 @@ async function saveReportsToSupabase(reports: SaleWorkReport[]): Promise<void> {
 
 async function main(): Promise<void> {
   const context = await chromium.launchPersistentContext(PROFILE_PATH, {
+    // Hồ sơ này được người dùng đăng nhập bằng Chrome hệ thống. Dùng cùng
+    // channel để tránh Chromium bundled cũ hơn từ chối hồ sơ đã nâng version.
+    channel: 'chrome',
     headless: !!process.env.CI,
     locale: 'vi-VN',
     timezoneId: 'Asia/Ho_Chi_Minh',
@@ -107,20 +112,33 @@ async function main(): Promise<void> {
   page.on('console', (message) => {
     if (message.type() === 'error') console.error(`[SaleWork console] ${message.text()}`);
   });
-  await page.goto('https://zalo.salework.net/statistical', {
+  // Luôn đi qua /login trước: SaleWork có thể trả 403/500 nếu một context tự
+  // động mở thẳng /statistical dù cookie vừa được đăng nhập thủ công.
+  await page.goto('https://zalo.salework.net/login', {
     waitUntil: 'domcontentloaded',
     timeout: 90_000,
   });
 
-  if (page.url().includes('/login') && username && password) {
-    await page.getByRole('textbox', { name: 'Tên đăng nhập hoặc email' }).fill(username);
+  const accountTab = page.locator('#pills-user-tab-2');
+  const usernameInput = page.getByRole('textbox', { name: 'Tên đăng nhập hoặc email' });
+  const entryState = await Promise.race([
+    accountTab.waitFor({ state: 'visible', timeout: 30_000 }).then(() => 'DASHBOARD' as const),
+    usernameInput.waitFor({ state: 'visible', timeout: 30_000 }).then(() => 'LOGIN' as const),
+  ]).catch(() => 'UNKNOWN' as const);
+
+  if (entryState === 'LOGIN' && username && password) {
+    await usernameInput.fill(username);
     await page.getByRole('textbox', { name: 'Mật khẩu' }).fill(password);
     await page.getByRole('button', { name: 'Đăng nhập' }).click();
-    await page.waitForURL('**://zalo.salework.net/statistical', { timeout: 90_000 });
+    await accountTab.waitFor({ state: 'visible', timeout: 90_000 });
   }
 
-  if (!page.url().includes('/statistical')) {
-    throw new Error(`SaleWork chuyển hướng tới URL không mong đợi: ${page.url()}`);
+  if (!(await accountTab.isVisible())) {
+    throw new Error(
+      entryState === 'LOGIN'
+        ? 'SaleWork yêu cầu đăng nhập nhưng môi trường không có đủ tên đăng nhập và mật khẩu.'
+        : `SaleWork không tải được dashboard sau 30 giây: ${page.url()}`,
+    );
   }
 
   // Trang cần vài giây để tải dữ liệu xong rồi mới bật popup (nếu có),
@@ -135,18 +153,42 @@ async function main(): Promise<void> {
     await expiredLinkCloseButton.first().waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
   }
 
-  const messageTab = page.getByText('Tin nhắn', { exact: true });
-  if (await messageTab.count() > 0) await messageTab.first().click();
+  // Đúng chuỗi thao tác đã ghi bằng Playwright Codegen trên giao diện SaleWork:
+  // mở nhóm tài khoản trước, sau đó chọn tab Tin nhắn bên trong nhóm đó.
+  const accountTabCount = await accountTab.count();
+  if (accountTabCount > 0 && (await accountTab.isVisible())) {
+    await accountTab.click();
+  }
+
+  const messageTab = page.getByText('Tin nhắn').nth(1);
+  await messageTab.waitFor({ state: 'visible', timeout: 30_000 });
+  await messageTab.click();
 
   const accountSelect = page.locator('.el-select').first();
   await accountSelect.waitFor({ state: 'visible', timeout: 30_000 });
   await accountSelect.click();
+  const accountSearchInput = page.getByRole('textbox').first();
+  await accountSearchInput.waitFor({ state: 'visible', timeout: 30_000 });
+
   for (const accountName of TARGET_ACCOUNT_NAMES) {
+    // SaleWork dùng danh sách dài/ảo hóa. Gõ từng tên vào ô tìm kiếm trước khi
+    // click giúp kết quả luôn có trong DOM, đúng thao tác đã xác nhận thủ công.
+    await accountSearchInput.fill(accountName);
+
     const accountOption = page
       .locator('.el-select-dropdown__item')
-      .filter({ hasText: accountName });
-    await accountOption.first().waitFor({ state: 'visible', timeout: 30_000 });
-    await accountOption.first().click();
+      .filter({ hasText: accountName })
+      .first();
+    await accountOption.waitFor({ state: 'visible', timeout: 30_000 });
+
+    // Element UI dùng class/aria để đánh dấu option đã chọn. Chỉ click mục còn
+    // thiếu; click lại mục đang chọn sẽ biến thao tác "chọn đủ" thành bỏ chọn.
+    const optionClass = (await accountOption.getAttribute('class')) ?? '';
+    const ariaSelected = await accountOption.getAttribute('aria-selected');
+    const isSelected =
+      ariaSelected === 'true' || /(^|\s)(is-selected|selected)(\s|$)/.test(optionClass);
+
+    if (!isSelected) await accountOption.click();
   }
 
   await page.keyboard.press('Escape');
@@ -171,12 +213,24 @@ async function main(): Promise<void> {
 
   const rows = page.locator('.el-table__body tbody tr');
   try {
-    await rows.first().waitFor({ state: 'visible', timeout: 60_000 });
+    await page.waitForFunction(
+      (expectedAccountNames) => {
+        const resultText = Array.from(
+          document.querySelectorAll('.el-table__body tbody tr'),
+          (row) => row.textContent ?? '',
+        ).join('\n');
+        return expectedAccountNames.every((accountName) => resultText.includes(accountName));
+      },
+      TARGET_ACCOUNT_NAMES,
+      { timeout: 60_000 },
+    );
   } catch {
-    throw new Error(`SaleWork không hiển thị dữ liệu sau khi tổng hợp: ${await summarizePage()}`);
+    throw new Error(
+      `SaleWork chưa hiển thị đủ ${TARGET_ACCOUNT_NAMES.length} tài khoản sau khi tổng hợp: ${await summarizePage()}`,
+    );
   }
 
-  const reports = (await page.locator('.el-table__body tbody tr').evaluateAll((rows) =>
+  const reports = (await rows.evaluateAll((rows) =>
     rows.map((row) => Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? '')),
   ))
     .map(parseRow)
