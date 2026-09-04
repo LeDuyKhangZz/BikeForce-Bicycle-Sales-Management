@@ -213,6 +213,47 @@ export async function listSalesOptions(
   return data ?? [];
 }
 
+type DailyPreviewReport = Pick<
+  Database['public']['Tables']['daily_reports']['Row'],
+  'id' | 'report_date' | 'status'
+>;
+
+export type SalesDailyPreviewOption = SalesOption & {
+  daily_reports: DailyPreviewReport[];
+};
+
+/**
+ * Danh sách nhân viên kèm báo cáo gần nhất để Admin chọn xem trước.
+ *
+ * Đây vẫn là một truy vấn duy nhất, không lặp truy vấn theo từng nhân viên.
+ * `limit(1)` chạy trên quan hệ nhúng và thứ tự bám index
+ * `idx_daily_reports_sales_date_desc`, nên `daily_reports` có tối đa một phần
+ * tử cho mỗi hồ sơ. Tương tự `listSalesOptions()`, danh sách hồ sơ
+ * không phân trang vì đây là control chọn người của đội nội bộ (dưới 200 người).
+ */
+export async function listSalesLatestReportPreviewOptions(
+  supabase: SupabaseClient<Database>,
+): Promise<SalesDailyPreviewOption[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(
+      'id, full_name, employee_code, is_active, daily_reports(id, report_date, status)',
+    )
+    .eq('role', 'SALES')
+    .order('is_active', { ascending: false })
+    .order('full_name', { ascending: true })
+    .order('report_date', { referencedTable: 'daily_reports', ascending: false })
+    .limit(1, { referencedTable: 'daily_reports' })
+    .returns<SalesDailyPreviewOption[]>();
+
+  if (error) {
+    console.error('[listSalesLatestReportPreviewOptions]', error.code, error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
+
 /**
  * Hồ sơ ĐẦY ĐỦ cho màn hình tài khoản — FR-023, UC-11 (Phase 7).
  *

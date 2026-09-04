@@ -1271,3 +1271,28 @@ deny-by-default của `profiles`/`daily_reports`: `revoke all` khỏi `anon` + `
 ⚠ **Đừng nhầm với `daily_reports.target_*`.** Cột kia là **cam kết NGÀY** do Sales tự gõ buổi sáng
 (DEC-030); bảng này là **chỉ tiêu THÁNG** công ty giao. Cộng cam kết ngày lại **không** ra chỉ tiêu
 tháng — đó chính là lỗi mà DEC-071 sửa.
+
+---
+
+## Snapshot CRM Report 70 trong `salework_reports` — 2026-09-04
+
+Database tích hợp SaleWork hiện hữu không được quản lý bởi bộ migration schema chính. Để tự động cộng
+CRM mà không sửa schema production, Report 70 lưu mỗi nhân viên/tháng thành một dòng kỹ thuật có khóa:
+
+```text
+__CRM70__:{YYYY-MM-01}:{employee_code}
+```
+
+Các dòng này là snapshot, không phải tài khoản SaleWork. `services/salework.ts` phải lọc chúng khỏi
+danh sách và chỉ dùng để cộng vào dòng thật. Ánh xạ cột trong dòng kỹ thuật:
+
+| Cột `salework_reports` | Ý nghĩa CRM |
+|---|---|
+| `conversations` | `QuantityOfCall` — tổng số lượng |
+| `outgoing_calls` | `QuantityOfCalled` — SL đã gọi |
+| `incoming_calls` | `QuantityOfCallIncomingSuccessful` |
+| `missed_calls` | `QuantityOfNotCalledYet` — chỉ lưu đối soát |
+| `call_duration` | `TotalCallAwayTime` dạng `{n} giây` |
+
+Khóa có kỳ tháng nên dữ liệu tháng cũ không bị dùng cho tháng hiện tại; UPSERT cùng khóa ghi đè
+snapshot mới nhất và không làm tăng số sau mỗi lần chạy.

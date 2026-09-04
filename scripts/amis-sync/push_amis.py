@@ -26,6 +26,11 @@ from typing import Any
 import requests # type: ignore
 from dotenv import load_dotenv # type: ignore
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Tái sử dụng nguyên logic đã kiểm chứng từ các script cũ.
 import test_amis_revenue as revenue_mod
 import test_act_receivable as receivable_mod
@@ -107,7 +112,16 @@ def upsert(rows: list[dict[str, Any]], columns: list[str]) -> None:
         print("  Khong nguon nao chay duoc — khong ghi gi de giu nguyen so cu.")
         return
 
-    payload = [{column: row.get(column) for column in columns} for row in rows]
+    # `synced_at` phải gửi tường minh khi UPDATE. Default `now()` chỉ áp dụng
+    # lúc INSERT lần đầu; nếu bỏ cột này thì ảnh sẽ mãi hiện ngày đồng bộ cũ.
+    synced_at = datetime.now(timezone.utc).isoformat()
+    payload = [
+        {
+            **{column: row.get(column) for column in columns},
+            "synced_at": synced_at,
+        }
+        for row in rows
+    ]
 
     response = requests.post(
         f"{SUPABASE_URL}/rest/v1/amis_employee_metrics",

@@ -1019,13 +1019,23 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 
 ## Admin module switcher - SaleWork (2026-08-28)
 
-- [x] Nút chuyển module SaleWork chỉ xuất hiện trong Admin header
+- [x] SaleWork nằm trong sidebar trái ở desktop; mobile vào từ màn **Xem trước**; không thêm tab bottom nav
 - [x] Route mẫu `/admin/salework` tự kiểm tra `requireRole('ADMIN')`
 - [x] Không thêm mục mới vào bottom nav Admin
 - [x] Ảnh xuất SaleWork tách cột `NỘI DUNG` và cột số `CHỈ TIÊU`; doanh số hiện đúng `target_amount`
 - [x] Dashboard doanh số lấy `THỐNG ĐẠT GROUP`, nhận tháng/năm và gửi đúng `Period=13/14/0`
 - [x] Abraham nối đúng dòng AMIS `Kế Toán Bán Hàng`; giá trị không áp dụng giữ là `—`
-- [ ] Bổ sung nghiệp vụ SaleWork thật sau khi có yêu cầu chi tiết
+- [x] Script Report 70 lấy thống kê cuộc gọi theo nhân viên, nhận tháng/năm và lưu JSON chuẩn hóa
+- [x] JSON/bảng terminal có tổng số lượng, đã gọi, chưa gọi và gọi đến thành công
+- [x] `amis-harvest.ts --crm-only` làm mới token cho script CRM mà không chờ hệ Kế toán
+- [x] `fetch_call_statistics.bat` cho phép bấm đúp, giữ cửa sổ kết quả bằng `pause`
+- [x] Script Report 70 tự UPSERT snapshot CRM vào Supabase sau mỗi lần lấy thành công
+- [x] `npm run salework:sync` chạy SaleWork rồi CRM trong cùng một luồng
+- [x] Cộng CRM + SaleWork cho hội thoại, gọi đi, gọi đến thành công và thời lượng gọi đi
+- [x] Snapshot CRM dùng khóa kỹ thuật theo tháng/mã nhân viên, chạy lại không cộng trùng và không hiện trên UI
+- [x] Báo cáo `Giao - Kế Toán bán hàng` hiển thị mã telesale `VP-TLS-003`
+- [x] `push_amis.py` cập nhật `synced_at` trong mọi lần UPSERT, không giữ ngày cũ
+- [x] Có `reports:sync`, batch tổng và script cài Windows Task Scheduler theo chu kỳ
 
 ## Repair sau merge cộng tác viên — ISSUE-033 (2026-08-21)
 
@@ -1048,6 +1058,19 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] `MORNING.paddingY` 44 → 32 để giữ câu nhắc và footer trong ảnh 1080×1920
 - [x] Typecheck · lint · unit **695/695** · production build **23 route** đều sạch
 - [x] Render và nhìn PNG thật 1080×1920: không chồng/cắt chữ, footer còn nguyên
+
+## Admin xem trước báo cáo theo nhân viên (2026-09-04)
+
+- [x] Nút **Xem trước** trong header Admin mở `/admin/report-previews`
+- [x] Nút chuyển module **SaleWork** nằm ở sidebar trái desktop; link trong trang preview chỉ hiện mobile
+- [x] Danh sách Sales hiện tên, mã, báo cáo gần nhất và đủ hai nút **Đầu ngày / Cuối ngày**
+- [x] Báo cáo mới có cam kết sáng vẫn preview cuối ngày; số thực đạt còn thiếu hiện `—`/chờ số liệu
+- [x] Danh sách telesale SaleWork hiện tên tài khoản và nút preview bên cạnh
+- [x] Preview dùng ảnh thật hiện hữu; không sao chép công thức KPI hoặc logic dựng ảnh
+- [x] Route ảnh SaleWork chấp nhận phiên Admin hoạt động nhưng không lộ API key n8n
+- [x] Nhân viên chưa có dữ liệu vẫn hiện trong danh sách với trạng thái không khả dụng
+- [x] Typecheck · lint · full unit **713/713** · production build **26 route**
+- [ ] E2E và kiểm trực quan 375px/1440px — chưa chạy vì Supabase local/Docker đang tắt và in-app Browser không khả dụng
 
 ## OPEN QUESTIONS
 

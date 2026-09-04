@@ -3145,3 +3145,143 @@ giữ là `null`/`—`, không biến thành mục tiêu 0.
 
 **Next Exact Steps:** tiếp tục nhận nguồn cho dòng “Doanh thu đã ghi”, sau đó nối các cột còn lại vào
 ảnh SaleWork và chạy đồng bộ Supabase một lượt.
+
+---
+
+## Entry 038 — 2026-09-04 — Script API báo cáo cuộc gọi AMIS (Report 70)
+
+Đã bắt request thật của trang `/crm/report/view/70/0`: endpoint
+`POST /crm/g1/api/report/Report/reportPaging`, Report ID 70. Từ body và response thật, đã tạo
+`fetch_call_statistics.py` với đủ cột cuộc gọi đi/đến, số thành công/không thành công và thời lượng.
+
+Script hỗ trợ `[NAM THANG]`, tự chọn `Period=13/14/0`, đọc token/cookie từ `.env`, lưu cả response gốc
+và JSON chuẩn hóa. Bổ sung `amis-harvest.ts --crm-only` để làm mới riêng phiên CRM.
+
+### Kiểm chứng thật
+
+| Cổng | Kết quả |
+|---|---|
+| Bắt request trình duyệt | ✅ endpoint Report 70, HTTP 200 |
+| Làm mới token CRM | ✅ token + cookie, hạn đến 05/09/2026 10:55 |
+| Gọi script tháng 09/2026 | ✅ HTTP 200, 1 nhân viên |
+| Dòng Trần Thị Quỳnh Giao | ✅ `VP-TLS-003 · 10 thành công · 0 không thành công · 09:12` |
+| Python compile + assertion chuẩn hóa | ✅ |
+| Typecheck · lint | ✅ exit 0 · exit 0 |
+| Unit | ✅ **697/697**, 21 file |
+| Production build | ✅ exit 0, **25 route** |
+
+**Next Exact Steps:** người dùng xác nhận các trường Report 70 nào sẽ đưa vào ảnh SaleWork; sau đó mới
+nối nguồn này vào Supabase và báo cáo, tránh lưu thừa dữ liệu.
+
+### Bổ sung 2026-09-04 — chạy bằng thao tác bấm đúp
+
+Người dùng mở trực tiếp file Python nhưng không thấy phản hồi vì đây là script terminal, cửa sổ có thể
+đóng ngay sau khi chạy. Đã thêm `fetch_call_statistics.bat`: tự chuyển vào đúng thư mục, bật UTF-8,
+chạy script và dùng `pause` để giữ nguyên kết quả hoặc thông báo lỗi trên màn hình.
+
+Đã chạy thử chính file `.bat`: HTTP 200, hiện dòng Trần Thị Quỳnh Giao với số mới nhất tại thời điểm
+kiểm tra (`11` cuộc gọi đi thành công, `0` không thành công, `11:21`) và dừng ở
+`Press any key to continue` đúng thiết kế.
+
+Theo yêu cầu tiếp theo, kết quả chuẩn hóa và bảng terminal bổ sung bốn cột trực tiếp từ Report 70:
+**Tổng số lượng · SL đã gọi · SL chưa gọi · SL gọi đến thành công**. Các trường chi tiết gọi đi/đến và
+thời lượng vẫn giữ trong JSON để dùng về sau.
+
+Kiểm chứng: Python compile sạch, assertion ánh xạ 4/4 trường pass; gọi AMIS thật kỳ 09/2026 trả
+`Trần Thị Quỳnh Giao · 12 · 12 · 0 · 0` theo đúng thứ tự bốn cột trên.
+
+---
+
+## Entry 039 — 2026-09-04 — Cộng số cuộc gọi CRM vào báo cáo SaleWork
+
+Đã nối Report 70 vào luồng báo cáo thật. Script `fetch_call_statistics.py` không chỉ lưu JSON debug
+mà còn tự UPSERT snapshot CRM theo `tháng + mã nhân viên` vào `salework_reports`. Snapshot có prefix
+`__CRM70__`, không xuất hiện như một tài khoản và luôn bị ghi đè khi chạy lại, nên không cộng lặp.
+
+Service cộng tại lúc đọc: `Tổng số lượng` vào hội thoại tương tác, `SL đã gọi` vào cuộc gọi đã gọi,
+`SL gọi đến thành công` vào cuộc gọi đến đã nghe, `Tổng thời gian gọi đi` vào tổng thời gian nghe máy.
+`SL chưa gọi` vẫn được giữ trong snapshot để đối soát. `npm run salework:sync` nay chạy SaleWork trước
+rồi tự chạy CRM sau.
+
+### Kiểm chứng thật
+
+| Cổng | Kết quả |
+|---|---|
+| CRM Report 70 kỳ 09/2026 | ✅ HTTP 200, `VP-TLS-003 · 16 · 16 · 0 · 0` tại thời điểm chạy |
+| UPSERT Supabase | ✅ 1 snapshot, chạy qua PostgREST của đúng project BikeForce |
+| Đọc lại qua `getSaleWorkReport()` | ✅ Giao: `33 hội thoại · 16 gọi đi · 0 gọi đến · 17.07 phút` |
+| Unit logic cộng/thời lượng | ✅ 9/9 |
+| Toàn bộ unit | ✅ **706/706**, 22 file |
+| Typecheck · lint · Python compile | ✅ exit 0 |
+| Production build | ✅ exit 0, **25 route** |
+
+**Next Exact Steps:** chạy `npm run salework:sync` theo lịch hiện có; nếu token CRM hết hạn, chạy
+`amis-harvest.ts --crm-only` rồi đồng bộ lại.
+
+### Bổ sung mã telesale của Giao
+
+Đã thêm mapping `Giao - Kế Toán bán hàng` → `VP-TLS-003` vào thẻ báo cáo dùng chung cho cả ảnh tải
+trên trình duyệt và route ảnh dành cho n8n. Có unit test khóa đúng tên tài khoản và mã hiển thị.
+
+---
+
+## Entry 040 — 2026-09-04 — Sửa mốc đồng bộ cũ và tạo lịch tự chạy
+
+Nguyên nhân ảnh vẫn ghi `13:47 03/09/2026`: `amis_employee_metrics.synced_at` chỉ dùng default
+`now()` khi INSERT đầu tiên; `push_amis.py` không gửi lại cột đó khi UPSERT nên những lần cập nhật số
+sau không đổi thời gian. Đã gửi `synced_at` tường minh theo UTC trong mọi lần ghi thành công.
+
+Đã thêm lệnh `npm run reports:sync`, batch `scripts/sync-all-reports.bat` và installer
+`scripts/install-auto-sync.ps1`. Installer tạo task chạy mỗi 60 phút khi người dùng Windows đang đăng
+nhập; nhận `-IntervalMinutes` để đổi chu kỳ.
+
+Kiểm chứng thật: nguồn CRM Report 119 và dashboard doanh số chạy thành công, 12 dòng/11 cột được ghi;
+ACT Kế toán hết phiên nên giữ nguyên công nợ cũ. Đọc lại Supabase cho Abraham và Giao đều trả
+`synced_at=2026-09-04T04:54:19.542858+00:00`, tương ứng **11:54 04/09/2026** giờ Việt Nam.
+
+Python compile, cú pháp installer PowerShell, typecheck và lint đều sạch.
+
+Chạy thử `scripts/sync-all-reports.bat` thật đã hoàn tất exit 0: CRM refresh thành công, 12 dòng MISA
+được ghi, 2 tài khoản SaleWork được đồng bộ và Report 70 UPSERT 1 snapshot. ACT Kế toán tiếp tục cảnh
+báo hết phiên nhưng không làm mất công nợ cũ hoặc chặn ba nguồn còn lại.
+
+Sau khi người dùng đăng nhập lại, API ACT đã trả 11 dòng và `push_amis.py` ghi thành công 13 nhân viên,
+đủ 12 cột gồm `receive_amount`. Task `BikeForce - Auto Sync Reports` đã được cài thật: trạng thái
+`Ready/Enabled`, chạy mỗi 1 giờ, `Last Result=0`, chế độ `Interactive only` cho tài khoản `Acer`.
+
+---
+
+## Entry 041 — 2026-09-04 — Admin xem preview báo cáo theo nhân viên
+
+Đã thay cửa vào SaleWork ở header Admin bằng nút **Xem trước** và thêm route
+`/admin/report-previews`. Màn hình có hai danh sách: Sales lấy đúng một báo cáo gần nhất cho mỗi hồ sơ;
+telesale lấy các tài khoản SaleWork đã đồng bộ. Mỗi dòng có nút **Xem preview** và ảnh hiện ngay dưới
+danh sách. Sau khi người dùng làm rõ, mỗi Sales giữ đủ **hai nút Đầu ngày / Cuối ngày**; telesale giữ
+nguyên. Row mới có cam kết sáng vẫn xem được mẫu cuối ngày, các trường `actual_*` còn `null` hiện
+`—`/chờ số liệu chứ không bịa số 0.
+
+Truy vấn hồ sơ + báo cáo chạy một lần bằng embedded relation có `limit(1)`, không N+1 và vẫn chịu RLS.
+Route ảnh SaleWork giữ API key cho n8n, đồng thời cho phép phiên Admin hợp lệ để UI xem ảnh mà không
+đưa key bí mật xuống client. Không có quyền ghi mới và không đổi schema.
+
+### Kiểm chứng
+
+| Cổng | Kết quả |
+|---|---|
+| Typecheck | ✅ exit 0 |
+| Lint | ✅ exit 0 |
+| Full unit | ✅ 713/713 |
+| Production build | ✅ exit 0, 26 route |
+| E2E / Visual 375px, 1440px | Chưa chạy — Supabase local/Docker đang tắt và in-app Browser không khả dụng |
+
+**Next Exact Steps:** bật Docker + Supabase local, chạy E2E Admin cho hai nút preview và ba ca từ chối
+route SaleWork (Sales/anon/inactive); kiểm trực quan 375px và 1440px khi Browser khả dụng.
+
+Ngoại lệ `variant=MORNING|EVENING` được route ảnh giới hạn cho phiên Admin active. Đường xuất ảnh bình thường
+của Sales vẫn để trạng thái persisted quyết định biến thể.
+
+### Bổ sung vị trí nút SaleWork
+
+Theo yêu cầu người dùng, SaleWork được chuyển thành mục riêng trong sidebar trái ở desktop. `MainNav`
+nhận `sidebarItems` tách khỏi danh sách bottom nav, nên mobile vẫn giữ đúng sáu mục. Vì mobile không có
+sidebar, link “Xem bảng SaleWork” trong trang preview được giữ lại nhưng ẩn từ breakpoint `lg`.

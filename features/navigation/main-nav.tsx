@@ -7,6 +7,7 @@ import {
   History,
   Home,
   LayoutDashboard,
+  MessagesSquare,
   Scale,
   Target,
   User,
@@ -30,9 +31,9 @@ import { activeNavKey, type NavItem, type NavKey } from '@/lib/navigation/nav-it
  *  đo ở client gây nhảy layout ở lần render đầu, và server không biết bề rộng
  *  màn hình nên sẽ luôn đoán sai một nửa số lần.
  *
- *  Cùng một danh sách mục được render **hai lần** với hai bộ class. Đó là chủ
- *  ý: hai `<nav>` với `aria-label` khác nhau, mỗi cái ẩn ở bề rộng còn lại, đọc
- *  rõ ràng hơn hẳn một cây DOM tự bẻ mình bằng CSS phức tạp.
+ *  Danh sách chính được render **hai lần** với hai bộ class. Sidebar có thể nhận
+ *  thêm module desktop qua `sidebarItems`; các mục này không chen vào bottom
+ *  nav vốn đã chạm trần bề rộng 375px.
  *
  * `'use client'` chỉ vì `usePathname()` — không có state, không có effect. Toàn
  * bộ quyết định "tab nào sáng" nằm ở `lib/navigation/nav-items.ts` và có unit
@@ -54,18 +55,21 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_RECONCILIATION: Scale,
   ADMIN_SALES: Users,
   ADMIN_TARGETS: Target,
+  ADMIN_SALEWORK: MessagesSquare,
   ADMIN_ACCOUNT: User,
 };
 
 type Props = {
   items: readonly NavItem[];
+  /** Module bổ sung chỉ hiện trong sidebar desktop. */
+  sidebarItems?: readonly NavItem[];
   /** Nhãn cho screen reader — "Điều hướng Sales" / "Điều hướng Admin". */
   label: string;
 };
 
-export function MainNav({ items, label }: Props) {
+export function MainNav({ items, sidebarItems = [], label }: Props) {
   const pathname = usePathname();
-  const activeKey = activeNavKey(items, pathname);
+  const activeKey = activeNavKey([...items, ...sidebarItems], pathname);
 
   return (
     <>
@@ -106,6 +110,15 @@ export function MainNav({ items, label }: Props) {
             </li>
           ))}
         </ul>
+        {sidebarItems.length > 0 && (
+          <ul className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
+            {sidebarItems.map((item) => (
+              <li key={item.key}>
+                <NavLink item={item} isActive={item.key === activeKey} layout="sidebar" />
+              </li>
+            ))}
+          </ul>
+        )}
       </nav>
     </>
   );

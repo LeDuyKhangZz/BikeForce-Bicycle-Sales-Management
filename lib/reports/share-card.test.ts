@@ -120,6 +120,25 @@ describe('buildShareCardModel — phần đầu thẻ (docs/05 §14)', () => {
 });
 
 describe('buildShareCardModel — bảng 4 chỉ tiêu', () => {
+  it('Admin có thể dựng mẫu cuối ngày từ báo cáo mới có cam kết sáng', () => {
+    const model = buildShareCardModel(
+      {
+        ...BASE,
+        status: 'MORNING_SUBMITTED',
+        actual_visit_points: null,
+        actual_sales_amount: null,
+        actual_revenue: null,
+        actual_customer_visits: null,
+      },
+      PERFORMANCE,
+      'EVENING',
+    );
+
+    expect(model.variant).toBe('EVENING');
+    expect(model.kindLabel).toBe('KẾT QUẢ CUỐI NGÀY');
+    expect(model.metrics.every((row) => row.actualText === '—')).toBe(true);
+  });
+
   // Thẻ ảnh dùng `shortLabel` (DEC-050) vì cột nhãn có bề rộng cố định — nhãn
   // đầy đủ "Doanh thu công nợ" / "Khách hàng đã gặp" chỉ hiện trên web.
   it('đúng bốn dòng, đúng thứ tự và nhãn RÚT GỌN của docs/05 §14', () => {
@@ -815,5 +834,21 @@ describe('shareImageViewPath — DEC-061', () => {
     // Máy tính không có "thư viện ảnh"; đổi mặc định sang `inline` là làm hỏng
     // hành vi tải file mà người dùng máy tính đã quen (DEC-060).
     expect(shareImagePath('11111111-2222-3333-4444-555555555555')).not.toContain('view');
+  });
+
+  it('thêm biến thể cuối ngày cho màn preview Admin', () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+
+    expect(shareImageViewPath(id, 'EVENING')).toBe(
+      `${shareImagePath(id)}?view=1&variant=EVENING`,
+    );
+  });
+
+  it('thêm biến thể đầu ngày cho màn preview Admin', () => {
+    const id = '11111111-2222-3333-4444-555555555555';
+
+    expect(shareImageViewPath(id, 'MORNING')).toBe(
+      `${shareImagePath(id)}?view=1&variant=MORNING`,
+    );
   });
 });

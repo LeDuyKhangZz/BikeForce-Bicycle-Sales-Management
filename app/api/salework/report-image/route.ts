@@ -2,6 +2,8 @@ import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 
+import { createClient } from '@/lib/supabase/server';
+import { getSessionProfile } from '@/services/profiles';
 import { getSaleWorkReport } from '@/services/salework';
 import { CARD_HEIGHT, CARD_WIDTH, drawReportCard, slugifyFilename, type Canvas2DLike } from '../../../(admin)/admin/salework/salework-report-card';
 
@@ -27,16 +29,29 @@ function ensureFontsRegistered() {
 // SALEWORK_REPORT_API_KEY=xxxxxxxx trong .env.local (và trên server production).
 const API_KEY = process.env.SALEWORK_REPORT_API_KEY;
 
-function isAuthorized(request: Request): boolean {
-  if (!API_KEY) return false; // bắt buộc phải cấu hình key, không cho phép bỏ trống
+function hasApiKey(request: Request): boolean {
+  if (!API_KEY) return false;
   const url = new URL(request.url);
   const keyFromQuery = url.searchParams.get('key');
   const keyFromHeader = request.headers.get('x-api-key');
   return keyFromQuery === API_KEY || keyFromHeader === API_KEY;
 }
 
+async function isAdminSession(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const profile = await getSessionProfile(supabase, user.id);
+  return profile?.role === 'ADMIN' && profile.is_active;
+}
+
 export async function GET(request: Request) {
-  if (!isAuthorized(request)) {
+  const authorizedByKey = hasApiKey(request);
+  if (!authorizedByKey && !(await isAdminSession())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -49,7 +64,9 @@ export async function GET(request: Request) {
     return NextResponse.json({
       accounts: reports.map((r) => ({
         accountName: r.accountName,
-        imageUrl: `/api/salework/report-image?account=${encodeURIComponent(r.accountName)}&key=${API_KEY}`,
+        imageUrl: authorizedByKey
+          ? `/api/salework/report-image?account=${encodeURIComponent(r.accountName)}&key=${API_KEY}`
+          : `/api/salework/report-image?account=${encodeURIComponent(r.accountName)}`,
       })),
     });
   }

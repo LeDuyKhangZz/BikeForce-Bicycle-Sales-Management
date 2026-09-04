@@ -1157,3 +1157,42 @@ nợ của Phase 6, và **project `zalo-like` của Playwright không thay thế
 Không cron, không queue, không Realtime, không Edge Function, **không dùng Supabase Storage** cho ảnh
 (DEC-021 — ảnh 9:16 stream thẳng từ Route Handler, không lưu file nào). Đội vài chục Sales, mỗi người
 2 lần ghi/ngày ⇒ vài trăm request/ngày, cách rất xa trần của Vercel Free và Supabase Free.
+
+---
+
+## Tự động đồng bộ AMIS + SaleWork trên Windows
+
+Luồng đầy đủ nằm trong `npm run reports:sync`, chạy tuần tự:
+
+1. Làm mới token/cookie AMIS bằng profile Playwright đã đăng nhập.
+2. Cập nhật doanh số, chỉ tiêu và công nợ bằng `push_amis.py`.
+3. Cập nhật dữ liệu SaleWork.
+4. Cập nhật cuộc gọi CRM Report 70 và snapshot cộng dồn.
+
+Chạy thử thủ công trước:
+
+```powershell
+scripts\sync-all-reports.bat
+```
+
+Cài Windows Task Scheduler chạy mỗi 60 phút (PowerShell, không cần sửa đường dẫn cứng):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-auto-sync.ps1
+```
+
+Đổi chu kỳ, ví dụ 30 phút:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-auto-sync.ps1 -IntervalMinutes 30
+```
+
+Task có tên `BikeForce - Auto Sync Reports`, chỉ chạy khi tài khoản Windows đang đăng nhập, cho phép
+chạy bằng pin và không mở hai tiến trình đồng bộ cùng lúc. Kết quả tóm tắt ghi vào
+`scripts/amis-sync/auto-sync.log`; lỗi hết phiên AMIS ghi thêm vào `alert.log`.
+
+Nếu profile MISA hết phiên hoàn toàn, đăng nhập lại một lần bằng cửa sổ trình duyệt:
+
+```powershell
+npx.cmd tsx scripts/amis-sync/amis-harvest.ts --login
+```

@@ -11,6 +11,7 @@ import { summarizeMonthToDate } from '@/lib/reports/month-summary';
 import {
   SHARE_IMAGE_VIEW_PARAM,
   SHARE_IMAGE_VIEW_VALUE,
+  SHARE_IMAGE_VARIANT_PARAM,
   buildShareCardModel,
   shareCardVariantForStatus,
   shareImageFileName,
@@ -18,6 +19,7 @@ import {
 } from '@/lib/reports/share-card';
 import { createClient } from '@/lib/supabase/server';
 import { getMonthlyTargets } from '@/services/monthly-targets';
+import { getSessionProfile } from '@/services/profiles';
 import {
   getAmisMetricsForShare,
   getReportForShare,
@@ -181,8 +183,13 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * chọn "Lưu ảnh", và muốn vậy thì ảnh phải được hiển thị. Xem chú thích đầy đủ
    * ở `lib/reports/share-card.ts § SHARE_IMAGE_VIEW_PARAM`.
    */
-  const wantsInlineView =
-    new URL(request.url).searchParams.get(SHARE_IMAGE_VIEW_PARAM) === SHARE_IMAGE_VIEW_VALUE;
+  const searchParams = new URL(request.url).searchParams;
+  const wantsInlineView = searchParams.get(SHARE_IMAGE_VIEW_PARAM) === SHARE_IMAGE_VIEW_VALUE;
+  const requestedVariant = searchParams.get(SHARE_IMAGE_VARIANT_PARAM);
+  const adminPreviewVariant =
+    requestedVariant === 'MORNING' || requestedVariant === 'EVENING'
+      ? requestedVariant
+      : null;
 
   const parsedId = reportIdSchema.safeParse(id);
   if (!parsedId.success) {
@@ -199,6 +206,13 @@ export async function GET(request: Request, context: ShareImageContext): Promise
 
   if (!user) {
     return errorResponse(401, 'UNAUTHENTICATED', AUTH_MESSAGES.SESSION_EXPIRED);
+  }
+
+  if (adminPreviewVariant !== null) {
+    const profile = await getSessionProfile(supabase, user.id);
+    if (profile?.role !== 'ADMIN' || !profile.is_active) {
+      return errorResponse(403, 'FORBIDDEN', REPORT_MESSAGES.FORBIDDEN);
+    }
   }
 
   // Không lọc `sales_id` ở đây — RLS quyết định, và Admin phải xuất được ảnh cho
@@ -220,9 +234,11 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    *
    * Phần CỐT LÕI của BR-002 không đổi và vẫn được ép ở đây: ảnh dựng từ **một
    * dòng đã persist trong database**, không bao giờ từ dữ liệu client gửi lên.
-   * Client cũng KHÔNG chọn được biến thể — `status` quyết định.
+   * Bình thường client KHÔNG chọn được biến thể — `status` quyết định. Ngoại lệ
+   * duy nhất là `variant=MORNING|EVENING` cho màn preview Admin: route đã kiểm lại role
+   * ngay sau `getUser()`, và dữ liệu vẫn phải là một row đã persist dưới RLS.
    */
-  const variant = shareCardVariantForStatus(report.status);
+  const variant = adminPreviewVariant ?? shareCardVariantForStatus(report.status);
   const monthRange = shareMonthRange(report.report_date, variant);
 
   /*
@@ -283,7 +299,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
           targetRevenue: summary.targetRevenue,
         };
 
-  const model = buildShareCardModel(report, performance);
+  const model = buildShareCardModel(report, performance, variant);
   const fileName = shareImageFileName(
     report.sales.full_name,
     report.report_date,

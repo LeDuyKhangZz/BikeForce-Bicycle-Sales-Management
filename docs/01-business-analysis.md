@@ -876,3 +876,14 @@ Sáu business rule trước đây bị treo nay đã chốt — **được phép
 | Roadmap ngoài MVP (AF-08 … AF-15 và các mục khác) | `docs/10-future-roadmap.md` |
 | Decision log đầy đủ (DEC-001 … DEC-030) | `docs/11-decisions.md` |
 | Rủi ro đã biết (ISSUE-001 … ISSUE-007) | `docs/12-known-issues.md` |
+
+---
+
+## BỔ SUNG 2026-09-04 — Admin xem trước báo cáo theo nhân viên
+
+Admin có một cửa vào chung để xem trước báo cáo mà không phải tìm ở ba màn hình riêng. Màn hình liệt
+kê tên nhân viên Sales và tài khoản telesale; mỗi dòng có nút **Xem preview**. Với Sales, hệ thống lấy
+báo cáo gần nhất và cung cấp riêng hai nút đầu ngày/cuối ngày. Mẫu cuối ngày vẫn dựng được khi số thực
+đạt chưa nhập; ô thiếu hiện `—`/chờ số liệu.
+Với telesale, hệ thống hiện ảnh báo cáo SaleWork đã đồng bộ. Nhân viên chưa từng báo cáo vẫn có trong
+danh sách nhưng nút ở trạng thái không khả dụng. Đây là quyền **chỉ đọc**, không thêm quyền sửa dữ liệu.

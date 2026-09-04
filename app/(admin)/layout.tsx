@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRightLeft } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import { buttonClassName } from '@/components/ui/button';
 import { MainNav } from '@/features/navigation/main-nav';
 import { HeaderSignOut } from '@/features/auth/header-sign-out';
 import { requireRole } from '@/features/auth/queries';
-import { ADMIN_NAV_ITEMS } from '@/lib/navigation/nav-items';
+import { ADMIN_NAV_ITEMS, ADMIN_SIDEBAR_ITEMS } from '@/lib/navigation/nav-items';
 
 /**
  * LỚP 2 — guard server-side cho toàn bộ route group `(admin)` (FR-004, DEC-004).
@@ -49,13 +49,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             </p>
           </div>
           <Link
-            href="/admin/salework"
-            aria-label="Chuyển sang SaleWork"
-            title="Chuyển sang SaleWork"
+            href="/admin/report-previews"
+            aria-label="Xem trước báo cáo nhân viên"
+            title="Xem trước báo cáo nhân viên"
             className={buttonClassName({ variant: 'secondary', className: 'shrink-0 px-3 sm:px-4' })}
           >
-            <ArrowRightLeft aria-hidden="true" className="size-4" />
-            <span>SaleWork</span>
+            <Eye aria-hidden="true" className="size-4" />
+            <span>Xem trước</span>
           </Link>
           <HeaderSignOut />
         </div>
@@ -66,7 +66,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {children}
       </main>
 
-      <MainNav items={ADMIN_NAV_ITEMS} label="Điều hướng Quản trị" />
+      <MainNav
+        items={ADMIN_NAV_ITEMS}
+        sidebarItems={ADMIN_SIDEBAR_ITEMS}
+        label="Điều hướng Quản trị"
+      />
     </div>
   );
 }

@@ -494,6 +494,7 @@ function optionalText(value: string | null): string | null {
 export function buildShareCardModel(
   source: ShareCardSource,
   performance: ShareCardPerformanceSource | null,
+  variantOverride: ShareCardVariant | null = null,
 ): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
@@ -512,7 +513,7 @@ export function buildShareCardModel(
     };
   });
 
-  const variant = shareCardVariantForStatus(source.status);
+  const variant = variantOverride ?? shareCardVariantForStatus(source.status);
 
   const route = optionalText(source.actual_route) ?? optionalText(source.planned_route);
   const routeText = route === null ? null : truncateText(route, MAX_SHARE_ROUTE_CHARS);
@@ -885,14 +886,24 @@ export const SHARE_IMAGE_VIEW_PARAM = 'view';
 /** Giá trị DUY NHẤT được chấp nhận — route so sánh đúng chuỗi này, không parse. */
 export const SHARE_IMAGE_VIEW_VALUE = '1';
 
+/** Chỉ route ảnh dùng và chỉ chấp nhận cho phiên Admin đã xác minh. */
+export const SHARE_IMAGE_VARIANT_PARAM = 'variant';
+
 /**
- * `/api/reports/<id>/share-image?view=1` — cùng route, cùng quyền, cùng ảnh;
- * chỉ khác `Content-Disposition`.
+ * `/api/reports/<id>/share-image?view=1` — cùng route và cùng quyền; mặc định
+ * chỉ khác `Content-Disposition`. Màn Admin có thể truyền thêm biến thể cuối
+ * ngày để xem các ô đang thiếu dưới dạng chờ; route tự kiểm role trước khi dựng.
  *
  * Không đẻ ra route thứ hai vì mọi thứ đáng giá của route ảnh (xác thực, RLS,
  * BR-002, chọn biến thể theo `status`) phải chạy y hệt. Một route thứ hai là một
  * bản sao của những luật đó, và bản sao thì trôi.
  */
-export function shareImageViewPath(reportId: string): string {
-  return `${shareImagePath(reportId)}?${SHARE_IMAGE_VIEW_PARAM}=${SHARE_IMAGE_VIEW_VALUE}`;
+export function shareImageViewPath(
+  reportId: string,
+  variantOverride: ShareCardVariant | null = null,
+): string {
+  const path = `${shareImagePath(reportId)}?${SHARE_IMAGE_VIEW_PARAM}=${SHARE_IMAGE_VIEW_VALUE}`;
+  return variantOverride === null
+    ? path
+    : `${path}&${SHARE_IMAGE_VARIANT_PARAM}=${variantOverride}`;
 }

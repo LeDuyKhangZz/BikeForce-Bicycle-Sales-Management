@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ADMIN_NAV_ITEMS,
+  ADMIN_SIDEBAR_ITEMS,
   activeNavKey,
   SALES_NAV_ITEMS,
   type NavItem,
@@ -113,6 +114,7 @@ describe('activeNavKey — Admin: tiền tố dài nhất thắng', () => {
     // Bài quan trọng nhất: `/admin` là tiền tố của tất cả, nhưng không được thắng.
     ['danh sách báo cáo', '/admin/reports', 'ADMIN_REPORTS'],
     ['chi tiết báo cáo', '/admin/reports/8f1c', 'ADMIN_REPORTS'],
+    ['xem trước báo cáo nhân viên', '/admin/report-previews', 'ADMIN_REPORTS'],
     ['phân tích tháng thuộc nhóm Báo cáo', '/admin/analytics', 'ADMIN_REPORTS'],
     ['danh sách Sales', '/admin/sales', 'ADMIN_SALES'],
     ['tạo Sales', '/admin/sales/new', 'ADMIN_SALES'],
@@ -146,5 +148,17 @@ describe('activeNavKey — Admin: tiền tố dài nhất thắng', () => {
       expect(key).not.toBeNull();
       expect(ADMIN_NAV_ITEMS.filter((item) => item.key === key)).toHaveLength(1);
     }
+  });
+});
+
+describe('activeNavKey — module SaleWork trên sidebar Admin', () => {
+  it('làm sáng đúng mục SaleWork khi mở module', () => {
+    expect(activeNavKey([...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS], '/admin/salework')).toBe(
+      'ADMIN_SALEWORK',
+    );
+  });
+
+  it('không thêm SaleWork vào bottom nav chính', () => {
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_SALEWORK')).toBe(false);
   });
 });

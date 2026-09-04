@@ -25,6 +25,7 @@ export type NavKey =
   | 'ADMIN_RECONCILIATION'
   | 'ADMIN_SALES'
   | 'ADMIN_TARGETS'
+  | 'ADMIN_SALEWORK'
   | 'ADMIN_ACCOUNT';
 
 export type NavItem = {
@@ -95,7 +96,7 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
     key: 'ADMIN_REPORTS',
     label: 'Báo cáo',
     href: '/admin/reports',
-    matchPrefixes: ['/admin/reports', '/admin/analytics'],
+    matchPrefixes: ['/admin/reports', '/admin/report-previews', '/admin/analytics'],
   },
   {
     key: 'ADMIN_RECONCILIATION',
@@ -122,6 +123,16 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
     label: 'Tài khoản',
     href: '/admin/account',
     matchPrefixes: ['/admin/account'],
+  },
+];
+
+/** Module bổ sung chỉ hiện trong sidebar desktop, không chen vào bottom nav. */
+export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
+  {
+    key: 'ADMIN_SALEWORK',
+    label: 'SaleWork',
+    href: '/admin/salework',
+    matchPrefixes: ['/admin/salework'],
   },
 ];
 

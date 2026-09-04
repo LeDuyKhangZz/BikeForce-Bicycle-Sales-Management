@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   drawReportCard,
+  getTelesaleCode,
   type Canvas2DLike,
 } from '../../app/(admin)/admin/salework/salework-report-card';
 
@@ -36,6 +37,10 @@ function recordingContext(): { context: Canvas2DLike; texts: TextCall[] } {
 }
 
 describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => {
+  it('hiển thị đúng mã telesale của tài khoản Giao', () => {
+    expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('VP-TLS-003');
+  });
+
   it('tách tên nội dung khỏi cột chỉ tiêu và vẽ targetAmount ở đúng cột', () => {
     const { context, texts } = recordingContext();
 

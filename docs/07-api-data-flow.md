@@ -609,6 +609,9 @@ Luồng chạy cục bộ: `amis-harvest.ts` lấy token/cookie → `push_amis.p
 `test_amis_revenue.py` → ghi `target_amount` và `current_amount` vào
 `amis_employee_metrics`. Dashboard dùng **Cơ cấu tổ chức = THỐNG ĐẠT GROUP** (`OrganizationUnitID=1`).
 
+Mọi lần UPSERT thành công phải gửi tường minh `synced_at=now()` theo UTC. Default database chỉ chạy
+khi INSERT lần đầu; không gửi cột này trong UPDATE sẽ làm ảnh giữ mốc đồng bộ cũ dù số liệu đã đổi.
+
 Script thử hỗ trợ `python test_amis_revenue.py [NAM THANG]`. Mã `Period` phải khớp kỳ: `13` cho tháng
 hiện tại, `14` cho tháng trước và `0` cho kỳ tùy chọn; cùng mã phải xuất hiện ở cả `Param.Period` và
 `Param.DateData.Period`. Không được cố định `13`, vì AMIS có thể ưu tiên mã kỳ và trả dữ liệu tháng
@@ -616,3 +619,56 @@ hiện tại dù `FromDate`/`ToDate` đang chỉ sang tháng khác.
 
 Tài khoản SaleWork `Abraham Kế Toán Bánhàng` nối với dòng AMIS `Kế Toán Bán Hàng`. Khi AMIS không
 giao `TargetAmount`, pipeline lưu `null` và ảnh hiển thị `—`, không đổi thành mục tiêu `0`.
+
+---
+
+## 16. API báo cáo cuộc gọi AMIS — Report 70
+
+`scripts/amis-sync/fetch_call_statistics.py` gọi endpoint nội bộ đã bắt từ trình duyệt:
+`POST /crm/g1/api/report/Report/reportPaging`. Body dùng `ID=70`, `ReportDynamicID=0`,
+`AnalysisType=2`, `OrganizationUnitID=1`, `IsViewEmployee=true` và danh sách cột được mã hóa Base64
+đúng như trang `/crm/report/view/70/0`.
+
+Script nhận `python fetch_call_statistics.py [NAM THANG]`, mặc định tháng hiện tại theo giờ Việt Nam;
+mã kỳ là `13/14/0` tương ứng tháng này/tháng trước/tùy chọn. Xác thực đọc từ
+`scripts/amis-sync/.env`; có thể làm mới riêng CRM bằng `amis-harvest.ts --crm-only`, không cần mở
+luồng AMIS Kế toán.
+
+Kết quả chuẩn hóa gồm mã/tên nhân viên, cuộc gọi đi thành công/không thành công/tổng, thời lượng gọi
+đi, cuộc gọi đến và tổng thời lượng. Bốn trường được đưa ra trực tiếp theo yêu cầu SaleWork là
+`total_quantity` (`QuantityOfCall`), `called_quantity` (`QuantityOfCalled`),
+`not_called_quantity` (`QuantityOfNotCalledYet`) và `incoming_successful`
+(`QuantityOfCallIncomingSuccessful`). Hai file cục bộ `call_statistics_raw.json` và
+`call_statistics.json` bị `.gitignore` chặn, không chứa token/cookie.
+
+### 16.1. Tự cập nhật và cộng với SaleWork
+
+Sau khi lấy thành công, script tự UPSERT một snapshot kỹ thuật vào `salework_reports` với khóa
+`__CRM70__:{period_month}:{employee_code}`. Snapshot nằm riêng với dòng SaleWork thật, bị service lọc
+khỏi danh sách tài khoản, và được ghi đè khi chạy lại nên không thể cộng lặp. Không cần migration mới
+cho database tích hợp hiện tại.
+
+`npm run salework:sync` chạy tuần tự hai nguồn: đồng bộ SaleWork trước, sau đó gọi Report 70 và cập
+nhật snapshot CRM. `services/salework.ts` chỉ cộng tại lúc đọc báo cáo theo ánh xạ mã nhân viên:
+
+| Dòng trên báo cáo | SaleWork | CRM Report 70 |
+|---|---|---|
+| Số lượng hội thoại tương tác | `conversations` | `QuantityOfCall` |
+| Số lượng cuộc gọi đã gọi | `outgoing_calls` | `QuantityOfCalled` |
+| Số lượng cuộc gọi đến đã nghe | `incoming_calls` | `QuantityOfCallIncomingSuccessful` |
+| Tổng thời gian đã nghe máy | `call_duration` | `TotalCallAwayTime` |
+
+`QuantityOfNotCalledYet` được giữ trong `missed_calls` của dòng snapshot để đối soát nhưng chưa có
+dòng hiển thị riêng. Với tài khoản `Giao - Kế Toán bán hàng`, mã nối CRM là `VP-TLS-003`.
+
+### 16.2. Luồng preview dành cho Admin
+
+`GET /admin/report-previews` gọi song song hai nguồn. Nguồn Sales truy vấn `profiles` kèm quan hệ
+`daily_reports(id, report_date, status)`, sắp báo cáo giảm dần và giới hạn một dòng trên mỗi hồ sơ;
+mọi dữ liệu đi qua anon client chịu RLS. Nguồn telesale dùng `getSaleWorkReport()` hiện hữu.
+
+Khi chọn Sales, Admin chọn `variant=MORNING` hoặc `variant=EVENING` trên cùng route ảnh. Route chỉ nhận
+override này khi phiên hiện tại là Admin active; báo cáo chưa hoàn tất vẫn dùng được mẫu cuối ngày và các
+giá trị `actual_* = null` hiện `—`/chờ số liệu. Đường xuất ảnh bình thường của Sales không đổi và vẫn
+để `status` quyết định biến thể. Khi chọn telesale, trình duyệt tải
+`/api/salework/report-image?account=...` bằng cookie Admin, không đưa API key vào HTML hoặc URL.

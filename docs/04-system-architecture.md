@@ -634,3 +634,18 @@ Mọi hàm của `services/admin.ts` trả **giá trị an toàn khi lỗi** (s�
 **Ranh giới client/server không đổi.** Danh sách client component vẫn ngắn và vẫn chỉ là phần tương tác: form (báo cáo, tài khoản, tạo/sửa Sales), nút chia sẻ ảnh, nút bật/tắt `is_active`, bộ lọc có `<select>` tự submit, và thanh điều hướng. **Biểu đồ trend là Server Component** — nó chỉ là SVG tĩnh, không cần một byte JavaScript nào trên máy khách (DEC-044).
 
 **Một luật mới của tầng feature (DEC-045):** file `'use server'` chỉ được export **async function** và `export type`. Hằng số dùng chung nằm ở `lib/` — `lib/auth/messages.ts`, `lib/reports/messages.ts`, `lib/account/messages.ts`, `lib/admin/messages.ts`. Vi phạm luật này làm module ném lỗi **lúc chạy** trong khi build/typecheck/lint đều xanh (ISSUE-016).
+
+---
+
+### Bổ sung màn xem trước báo cáo Admin
+
+`/admin/report-previews` là Server Component. Trang gọi song song
+`listSalesLatestReportPreviewOptions()` và `getSaleWorkReport()`, rồi truyền dữ liệu đã typed cho
+`features/admin-report-previews/employee-preview-list.tsx`. Truy vấn Sales dùng quan hệ nhúng với
+`limit(1)` theo từng hồ sơ, tránh N+1 và bám `idx_daily_reports_sales_date_desc`. Ảnh ngày tái sử dụng
+route Satori hiện hữu; ảnh SaleWork tái sử dụng route Canvas hiện hữu. Không có business logic hoặc
+truy vấn inline trong component.
+
+`MainNav` nhận thêm `sidebarItems` tùy chọn. Admin truyền `ADMIN_SIDEBAR_ITEMS` chứa SaleWork; tập này
+chỉ render trong sidebar desktop và vẫn tham gia tính trạng thái active. Bottom nav tiếp tục chỉ render
+`ADMIN_NAV_ITEMS`, nên không vượt trần sáu mục ở 375px.

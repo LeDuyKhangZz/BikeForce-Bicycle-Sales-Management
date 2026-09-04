@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { getVietnamCurrentMonth } from '@/lib/date';
+import {
+  combineCallMetrics,
+  parseSaleWorkDurationSeconds,
+} from '@/lib/salework/call-metrics';
+
 export type SaleWorkReport = {
   accountName: string;
   conversations: number;
@@ -54,6 +60,11 @@ export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
   'Giao - Kế Toán bán hàng': 'Trần Thị Quỳnh Giao',
 };
 
+const CRM_CALL_ROW_PREFIX = '__CRM70__:';
+const CRM_CALL_EMPLOYEE_CODE_MAP: Record<string, string> = {
+  'Giao - Kế Toán bán hàng': 'VP-TLS-003',
+};
+
 /**
  * ⚠ Dùng BIKEFORCE_SERVICE_ROLE_KEY (không phải anon key) vì hàm này CHỈ chạy
  * ở phía server (Server Component / Route Handler, không có "use client").
@@ -101,13 +112,26 @@ function toAmisData(row: AmisEmployeeMetricRow): SaleWorkReport['amis'] {
   };
 }
 
+function combineReportCalls(
+  report: Omit<SaleWorkReport, 'amis'>,
+  row: SaleWorkReportRow | undefined,
+) {
+  return combineCallMetrics(
+    report,
+    row
+      ? {
+          totalQuantity: row.conversations,
+          calledQuantity: row.outgoing_calls,
+          incomingSuccessful: row.incoming_calls,
+          outgoingDurationSeconds: parseSaleWorkDurationSeconds(row.call_duration),
+        }
+      : null,
+  );
+}
+
 /** '2026-08-01' cho tháng hiện tại theo giờ VN — khớp cách push_amis.py ghi period_month. */
 function currentPeriodMonth(): string {
-  const now = new Date();
-  const vnNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-  const y = vnNow.getFullYear();
-  const m = String(vnNow.getMonth() + 1).padStart(2, '0');
-  return `${y}-${m}-01`;
+  return `${getVietnamCurrentMonth()}-01`;
 }
 
 /**
@@ -124,7 +148,9 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
 
     const { data: saleworkData, error: saleworkError } = await supabase
       .from('salework_reports')
-      .select('*')
+      .select(
+        'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration',
+      )
       .order('account_name', { ascending: true });
 
     if (saleworkError) {
@@ -132,22 +158,31 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
       return [];
     }
 
-    const baseReports = (saleworkData ?? []).map(toSaleWorkReport);
+    const period = currentPeriodMonth();
+    const allSaleWorkRows: SaleWorkReportRow[] = saleworkData ?? [];
+    const baseReports = allSaleWorkRows
+      .filter((row) => !row.account_name.startsWith(CRM_CALL_ROW_PREFIX))
+      .map(toSaleWorkReport);
+    const crmCallsByEmployeeCode = new Map<string, SaleWorkReportRow>();
+    for (const row of allSaleWorkRows) {
+      if (row.account_name.startsWith(CRM_CALL_ROW_PREFIX)) {
+        crmCallsByEmployeeCode.set(row.account_name.slice(CRM_CALL_ROW_PREFIX.length), row);
+      }
+    }
 
     // Lấy số liệu AMIS của tháng hiện tại cho các nhân viên đã map.
     const employeeNames = Array.from(new Set(Object.values(AMIS_EMPLOYEE_MAP)));
-    const period = currentPeriodMonth();
-
     const { data: amisData, error: amisError } = await supabase
       .from('amis_employee_metrics')
-      .select('*')
+      .select(
+        'employee_name,net_sales,sales,return_sales,no_of_orders,target_amount,current_amount,synced_at',
+      )
       .eq('period_month', period)
       .in('employee_name', employeeNames);
 
     if (amisError) {
       console.error('[getSaleWorkReport] Lỗi truy vấn amis_employee_metrics:', amisError.message);
     }
-
     const amisByEmployeeName = new Map<string, AmisEmployeeMetricRow>();
     for (const row of amisData ?? []) {
       amisByEmployeeName.set(row.employee_name, row as AmisEmployeeMetricRow);
@@ -156,8 +191,13 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     return baseReports.map((report) => {
       const employeeName = AMIS_EMPLOYEE_MAP[report.accountName];
       const amisRow = employeeName ? amisByEmployeeName.get(employeeName) : undefined;
+      const employeeCode = CRM_CALL_EMPLOYEE_CODE_MAP[report.accountName];
+      const callRow = employeeCode
+        ? crmCallsByEmployeeCode.get(`${period}:${employeeCode}`)
+        : undefined;
       return {
         ...report,
+        ...combineReportCalls(report, callRow),
         amis: amisRow ? toAmisData(amisRow) : null,
       };
     });

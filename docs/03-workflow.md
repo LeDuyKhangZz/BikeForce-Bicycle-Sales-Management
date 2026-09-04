@@ -1078,3 +1078,14 @@ Bốn thứ **bên trong** các bước đó đã đổi:
 Một nhánh hiển thị **mới** cần biết khi đọc luồng: báo cáo tạo **trước** migration `0008` mang `null`
 ở doanh số, nên ô "Cam kết"/"Hoàn thành" của dòng đó hiện `'—'` thay vì một con số. Đây là trạng thái
 **hợp lệ và cố ý** (OQ-19c), không phải lỗi tải dữ liệu.
+
+---
+
+## LUỒNG ADMIN XEM TRƯỚC BÁO CÁO NHÂN VIÊN (2026-09-04)
+
+`Nút Xem trước ở header Admin` → `/admin/report-previews` → tải danh sách Sales kèm đúng một báo cáo
+gần nhất và danh sách tài khoản SaleWork → Admin bấm **Xem preview** bên cạnh tên → ảnh hiện ngay dưới
+danh sách. Mỗi Sales có hai lựa chọn đầu ngày/cuối ngày. Báo cáo ngày đi qua route ảnh hiện hữu và RLS;
+riêng phiên Admin được chọn biến thể, kể cả mẫu cuối ngày khi row còn `MORNING_SUBMITTED`. Ảnh SaleWork
+chỉ chấp nhận API key của n8n
+hoặc phiên Admin đang hoạt động. Không có bước ghi hay thay đổi báo cáo.

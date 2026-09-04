@@ -9,6 +9,7 @@
  *           -> mo browser, dang nhap CA HAI trang (co the phai nhap OTP).
  *
  * Cac lan sau: npx tsx scripts/amis-sync/amis-harvest.ts
+ * Chi can CRM: npx tsx scripts/amis-sync/amis-harvest.ts --crm-only
  *
  * Neu he thong bao THIEU token (phien dang nhap trong profile da het han),
  * script se ghi canh bao ro rang vao scripts/amis-sync/alert.log va
@@ -38,6 +39,7 @@ const WANTED_COOKIES = [
 ];
 
 const loginMode = process.argv.includes('--login');
+const crmOnly = process.argv.includes('--crm-only');
 
 type Harvested = {
   crmToken?: string;
@@ -194,7 +196,9 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log(loginMode ? 'CHE DO DANG NHAP' : 'CHE DO TU DONG');
+  console.log(
+    `${loginMode ? 'CHE DO DANG NHAP' : 'CHE DO TU DONG'}${crmOnly ? ' — CHI CRM' : ''}`,
+  );
 
   const ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
     headless: !loginMode,
@@ -211,7 +215,9 @@ async function main(): Promise<void> {
   const got: Harvested = {};
 
   await harvestCrm(ctx, got);
-  await harvestAct(ctx, got);
+  if (!crmOnly) {
+    await harvestAct(ctx, got);
+  }
   await ctx.close();
 
   const updates: Record<string, string> = {};
@@ -243,7 +249,7 @@ async function main(): Promise<void> {
   }
 
   // KE TOAN thieu thi khong chan qua trinh, nhung phai canh bao ro.
-  if (!got.actToken && !loginMode) {
+  if (!crmOnly && !got.actToken && !loginMode) {
     logAlert('ACT (KE TOAN) token van THIEU sau khi chay xong — can dang nhap lai (--login).');
   }
 }

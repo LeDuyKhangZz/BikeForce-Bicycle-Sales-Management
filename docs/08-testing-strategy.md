@@ -1416,3 +1416,14 @@ build/typecheck/lint exit 0 và build có 20 route.
 Ngày 2026-08-12, bài mới đỏ lần đầu với sai lệch **2px**, sau khi chỉnh nút tháng về touch target 44px thì
 chạy lại xanh **1/1** trên `desktop-1440`; cùng luồng trên `mobile-375` cũng xanh **1/1**. Bản preview tạm
 được nhìn ở 1440×900 và 375×812 rồi xoá.
+
+---
+
+## 17. MÀN XEM TRƯỚC BÁO CÁO ADMIN
+
+Hàng rào tối thiểu: unit kiểm `/admin/report-previews` làm sáng mục **Báo cáo**; typecheck/lint kiểm
+shape truy vấn nhúng và component; production build phải sinh route động. E2E tiếp theo cần đăng nhập
+Admin, mở nút **Xem trước**, xác nhận danh sách tên, bấm một dòng Sales và một dòng SaleWork, rồi kiểm
+ảnh tải thành công. Đồng thời khóa ba ca từ chối trên route ảnh SaleWork: Sales, anon và inactive.
+View-model phải có unit chứng minh `MORNING_SUBMITTED` + override `EVENING` cho mẫu cuối ngày với toàn
+bộ `actual_* = null`, nhưng đường ảnh Sales bình thường vẫn không bị đổi biến thể.

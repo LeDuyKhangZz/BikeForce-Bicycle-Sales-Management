@@ -1,6 +1,30 @@
 # BikeForce Session Checkpoint
 
-> Status: ACTIVE | Phase: **SaleWork — nối dữ liệu AMIS** | Last updated: 2026-09-03
+> Status: ACTIVE | Phase: **SaleWork — nối dữ liệu AMIS** | Last updated: 2026-09-04
+
+## ✅ PHIÊN HIỆN TẠI — script thống kê cuộc gọi AMIS (2026-09-04)
+
+Đã bắt request thật của Report 70 và tạo `scripts/amis-sync/fetch_call_statistics.py`. Script nhận
+tháng/năm, gọi API AMIS, lưu response gốc + JSON chuẩn hóa và in bảng theo nhân viên. Có thêm
+`amis-harvest.ts --crm-only` để làm mới riêng token CRM.
+
+Đã thêm `fetch_call_statistics.bat` để người dùng bấm đúp và xem kết quả; cửa sổ không tự đóng vì có
+`pause` ở cuối.
+
+Kết quả chuẩn hóa hiện có thêm bốn cột người dùng chốt: tổng số lượng, đã gọi, chưa gọi và gọi đến
+thành công. Gọi thật kỳ 09/2026 trả `12 · 12 · 0 · 0` cho Trần Thị Quỳnh Giao.
+
+Chạy thật kỳ 09/2026 trả HTTP 200: `Trần Thị Quỳnh Giao (VP-TLS-003) · 10 cuộc gọi đi thành công ·
+0 không thành công · 09:12`.
+
+Typecheck và lint sạch; unit **697/697**; production build thành công với **25 route**.
+
+### Next Exact Steps
+
+1. Chốt các trường Report 70 cần đưa vào ảnh SaleWork.
+2. Thêm nơi lưu Supabase và nối vào `SaleWorkReport` sau khi chốt.
+
+---
 
 ## ✅ PHIÊN HIỆN TẠI — dashboard doanh số AMIS (2026-09-03)
 
@@ -2065,3 +2089,57 @@ mới xuất hiện trong Vercel Activity. Sau khi bật Supabase local, chạy 
 - Đã chạy: typecheck + lint exit 0 · unit **695/695** · production build exit 0, 23 route.
 
 **Next Exact Steps:** commit/push `main`; xác nhận deployment Vercel của commit mới hoàn tất.
+
+---
+
+## CHECKPOINT 2026-09-04 — CRM Report 70 + SaleWork
+
+- `fetch_call_statistics.py` tự lấy Report 70 và UPSERT snapshot CRM vào `salework_reports`.
+- Snapshot có khóa `__CRM70__:{YYYY-MM-01}:{employee_code}`, không xuất hiện trên UI và chạy lại không
+  cộng lặp.
+- Mapping đang dùng: `Giao - Kế Toán bán hàng` → `VP-TLS-003` / `Trần Thị Quỳnh Giao`.
+- Ảnh báo cáo của Giao hiển thị `Mã telesale: VP-TLS-003`.
+- Công thức cộng nằm trong `lib/salework/call-metrics.ts`, không nằm trong component ảnh.
+- Bốn phép cộng: hội thoại + tổng số lượng; gọi đi + đã gọi; gọi đến + gọi đến thành công; thời lượng
+  SaleWork + tổng thời gian gọi đi.
+- Đã ghi dữ liệu thật và đọc lại qua service: `33 · 16 · 0 · 17.07 phút` tại thời điểm kiểm tra.
+- Cổng hoàn tất: unit **706/706** · typecheck ✅ · lint ✅ · Python compile ✅ · build **25 route** ✅.
+- Database URL trong `scripts/amis-sync/.env` không cùng project với `BIKEFORCE_SUPABASE_URL`; không
+  dùng URL đó để migrate BikeForce. Bảng rỗng tạo nhầm trong lúc kiểm tra đã được xóa ngay.
+
+**Next Exact Steps:** dùng `npm run salework:sync` cho lần đồng bộ kế tiếp; làm mới CRM bằng
+`amis-harvest.ts --crm-only` nếu API trả 401/403.
+
+---
+
+## CHECKPOINT 2026-09-04 — Mốc MISA và lịch tự động
+
+- Đã sửa `push_amis.py` luôn ghi `synced_at`; ảnh không còn kẹt ở ngày INSERT đầu tiên.
+- Dữ liệu thật hiện có mốc `11:54 04/09/2026` giờ Việt Nam cho Abraham và Giao.
+- `npm run reports:sync` là luồng đầy đủ: refresh AMIS → push MISA → SaleWork → CRM Report 70.
+- `scripts/install-auto-sync.ps1` cài task `BikeForce - Auto Sync Reports`, mặc định mỗi 60 phút.
+- ACT Kế toán hiện hết phiên; số công nợ cũ được giữ, không ghi NULL. Cần chạy `amis-harvest.ts
+  --login` nếu muốn làm mới cả nguồn công nợ.
+- Batch đầy đủ đã chạy thử thật và exit 0; log ghi `THANH CONG`.
+
+**Next Exact Steps:** chạy installer một lần trên tài khoản Windows dùng để đồng bộ, rồi kiểm tra lần
+chạy đầu trong Task Scheduler và `scripts/amis-sync/auto-sync.log`.
+
+**Đã hoàn tất bước trên:** task đã cài và kiểm tra bằng `schtasks`; trạng thái Enabled/Ready, chu kỳ
+1 giờ, kết quả gần nhất `0`. Phiên ACT mới cũng đã gọi API và đẩy công nợ thành công.
+
+---
+
+## CHECKPOINT 2026-09-04 — Admin xem trước báo cáo theo nhân viên
+
+- Header Admin có nút **Xem trước** mở `/admin/report-previews`; không thêm mục bottom nav thứ bảy.
+- Danh sách Sales lấy hồ sơ kèm đúng một báo cáo gần nhất trong một query, không N+1.
+- Mỗi nhân viên có đủ hai nút **Đầu ngày / Cuối ngày**; row chưa hoàn tất vẫn dựng mẫu cuối ngày và hiện `—` ở ô thiếu.
+- Danh sách telesale SaleWork có nút preview riêng và link về bảng SaleWork đầy đủ.
+- SaleWork là mục riêng ở sidebar trái desktop; link trong trang preview chỉ hiện trên mobile.
+- Route ảnh SaleWork nhận API key n8n hoặc phiên Admin active; URL phía UI không chứa secret.
+- Typecheck và lint sạch; full unit **713/713**; production build thành công với **26 route**.
+- Chưa chạy E2E/visual vì Supabase local/Docker đang tắt và in-app Browser không khả dụng; không ghi PASS giả.
+
+**Next Exact Steps:** bật Docker + Supabase local, chạy E2E Admin + security của route SaleWork, sau đó
+nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.

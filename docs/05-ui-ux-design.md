@@ -480,7 +480,7 @@ Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
 | | Mobile (< 1024px) | Desktop (≥ 1024px) |
 |---|---|---|
 | **Sales** | Bottom tab 3 mục: **Hôm nay** (`Home`) · **Lịch sử** (`History`) · **Tài khoản** (`User`) | Sidebar trái cố định, cùng 3 mục |
-| **Admin** | Bottom tab các mục nghiệp vụ hiện có; nút chuyển module **SaleWork** (`ArrowRightLeft`) nằm ở header | Sidebar trái cố định; nút chuyển module **SaleWork** nằm ở header |
+| **Admin** | Bottom tab 6 mục; lối vào SaleWork nằm trong trang Xem trước | Sidebar trái cố định; **SaleWork** là mục module riêng dưới đường phân cách |
 
 **Không bao giờ hiển thị đồng thời bottom nav và sidebar** (`avoid-mixed-patterns`).
 
@@ -497,7 +497,7 @@ Mỗi route group có đủ `loading.tsx`, `error.tsx`, `not-found.tsx`.
 | `state-preservation` | Quay lại `/sales/history` hay `/admin/reports` phải khôi phục tháng đang lọc, trang đang xem và vị trí cuộn |
 | `deep-linking` | Mọi màn hình quan trọng có URL riêng, chia sẻ và bookmark được |
 | `persistent-nav` | Điều hướng chính luôn tới được từ trang sâu |
-| `module-switcher` | Chỉ Admin thấy nút chuyển từ BikeForce sang module SaleWork tại header; SaleWork dùng route riêng `/admin/salework` và không thêm tab bottom nav |
+| `module-switcher` | Chỉ Admin thấy SaleWork: ở sidebar trái từ 1024px, và trong trang Xem trước ở mobile; route riêng `/admin/salework`, không thêm tab bottom nav |
 | `destructive-nav-separation` | Đăng xuất nằm ở `/…/account`, tách khỏi các mục điều hướng thường |
 | `focus-on-route-change` | Sau khi chuyển trang, focus chuyển về vùng nội dung chính |
 | `skip-links` | Có link "Bỏ qua điều hướng" cho người dùng bàn phím |
@@ -1266,3 +1266,18 @@ nhanh — 22 ô mỗi ô ba chip thì trang chỉ còn là một rừng nút. Vi
 
 ⚠ **Nhãn ô có phần `sr-only` mang tên người.** 22 ô cùng nhãn "Chỉ tiêu doanh số" thì trình đọc màn hình
 không cho biết đang ở dòng của ai.
+
+---
+
+## Màn hình `/admin/report-previews` — Xem trước theo nhân viên
+
+- Cửa vào là nút **Xem trước** trong header Admin; không thêm mục thứ bảy vào bottom nav.
+- Từ 1024px, module **SaleWork** nằm trực tiếp trong sidebar trái, dưới nhóm điều hướng chính. Link
+  “Xem bảng SaleWork” trong card telesale chỉ còn hiện ở mobile vì mobile không có sidebar.
+- Hai card danh sách tách rõ **Nhân viên Sales** và **Nhân viên telesale · SaleWork**.
+- Mỗi dòng có tên, mã/trạng thái và hai nút **Đầu ngày** / **Cuối ngày** tối thiểu 44px. Báo cáo mới có
+  cam kết sáng vẫn dựng được mẫu cuối ngày; ô chưa nhập hiện `—` hoặc trạng thái chờ. Nhân viên chưa có dữ
+  liệu vẫn hiện tên, kèm trạng thái và nút không khả dụng.
+- Preview hiện dưới danh sách trong khung dọc co theo bề rộng, tối đa 540px; ảnh giữ đúng tỉ lệ, không
+  sinh cuộn ngang ở 375px.
+- Nút mang `aria-label` có tên nhân viên; trạng thái báo cáo có chữ, không truyền đạt chỉ bằng màu.

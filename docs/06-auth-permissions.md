@@ -831,3 +831,22 @@ chính Sales đó, nên không có quyền đọc thì thẻ ảnh mất cụm "
 
 ⚠ Đường ghi **không** dùng service role. `monthly_targets_*_admin` đã cho phép Admin làm đúng việc cần
 làm; dùng `lib/supabase/admin.ts` ở đây là tắt mô hình bảo mật cho tiện (DEC-005).
+
+---
+
+## Quyền xem trước báo cáo Admin (2026-09-04)
+
+| Tài nguyên | ADMIN đang hoạt động | SALES | anon / inactive |
+|---|---:|---:|---:|
+| `/admin/report-previews` | ✅ | ❌ chuyển về trang Sales | ❌ |
+| Ảnh báo cáo ngày của Sales khác | ✅ qua RLS | ❌ qua RLS | ❌ |
+| Chọn mẫu preview đầu ngày/cuối ngày | ✅ | ❌ | ❌ |
+| Ảnh SaleWork bằng phiên trình duyệt | ✅ | ❌ | ❌ |
+| Ảnh SaleWork bằng API key n8n | ✅ máy tích hợp | — | — |
+
+Route ảnh SaleWork vẫn giữ đường API key cho n8n, đồng thời chấp nhận cookie phiên khi và chỉ khi
+`getUser()` hợp lệ, hồ sơ `is_active = true` và `role = 'ADMIN'`. URL preview phía Admin không chứa
+`SALEWORK_REPORT_API_KEY`.
+
+Tham số `variant=MORNING|EVENING` trên route ảnh ngày là ngoại lệ chỉ dành cho preview Admin. Route
+gọi `getUser()` rồi kiểm lại hồ sơ active/role trước khi đọc báo cáo; Sales cố truyền tham số nhận 403.
