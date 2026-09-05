@@ -751,7 +751,7 @@ function SaleWorkMetrics({ metrics }: { metrics: readonly ShareCardSaleWorkMetri
           paddingBottom: 6,
         }}
       >
-        HOẠT ĐỘNG SALEWORK
+        HOẠT ĐỘNG ONLINE TRONG NGÀY
       </div>
       {metrics.map((metric, index) => (
         <div

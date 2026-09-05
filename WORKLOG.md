@@ -3317,3 +3317,7 @@ Script nay chờ bảng chứa đủ cả 7 tên rồi mới parse và UPSERT.
 Chạy thật `npm run salework:sync` exit 0: **7 tài khoản SaleWork** và **1 snapshot CRM Report 70** đã
 được cập nhật lên Supabase. Đọc file đối soát xác nhận `Abraham Bà Rịa - Vũng Tàu` có `54` hội thoại,
 `404` tin gửi, `84` tin nhận, `1` gọi đến và thời lượng `30.00 giây`. Typecheck và lint sạch.
+
+Theo yêu cầu hiển thị ngày 2026-09-05, tiêu đề khối sáu chỉ số trên ảnh báo cáo Sales được đổi từ
+`HOẠT ĐỘNG SALEWORK` thành `HOẠT ĐỘNG ONLINE TRONG NGÀY`. Chỉ thay nhãn trình bày; mapping, snapshot
+SaleWork và sáu giá trị giữ nguyên.

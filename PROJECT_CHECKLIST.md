@@ -1080,6 +1080,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Script đồng bộ chọn thêm 5 tài khoản; không chỉ ánh xạ ở màn hình
 - [x] Script gõ từng tên trong ô tìm kiếm, chọn đúng tab **Tin nhắn** và chờ đủ 7 tên trước khi đọc bảng
 - [x] Chạy đồng bộ thật: **7/7 tài khoản** đã ghi Supabase; Bà Rịa có dữ liệu thật, không dùng số 0 giả
+- [x] Tiêu đề sáu chỉ số trên báo cáo Sales là **HOẠT ĐỘNG ONLINE TRONG NGÀY**
 - [x] Bản đầu ngày và cuối ngày hiển thị đủ 6 dòng Zalo/cuộc gọi, dữ liệu thiếu hiện `—`
 - [x] Không thêm input và không lưu trùng dữ liệu SaleWork vào `daily_reports`
 - [x] Typecheck · lint · full unit **724/724**

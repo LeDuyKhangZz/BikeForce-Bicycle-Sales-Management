@@ -2156,6 +2156,8 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
   kết quả, bấm Tổng hợp và chờ bảng chứa đủ 7 tên trước khi đọc.
 - Đã chạy thật thành công **7/7 tài khoản**. `Abraham Bà Rịa - Vũng Tàu` có `54` hội thoại, `404` tin
   gửi, `84` tin nhận, `1` gọi đến và `30.00 giây` tại thời điểm xác minh; không ghi fallback số 0.
+- Tiêu đề khối sáu chỉ số trên ảnh Sales đã đổi từ `HOẠT ĐỘNG SALEWORK` thành
+  `HOẠT ĐỘNG ONLINE TRONG NGÀY`; nguồn dữ liệu và sáu dòng không đổi.
 - Cả ảnh đầu ngày/cuối ngày có 6 dòng: hội thoại, tin gửi, tin nhận, gọi đi, gọi đến đã nghe, thời lượng.
 - Dữ liệu chỉ đọc từ snapshot SaleWork; không persist vào `daily_reports`; thiếu snapshot hiển thị `—`.
 - View-model dựng nhãn/giá trị; component chỉ render và bật layout gọn khi có SaleWork.

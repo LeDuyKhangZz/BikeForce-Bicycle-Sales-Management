@@ -1286,7 +1286,7 @@ không cho biết đang ở dòng của ai.
 
 ### Sáu dòng SaleWork trên ảnh báo cáo Sales
 
-- Khối **HOẠT ĐỘNG SALEWORK** có sáu dòng nhãn trái/giá trị phải và xuất hiện trên cả mẫu đầu ngày, cuối ngày.
+- Khối **HOẠT ĐỘNG ONLINE TRONG NGÀY** có sáu dòng nhãn trái/giá trị phải và xuất hiện trên cả mẫu đầu ngày, cuối ngày.
 - Giá trị chưa đồng bộ dùng `—`; không tạo input vì đây là dữ liệu hệ thống.
 - Khi có khối này, bảng KPI và cụm MISA dùng nhịp gọn hơn nhưng vẫn giữ đủ chữ, số và footer trong ảnh
   1080×1920. Hai biến thể đã được render PNG thật để kiểm tra không cắt/chồng nội dung.
