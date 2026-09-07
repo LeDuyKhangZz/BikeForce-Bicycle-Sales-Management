@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { DailyReportShareCard } from '@/features/report-share/daily-report-share-card';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
-import { getVietnamToday } from '@/lib/date';
+import { getVietnamCurrentMonth, getVietnamToday, shiftVietnamMonth } from '@/lib/date';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
 import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { summarizeMonthToDate } from '@/lib/reports/month-summary';
@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getMonthlyTargets } from '@/services/monthly-targets';
 import { getSessionProfile } from '@/services/profiles';
 import { getSaleWorkReportByAccountName } from '@/services/salework';
+import { getMonthlyTravelExpense } from '@/services/travel-expenses';
 import {
   getAmisMetricsForShare,
   getReportForShare,
@@ -248,7 +249,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * ─────────────────────────────────────────────────────────────────────────
    *  CỤM "TÌNH TRẠNG THỰC HIỆN" — PHASE 19, DEC-070
    * ─────────────────────────────────────────────────────────────────────────
-   *  BA truy vấn thêm:
+   *  BỐN truy vấn thêm:
    *
    *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`, nay chỉ còn là
    *       ĐƯỜNG LÙI khi Admin chưa giao chỉ tiêu tháng (DEC-071).
@@ -256,8 +257,10 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    *       `scripts/amis-sync/push_amis.py` đẩy lên.
    *    3. `getMonthlyTargets` → hai chỉ tiêu THÁNG công ty giao. Chúng thắng cả
    *       `target_amount` của AMIS lẫn tổng cam kết ngày ở (1).
+   *    4. `getMonthlyTravelExpense` → công tác phí của Sales ở tháng liền trước
+   *       tháng hiện tại theo giờ Việt Nam (BR-028).
    *
-   *  Cả ba đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
+   *  Cả bốn đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
    *  người khác và Admin xuất ảnh hộ Sales vẫn đúng (BR-022).
    *
    *  Thiếu (1) HOẶC (2) ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
@@ -281,12 +284,17 @@ export async function GET(request: Request, context: ShareImageContext): Promise
   // hai dòng tiền rơi về đường cũ (AMIS `target_amount` và tổng cam kết ngày).
   const saleWorkAccountName = getSaleWorkAccountName(report.sales.full_name);
   const isCurrentSaleWorkDate = report.report_date === getVietnamToday();
-  const [amis, monthlyTargets, saleWorkReport] = await Promise.all([
+  const previousMonth = shiftVietnamMonth(getVietnamCurrentMonth(), -1);
+  const previousExpensePeriod = previousMonth === null ? null : `${previousMonth}-01`;
+  const [amis, monthlyTargets, saleWorkReport, previousMonthTravelExpense] = await Promise.all([
     getAmisMetricsForShare(supabase, report.sales.amis_employee_name, periodMonth),
     getMonthlyTargets(supabase, report.sales_id, periodMonth),
     saleWorkAccountName === null || !isCurrentSaleWorkDate
       ? Promise.resolve(null)
       : getSaleWorkReportByAccountName(saleWorkAccountName),
+    previousExpensePeriod === null
+      ? Promise.resolve(null)
+      : getMonthlyTravelExpense(supabase, report.sales_id, previousExpensePeriod),
   ]);
 
   const performance =
@@ -319,7 +327,13 @@ export async function GET(request: Request, context: ShareImageContext): Promise
           callDuration: saleWorkReport?.callDuration ?? null,
         };
 
-  const model = buildShareCardModel(report, performance, variant, saleWork);
+  const model = buildShareCardModel(
+    report,
+    performance,
+    variant,
+    saleWork,
+    previousMonthTravelExpense,
+  );
   const fileName = shareImageFileName(
     report.sales.full_name,
     report.report_date,

@@ -2171,12 +2171,18 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
 - Module `/admin/travel-expenses` có mục riêng ở sidebar trái desktop; bottom nav mobile không đổi.
 - Danh sách Công tác phí luôn một nhân viên mỗi hàng ở mọi breakpoint.
 - Admin nhập một `amount` VND cho từng Sales theo tháng; khoá DB `(period_month, sales_id)`.
-- Bảng `sales_monthly_travel_expenses` force RLS; chỉ Admin đọc/ghi, không có quyền xoá.
+- Bảng `sales_monthly_travel_expenses` force RLS; Admin ghi/đọc tất cả, Sales đọc own, không cấp xoá.
 - Validation Zod → auth → active → role → danh sách Sales server → upsert → revalidate.
 - Types đã generate từ schema local sau migration.
-- Đã chạy thật: typecheck/lint sạch; full unit 729/729; RLS 6/6; build 27 route; E2E 6/6 ở 375/1440.
+- Đã chạy thật: typecheck/lint sạch; full unit 732/732; RLS 6/6; build 27 route; E2E module 6/6
+  ở 375/1440 và E2E render ảnh công tác phí 1/1.
 - E2E đo nút ở sidebar trái desktop, ẩn khỏi bottom nav mobile, lưu/tải lại và không cuộn ngang.
 - In-app Browser không khả dụng trong phiên; kiểm chứng UI dùng Playwright E2E của dự án.
+- BR-028/DEC-074: cả hai ảnh báo cáo có dòng cuối “Công tác phí tháng trước”; kỳ là tháng liền trước
+  tháng hiện tại giờ VN, thiếu dữ liệu hiện `—`, số 0 vẫn là giá trị thật.
+- Sales được SELECT đúng công tác phí của mình để dựng ảnh, không đọc người khác và không được ghi.
+- E2E nhập 3.500.000 ₫ kỳ 08/2026 rồi render báo cáo 07/09/2026; PNG 1080×1920 đã nhìn trực tiếp,
+  dòng mới và footer đều trọn vẹn.
 
 **Next Exact Steps:** đẩy hai migration mới lên Supabase cloud trước khi deploy code, rồi commit/push
 `main` và xác nhận Vercel deploy route `/admin/travel-expenses`.

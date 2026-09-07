@@ -859,8 +859,8 @@ danh sách tài khoản SaleWork hay dữ liệu thô bổ sung cho client.
 | Vai | Đọc | Tạo/sửa | Xoá |
 |---|---|---|---|
 | Admin đang hoạt động | Tất cả nhân viên/tháng | Có, qua Server Action và RLS | Không cấp |
-| Sales (kể cả dòng của mình) | Không | Không | Không |
+| Sales | Chỉ dòng của chính mình, phục vụ ảnh báo cáo | Không | Không |
 | Anon | Không | Không | Không |
 
-Middleware/layout chỉ hỗ trợ UX; ba policy Admin-only trên `sales_monthly_travel_expenses` mới là biên
-giới bảo mật. Server Action vẫn tự kiểm lại auth → active → role.
+Middleware/layout chỉ hỗ trợ UX. Policy select là `sales_id = auth.uid() OR is_admin()`; ba policy ghi
+vẫn Admin-only. Server Action vẫn tự kiểm lại auth → active → role.

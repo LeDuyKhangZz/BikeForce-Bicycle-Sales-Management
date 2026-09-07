@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+  getMonthlyTravelExpense,
   listMonthlyTravelExpenses,
   saveMonthlyTravelExpenses,
 } from '@/services/travel-expenses';
@@ -58,8 +59,21 @@ describe('RLS công tác phí theo tháng', () => {
     expect(error).not.toBeNull();
   });
 
-  it('Sales không đọc được công tác phí, kể cả của chính mình', async () => {
-    expect(await listMonthlyTravelExpenses(fixture.clients.salesA, PERIOD_MONTH)).toEqual([]);
+  it('Sales chỉ đọc được công tác phí của chính mình để dựng báo cáo', async () => {
+    await saveMonthlyTravelExpenses(
+      fixture.clients.admin,
+      PERIOD_MONTH,
+      [{ sales_id: fixture.ids.salesB, amount: 8_000_000 }],
+      fixture.ids.admin,
+    );
+
+    expect(await getMonthlyTravelExpense(fixture.clients.salesA, fixture.ids.salesA, PERIOD_MONTH)).toBe(
+      4_000_000,
+    );
+    expect(await getMonthlyTravelExpense(fixture.clients.salesA, fixture.ids.salesB, PERIOD_MONTH)).toBeNull();
+    expect(await listMonthlyTravelExpenses(fixture.clients.salesA, PERIOD_MONTH)).toEqual([
+      { sales_id: fixture.ids.salesA, amount: 4_000_000 },
+    ]);
   });
 
   it('Sales không thể tự ghi công tác phí', async () => {

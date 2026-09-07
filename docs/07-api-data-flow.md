@@ -694,3 +694,10 @@ Snapshot SaleWork hiện chỉ lưu số của ngày đồng bộ gần nhất, 
 `listSalesOptions()` đọc lại tập người hợp lệ ở server → `saveMonthlyTravelExpenses()` upsert một câu
 theo `(period_month, sales_id)` → `revalidatePath('/admin/travel-expenses')` → trả `ActionResult`.
 Client không được quyết định `updated_by`, role hay danh sách người sẽ ghi.
+
+### Đọc công tác phí vào ảnh báo cáo (BR-028)
+
+`GET /api/reports/[id]/share-image` xác thực và đọc report dưới RLS → lấy tháng hiện tại giờ VN → lùi
+một tháng → `getMonthlyTravelExpense(supabase, report.sales_id, YYYY-MM-01)` → truyền số vào
+`buildShareCardModel()` → format bằng `formatCurrencyVND()` → `DailyReportShareCard` render dòng cuối.
+Sales chỉ đọc được dòng của mình; Admin preview báo cáo Sales bất kỳ vẫn đọc được theo policy.

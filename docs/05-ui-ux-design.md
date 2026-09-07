@@ -1298,3 +1298,5 @@ không cho biết đang ở dòng của ai.
   cho mỗi nhân viên, dòng tổng và nút lưu có trạng thái pending.
 - Nhân viên vô hiệu hoá vẫn hiện kèm nhãn trạng thái để Admin tra/sửa dữ liệu tháng cũ. Ô trống hiển
   thị “Chưa nhập”; lỗi nằm ngay dưới ô với `role="alert"`.
+- Thẻ ảnh Sales có dòng cuối `Công tác phí tháng trước` ngay trên footer, giá trị canh phải, đậm và
+  không xuống dòng. Thiếu dữ liệu hiện `—`; áp dụng cho cả bản đầu ngày và cuối ngày.

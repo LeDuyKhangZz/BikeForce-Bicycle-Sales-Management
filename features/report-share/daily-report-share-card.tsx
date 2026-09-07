@@ -1065,6 +1065,26 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
         </div>
       )}
 
+      <div
+        style={{
+          ...NO_SHRINK,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 24,
+          marginTop: 18,
+          paddingTop: 16,
+          borderTop: `1px solid ${COLOR.rule}`,
+          fontSize: 26,
+          color: COLOR.body,
+        }}
+      >
+        <div style={{ display: 'flex', fontWeight: 600 }}>Công tác phí tháng trước</div>
+        <div style={{ display: 'flex', fontWeight: 700, whiteSpace: 'nowrap' }}>
+          {model.previousMonthTravelExpenseText}
+        </div>
+      </div>
+
       {/* `marginTop: auto` đẩy footer xuống đáy dù nội dung trên dài hay ngắn. */}
       <div style={{ ...NO_SHRINK, display: 'flex', flexDirection: 'column', marginTop: 'auto' }}>
         <div style={{ display: 'flex', height: 1, backgroundColor: COLOR.rule }} />

@@ -1302,7 +1302,8 @@ Khoá chính `(period_month, sales_id)` bảo đảm mỗi nhân viên chỉ có
 luôn là ngày 01; `amount` là `bigint` nguyên VND, không âm và được phép `NULL` để biểu diễn “chưa nhập”.
 Hai khoá ngoại trỏ `profiles`: `sales_id` xoá cascade, `updated_by` xoá thì đặt `NULL`.
 
-RLS được bật và force ngay trong migration. Chỉ `authenticated` có `select/insert/update`, và cả ba
-policy đều đòi `(select public.is_admin())`; `anon` và Sales không đọc hoặc ghi được. Index
+RLS được bật và force ngay trong migration. Admin đọc/ghi toàn bộ; Sales chỉ `SELECT` dòng có
+`sales_id = auth.uid()` để dựng báo cáo của chính mình, không được ghi hay đọc người khác. `anon`
+không có quyền. Index
 `(period_month desc)` phục vụ màn quản trị theo tháng. Migration kế tiếp thu hồi toàn bộ grant mặc
 định của `service_role`, giữ đúng DEC-005.

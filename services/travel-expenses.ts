@@ -8,6 +8,25 @@ type TravelExpenseTable = Database['public']['Tables']['sales_monthly_travel_exp
 export type MonthlyTravelExpenseRow = Pick<TravelExpenseTable['Row'], 'sales_id' | 'amount'>;
 export type MonthlyTravelExpenseWrite = Pick<TravelExpenseTable['Insert'], 'sales_id' | 'amount'>;
 
+export async function getMonthlyTravelExpense(
+  supabase: SupabaseClient<Database>,
+  salesId: string,
+  periodMonth: string,
+): Promise<number | null> {
+  const { data, error } = await supabase
+    .from('sales_monthly_travel_expenses')
+    .select('amount')
+    .eq('sales_id', salesId)
+    .eq('period_month', periodMonth)
+    .maybeSingle<Pick<TravelExpenseTable['Row'], 'amount'>>();
+
+  if (error) {
+    console.error('[getMonthlyTravelExpense]', error.code, error.message);
+    return null;
+  }
+  return data?.amount ?? null;
+}
+
 export async function listMonthlyTravelExpenses(
   supabase: SupabaseClient<Database>,
   periodMonth: string,

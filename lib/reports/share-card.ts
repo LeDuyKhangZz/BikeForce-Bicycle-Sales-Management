@@ -22,7 +22,7 @@ import {
   formatMetricValueCompact,
   type AchievementResult,
 } from '@/lib/kpi';
-import { formatThousands } from '@/lib/currency';
+import { formatCurrencyVND, formatThousands } from '@/lib/currency';
 import {
   formatVietnamDate,
   formatVietnamShortDate,
@@ -456,6 +456,8 @@ export type ShareCardModel = {
   readonly performance: ShareCardPerformance | null;
   /** Sáu chỉ số Zalo/cuộc gọi đọc tự động từ SaleWork; `null` khi Sales chưa được ánh xạ. */
   readonly saleWorkMetrics: readonly ShareCardSaleWorkMetric[] | null;
+  /** Công tác phí của tháng liền trước tháng hiện tại theo giờ Việt Nam. */
+  readonly previousMonthTravelExpenseText: string;
   readonly noteText: string | null;
 };
 
@@ -530,6 +532,7 @@ export function buildShareCardModel(
   performance: ShareCardPerformanceSource | null,
   variantOverride: ShareCardVariant | null = null,
   saleWork: ShareCardSaleWorkSource | null = null,
+  previousMonthTravelExpense: number | null = null,
 ): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
@@ -577,6 +580,8 @@ export function buildShareCardModel(
     // việc hôm nay Sales đã nhập thực đạt hay chưa.
     performance: performance === null ? null : buildPerformance(performance),
     saleWorkMetrics: saleWork === null ? null : buildSaleWorkMetrics(saleWork),
+    previousMonthTravelExpenseText:
+      previousMonthTravelExpense === null ? '—' : formatCurrencyVND(previousMonthTravelExpense),
     // `noteBudget === 0` ⇒ phần đầu thẻ đã ăn hết chỗ ⇒ bỏ hẳn khối ghi chú.
     noteText: note === null || noteBudget === 0 ? null : truncateText(note, noteBudget),
   };

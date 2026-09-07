@@ -2549,11 +2549,27 @@ mục. Module phụ SaleWork chỉ nằm trong sidebar desktop.
 **Date:** 2026-09-07
 **Decision:** Thêm bảng `sales_monthly_travel_expenses`, route `/admin/travel-expenses` và mục “Công
 tác phí” ở sidebar trái. Mỗi `(period_month, sales_id)` có một `amount` nguyên VND; ô trống là `NULL`.
-Chỉ Admin được đọc/ghi, không cấp xoá.
+Ban đầu chỉ Admin được đọc/ghi, không cấp xoá; DEC-074 sau đó mở SELECT tối thiểu cho Sales đọc dòng
+của chính mình để dựng ảnh báo cáo.
 **Reason:** Người dùng yêu cầu Admin nhập công tác phí gắn với mỗi nhân viên theo từng tháng. Bảng
 riêng giữ khái niệm chi phí tách khỏi chỉ tiêu KPI và cho phép mở rộng báo cáo chi phí sau này.
 **Alternatives:** (a) thêm cột vào `sales_monthly_targets` — trộn chi phí với KPI; (b) lưu JSON trong
 profile — mất lịch sử theo tháng và ràng buộc duy nhất.
 **Impact:** BR-027; thêm migration, service, validation, Server Action, form, route, nav, unit/RLS/E2E.
 Bottom nav mobile không đổi vì đã có sáu mục.
+**Status:** APPROVED
+
+## DEC-074 — Dòng cuối báo cáo là công tác phí tháng trước
+
+**Date:** 2026-09-07
+**Decision:** Cả hai ảnh báo cáo Sales thêm dòng cuối “Công tác phí tháng trước”, ngay trên footer.
+Kỳ dữ liệu là tháng liền trước **tháng hiện tại theo giờ Việt Nam**, không phải tháng của report đang
+xem lại. Thiếu dữ liệu hiện `—`; `0` là giá trị thật. Policy đọc công tác phí đổi từ Admin-only thành
+own-or-admin, còn mọi quyền ghi giữ Admin-only.
+**Reason:** Người dùng yêu cầu trực tiếp: ngày 07/09/2026 phải lấy công tác phí kỳ tháng 08/2026 từ
+module vừa tạo.
+**Alternatives:** Lấy tháng trước ngày report — không khớp cách người dùng mô tả “bây giờ”; copy số
+sang `daily_reports` — trùng dữ liệu và có thể lệch khi Admin sửa.
+**Impact:** BR-028; thêm một truy vấn select hẹp trong share-image, trường view-model, dòng Satori,
+policy RLS và test unit/RLS/render.
 **Status:** APPROVED

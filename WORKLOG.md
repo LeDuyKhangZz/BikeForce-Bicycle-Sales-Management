@@ -3331,10 +3331,19 @@ Thêm migration `20260907090000_sales_monthly_travel_expenses.sql`: khoá `(peri
 `bigint` không âm/nullable, RLS force, chỉ Admin select/insert/update, không cấp delete. Action dùng Zod
 trước auth → active → role và chỉ ghi tập Sales đọc lại từ server. Types được generate từ Supabase local.
 
-Kiểm chứng thật: typecheck ✅; lint ✅; full unit **729/729** (validation+nav **41/41**); RLS JWT thật **6/6**; production
+Kiểm chứng thật: typecheck ✅; lint ✅; full unit **732/732**; RLS JWT thật **6/6**; production
 build ✅, **27 route**; E2E **6/6** ở mobile 375px và desktop 1440px. E2E đo trực tiếp vị trí nút
 trong sidebar trái desktop, xác nhận nó ẩn khỏi bottom nav mobile và không có cuộn ngang. In-app
 Browser không có trong phiên nên kiểm chứng UI dùng Playwright của dự án.
 
 Theo phản hồi trực tiếp cùng ngày, danh sách Công tác phí được đổi từ lưới hai cột desktop thành list
 một nhân viên mỗi hàng ở mọi breakpoint. Đây chỉ là thay đổi bố cục, không đổi dữ liệu hay quyền.
+
+Theo yêu cầu tiếp theo, ảnh báo cáo Sales thêm dòng cuối “Công tác phí tháng trước”. Kỳ lấy theo tháng
+hiện tại giờ Việt Nam rồi lùi một tháng (07/09/2026 → `2026-08-01`), không copy vào báo cáo ngày.
+Policy select được nới tối thiểu từ Admin-only thành own-or-admin; Sales vẫn không ghi và không đọc
+người khác. Unit share-card 93/93 và RLS công tác phí 6/6 đã pass sau migration local.
+
+E2E đầu-cuối đã nhập **3.500.000 ₫** cho Sales ở kỳ 08/2026 rồi đăng nhập Sales và render ảnh ngày
+07/09/2026. Đã nhìn PNG thật 1080×1920: dòng mới hiện đúng số, canh phải, không xuống dòng; footer còn
+nguyên và không có chữ chồng/cắt. E2E render 1/1 pass.

@@ -1113,7 +1113,10 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Mục “Công tác phí” nằm ở sidebar trái Admin, không làm chật bottom nav mobile
 - [x] Admin chọn tháng, nhập tiền từng Sales, xem tổng và sửa lại được
 - [x] Danh sách nhân viên luôn một người mỗi hàng, không chia hai cột trên desktop
-- [x] Bảng riêng có unique theo tháng/nhân viên, bigint VND, RLS force và Admin-only
+- [x] Bảng riêng có unique theo tháng/nhân viên, bigint VND, RLS force; ghi Admin-only, Sales đọc own
 - [x] Server Action dùng Zod, tự kiểm auth/active/role và đọc lại danh sách Sales ở server
-- [x] Full unit 729/729 (riêng validation + nav 41/41), RLS 6/6, typecheck, lint và build sạch
+- [x] Full unit 732/732, RLS 6/6, typecheck, lint và build sạch
 - [x] E2E 6/6 ở 375px + 1440px: vị trí sidebar, lưu/tải lại, chặn Sales, không cuộn ngang
+- [x] Báo cáo Sales có dòng cuối “Công tác phí tháng trước”, đọc động từ kỳ trước theo giờ VN
+- [x] Sales chỉ đọc khoản của mình; số VND/0/null có unit test, RLS own-or-admin có test
+- [x] Render PNG thật 1080×1920: hiện `3.500.000 ₫`, dòng mới và footer đều nằm trọn

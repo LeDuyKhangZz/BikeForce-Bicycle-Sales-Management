@@ -1441,3 +1441,6 @@ QA phải render thật cả MORNING và EVENING ở 1080×1920, có đồng th�
 - RLS bằng JWT thật: Admin ghi/đọc; Sales không đọc cả dòng của mình và không tự ghi; anon không đọc.
 - E2E: Admin nhập, lưu, tải lại còn số; Sales mở URL trực tiếp bị chuyển khỏi khu vực Admin; kiểm
   không cuộn ngang; ở desktop đo mục nằm trong sidebar trái, ở mobile xác nhận không chen bottom nav.
+- Share-card unit: công tác phí dương format VND, `0` không thành thiếu dữ liệu, `null` hiện `—`.
+- RLS: Sales đọc được đúng dòng của mình để dựng ảnh nhưng không đọc dòng Sales khác; Admin đọc tất cả,
+  Sales vẫn không ghi, anon không đọc. Render thật xác nhận dòng mới không đẩy footer khỏi 1920px.

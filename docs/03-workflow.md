@@ -1104,3 +1104,7 @@ không có ánh xạ thì giữ mẫu cũ, có ánh xạ nhưng chưa có snapsh
 “Lưu công tác phí”. Server Action kiểm Zod trước, rồi auth → active → role Admin → đọc lại danh sách
 Sales ở server → upsert toàn bộ tháng theo `(period_month, sales_id)` → làm mới trang. Ô trống được
 lưu là `NULL` (“chưa nhập”), không tự suy thành 0.
+
+Khi dựng ảnh báo cáo, route lấy tháng hiện tại bằng `getVietnamCurrentMonth()`, lùi một tháng bằng
+`shiftVietnamMonth()`, rồi đọc đúng `(tháng trước, sales_id của báo cáo)`. Ví dụ ngày 07/09/2026 đọc
+kỳ `2026-08-01`. Cả ảnh đầu ngày và cuối ngày đặt dòng này cuối nội dung, ngay trên footer.

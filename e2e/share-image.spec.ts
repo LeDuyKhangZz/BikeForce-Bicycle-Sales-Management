@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { E2E_DONE_SALES_EMAIL } from './accounts';
+import { E2E_ADMIN_EMAIL, E2E_DONE_SALES_EMAIL, E2E_DONE_SALES_NAME } from './accounts';
 import { signIn } from './helpers';
 
 /**
@@ -275,6 +275,34 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
 
     // Không có chữ nào bảo người dùng nhấn giữ — DEC-064 đã bỏ hẳn lối đó.
     await expect(page.getByText('Nhấn giữ vào ảnh')).toHaveCount(0);
+  });
+
+  test('ảnh báo cáo render trọn vẹn sau khi thêm dòng công tác phí', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-1440', 'Một ảnh PNG là đủ cho visual QA.');
+
+    await signIn(page, E2E_ADMIN_EMAIL);
+    await page.goto('/admin/travel-expenses?month=2026-08');
+    const salesRow = page.locator('form > ul > li').filter({ hasText: E2E_DONE_SALES_NAME });
+    await salesRow.locator('input[name^="amount__"]').fill('3500000');
+    await page.getByRole('button', { name: /Lưu công tác phí/ }).click();
+    await expect(page.getByText('Đã lưu công tác phí tháng.')).toBeVisible({ timeout: 30_000 });
+
+    await page.context().clearCookies();
+    await signIn(page, E2E_DONE_SALES_EMAIL);
+
+    const preview = page.getByRole('img', { name: /^Ảnh báo cáo dọc 9:16/ });
+    await expect(preview).toBeVisible({ timeout: 60_000 });
+    const source = await preview.getAttribute('src');
+    expect(source).not.toBeNull();
+    if (source === null) return;
+
+    const response = await page.request.get(source);
+    expect(response.status()).toBe(200);
+    const image = await response.body();
+    await testInfo.attach('bao-cao-cong-tac-phi.png', {
+      body: image,
+      contentType: 'image/png',
+    });
   });
 
   /**

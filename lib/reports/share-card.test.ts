@@ -888,3 +888,19 @@ describe('shareImageViewPath — DEC-061', () => {
     );
   });
 });
+
+describe('buildShareCardModel — công tác phí tháng trước (BR-028)', () => {
+  it('format số tiền VND sẵn cho thẻ ảnh', () => {
+    const model = buildShareCardModel(BASE, PERFORMANCE, null, null, 3_500_000);
+    expect(model.previousMonthTravelExpenseText).toBe('3.500.000 ₫');
+  });
+
+  it('chưa được Admin nhập thì vẫn có dòng và hiện gạch ngang', () => {
+    expect(build().previousMonthTravelExpenseText).toBe('—');
+  });
+
+  it('số 0 là giá trị thật, không bị hiểu thành chưa nhập', () => {
+    const model = buildShareCardModel(BASE, PERFORMANCE, null, null, 0);
+    expect(model.previousMonthTravelExpenseText).toBe('0 ₫');
+  });
+});

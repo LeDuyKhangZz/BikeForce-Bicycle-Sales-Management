@@ -327,6 +327,7 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đ�
 | BR-025 | Email của profile phải khớp email trong `auth.users`, unique toàn hệ thống | DB unique + trigger | APPROVED (technical) |
 | **BR-026** | **Mục tiêu** điểm viếng thăm phải nằm trong **[10, 1000]**. Sàn 10 **không** áp cho `actual_visit_points` — đi được ít hơn cam kết là kết quả thật, không phải dữ liệu sai | `ck_target_visit_points` (0008, `not valid`) + Zod `MIN_TARGET_VISIT_POINTS` | **APPROVED 2026-08-10** (DEC-049) |
 | **BR-027** | Admin nhập công tác phí nguyên VND cho từng nhân viên Sales theo từng tháng; một nhân viên chỉ có một giá trị trong một tháng, được phép sửa lại | `sales_monthly_travel_expenses` + `/admin/travel-expenses` | **APPROVED 2026-09-07** (DEC-073) |
+| **BR-028** | Ảnh báo cáo Sales luôn có dòng cuối “Công tác phí tháng trước”, lấy khoản của chính Sales ở tháng liền trước tháng hiện tại theo giờ Việt Nam; chưa nhập thì hiện `—` | share-image + `sales_monthly_travel_expenses` | **APPROVED 2026-09-07** (DEC-074) |
 
 ### 8.1 Logic tập trung bắt buộc (Master Spec §9)
 

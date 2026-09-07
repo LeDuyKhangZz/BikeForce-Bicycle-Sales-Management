@@ -666,3 +666,5 @@ Route Server Component `app/(admin)/admin/travel-expenses/page.tsx` chỉ điề
 Server Action nằm trong `features/admin-travel-expenses/`; Zod/field-name ở
 `lib/validation/travel-expenses.ts`; toàn bộ PostgREST nằm trong `services/travel-expenses.ts` và nhận
 Supabase server client chịu RLS. Không dùng service-role cho dữ liệu công tác phí.
+Route share-image gọi `getMonthlyTravelExpense()` song song với các nguồn tháng khác và truyền số vào
+`buildShareCardModel()`; view-model format VND, component ảnh chỉ render dòng cuối.
