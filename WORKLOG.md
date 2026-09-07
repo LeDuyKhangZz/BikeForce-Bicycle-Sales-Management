@@ -3335,3 +3335,6 @@ Kiểm chứng thật: typecheck ✅; lint ✅; full unit **729/729** (validatio
 build ✅, **27 route**; E2E **6/6** ở mobile 375px và desktop 1440px. E2E đo trực tiếp vị trí nút
 trong sidebar trái desktop, xác nhận nó ẩn khỏi bottom nav mobile và không có cuộn ngang. In-app
 Browser không có trong phiên nên kiểm chứng UI dùng Playwright của dự án.
+
+Theo phản hồi trực tiếp cùng ngày, danh sách Công tác phí được đổi từ lưới hai cột desktop thành list
+một nhân viên mỗi hàng ở mọi breakpoint. Đây chỉ là thay đổi bố cục, không đổi dữ liệu hay quyền.

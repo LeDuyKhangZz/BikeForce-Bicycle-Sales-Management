@@ -2169,6 +2169,7 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
 ## CHECKPOINT 2026-09-07 — Công tác phí tháng (BR-027, DEC-073)
 
 - Module `/admin/travel-expenses` có mục riêng ở sidebar trái desktop; bottom nav mobile không đổi.
+- Danh sách Công tác phí luôn một nhân viên mỗi hàng ở mọi breakpoint.
 - Admin nhập một `amount` VND cho từng Sales theo tháng; khoá DB `(period_month, sales_id)`.
 - Bảng `sales_monthly_travel_expenses` force RLS; chỉ Admin đọc/ghi, không có quyền xoá.
 - Validation Zod → auth → active → role → danh sách Sales server → upsert → revalidate.

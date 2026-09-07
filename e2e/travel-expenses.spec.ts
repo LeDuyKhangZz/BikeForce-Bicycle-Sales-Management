@@ -29,6 +29,12 @@ test.describe('Admin nhập công tác phí theo tháng', () => {
     await page.goto(PAGE_PATH);
 
     await expect(page.getByRole('heading', { level: 1, name: 'Công tác phí' })).toBeVisible();
+    const employeeCards = page.locator('form > ul > li');
+    if ((await employeeCards.count()) >= 2) {
+      const firstBox = await employeeCards.nth(0).boundingBox();
+      const secondBox = await employeeCards.nth(1).boundingBox();
+      expect(secondBox?.y ?? 0).toBeGreaterThan(firstBox?.y ?? Number.POSITIVE_INFINITY);
+    }
     const firstAmount = page.locator('input[name^="amount__"]').first();
     await firstAmount.fill('3500000');
     await page.getByRole('button', { name: /Lưu công tác phí/ }).click();

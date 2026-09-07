@@ -1294,7 +1294,7 @@ không cho biết đang ở dòng của ai.
 
 - Mục “Công tác phí” có icon `ReceiptText`, nằm ở sidebar trái desktop theo yêu cầu; không chen thêm
   mục thứ bảy vào bottom nav 375px.
-- Trang có điều hướng tháng, thẻ một cột trên mobile/hai cột từ `md`, một ô tiền có label luôn hiện
+- Trang có điều hướng tháng, danh sách luôn chỉ một nhân viên mỗi hàng, một ô tiền có label luôn hiện
   cho mỗi nhân viên, dòng tổng và nút lưu có trạng thái pending.
 - Nhân viên vô hiệu hoá vẫn hiện kèm nhãn trạng thái để Admin tra/sửa dữ liệu tháng cũ. Ô trống hiển
   thị “Chưa nhập”; lỗi nằm ngay dưới ô với `role="alert"`.

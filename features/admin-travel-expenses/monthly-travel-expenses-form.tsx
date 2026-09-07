@@ -83,7 +83,7 @@ export function MonthlyTravelExpensesForm({
         </p>
       )}
 
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="flex flex-col gap-3">
         {salesList.map((sales) => {
           const field = travelExpenseFieldName(sales.id);
           const value = values[sales.id] ?? '';
