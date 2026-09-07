@@ -1,4 +1,5 @@
 import { chromium } from '@playwright/test';
+import type { BrowserContext } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import dotenv from 'dotenv';
@@ -34,6 +35,7 @@ const TARGET_ACCOUNT_NAMES = [
   ...SALES_SALEWORK_ACCOUNT_NAMES,
 ];
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
+let activeBrowserContext: BrowserContext | null = null;
 
 function numberAfter(text: string, label: string): number {
   const match = text.match(new RegExp(`${label}\\s*:\\s*(\\d+)`, 'i'));
@@ -106,6 +108,7 @@ async function main(): Promise<void> {
     timezoneId: 'Asia/Ho_Chi_Minh',
     viewport: { width: 1440, height: 900 },
   });
+  activeBrowserContext = context;
 
   const page = context.pages()[0] ?? (await context.newPage());
   page.on('pageerror', (error) => console.error(`[SaleWork pageerror] ${error.message}`));
@@ -199,6 +202,8 @@ async function main(): Promise<void> {
       title: await page.title(),
       totalRows: await page.locator('.el-table__body tbody tr').count(),
       visibleText: (await page.locator('body').innerText()).slice(0, 300),
+      tableText: (await page.locator('.el-table__body tbody tr').allTextContents()).join(' | '),
+      paginationText: (await page.locator('.el-pagination').allTextContents()).join(' | '),
     });
 
   const aggregateButton = page.getByRole('button', { name: 'Tổng hợp' });
@@ -212,29 +217,58 @@ async function main(): Promise<void> {
   await aggregateButton.click();
 
   const rows = page.locator('.el-table__body tbody tr');
-  try {
+  await rows.first().waitFor({ state: 'visible', timeout: 60_000 });
+
+  // SaleWork hiện phân trang bảng kết quả với 5 dòng/trang. Đọc tuần tự mọi
+  // trang thay vì đòi cả tập tài khoản cùng tồn tại trong DOM của trang đầu.
+  const reportCells: string[][] = [];
+  const visitedPages = new Set<string>();
+
+  while (true) {
+    const currentPageCells = await rows.evaluateAll((currentRows) =>
+      currentRows.map((row) =>
+        Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? ''),
+      ),
+    );
+    const pageSignature = JSON.stringify(currentPageCells);
+    if (visitedPages.has(pageSignature)) break;
+
+    visitedPages.add(pageSignature);
+    reportCells.push(...currentPageCells);
+
+    const nextPageButton = page.locator('.el-pagination .btn-next').last();
+    if ((await nextPageButton.count()) === 0) break;
+
+    const nextButtonClass = (await nextPageButton.getAttribute('class')) ?? '';
+    const hasDisabledAttribute = (await nextPageButton.getAttribute('disabled')) !== null;
+    if (hasDisabledAttribute || /(^|\s)is-disabled(\s|$)/.test(nextButtonClass)) break;
+
+    const previousTableText = (await rows.allTextContents()).join('\n');
+    await nextPageButton.click();
     await page.waitForFunction(
-      (expectedAccountNames) => {
-        const resultText = Array.from(
+      (previousText) =>
+        Array.from(
           document.querySelectorAll('.el-table__body tbody tr'),
           (row) => row.textContent ?? '',
-        ).join('\n');
-        return expectedAccountNames.every((accountName) => resultText.includes(accountName));
-      },
-      TARGET_ACCOUNT_NAMES,
-      { timeout: 60_000 },
-    );
-  } catch {
-    throw new Error(
-      `SaleWork chưa hiển thị đủ ${TARGET_ACCOUNT_NAMES.length} tài khoản sau khi tổng hợp: ${await summarizePage()}`,
+        ).join('\n') !== previousText,
+      previousTableText,
+      { timeout: 30_000 },
     );
   }
 
-  const reports = (await rows.evaluateAll((rows) =>
-    rows.map((row) => Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? '')),
-  ))
+  const reports = reportCells
     .map(parseRow)
     .filter((report): report is SaleWorkReport => report !== null);
+
+  const syncedAccountNames = new Set(reports.map((report) => report.accountName));
+  const missingAccountNames = TARGET_ACCOUNT_NAMES.filter(
+    (accountName) => !syncedAccountNames.has(accountName),
+  );
+  if (missingAccountNames.length > 0) {
+    throw new Error(
+      `SaleWork thiếu dữ liệu của ${missingAccountNames.join(', ')} sau khi đọc ${visitedPages.size} trang: ${await summarizePage()}`,
+    );
+  }
 
   // Vẫn giữ ghi ra file JSON cục bộ để tiện xem/debug nhanh trên máy —
   // nhưng đây không còn là nguồn dữ liệu chính mà app đọc nữa.
@@ -247,9 +281,14 @@ async function main(): Promise<void> {
 
   console.log(`Đã đồng bộ ${reports.length} tài khoản SaleWork lên Supabase.`);
   await context.close();
+  activeBrowserContext = null;
 }
 
-main().catch((error: unknown) => {
+main().catch(async (error: unknown) => {
+  if (activeBrowserContext) {
+    await activeBrowserContext.close().catch(() => {});
+    activeBrowserContext = null;
+  }
   console.error(error instanceof Error ? error.message : 'Đồng bộ SaleWork thất bại.');
   process.exitCode = 1;
 });

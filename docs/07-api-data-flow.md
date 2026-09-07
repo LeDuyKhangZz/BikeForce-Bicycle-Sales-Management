@@ -681,8 +681,9 @@ chuỗi ngày chuẩn `YYYY-MM-DD` với `getVietnamToday()`, giữ nguyên th�
 
 `scripts/salework-sync.ts` chọn thêm sáu tài khoản được ánh xạ và UPSERT cùng tám cột snapshot hiện hữu.
 Script mở đúng tab **Tin nhắn**, gõ từng tên vào ô tìm kiếm trước khi chọn để không phụ thuộc danh sách
-ảo hóa, rồi sau khi bấm **Tổng hợp** phải chờ bảng chứa đủ cả tám tài khoản. Không được chỉ chờ dòng đầu
-tiên hiện ra vì bảng kết quả cũ có thể vẫn còn trong DOM và dẫn đến ghi snapshot thiếu tài khoản.
+ảo hóa, rồi sau khi bấm **Tổng hợp** phải đọc tuần tự tất cả trang của bảng kết quả (SaleWork hiện giới
+hạn 5 dòng/trang). Script chỉ UPSERT khi tập đã gom chứa đủ cả tám tài khoản; không được chỉ đọc DOM của
+trang đầu vì sẽ tạo snapshot thiếu. Browser context luôn được đóng cả khi thành công lẫn khi có lỗi.
 Khi dựng ảnh, route lấy tên tài khoản bằng `getSaleWorkAccountName(full_name)`, gọi
 `getSaleWorkReportByAccountName()`, rồi chỉ chuyển sáu trường cần thiết vào `buildShareCardModel()`.
 Không có snapshot thì truyền sáu giá trị null để view-model hiển thị `—`; không ghi ngược vào báo cáo ngày.

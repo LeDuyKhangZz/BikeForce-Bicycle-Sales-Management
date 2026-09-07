@@ -2192,10 +2192,14 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
 - Nguồn ánh xạ chuẩn đã có `Nguyễn Minh Khải` → `Abraham Khải Hcm`.
 - `SALES_SALEWORK_ACCOUNT_NAMES` tự tăng từ 5 lên 6 tài khoản Sales; tập script chọn tăng từ 7 lên 8.
 - Không thay hoặc nhập nhằng với `Phan Thành Khải` → `Abraham Khải Khánh Hoà`.
-- Unit ánh xạ 9/9 và toàn bộ unit 733/733; typecheck, lint và production build 27 route đã chạy sạch.
+- Unit ánh xạ 9/9 và toàn bộ unit 734/734; typecheck, lint và production build 27 route đã chạy sạch.
 - Full Vitest 938/939: một integration test đỏ do trạng thái local có sẵn
   `sales_monthly_targets` chưa force RLS, không liên quan thay đổi ánh xạ.
-- Chưa chạy đồng bộ thật 8/8: môi trường từ chối quyền ghi snapshot SaleWork vào Supabase cloud.
+- Sau khi người dùng cấp quyền rõ ràng, đồng bộ thật đã thành công **8/8 tài khoản** và CRM Report 70
+  cập nhật thành công 1 dòng. Đối soát `Abraham Khải Hcm`: 16 hội thoại, 134 tin gửi, 40 tin nhận,
+  1 gọi đến, 5 gọi đi, 1 gọi nhỡ, thời lượng 2.58 phút.
+- SaleWork phân trang bảng kết quả 5 dòng/trang; script nay duyệt mọi trang, xác nhận đủ 8 tên trước khi
+  UPSERT và luôn đóng browser context kể cả khi lỗi.
 
-**Next Exact Steps:** khi có quyền ghi cloud rõ ràng, chạy `npm run salework:sync`, xác nhận log đủ 8 tài
-khoản và mở preview của Nguyễn Minh Khải để kiểm sáu chỉ số lấy từ `Abraham Khải Hcm`.
+**Next Exact Steps:** mở preview của Nguyễn Minh Khải để kiểm trực quan sáu chỉ số mới; các lịch tiếp theo
+tiếp tục dùng `npm run reports:sync` hoặc `npm run salework:sync` như hiện tại.

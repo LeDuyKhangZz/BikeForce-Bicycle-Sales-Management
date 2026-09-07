@@ -3355,10 +3355,17 @@ Theo xác nhận của người dùng, đã thêm ánh xạ tường minh `Nguy�
 đồng bộ, nên tập mục tiêu tăng từ 7 lên 8 mà không nhân bản cấu hình. Ánh xạ Phan Thành Khải hiện hữu
 được giữ nguyên.
 
-Unit ánh xạ **9/9**, toàn bộ unit **733/733**, typecheck, lint và production build 27 route đã chạy sạch.
+Unit ánh xạ **9/9**, toàn bộ unit **734/734**, typecheck, lint và production build 27 route đã chạy sạch.
 Full Vitest đạt 938/939; một integration test đỏ vì database local có sẵn bảng `sales_monthly_targets`
 chưa force RLS, không do thay đổi ánh xạ. Đã yêu cầu chạy `npm run salework:sync`, nhưng môi trường từ
 chối thao tác vì sẽ ghi snapshot vào Supabase cloud; do đó chưa ghi trạng thái 8/8 PASS giả.
 
-**Next Exact Steps:** chạy đồng bộ thật khi được cấp quyền ghi cloud, xác nhận đủ 8 tài khoản và kiểm
-preview Nguyễn Minh Khải lấy đúng sáu chỉ số từ `Abraham Khải Hcm`.
+Sau khi người dùng cấp quyền rõ ràng, đã chạy thật. Lần đầu phát hiện SaleWork chuyển bảng sang phân trang
+5 dòng/trang; script cũ chỉ nhìn DOM trang đầu nên dừng an toàn, chưa ghi thiếu. Đã sửa script duyệt tuần
+tự mọi trang, kiểm đủ tám tên trước UPSERT và luôn đóng browser context trong nhánh lỗi. Lần chạy lại exit
+0: **8 tài khoản SaleWork** đã ghi Supabase và **1 dòng CRM Report 70** được cập nhật.
+
+Đối soát JSON cục bộ có đúng 8 dòng. `Abraham Khải Hcm` có 16 hội thoại, 134 tin gửi, 40 tin nhận,
+1 gọi đến, 5 gọi đi, 1 gọi nhỡ và thời lượng 2.58 phút.
+
+**Next Exact Steps:** kiểm trực quan preview Nguyễn Minh Khải; lịch đồng bộ tiếp theo giữ nguyên lệnh hiện có.
