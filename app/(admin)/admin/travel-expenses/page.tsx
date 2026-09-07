@@ -1,0 +1,97 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, ReceiptText, UsersRound } from 'lucide-react';
+
+import { buttonClassName } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
+import {
+  MonthlyTravelExpensesForm,
+  type TravelExpenseSalesRow,
+} from '@/features/admin-travel-expenses/monthly-travel-expenses-form';
+import { requireRole } from '@/features/auth/queries';
+import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
+import { createClient } from '@/lib/supabase/server';
+import { cn } from '@/lib/utils';
+import { periodMonthOf } from '@/lib/validation/monthly-targets';
+import { listSalesOptions } from '@/services/profiles';
+import { listMonthlyTravelExpenses } from '@/services/travel-expenses';
+
+export const metadata: Metadata = { title: 'Công tác phí · BikeForce' };
+const PAGE_PATH = '/admin/travel-expenses';
+
+type Props = { searchParams: Promise<{ month?: string }> };
+
+export default async function AdminTravelExpensesPage({ searchParams }: Props) {
+  await requireRole('ADMIN');
+  const { month } = resolveVietnamMonth((await searchParams).month);
+  const previousMonth = shiftVietnamMonth(month, -1);
+  const nextMonth = shiftVietnamMonth(month, 1);
+  const supabase = await createClient();
+  const [salesList, expenses] = await Promise.all([
+    listSalesOptions(supabase),
+    listMonthlyTravelExpenses(supabase, periodMonthOf(month)),
+  ]);
+
+  const salesRows: TravelExpenseSalesRow[] = salesList.map((sales) => ({
+    id: sales.id,
+    full_name: sales.full_name,
+    employee_code: sales.employee_code,
+    is_active: sales.is_active,
+  }));
+  const currentAmounts = Object.fromEntries(expenses.map((row) => [row.sales_id, row.amount]));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-heading">
+          <ReceiptText aria-hidden="true" className="size-6" />
+          Công tác phí
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Nhập số tiền công tác phí theo từng nhân viên và từng tháng.
+        </p>
+      </div>
+
+      <Card className="flex items-center justify-between gap-2 py-2">
+        <MonthLink
+          href={previousMonth === null ? null : `${PAGE_PATH}?month=${previousMonth}`}
+          label="Tháng trước"
+          icon={<ChevronLeft aria-hidden="true" className="size-5" />}
+        />
+        <p aria-live="polite" className="tabular text-base font-semibold text-heading">
+          {formatVietnamMonth(month)}
+        </p>
+        <MonthLink
+          href={nextMonth === null ? null : `${PAGE_PATH}?month=${nextMonth}`}
+          label="Tháng sau"
+          icon={<ChevronRight aria-hidden="true" className="size-5" />}
+        />
+      </Card>
+
+      {salesRows.length === 0 ? (
+        <Card className="flex flex-col items-center gap-3 py-8 text-center">
+          <UsersRound aria-hidden="true" className="size-12 text-muted-foreground" />
+          <p className="font-medium text-foreground">Chưa có nhân viên Sales</p>
+          <Link href="/admin/sales/new" className={buttonClassName()}>Tạo tài khoản Sales</Link>
+        </Card>
+      ) : (
+        <MonthlyTravelExpensesForm
+          key={month}
+          month={month}
+          monthLabel={formatVietnamMonth(month)}
+          salesList={salesRows}
+          currentAmounts={currentAmounts}
+        />
+      )}
+    </div>
+  );
+}
+
+function MonthLink({ href, label, icon }: { href: string | null; label: string; icon: React.ReactNode }) {
+  const className = cn(buttonClassName({ variant: 'ghost' }), 'min-w-11');
+  if (href === null) {
+    return <span aria-disabled="true" className={cn(className, 'cursor-not-allowed opacity-45')}>{icon}<span className="sr-only">{label}</span></span>;
+  }
+  return <Link href={href} className={className}><LinkPendingIcon label={`Đang mở ${label.toLocaleLowerCase('vi-VN')}…`}>{icon}</LinkPendingIcon><span className="sr-only">{label}</span></Link>;
+}

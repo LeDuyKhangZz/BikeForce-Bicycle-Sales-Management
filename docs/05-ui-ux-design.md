@@ -1290,3 +1290,11 @@ không cho biết đang ở dòng của ai.
 - Giá trị chưa đồng bộ dùng `—`; không tạo input vì đây là dữ liệu hệ thống.
 - Khi có khối này, bảng KPI và cụm MISA dùng nhịp gọn hơn nhưng vẫn giữ đủ chữ, số và footer trong ảnh
   1080×1920. Hai biến thể đã được render PNG thật để kiểm tra không cắt/chồng nội dung.
+## Màn “Công tác phí” (DEC-073)
+
+- Mục “Công tác phí” có icon `ReceiptText`, nằm ở sidebar trái desktop theo yêu cầu; không chen thêm
+  mục thứ bảy vào bottom nav 375px.
+- Trang có điều hướng tháng, thẻ một cột trên mobile/hai cột từ `md`, một ô tiền có label luôn hiện
+  cho mỗi nhân viên, dòng tổng và nút lưu có trạng thái pending.
+- Nhân viên vô hiệu hoá vẫn hiện kèm nhãn trạng thái để Admin tra/sửa dữ liệu tháng cũ. Ô trống hiển
+  thị “Chưa nhập”; lỗi nằm ngay dưới ô với `role="alert"`.

@@ -1435,3 +1435,9 @@ không có báo cáo đều rơi xuống nhóm cuối.
 Unit phải khóa đủ năm ánh xạ tên và đúng thứ tự sáu dòng; null/chuỗi thời lượng rỗng phải ra `—`. Visual
 QA phải render thật cả MORNING và EVENING ở 1080×1920, có đồng thời KPI + SaleWork + MISA, rồi xác nhận
 đủ header/footer và không có chữ bị cắt/chồng.
+## Công tác phí tháng (DEC-073)
+
+- Unit: tháng hợp lệ/sai; ô trống, 0, VND phân nhóm; từ chối chữ, âm, số lẻ, Infinity.
+- RLS bằng JWT thật: Admin ghi/đọc; Sales không đọc cả dòng của mình và không tự ghi; anon không đọc.
+- E2E: Admin nhập, lưu, tải lại còn số; Sales mở URL trực tiếp bị chuyển khỏi khu vực Admin; kiểm
+  không cuộn ngang; ở desktop đo mục nằm trong sidebar trái, ở mobile xác nhận không chen bottom nav.

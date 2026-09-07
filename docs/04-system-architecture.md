@@ -660,3 +660,9 @@ theo thứ tự Sales hôm nay → SaleWork → Sales còn lại, không tự t�
 danh sách cho script đồng bộ, tránh khai báo hai bản. Route `share-image` chỉ đọc SaleWork sau khi báo cáo
 đã qua auth + RLS; `lib/reports/share-card.ts` dựng sáu chuỗi hiển thị, còn component Satori chỉ render.
 Không thêm cột database và không đưa truy vấn vào `.tsx`.
+## Module công tác phí tháng (DEC-073)
+
+Route Server Component `app/(admin)/admin/travel-expenses/page.tsx` chỉ điều phối dữ liệu. Form và
+Server Action nằm trong `features/admin-travel-expenses/`; Zod/field-name ở
+`lib/validation/travel-expenses.ts`; toàn bộ PostgREST nằm trong `services/travel-expenses.ts` và nhận
+Supabase server client chịu RLS. Không dùng service-role cho dữ liệu công tác phí.

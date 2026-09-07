@@ -3321,3 +3321,17 @@ Chạy thật `npm run salework:sync` exit 0: **7 tài khoản SaleWork** và **
 Theo yêu cầu hiển thị ngày 2026-09-05, tiêu đề khối sáu chỉ số trên ảnh báo cáo Sales được đổi từ
 `HOẠT ĐỘNG SALEWORK` thành `HOẠT ĐỘNG ONLINE TRONG NGÀY`. Chỉ thay nhãn trình bày; mapping, snapshot
 SaleWork và sáu giá trị giữ nguyên.
+## Entry 043 — 2026-09-07 — Công tác phí theo nhân viên/tháng
+
+Theo yêu cầu người dùng, đã thêm module `/admin/travel-expenses` và nút “Công tác phí” ở sidebar trái
+Admin. Trang cho chọn tháng, nhập một khoản VND cho từng Sales (kể cả tài khoản đã vô hiệu hoá để tra
+lịch sử), xem tổng và lưu/upsert cả tháng. Bottom nav mobile giữ nguyên sáu mục.
+
+Thêm migration `20260907090000_sales_monthly_travel_expenses.sql`: khoá `(period_month, sales_id)`,
+`bigint` không âm/nullable, RLS force, chỉ Admin select/insert/update, không cấp delete. Action dùng Zod
+trước auth → active → role và chỉ ghi tập Sales đọc lại từ server. Types được generate từ Supabase local.
+
+Kiểm chứng thật: typecheck ✅; lint ✅; full unit **729/729** (validation+nav **41/41**); RLS JWT thật **6/6**; production
+build ✅, **27 route**; E2E **6/6** ở mobile 375px và desktop 1440px. E2E đo trực tiếp vị trí nút
+trong sidebar trái desktop, xác nhận nó ẩn khỏi bottom nav mobile và không có cuộn ngang. In-app
+Browser không có trong phiên nên kiểm chứng UI dùng Playwright của dự án.

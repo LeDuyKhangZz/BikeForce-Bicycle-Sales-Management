@@ -2166,3 +2166,16 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
 
 **Next Exact Steps:** kiểm tra preview của từng Sales sau snapshot 7/7; lịch tiếp theo dùng
 `npm run reports:sync` với phiên SaleWork hiện hữu.
+## CHECKPOINT 2026-09-07 — Công tác phí tháng (BR-027, DEC-073)
+
+- Module `/admin/travel-expenses` có mục riêng ở sidebar trái desktop; bottom nav mobile không đổi.
+- Admin nhập một `amount` VND cho từng Sales theo tháng; khoá DB `(period_month, sales_id)`.
+- Bảng `sales_monthly_travel_expenses` force RLS; chỉ Admin đọc/ghi, không có quyền xoá.
+- Validation Zod → auth → active → role → danh sách Sales server → upsert → revalidate.
+- Types đã generate từ schema local sau migration.
+- Đã chạy thật: typecheck/lint sạch; full unit 729/729; RLS 6/6; build 27 route; E2E 6/6 ở 375/1440.
+- E2E đo nút ở sidebar trái desktop, ẩn khỏi bottom nav mobile, lưu/tải lại và không cuộn ngang.
+- In-app Browser không khả dụng trong phiên; kiểm chứng UI dùng Playwright E2E của dự án.
+
+**Next Exact Steps:** đẩy hai migration mới lên Supabase cloud trước khi deploy code, rồi commit/push
+`main` và xác nhận Vercel deploy route `/admin/travel-expenses`.

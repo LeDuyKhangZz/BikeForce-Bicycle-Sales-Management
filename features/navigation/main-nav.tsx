@@ -8,6 +8,7 @@ import {
   Home,
   LayoutDashboard,
   MessagesSquare,
+  ReceiptText,
   Scale,
   Target,
   User,
@@ -55,6 +56,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_RECONCILIATION: Scale,
   ADMIN_SALES: Users,
   ADMIN_TARGETS: Target,
+  ADMIN_TRAVEL_EXPENSES: ReceiptText,
   ADMIN_SALEWORK: MessagesSquare,
   ADMIN_ACCOUNT: User,
 };

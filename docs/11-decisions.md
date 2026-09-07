@@ -2534,3 +2534,26 @@ mà không có xác nhận của người dùng. Cửa vào là nút **"Chỉ ti
 
 Dãy `UC` là **dãy đóng** (CLAUDE.md §12). Phiên này đã lỡ viết `UC-22` vào 5 file rồi tự gỡ ngay trong
 phiên. Muốn có ID use case cho nó thì phải hỏi người dùng trước.
+## DEC-072 — “Chỉ tiêu” là module điều hướng riêng của Admin
+
+**Date:** 2026-08-18
+**Decision:** “Chỉ tiêu” nằm thành mục riêng trong điều hướng Admin; bottom nav Admin được nới lên sáu
+mục. Module phụ SaleWork chỉ nằm trong sidebar desktop.
+**Reason:** Người dùng yêu cầu trực tiếp không đặt chỉ tiêu như nút phụ trong trang Nhân viên.
+**Alternatives:** Nút trên `/admin/sales` — đã bị người dùng bác.
+**Impact:** `ADMIN_NAV_ITEMS` có sáu mục; test khóa trần 375px.
+**Status:** APPROVED
+
+## DEC-073 — Công tác phí là module Admin theo nhân viên/tháng
+
+**Date:** 2026-09-07
+**Decision:** Thêm bảng `sales_monthly_travel_expenses`, route `/admin/travel-expenses` và mục “Công
+tác phí” ở sidebar trái. Mỗi `(period_month, sales_id)` có một `amount` nguyên VND; ô trống là `NULL`.
+Chỉ Admin được đọc/ghi, không cấp xoá.
+**Reason:** Người dùng yêu cầu Admin nhập công tác phí gắn với mỗi nhân viên theo từng tháng. Bảng
+riêng giữ khái niệm chi phí tách khỏi chỉ tiêu KPI và cho phép mở rộng báo cáo chi phí sau này.
+**Alternatives:** (a) thêm cột vào `sales_monthly_targets` — trộn chi phí với KPI; (b) lưu JSON trong
+profile — mất lịch sử theo tháng và ràng buộc duy nhất.
+**Impact:** BR-027; thêm migration, service, validation, Server Action, form, route, nav, unit/RLS/E2E.
+Bottom nav mobile không đổi vì đã có sáu mục.
+**Status:** APPROVED

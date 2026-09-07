@@ -688,3 +688,9 @@ Khi dựng ảnh, route lấy tên tài khoản bằng `getSaleWorkAccountName(f
 Không có snapshot thì truyền sáu giá trị null để view-model hiển thị `—`; không ghi ngược vào báo cáo ngày.
 Snapshot SaleWork hiện chỉ lưu số của ngày đồng bộ gần nhất, nên báo cáo khác ngày Việt Nam hôm nay không
 được ghép số hiện tại vào quá khứ; sáu dòng của nhân viên đã ánh xạ sẽ hiển thị `—`.
+## `saveTravelExpensesAction` — lưu công tác phí tháng (DEC-073)
+
+`FormData` → Zod kiểm `month` và từng `amount__<salesId>` → lấy session/profile → đòi Admin active →
+`listSalesOptions()` đọc lại tập người hợp lệ ở server → `saveMonthlyTravelExpenses()` upsert một câu
+theo `(period_month, sales_id)` → `revalidatePath('/admin/travel-expenses')` → trả `ActionResult`.
+Client không được quyết định `updated_by`, role hay danh sách người sẽ ghi.

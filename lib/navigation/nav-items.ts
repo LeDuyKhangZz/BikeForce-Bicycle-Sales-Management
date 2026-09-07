@@ -25,6 +25,7 @@ export type NavKey =
   | 'ADMIN_RECONCILIATION'
   | 'ADMIN_SALES'
   | 'ADMIN_TARGETS'
+  | 'ADMIN_TRAVEL_EXPENSES'
   | 'ADMIN_SALEWORK'
   | 'ADMIN_ACCOUNT';
 
@@ -128,6 +129,12 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
 
 /** Module bổ sung chỉ hiện trong sidebar desktop, không chen vào bottom nav. */
 export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
+  {
+    key: 'ADMIN_TRAVEL_EXPENSES',
+    label: 'Công tác phí',
+    href: '/admin/travel-expenses',
+    matchPrefixes: ['/admin/travel-expenses'],
+  },
   {
     key: 'ADMIN_SALEWORK',
     label: 'SaleWork',

@@ -1108,3 +1108,11 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 
 ✅ **Đã hết blocker** — 17/17 OPEN QUESTION được trả lời ngày 2026-08-07, Phase 2 đã viết được
 (ISSUE-001).
+## Công tác phí theo nhân viên/tháng — BR-027 / DEC-073 (2026-09-07)
+
+- [x] Mục “Công tác phí” nằm ở sidebar trái Admin, không làm chật bottom nav mobile
+- [x] Admin chọn tháng, nhập tiền từng Sales, xem tổng và sửa lại được
+- [x] Bảng riêng có unique theo tháng/nhân viên, bigint VND, RLS force và Admin-only
+- [x] Server Action dùng Zod, tự kiểm auth/active/role và đọc lại danh sách Sales ở server
+- [x] Full unit 729/729 (riêng validation + nav 41/41), RLS 6/6, typecheck, lint và build sạch
+- [x] E2E 6/6 ở 375px + 1440px: vị trí sidebar, lưu/tải lại, chặn Sales, không cuộn ngang

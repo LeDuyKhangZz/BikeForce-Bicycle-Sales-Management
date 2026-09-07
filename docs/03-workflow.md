@@ -1098,3 +1098,9 @@ Sau khi lấy dữ liệu, Server Component dùng `getVietnamToday()` để chia
 Sau khi route ảnh đã xác thực phiên và đọc được báo cáo qua RLS, hệ thống ánh xạ tên Sales sang tài khoản
 SaleWork, đọc snapshot đã đồng bộ và dựng sáu dòng chỉ đọc. Cả bản đầu ngày lẫn cuối ngày dùng cùng nguồn;
 không có ánh xạ thì giữ mẫu cũ, có ánh xạ nhưng chưa có snapshot thì sáu giá trị hiện `—`.
+## Luồng Admin nhập công tác phí tháng (BR-027, DEC-073)
+
+`/admin/travel-expenses` → chọn tháng → nhập một số tiền VND cho từng Sales → kiểm tra tổng → bấm
+“Lưu công tác phí”. Server Action kiểm Zod trước, rồi auth → active → role Admin → đọc lại danh sách
+Sales ở server → upsert toàn bộ tháng theo `(period_month, sales_id)` → làm mới trang. Ô trống được
+lưu là `NULL` (“chưa nhập”), không tự suy thành 0.

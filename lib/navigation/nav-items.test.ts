@@ -151,7 +151,7 @@ describe('activeNavKey — Admin: tiền tố dài nhất thắng', () => {
   });
 });
 
-describe('activeNavKey — module SaleWork trên sidebar Admin', () => {
+describe('activeNavKey — module bổ sung trên sidebar Admin', () => {
   it('làm sáng đúng mục SaleWork khi mở module', () => {
     expect(activeNavKey([...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS], '/admin/salework')).toBe(
       'ADMIN_SALEWORK',
@@ -160,5 +160,11 @@ describe('activeNavKey — module SaleWork trên sidebar Admin', () => {
 
   it('không thêm SaleWork vào bottom nav chính', () => {
     expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_SALEWORK')).toBe(false);
+  });
+
+  it('Công tác phí nằm bên trái và làm sáng đúng mục riêng', () => {
+    const allItems = [...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS];
+    expect(activeNavKey(allItems, '/admin/travel-expenses')).toBe('ADMIN_TRAVEL_EXPENSES');
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_TRAVEL_EXPENSES')).toBe(false);
   });
 });

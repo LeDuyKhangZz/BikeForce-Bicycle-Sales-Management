@@ -38,3 +38,12 @@ export const MONTHLY_TARGET_MESSAGES = {
   FORBIDDEN: 'Bạn không có quyền đặt chỉ tiêu.',
   FAILED: 'Không lưu được lúc này. Vui lòng thử lại.',
 } as const;
+
+export const TRAVEL_EXPENSE_MESSAGES = {
+  SAVED: 'Đã lưu công tác phí tháng.',
+  VALIDATION: 'Vui lòng kiểm tra lại các ô được đánh dấu.',
+  INVALID_MONTH: 'Tháng không hợp lệ.',
+  NO_SALES: 'Chưa có nhân viên Sales nào để nhập công tác phí.',
+  FORBIDDEN: 'Bạn không có quyền nhập công tác phí.',
+  FAILED: 'Không lưu được lúc này. Vui lòng thử lại.',
+} as const;

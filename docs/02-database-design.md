@@ -1296,3 +1296,13 @@ danh sách và chỉ dùng để cộng vào dòng thật. Ánh xạ cột trong
 
 Khóa có kỳ tháng nên dữ liệu tháng cũ không bị dùng cho tháng hiện tại; UPSERT cùng khóa ghi đè
 snapshot mới nhất và không làm tăng số sau mỗi lần chạy.
+## Bảng `sales_monthly_travel_expenses` — công tác phí tháng (DEC-073)
+
+Khoá chính `(period_month, sales_id)` bảo đảm mỗi nhân viên chỉ có một dòng mỗi tháng. `period_month`
+luôn là ngày 01; `amount` là `bigint` nguyên VND, không âm và được phép `NULL` để biểu diễn “chưa nhập”.
+Hai khoá ngoại trỏ `profiles`: `sales_id` xoá cascade, `updated_by` xoá thì đặt `NULL`.
+
+RLS được bật và force ngay trong migration. Chỉ `authenticated` có `select/insert/update`, và cả ba
+policy đều đòi `(select public.is_admin())`; `anon` và Sales không đọc hoặc ghi được. Index
+`(period_month desc)` phục vụ màn quản trị theo tháng. Migration kế tiếp thu hồi toàn bộ grant mặc
+định của `service_role`, giữ đúng DEC-005.

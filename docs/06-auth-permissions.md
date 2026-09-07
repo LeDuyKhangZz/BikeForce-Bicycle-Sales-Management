@@ -854,3 +854,13 @@ gọi `getUser()` rồi kiểm lại hồ sơ active/role trước khi đọc b�
 Sáu chỉ số SaleWork chỉ được ghép sau khi route đã đọc thành công báo cáo theo quyền hiện tại. Vì vậy Sales
 chỉ nhận số gắn với ảnh của chính mình, còn Admin nhận số khi xem báo cáo được RLS cho phép; route không trả
 danh sách tài khoản SaleWork hay dữ liệu thô bổ sung cho client.
+## Quyền trên công tác phí tháng (DEC-073)
+
+| Vai | Đọc | Tạo/sửa | Xoá |
+|---|---|---|---|
+| Admin đang hoạt động | Tất cả nhân viên/tháng | Có, qua Server Action và RLS | Không cấp |
+| Sales (kể cả dòng của mình) | Không | Không | Không |
+| Anon | Không | Không | Không |
+
+Middleware/layout chỉ hỗ trợ UX; ba policy Admin-only trên `sales_monthly_travel_expenses` mới là biên
+giới bảo mật. Server Action vẫn tự kiểm lại auth → active → role.
