@@ -660,6 +660,10 @@ theo thứ tự Sales hôm nay → SaleWork → Sales còn lại, không tự t�
 danh sách cho script đồng bộ, tránh khai báo hai bản. Route `share-image` chỉ đọc SaleWork sau khi báo cáo
 đã qua auth + RLS; `lib/reports/share-card.ts` dựng sáu chuỗi hiển thị, còn component Satori chỉ render.
 Không thêm cột database và không đưa truy vấn vào `.tsx`.
+
+Nguồn chuẩn hiện có sáu ánh xạ; `Nguyễn Minh Khải` ánh xạ chính xác sang `Abraham Khải Hcm`. Vì script
+trải `SALES_SALEWORK_ACCOUNT_NAMES`, tài khoản mới tự tham gia tập đồng bộ mà không cần danh sách thứ hai.
+
 ## Module công tác phí tháng (DEC-073)
 
 Route Server Component `app/(admin)/admin/travel-expenses/page.tsx` chỉ điều phối dữ liệu. Form và

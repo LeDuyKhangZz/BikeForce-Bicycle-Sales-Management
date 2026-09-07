@@ -2186,3 +2186,16 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
 
 **Next Exact Steps:** đẩy hai migration mới lên Supabase cloud trước khi deploy code, rồi commit/push
 `main` và xác nhận Vercel deploy route `/admin/travel-expenses`.
+
+## CHECKPOINT 2026-09-07 — Thêm SaleWork cho Nguyễn Minh Khải
+
+- Nguồn ánh xạ chuẩn đã có `Nguyễn Minh Khải` → `Abraham Khải Hcm`.
+- `SALES_SALEWORK_ACCOUNT_NAMES` tự tăng từ 5 lên 6 tài khoản Sales; tập script chọn tăng từ 7 lên 8.
+- Không thay hoặc nhập nhằng với `Phan Thành Khải` → `Abraham Khải Khánh Hoà`.
+- Unit ánh xạ 9/9 và toàn bộ unit 733/733; typecheck, lint và production build 27 route đã chạy sạch.
+- Full Vitest 938/939: một integration test đỏ do trạng thái local có sẵn
+  `sales_monthly_targets` chưa force RLS, không liên quan thay đổi ánh xạ.
+- Chưa chạy đồng bộ thật 8/8: môi trường từ chối quyền ghi snapshot SaleWork vào Supabase cloud.
+
+**Next Exact Steps:** khi có quyền ghi cloud rõ ràng, chạy `npm run salework:sync`, xác nhận log đủ 8 tài
+khoản và mở preview của Nguyễn Minh Khải để kiểm sáu chỉ số lấy từ `Abraham Khải Hcm`.

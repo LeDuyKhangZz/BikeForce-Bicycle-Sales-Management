@@ -6,6 +6,7 @@
  */
 const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Ngô Thế San': 'Abraham San Miền Trung',
+  'Nguyễn Minh Khải': 'Abraham Khải Hcm',
   'Nguyễn Trần Hoàn Thiện': 'Abraham Nguyễn Thiện',
   'Phan Thành Khải': 'Abraham Khải Khánh Hoà',
   'Tô Kim Sang': 'Abraham Sang Miền Tây',

@@ -3347,3 +3347,18 @@ người khác. Unit share-card 93/93 và RLS công tác phí 6/6 đã pass sau 
 E2E đầu-cuối đã nhập **3.500.000 ₫** cho Sales ở kỳ 08/2026 rồi đăng nhập Sales và render ảnh ngày
 07/09/2026. Đã nhìn PNG thật 1080×1920: dòng mới hiện đúng số, canh phải, không xuống dòng; footer còn
 nguyên và không có chữ chồng/cắt. E2E render 1/1 pass.
+
+## Entry 044 — 2026-09-07 — Ánh xạ SaleWork cho Nguyễn Minh Khải
+
+Theo xác nhận của người dùng, đã thêm ánh xạ tường minh `Nguyễn Minh Khải` (tên trong BikeForce/CRM)
+→ `Abraham Khải Hcm` (tên tài khoản SaleWork). Nguồn chuẩn tiếp tục cấp đồng thời cho route ảnh và script
+đồng bộ, nên tập mục tiêu tăng từ 7 lên 8 mà không nhân bản cấu hình. Ánh xạ Phan Thành Khải hiện hữu
+được giữ nguyên.
+
+Unit ánh xạ **9/9**, toàn bộ unit **733/733**, typecheck, lint và production build 27 route đã chạy sạch.
+Full Vitest đạt 938/939; một integration test đỏ vì database local có sẵn bảng `sales_monthly_targets`
+chưa force RLS, không do thay đổi ánh xạ. Đã yêu cầu chạy `npm run salework:sync`, nhưng môi trường từ
+chối thao tác vì sẽ ghi snapshot vào Supabase cloud; do đó chưa ghi trạng thái 8/8 PASS giả.
+
+**Next Exact Steps:** chạy đồng bộ thật khi được cấp quyền ghi cloud, xác nhận đủ 8 tài khoản và kiểm
+preview Nguyễn Minh Khải lấy đúng sáu chỉ số từ `Abraham Khải Hcm`.

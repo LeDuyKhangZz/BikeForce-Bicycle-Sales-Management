@@ -679,15 +679,19 @@ chuỗi ngày chuẩn `YYYY-MM-DD` với `getVietnamToday()`, giữ nguyên th�
 
 ### 16.3. Sáu chỉ số SaleWork trên ảnh Sales
 
-`scripts/salework-sync.ts` chọn thêm năm tài khoản được ánh xạ và UPSERT cùng tám cột snapshot hiện hữu.
+`scripts/salework-sync.ts` chọn thêm sáu tài khoản được ánh xạ và UPSERT cùng tám cột snapshot hiện hữu.
 Script mở đúng tab **Tin nhắn**, gõ từng tên vào ô tìm kiếm trước khi chọn để không phụ thuộc danh sách
-ảo hóa, rồi sau khi bấm **Tổng hợp** phải chờ bảng chứa đủ cả bảy tài khoản. Không được chỉ chờ dòng đầu
+ảo hóa, rồi sau khi bấm **Tổng hợp** phải chờ bảng chứa đủ cả tám tài khoản. Không được chỉ chờ dòng đầu
 tiên hiện ra vì bảng kết quả cũ có thể vẫn còn trong DOM và dẫn đến ghi snapshot thiếu tài khoản.
 Khi dựng ảnh, route lấy tên tài khoản bằng `getSaleWorkAccountName(full_name)`, gọi
 `getSaleWorkReportByAccountName()`, rồi chỉ chuyển sáu trường cần thiết vào `buildShareCardModel()`.
 Không có snapshot thì truyền sáu giá trị null để view-model hiển thị `—`; không ghi ngược vào báo cáo ngày.
 Snapshot SaleWork hiện chỉ lưu số của ngày đồng bộ gần nhất, nên báo cáo khác ngày Việt Nam hôm nay không
 được ghép số hiện tại vào quá khứ; sáu dòng của nhân viên đã ánh xạ sẽ hiển thị `—`.
+
+Ánh xạ bổ sung là `Nguyễn Minh Khải` (hồ sơ BikeForce/CRM) → `Abraham Khải Hcm` (SaleWork). Việc ghép
+dữ liệu vẫn dùng tên hồ sơ làm đầu vào và tên SaleWork làm khoá đọc snapshot, không đổi schema.
+
 ## `saveTravelExpensesAction` — lưu công tác phí tháng (DEC-073)
 
 `FormData` → Zod kiểm `month` và từng `amount__<salesId>` → lấy session/profile → đòi Admin active →

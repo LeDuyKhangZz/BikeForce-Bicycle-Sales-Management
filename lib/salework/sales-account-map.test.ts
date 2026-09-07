@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
+import {
+  getSaleWorkAccountName,
+  SALES_SALEWORK_ACCOUNT_NAMES,
+} from '@/lib/salework/sales-account-map';
 
 describe('getSaleWorkAccountName', () => {
   it.each([
     ['Ngô Thế San', 'Abraham San Miền Trung'],
+    ['Nguyễn Minh Khải', 'Abraham Khải Hcm'],
     ['Nguyễn Trần Hoàn Thiện', 'Abraham Nguyễn Thiện'],
     ['Phan Thành Khải', 'Abraham Khải Khánh Hoà'],
     ['Tô Kim Sang', 'Abraham Sang Miền Tây'],
@@ -19,5 +23,10 @@ describe('getSaleWorkAccountName', () => {
 
   it('trả null khi Sales chưa được ánh xạ', () => {
     expect(getSaleWorkAccountName('Nhân viên chưa ánh xạ')).toBeNull();
+  });
+
+  it('đưa Abraham Khải Hcm vào danh sách tài khoản cần đồng bộ', () => {
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(6);
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
   });
 });

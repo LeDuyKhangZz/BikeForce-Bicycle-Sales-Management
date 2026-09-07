@@ -1076,10 +1076,13 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 
 ## Sáu chỉ số SaleWork trong báo cáo Sales (2026-09-04)
 
-- [x] Ánh xạ đủ 5 hồ sơ Sales sang đúng tài khoản SaleWork do người dùng cung cấp
-- [x] Script đồng bộ chọn thêm 5 tài khoản; không chỉ ánh xạ ở màn hình
-- [x] Script gõ từng tên trong ô tìm kiếm, chọn đúng tab **Tin nhắn** và chờ đủ 7 tên trước khi đọc bảng
+- [x] Ánh xạ đủ 6 hồ sơ Sales sang đúng tài khoản SaleWork do người dùng cung cấp
+- [x] Bổ sung `Nguyễn Minh Khải` → `Abraham Khải Hcm` vào nguồn chuẩn dùng chung
+- [x] Script đồng bộ chọn thêm 6 tài khoản; không chỉ ánh xạ ở màn hình
+- [x] Script gõ từng tên trong ô tìm kiếm, chọn đúng tab **Tin nhắn** và chờ đủ 8 tên trước khi đọc bảng
 - [x] Chạy đồng bộ thật: **7/7 tài khoản** đã ghi Supabase; Bà Rịa có dữ liệu thật, không dùng số 0 giả
+- [ ] Chạy lại đồng bộ thật để ghi đủ **8/8 tài khoản**; phiên hiện tại bị chặn quyền ghi Supabase cloud
+- [x] Unit ánh xạ 9/9 · toàn bộ unit 733/733 · typecheck · lint · production build 27 route
 - [x] Tiêu đề sáu chỉ số trên báo cáo Sales là **HOẠT ĐỘNG ONLINE TRONG NGÀY**
 - [x] Bản đầu ngày và cuối ngày hiển thị đủ 6 dòng Zalo/cuộc gọi, dữ liệu thiếu hiện `—`
 - [x] Không thêm input và không lưu trùng dữ liệu SaleWork vào `daily_reports`
