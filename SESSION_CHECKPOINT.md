@@ -2209,7 +2209,8 @@ tiếp tục dùng `npm run reports:sync` hoặc `npm run salework:sync` như hi
 - `features/admin-report-previews/preview-image-viewer.tsx` là client leaf mới cho nút **Xem toàn màn hình**.
 - Nút nằm trong thẻ **Bản xem trước** của `/admin/report-previews`, chỉ xuất hiện sau khi chọn báo cáo.
 - Lớp phủ full viewport dùng lại đúng URL ảnh hiện hữu, không đổi dữ liệu hay logic dựng ảnh.
-- Khóa cuộn nền; ảnh tối đa 1080px và cuộn dọc; đóng bằng nút hoặc `Escape`; quản lý focus đầy đủ.
+- Khóa cuộn nền; ảnh `contain` theo cả hai chiều để hiện trọn khổ trong viewport, không cần cuộn; đóng bằng
+  nút hoặc `Escape`; quản lý focus đầy đủ.
 - Typecheck/lint sạch; unit 734/734; build 27 route thành công.
 - E2E toàn màn hình hoàn thành 3/3 assertion ở ba project; runner treo ở teardown nên đã ngắt thủ công,
   không ghi toàn lệnh là PASS. Browser tích hợp không khả dụng.

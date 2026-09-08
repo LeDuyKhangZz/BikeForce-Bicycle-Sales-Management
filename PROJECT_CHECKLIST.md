@@ -1069,7 +1069,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Ngày ưu tiên lấy từ `getVietnamToday()`; component không tự tính ngày
 - [x] Danh sách telesale SaleWork hiện tên tài khoản và nút preview bên cạnh
 - [x] Preview dùng ảnh thật hiện hữu; không sao chép công thức KPI hoặc logic dựng ảnh
-- [x] Preview có nút **Xem toàn màn hình**; ảnh lớn cuộn dọc, khóa nền, đóng bằng nút hoặc `Escape`
+- [x] Preview có nút **Xem toàn màn hình**; ảnh co vừa viewport và hiện trọn khổ, khóa nền, đóng bằng nút hoặc `Escape`
 - [x] Focus vào nút Đóng khi mở và trở lại nút mở khi đóng; không cuộn ngang ở 375px
 - [x] Route ảnh SaleWork chấp nhận phiên Admin hoạt động nhưng không lộ API key n8n
 - [x] Nhân viên chưa có dữ liệu vẫn hiện trong danh sách với trạng thái không khả dụng

@@ -3384,3 +3384,9 @@ khả dụng trong phiên.
 
 **Next Exact Steps:** commit/push thay đổi để Vercel triển khai, rồi mở đúng preview production và bấm
 **Xem toàn màn hình** để kiểm trực quan trên thiết bị thật.
+
+### Điều chỉnh theo phản hồi trực tiếp
+
+Người dùng làm rõ “toàn màn hình” nghĩa là thấy **đủ toàn bộ khổ báo cáo trong một tầm nhìn**, không phải
+phóng ảnh lên 1080px rồi cuộn. Lớp phủ đã đổi sang layout cao đúng `100dvh`; vùng ảnh dùng `max-height` và
+`max-width` đồng thời với `object-contain`, nên tự co vừa màn hình và giữ nguyên tỷ lệ ở mọi viewport.

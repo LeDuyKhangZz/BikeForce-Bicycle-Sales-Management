@@ -21,6 +21,17 @@ test('Admin mở và đóng ảnh báo cáo toàn màn hình', async ({ page }) 
   await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
   await expectNoHorizontalScroll(page);
 
+  const imageBox = await dialog.getByRole('img').boundingBox();
+  const viewport = page.viewportSize();
+  expect(imageBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect((imageBox?.x ?? -1) + (imageBox?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(
+    viewport?.width ?? 0,
+  );
+  expect((imageBox?.y ?? -1) + (imageBox?.height ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(
+    viewport?.height ?? 0,
+  );
+
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(openButton).toBeFocused();

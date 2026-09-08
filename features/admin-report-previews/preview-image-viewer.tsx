@@ -73,7 +73,7 @@ export function PreviewImageViewer({ src, alt, width, height }: Props) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="fixed inset-0 z-50 overflow-y-auto bg-foreground/95"
+            className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-foreground/95"
             onKeyDown={(event) => {
               if (event.key === 'Tab') {
                 event.preventDefault();
@@ -81,7 +81,7 @@ export function PreviewImageViewer({ src, alt, width, height }: Props) {
               }
             }}
           >
-            <div className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-3 border-b border-background/20 bg-foreground/95 px-4 py-2 supports-backdrop-filter:backdrop-blur-lg">
+            <div className="z-10 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-background/20 bg-foreground/95 px-4 py-2 supports-backdrop-filter:backdrop-blur-lg">
               <h2 id={titleId} className="text-base font-semibold text-background">
                 Xem báo cáo toàn màn hình
               </h2>
@@ -96,7 +96,7 @@ export function PreviewImageViewer({ src, alt, width, height }: Props) {
               </Button>
             </div>
 
-            <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full items-start justify-center p-2 sm:p-4">
+            <div className="mx-auto flex min-h-0 w-full flex-1 items-center justify-center p-2 sm:p-4">
               <Image
                 src={src}
                 alt={alt}
@@ -105,7 +105,7 @@ export function PreviewImageViewer({ src, alt, width, height }: Props) {
                 sizes="100vw"
                 unoptimized
                 priority
-                className="h-auto w-full max-w-[1080px] bg-card object-contain"
+                className="h-auto max-h-full w-auto max-w-full bg-card object-contain"
               />
             </div>
           </div>,

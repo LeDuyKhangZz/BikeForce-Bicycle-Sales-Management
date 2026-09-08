@@ -1281,7 +1281,8 @@ không cho biết đang ở dòng của ai.
 - Preview hiện dưới danh sách trong khung dọc co theo bề rộng, tối đa 540px; ảnh giữ đúng tỉ lệ, không
   sinh cuộn ngang ở 375px.
 - Khi đã chọn báo cáo, nút **Xem toàn màn hình** nằm ngay trên ảnh preview. Nút mở lớp phủ chiếm toàn bộ
-  viewport, khóa cuộn trang nền và cho ảnh dùng tối đa 1080px để Admin đọc rõ; ảnh dài vẫn cuộn dọc được.
+  viewport, khóa cuộn trang nền và co ảnh theo cả chiều ngang lẫn chiều cao để Admin luôn thấy trọn khổ
+  báo cáo mà không phải cuộn.
   Lớp phủ có nút **Đóng**, hỗ trợ phím `Escape`, giữ focus bên trong và trả focus về nút mở sau khi đóng.
 - Nút mang `aria-label` có tên nhân viên; trạng thái báo cáo có chữ, không truyền đạt chỉ bằng màu.
 - Thứ tự section cố định: **Sales đã báo cáo hôm nay** (nhãn Ưu tiên) → **telesale/SaleWork** →
