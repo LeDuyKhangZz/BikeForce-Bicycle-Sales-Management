@@ -2203,3 +2203,15 @@ nhìn 375px/1440px và kiểm không cuộn ngang khi Browser khả dụng.
 
 **Next Exact Steps:** mở preview của Nguyễn Minh Khải để kiểm trực quan sáu chỉ số mới; các lịch tiếp theo
 tiếp tục dùng `npm run reports:sync` hoặc `npm run salework:sync` như hiện tại.
+
+## CHECKPOINT 2026-09-08 — Admin xem ảnh preview toàn màn hình
+
+- `features/admin-report-previews/preview-image-viewer.tsx` là client leaf mới cho nút **Xem toàn màn hình**.
+- Nút nằm trong thẻ **Bản xem trước** của `/admin/report-previews`, chỉ xuất hiện sau khi chọn báo cáo.
+- Lớp phủ full viewport dùng lại đúng URL ảnh hiện hữu, không đổi dữ liệu hay logic dựng ảnh.
+- Khóa cuộn nền; ảnh tối đa 1080px và cuộn dọc; đóng bằng nút hoặc `Escape`; quản lý focus đầy đủ.
+- Typecheck/lint sạch; unit 734/734; build 27 route thành công.
+- E2E toàn màn hình hoàn thành 3/3 assertion ở ba project; runner treo ở teardown nên đã ngắt thủ công,
+  không ghi toàn lệnh là PASS. Browser tích hợp không khả dụng.
+
+**Next Exact Steps:** commit/push để Vercel deploy, rồi kiểm trực quan đúng link production người dùng gửi.

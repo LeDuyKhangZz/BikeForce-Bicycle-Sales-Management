@@ -3369,3 +3369,18 @@ tự mọi trang, kiểm đủ tám tên trước UPSERT và luôn đóng browse
 1 gọi đến, 5 gọi đi, 1 gọi nhỡ và thời lượng 2.58 phút.
 
 **Next Exact Steps:** kiểm trực quan preview Nguyễn Minh Khải; lịch đồng bộ tiếp theo giữ nguyên lệnh hiện có.
+
+## Entry 045 — 2026-09-08 — Phóng to ảnh preview cho Admin
+
+Theo yêu cầu người dùng tại chính route `/admin/report-previews?...#report-preview`, thẻ **Bản xem trước**
+nay có nút **Xem toàn màn hình**. Component client chỉ quản lý tương tác hiển thị: ảnh và route dựng ảnh
+giữ nguyên; lớp phủ khóa cuộn nền, cho ảnh rộng tối đa 1080px và cuộn dọc, có nút Đóng, phím `Escape`,
+focus trap và trả focus về nút mở.
+
+Đã chạy thật: typecheck sạch; lint sạch, 0 warning; unit **734/734**; production build thành công, 27 route.
+E2E mới hoàn thành đủ assertion **3/3** trên `mobile-375`, `desktop-1440`, `zalo-like`; sau đó runner mắc ở
+bước dọn fixture nên phải ngắt thủ công, vì vậy không ghi toàn bộ lệnh E2E là PASS. In-app Browser không
+khả dụng trong phiên.
+
+**Next Exact Steps:** commit/push thay đổi để Vercel triển khai, rồi mở đúng preview production và bấm
+**Xem toàn màn hình** để kiểm trực quan trên thiết bị thật.

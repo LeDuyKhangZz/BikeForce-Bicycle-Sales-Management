@@ -1430,6 +1430,10 @@ bộ `actual_* = null`, nhưng đường ảnh Sales bình thường vẫn khôn
 Helper phân nhóm phải kiểm: nhiều Sales hôm nay giữ nguyên thứ tự; báo cáo ngày trước, ngày khác và
 không có báo cáo đều rơi xuống nhóm cuối.
 
+Chế độ xem toàn màn hình có E2E riêng trên `mobile-375`, `desktop-1440` và `zalo-like`: chọn một báo cáo,
+mở dialog, xác nhận focus vào nút Đóng, `body` bị khóa cuộn, không phát sinh cuộn ngang, đóng bằng `Escape`
+và focus quay lại nút mở.
+
 ### 17.1. Chỉ số SaleWork trong ảnh Sales
 
 Unit phải khóa đủ năm ánh xạ tên và đúng thứ tự sáu dòng; null/chuỗi thời lượng rỗng phải ra `—`. Visual

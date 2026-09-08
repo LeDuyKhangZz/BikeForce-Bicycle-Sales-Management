@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { Eye, FileQuestion } from 'lucide-react';
 
@@ -10,6 +9,7 @@ import type { SalesDailyPreviewOption } from '@/services/profiles';
 import type { SaleWorkReport } from '@/services/salework';
 
 import { SalesPreviewSection } from './sales-preview-section';
+import { PreviewImageViewer } from './preview-image-viewer';
 
 type Props = {
   reportedToday: readonly SalesDailyPreviewOption[];
@@ -115,25 +115,20 @@ export function EmployeePreviewList({
                     : 'Bản cuối ngày xem trước; số liệu chưa nhập sẽ hiển thị “—” hoặc trạng thái chờ.'
                 : `Báo cáo SaleWork của ${selectedSaleWork?.accountName ?? 'nhân viên telesale'}.`}
             </p>
-            <div className="mx-auto w-full max-w-[540px] overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-              <Image
-                src={
-                  selectedDaily
-                    ? shareImageViewPath(selectedDaily.id, selectedDailyVariant)
-                    : `/api/salework/report-image?account=${encodeURIComponent(selectedSaleWork?.accountName ?? '')}`
-                }
-                alt={
-                  selectedDaily
-                    ? 'Bản xem trước báo cáo ngày của nhân viên'
-                    : `Bản xem trước báo cáo SaleWork của ${selectedSaleWork?.accountName ?? 'nhân viên telesale'}`
-                }
-                width={selectedDaily ? 1080 : 960}
-                height={selectedDaily ? 1920 : 1560}
-                sizes="(min-width: 768px) 540px, calc(100vw - 64px)"
-                unoptimized
-                className="h-auto w-full"
-              />
-            </div>
+            <PreviewImageViewer
+              src={
+                selectedDaily
+                  ? shareImageViewPath(selectedDaily.id, selectedDailyVariant)
+                  : `/api/salework/report-image?account=${encodeURIComponent(selectedSaleWork?.accountName ?? '')}`
+              }
+              alt={
+                selectedDaily
+                  ? 'Bản xem trước báo cáo ngày của nhân viên'
+                  : `Bản xem trước báo cáo SaleWork của ${selectedSaleWork?.accountName ?? 'nhân viên telesale'}`
+              }
+              width={selectedDaily ? 1080 : 960}
+              height={selectedDaily ? 1920 : 1560}
+            />
           </Card>
         </section>
       )}

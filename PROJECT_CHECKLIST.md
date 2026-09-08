@@ -1069,10 +1069,13 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Ngày ưu tiên lấy từ `getVietnamToday()`; component không tự tính ngày
 - [x] Danh sách telesale SaleWork hiện tên tài khoản và nút preview bên cạnh
 - [x] Preview dùng ảnh thật hiện hữu; không sao chép công thức KPI hoặc logic dựng ảnh
+- [x] Preview có nút **Xem toàn màn hình**; ảnh lớn cuộn dọc, khóa nền, đóng bằng nút hoặc `Escape`
+- [x] Focus vào nút Đóng khi mở và trở lại nút mở khi đóng; không cuộn ngang ở 375px
 - [x] Route ảnh SaleWork chấp nhận phiên Admin hoạt động nhưng không lộ API key n8n
 - [x] Nhân viên chưa có dữ liệu vẫn hiện trong danh sách với trạng thái không khả dụng
 - [x] Typecheck · lint · full unit **715/715** · production build **26 route**
 - [ ] E2E và kiểm trực quan 375px/1440px — chưa chạy vì Supabase local/Docker đang tắt và in-app Browser không khả dụng
+- [x] E2E riêng cho toàn màn hình đã hoàn thành assertion **3/3** ở mobile 375, desktop 1440 và Zalo-like
 
 ## Sáu chỉ số SaleWork trong báo cáo Sales (2026-09-04)
 
