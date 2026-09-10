@@ -1123,4 +1123,5 @@ kỳ `2026-08-01`. Cả ảnh đầu ngày và cuối ngày đặt dòng này cu
 
 `/admin/salaries` → chọn tháng → nhập một số tiền VND cho từng Sales → xem tổng → bấm “Lưu lương”. Server Action kiểm Zod trước, rồi auth → active → role Admin → đọc lại danh sách Sales từ server → upsert theo `(period_month, sales_id)` → revalidate trang. Ô trống ghi `NULL` để Admin có thể xoá giá trị nhập nhầm. Sales bị chặn ở route và RLS.
 
-Khi dựng ảnh báo cáo hằng ngày, route lấy lương của chính Sales ở tháng liền trước tháng chứa `report_date`: báo cáo ngày `10/09/2026` đọc kỳ `2026-08-01`; báo cáo tháng 01 lùi đúng sang tháng 12 năm trước (DEC-078). Có số thì format VND; `NULL` hiển thị `-`. Màn tổng kết tháng vẫn đọc đúng tháng Admin đang chọn. Sales chỉ được RLS cho đọc dòng của chính mình, không được mở màn quản trị hoặc ghi dữ liệu.
+Theo DEC-080, ảnh báo cáo hằng ngày không còn đọc hoặc hiển thị lương. Màn Admin nhập lương và ảnh tổng
+kết tháng vẫn đọc đúng tháng Admin chọn; dữ liệu lương không bị xoá.

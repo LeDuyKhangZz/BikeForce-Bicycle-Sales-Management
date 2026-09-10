@@ -615,9 +615,9 @@ Danh sách đầy đủ những chỗ có chuyển động: nút (màu + scale 0
 Kích thước cố định **1080 × 1920**, nền **`#FFFFFF`**, render server-side bằng Satori (DEC-010).
 Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `kebab-case` theo `AGENTS.md §3`; `DailyReportShareCard` là tên **component**).
 
-Khi có đủ khối SaleWork + MISA, bố cục dùng nhịp dọc gọn riêng để hai dòng bắt buộc ở đáy — **“Công
-tác phí tháng trước” và “Lương”** — cùng footer vẫn nằm trọn trong khung 1920px. Quy tắc này áp dụng cho
-cả ảnh `MORNING` và `EVENING`; Admin xem trước và Sales gửi đi dùng cùng một component/route ảnh.
+Khi có đủ khối SaleWork + MISA, bố cục dùng nhịp dọc gọn riêng để dòng **“Công tác phí tháng trước”**
+cùng footer vẫn nằm trọn trong khung 1920px. Cả ảnh `MORNING` và `EVENING` tạm thời không có dòng lương
+(DEC-080); Admin xem trước và Sales gửi đi dùng cùng một component/route ảnh.
 
 > ⚠ **VIẾT LẠI HOÀN TOÀN Ở PHASE 14 (2026-08-11).** Ba quyết định đổi cùng lúc — đọc trước khi tin bất kỳ dòng nào của bản Phase 6:
 >
@@ -1322,4 +1322,4 @@ không cho biết đang ở dòng của ai.
 - Mục “Lương” dùng icon `Banknote`, nằm ngay dưới “Công tác phí” trong sidebar trái desktop; không thêm vào bottom nav mobile vốn đã chạm giới hạn.
 - Route `/admin/salaries` giữ cùng cấu trúc với màn Công tác phí: chuyển tháng, một nhân viên mỗi hàng, ô VND có label luôn hiển thị, helper format tiền, tổng tháng và nút “Lưu lương”.
 - Input giữ tối thiểu 48px, bàn phím số, lỗi ngay dưới field; các nút chuyển tháng và lưu đáp ứng touch target tối thiểu 44px.
-- Cả hai ảnh báo cáo Sales có dòng “Lương” dưới dòng công tác phí. Giá trị canh phải, đậm; chưa có dữ liệu hiển thị dấu `-` theo yêu cầu, không ẩn cả dòng.
+- Ảnh tổng kết tháng vẫn có dòng “Lương”. Hai ảnh báo cáo ngày của Sales tạm thời không hiển thị dòng này (DEC-080).

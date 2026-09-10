@@ -3463,3 +3463,14 @@ Lần xác minh sau cho thấy SaleWork ngày chỉ trả ba tài khoản có ho
 Người dùng gửi ảnh Sales và xác nhận dòng lương vẫn không thấy. Đối chiếu PNG cho thấy đây không phải khác biệt Admin/Sales: cả hai dùng chung route, nhưng bố cục SaleWork + MISA đã vượt chiều cao 1920px nên lương bị cắt sau công tác phí. Đã nén riêng khoảng trắng của layout SaleWork, giữ nguyên cỡ chữ số liệu, rồi render và nhìn trực tiếp cả PNG đầu ngày lẫn cuối ngày; hai ảnh đều hiện đủ công tác phí, lương và footer. Ghi nhận/đóng ISSUE-038. Kiểm chứng cuối: unit **757/757**, typecheck/lint sạch và production build thành công.
 
 Người dùng phát hiện nhiều Sales bị toàn số 0 dù bảng SaleWork có hoạt động. Root cause là bảng dùng cuộn ảo nhưng script chỉ đọc `<tr>` đang có trong DOM, rồi bản sửa trước đó còn tự điền 0 cho tài khoản chưa thấy. Đã xóa cơ chế nguy hiểm này, cuộn hết vùng bảng và thêm fail-closed đủ tám tài khoản trước khi UPSERT. Chạy thật thành công trong khoảng 18 giây: lưu đủ 8 dòng ngày, bỏ qua nhánh tháng mặc định và tiếp tục AMIS. Đọc lại service xác nhận Nguyễn Thiện 19 hội thoại/43 tin gửi/70 tin nhận/11 gọi đi; San 20/18/77/0. Ghi nhận/đóng ISSUE-039. Kiểm chứng cuối: unit **760/760**, typecheck/lint sạch và production build thành công.
+
+## Entry 052 — 2026-09-10 — Tạm gỡ lương khỏi ảnh báo cáo ngày
+
+Theo yêu cầu trực tiếp của người dùng, đã bỏ dòng “Lương” khỏi cả ảnh đầu ngày và cuối ngày của Sales,
+đồng thời bỏ truy vấn lương khỏi route ảnh ngày. Module Admin nhập lương, dữ liệu hiện có, policy và ảnh
+tổng kết tháng vẫn giữ nguyên. Xóa trường view-model/tham số/test/helper ngày chỉ phục vụ dòng đã gỡ;
+BR-030 chuyển `SUSPENDED` và DEC-080 ghi nhận việc tạm thay DEC-076/078 trong phạm vi ảnh ngày.
+
+Đã render và nhìn trực tiếp hai PNG 1080×1920 với đủ SaleWork + MISA: cả đầu ngày và cuối ngày đều
+không còn lương, công tác phí/footer vẫn nguyên vẹn. Unit **753/753**, typecheck, lint và production
+build đều sạch.

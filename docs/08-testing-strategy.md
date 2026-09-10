@@ -1466,6 +1466,5 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - Navigation: “Lương” đứng ngay sau “Công tác phí”, active đúng route và không vào bottom nav.
 - RLS: Admin insert/update/select; số âm bị CHECK từ chối; Sales chỉ đọc own, không đọc người khác và không ghi; anon không đọc.
 - E2E ba viewport: vị trí sidebar, nhập/lưu/tải lại, không cuộn ngang và Sales không truy cập route.
-- Share-card unit: lương dương format VND, `0` không thành thiếu dữ liệu, `null` hiện đúng `-`; E2E render ảnh sau khi Admin nhập cả công tác phí và lương.
-- Sau thay đổi chiều cao share-card, render PNG thật 1080×1920 cho cả `MORNING` và `EVENING` với đủ SaleWork + MISA; nhìn trực tiếp và xác nhận công tác phí, lương, footer không bị cắt.
-- Kỳ lương ảnh ngày: unit khóa `10/09/2026 → 2026-08-01`, lùi qua đầu năm và đầu vào sai; E2E nhập lương tháng 08 trước khi render ảnh báo cáo tháng 09 (DEC-078).
+- Share-card ngày: cả `MORNING` và `EVENING` không có dòng lương và route không truy vấn bảng lương (DEC-080).
+- Ảnh tổng kết tháng: lương dương format VND; `0` không thành thiếu dữ liệu; `null` hiện đúng `-`.

@@ -329,7 +329,7 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đ�
 | **BR-027** | Admin nhập công tác phí nguyên VND cho từng nhân viên Sales theo từng tháng; một nhân viên chỉ có một giá trị trong một tháng, được phép sửa lại | `sales_monthly_travel_expenses` + `/admin/travel-expenses` | **APPROVED 2026-09-07** (DEC-073) |
 | **BR-028** | Ảnh báo cáo Sales luôn có dòng cuối “Công tác phí tháng trước”, lấy khoản của chính Sales ở tháng liền trước tháng hiện tại theo giờ Việt Nam; chưa nhập thì hiện `—` | share-image + `sales_monthly_travel_expenses` | **APPROVED 2026-09-07** (DEC-074) |
 | **BR-029** | Admin nhập lương nguyên VND cho từng nhân viên Sales theo từng tháng; một nhân viên chỉ có một giá trị trong một tháng, được phép sửa lại; Sales không được ghi dữ liệu lương | `sales_monthly_salaries` + `/admin/salaries` | **APPROVED 2026-09-10** (DEC-075, quyền đọc cập nhật bởi DEC-076) |
-| **BR-030** | Ảnh báo cáo Sales luôn có dòng “Lương”, lấy khoản của chính Sales ở tháng liền trước tháng chứa ngày báo cáo (ví dụ báo cáo 10/09/2026 lấy kỳ 08/2026); chưa nhập thì hiện đúng dấu `-`, còn `0` là dữ liệu thật | share-image + `sales_monthly_salaries` | **APPROVED 2026-09-10** (DEC-076, sửa bởi DEC-078) |
+| **BR-030** | Tạm thời không hiển thị lương trên ảnh báo cáo ngày của Sales. Module Admin nhập lương và dòng lương trên ảnh tổng kết tháng vẫn giữ nguyên | daily share-image + `sales_monthly_salaries` | **SUSPENDED 2026-09-10** (DEC-080; thay DEC-076/078 cho ảnh ngày) |
 
 ### 8.1 Logic tập trung bắt buộc (Master Spec §9)
 

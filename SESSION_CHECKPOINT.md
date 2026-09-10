@@ -2307,3 +2307,12 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Chạy thật `npm run salework:sync` exit 0 trong khoảng 18 giây; đủ 8 dòng ngày và CRM tiếp tục chạy.
 - Đọc lại service: Nguyễn Thiện 19/43/70 và 11 gọi đi; San 20/18/77 và 0 gọi đi.
 - Unit 760/760, typecheck, lint và production build đều sạch.
+
+### DEC-080 — tạm gỡ lương khỏi ảnh báo cáo ngày (2026-09-10)
+
+- Cả `MORNING` và `EVENING` không còn dòng “Lương”.
+- Route ảnh ngày không còn truy vấn bảng lương; view-model ngày không giữ trường lương.
+- Module Admin `/admin/salaries`, dữ liệu, policy và ảnh tổng kết tháng giữ nguyên.
+- BR-030 chuyển `SUSPENDED`; DEC-076/078 tạm bị thay trong phạm vi ảnh ngày.
+- Đã render/nhìn trực tiếp cả hai PNG 1080×1920; không còn lương, công tác phí/footer vẫn đủ.
+- Unit 753/753, typecheck, lint và production build đều sạch.

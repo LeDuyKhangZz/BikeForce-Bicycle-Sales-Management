@@ -1889,6 +1889,9 @@ header, tuyến, bảng KPI, SaleWork, MISA và hai dòng cuối.
 **Verification:** render và nhìn trực tiếp hai PNG 1080×1920 (`MORNING`, `EVENING`) bằng dữ liệu tương
 đương ảnh Ngô Thế San; cả hai hiện đủ công tác phí, lương và footer.
 
+**Follow-up:** DEC-080 sau đó tạm gỡ hẳn dòng lương khỏi ảnh ngày; ISSUE-038 vẫn giữ CLOSED như lịch sử
+của lỗi overflow đã xảy ra.
+
 ---
 
 ### ISSUE-039

@@ -2617,3 +2617,16 @@ policy RLS và test unit/RLS/render.
 **Alternatives:** Chỉ dùng SaleWork và bỏ AMIS — bị loại vì người dùng yêu cầu giữ cả hai nguồn; lấy hiệu hai snapshot lũy kế — bị loại vì dễ sai khi AMIS cập nhật muộn và không cần thiết khi API hỗ trợ khoảng ngày tùy chọn.
 **Impact:** Sửa script Report 70, khóa snapshot và lookup trong service; không đổi schema, RLS, mapping chỉ số hoặc khối số liệu tháng.
 **Status:** APPROVED
+
+## DEC-080 — Tạm ẩn lương khỏi ảnh báo cáo ngày của Sales
+
+**Date:** 2026-09-10
+**Decision:** Cả hai biến thể `MORNING` và `EVENING` của ảnh báo cáo ngày không hiển thị dòng “Lương” và
+route ngày không truy vấn `sales_monthly_salaries`. Module Admin `/admin/salaries`, dữ liệu đã nhập và
+dòng lương trên ảnh tổng kết tháng vẫn giữ nguyên.
+**Reason:** Người dùng yêu cầu trực tiếp tạm thời chưa đưa lương vào báo cáo ngày của Sales.
+**Alternatives:** Chỉ ẩn bằng CSS nhưng vẫn truy vấn lương — bị loại vì đọc dữ liệu nhạy cảm không cần
+thiết; xoá module/bảng lương — bị loại vì người dùng chỉ yêu cầu tạm ẩn khỏi báo cáo ngày.
+**Impact:** Tạm thay DEC-076 và DEC-078 trong phạm vi ảnh ngày; BR-030 chuyển `SUSPENDED`. Không đổi
+schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổng kết tháng không đổi.
+**Status:** APPROVED

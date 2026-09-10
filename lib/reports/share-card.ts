@@ -458,8 +458,6 @@ export type ShareCardModel = {
   readonly saleWorkMetrics: readonly ShareCardSaleWorkMetric[] | null;
   /** Công tác phí của tháng liền trước tháng hiện tại theo giờ Việt Nam. */
   readonly previousMonthTravelExpenseText: string;
-  /** Lương tháng liền trước tháng của báo cáo; thiếu dữ liệu hiển thị dấu `-`. */
-  readonly monthlySalaryText: string;
   readonly noteText: string | null;
 };
 
@@ -535,7 +533,6 @@ export function buildShareCardModel(
   variantOverride: ShareCardVariant | null = null,
   saleWork: ShareCardSaleWorkSource | null = null,
   previousMonthTravelExpense: number | null = null,
-  monthlySalary: number | null = null,
 ): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
@@ -585,7 +582,6 @@ export function buildShareCardModel(
     saleWorkMetrics: saleWork === null ? null : buildSaleWorkMetrics(saleWork),
     previousMonthTravelExpenseText:
       previousMonthTravelExpense === null ? '—' : formatCurrencyVND(previousMonthTravelExpense),
-    monthlySalaryText: monthlySalary === null ? '-' : formatCurrencyVND(monthlySalary),
     // `noteBudget === 0` ⇒ phần đầu thẻ đã ăn hết chỗ ⇒ bỏ hẳn khối ghi chú.
     noteText: note === null || noteBudget === 0 ? null : truncateText(note, noteBudget),
   };

@@ -719,6 +719,8 @@ Sales chỉ đọc được dòng của mình; Admin preview báo cáo Sales b�
 
 FormData → parse `month` và từng `amount__<salesId>` bằng Zod → auth → active → Admin → lấy danh sách Sales phía server → `saveMonthlySalaries()` upsert theo `(period_month, sales_id)` → `revalidatePath('/admin/salaries')` → trả `ActionResult`. Dữ liệu đọc qua `listMonthlySalaries()` với danh sách cột tường minh và giới hạn 200 dòng.
 
-### Đọc lương vào ảnh báo cáo (BR-030)
+### Lương và ảnh báo cáo (BR-030)
 
-Sau khi `getReportForShare()` xác nhận người gọi được đọc báo cáo, route gọi `getPreviousVietnamMonthPeriod(report.report_date)` để lấy ngày đầu tháng liền trước rồi mới gọi `getMonthlySalary(supabase, report.sales_id, previousSalaryPeriod)`. Ví dụ `report_date = 2026-09-10` đọc kỳ `2026-08-01`; tháng 01 lùi sang tháng 12 năm trước (DEC-078). Cùng client anon-key chịu RLS chỉ trả lương own-or-admin. Số thô đi vào view-model để format VND; `null` thành `-`. Route tổng kết tháng tiếp tục đọc đúng kỳ tháng Admin chọn.
+Route ảnh báo cáo ngày không gọi `getMonthlySalary()` và view-model ngày không chứa trường lương
+(DEC-080). Route ảnh tổng kết tháng tiếp tục đọc và hiển thị lương đúng kỳ tháng Admin chọn. Module nhập
+lương, dữ liệu và policy hiện hữu không bị xoá.
