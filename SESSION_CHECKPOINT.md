@@ -2290,3 +2290,11 @@ lần tự động kế tiếp tiếp tục exit 0.
   hoàn tất integration/RLS vì Supabase local `127.0.0.1:54322` đang tắt.
 
 **Next Exact Steps:** commit/push `main`, chờ Vercel deploy rồi mở lại ảnh Giao để xác nhận trực quan.
+
+### ISSUE-038 — lương bị cắt khỏi ảnh Sales (2026-09-10)
+
+- Admin và Sales dùng cùng `DailyReportShareCard`/route; không có nhánh phân quyền hiển thị lương.
+- Tổng chiều cao SaleWork + MISA vượt 1920px, nên PNG Sales kết thúc sau công tác phí.
+- Đã nén khoảng trắng riêng cho layout SaleWork, không giảm cỡ chữ số liệu chính.
+- Đã render và nhìn trực tiếp PNG 1080×1920 của cả `MORNING` và `EVENING`: đủ công tác phí, lương, footer.
+- Unit 757/757, typecheck, lint và production build đều sạch.

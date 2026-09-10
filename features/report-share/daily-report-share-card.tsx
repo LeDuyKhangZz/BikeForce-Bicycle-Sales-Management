@@ -736,7 +736,7 @@ function SaleWorkMetrics({ metrics }: { metrics: readonly ShareCardSaleWorkMetri
         ...NO_SHRINK,
         display: 'flex',
         flexDirection: 'column',
-        marginTop: 20,
+        marginTop: 12,
         borderTop: `2px solid ${COLOR.heading}`,
       }}
     >
@@ -747,8 +747,8 @@ function SaleWorkMetrics({ metrics }: { metrics: readonly ShareCardSaleWorkMetri
           fontWeight: 600,
           color: COLOR.heading,
           letterSpacing: 3,
-          paddingTop: 12,
-          paddingBottom: 6,
+          paddingTop: 8,
+          paddingBottom: 4,
         }}
       >
         HOẠT ĐỘNG ONLINE TRONG NGÀY
@@ -760,7 +760,7 @@ function SaleWorkMetrics({ metrics }: { metrics: readonly ShareCardSaleWorkMetri
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            minHeight: 31,
+            minHeight: 28,
             paddingLeft: 16,
             paddingRight: 16,
             backgroundColor: index % 2 === 1 ? COLOR.zebra : COLOR.background,
@@ -815,8 +815,8 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
         color: COLOR.body,
         // Tên này phải trùng `fonts[].name` truyền cho `ImageResponse`.
         fontFamily: 'Inter',
-        paddingTop: 64,
-        paddingBottom: 48,
+        paddingTop: isSaleWorkLayout ? 36 : 64,
+        paddingBottom: isSaleWorkLayout ? 28 : 48,
         paddingLeft: PAGE_PADDING,
         paddingRight: PAGE_PADDING,
       }}
@@ -835,7 +835,7 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           fontWeight: 700,
           color: COLOR.heading,
           letterSpacing: 2,
-          marginTop: 18,
+          marginTop: isSaleWorkLayout ? 12 : 18,
         }}
       >
         BIKEFORCE
@@ -848,18 +848,32 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           fontWeight: 600,
           color: COLOR.accentText,
           letterSpacing: 5,
-          marginTop: 8,
+          marginTop: isSaleWorkLayout ? 4 : 8,
         }}
       >
         {model.kindLabel}
       </div>
 
       <div
-        style={{ ...NO_SHRINK, display: 'flex', height: 3, backgroundColor: COLOR.heading, marginTop: 24 }}
+        style={{
+          ...NO_SHRINK,
+          display: 'flex',
+          height: 3,
+          backgroundColor: COLOR.heading,
+          marginTop: isSaleWorkLayout ? 14 : 24,
+        }}
       />
 
       {/* ── Ngày nghiệp vụ (BR-005) ────────────────────────────────────────── */}
-      <div style={{ ...NO_SHRINK, display: 'flex', fontSize: 36, color: COLOR.muted, marginTop: 28 }}>
+      <div
+        style={{
+          ...NO_SHRINK,
+          display: 'flex',
+          fontSize: 36,
+          color: COLOR.muted,
+          marginTop: isSaleWorkLayout ? 16 : 28,
+        }}
+      >
         {model.dateText}
       </div>
 
@@ -892,9 +906,9 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
             ...NO_SHRINK,
             display: 'flex',
             flexDirection: 'column',
-            marginTop: 26,
-            paddingTop: 22,
-            paddingBottom: 22,
+            marginTop: isSaleWorkLayout ? 16 : 26,
+            paddingTop: isSaleWorkLayout ? 14 : 22,
+            paddingBottom: isSaleWorkLayout ? 14 : 22,
             paddingLeft: 24,
             paddingRight: 24,
             backgroundColor: COLOR.zebra,
@@ -920,7 +934,14 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
       )}
 
       {/* ── Bảng chỉ tiêu ──────────────────────────────────────────────────── */}
-      <div style={{ ...NO_SHRINK, display: 'flex', flexDirection: 'column', marginTop: 30 }}>
+      <div
+        style={{
+          ...NO_SHRINK,
+          display: 'flex',
+          flexDirection: 'column',
+          marginTop: isSaleWorkLayout ? 18 : 30,
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -961,7 +982,7 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           khai. Chỗ này trước đây là cụm lũy kế tháng (DEC-068), và trước nữa là
           khối "Số khách làm việc" (DEC-056). Đừng khôi phục bản nào cũ. */}
       {model.performance !== null && (
-        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: isSaleWorkLayout ? 16 : 26 }}>
+        <div style={{ ...NO_SHRINK, display: 'flex', marginTop: isSaleWorkLayout ? 12 : 26 }}>
           {/* Vạch cam dọc: cam logo làm ĐỒ HOẠ, không mang chữ (DEC-046). */}
           <div style={{ display: 'flex', width: 10, backgroundColor: COLOR.accent }} />
           <div
@@ -970,8 +991,8 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
               flexDirection: 'column',
               flexGrow: 1,
               backgroundColor: COLOR.accentSoft,
-              paddingTop: isSaleWorkLayout ? 12 : 22,
-              paddingBottom: isSaleWorkLayout ? 12 : 24,
+              paddingTop: isSaleWorkLayout ? 8 : 22,
+              paddingBottom: isSaleWorkLayout ? 8 : 24,
               paddingLeft: 32,
               paddingRight: 32,
             }}
@@ -1072,8 +1093,8 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 24,
-          marginTop: 18,
-          paddingTop: 16,
+          marginTop: isSaleWorkLayout ? 10 : 18,
+          paddingTop: isSaleWorkLayout ? 10 : 16,
           borderTop: `1px solid ${COLOR.rule}`,
           fontSize: 26,
           color: COLOR.body,
@@ -1092,7 +1113,7 @@ export function DailyReportShareCard({ model, flameSrc }: Props) {
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 24,
-          marginTop: 14,
+          marginTop: isSaleWorkLayout ? 8 : 14,
           fontSize: 26,
           color: COLOR.body,
         }}

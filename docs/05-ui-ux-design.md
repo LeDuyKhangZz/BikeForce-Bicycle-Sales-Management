@@ -615,6 +615,10 @@ Danh sách đầy đủ những chỗ có chuyển động: nút (màu + scale 0
 Kích thước cố định **1080 × 1920**, nền **`#FFFFFF`**, render server-side bằng Satori (DEC-010).
 Component: **`features/report-share/daily-report-share-card.tsx`** (tên file `kebab-case` theo `AGENTS.md §3`; `DailyReportShareCard` là tên **component**).
 
+Khi có đủ khối SaleWork + MISA, bố cục dùng nhịp dọc gọn riêng để hai dòng bắt buộc ở đáy — **“Công
+tác phí tháng trước” và “Lương”** — cùng footer vẫn nằm trọn trong khung 1920px. Quy tắc này áp dụng cho
+cả ảnh `MORNING` và `EVENING`; Admin xem trước và Sales gửi đi dùng cùng một component/route ảnh.
+
 > ⚠ **VIẾT LẠI HOÀN TOÀN Ở PHASE 14 (2026-08-11).** Ba quyết định đổi cùng lúc — đọc trước khi tin bất kỳ dòng nào của bản Phase 6:
 >
 > | | Phase 6 (cũ) | PHASE 14 (hiện hành) |

@@ -1863,3 +1863,30 @@ mới được xác định và test thật.
 
 **Verification:** chạy lại `npm run salework:sync`; phải thấy cảnh báo tháng nhưng vẫn tiếp tục tới dòng
 AMIS `Period=0` và exit 0.
+
+---
+
+### ISSUE-038
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-10
+**Module:** ảnh báo cáo ngày 9:16
+
+**Description:** Ảnh Sales gửi đi có đủ SaleWork và MISA kết thúc ngay sau dòng “Công tác phí tháng
+trước”; dòng “Lương” đã có trong cây component nhưng nằm ngoài đáy ảnh 1920px nên bị cắt.
+
+**Expected:** ảnh đầu ngày và cuối ngày của Sales đều hiện đủ công tác phí tháng trước, lương tháng
+trước và footer.
+
+**Actual:** preview có thể dựng trường lương, nhưng PNG tải/gửi của Sales không nhìn thấy vì tổng chiều
+cao các khối cố định vượt khung.
+
+**Root Cause:** thêm dòng lương mà chưa bù lại chiều cao cho biến thể có đồng thời sáu dòng SaleWork và
+khối MISA. Admin và Sales thực tế dùng cùng component/route; lỗi là overflow bố cục, không phải quyền.
+
+**Fix:** giữ nguyên cỡ chữ số liệu chính, giảm khoảng trắng dọc riêng khi `saleWorkMetrics !== null` ở
+header, tuyến, bảng KPI, SaleWork, MISA và hai dòng cuối.
+
+**Verification:** render và nhìn trực tiếp hai PNG 1080×1920 (`MORNING`, `EVENING`) bằng dữ liệu tương
+đương ảnh Ngô Thế San; cả hai hiện đủ công tác phí, lương và footer.
