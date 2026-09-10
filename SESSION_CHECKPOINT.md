@@ -2216,3 +2216,46 @@ tiếp tục dùng `npm run reports:sync` hoặc `npm run salework:sync` như hi
   không ghi toàn lệnh là PASS. Browser tích hợp không khả dụng.
 
 **Next Exact Steps:** commit/push để Vercel deploy, rồi kiểm trực quan đúng link production người dùng gửi.
+
+## CHECKPOINT 2026-09-08 — Bản thử style báo cáo Telesale, chỉ local
+
+- Chỉ đổi style canvas Telesale; dữ liệu, mapping và công thức giữ nguyên.
+- Nền Trung Thu không chữ/số ở `public/images/salework-mid-autumn-background.png`, tạo bằng Imagegen từ
+  ảnh tham chiếu của người dùng.
+- Canvas logic 540×960, scale 2 thành PNG 1080×1920; API và nút xuất Admin dùng chung lớp vẽ/asset.
+- `next.config.ts` trace `public/fonts/**` và `public/images/**` cho `/api/salework/report-image`.
+- PNG mẫu thật đã nhìn: hai card rõ, đủ sáu hoạt động, ba chỉ số AMIS, footer không bị cắt/chồng.
+- Typecheck/lint sạch; unit 734/734; build 27 route thành công.
+- Theo yêu cầu: **không commit, không push, không deploy**. Working tree cố ý còn thay đổi local.
+
+**Next Exact Steps:** chờ phản hồi thẩm mỹ trên PNG mẫu; không đưa lên production nếu chưa được yêu cầu.
+
+## CHECKPOINT 2026-09-10 — SaleWork hỗ trợ tài khoản `(OFF)`
+
+- `normalizeSaleWorkAccountName()` bỏ tiền tố `(OFF)` không phân biệt hoa thường cho mọi tài khoản.
+- Script dùng tên chuẩn khi kiểm đủ tập và UPSERT, nên ngày nghỉ/ngày làm vẫn là cùng một dòng dữ liệu.
+- Bộ chọn đọc `.is-checked`/`aria-checked` ở checkbox con, tránh click lại làm bỏ chọn tài khoản đã có.
+- Đồng bộ thật exit 0: 8/8 tài khoản SaleWork đã ghi Supabase; CRM Report 70 cập nhật 2 dòng.
+- JSON đối soát có đủ tám tài khoản với số hoạt động trong ngày, không còn toàn số 0.
+- Unit 738/738, typecheck, lint và production build 27 route đã chạy sạch; chưa commit/push/deploy.
+
+**Next Exact Steps:** mở preview một Sales đang online và Giao đang `(OFF)` để kiểm số hiển thị; xác nhận
+lần tự động kế tiếp tiếp tục exit 0.
+## CHECKPOINT 2026-09-10 — Lương theo nhân viên/tháng
+
+- Mục “Lương” nằm ngay dưới “Công tác phí” trong sidebar Admin; bottom nav mobile không đổi.
+- `/admin/salaries` cho chọn tháng, nhập/sửa lương VND cho từng Sales và xem tổng tháng.
+- Bảng `sales_monthly_salaries` tách biệt công tác phí, force RLS, Admin-only read/write, không cấp delete.
+- Action kiểm Zod trước auth và chỉ ghi tập Sales lấy lại từ server.
+- Đã chạy typecheck/lint sạch, toàn bộ unit 743/743 và production build thành công (28 route, có `/admin/salaries`); đã thêm RLS/E2E nhưng chưa chạy do local Supabase/app chưa sẵn sàng.
+
+**Next Exact Steps:** áp migration `20260910090000_sales_monthly_salaries.sql` lên Supabase đích trước khi deploy code; sau đó chạy RLS và E2E ba viewport, kiểm trực quan trang `/admin/salaries`.
+
+## CHECKPOINT 2026-09-10 — Lương trên báo cáo Sales
+
+- Ảnh báo cáo có dòng “Lương” dưới công tác phí, áp dụng cả biến thể sáng và chiều.
+- Kỳ lương là tháng chứa `report_date`; thiếu dữ liệu hiển thị đúng `-`, số 0 hiển thị `0 ₫`.
+- Migration `20260910100000_salaries_select_own.sql` chỉ mở SELECT own-or-admin; ghi vẫn Admin-only.
+- Typecheck/lint sạch; toàn bộ unit 746/746; production build thành công với 28 route. RLS/E2E chưa chạy vì local Supabase/Docker chưa hoạt động.
+
+**Next Exact Steps:** áp cả hai migration lương theo thứ tự, chạy RLS/E2E rồi xem PNG 1080×1920 để xác nhận footer không bị chèn.

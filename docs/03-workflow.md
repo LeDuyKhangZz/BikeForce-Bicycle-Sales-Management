@@ -1108,3 +1108,8 @@ lưu là `NULL` (“chưa nhập”), không tự suy thành 0.
 Khi dựng ảnh báo cáo, route lấy tháng hiện tại bằng `getVietnamCurrentMonth()`, lùi một tháng bằng
 `shiftVietnamMonth()`, rồi đọc đúng `(tháng trước, sales_id của báo cáo)`. Ví dụ ngày 07/09/2026 đọc
 kỳ `2026-08-01`. Cả ảnh đầu ngày và cuối ngày đặt dòng này cuối nội dung, ngay trên footer.
+## Luồng Admin nhập lương tháng (BR-029, DEC-075)
+
+`/admin/salaries` → chọn tháng → nhập một số tiền VND cho từng Sales → xem tổng → bấm “Lưu lương”. Server Action kiểm Zod trước, rồi auth → active → role Admin → đọc lại danh sách Sales từ server → upsert theo `(period_month, sales_id)` → revalidate trang. Ô trống ghi `NULL` để Admin có thể xoá giá trị nhập nhầm. Sales bị chặn ở route và RLS.
+
+Khi dựng ảnh báo cáo, route lấy lương của chính Sales theo tháng chứa `report_date`. Có số thì format VND; `NULL` hiển thị `-`. Sales chỉ được RLS cho đọc dòng của chính mình, không được mở màn quản trị hoặc ghi dữ liệu.

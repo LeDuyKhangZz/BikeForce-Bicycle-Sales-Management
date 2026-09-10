@@ -277,7 +277,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await expect(page.getByText('Nhấn giữ vào ảnh')).toHaveCount(0);
   });
 
-  test('ảnh báo cáo render trọn vẹn sau khi thêm dòng công tác phí', async ({ page }, testInfo) => {
+  test('ảnh báo cáo render trọn vẹn sau khi thêm dòng công tác phí và lương', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop-1440', 'Một ảnh PNG là đủ cho visual QA.');
 
     await signIn(page, E2E_ADMIN_EMAIL);
@@ -286,6 +286,12 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await salesRow.locator('input[name^="amount__"]').fill('3500000');
     await page.getByRole('button', { name: /Lưu công tác phí/ }).click();
     await expect(page.getByText('Đã lưu công tác phí tháng.')).toBeVisible({ timeout: 30_000 });
+
+    await page.goto('/admin/salaries?month=2026-09');
+    const salaryRow = page.locator('form > ul > li').filter({ hasText: E2E_DONE_SALES_NAME });
+    await salaryRow.locator('input[name^="amount__"]').fill('15000000');
+    await page.getByRole('button', { name: /Lưu lương/ }).click();
+    await expect(page.getByText('Đã lưu lương tháng.')).toBeVisible({ timeout: 30_000 });
 
     await page.context().clearCookies();
     await signIn(page, E2E_DONE_SALES_EMAIL);
@@ -299,7 +305,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     const response = await page.request.get(source);
     expect(response.status()).toBe(200);
     const image = await response.body();
-    await testInfo.attach('bao-cao-cong-tac-phi.png', {
+    await testInfo.attach('bao-cao-cong-tac-phi-va-luong.png', {
       body: image,
       contentType: 'image/png',
     });

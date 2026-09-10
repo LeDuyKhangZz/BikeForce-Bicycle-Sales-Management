@@ -4,12 +4,18 @@ import { Download, ImageIcon } from 'lucide-react';
 
 import type { SaleWorkReport } from '@/services/salework';
 
-import { CARD_HEIGHT, CARD_WIDTH, drawReportCard, slugifyFilename } from './salework-report-card';
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  drawReportCard,
+  REPORT_BACKGROUND_PATH,
+  slugifyFilename,
+} from './salework-report-card';
 
 const BUTTON_CLASS =
   'inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-heading transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50';
 
-function buildReportCanvas(report: SaleWorkReport): HTMLCanvasElement {
+async function buildReportCanvas(report: SaleWorkReport): Promise<HTMLCanvasElement> {
   const canvas = document.createElement('canvas');
   const scale = 2; // xuất nét gấp đôi (retina)
   canvas.width = CARD_WIDTH * scale;
@@ -18,7 +24,10 @@ function buildReportCanvas(report: SaleWorkReport): HTMLCanvasElement {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Không thể khởi tạo canvas 2D context.');
   ctx.scale(scale, scale);
-  drawReportCard(ctx, report);
+  const background = new window.Image();
+  background.src = REPORT_BACKGROUND_PATH;
+  await background.decode();
+  drawReportCard(ctx, report, background);
   return canvas;
 }
 
@@ -36,8 +45,8 @@ function downloadCanvasAsPng(canvas: HTMLCanvasElement, filename: string): void 
   }, 'image/png');
 }
 
-function exportReportImage(report: SaleWorkReport): void {
-  const canvas = buildReportCanvas(report);
+async function exportReportImage(report: SaleWorkReport): Promise<void> {
+  const canvas = await buildReportCanvas(report);
   const date = new Date().toISOString().slice(0, 10);
   downloadCanvasAsPng(canvas, `bao-cao-${slugifyFilename(report.accountName)}-${date}.png`);
 }
@@ -48,7 +57,7 @@ export function AccountExportButton({ report }: { report: SaleWorkReport }) {
     <button
       type="button"
       className={BUTTON_CLASS}
-      onClick={() => exportReportImage(report)}
+      onClick={() => void exportReportImage(report)}
       aria-label={`Xuất ảnh báo cáo cho ${report.accountName}`}
     >
       <ImageIcon className="h-4 w-4" aria-hidden="true" />
@@ -61,7 +70,7 @@ export function AccountExportButton({ report }: { report: SaleWorkReport }) {
 export function ExportReportButton({ reports }: { reports: SaleWorkReport[] }) {
   const handleExportAll = () => {
     reports.forEach((report, index) => {
-      setTimeout(() => exportReportImage(report), index * 350);
+      setTimeout(() => void exportReportImage(report), index * 350);
     });
   };
 

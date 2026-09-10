@@ -458,6 +458,8 @@ export type ShareCardModel = {
   readonly saleWorkMetrics: readonly ShareCardSaleWorkMetric[] | null;
   /** Công tác phí của tháng liền trước tháng hiện tại theo giờ Việt Nam. */
   readonly previousMonthTravelExpenseText: string;
+  /** Lương của tháng chứa ngày báo cáo; thiếu dữ liệu hiển thị dấu `-`. */
+  readonly monthlySalaryText: string;
   readonly noteText: string | null;
 };
 
@@ -533,6 +535,7 @@ export function buildShareCardModel(
   variantOverride: ShareCardVariant | null = null,
   saleWork: ShareCardSaleWorkSource | null = null,
   previousMonthTravelExpense: number | null = null,
+  monthlySalary: number | null = null,
 ): ShareCardModel {
   const metrics = KPI_METRIC_ROWS.map((row): ShareCardMetricRow => {
     const target = source[row.targetColumn];
@@ -578,10 +581,11 @@ export function buildShareCardModel(
     metrics,
     // Cụm này có ở CẢ HAI biến thể: số AMIS là luỹ kế tháng, không phụ thuộc
     // việc hôm nay Sales đã nhập thực đạt hay chưa.
-    performance: performance === null ? null : buildPerformance(performance),
+    performance: performance === null ? null : buildShareCardPerformance(performance),
     saleWorkMetrics: saleWork === null ? null : buildSaleWorkMetrics(saleWork),
     previousMonthTravelExpenseText:
       previousMonthTravelExpense === null ? '—' : formatCurrencyVND(previousMonthTravelExpense),
+    monthlySalaryText: monthlySalary === null ? '-' : formatCurrencyVND(monthlySalary),
     // `noteBudget === 0` ⇒ phần đầu thẻ đã ăn hết chỗ ⇒ bỏ hẳn khối ghi chú.
     noteText: note === null || noteBudget === 0 ? null : truncateText(note, noteBudget),
   };
@@ -731,7 +735,7 @@ function formatOrderCount(orderCount: number | null): string {
   return `${formatThousands(orderCount)} đơn`;
 }
 
-function buildPerformance(source: ShareCardPerformanceSource): ShareCardPerformance {
+export function buildShareCardPerformance(source: ShareCardPerformanceSource): ShareCardPerformance {
   const syncedDate = source.syncedAt === null ? null : vietnamDatePart(source.syncedAt);
   const averageOrderValue = calculateAverageOrderValue(
     source.amisSalesActual,

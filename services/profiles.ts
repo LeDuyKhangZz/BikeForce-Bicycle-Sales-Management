@@ -222,6 +222,26 @@ export type SalesDailyPreviewOption = SalesOption & {
   daily_reports: DailyPreviewReport[];
 };
 
+export type MonthlySummarySales = SalesOption & { amis_employee_name: string | null };
+
+export async function getMonthlySummarySales(
+  supabase: SupabaseClient<Database>,
+  salesId: string,
+): Promise<MonthlySummarySales | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, employee_code, is_active, amis_employee_name')
+    .eq('id', salesId)
+    .eq('role', 'SALES')
+    .maybeSingle<MonthlySummarySales>();
+
+  if (error) {
+    console.error('[getMonthlySummarySales]', error.code, error.message);
+    return null;
+  }
+  return data;
+}
+
 /**
  * Danh sách nhân viên kèm báo cáo gần nhất để Admin chọn xem trước.
  *

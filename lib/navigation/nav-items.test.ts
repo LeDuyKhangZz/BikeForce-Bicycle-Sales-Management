@@ -167,4 +167,26 @@ describe('activeNavKey — module bổ sung trên sidebar Admin', () => {
     expect(activeNavKey(allItems, '/admin/travel-expenses')).toBe('ADMIN_TRAVEL_EXPENSES');
     expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_TRAVEL_EXPENSES')).toBe(false);
   });
+
+  it('Lương nằm ngay dưới Công tác phí và làm sáng đúng mục riêng', () => {
+    const allItems = [...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS];
+    const travelExpenseIndex = ADMIN_SIDEBAR_ITEMS.findIndex(
+      (item) => item.key === 'ADMIN_TRAVEL_EXPENSES',
+    );
+    expect(ADMIN_SIDEBAR_ITEMS[travelExpenseIndex + 1]?.key).toBe('ADMIN_SALARIES');
+    expect(activeNavKey(allItems, '/admin/salaries')).toBe('ADMIN_SALARIES');
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_SALARIES')).toBe(false);
+  });
+
+  it('Tổng kết tháng nằm ngay dưới Lương và làm sáng đúng mục riêng', () => {
+    const allItems = [...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS];
+    const salaryIndex = ADMIN_SIDEBAR_ITEMS.findIndex(
+      (item) => item.key === 'ADMIN_SALARIES',
+    );
+    expect(ADMIN_SIDEBAR_ITEMS[salaryIndex + 1]?.key).toBe('ADMIN_MONTHLY_SUMMARIES');
+    expect(activeNavKey(allItems, '/admin/monthly-summaries')).toBe(
+      'ADMIN_MONTHLY_SUMMARIES',
+    );
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_MONTHLY_SUMMARIES')).toBe(false);
+  });
 });

@@ -47,3 +47,12 @@ export const TRAVEL_EXPENSE_MESSAGES = {
   FORBIDDEN: 'Bạn không có quyền nhập công tác phí.',
   FAILED: 'Không lưu được lúc này. Vui lòng thử lại.',
 } as const;
+
+export const SALARY_MESSAGES = {
+  SAVED: 'Đã lưu lương tháng.',
+  VALIDATION: 'Vui lòng kiểm tra lại các ô được đánh dấu.',
+  INVALID_MONTH: 'Tháng không hợp lệ.',
+  NO_SALES: 'Chưa có nhân viên Sales nào để nhập lương.',
+  FORBIDDEN: 'Bạn không có quyền nhập lương.',
+  FAILED: 'Không lưu được lúc này. Vui lòng thử lại.',
+} as const;

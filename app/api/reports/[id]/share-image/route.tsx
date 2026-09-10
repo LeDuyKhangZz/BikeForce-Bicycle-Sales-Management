@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getMonthlyTargets } from '@/services/monthly-targets';
 import { getSessionProfile } from '@/services/profiles';
 import { getSaleWorkReportByAccountName } from '@/services/salework';
+import { getMonthlySalary } from '@/services/salaries';
 import { getMonthlyTravelExpense } from '@/services/travel-expenses';
 import {
   getAmisMetricsForShare,
@@ -249,7 +250,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    * ─────────────────────────────────────────────────────────────────────────
    *  CỤM "TÌNH TRẠNG THỰC HIỆN" — PHASE 19, DEC-070
    * ─────────────────────────────────────────────────────────────────────────
-   *  BỐN truy vấn thêm:
+   *  NĂM truy vấn thêm:
    *
    *    1. `listMonthToDateMetrics` → cộng ra `targetRevenue`, nay chỉ còn là
    *       ĐƯỜNG LÙI khi Admin chưa giao chỉ tiêu tháng (DEC-071).
@@ -259,8 +260,9 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    *       `target_amount` của AMIS lẫn tổng cam kết ngày ở (1).
    *    4. `getMonthlyTravelExpense` → công tác phí của Sales ở tháng liền trước
    *       tháng hiện tại theo giờ Việt Nam (BR-028).
+   *    5. `getMonthlySalary` → lương của Sales trong tháng chứa ngày báo cáo (BR-030).
    *
-   *  Cả bốn đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
+   *  Cả năm đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
    *  người khác và Admin xuất ảnh hộ Sales vẫn đúng (BR-022).
    *
    *  Thiếu (1) HOẶC (2) ⇒ bỏ hẳn cụm. In một nửa số liệu lên tấm ảnh gửi cấp
@@ -286,7 +288,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
   const isCurrentSaleWorkDate = report.report_date === getVietnamToday();
   const previousMonth = shiftVietnamMonth(getVietnamCurrentMonth(), -1);
   const previousExpensePeriod = previousMonth === null ? null : `${previousMonth}-01`;
-  const [amis, monthlyTargets, saleWorkReport, previousMonthTravelExpense] = await Promise.all([
+  const [amis, monthlyTargets, saleWorkReport, previousMonthTravelExpense, monthlySalary] = await Promise.all([
     getAmisMetricsForShare(supabase, report.sales.amis_employee_name, periodMonth),
     getMonthlyTargets(supabase, report.sales_id, periodMonth),
     saleWorkAccountName === null || !isCurrentSaleWorkDate
@@ -295,6 +297,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
     previousExpensePeriod === null
       ? Promise.resolve(null)
       : getMonthlyTravelExpense(supabase, report.sales_id, previousExpensePeriod),
+    getMonthlySalary(supabase, report.sales_id, periodMonth),
   ]);
 
   const performance =
@@ -333,6 +336,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
     variant,
     saleWork,
     previousMonthTravelExpense,
+    monthlySalary,
   );
   const fileName = shareImageFileName(
     report.sales.full_name,

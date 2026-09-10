@@ -2544,6 +2544,15 @@ mục. Module phụ SaleWork chỉ nằm trong sidebar desktop.
 **Impact:** `ADMIN_NAV_ITEMS` có sáu mục; test khóa trần 375px.
 **Status:** APPROVED
 
+## DEC-077 — Tổng kết tháng dùng dữ liệu nguồn đã lọc theo tháng, không dùng báo cáo ngày tự nhập
+
+**Date:** 2026-09-10
+**Decision:** Thêm module Admin `/admin/monthly-summaries`, ưu tiên Sales đang hoạt động và cho xem ảnh từng người. AMIS đọc đúng `period_month`; SaleWork được sync/lưu snapshot riêng theo tháng. Ảnh bỏ toàn bộ tuyến, cam kết, thực đạt và ghi chú từ `daily_reports`; công tác phí và lương lấy đúng tháng đang chọn.
+**Reason:** Người dùng yêu cầu bản cộng dồn đầu-tháng đến cuối-tháng và xác nhận cả SaleWork lẫn AMIS đều có bộ lọc tháng. Dùng snapshot hiện tại hoặc cộng báo cáo ngày sẽ sai kỳ và đưa lại phần tự nhập đã bị yêu cầu bỏ.
+**Alternatives:** Dùng snapshot SaleWork mới nhất; cộng `daily_reports`; giữ nguyên mẫu báo cáo ngày — đều bị loại vì không đảm bảo đúng tháng hoặc sai nội dung.
+**Impact:** BR-031; thêm route trang, route ảnh, view-model/card, điều hướng, snapshot SaleWork theo tháng và test liên quan; không mở quyền ghi mới.
+**Status:** APPROVED
+
 ## DEC-073 — Công tác phí là module Admin theo nhân viên/tháng
 
 **Date:** 2026-09-07
@@ -2572,4 +2581,21 @@ module vừa tạo.
 sang `daily_reports` — trùng dữ liệu và có thể lệch khi Admin sửa.
 **Impact:** BR-028; thêm một truy vấn select hẹp trong share-image, trường view-model, dòng Satori,
 policy RLS và test unit/RLS/render.
+**Status:** APPROVED
+## DEC-075 — Lương là module Admin theo nhân viên/tháng
+
+**Date:** 2026-09-10
+**Decision:** Thêm bảng `sales_monthly_salaries`, route `/admin/salaries` và mục “Lương” ngay dưới “Công tác phí” ở sidebar trái. Mỗi `(period_month, sales_id)` có một `amount` nguyên VND; ô trống là `NULL`. Ban đầu chỉ Admin được đọc/ghi và không cấp xoá; DEC-076 sau đó mở SELECT tối thiểu cho Sales đọc dòng của chính mình để dựng ảnh báo cáo.
+**Reason:** Người dùng yêu cầu trực tiếp một nút “Lương” và cách nhập giống Công tác phí.
+**Alternatives:** Thêm cột lương vào bảng công tác phí — bị loại vì trộn hai khái niệm nghiệp vụ và quyền đọc khác nhau; tái sử dụng một route với loại khoản — bị loại vì làm phức tạp quyền và giao diện cho yêu cầu hiện tại.
+**Impact:** BR-029; thêm migration, generated database type, service, validation, Server Action, form, route, nav và unit/RLS/E2E. Bottom nav mobile không đổi.
+**Status:** APPROVED
+
+## DEC-076 — Dòng lương trên ảnh báo cáo Sales
+
+**Date:** 2026-09-10
+**Decision:** Cả hai biến thể ảnh báo cáo Sales thêm dòng “Lương”, lấy `sales_monthly_salaries.amount` của chính Sales trong tháng chứa `report_date`. Thiếu dữ liệu hiển thị đúng dấu `-`; `0` là giá trị thật. Policy đọc lương đổi từ Admin-only thành own-or-admin, mọi quyền ghi vẫn Admin-only.
+**Reason:** Người dùng yêu cầu trực tiếp bổ sung lương vào báo cáo của Sales và quy định cách hiển thị khi chưa có số liệu.
+**Alternatives:** Dùng tháng trước như công tác phí — không được chọn vì người dùng không yêu cầu độ trễ này và lương đã gắn kỳ tháng rõ ràng; mở đọc toàn bảng cho Sales — bị loại vì làm lộ dữ liệu nhạy cảm của người khác.
+**Impact:** BR-030; thêm migration policy, service getter, truy vấn trong share-image, trường view-model, dòng Satori và unit/RLS/E2E.
 **Status:** APPROVED

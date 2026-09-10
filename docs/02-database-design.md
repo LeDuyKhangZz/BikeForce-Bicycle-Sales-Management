@@ -1307,3 +1307,14 @@ RLS được bật và force ngay trong migration. Admin đọc/ghi toàn bộ; 
 không có quyền. Index
 `(period_month desc)` phục vụ màn quản trị theo tháng. Migration kế tiếp thu hồi toàn bộ grant mặc
 định của `service_role`, giữ đúng DEC-005.
+## Bảng `sales_monthly_salaries` — lương tháng (DEC-075)
+
+- Khoá chính `(period_month, sales_id)`; `period_month` luôn là ngày đầu tháng.
+- `amount bigint null` lưu số VND nguyên, không âm; `NULL` nghĩa là chưa nhập.
+- `sales_id` và `updated_by` tham chiếu `profiles`; có `updated_at` và trigger dùng chung `set_updated_at()`.
+- Bật và ép buộc RLS. Admin được `SELECT`, `INSERT`, `UPDATE`; Sales chỉ `SELECT` dòng có `sales_id = auth.uid()` để dựng ảnh báo cáo; không cấp `DELETE` và thu hồi toàn bộ quyền của `anon`, `service_role` (DEC-076).
+- Index `sales_monthly_salaries_period_idx (period_month desc)` phục vụ màn hình theo kỳ.
+
+## Bổ sung 2026-09-10 — snapshot SaleWork theo tháng
+
+Không thêm bảng public mới. Bảng tích hợp `salework_reports` lưu snapshot tháng bằng khoá `account_name = __SALEWORK_MONTH__:<YYYY-MM-01>:<account-name>` để không ghi đè snapshot ngày hiện hữu. AMIS tiếp tục dùng khoá kỳ chuẩn `amis_employee_metrics.period_month = YYYY-MM-01`.

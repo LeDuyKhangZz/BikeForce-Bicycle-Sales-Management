@@ -397,11 +397,15 @@ Ba file này **không** đi vào client bundle: giao diện web nạp Inter qua 
 
 ```ts
 outputFileTracingIncludes: {
-  '/api/reports/[id]/share-image': ['./public/fonts/**'],
+  '/api/reports/[id]/share-image': ['./public/fonts/**', './public/images/**'],
+  '/api/salework/report-image': ['./public/fonts/**', './public/images/**'],
 },
 ```
 
-Đường dẫn font được ghép lúc chạy bằng `join(process.cwd(), 'public', 'fonts', …)`, nên bộ dò phụ thuộc của Vercel **không nhìn thấy nó**. Thiếu khai báo này thì `next build` vẫn xanh, còn hàm trên Vercel ném `ENOENT` ngay request đầu tiên — một lỗi chỉ xuất hiện sau khi deploy. Nếu sau này thêm route nào khác cũng đọc file từ đĩa, phải thêm entry tương ứng.
+Đường dẫn font và ảnh nền được ghép lúc chạy bằng `join(process.cwd(), 'public', …)`, nên bộ dò phụ thuộc
+của Vercel **không nhìn thấy chúng**. Thiếu khai báo này thì `next build` vẫn xanh, còn hàm trên Vercel
+ném `ENOENT` ngay request đầu tiên — một lỗi chỉ xuất hiện sau khi deploy. Nếu sau này thêm route nào khác
+cũng đọc file từ đĩa, phải thêm entry tương ứng.
 
 ---
 

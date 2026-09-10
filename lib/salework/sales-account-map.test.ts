@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getSaleWorkAccountName,
+  normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
 } from '@/lib/salework/sales-account-map';
 
@@ -28,5 +29,16 @@ describe('getSaleWorkAccountName', () => {
   it('đưa Abraham Khải Hcm vào danh sách tài khoản cần đồng bộ', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(6);
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
+  });
+});
+
+describe('normalizeSaleWorkAccountName', () => {
+  it.each([
+    ['Giao - Kế Toán bán hàng', 'Giao - Kế Toán bán hàng'],
+    ['(OFF)Giao - Kế Toán bán hàng', 'Giao - Kế Toán bán hàng'],
+    ['(off) Abraham San Miền Trung ', 'Abraham San Miền Trung'],
+    ['  (OFF)   Abraham Khải Hcm  ', 'Abraham Khải Hcm'],
+  ])('chuẩn hoá %s thành %s', (source, expected) => {
+    expect(normalizeSaleWorkAccountName(source)).toBe(expected);
   });
 });

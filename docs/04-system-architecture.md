@@ -672,3 +672,8 @@ Server Action nằm trong `features/admin-travel-expenses/`; Zod/field-name ở
 Supabase server client chịu RLS. Không dùng service-role cho dữ liệu công tác phí.
 Route share-image gọi `getMonthlyTravelExpense()` song song với các nguồn tháng khác và truyền số vào
 `buildShareCardModel()`; view-model format VND, component ảnh chỉ render dòng cuối.
+## Module lương tháng (DEC-075)
+
+Route Server Component `app/(admin)/admin/salaries/page.tsx` điều phối dữ liệu. Form và Server Action nằm trong `features/admin-salaries/`; Zod/field-name ở `lib/validation/salaries.ts`; toàn bộ PostgREST nằm trong `services/salaries.ts` và nhận Supabase server client chịu RLS. Module dùng bảng riêng, không trộn dữ liệu lương với công tác phí hay KPI.
+
+Route share-image gọi `getMonthlySalary()` sau khi đọc báo cáo qua RLS, rồi truyền số thô vào `buildShareCardModel()`. View-model chịu trách nhiệm format VND hoặc `-`; component Satori chỉ render dòng “Lương”.

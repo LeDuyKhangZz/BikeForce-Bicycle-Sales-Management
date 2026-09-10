@@ -1294,6 +1294,15 @@ không cho biết đang ở dòng của ai.
 - Giá trị chưa đồng bộ dùng `—`; không tạo input vì đây là dữ liệu hệ thống.
 - Khi có khối này, bảng KPI và cụm MISA dùng nhịp gọn hơn nhưng vẫn giữ đủ chữ, số và footer trong ảnh
   1080×1920. Hai biến thể đã được render PNG thật để kiểm tra không cắt/chồng nội dung.
+
+### Style ảnh báo cáo Telesale
+
+- Ảnh Telesale dùng khổ chuẩn 9:16, đầu ra 1080×1920. Dữ liệu và công thức hiện hữu giữ nguyên; thay đổi
+  chỉ nằm ở lớp trình bày canvas dùng chung cho nút xuất Admin và route `/api/salework/report-image`.
+- Nền Trung Thu là bitmap không chứa chữ/số tại `public/images/salework-mid-autumn-background.png`.
+  Tên, ngày và số liệu vẫn được canvas vẽ chính xác lên hai card kem, không giao cho ảnh nền sinh chữ.
+- Bố cục gồm header nhận diện/ngày, tình trạng tháng, sáu hoạt động trong ngày, ba chỉ số đơn hàng và
+  footer. Màu xanh đêm–vàng–cam bám ảnh tham chiếu; card dữ liệu giữ tương phản cao và không che trang trí.
 ## Màn “Công tác phí” (DEC-073)
 
 - Mục “Công tác phí” có icon `ReceiptText`, nằm ở sidebar trái desktop theo yêu cầu; không chen thêm
@@ -1304,3 +1313,9 @@ không cho biết đang ở dòng của ai.
   thị “Chưa nhập”; lỗi nằm ngay dưới ô với `role="alert"`.
 - Thẻ ảnh Sales có dòng cuối `Công tác phí tháng trước` ngay trên footer, giá trị canh phải, đậm và
   không xuống dòng. Thiếu dữ liệu hiện `—`; áp dụng cho cả bản đầu ngày và cuối ngày.
+## Màn “Lương” (DEC-075)
+
+- Mục “Lương” dùng icon `Banknote`, nằm ngay dưới “Công tác phí” trong sidebar trái desktop; không thêm vào bottom nav mobile vốn đã chạm giới hạn.
+- Route `/admin/salaries` giữ cùng cấu trúc với màn Công tác phí: chuyển tháng, một nhân viên mỗi hàng, ô VND có label luôn hiển thị, helper format tiền, tổng tháng và nút “Lưu lương”.
+- Input giữ tối thiểu 48px, bàn phím số, lỗi ngay dưới field; các nút chuyển tháng và lưu đáp ứng touch target tối thiểu 44px.
+- Cả hai ảnh báo cáo Sales có dòng “Lương” dưới dòng công tác phí. Giá trị canh phải, đậm; chưa có dữ liệu hiển thị dấu `-` theo yêu cầu, không ẩn cả dòng.

@@ -1023,6 +1023,9 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Route mẫu `/admin/salework` tự kiểm tra `requireRole('ADMIN')`
 - [x] Không thêm mục mới vào bottom nav Admin
 - [x] Ảnh xuất SaleWork tách cột `NỘI DUNG` và cột số `CHỈ TIÊU`; doanh số hiện đúng `target_amount`
+- [x] Bản thử style Trung Thu 9:16 chỉ đổi canvas/nền; giữ nguyên dữ liệu, mapping và công thức Telesale
+- [x] Nền không chứa chữ/số; route API và nút xuất Admin dùng chung đúng một lớp vẽ
+- [x] PNG mẫu 1080×1920 đã render và nhìn thật; hai card, sáu dòng, footer không chồng/cắt
 - [x] Dashboard doanh số lấy `THỐNG ĐẠT GROUP`, nhận tháng/năm và gửi đúng `Period=13/14/0`
 - [x] Abraham nối đúng dòng AMIS `Kế Toán Bán Hàng`; giá trị không áp dụng giữ là `—`
 - [x] Script Report 70 lấy thống kê cuộc gọi theo nhân viên, nhận tháng/năm và lưu JSON chuẩn hóa
@@ -1086,6 +1089,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Chạy đồng bộ thật: **7/7 tài khoản** đã ghi Supabase; Bà Rịa có dữ liệu thật, không dùng số 0 giả
 - [x] Chạy lại đồng bộ thật: đủ **8/8 tài khoản** đã ghi Supabase, gồm `Abraham Khải Hcm`
 - [x] Script đọc đủ các trang của bảng SaleWork 5 dòng/trang và luôn đóng browser context khi lỗi
+- [x] Tên SaleWork có/không có tiền tố `(OFF)` được chuẩn hóa chung; bộ chọn nhận đúng checkbox con và không tự bỏ chọn tài khoản
 - [x] Unit ánh xạ 9/9 · toàn bộ unit 734/734 · typecheck · lint · production build 27 route
 - [x] Tiêu đề sáu chỉ số trên báo cáo Sales là **HOẠT ĐỘNG ONLINE TRONG NGÀY**
 - [x] Bản đầu ngày và cuối ngày hiển thị đủ 6 dòng Zalo/cuộc gọi, dữ liệu thiếu hiện `—`
@@ -1127,3 +1131,14 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Báo cáo Sales có dòng cuối “Công tác phí tháng trước”, đọc động từ kỳ trước theo giờ VN
 - [x] Sales chỉ đọc khoản của mình; số VND/0/null có unit test, RLS own-or-admin có test
 - [x] Render PNG thật 1080×1920: hiện `3.500.000 ₫`, dòng mới và footer đều nằm trọn
+## Lương theo nhân viên/tháng — BR-029 / DEC-075 (2026-09-10)
+
+- [x] Nút “Lương” nằm ngay dưới “Công tác phí” trong sidebar Admin
+- [x] Route `/admin/salaries` cho chọn tháng và nhập VND theo từng Sales
+- [x] Dữ liệu lưu độc lập bằng khoá `(period_month, sales_id)` và cho phép sửa/để trống
+- [x] Force RLS: Admin đọc/ghi; Sales chỉ đọc own để dựng ảnh; anon không đọc; không cấp xoá
+- [x] Zod → auth → active → role → danh sách Sales server → service → revalidate
+- [x] Unit validation và navigation đã thêm
+- [x] RLS và E2E đã thêm; chờ môi trường local Supabase/app để chạy
+- [x] Ảnh báo cáo Sales có dòng “Lương”; thiếu dữ liệu hiện `-`, số 0 vẫn format VND
+- [x] Sales chỉ được RLS cho đọc lương của chính mình để dựng ảnh

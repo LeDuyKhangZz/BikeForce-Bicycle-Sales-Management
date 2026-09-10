@@ -3390,3 +3390,50 @@ khả dụng trong phiên.
 Người dùng làm rõ “toàn màn hình” nghĩa là thấy **đủ toàn bộ khổ báo cáo trong một tầm nhìn**, không phải
 phóng ảnh lên 1080px rồi cuộn. Lớp phủ đã đổi sang layout cao đúng `100dvh`; vùng ảnh dùng `max-height` và
 `max-width` đồng thời với `object-contain`, nên tự co vừa màn hình và giữ nguyên tỷ lệ ở mọi viewport.
+
+## Entry 046 — 2026-09-08 — Bản thử style Trung Thu cho báo cáo Telesale
+
+Theo yêu cầu trực tiếp, chỉ đổi style ảnh Telesale và giữ nguyên toàn bộ dữ liệu/logic hiện hữu. Dùng
+Imagegen tạo nền 9:16 không chữ/số từ ảnh tham chiếu, lưu thành
+`public/images/salework-mid-autumn-background.png`. Canvas chung đổi sang 540×960 và vẫn xuất scale 2 thành
+1080×1920; tên/ngày/bảng tháng/sáu chỉ số SaleWork/ba chỉ số AMIS tiếp tục được vẽ bằng code chính xác.
+
+Cả nút xuất trong `/admin/salework` và `/api/salework/report-image` nạp cùng asset/lớp vẽ. Route tracing
+được bổ sung cho font và ảnh nền để tránh `ENOENT` nếu sau này deploy. PNG mẫu thật đã render và kiểm trực
+quan: nền phủ đủ khổ, card không chồng, footer nguyên; dấu đầu dòng lỗi font được thay bằng hình vuông canvas.
+
+Đã chạy thật: typecheck sạch; lint sạch; unit **734/734**; production build thành công, 27 route.
+Theo yêu cầu người dùng, **không commit, không push Git và không deploy**.
+
+**Next Exact Steps:** người dùng xem PNG mẫu local; chỉ chỉnh thẩm mỹ tiếp nếu có phản hồi, vẫn không deploy
+hoặc push cho tới khi được yêu cầu rõ ràng.
+
+## Entry 047 — 2026-09-10 — Đồng bộ tài khoản SaleWork đang nghỉ
+
+Điều tra việc sáu chỉ số hoạt động trong ngày không cập nhật cho thấy snapshot lúc 01:20 có tám dòng nhưng
+đều bằng 0; lần làm mới sau đó dừng an toàn trước UPSERT. SaleWork đổi tên hiển thị tài khoản đang nghỉ
+thành dạng `(OFF)<tên>`, đồng thời trạng thái đã chọn nằm trên checkbox con nên script cũ có thể click lại
+và vô tình bỏ chọn một phần tài khoản được giữ từ phiên trước.
+
+Đã thêm chuẩn hóa chung để mọi tên có/không có `(OFF)` dùng cùng khoá, và nhận diện checkbox con trước khi
+click. Chạy lại thật thành công: **8/8 tài khoản SaleWork** đã ghi Supabase và **2 dòng CRM Report 70** đã
+cập nhật. JSON đối soát chứa đủ tám tên chuẩn, không còn bản ghi `(OFF)` riêng.
+
+Đã chạy thật: unit **738/738**, typecheck, lint và production build **27 route** sạch. Build trong sandbox
+lần đầu không tải được Google Fonts; chạy lại với quyền mạng đã compile và prerender thành công.
+
+**Next Exact Steps:** kiểm tra preview báo cáo Sales hiện sáu số mới; theo dõi lần chạy lịch tiếp theo để
+xác nhận trạng thái `(OFF)` tiếp tục đồng bộ mà không sinh khoá trùng.
+## Entry 048 — 2026-09-10 — Lương theo nhân viên/tháng
+
+Theo yêu cầu trực tiếp, thêm mục “Lương” ngay dưới “Công tác phí” trong sidebar Admin. Route `/admin/salaries` tái hiện cùng trải nghiệm chọn tháng, nhập VND theo từng nhân viên, xem tổng, lưu và tải lại giá trị. Dữ liệu nằm riêng trong `sales_monthly_salaries`, khoá `(period_month, sales_id)`, nullable và không âm.
+
+Vì lương là dữ liệu nhạy cảm, RLS chỉ cho Admin đọc/ghi; Sales và anon không đọc, không có quyền xoá, `service_role` bị thu hồi DML. Server Action tuân thủ Zod → auth → active → role → danh sách Sales server → service → revalidate. Đã thêm unit validation/navigation, RLS và E2E cho route/action mới.
+
+Kiểm chứng đã chạy: typecheck sạch; lint sạch; toàn bộ unit 743/743; production build thành công và có route `/admin/salaries` trong 28 route. RLS/E2E cần local Supabase/app có migration mới nên chưa chạy.
+
+## Entry 049 — 2026-09-10 — Đưa lương vào ảnh báo cáo Sales
+
+Theo yêu cầu tiếp theo, cả ảnh cam kết sáng và kết quả chiều có thêm dòng “Lương” dưới công tác phí. Route lấy lương theo tháng chứa ngày báo cáo; view-model format VND và trả đúng `-` khi chưa nhập, trong khi `0` vẫn hiển thị là tiền thật. Policy SELECT được mở tối thiểu cho Sales đọc dòng own; ghi vẫn Admin-only.
+
+Đã thêm unit cho đủ ba nhánh lương, cập nhật RLS test và mở rộng E2E ảnh để Admin nhập lương trước khi Sales render PNG. Typecheck/lint sạch; toàn bộ unit 746/746; production build thành công với 28 route. RLS/E2E chưa chạy vì local Supabase/Docker chưa hoạt động.

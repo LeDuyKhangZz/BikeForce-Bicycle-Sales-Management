@@ -47,6 +47,7 @@ const nextConfig: NextConfig = {
     // tiến độ — cùng lý do với font: nó cũng được đọc bằng `fs` lúc render, nên
     // thiếu dòng này thì ảnh vẫn build xanh mà hàm trên Vercel ném `ENOENT`.
     '/api/reports/[id]/share-image': ['./public/fonts/**', './public/images/**'],
+    '/api/salework/report-image': ['./public/fonts/**', './public/images/**'],
   },
 };
 

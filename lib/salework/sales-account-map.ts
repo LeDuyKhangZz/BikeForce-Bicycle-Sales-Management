@@ -13,6 +13,15 @@ const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Võ Trí Tính': 'Abraham Bà Rịa - Vũng Tàu',
 };
 
+/**
+ * SaleWork thêm tiền tố `(OFF)` vào tên hiển thị khi tài khoản đang nghỉ.
+ * Đây chỉ là trạng thái tức thời, không phải một tài khoản khác, nên phải bỏ
+ * tiền tố trước khi đối chiếu và lưu snapshot để không tạo hai dòng cho một người.
+ */
+export function normalizeSaleWorkAccountName(accountName: string): string {
+  return accountName.trim().replace(/^\(OFF\)\s*/i, '').trim();
+}
+
 /** Danh sách tài khoản phải được script SaleWork chọn để dữ liệu luôn được đồng bộ. */
 export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = Object.values(
   SALES_SALEWORK_ACCOUNT_MAP,

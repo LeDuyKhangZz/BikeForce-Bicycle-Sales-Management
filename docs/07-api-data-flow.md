@@ -684,6 +684,10 @@ Script mở đúng tab **Tin nhắn**, gõ từng tên vào ô tìm kiếm trư�
 ảo hóa, rồi sau khi bấm **Tổng hợp** phải đọc tuần tự tất cả trang của bảng kết quả (SaleWork hiện giới
 hạn 5 dòng/trang). Script chỉ UPSERT khi tập đã gom chứa đủ cả tám tài khoản; không được chỉ đọc DOM của
 trang đầu vì sẽ tạo snapshot thiếu. Browser context luôn được đóng cả khi thành công lẫn khi có lỗi.
+Tên hiển thị có thể được SaleWork thêm tiền tố trạng thái `(OFF)` khi nhân viên nghỉ. Script bỏ tiền tố
+này cho **mọi** tài khoản trước khi đối chiếu và UPSERT; trạng thái online/offline không được tạo hai khoá
+`account_name` cho cùng một người. Khi kiểm lựa chọn, script đọc cả trạng thái checkbox con của option để
+không click lại và vô tình bỏ chọn tài khoản đã có từ phiên trước.
 Khi dựng ảnh, route lấy tên tài khoản bằng `getSaleWorkAccountName(full_name)`, gọi
 `getSaleWorkReportByAccountName()`, rồi chỉ chuyển sáu trường cần thiết vào `buildShareCardModel()`.
 Không có snapshot thì truyền sáu giá trị null để view-model hiển thị `—`; không ghi ngược vào báo cáo ngày.
@@ -706,3 +710,10 @@ Client không được quyết định `updated_by`, role hay danh sách ngườ
 một tháng → `getMonthlyTravelExpense(supabase, report.sales_id, YYYY-MM-01)` → truyền số vào
 `buildShareCardModel()` → format bằng `formatCurrencyVND()` → `DailyReportShareCard` render dòng cuối.
 Sales chỉ đọc được dòng của mình; Admin preview báo cáo Sales bất kỳ vẫn đọc được theo policy.
+## `saveSalariesAction` — lưu lương tháng (DEC-075)
+
+FormData → parse `month` và từng `amount__<salesId>` bằng Zod → auth → active → Admin → lấy danh sách Sales phía server → `saveMonthlySalaries()` upsert theo `(period_month, sales_id)` → `revalidatePath('/admin/salaries')` → trả `ActionResult`. Dữ liệu đọc qua `listMonthlySalaries()` với danh sách cột tường minh và giới hạn 200 dòng.
+
+### Đọc lương vào ảnh báo cáo (BR-030)
+
+Sau khi `getReportForShare()` xác nhận người gọi được đọc báo cáo, route tính kỳ bằng tháng của `report_date` rồi gọi `getMonthlySalary(supabase, report.sales_id, periodMonth)`. Cùng client anon-key chịu RLS chỉ trả lương own-or-admin. Số thô đi vào view-model để format VND; `null` thành `-`.

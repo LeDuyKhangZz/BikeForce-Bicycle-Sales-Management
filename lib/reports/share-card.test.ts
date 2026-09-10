@@ -904,3 +904,19 @@ describe('buildShareCardModel — công tác phí tháng trước (BR-028)', () 
     expect(model.previousMonthTravelExpenseText).toBe('0 ₫');
   });
 });
+
+describe('buildShareCardModel — lương tháng của báo cáo (BR-030)', () => {
+  it('format số tiền VND sẵn cho thẻ ảnh', () => {
+    const model = buildShareCardModel(BASE, PERFORMANCE, null, null, null, 15_000_000);
+    expect(model.monthlySalaryText).toBe('15.000.000 ₫');
+  });
+
+  it('chưa được Admin nhập thì vẫn có dòng và hiện đúng dấu gạch ngang ngắn', () => {
+    expect(build().monthlySalaryText).toBe('-');
+  });
+
+  it('số 0 là giá trị thật, không bị hiểu thành chưa nhập', () => {
+    const model = buildShareCardModel(BASE, PERFORMANCE, null, null, null, 0);
+    expect(model.monthlySalaryText).toBe('0 ₫');
+  });
+});

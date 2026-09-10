@@ -1439,6 +1439,10 @@ và focus quay lại nút mở.
 Unit phải khóa đủ năm ánh xạ tên và đúng thứ tự sáu dòng; null/chuỗi thời lượng rỗng phải ra `—`. Visual
 QA phải render thật cả MORNING và EVENING ở 1080×1920, có đồng thời KPI + SaleWork + MISA, rồi xác nhận
 đủ header/footer và không có chữ bị cắt/chồng.
+
+Style ảnh Telesale phải render PNG thật 1080×1920 bằng dữ liệu mẫu có số tiền chín chữ số, sáu chỉ số
+hoạt động và tên dài. Kiểm trực quan nền được phủ đủ khổ, chữ không do bitmap sinh, hai card không chồng,
+footer còn nguyên. Unit khóa nguyên mapping cột/chỉ tiêu; typecheck, lint và production build phải sạch.
 ## Công tác phí tháng (DEC-073)
 
 - Unit: tháng hợp lệ/sai; ô trống, 0, VND phân nhóm; từ chối chữ, âm, số lẻ, Infinity.
@@ -1448,3 +1452,10 @@ QA phải render thật cả MORNING và EVENING ở 1080×1920, có đồng th�
 - Share-card unit: công tác phí dương format VND, `0` không thành thiếu dữ liệu, `null` hiện `—`.
 - RLS: Sales đọc được đúng dòng của mình để dựng ảnh nhưng không đọc dòng Sales khác; Admin đọc tất cả,
   Sales vẫn không ghi, anon không đọc. Render thật xác nhận dòng mới không đẩy footer khỏi 1920px.
+## Lương tháng (DEC-075)
+
+- Unit: nhận ô trống/0/VND phân nhóm; từ chối chữ, âm, số lẻ, Infinity và tháng sai; kiểm field-name.
+- Navigation: “Lương” đứng ngay sau “Công tác phí”, active đúng route và không vào bottom nav.
+- RLS: Admin insert/update/select; số âm bị CHECK từ chối; Sales chỉ đọc own, không đọc người khác và không ghi; anon không đọc.
+- E2E ba viewport: vị trí sidebar, nhập/lưu/tải lại, không cuộn ngang và Sales không truy cập route.
+- Share-card unit: lương dương format VND, `0` không thành thiếu dữ liệu, `null` hiện đúng `-`; E2E render ảnh sau khi Admin nhập cả công tác phí và lương.

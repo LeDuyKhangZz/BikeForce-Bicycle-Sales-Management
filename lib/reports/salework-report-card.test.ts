@@ -28,6 +28,7 @@ function recordingContext(): { context: Canvas2DLike; texts: TextCall[] } {
     fill: () => undefined,
     stroke: () => undefined,
     fillRect: () => undefined,
+    drawImage: () => undefined,
     fillText: (text, x) => texts.push({ text, x }),
     measureText: (text) => ({ width: text.length * 8 }),
     scale: () => undefined,

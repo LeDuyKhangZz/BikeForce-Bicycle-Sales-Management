@@ -61,6 +61,7 @@ export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
 };
 
 const CRM_CALL_ROW_PREFIX = '__CRM70__:';
+const MONTHLY_SALEWORK_ROW_PREFIX = '__SALEWORK_MONTH__:';
 const CRM_CALL_EMPLOYEE_CODE_MAP: Record<string, string> = {
   'Giao - Kế Toán bán hàng': 'VP-TLS-003',
 };
@@ -160,8 +161,11 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
 
     const period = currentPeriodMonth();
     const allSaleWorkRows: SaleWorkReportRow[] = saleworkData ?? [];
-    const baseReports = allSaleWorkRows
-      .filter((row) => !row.account_name.startsWith(CRM_CALL_ROW_PREFIX))
+  const baseReports = allSaleWorkRows
+      .filter((row) =>
+        !row.account_name.startsWith(CRM_CALL_ROW_PREFIX) &&
+        !row.account_name.startsWith(MONTHLY_SALEWORK_ROW_PREFIX),
+      )
       .map(toSaleWorkReport);
     const crmCallsByEmployeeCode = new Map<string, SaleWorkReportRow>();
     for (const row of allSaleWorkRows) {
@@ -213,4 +217,36 @@ export async function getSaleWorkReportByAccountName(
 ): Promise<SaleWorkReport | null> {
   const reports = await getSaleWorkReport();
   return reports.find((report) => report.accountName === accountName) ?? null;
+}
+
+/** Snapshot SaleWork đã lọc đúng một tháng; script sync lưu riêng theo tháng, không ghi đè ngày. */
+export async function getMonthlySaleWorkReportByAccountName(
+  accountName: string,
+  month: string,
+): Promise<SaleWorkReport | null> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    const period = `${month}-01`;
+    const monthlyKey = `${MONTHLY_SALEWORK_ROW_PREFIX}${period}:${accountName}`;
+    const { data, error } = await supabase
+      .from('salework_reports')
+      .select(
+        'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration',
+      )
+      .eq('account_name', monthlyKey)
+      .maybeSingle<SaleWorkReportRow>();
+
+    if (error || data === null) {
+      if (error) console.error('[getMonthlySaleWorkReportByAccountName]', error.message);
+      return null;
+    }
+
+    return { ...toSaleWorkReport({ ...data, account_name: accountName }), amis: null };
+  } catch (error) {
+    console.error(
+      '[getMonthlySaleWorkReportByAccountName]',
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
 }

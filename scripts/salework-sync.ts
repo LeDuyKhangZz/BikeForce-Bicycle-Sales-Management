@@ -1,12 +1,16 @@
 import { chromium } from '@playwright/test';
-import type { BrowserContext } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
 import type { SaleWorkReport } from '../services/salework';
-import { SALES_SALEWORK_ACCOUNT_NAMES } from '../lib/salework/sales-account-map';
+import { getVietnamCurrentMonth, getVietnamMonthRange } from '../lib/date';
+import {
+  normalizeSaleWorkAccountName,
+  SALES_SALEWORK_ACCOUNT_NAMES,
+} from '../lib/salework/sales-account-map';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 
@@ -36,6 +40,7 @@ const TARGET_ACCOUNT_NAMES = [
 ];
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
 let activeBrowserContext: BrowserContext | null = null;
+const MONTHLY_SALEWORK_ROW_PREFIX = '__SALEWORK_MONTH__:';
 
 function numberAfter(text: string, label: string): number {
   const match = text.match(new RegExp(`${label}\\s*:\\s*(\\d+)`, 'i'));
@@ -43,7 +48,8 @@ function numberAfter(text: string, label: string): number {
 }
 
 function parseRow(cells: string[]): SaleWorkReport | null {
-  const accountName = cells[0]?.trim();
+  const rawAccountName = cells[0];
+  const accountName = rawAccountName ? normalizeSaleWorkAccountName(rawAccountName) : '';
   if (!accountName) return null;
 
   const conversation = cells[1] ?? '';
@@ -65,7 +71,10 @@ function parseRow(cells: string[]): SaleWorkReport | null {
 }
 
 /** Ghi báo cáo vào bảng Supabase salework_reports (upsert theo account_name). */
-async function saveReportsToSupabase(reports: SaleWorkReport[]): Promise<void> {
+async function saveReportsToSupabase(
+  reports: SaleWorkReport[],
+  accountNamePrefix = '',
+): Promise<void> {
   if (reports.length === 0) {
     console.warn('Không có báo cáo nào để ghi — bỏ qua Supabase.');
     return;
@@ -81,7 +90,7 @@ async function saveReportsToSupabase(reports: SaleWorkReport[]): Promise<void> {
   const dedupedReports = Array.from(dedupedByAccount.values());
 
   const rows = dedupedReports.map((report) => ({
-    account_name: report.accountName,
+    account_name: `${accountNamePrefix}${report.accountName}`,
     conversations: report.conversations,
     sent_messages: report.sentMessages,
     received_messages: report.receivedMessages,
@@ -188,8 +197,15 @@ async function main(): Promise<void> {
     // thiếu; click lại mục đang chọn sẽ biến thao tác "chọn đủ" thành bỏ chọn.
     const optionClass = (await accountOption.getAttribute('class')) ?? '';
     const ariaSelected = await accountOption.getAttribute('aria-selected');
+    // Giao diện SaleWork hiện đặt trạng thái chọn trên checkbox CON thay vì
+    // chính dòng option. Chỉ nhìn class/aria của dòng ngoài sẽ tưởng tài khoản
+    // đang chọn là chưa chọn rồi click lần nữa, tức vô tình bỏ chọn nó.
+    const hasCheckedDescendant =
+      (await accountOption.locator('.is-checked, [aria-checked="true"]').count()) > 0;
     const isSelected =
-      ariaSelected === 'true' || /(^|\s)(is-selected|selected)(\s|$)/.test(optionClass);
+      ariaSelected === 'true' ||
+      hasCheckedDescendant ||
+      /(^|\s)(is-selected|selected)(\s|$)/.test(optionClass);
 
     if (!isSelected) await accountOption.click();
   }
@@ -279,9 +295,88 @@ async function main(): Promise<void> {
   // (Vercel) đều đọc chung một nơi, không cần commit/push mỗi lần sync.
   await saveReportsToSupabase(reports);
 
-  console.log(`Đã đồng bộ ${reports.length} tài khoản SaleWork lên Supabase.`);
+  // SaleWork và AMIS đều có bộ lọc tháng. Snapshot tháng dùng khoá riêng để dữ liệu
+  // lịch sử không bị lần đồng bộ ngày sau ghi đè bằng số của tháng hiện tại.
+  const monthlySyncMonth = process.env.SALEWORK_SYNC_MONTH?.trim() || getVietnamCurrentMonth();
+  await selectSaleWorkMonth(page, monthlySyncMonth);
+  await aggregateButton.click();
+  const monthlyResult = await readPaginatedReports(page);
+  await saveReportsToSupabase(
+    monthlyResult.reports,
+    `${MONTHLY_SALEWORK_ROW_PREFIX}${monthlySyncMonth}-01:`,
+  );
+
+  console.log(
+    `Đã đồng bộ ${reports.length} tài khoản SaleWork ngày và ${monthlyResult.reports.length} tài khoản tháng ${monthlySyncMonth} lên Supabase.`,
+  );
   await context.close();
   activeBrowserContext = null;
+}
+
+async function readPaginatedReports(page: Page): Promise<{
+  reports: SaleWorkReport[];
+  visitedPageCount: number;
+}> {
+  const rows = page.locator('.el-table__body tbody tr');
+  await rows.first().waitFor({ state: 'visible', timeout: 60_000 });
+
+  const reportCells: string[][] = [];
+  const visitedPages = new Set<string>();
+
+  while (true) {
+    const currentPageCells = await rows.evaluateAll((currentRows) =>
+      currentRows.map((row) =>
+        Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? ''),
+      ),
+    );
+    const pageSignature = JSON.stringify(currentPageCells);
+    if (visitedPages.has(pageSignature)) break;
+
+    visitedPages.add(pageSignature);
+    reportCells.push(...currentPageCells);
+
+    const nextPageButton = page.locator('.el-pagination .btn-next').last();
+    if ((await nextPageButton.count()) === 0) break;
+
+    const nextButtonClass = (await nextPageButton.getAttribute('class')) ?? '';
+    const hasDisabledAttribute = (await nextPageButton.getAttribute('disabled')) !== null;
+    if (hasDisabledAttribute || /(^|\s)is-disabled(\s|$)/.test(nextButtonClass)) break;
+
+    const previousTableText = (await rows.allTextContents()).join('\n');
+    await nextPageButton.click();
+    await page.waitForFunction(
+      (previousText) =>
+        Array.from(
+          document.querySelectorAll('.el-table__body tbody tr'),
+          (row) => row.textContent ?? '',
+        ).join('\n') !== previousText,
+      previousTableText,
+      { timeout: 30_000 },
+    );
+  }
+
+  return {
+    reports: reportCells
+      .map(parseRow)
+      .filter((report): report is SaleWorkReport => report !== null),
+    visitedPageCount: visitedPages.size,
+  };
+}
+
+async function selectSaleWorkMonth(page: Page, month: string): Promise<void> {
+  const range = getVietnamMonthRange(month);
+  if (range === null) throw new Error(`SALEWORK_SYNC_MONTH không hợp lệ: ${month}`);
+
+  const dateRange = page.locator('.el-date-editor--daterange').first();
+  await dateRange.waitFor({ state: 'visible', timeout: 30_000 });
+  const inputs = dateRange.locator('input');
+  if ((await inputs.count()) < 2) {
+    throw new Error('Không tìm thấy đủ hai ô ngày bắt đầu/kết thúc của bộ lọc SaleWork.');
+  }
+
+  await inputs.nth(0).fill(range.from);
+  await inputs.nth(1).fill(range.to);
+  await page.keyboard.press('Enter');
 }
 
 main().catch(async (error: unknown) => {

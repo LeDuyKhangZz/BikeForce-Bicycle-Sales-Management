@@ -1,24 +1,28 @@
 import type { SaleWorkReport } from '@/services/salework';
 
-export const CARD_WIDTH = 480;
-export const CARD_HEIGHT = 780;
-export const PAD = 26;
+export const CARD_WIDTH = 540;
+export const CARD_HEIGHT = 960;
+export const PAD = 30;
+export const REPORT_BACKGROUND_PATH = '/images/salework-mid-autumn-background.png';
 
 export const COLORS = {
-  background: '#ffffff',
-  border: '#e2e2e2',
-  brand: '#6C5CE7',
-  accent: '#F2994A',
-  rule: '#2BB3A3',
-  textDark: '#1f2430',
-  textMuted: '#6b7280',
-  tableHeaderBg: '#f4f5f7',
-  tableBorder: '#e5e7eb',
-  orangeBoxBg: '#c1730f',
+  background: '#0b315b',
+  cream: 'rgba(255, 249, 235, 0.97)',
+  creamStrong: '#fff7e3',
+  border: '#efbd68',
+  brand: '#ffffff',
+  accent: '#ffc75a',
+  accentStrong: '#d74324',
+  rule: '#9ee6b4',
+  textDark: '#3b1b16',
+  textMuted: '#657080',
+  tableHeaderBg: '#f9ead9',
+  tableBorder: '#ead7c6',
+  orangeBoxBg: '#f15a35',
   orangeBoxText: '#ffffff',
-  bottomBoxBg: '#fdf6ec',
-  bottomBoxText: '#3b2a12',
-  placeholder: '#9ca3af',
+  bottomBoxBg: '#fff9ec',
+  bottomBoxText: '#3b1b16',
+  placeholder: '#8a8178',
 } as const;
 
 export const PLACEHOLDER = '—';
@@ -85,6 +89,7 @@ export interface Canvas2DLike {
   fill(): void;
   stroke(): void;
   fillRect(x: number, y: number, w: number, h: number): void;
+  drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
   fillText(text: string, x: number, y: number): void;
   measureText(text: string): { width: number };
   scale(x: number, y: number): void;
@@ -100,84 +105,100 @@ function roundRect(ctx: Canvas2DLike, x: number, y: number, w: number, h: number
   ctx.closePath();
 }
 
+function fillRoundedBox(
+  ctx: Canvas2DLike,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  fill: string,
+  stroke?: string,
+): void {
+  ctx.fillStyle = fill;
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1;
+    roundRect(ctx, x + 0.5, y + 0.5, width - 1, height - 1, radius);
+    ctx.stroke();
+  }
+}
+
 /** Vẽ toàn bộ thẻ báo cáo "Báo cáo cuối ngày" cho 1 tài khoản lên context đã cho. */
-export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void {
+export function drawReportCard(
+  ctx: Canvas2DLike,
+  report: SaleWorkReport,
+  backgroundImage?: CanvasImageSource,
+): void {
   const w = CARD_WIDTH;
   const h = CARD_HEIGHT;
   const amis = report.amis;
 
-  ctx.fillStyle = COLORS.background;
-  roundRect(ctx, 0, 0, w, h, 16);
-  ctx.fill();
-  ctx.strokeStyle = COLORS.border;
-  ctx.lineWidth = 1;
-  roundRect(ctx, 0.5, 0.5, w - 1, h - 1, 16);
-  ctx.stroke();
-
-  let y = 46;
+  if (backgroundImage) {
+    ctx.drawImage(backgroundImage, 0, 0, w, h);
+  } else {
+    ctx.fillStyle = COLORS.background;
+    ctx.fillRect(0, 0, w, h);
+  }
 
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = COLORS.brand;
-  ctx.font = '700 26px ReportFont-Bold';
-  ctx.fillText('BIKEFORCE', PAD, y);
-
-  y += 24;
+  ctx.font = '700 29px ReportFont-Bold';
+  ctx.fillText('BIKEFORCE', PAD, 50);
   ctx.fillStyle = COLORS.accent;
-  ctx.font = '600 14px ReportFont-Bold';
-  ctx.fillText('Báo cáo cuối ngày', PAD, y);
+  ctx.font = '700 17px ReportFont-Bold';
+  ctx.fillText('Báo cáo cuối ngày', PAD, 75);
 
-  y += 16;
-  ctx.strokeStyle = COLORS.rule;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(PAD, y);
-  ctx.lineTo(w - PAD, y);
-  ctx.stroke();
-
-  y += 28;
-  ctx.fillStyle = COLORS.textDark;
-  ctx.font = '400 13px ReportFont';
-  ctx.fillText(getVietnameseDateLabel(new Date()), PAD, y);
-
-  // Tên telesale = tên tài khoản (tự giảm cỡ chữ nếu tên quá dài)
-  y += 34;
-  ctx.fillStyle = COLORS.brand;
-  const maxNameWidth = w - PAD * 2;
-  let nameFontSize = 26;
+  const maxNameWidth = 335;
+  let nameFontSize = 30;
   ctx.font = `700 ${nameFontSize}px ReportFont-Bold`;
-  while (ctx.measureText(report.accountName).width > maxNameWidth && nameFontSize > 15) {
+  while (ctx.measureText(report.accountName).width > maxNameWidth && nameFontSize > 18) {
     nameFontSize -= 1;
     ctx.font = `700 ${nameFontSize}px ReportFont-Bold`;
   }
-  ctx.fillText(report.accountName, PAD, y);
+  ctx.fillText(report.accountName, PAD, 126);
 
-  // Mã telesale
-  y += 22;
-  ctx.fillStyle = COLORS.placeholder;
-  ctx.font = '400 13px ReportFont';
-  ctx.fillText(`Mã telesale: ${getTelesaleCode(report.accountName)}`, PAD, y);
+  ctx.fillStyle = COLORS.brand;
+  ctx.font = '400 14px ReportFont';
+  ctx.fillText(`Mã telesale: ${getTelesaleCode(report.accountName)}`, PAD, 155);
+
+  ctx.strokeStyle = COLORS.rule;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAD, 174);
+  ctx.lineTo(360, 174);
+  ctx.stroke();
+
+  fillRoundedBox(ctx, 414, 32, 96, 116, 12, 'rgba(255, 247, 227, 0.93)', COLORS.border);
+  const dateParts = getVietnameseDateLabel(new Date()).split(', ');
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLORS.textDark;
+  ctx.font = '600 12px ReportFont-Bold';
+  ctx.fillText(dateParts[0] ?? '', 462, 60);
+  ctx.fillStyle = COLORS.accentStrong;
+  ctx.font = '700 20px ReportFont-Bold';
+  ctx.fillText((dateParts[1] ?? '').replace(/\/\d{4}$/, ''), 462, 92);
+  ctx.fillStyle = COLORS.textDark;
+  ctx.font = '700 15px ReportFont-Bold';
+  ctx.fillText((dateParts[1] ?? '').slice(-4), 462, 120);
+  ctx.textAlign = 'left';
 
   // --- Tình trạng thực hiện trong tháng ---
-  y += 34;
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = '700 15px ReportFont-Bold';
-  ctx.fillText('Tình trạng thực hiện trong tháng', PAD, y);
-
-  y += 22;
-  const tableX = PAD;
-  const tableW = w - PAD * 2;
-  const tableTop = y;
-  const rowH = 40;
-  const headerH = 34;
+  const tableX = 20;
+  const tableW = 500;
+  const tableTop = 235;
+  const rowH = 44;
+  const headerH = 38;
   const tableH = headerH + rowH * 2;
 
-  ctx.fillStyle = COLORS.tableHeaderBg;
-  roundRect(ctx, tableX, tableTop, tableW, tableH, 8);
-  ctx.fill();
-  ctx.strokeStyle = COLORS.tableBorder;
-  ctx.lineWidth = 1;
-  roundRect(ctx, tableX + 0.5, tableTop + 0.5, tableW - 1, tableH - 1, 8);
-  ctx.stroke();
+  fillRoundedBox(ctx, 20, 205, 500, 190, 16, COLORS.cream, COLORS.border);
+  fillRoundedBox(ctx, 34, 190, 330, 36, 18, COLORS.orangeBoxBg);
+  ctx.fillStyle = COLORS.orangeBoxText;
+  ctx.font = '700 16px ReportFont-Bold';
+  ctx.fillText('Tình trạng thực hiện trong tháng', 54, 214);
+  fillRoundedBox(ctx, tableX + 14, tableTop, tableW - 28, tableH, 10, COLORS.creamStrong, COLORS.tableBorder);
 
   ctx.fillStyle = COLORS.textMuted;
   ctx.font = '400 10px ReportFont';
@@ -190,21 +211,21 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
         minute: '2-digit',
       })
     : PLACEHOLDER;
-  ctx.fillText(`Số liệu MISA tính đến ${syncedLabel}`, tableX + 12, tableTop - 6);
+  ctx.fillText(`Số liệu MISA tính đến ${syncedLabel}`, tableX + 28, tableTop - 8);
 
-  const contentX = tableX + 12;
-  const targetRightX = tableX + tableW * 0.58;
-  const actualRightX = tableX + tableW * 0.79;
-  const percentRightX = tableX + tableW - 8;
+  const contentX = tableX + 28;
+  const targetRightX = tableX + tableW * 0.56;
+  const actualRightX = tableX + tableW * 0.78;
+  const percentRightX = tableX + tableW - 24;
 
   ctx.fillStyle = COLORS.textMuted;
-  ctx.font = '600 9px ReportFont-Bold';
+  ctx.font = '600 10px ReportFont-Bold';
   ctx.textAlign = 'left';
-  ctx.fillText('NỘI DUNG', contentX, tableTop + 21);
+  ctx.fillText('NỘI DUNG', contentX, tableTop + 24);
   ctx.textAlign = 'right';
-  ctx.fillText('CHỈ TIÊU', targetRightX, tableTop + 21);
-  ctx.fillText('THỰC ĐẠT', actualRightX, tableTop + 21);
-  ctx.fillText('% HOÀN THÀNH', percentRightX, tableTop + 21);
+  ctx.fillText('CHỈ TIÊU', targetRightX, tableTop + 24);
+  ctx.fillText('THỰC ĐẠT', actualRightX, tableTop + 24);
+  ctx.fillText('% HOÀN THÀNH', percentRightX, tableTop + 24);
 
   const monthRows: Array<{ label: string; target: string; value: string; percent: string }> = [
     {
@@ -246,7 +267,7 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
     ctx.textAlign = 'left';
     ctx.fillText(row.label, contentX, textY);
 
-    ctx.fillStyle = amis ? COLORS.textDark : COLORS.placeholder;
+    ctx.fillStyle = amis ? COLORS.accentStrong : COLORS.placeholder;
     ctx.font = '700 11px ReportFont-Bold';
     ctx.textAlign = 'right';
     ctx.fillText(row.target, targetRightX, textY);
@@ -256,15 +277,9 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
   ctx.textAlign = 'left';
 
   // --- Tình trạng thực hiện trong ngày ---
-  y = tableTop + tableH + 32;
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = '700 15px ReportFont-Bold';
-  ctx.fillText('Tình trạng thực hiện trong ngày', PAD, y);
-
-  y += 12;
-  const boxX = PAD;
-  const boxW = w - PAD * 2;
-  const boxTop = y;
+  const boxX = 20;
+  const boxW = 500;
+  const boxTop = 435;
   const lineItems: Array<{ label: string; value: string }> = [
     { label: 'Số lượng hội thoại tương tác', value: String(report.conversations) },
     { label: 'Số lượng tin nhắn đã gửi', value: String(report.sentMessages) },
@@ -274,33 +289,38 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
     { label: 'Tổng thời gian đã nghe máy', value: report.callDuration },
   ];
   const lineH = 34;
-  const listTopPad = 22;
-  const bottomBoxH = 78;
-  const boxH = listTopPad + lineItems.length * lineH + 16 + bottomBoxH + 16;
+  const bottomBoxH = 82;
 
-  ctx.fillStyle = COLORS.orangeBoxBg;
-  roundRect(ctx, boxX, boxTop, boxW, boxH, 14);
-  ctx.fill();
+  fillRoundedBox(ctx, boxX, boxTop, boxW, 344, 16, COLORS.cream, COLORS.border);
+  fillRoundedBox(ctx, 58, boxTop - 18, 350, 40, 20, COLORS.orangeBoxBg);
+  ctx.fillStyle = COLORS.orangeBoxText;
+  ctx.font = '700 17px ReportFont-Bold';
+  ctx.fillText('Tình trạng thực hiện trong ngày', 84, boxTop + 8);
 
-  let itemY = boxTop + listTopPad;
-  lineItems.forEach((item) => {
-    ctx.fillStyle = COLORS.orangeBoxText;
-    ctx.font = '400 14px ReportFont';
-    ctx.fillText(item.label, boxX + 18, itemY);
+  let itemY = boxTop + 48;
+  lineItems.forEach((item, index) => {
+    if (index % 2 === 0) {
+      ctx.fillStyle = 'rgba(249, 234, 217, 0.78)';
+      ctx.fillRect(boxX + 18, itemY - 22, boxW - 36, lineH);
+    }
+    ctx.fillStyle = COLORS.accentStrong;
+    ctx.fillRect(boxX + 29, itemY - 8, 7, 7);
+    ctx.fillStyle = COLORS.textDark;
+    ctx.font = '400 13px ReportFont';
+    ctx.fillText(item.label, boxX + 52, itemY);
 
+    ctx.fillStyle = COLORS.accentStrong;
     ctx.font = '700 14px ReportFont-Bold';
-    const valueWidth = ctx.measureText(item.value).width;
-    ctx.fillText(item.value, boxX + boxW - 18 - valueWidth, itemY);
-
+    ctx.textAlign = 'right';
+    ctx.fillText(item.value, boxX + boxW - 30, itemY);
+    ctx.textAlign = 'left';
     itemY += lineH;
   });
 
-  const innerBoxY = itemY + 6;
-  const innerBoxX = boxX + 16;
-  const innerBoxW = boxW - 32;
-  ctx.fillStyle = COLORS.bottomBoxBg;
-  roundRect(ctx, innerBoxX, innerBoxY, innerBoxW, bottomBoxH, 10);
-  ctx.fill();
+  const innerBoxY = itemY + 2;
+  const innerBoxX = boxX + 24;
+  const innerBoxW = boxW - 48;
+  fillRoundedBox(ctx, innerBoxX, innerBoxY, innerBoxW, bottomBoxH, 12, COLORS.bottomBoxBg, COLORS.border);
 
   const orderRows: Array<{ label: string; value: string }> = [
     {
@@ -324,4 +344,11 @@ export function drawReportCard(ctx: Canvas2DLike, report: SaleWorkReport): void 
     ctx.fillText(`${row.label}  ${row.value}`, innerBoxX + innerBoxW / 2, rowY);
   });
   ctx.textAlign = 'left';
+
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = '700 20px ReportFont-Bold';
+  ctx.fillText('Kết nối hôm nay · Tăng trưởng ngày mai', PAD, 835);
+  ctx.fillStyle = COLORS.brand;
+  ctx.font = '600 12px ReportFont-Bold';
+  ctx.fillText('BIKEFORCE · BÁO CÁO HOẠT ĐỘNG TELESALE', PAD, 866);
 }

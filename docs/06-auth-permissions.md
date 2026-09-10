@@ -864,3 +864,6 @@ danh sách tài khoản SaleWork hay dữ liệu thô bổ sung cho client.
 
 Middleware/layout chỉ hỗ trợ UX. Policy select là `sales_id = auth.uid() OR is_admin()`; ba policy ghi
 vẫn Admin-only. Server Action vẫn tự kiểm lại auth → active → role.
+## Quyền trên lương tháng (DEC-075, DEC-076)
+
+`sales_monthly_salaries` là dữ liệu Admin quản lý. Admin active được đọc/thêm/sửa; Sales chỉ đọc dòng của chính mình để route dựng ảnh báo cáo, không được đọc người khác hoặc ghi; anon không có quyền; không vai trò ứng dụng nào được xoá. Policy select là `sales_id = auth.uid() OR is_admin()`; các policy ghi vẫn Admin-only. `service_role` bị thu hồi DML theo DEC-031.

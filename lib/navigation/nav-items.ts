@@ -26,6 +26,8 @@ export type NavKey =
   | 'ADMIN_SALES'
   | 'ADMIN_TARGETS'
   | 'ADMIN_TRAVEL_EXPENSES'
+  | 'ADMIN_SALARIES'
+  | 'ADMIN_MONTHLY_SUMMARIES'
   | 'ADMIN_SALEWORK'
   | 'ADMIN_ACCOUNT';
 
@@ -134,6 +136,18 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
     label: 'Công tác phí',
     href: '/admin/travel-expenses',
     matchPrefixes: ['/admin/travel-expenses'],
+  },
+  {
+    key: 'ADMIN_SALARIES',
+    label: 'Lương',
+    href: '/admin/salaries',
+    matchPrefixes: ['/admin/salaries'],
+  },
+  {
+    key: 'ADMIN_MONTHLY_SUMMARIES',
+    label: 'Tổng kết tháng',
+    href: '/admin/monthly-summaries',
+    matchPrefixes: ['/admin/monthly-summaries'],
   },
   {
     key: 'ADMIN_SALEWORK',

@@ -1,11 +1,18 @@
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/services/profiles';
 import { getSaleWorkReport } from '@/services/salework';
-import { CARD_HEIGHT, CARD_WIDTH, drawReportCard, slugifyFilename, type Canvas2DLike } from '../../../(admin)/admin/salework/salework-report-card';
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  drawReportCard,
+  REPORT_BACKGROUND_PATH,
+  slugifyFilename,
+  type Canvas2DLike,
+} from '../../../(admin)/admin/salework/salework-report-card';
 
 // Đăng ký font — chỉ nằm trong route.ts (server-only), không được đưa vào
 // salework-report-card.ts vì file đó còn được Client Component import,
@@ -77,12 +84,19 @@ export async function GET(request: Request) {
   }
 
   ensureFontsRegistered();
+  const background = await loadImage(
+    path.join(process.cwd(), 'public', REPORT_BACKGROUND_PATH.slice(1)),
+  );
 
   const scale = 2;
   const canvas = createCanvas(CARD_WIDTH * scale, CARD_HEIGHT * scale);
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  drawReportCard(ctx as unknown as Canvas2DLike, report);
+  drawReportCard(
+    ctx as unknown as Canvas2DLike,
+    report,
+    background as unknown as CanvasImageSource,
+  );
 
   const buffer = canvas.toBuffer('image/png');
 
