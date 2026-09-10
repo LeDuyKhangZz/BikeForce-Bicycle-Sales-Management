@@ -1,12 +1,13 @@
 import { chromium } from '@playwright/test';
-import type { BrowserContext, Page } from '@playwright/test';
+import type { BrowserContext, Locator, Page } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
 import type { SaleWorkReport } from '../services/salework';
-import { getVietnamCurrentMonth, getVietnamMonthRange } from '../lib/date';
+import { getVietnamMonthRange } from '../lib/date';
+import { requireCompleteSaleWorkReports } from '../lib/salework/report-completeness';
 import {
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
@@ -231,78 +232,19 @@ async function main(): Promise<void> {
     );
   }
   await aggregateButton.click();
+  console.log('Đã bấm Tổng hợp; đang cuộn và đọc toàn bộ bảng SaleWork…');
+  const dailyResult = await readPaginatedReports(page);
+  const reports = dailyResult.reports;
 
-  const rows = page.locator('.el-table__body tbody tr');
-  await rows.first().waitFor({ state: 'visible', timeout: 60_000 });
-
-  // SaleWork hiện phân trang bảng kết quả với 5 dòng/trang. Đọc tuần tự mọi
-  // trang thay vì đòi cả tập tài khoản cùng tồn tại trong DOM của trang đầu.
-  const reportCells: string[][] = [];
-  const visitedPages = new Set<string>();
-
-  while (true) {
-    const currentPageCells = await rows.evaluateAll((currentRows) =>
-      currentRows.map((row) =>
-        Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? ''),
-      ),
-    );
-    const pageSignature = JSON.stringify(currentPageCells);
-    if (visitedPages.has(pageSignature)) break;
-
-    visitedPages.add(pageSignature);
-    reportCells.push(...currentPageCells);
-
-    const nextPageButton = page.locator('.el-pagination .btn-next').last();
-    if ((await nextPageButton.count()) === 0) break;
-
-    const nextButtonClass = (await nextPageButton.getAttribute('class')) ?? '';
-    const hasDisabledAttribute = (await nextPageButton.getAttribute('disabled')) !== null;
-    if (hasDisabledAttribute || /(^|\s)is-disabled(\s|$)/.test(nextButtonClass)) break;
-
-    const previousTableText = (await rows.allTextContents()).join('\n');
-    await nextPageButton.click();
-    await page.waitForFunction(
-      (previousText) =>
-        Array.from(
-          document.querySelectorAll('.el-table__body tbody tr'),
-          (row) => row.textContent ?? '',
-        ).join('\n') !== previousText,
-      previousTableText,
-      { timeout: 30_000 },
+  let completeDailyReports: SaleWorkReport[];
+  try {
+    completeDailyReports = requireCompleteSaleWorkReports(TARGET_ACCOUNT_NAMES, reports);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'thiếu dữ liệu không xác định';
+    throw new Error(
+      `Chưa đọc đủ bảng sau ${dailyResult.visitedPageCount} trang (${reason}). Không ghi Supabase.`,
     );
   }
-
-  const reports = reportCells
-    .map(parseRow)
-    .filter((report): report is SaleWorkReport => report !== null);
-
-  const reportsByAccountName = new Map(reports.map((report) => [report.accountName, report]));
-  const missingAccountNames = TARGET_ACCOUNT_NAMES.filter(
-    (accountName) => !reportsByAccountName.has(accountName),
-  );
-  if (missingAccountNames.length > 0) {
-    // Báo cáo ngày của SaleWork có thể chỉ trả các tài khoản phát sinh hoạt
-    // động. Nếu giữ snapshot hôm trước cho tài khoản vắng mặt, báo cáo ngày sẽ
-    // mang số cũ. Ghi một dòng 0 tường minh để reset đúng ngày (ISSUE-037).
-    console.warn(
-      `SaleWork không trả ${missingAccountNames.length} tài khoản hôm nay; ghi 0 cho: ${missingAccountNames.join(', ')}`,
-    );
-  }
-
-  const completeDailyReports = TARGET_ACCOUNT_NAMES.map(
-    (accountName): SaleWorkReport =>
-      reportsByAccountName.get(accountName) ?? {
-        accountName,
-        conversations: 0,
-        sentMessages: 0,
-        receivedMessages: 0,
-        incomingCalls: 0,
-        outgoingCalls: 0,
-        missedCalls: 0,
-        callDuration: '0.00 giây',
-        amis: null,
-      },
-  );
 
   // Vẫn giữ ghi ra file JSON cục bộ để tiện xem/debug nhanh trên máy —
   // nhưng đây không còn là nguồn dữ liệu chính mà app đọc nữa.
@@ -312,36 +254,107 @@ async function main(): Promise<void> {
   // ✅ Nguồn dữ liệu chính: ghi lên Supabase, để cả localhost và production
   // (Vercel) đều đọc chung một nơi, không cần commit/push mỗi lần sync.
   await saveReportsToSupabase(completeDailyReports);
+  console.log(`Đã lưu ${completeDailyReports.length} tài khoản ngày vào Supabase.`);
 
   // SaleWork và AMIS đều có bộ lọc tháng. Snapshot tháng dùng khoá riêng để dữ liệu
   // lịch sử không bị lần đồng bộ ngày sau ghi đè bằng số của tháng hiện tại.
-  const monthlySyncMonth = process.env.SALEWORK_SYNC_MONTH?.trim() || getVietnamCurrentMonth();
+  const monthlySyncMonth = process.env.SALEWORK_SYNC_MONTH?.trim() || null;
   let monthlyReportCount = 0;
-  try {
-    await selectSaleWorkMonth(page, monthlySyncMonth);
-    await aggregateButton.click();
-    const monthlyResult = await readPaginatedReports(page);
-    await saveReportsToSupabase(
-      monthlyResult.reports,
-      `${MONTHLY_SALEWORK_ROW_PREFIX}${monthlySyncMonth}-01:`,
-    );
-    monthlyReportCount = monthlyResult.reports.length;
-  } catch (error) {
-    // Snapshot tháng là nhánh phụ. Giao diện SaleWork có thể đổi/ẩn bộ chọn
-    // khoảng ngày; không được để lỗi đó chặn snapshot NGÀY đã ghi và script
-    // CRM Report 70 chạy kế tiếp trong `npm run salework:sync` (ISSUE-037).
-    console.warn(
-      `CẢNH BÁO: chưa cập nhật được snapshot SaleWork tháng ${monthlySyncMonth}: ${
-        error instanceof Error ? error.message : 'lỗi không xác định'
-      }`,
-    );
+  if (monthlySyncMonth !== null) {
+    try {
+      await selectSaleWorkMonth(page, monthlySyncMonth);
+      await aggregateButton.click();
+      const monthlyResult = await readPaginatedReports(page);
+      await saveReportsToSupabase(
+        monthlyResult.reports,
+        `${MONTHLY_SALEWORK_ROW_PREFIX}${monthlySyncMonth}-01:`,
+      );
+      monthlyReportCount = monthlyResult.reports.length;
+    } catch (error) {
+      // Snapshot tháng là nhánh phụ. Giao diện SaleWork có thể đổi/ẩn bộ chọn
+      // khoảng ngày; không được để lỗi đó chặn snapshot NGÀY đã ghi và script
+      // CRM Report 70 chạy kế tiếp trong `npm run salework:sync` (ISSUE-037).
+      console.warn(
+        `CẢNH BÁO: chưa cập nhật được snapshot SaleWork tháng ${monthlySyncMonth}: ${
+          error instanceof Error ? error.message : 'lỗi không xác định'
+        }`,
+      );
+    }
+  } else {
+    console.log('Bỏ qua snapshot tháng; đặt SALEWORK_SYNC_MONTH=YYYY-MM khi cần chạy riêng.');
   }
 
   console.log(
-    `Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày và ${monthlyReportCount} tài khoản tháng ${monthlySyncMonth} lên Supabase.`,
+    monthlySyncMonth === null
+      ? `Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày lên Supabase.`
+      : `Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày và ${monthlyReportCount} tài khoản tháng ${monthlySyncMonth} lên Supabase.`,
   );
   await context.close();
   activeBrowserContext = null;
+}
+
+async function readScrollableTablePage(
+  page: Page,
+  rows: Locator,
+): Promise<string[][]> {
+  const cellsBySignature = new Map<string, string[]>();
+  const collectVisibleRows = async (): Promise<void> => {
+    const visibleCells = await rows.evaluateAll((currentRows) =>
+      currentRows.map((row) =>
+        Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? ''),
+      ),
+    );
+    for (const cells of visibleCells) {
+      cellsBySignature.set(JSON.stringify(cells), cells);
+    }
+  };
+
+  await collectVisibleRows();
+
+  // Element UI chỉ giữ các dòng đang nhìn thấy trong DOM. Tìm chính phần tử có
+  // overflow dọc lớn nhất bên trong bảng rồi cuộn từ đầu tới cuối, thu dữ liệu
+  // sau mỗi nhịp. Không suy “không thấy = 0”.
+  const scrollCandidates = page.locator(
+    '.el-table .el-table__body-wrapper, .el-table .el-scrollbar__wrap, .el-table [class*="body"]',
+  );
+  let selectedIndex: number | null = null;
+  let selectedOverflow = 0;
+
+  for (let index = 0; index < (await scrollCandidates.count()); index += 1) {
+    const metrics = await scrollCandidates.nth(index).evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+    }));
+    const overflow = metrics.scrollHeight - metrics.clientHeight;
+    if (metrics.clientHeight > 0 && overflow > selectedOverflow) {
+      selectedIndex = index;
+      selectedOverflow = overflow;
+    }
+  }
+
+  if (selectedIndex === null) return Array.from(cellsBySignature.values());
+
+  const scrollContainer = scrollCandidates.nth(selectedIndex);
+  const clientHeight = await scrollContainer.evaluate((element) => element.clientHeight);
+  const step = Math.max(Math.floor(clientHeight * 0.75), 1);
+
+  for (let scrollTop = 0; scrollTop <= selectedOverflow; scrollTop += step) {
+    await scrollContainer.evaluate((element, top) => {
+      element.scrollTop = top;
+      element.dispatchEvent(new Event('scroll'));
+    }, scrollTop);
+    await page.waitForTimeout(150);
+    await collectVisibleRows();
+  }
+
+  await scrollContainer.evaluate((element, top) => {
+    element.scrollTop = top;
+    element.dispatchEvent(new Event('scroll'));
+  }, selectedOverflow);
+  await page.waitForTimeout(150);
+  await collectVisibleRows();
+
+  return Array.from(cellsBySignature.values());
 }
 
 async function readPaginatedReports(page: Page): Promise<{
@@ -355,11 +368,7 @@ async function readPaginatedReports(page: Page): Promise<{
   const visitedPages = new Set<string>();
 
   while (true) {
-    const currentPageCells = await rows.evaluateAll((currentRows) =>
-      currentRows.map((row) =>
-        Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent ?? ''),
-      ),
-    );
+    const currentPageCells = await readScrollableTablePage(page, rows);
     const pageSignature = JSON.stringify(currentPageCells);
     if (visitedPages.has(pageSignature)) break;
 

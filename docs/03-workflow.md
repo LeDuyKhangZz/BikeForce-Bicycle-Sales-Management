@@ -1103,6 +1103,12 @@ Với ảnh Telesale hiện tại, sáu dòng “trong ngày” cộng snapshot 
 đúng ngày đó. Script AMIS gửi `Period=0`, khoảng đầu ngày–cuối ngày theo giờ Việt Nam và lưu khóa ngày;
 service chỉ ghép khóa của `getVietnamToday()`. Không lấy hiệu lũy kế tháng và không dùng `Period=13`
 cho khối này (DEC-079). Khối “trong tháng” phía trên vẫn giữ nguồn AMIS tháng riêng.
+
+Luồng đồng bộ SaleWork ngày: chọn đủ tám tài khoản → bấm **Tổng hợp** → tìm vùng cuộn dọc của bảng →
+cuộn từ đầu đến cuối và gom các dòng DOM ảo → kiểm tra đủ đúng tám tên → UPSERT một mẻ vào Supabase →
+đóng browser → chạy CRM Report 70. Thiếu một tên ở bất kỳ bước nào thì dừng trước UPSERT; không tự suy
+thành số 0. Snapshot tháng không chạy mặc định trong lệnh ngày và chỉ được bật bằng
+`SALEWORK_SYNC_MONTH=YYYY-MM` (ISSUE-037, ISSUE-039).
 ## Luồng Admin nhập công tác phí tháng (BR-027, DEC-073)
 
 `/admin/travel-expenses` → chọn tháng → nhập một số tiền VND cho từng Sales → kiểm tra tổng → bấm

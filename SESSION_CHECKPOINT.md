@@ -2298,3 +2298,12 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Đã nén khoảng trắng riêng cho layout SaleWork, không giảm cỡ chữ số liệu chính.
 - Đã render và nhìn trực tiếp PNG 1080×1920 của cả `MORNING` và `EVENING`: đủ công tác phí, lương, footer.
 - Unit 757/757, typecheck, lint và production build đều sạch.
+
+### ISSUE-039 — SaleWork ghi 0 cho dòng ngoài vùng cuộn (2026-09-10)
+
+- Bảng SaleWork cuộn ảo; chỉ ba dòng hiện tại tồn tại trong DOM tại một thời điểm.
+- Bản cũ tự điền 0 cho năm tài khoản chưa đọc và ghi đè Supabase.
+- Đã cuộn hết bảng, gom đủ tám tài khoản và fail-closed trước khi ghi nếu còn thiếu.
+- Chạy thật `npm run salework:sync` exit 0 trong khoảng 18 giây; đủ 8 dòng ngày và CRM tiếp tục chạy.
+- Đọc lại service: Nguyễn Thiện 19/43/70 và 11 gọi đi; San 20/18/77 và 0 gọi đi.
+- Unit 760/760, typecheck, lint và production build đều sạch.

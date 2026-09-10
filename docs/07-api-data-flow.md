@@ -685,9 +685,10 @@ chuỗi ngày chuẩn `YYYY-MM-DD` với `getVietnamToday()`, giữ nguyên th�
 
 `scripts/salework-sync.ts` chọn thêm sáu tài khoản được ánh xạ và UPSERT cùng tám cột snapshot hiện hữu.
 Script mở đúng tab **Tin nhắn**, gõ từng tên vào ô tìm kiếm trước khi chọn để không phụ thuộc danh sách
-ảo hóa, rồi sau khi bấm **Tổng hợp** phải đọc tuần tự tất cả trang của bảng kết quả (SaleWork hiện giới
-hạn 5 dòng/trang). Script chỉ UPSERT khi tập đã gom chứa đủ cả tám tài khoản; không được chỉ đọc DOM của
-trang đầu vì sẽ tạo snapshot thiếu. Browser context luôn được đóng cả khi thành công lẫn khi có lỗi.
+ảo hóa, rồi sau khi bấm **Tổng hợp** phải cuộn hết vùng bảng ảo và đọc tuần tự mọi trang nếu có. Script
+chỉ UPSERT khi tập đã gom chứa đủ cả tám tài khoản; “chưa thấy trong DOM” không được suy thành số 0.
+Browser context luôn được đóng cả khi thành công lẫn khi có lỗi. Lệnh ngày mặc định không chạy snapshot
+tháng; muốn chạy nhánh đó phải truyền tường minh `SALEWORK_SYNC_MONTH=YYYY-MM`.
 Tên hiển thị có thể được SaleWork thêm tiền tố trạng thái `(OFF)` khi nhân viên nghỉ. Script bỏ tiền tố
 này cho **mọi** tài khoản trước khi đối chiếu và UPSERT; trạng thái online/offline không được tạo hai khoá
 `account_name` cho cùng một người. Khi kiểm lựa chọn, script đọc cả trạng thái checkbox con của option để

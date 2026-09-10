@@ -1845,24 +1845,22 @@ cuộc gọi AMIS trong ngày.
 **Status:** OPEN — 2026-09-10
 **Module:** script đồng bộ SaleWork tháng
 
-**Description:** SaleWork ngày có thể chỉ trả các tài khoản phát sinh hoạt động; script cũ dừng khi
-không đủ tám dòng. Sau khi ghi snapshot ngày, bước chọn khoảng tháng còn có thể không tìm thấy
-`.el-date-editor--daterange`. Cả hai nhánh đều từng làm lệnh dừng trước CRM Report 70.
+**Description:** Sau khi ghi snapshot ngày, bước chọn khoảng tháng có thể không tìm thấy
+`.el-date-editor--daterange`, làm lệnh dừng trước CRM Report 70.
 
 **Expected:** lỗi nhánh snapshot tháng không được chặn hai nguồn của báo cáo ngày; đồng thời cần cập nhật
 selector tháng theo giao diện SaleWork mới trong một lượt riêng.
 
 **Actual:** daily snapshot đã ghi nhưng process exit 1, nên toán tử `&&` không chạy Report 70.
 
-**Root Cause:** script nhầm “không có dòng ngày” với lỗi phân trang, thay vì hiểu là hoạt động 0; đồng
-thời giao diện SaleWork hiện không còn hiển thị bộ chọn khoảng ngày bằng selector đã ghi lại.
+**Root Cause:** giao diện SaleWork hiện không còn hiển thị bộ chọn khoảng ngày bằng selector đã ghi lại.
 
-**Fix:** tạo đủ tám snapshot ngày, tài khoản không có dòng được reset mọi chỉ số về 0; cô lập nhánh
-tháng bằng `try/catch` có cảnh báo rõ để Report 70 vẫn chạy. Chưa đóng issue cho tới khi selector tháng
-mới được xác định và test thật.
+**Fix:** lệnh đồng bộ ngày bỏ qua hẳn snapshot tháng nếu không truyền `SALEWORK_SYNC_MONTH=YYYY-MM`, nên
+đóng trình duyệt và chạy Report 70 ngay. Nhánh tháng chỉ chạy khi được yêu cầu tường minh. Chưa đóng issue
+cho tới khi selector tháng mới được xác định và test thật.
 
-**Verification:** chạy lại `npm run salework:sync`; phải thấy cảnh báo tháng nhưng vẫn tiếp tục tới dòng
-AMIS `Period=0` và exit 0.
+**Verification:** chạy lại `npm run salework:sync`; đủ tám dòng ngày được lưu, nhánh tháng được bỏ qua,
+AMIS `Period=0` chạy tiếp và toàn bộ lệnh exit 0 trong khoảng 18 giây.
 
 ---
 
@@ -1890,3 +1888,31 @@ header, tuyến, bảng KPI, SaleWork, MISA và hai dòng cuối.
 
 **Verification:** render và nhìn trực tiếp hai PNG 1080×1920 (`MORNING`, `EVENING`) bằng dữ liệu tương
 đương ảnh Ngô Thế San; cả hai hiện đủ công tác phí, lương và footer.
+
+---
+
+### ISSUE-039
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-10
+**Module:** đồng bộ hoạt động SaleWork ngày
+
+**Description:** Nhiều Sales hiện toàn số 0 ở “Hoạt động online trong ngày” dù bảng SaleWork có dữ liệu.
+Ví dụ ảnh nguồn có Nguyễn Thiện 18 hội thoại và San 20 hội thoại, nhưng snapshot lúc 20:20 ghi cả hai là 0.
+
+**Expected:** Playwright cuộn/đọc đủ tám tài khoản sau khi bấm “Tổng hợp”; chỉ UPSERT khi đã thu đủ.
+
+**Actual:** script chỉ đọc các `<tr>` SaleWork đang giữ trong DOM, sau đó tự tạo dòng số 0 cho năm tài
+khoản chưa nhìn thấy và ghi đè dữ liệu đúng trên Supabase.
+
+**Root Cause:** bảng kết quả dùng vùng cuộn ảo bên trong. “Không có trong DOM hiện tại” bị hiểu sai thành
+“không hoạt động”, trong khi các dòng thật nằm phía dưới vùng cuộn.
+
+**Fix:** tìm vùng overflow dọc của bảng, cuộn từ đầu tới cuối và gom từng nhóm `<tr>`; bỏ hoàn toàn việc
+tạo số 0 cho tài khoản thiếu. Helper `requireCompleteSaleWorkReports()` làm mẻ đồng bộ thất bại trước
+mọi lần ghi nếu chưa có đủ tám tài khoản.
+
+**Verification:** chạy thật `npm run salework:sync` sau sửa: log xác nhận bấm Tổng hợp, đọc/lưu đủ 8 tài
+khoản, bỏ qua nhánh tháng và tiếp tục CRM. Đọc lại service: Nguyễn Thiện 19/43/70 hội thoại-tin gửi-tin
+nhận và 11 cuộc gọi đi; San 20/18/77 và 0 cuộc gọi đi; sáu tài khoản còn lại cũng có snapshot thật.

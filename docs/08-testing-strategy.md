@@ -1447,6 +1447,10 @@ footer còn nguyên. Unit khóa nguyên mapping cột/chỉ tiêu; typecheck, li
 Report 70 có test Python khóa `Period=0`, biên UTC của đúng một ngày Việt Nam và khóa snapshot
 `__CRM70__:YYYY-MM-DD:<employee_code>`. Kiểm thử gọi thật ngày 10/09/2026 phải không trả dòng
 `VP-TLS-003` nếu nhân viên nghỉ; không được chấp nhận lại kết quả lũy kế `114` cuộc gọi (ISSUE-036).
+
+Đồng bộ SaleWork phải có unit khóa fail-closed: đủ tám tài khoản thì giữ đúng số và thứ tự; thiếu một
+tài khoản do DOM cuộn ảo thì ném lỗi, tuyệt đối không tạo snapshot 0. Kiểm chứng thật phải thấy log đã
+bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục chạy và process exit 0 (ISSUE-039).
 ## Công tác phí tháng (DEC-073)
 
 - Unit: tháng hợp lệ/sai; ô trống, 0, VND phân nhóm; từ chối chữ, âm, số lẻ, Infinity.

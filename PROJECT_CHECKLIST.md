@@ -1038,6 +1038,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Abraham Kế Toán Bánhàng nối `VP-SA-001`: 16 cuộc gọi SaleWork + 11 AMIS ngày = 27
 - [x] Ảnh Sales có khối SaleWork vẫn hiện đủ công tác phí + lương ở cả đầu ngày và cuối ngày (ISSUE-038)
 - [x] `npm run salework:sync` chạy SaleWork rồi CRM trong cùng một luồng
+- [x] Bảng SaleWork cuộn ảo được đọc đủ tám người; thiếu một người thì dừng trước khi ghi, không tự tạo số 0 (ISSUE-039)
 - [x] Cộng CRM + SaleWork cho hội thoại, gọi đi, gọi đến thành công và thời lượng gọi đi
 - [x] Snapshot CRM dùng khóa kỹ thuật theo tháng/mã nhân viên, chạy lại không cộng trùng và không hiện trên UI
 - [x] Báo cáo `Giao - Kế Toán bán hàng` hiển thị mã telesale `VP-TLS-003`
