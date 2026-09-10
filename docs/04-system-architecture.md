@@ -661,6 +661,12 @@ danh sách cho script đồng bộ, tránh khai báo hai bản. Route `share-ima
 đã qua auth + RLS; `lib/reports/share-card.ts` dựng sáu chuỗi hiển thị, còn component Satori chỉ render.
 Không thêm cột database và không đưa truy vấn vào `.tsx`.
 
+Snapshot CRM Report 70 dùng cùng bảng tích hợp nhưng có namespace khóa
+`__CRM70__:YYYY-MM-DD:<employee_code>`. `scripts/amis-sync/fetch_call_statistics.py` chịu trách nhiệm
+đảm bảo grain ngày ngay từ nguồn (`Period=0` + khoảng ngày Việt Nam); `services/salework.ts` chỉ chọn
+khóa hôm nay rồi gọi helper thuần cộng với snapshot SaleWork. Nhờ tách khóa, dòng CRM tháng cũ không thể
+lọt lại vào ảnh ngày dù còn tồn tại trong bảng (DEC-079, ISSUE-036).
+
 Nguồn chuẩn hiện có sáu ánh xạ; `Nguyễn Minh Khải` ánh xạ chính xác sang `Abraham Khải Hcm`. Vì script
 trải `SALES_SALEWORK_ACCOUNT_NAMES`, tài khoản mới tự tham gia tập đồng bộ mà không cần danh sách thứ hai.
 

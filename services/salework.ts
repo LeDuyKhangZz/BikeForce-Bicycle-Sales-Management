@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-import { getVietnamCurrentMonth } from '@/lib/date';
+import { getVietnamCurrentMonth, getVietnamToday } from '@/lib/date';
 import {
   combineCallMetrics,
   parseSaleWorkDurationSeconds,
@@ -160,6 +160,7 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     }
 
     const period = currentPeriodMonth();
+    const reportDate = getVietnamToday();
     const allSaleWorkRows: SaleWorkReportRow[] = saleworkData ?? [];
   const baseReports = allSaleWorkRows
       .filter((row) =>
@@ -197,7 +198,7 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
       const amisRow = employeeName ? amisByEmployeeName.get(employeeName) : undefined;
       const employeeCode = CRM_CALL_EMPLOYEE_CODE_MAP[report.accountName];
       const callRow = employeeCode
-        ? crmCallsByEmployeeCode.get(`${period}:${employeeCode}`)
+        ? crmCallsByEmployeeCode.get(`${reportDate}:${employeeCode}`)
         : undefined;
       return {
         ...report,

@@ -901,6 +901,10 @@ Bản đầu ngày và cuối ngày của Sales đã được ánh xạ hiển t
 tin nhắn gửi, tin nhắn nhận, cuộc gọi đi, cuộc gọi đến đã nghe và tổng thời gian nghe máy. Sales không
 nhập tay và các số này không được lưu vào `daily_reports`; thiếu lần đồng bộ thì hiển thị `—`.
 
+Với báo cáo Telesale, khối “Tình trạng thực hiện trong ngày” cộng dữ liệu SaleWork của hôm nay với
+CRM Report 70 cũng được lọc đúng hôm nay theo giờ Việt Nam. Tuyệt đối không dùng số AMIS lũy kế từ đầu
+tháng cho khối ngày; người nghỉ hôm nay không được mang số cuộc gọi của các ngày trước sang (DEC-079).
+
 Tên nhân viên/CRM và tài khoản SaleWork được nối bằng ánh xạ tường minh, không tìm gần đúng. Trong đó
 `Nguyễn Minh Khải` dùng tài khoản SaleWork `Abraham Khải Hcm`; tài khoản này phải được chọn trong mỗi
 lượt đồng bộ cùng các tài khoản hiện tại.

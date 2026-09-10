@@ -20,7 +20,7 @@ describe('parseSaleWorkDurationSeconds', () => {
 });
 
 describe('combineCallMetrics', () => {
-  it('cộng CRM vào SaleWork theo đúng ánh xạ báo cáo', () => {
+  it('cộng snapshot CRM đúng ngày vào SaleWork theo đúng ánh xạ báo cáo', () => {
     expect(
       combineCallMetrics(
         { conversations: 13, outgoingCalls: 0, incomingCalls: 2, callDuration: '25.17 phút' },

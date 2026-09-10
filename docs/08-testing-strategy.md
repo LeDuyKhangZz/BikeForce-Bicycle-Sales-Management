@@ -1443,6 +1443,10 @@ QA phải render thật cả MORNING và EVENING ở 1080×1920, có đồng th�
 Style ảnh Telesale phải render PNG thật 1080×1920 bằng dữ liệu mẫu có số tiền chín chữ số, sáu chỉ số
 hoạt động và tên dài. Kiểm trực quan nền được phủ đủ khổ, chữ không do bitmap sinh, hai card không chồng,
 footer còn nguyên. Unit khóa nguyên mapping cột/chỉ tiêu; typecheck, lint và production build phải sạch.
+
+Report 70 có test Python khóa `Period=0`, biên UTC của đúng một ngày Việt Nam và khóa snapshot
+`__CRM70__:YYYY-MM-DD:<employee_code>`. Kiểm thử gọi thật ngày 10/09/2026 phải không trả dòng
+`VP-TLS-003` nếu nhân viên nghỉ; không được chấp nhận lại kết quả lũy kế `114` cuộc gọi (ISSUE-036).
 ## Công tác phí tháng (DEC-073)
 
 - Unit: tháng hợp lệ/sai; ô trống, 0, VND phân nhóm; từ chối chữ, âm, số lẻ, Infinity.

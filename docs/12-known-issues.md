@@ -1803,3 +1803,32 @@ cho tháng này, `14` cho tháng trước, `0` cho kỳ tùy chọn; dùng cùng
 **Verification:** `python test_amis_revenue.py 2026 8` gọi AMIS thật nhận HTTP 200 và **15 dòng**;
 `Kế Toán Bán Hàng` trả `— · 458.661.000 · —`; tổng thực hiện `2.718.370.075`. Python compile sạch,
 assertion cho ba mã kỳ và ID/tên đơn vị pass; typecheck pass.
+
+---
+
+### ISSUE-036
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-10
+**Module:** AMIS CRM Report 70 · báo cáo Telesale
+
+**Description:** Khối “Tình trạng thực hiện trong ngày” cộng số gọi AMIS lũy kế từ đầu tháng. Ngày
+10/09/2026, Trần Thị Quỳnh Giao nghỉ nhưng ảnh vẫn hiện 114 cuộc gọi và 2 giờ 31 phút 22 giây.
+
+**Expected:** Sáu chỉ số ngày tiếp tục kết hợp SaleWork + AMIS, nhưng mỗi nguồn chỉ đóng góp dữ liệu
+của đúng ngày hiện tại theo giờ Việt Nam.
+
+**Actual:** `fetch_call_statistics.py` gửi kỳ tháng hiện tại (`Period=13`) cùng khoảng từ ngày 01 tới
+cuối tháng và lưu snapshot theo `YYYY-MM-01`; service ghép snapshot tháng vào báo cáo ngày.
+
+**Root Cause:** Report 70 ban đầu được xây như công cụ thống kê tháng rồi được nối thẳng vào khối ngày
+mà không đổi grain dữ liệu từ tháng sang ngày. Nhãn UI và dữ liệu vì vậy khác cấp thời gian.
+
+**Fix:** Gửi `Period=0` với đầu/cuối đúng một ngày Việt Nam; lưu khóa
+`__CRM70__:YYYY-MM-DD:<employee_code>`; service chỉ lookup ngày `getVietnamToday()`. Giữ nguyên mapping
+cộng số và toàn bộ nguồn số liệu tháng phía trên.
+
+**Verification:** unit Python khóa ngày 10/09/2026 thành UTC `09/09 17:00:00.000Z → 10/09
+16:59:59.999Z`; gọi AMIS thật trả `VP-SA-001 = 11 cuộc gọi / 1.122 giây` và không có dòng
+`VP-TLS-003`, thay vì snapshot tháng cũ `114 / 9.082 giây`.

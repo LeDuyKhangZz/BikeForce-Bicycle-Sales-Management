@@ -1277,10 +1277,10 @@ tháng — đó chính là lỗi mà DEC-071 sửa.
 ## Snapshot CRM Report 70 trong `salework_reports` — 2026-09-04
 
 Database tích hợp SaleWork hiện hữu không được quản lý bởi bộ migration schema chính. Để tự động cộng
-CRM mà không sửa schema production, Report 70 lưu mỗi nhân viên/tháng thành một dòng kỹ thuật có khóa:
+CRM mà không sửa schema production, Report 70 lưu mỗi nhân viên/ngày thành một dòng kỹ thuật có khóa:
 
 ```text
-__CRM70__:{YYYY-MM-01}:{employee_code}
+__CRM70__:{YYYY-MM-DD}:{employee_code}
 ```
 
 Các dòng này là snapshot, không phải tài khoản SaleWork. `services/salework.ts` phải lọc chúng khỏi
@@ -1294,8 +1294,10 @@ danh sách và chỉ dùng để cộng vào dòng thật. Ánh xạ cột trong
 | `missed_calls` | `QuantityOfNotCalledYet` — chỉ lưu đối soát |
 | `call_duration` | `TotalCallAwayTime` dạng `{n} giây` |
 
-Khóa có kỳ tháng nên dữ liệu tháng cũ không bị dùng cho tháng hiện tại; UPSERT cùng khóa ghi đè
-snapshot mới nhất và không làm tăng số sau mỗi lần chạy.
+Khóa có ngày nên khối “Tình trạng thực hiện trong ngày” chỉ ghép snapshot CRM của đúng ngày Việt Nam
+hiện tại (DEC-079). UPSERT cùng khóa ghi đè snapshot mới nhất và không làm tăng số sau mỗi lần chạy.
+Các khóa tháng cũ dạng `__CRM70__:YYYY-MM-01:*` được giữ lại nhưng service không đọc, tránh thao tác xoá
+dữ liệu ngoài phạm vi bản sửa.
 ## Bảng `sales_monthly_travel_expenses` — công tác phí tháng (DEC-073)
 
 Khoá chính `(period_month, sales_id)` bảo đảm mỗi nhân viên chỉ có một dòng mỗi tháng. `period_month`

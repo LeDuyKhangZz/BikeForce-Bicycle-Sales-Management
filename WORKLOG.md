@@ -3443,3 +3443,11 @@ Theo yêu cầu tiếp theo, cả ảnh cam kết sáng và kết quả chiều 
 Sau khi nhập lương kỳ 08/2026, người dùng mở ảnh báo cáo ngày 10/09/2026 và thấy dấu `-`. Nguyên nhân là DEC-076 cũ đọc lương theo tháng chứa `report_date`. Người dùng chốt lại: chỉ dòng “Lương” của ảnh báo cáo hằng ngày phải đọc tháng liền trước; các tháng sau tiếp tục cùng quy tắc.
 
 Route ảnh ngày nay suy kỳ bằng `getPreviousVietnamMonthPeriod(report.report_date)` trước khi gọi service; ảnh ngày tháng 01 lùi đúng sang tháng 12 năm trước. Màn nhập lương và tổng kết tháng không đổi. E2E ảnh đổi dữ liệu chuẩn bị từ kỳ 09 sang kỳ 08; unit khóa tháng 09, biên năm và ngày sai. Quyết định được ghi thành DEC-078 và BR-030 được cập nhật.
+
+## Entry 051 — 2026-09-10 — Sửa AMIS lũy kế tháng lọt vào báo cáo Telesale ngày
+
+Người dùng phát hiện ảnh của `Giao - Kế Toán bán hàng` ngày 10/09 vẫn có 114 cuộc gọi và hơn 2 giờ 31 phút dù nhân viên nghỉ. Root cause là Report 70 dùng `Period=13`, `FromDate` từ ngày 01 và snapshot khóa tháng, sau đó service cộng thẳng vào khối mang nhãn “trong ngày”.
+
+Đã đổi riêng nguồn CRM Report 70 sang khoảng đúng một ngày Việt Nam (`Period=0`), khóa snapshot theo `YYYY-MM-DD` và lookup bằng `getVietnamToday()`. SaleWork ngày vẫn được giữ và cộng cùng AMIS ngày; khối doanh số/doanh thu tháng không đổi. Gọi thật ngày 10/09 trả `VP-SA-001 = 11 / 1.122 giây` và không có `VP-TLS-003`, xác nhận số `114 / 9.082 giây` trước đó là lũy kế tháng. ISSUE-036 và DEC-079 ghi lại lỗi/quyết định.
+
+Đã ghi snapshot ngày thật vào Supabase và đọc lại qua service: `Giao - Kế Toán bán hàng` còn đúng 2 hội thoại SaleWork, 0 cuộc gọi và 0 giây; không còn phần cộng AMIS tháng. Kiểm chứng: Python unittest 3/3, Python compile sạch, TypeScript test liên quan 12/12, toàn bộ unit 753/753, typecheck/lint sạch và production build thành công với 28 route. Không đổi schema nên không cần migration/RLS mới.

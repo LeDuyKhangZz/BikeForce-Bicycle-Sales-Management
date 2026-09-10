@@ -1028,11 +1028,13 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] PNG mẫu 1080×1920 đã render và nhìn thật; hai card, sáu dòng, footer không chồng/cắt
 - [x] Dashboard doanh số lấy `THỐNG ĐẠT GROUP`, nhận tháng/năm và gửi đúng `Period=13/14/0`
 - [x] Abraham nối đúng dòng AMIS `Kế Toán Bán Hàng`; giá trị không áp dụng giữ là `—`
-- [x] Script Report 70 lấy thống kê cuộc gọi theo nhân viên, nhận tháng/năm và lưu JSON chuẩn hóa
+- [x] Script Report 70 lấy thống kê cuộc gọi theo nhân viên đúng một ngày Việt Nam và lưu JSON chuẩn hóa
 - [x] JSON/bảng terminal có tổng số lượng, đã gọi, chưa gọi và gọi đến thành công
 - [x] `amis-harvest.ts --crm-only` làm mới token cho script CRM mà không chờ hệ Kế toán
 - [x] `fetch_call_statistics.bat` cho phép bấm đúp, giữ cửa sổ kết quả bằng `pause`
 - [x] Script Report 70 tự UPSERT snapshot CRM vào Supabase sau mỗi lần lấy thành công
+- [x] Snapshot CRM dùng khóa ngày; service chỉ cộng AMIS đúng hôm nay vào SaleWork hôm nay (DEC-079)
+- [x] Gọi thật 10/09/2026: `VP-TLS-003` nghỉ không còn dòng; số lũy kế 114 cuộc gọi bị loại
 - [x] `npm run salework:sync` chạy SaleWork rồi CRM trong cùng một luồng
 - [x] Cộng CRM + SaleWork cho hội thoại, gọi đi, gọi đến thành công và thời lượng gọi đi
 - [x] Snapshot CRM dùng khóa kỹ thuật theo tháng/mã nhân viên, chạy lại không cộng trùng và không hiện trên UI

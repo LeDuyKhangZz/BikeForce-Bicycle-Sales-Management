@@ -2608,3 +2608,12 @@ policy RLS và test unit/RLS/render.
 **Alternatives:** Ghi lại số tháng 08 dưới kỳ tháng 09 — bị loại vì làm sai kỳ dữ liệu; đổi cả tổng kết tháng — bị loại vì ngoài phạm vi người dùng yêu cầu.
 **Impact:** Sửa BR-030 và kỳ truyền vào `getMonthlySalary()` trong route ảnh ngày; thêm helper ngày thuần, unit test biên năm và cập nhật E2E ảnh. Không đổi schema hay RLS.
 **Status:** APPROVED
+
+## DEC-079 — Số cuộc gọi AMIS trong báo cáo Telesale phải lọc đúng ngày
+
+**Date:** 2026-09-10
+**Decision:** Khối “Tình trạng thực hiện trong ngày” tiếp tục cộng hai nguồn SaleWork + AMIS CRM Report 70, nhưng Report 70 bắt buộc dùng `Period=0` với `FromDate`/`ToDate` là đầu/cuối đúng ngày Việt Nam. Snapshot CRM đổi khóa từ tháng sang `__CRM70__:YYYY-MM-DD:<employee_code>` và service chỉ ghép khóa của `getVietnamToday()`. Khối doanh số/doanh thu “trong tháng” không đổi.
+**Reason:** Người dùng phát hiện Trần Thị Quỳnh Giao nghỉ ngày 10/09/2026 nhưng ảnh vẫn hiện 114 cuộc gọi và hơn 2 giờ 31 phút. Đối soát xác nhận đó là số AMIS từ đầu tháng tới hiện tại, trái nghĩa nhãn “trong ngày”.
+**Alternatives:** Chỉ dùng SaleWork và bỏ AMIS — bị loại vì người dùng yêu cầu giữ cả hai nguồn; lấy hiệu hai snapshot lũy kế — bị loại vì dễ sai khi AMIS cập nhật muộn và không cần thiết khi API hỗ trợ khoảng ngày tùy chọn.
+**Impact:** Sửa script Report 70, khóa snapshot và lookup trong service; không đổi schema, RLS, mapping chỉ số hoặc khối số liệu tháng.
+**Status:** APPROVED

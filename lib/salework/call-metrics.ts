@@ -67,7 +67,7 @@ export function formatCallDuration(totalSeconds: number): string {
   return `${seconds}.00 giây`;
 }
 
-/** Cộng snapshot CRM vào số gốc SaleWork đúng một lần khi đọc báo cáo. */
+/** Cộng snapshot CRM ĐÚNG NGÀY vào số SaleWork ngày đúng một lần khi đọc báo cáo. */
 export function combineCallMetrics(
   salework: SaleWorkCallMetrics,
   crm: CrmCallMetrics | null,

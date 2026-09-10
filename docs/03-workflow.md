@@ -1098,6 +1098,11 @@ Sau khi lấy dữ liệu, Server Component dùng `getVietnamToday()` để chia
 Sau khi route ảnh đã xác thực phiên và đọc được báo cáo qua RLS, hệ thống ánh xạ tên Sales sang tài khoản
 SaleWork, đọc snapshot đã đồng bộ và dựng sáu dòng chỉ đọc. Cả bản đầu ngày lẫn cuối ngày dùng cùng nguồn;
 không có ánh xạ thì giữ mẫu cũ, có ánh xạ nhưng chưa có snapshot thì sáu giá trị hiện `—`.
+
+Với ảnh Telesale hiện tại, sáu dòng “trong ngày” cộng snapshot SaleWork ngày với CRM Report 70 cũng của
+đúng ngày đó. Script AMIS gửi `Period=0`, khoảng đầu ngày–cuối ngày theo giờ Việt Nam và lưu khóa ngày;
+service chỉ ghép khóa của `getVietnamToday()`. Không lấy hiệu lũy kế tháng và không dùng `Period=13`
+cho khối này (DEC-079). Khối “trong tháng” phía trên vẫn giữ nguồn AMIS tháng riêng.
 ## Luồng Admin nhập công tác phí tháng (BR-027, DEC-073)
 
 `/admin/travel-expenses` → chọn tháng → nhập một số tiền VND cho từng Sales → kiểm tra tổng → bấm

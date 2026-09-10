@@ -3,9 +3,11 @@ Lấy báo cáo AMIS CRM "Thống kê cuộc gọi theo Đơn vị, Nhân viên"
 
 Cách chạy:
     python fetch_call_statistics.py
-    python fetch_call_statistics.py 2026 9
+    python fetch_call_statistics.py 2026-09-10
 
-Không truyền tháng/năm thì lấy tháng hiện tại theo giờ Việt Nam. Script đọc
+Không truyền ngày thì lấy hôm nay theo giờ Việt Nam. Report 70 luôn được lọc
+đúng một ngày; không dùng kỳ tháng cho khối "Tình trạng thực hiện trong ngày".
+Script đọc
 token từ file .env cùng thư mục, lấy dữ liệu CRM rồi tự UPSERT snapshot vào
 Supabase để báo cáo cộng với số SaleWork. Kết quả debug vẫn được lưu vào:
     call_statistics_raw.json
@@ -94,34 +96,18 @@ def iso_ms(value: datetime) -> str:
     return utc_value.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc_value.microsecond // 1000:03d}Z"
 
 
-def month_range_vn(year: int, month: int) -> tuple[datetime, datetime]:
-    start = datetime(year, month, 1, tzinfo=VN_TZ)
-    next_start = (
-        datetime(year + 1, 1, 1, tzinfo=VN_TZ)
-        if month == 12
-        else datetime(year, month + 1, 1, tzinfo=VN_TZ)
-    )
-    return start, next_start - timedelta(milliseconds=1)
-
-
-def report_period(year: int, month: int, now_vn: datetime | None = None) -> int:
-    """Mã kỳ AMIS: 13 tháng này, 14 tháng trước, 0 cho kỳ tùy chọn."""
-    current = now_vn or datetime.now(VN_TZ)
-    previous = current.replace(day=1) - timedelta(days=1)
-
-    if (year, month) == (current.year, current.month):
-        return 13
-    if (year, month) == (previous.year, previous.month):
-        return 14
-    return 0
+def day_range_vn(report_day: datetime) -> tuple[datetime, datetime]:
+    """Đầu và cuối đúng một ngày nghiệp vụ theo giờ Việt Nam."""
+    start = report_day.replace(hour=0, minute=0, second=0, microsecond=0)
+    return start, start + timedelta(days=1) - timedelta(milliseconds=1)
 
 
 def encoded_columns() -> str:
     return base64.b64encode(",".join(COLUMNS).encode("utf-8")).decode("ascii")
 
 
-def request_body(year: int, month: int, period: int) -> dict[str, Any]:
-    from_date, to_date = month_range_vn(year, month)
+def request_body(report_day: datetime) -> dict[str, Any]:
+    from_date, to_date = day_range_vn(report_day)
 
     return {
         "Columns": encoded_columns(),
@@ -138,7 +124,9 @@ def request_body(year: int, month: int, period: int) -> dict[str, Any]:
             "ID": REPORT_ID,
             "ReportDynamicID": 0,
             "Data": {
-                "Period": period,
+                # Period=13 là "tháng này" và khiến AMIS trả lũy kế đầu tháng.
+                # Báo cáo ngày phải dùng kỳ tùy chọn cùng FromDate/ToDate một ngày.
+                "Period": 0,
                 "FromDate": iso_ms(from_date),
                 "ToDate": iso_ms(to_date),
                 "AnalysisType": 2,
@@ -176,11 +164,10 @@ def request_body(year: int, month: int, period: int) -> dict[str, Any]:
     }
 
 
-def fetch(year: int, month: int) -> dict[str, Any]:
+def fetch(report_day: datetime) -> dict[str, Any]:
     if not BEARER_TOKEN:
         stop("Thiếu AMIS_BEARER_TOKEN trong scripts/amis-sync/.env")
 
-    period = report_period(year, month)
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Authorization": f"Bearer {BEARER_TOKEN}",
@@ -197,7 +184,7 @@ def fetch(year: int, month: int) -> dict[str, Any]:
     response = requests.post(
         API_URL,
         headers=headers,
-        json=request_body(year, month, period),
+        json=request_body(report_day),
         timeout=90,
     )
 
@@ -255,8 +242,12 @@ def duration_text(total_seconds: int) -> str:
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}" if hours else f"{minutes:02d}:{seconds:02d}"
 
 
-def upsert_to_supabase(rows: list[dict[str, Any]], year: int, month: int) -> int:
-    """Ghi snapshot CRM vào dòng kỹ thuật SaleWork; chạy lại không cộng lặp."""
+def crm_snapshot_key(report_date: str, employee_code: str) -> str:
+    return f"__CRM70__:{report_date}:{employee_code}"
+
+
+def upsert_to_supabase(rows: list[dict[str, Any]], report_day: datetime) -> int:
+    """Ghi snapshot CRM theo ngày; chạy lại cùng ngày không cộng lặp."""
     if not SUPABASE_URL or not SERVICE_ROLE_KEY:
         stop(
             "Thiếu BIKEFORCE_SUPABASE_URL hoặc BIKEFORCE_SERVICE_ROLE_KEY "
@@ -266,10 +257,10 @@ def upsert_to_supabase(rows: list[dict[str, Any]], year: int, month: int) -> int
         return 0
 
     synced_at = datetime.now(timezone.utc).isoformat()
-    period = f"{year:04d}-{month:02d}-01"
+    report_date = report_day.strftime("%Y-%m-%d")
     payload = [
         {
-            "account_name": f"__CRM70__:{period}:{row['employee_code']}",
+            "account_name": crm_snapshot_key(report_date, row["employee_code"]),
             "conversations": row["total_quantity"],
             "sent_messages": 0,
             "received_messages": 0,
@@ -320,35 +311,34 @@ def print_rows(rows: list[dict[str, Any]]) -> None:
         )
 
 
-def selected_month() -> tuple[int, int]:
+def selected_date() -> datetime:
     args = sys.argv[1:]
     now_vn = datetime.now(VN_TZ)
 
     if not args:
-        return now_vn.year, now_vn.month
-    if len(args) != 2:
-        stop("Cách chạy: python fetch_call_statistics.py [NĂM THÁNG]")
+        return now_vn
+    if len(args) != 1:
+        stop("Cách chạy: python fetch_call_statistics.py [YYYY-MM-DD]")
 
     try:
-        year, month = int(args[0]), int(args[1])
-        month_range_vn(year, month)
+        parsed = datetime.strptime(args[0], "%Y-%m-%d")
     except (TypeError, ValueError):
-        stop("Tháng/năm không hợp lệ. Ví dụ: python fetch_call_statistics.py 2026 9")
+        stop("Ngày không hợp lệ. Ví dụ: python fetch_call_statistics.py 2026-09-10")
 
-    return year, month
+    return parsed.replace(tzinfo=VN_TZ)
 
 
 def main() -> None:
-    year, month = selected_month()
-    period = report_period(year, month)
+    report_day = selected_date()
+    report_date = report_day.strftime("%Y-%m-%d")
 
     print("=" * 80)
     print("THỐNG KÊ CUỘC GỌI THEO ĐƠN VỊ, NHÂN VIÊN")
-    print(f"Kỳ      : {month:02d}/{year} (Period={period})")
+    print(f"Ngày    : {report_date} (Period=0, lọc đúng một ngày)")
     print(f"Đơn vị  : {ORG_UNIT_TEXT} (ID={ORG_UNIT_ID})")
     print("=" * 80)
 
-    payload = fetch(year, month)
+    payload = fetch(report_day)
     rows = normalize_rows(payload)
 
     (HERE / "call_statistics_raw.json").write_text(
@@ -362,7 +352,7 @@ def main() -> None:
 
     print(f"HTTP 200 — lấy được {len(rows)} nhân viên.")
     print_rows(rows)
-    updated_count = upsert_to_supabase(rows, year, month)
+    updated_count = upsert_to_supabase(rows, report_day)
     print(f"\nĐã cập nhật {updated_count} dòng CRM vào Supabase.")
     print("Đã lưu call_statistics_raw.json và call_statistics.json để đối soát.")
 

@@ -629,8 +629,9 @@ giao `TargetAmount`, pipeline lưu `null` và ảnh hiển thị `—`, không �
 `AnalysisType=2`, `OrganizationUnitID=1`, `IsViewEmployee=true` và danh sách cột được mã hóa Base64
 đúng như trang `/crm/report/view/70/0`.
 
-Script nhận `python fetch_call_statistics.py [NAM THANG]`, mặc định tháng hiện tại theo giờ Việt Nam;
-mã kỳ là `13/14/0` tương ứng tháng này/tháng trước/tùy chọn. Xác thực đọc từ
+Script nhận `python fetch_call_statistics.py [YYYY-MM-DD]`, mặc định hôm nay theo giờ Việt Nam.
+Request luôn gửi `Period=0` và đặt `FromDate`/`ToDate` thành đầu/cuối của đúng một ngày Việt Nam;
+không dùng `Period=13` vì mã đó buộc AMIS trả lũy kế từ đầu tháng (DEC-079). Xác thực đọc từ
 `scripts/amis-sync/.env`; có thể làm mới riêng CRM bằng `amis-harvest.ts --crm-only`, không cần mở
 luồng AMIS Kế toán.
 
@@ -644,12 +645,13 @@ Kết quả chuẩn hóa gồm mã/tên nhân viên, cuộc gọi đi thành cô
 ### 16.1. Tự cập nhật và cộng với SaleWork
 
 Sau khi lấy thành công, script tự UPSERT một snapshot kỹ thuật vào `salework_reports` với khóa
-`__CRM70__:{period_month}:{employee_code}`. Snapshot nằm riêng với dòng SaleWork thật, bị service lọc
+`__CRM70__:{report_date}:{employee_code}`. Snapshot nằm riêng với dòng SaleWork thật, bị service lọc
 khỏi danh sách tài khoản, và được ghi đè khi chạy lại nên không thể cộng lặp. Không cần migration mới
 cho database tích hợp hiện tại.
 
 `npm run salework:sync` chạy tuần tự hai nguồn: đồng bộ SaleWork trước, sau đó gọi Report 70 và cập
-nhật snapshot CRM. `services/salework.ts` chỉ cộng tại lúc đọc báo cáo theo ánh xạ mã nhân viên:
+nhật snapshot CRM. `services/salework.ts` chỉ cộng snapshot có khóa đúng `getVietnamToday()` tại lúc
+đọc báo cáo theo ánh xạ mã nhân viên; snapshot tháng cũ không còn khớp và bị bỏ qua:
 
 | Dòng trên báo cáo | SaleWork | CRM Report 70 |
 |---|---|---|

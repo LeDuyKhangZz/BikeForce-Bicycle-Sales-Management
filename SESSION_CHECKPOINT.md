@@ -2268,3 +2268,15 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Route dùng helper ngày thuần; unit và E2E ảnh đã cập nhật theo kỳ mới.
 
 **Next Exact Steps:** chạy typecheck, lint, unit, build và E2E ảnh khi môi trường local sẵn sàng; sau đó commit/push để Vercel deploy.
+
+## CHECKPOINT 2026-09-10 — AMIS cuộc gọi trên báo cáo Telesale đổi từ tháng sang ngày
+
+- ISSUE-036: ảnh ngày của Giao hiện 114 cuộc gọi/9.082 giây dù nghỉ vì Report 70 dùng kỳ lũy kế tháng.
+- DEC-079: giữ phép cộng SaleWork hôm nay + AMIS hôm nay; chỉ đổi Report 70 sang `Period=0` và khoảng đúng một ngày Việt Nam.
+- Snapshot CRM nay có khóa `__CRM70__:YYYY-MM-DD:<employee_code>`; service chỉ ghép khóa của `getVietnamToday()`.
+- Gọi AMIS thật ngày 10/09/2026: `VP-TLS-003` không có dòng; `VP-SA-001` có 11 cuộc gọi/1.122 giây.
+- Khối doanh số/doanh thu theo tháng và báo cáo tổng kết tháng không đổi.
+- Snapshot ngày đã ghi Supabase; service trả Giao = 2 hội thoại SaleWork, 0 cuộc gọi, 0 giây.
+- Python test 3/3, TS test liên quan 12/12, full unit 753/753, typecheck/lint/build đều sạch.
+
+**Next Exact Steps:** commit/push `main`, chờ Vercel deploy rồi mở lại ảnh Giao để xác nhận trực quan.
