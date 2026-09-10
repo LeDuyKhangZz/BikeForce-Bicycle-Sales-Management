@@ -906,6 +906,30 @@ describe('buildShareCardModel — công tác phí tháng trước (BR-028)', () 
 });
 
 describe('buildShareCardModel — lương tháng của báo cáo (BR-030)', () => {
+  it('hiển thị cùng mức lương ở cả bản đầu ngày và cuối ngày', () => {
+    const morning = buildShareCardModel(
+      { ...BASE, status: 'MORNING_SUBMITTED' },
+      PERFORMANCE,
+      null,
+      null,
+      null,
+      15_000_000,
+    );
+    const evening = buildShareCardModel(
+      BASE,
+      PERFORMANCE,
+      null,
+      null,
+      null,
+      15_000_000,
+    );
+
+    expect(morning.variant).toBe('MORNING');
+    expect(evening.variant).toBe('EVENING');
+    expect(morning.monthlySalaryText).toBe('15.000.000 ₫');
+    expect(evening.monthlySalaryText).toBe('15.000.000 ₫');
+  });
+
   it('format số tiền VND sẵn cho thẻ ảnh', () => {
     const model = buildShareCardModel(BASE, PERFORMANCE, null, null, null, 15_000_000);
     expect(model.monthlySalaryText).toBe('15.000.000 ₫');

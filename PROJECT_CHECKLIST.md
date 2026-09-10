@@ -1035,6 +1035,7 @@ mình chọn nơi chuyển"* · *"mở link ngay trong zalo sẽ không thể t�
 - [x] Script Report 70 tự UPSERT snapshot CRM vào Supabase sau mỗi lần lấy thành công
 - [x] Snapshot CRM dùng khóa ngày; service chỉ cộng AMIS đúng hôm nay vào SaleWork hôm nay (DEC-079)
 - [x] Gọi thật 10/09/2026: `VP-TLS-003` nghỉ không còn dòng; số lũy kế 114 cuộc gọi bị loại
+- [x] Abraham Kế Toán Bánhàng nối `VP-SA-001`: 16 cuộc gọi SaleWork + 11 AMIS ngày = 27
 - [x] `npm run salework:sync` chạy SaleWork rồi CRM trong cùng một luồng
 - [x] Cộng CRM + SaleWork cho hội thoại, gọi đi, gọi đến thành công và thời lượng gọi đi
 - [x] Snapshot CRM dùng khóa kỹ thuật theo tháng/mã nhân viên, chạy lại không cộng trùng và không hiện trên UI

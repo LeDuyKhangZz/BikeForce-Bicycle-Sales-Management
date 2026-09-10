@@ -3451,3 +3451,11 @@ Người dùng phát hiện ảnh của `Giao - Kế Toán bán hàng` ngày 10/
 Đã đổi riêng nguồn CRM Report 70 sang khoảng đúng một ngày Việt Nam (`Period=0`), khóa snapshot theo `YYYY-MM-DD` và lookup bằng `getVietnamToday()`. SaleWork ngày vẫn được giữ và cộng cùng AMIS ngày; khối doanh số/doanh thu tháng không đổi. Gọi thật ngày 10/09 trả `VP-SA-001 = 11 / 1.122 giây` và không có `VP-TLS-003`, xác nhận số `114 / 9.082 giây` trước đó là lũy kế tháng. ISSUE-036 và DEC-079 ghi lại lỗi/quyết định.
 
 Đã ghi snapshot ngày thật vào Supabase và đọc lại qua service: `Giao - Kế Toán bán hàng` còn đúng 2 hội thoại SaleWork, 0 cuộc gọi và 0 giây; không còn phần cộng AMIS tháng. Kiểm chứng: Python unittest 3/3, Python compile sạch, TypeScript test liên quan 12/12, toàn bộ unit 753/753, typecheck/lint sạch và production build thành công với 28 route. Không đổi schema nên không cần migration/RLS mới.
+
+Người dùng đối soát tiếp và phát hiện Abraham phải là `16 SaleWork + 11 AMIS = 27`, nhưng ảnh chỉ có 16. Snapshot hai nguồn đều đúng; thiếu duy nhất ánh xạ CRM `Abraham Kế Toán Bánhàng → VP-SA-001`, vì map ban đầu chỉ khai báo Giao. Đã bổ sung ánh xạ tường minh và unit test giữ riêng hai mã `VP-SA-001` / `VP-TLS-003`.
+
+Lần chạy lại SaleWork ghi thành công dữ liệu ngày nhưng vấp selector tháng trước khi shell gọi Report 70. Để lỗi nhánh phụ không làm báo cáo ngày thiếu AMIS lần nữa, bước tháng nay có cảnh báo riêng và không chặn pipeline; ISSUE-037 giữ OPEN cho việc tìm selector tháng mới.
+
+Lần xác minh sau cho thấy SaleWork ngày chỉ trả ba tài khoản có hoạt động, không có phân trang; năm tài khoản vắng mặt là 0 chứ không phải lỗi. Script nay luôn tạo đủ tám snapshot ngày và reset dòng vắng mặt về 0, tránh giữ số của hôm trước.
+
+Đã chạy lại toàn bộ pipeline ngày thành công và đọc trực tiếp dữ liệu Supabase: Abraham có `outgoingCalls = 27`, Giao có `outgoingCalls = 0`, thời lượng `0.00 giây`. Dòng lương được xác nhận dùng chung cho cả ảnh `MORNING` và `EVENING`, kèm test hồi quy riêng. Kiểm chứng cuối: unit **757/757**, Python **3/3**, typecheck/lint sạch và production build thành công. Full Vitest có 760 unit pass nhưng integration/RLS không chạy vì Supabase local `127.0.0.1:54322` đang tắt.

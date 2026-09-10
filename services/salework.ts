@@ -5,6 +5,7 @@ import {
   combineCallMetrics,
   parseSaleWorkDurationSeconds,
 } from '@/lib/salework/call-metrics';
+import { getCrmCallEmployeeCode } from '@/lib/salework/crm-employee-map';
 
 export type SaleWorkReport = {
   accountName: string;
@@ -62,9 +63,6 @@ export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
 
 const CRM_CALL_ROW_PREFIX = '__CRM70__:';
 const MONTHLY_SALEWORK_ROW_PREFIX = '__SALEWORK_MONTH__:';
-const CRM_CALL_EMPLOYEE_CODE_MAP: Record<string, string> = {
-  'Giao - Kế Toán bán hàng': 'VP-TLS-003',
-};
 
 /**
  * ⚠ Dùng BIKEFORCE_SERVICE_ROLE_KEY (không phải anon key) vì hàm này CHỈ chạy
@@ -196,7 +194,7 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     return baseReports.map((report) => {
       const employeeName = AMIS_EMPLOYEE_MAP[report.accountName];
       const amisRow = employeeName ? amisByEmployeeName.get(employeeName) : undefined;
-      const employeeCode = CRM_CALL_EMPLOYEE_CODE_MAP[report.accountName];
+      const employeeCode = getCrmCallEmployeeCode(report.accountName);
       const callRow = employeeCode
         ? crmCallsByEmployeeCode.get(`${reportDate}:${employeeCode}`)
         : undefined;

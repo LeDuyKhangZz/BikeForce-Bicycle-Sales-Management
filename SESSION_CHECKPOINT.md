@@ -2278,5 +2278,15 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Khối doanh số/doanh thu theo tháng và báo cáo tổng kết tháng không đổi.
 - Snapshot ngày đã ghi Supabase; service trả Giao = 2 hội thoại SaleWork, 0 cuộc gọi, 0 giây.
 - Python test 3/3, TS test liên quan 12/12, full unit 753/753, typecheck/lint/build đều sạch.
+- Bổ sung ánh xạ còn thiếu `Abraham Kế Toán Bánhàng → VP-SA-001`; kết quả mong đợi hôm nay là 16
+  cuộc gọi SaleWork + 11 AMIS = 27. Giao tiếp tục dùng mã riêng `VP-TLS-003`.
+- ISSUE-037 OPEN: selector snapshot tháng SaleWork biến mất; đã cô lập thành cảnh báo để không chặn
+  snapshot ngày và CRM Report 70. Cần tìm selector tháng mới ở lượt riêng.
+- SaleWork ngày chỉ trả tài khoản có hoạt động; script nay ghi đủ tám dòng và reset tài khoản vắng mặt
+  về 0, không dừng pipeline và không giữ số của hôm trước.
+- Đọc lại Supabase sau lần đồng bộ cuối: Abraham = 27 cuộc gọi đi; Giao = 0 cuộc gọi, 0 giây.
+- Lương đã nằm ở cả biến thể `MORNING` và `EVENING`; bổ sung unit test khóa hai nhánh.
+- Kiểm chứng cuối: unit 757/757, Python 3/3, typecheck/lint/build đều sạch. Full Vitest không thể
+  hoàn tất integration/RLS vì Supabase local `127.0.0.1:54322` đang tắt.
 
 **Next Exact Steps:** commit/push `main`, chờ Vercel deploy rồi mở lại ảnh Giao để xác nhận trực quan.

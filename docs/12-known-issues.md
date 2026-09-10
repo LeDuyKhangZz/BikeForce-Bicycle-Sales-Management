@@ -1823,12 +1823,43 @@ của đúng ngày hiện tại theo giờ Việt Nam.
 cuối tháng và lưu snapshot theo `YYYY-MM-01`; service ghép snapshot tháng vào báo cáo ngày.
 
 **Root Cause:** Report 70 ban đầu được xây như công cụ thống kê tháng rồi được nối thẳng vào khối ngày
-mà không đổi grain dữ liệu từ tháng sang ngày. Nhãn UI và dữ liệu vì vậy khác cấp thời gian.
+mà không đổi grain dữ liệu từ tháng sang ngày. Sau khi sửa grain, bảng nối mã CRM vẫn chỉ có Giao và
+thiếu `Abraham Kế Toán Bánhàng → VP-SA-001`, khiến số AMIS ngày đúng nhưng không được cộng vào Abraham.
 
 **Fix:** Gửi `Period=0` với đầu/cuối đúng một ngày Việt Nam; lưu khóa
-`__CRM70__:YYYY-MM-DD:<employee_code>`; service chỉ lookup ngày `getVietnamToday()`. Giữ nguyên mapping
-cộng số và toàn bộ nguồn số liệu tháng phía trên.
+`__CRM70__:YYYY-MM-DD:<employee_code>`; service chỉ lookup ngày `getVietnamToday()`. Bổ sung ánh xạ
+tường minh Abraham → `VP-SA-001`; giữ nguyên công thức cộng và toàn bộ nguồn số liệu tháng phía trên.
 
 **Verification:** unit Python khóa ngày 10/09/2026 thành UTC `09/09 17:00:00.000Z → 10/09
 16:59:59.999Z`; gọi AMIS thật trả `VP-SA-001 = 11 cuộc gọi / 1.122 giây` và không có dòng
 `VP-TLS-003`, thay vì snapshot tháng cũ `114 / 9.082 giây`.
+Đọc lại sau khi đồng bộ SaleWork: Abraham có `16` cuộc gọi SaleWork + `11` AMIS = `27`; Giao có `0`
+cuộc gọi AMIS trong ngày.
+
+---
+
+### ISSUE-037
+
+**Severity:** P2
+
+**Status:** OPEN — 2026-09-10
+**Module:** script đồng bộ SaleWork tháng
+
+**Description:** SaleWork ngày có thể chỉ trả các tài khoản phát sinh hoạt động; script cũ dừng khi
+không đủ tám dòng. Sau khi ghi snapshot ngày, bước chọn khoảng tháng còn có thể không tìm thấy
+`.el-date-editor--daterange`. Cả hai nhánh đều từng làm lệnh dừng trước CRM Report 70.
+
+**Expected:** lỗi nhánh snapshot tháng không được chặn hai nguồn của báo cáo ngày; đồng thời cần cập nhật
+selector tháng theo giao diện SaleWork mới trong một lượt riêng.
+
+**Actual:** daily snapshot đã ghi nhưng process exit 1, nên toán tử `&&` không chạy Report 70.
+
+**Root Cause:** script nhầm “không có dòng ngày” với lỗi phân trang, thay vì hiểu là hoạt động 0; đồng
+thời giao diện SaleWork hiện không còn hiển thị bộ chọn khoảng ngày bằng selector đã ghi lại.
+
+**Fix:** tạo đủ tám snapshot ngày, tài khoản không có dòng được reset mọi chỉ số về 0; cô lập nhánh
+tháng bằng `try/catch` có cảnh báo rõ để Report 70 vẫn chạy. Chưa đóng issue cho tới khi selector tháng
+mới được xác định và test thật.
+
+**Verification:** chạy lại `npm run salework:sync`; phải thấy cảnh báo tháng nhưng vẫn tiếp tục tới dòng
+AMIS `Period=0` và exit 0.

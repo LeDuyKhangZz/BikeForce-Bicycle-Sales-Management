@@ -661,7 +661,9 @@ nhật snapshot CRM. `services/salework.ts` chỉ cộng snapshot có khóa đú
 | Tổng thời gian đã nghe máy | `call_duration` | `TotalCallAwayTime` |
 
 `QuantityOfNotCalledYet` được giữ trong `missed_calls` của dòng snapshot để đối soát nhưng chưa có
-dòng hiển thị riêng. Với tài khoản `Giao - Kế Toán bán hàng`, mã nối CRM là `VP-TLS-003`.
+dòng hiển thị riêng. Ánh xạ CRM tường minh: `Abraham Kế Toán Bánhàng` → `VP-SA-001` (`Kế Toán Bán
+Hàng` trên AMIS); `Giao - Kế Toán bán hàng` → `VP-TLS-003` (`Trần Thị Quỳnh Giao`). Không nối hai
+tài khoản này bằng tên gần đúng.
 
 ### 16.2. Luồng preview dành cho Admin
 

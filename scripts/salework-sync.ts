@@ -276,38 +276,69 @@ async function main(): Promise<void> {
     .map(parseRow)
     .filter((report): report is SaleWorkReport => report !== null);
 
-  const syncedAccountNames = new Set(reports.map((report) => report.accountName));
+  const reportsByAccountName = new Map(reports.map((report) => [report.accountName, report]));
   const missingAccountNames = TARGET_ACCOUNT_NAMES.filter(
-    (accountName) => !syncedAccountNames.has(accountName),
+    (accountName) => !reportsByAccountName.has(accountName),
   );
   if (missingAccountNames.length > 0) {
-    throw new Error(
-      `SaleWork thiếu dữ liệu của ${missingAccountNames.join(', ')} sau khi đọc ${visitedPages.size} trang: ${await summarizePage()}`,
+    // Báo cáo ngày của SaleWork có thể chỉ trả các tài khoản phát sinh hoạt
+    // động. Nếu giữ snapshot hôm trước cho tài khoản vắng mặt, báo cáo ngày sẽ
+    // mang số cũ. Ghi một dòng 0 tường minh để reset đúng ngày (ISSUE-037).
+    console.warn(
+      `SaleWork không trả ${missingAccountNames.length} tài khoản hôm nay; ghi 0 cho: ${missingAccountNames.join(', ')}`,
     );
   }
+
+  const completeDailyReports = TARGET_ACCOUNT_NAMES.map(
+    (accountName): SaleWorkReport =>
+      reportsByAccountName.get(accountName) ?? {
+        accountName,
+        conversations: 0,
+        sentMessages: 0,
+        receivedMessages: 0,
+        incomingCalls: 0,
+        outgoingCalls: 0,
+        missedCalls: 0,
+        callDuration: '0.00 giây',
+        amis: null,
+      },
+  );
 
   // Vẫn giữ ghi ra file JSON cục bộ để tiện xem/debug nhanh trên máy —
   // nhưng đây không còn là nguồn dữ liệu chính mà app đọc nữa.
   mkdirSync(resolve(process.cwd(), 'data'), { recursive: true });
-  writeFileSync(resolve(process.cwd(), 'data/salework-report.json'), JSON.stringify(reports, null, 2), 'utf8');
+  writeFileSync(resolve(process.cwd(), 'data/salework-report.json'), JSON.stringify(completeDailyReports, null, 2), 'utf8');
 
   // ✅ Nguồn dữ liệu chính: ghi lên Supabase, để cả localhost và production
   // (Vercel) đều đọc chung một nơi, không cần commit/push mỗi lần sync.
-  await saveReportsToSupabase(reports);
+  await saveReportsToSupabase(completeDailyReports);
 
   // SaleWork và AMIS đều có bộ lọc tháng. Snapshot tháng dùng khoá riêng để dữ liệu
   // lịch sử không bị lần đồng bộ ngày sau ghi đè bằng số của tháng hiện tại.
   const monthlySyncMonth = process.env.SALEWORK_SYNC_MONTH?.trim() || getVietnamCurrentMonth();
-  await selectSaleWorkMonth(page, monthlySyncMonth);
-  await aggregateButton.click();
-  const monthlyResult = await readPaginatedReports(page);
-  await saveReportsToSupabase(
-    monthlyResult.reports,
-    `${MONTHLY_SALEWORK_ROW_PREFIX}${monthlySyncMonth}-01:`,
-  );
+  let monthlyReportCount = 0;
+  try {
+    await selectSaleWorkMonth(page, monthlySyncMonth);
+    await aggregateButton.click();
+    const monthlyResult = await readPaginatedReports(page);
+    await saveReportsToSupabase(
+      monthlyResult.reports,
+      `${MONTHLY_SALEWORK_ROW_PREFIX}${monthlySyncMonth}-01:`,
+    );
+    monthlyReportCount = monthlyResult.reports.length;
+  } catch (error) {
+    // Snapshot tháng là nhánh phụ. Giao diện SaleWork có thể đổi/ẩn bộ chọn
+    // khoảng ngày; không được để lỗi đó chặn snapshot NGÀY đã ghi và script
+    // CRM Report 70 chạy kế tiếp trong `npm run salework:sync` (ISSUE-037).
+    console.warn(
+      `CẢNH BÁO: chưa cập nhật được snapshot SaleWork tháng ${monthlySyncMonth}: ${
+        error instanceof Error ? error.message : 'lỗi không xác định'
+      }`,
+    );
+  }
 
   console.log(
-    `Đã đồng bộ ${reports.length} tài khoản SaleWork ngày và ${monthlyResult.reports.length} tài khoản tháng ${monthlySyncMonth} lên Supabase.`,
+    `Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày và ${monthlyReportCount} tài khoản tháng ${monthlySyncMonth} lên Supabase.`,
   );
   await context.close();
   activeBrowserContext = null;
