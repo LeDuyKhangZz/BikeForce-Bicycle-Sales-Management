@@ -2259,3 +2259,12 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Typecheck/lint sạch; toàn bộ unit 746/746; production build thành công với 28 route. RLS/E2E chưa chạy vì local Supabase/Docker chưa hoạt động.
 
 **Next Exact Steps:** áp cả hai migration lương theo thứ tự, chạy RLS/E2E rồi xem PNG 1080×1920 để xác nhận footer không bị chèn.
+
+## CHECKPOINT 2026-09-10 — Ảnh ngày lấy lương tháng liền trước
+
+- DEC-078 sửa BR-030: dòng “Lương” trên ảnh báo cáo hằng ngày đọc tháng liền trước tháng chứa `report_date`.
+- Ví dụ ảnh ngày 10/09/2026 đọc kỳ `2026-08-01`; tháng 01 lùi sang tháng 12 năm trước.
+- Màn nhập lương và ảnh tổng kết tháng vẫn đọc đúng tháng được chọn, không bị đổi theo quy tắc này.
+- Route dùng helper ngày thuần; unit và E2E ảnh đã cập nhật theo kỳ mới.
+
+**Next Exact Steps:** chạy typecheck, lint, unit, build và E2E ảnh khi môi trường local sẵn sàng; sau đó commit/push để Vercel deploy.

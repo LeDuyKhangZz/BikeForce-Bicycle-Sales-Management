@@ -676,4 +676,4 @@ Route share-image gọi `getMonthlyTravelExpense()` song song với các nguồn
 
 Route Server Component `app/(admin)/admin/salaries/page.tsx` điều phối dữ liệu. Form và Server Action nằm trong `features/admin-salaries/`; Zod/field-name ở `lib/validation/salaries.ts`; toàn bộ PostgREST nằm trong `services/salaries.ts` và nhận Supabase server client chịu RLS. Module dùng bảng riêng, không trộn dữ liệu lương với công tác phí hay KPI.
 
-Route share-image gọi `getMonthlySalary()` sau khi đọc báo cáo qua RLS, rồi truyền số thô vào `buildShareCardModel()`. View-model chịu trách nhiệm format VND hoặc `-`; component Satori chỉ render dòng “Lương”.
+Route share-image dùng helper ngày thuần để suy kỳ lương là tháng liền trước tháng của `report_date`, gọi `getMonthlySalary()` sau khi đọc báo cáo qua RLS, rồi truyền số thô vào `buildShareCardModel()` (DEC-078). View-model chịu trách nhiệm format VND hoặc `-`; component Satori chỉ render dòng “Lương”. Route tổng kết tháng không dùng quy tắc lùi này.

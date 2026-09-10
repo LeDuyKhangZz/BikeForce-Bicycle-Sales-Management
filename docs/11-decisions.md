@@ -2599,3 +2599,12 @@ policy RLS và test unit/RLS/render.
 **Alternatives:** Dùng tháng trước như công tác phí — không được chọn vì người dùng không yêu cầu độ trễ này và lương đã gắn kỳ tháng rõ ràng; mở đọc toàn bảng cho Sales — bị loại vì làm lộ dữ liệu nhạy cảm của người khác.
 **Impact:** BR-030; thêm migration policy, service getter, truy vấn trong share-image, trường view-model, dòng Satori và unit/RLS/E2E.
 **Status:** APPROVED
+
+## DEC-078 — Ảnh báo cáo hằng ngày lấy lương tháng liền trước
+
+**Date:** 2026-09-10
+**Decision:** Chỉ dòng “Lương” trên hai biến thể ảnh báo cáo hằng ngày đổi sang đọc kỳ tháng liền trước tháng chứa `report_date`. Ví dụ ảnh ngày 10/09/2026 đọc lương kỳ 08/2026; ảnh tháng 01 đọc tháng 12 năm trước. Màn nhập lương và ảnh tổng kết tháng vẫn dùng đúng tháng được chọn.
+**Reason:** Người dùng xác nhận trực tiếp lương được hiển thị trễ một tháng và làm rõ phạm vi là dòng cuối của báo cáo hằng ngày.
+**Alternatives:** Ghi lại số tháng 08 dưới kỳ tháng 09 — bị loại vì làm sai kỳ dữ liệu; đổi cả tổng kết tháng — bị loại vì ngoài phạm vi người dùng yêu cầu.
+**Impact:** Sửa BR-030 và kỳ truyền vào `getMonthlySalary()` trong route ảnh ngày; thêm helper ngày thuần, unit test biên năm và cập nhật E2E ảnh. Không đổi schema hay RLS.
+**Status:** APPROVED

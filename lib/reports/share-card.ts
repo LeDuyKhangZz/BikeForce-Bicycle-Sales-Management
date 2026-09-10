@@ -458,7 +458,7 @@ export type ShareCardModel = {
   readonly saleWorkMetrics: readonly ShareCardSaleWorkMetric[] | null;
   /** Công tác phí của tháng liền trước tháng hiện tại theo giờ Việt Nam. */
   readonly previousMonthTravelExpenseText: string;
-  /** Lương của tháng chứa ngày báo cáo; thiếu dữ liệu hiển thị dấu `-`. */
+  /** Lương tháng liền trước tháng của báo cáo; thiếu dữ liệu hiển thị dấu `-`. */
   readonly monthlySalaryText: string;
   readonly noteText: string | null;
 };

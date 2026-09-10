@@ -12,6 +12,7 @@ import {
   formatVietnamMonth,
   formatVietnamDateTime,
   formatVietnamShortDate,
+  getPreviousVietnamMonthPeriod,
   getVietnamCurrentMonth,
   getVietnamMonthRange,
   getVietnamMonthToDateRange,
@@ -309,6 +310,21 @@ describe('shiftVietnamMonth — nút Tháng trước / Tháng sau', () => {
   ])('%s → trả null, KHÔNG throw', (_label, month, delta) => {
     expect(() => shiftVietnamMonth(month, delta)).not.toThrow();
     expect(shiftVietnamMonth(month, delta)).toBeNull();
+  });
+});
+
+describe('getPreviousVietnamMonthPeriod — kỳ lương trên ảnh ngày (BR-030, DEC-078)', () => {
+  it('báo cáo tháng 09 đọc lương tháng 08', () => {
+    expect(getPreviousVietnamMonthPeriod('2026-09-10')).toBe('2026-08-01');
+  });
+
+  it('lùi qua đầu năm', () => {
+    expect(getPreviousVietnamMonthPeriod('2026-01-15')).toBe('2025-12-01');
+  });
+
+  it('ngày không hợp lệ trả null', () => {
+    expect(getPreviousVietnamMonthPeriod('2026-02-30')).toBeNull();
+    expect(getPreviousVietnamMonthPeriod('2026-09')).toBeNull();
   });
 });
 

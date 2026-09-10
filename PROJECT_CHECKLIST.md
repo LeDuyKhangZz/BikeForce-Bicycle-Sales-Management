@@ -1142,3 +1142,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] RLS và E2E đã thêm; chờ môi trường local Supabase/app để chạy
 - [x] Ảnh báo cáo Sales có dòng “Lương”; thiếu dữ liệu hiện `-`, số 0 vẫn format VND
 - [x] Sales chỉ được RLS cho đọc lương của chính mình để dựng ảnh
+- [x] Ảnh báo cáo hằng ngày lấy lương tháng liền trước; tháng 01 lùi đúng sang tháng 12 năm trước (DEC-078)

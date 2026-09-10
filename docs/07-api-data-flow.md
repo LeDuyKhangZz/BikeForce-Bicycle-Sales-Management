@@ -716,4 +716,4 @@ FormData → parse `month` và từng `amount__<salesId>` bằng Zod → auth �
 
 ### Đọc lương vào ảnh báo cáo (BR-030)
 
-Sau khi `getReportForShare()` xác nhận người gọi được đọc báo cáo, route tính kỳ bằng tháng của `report_date` rồi gọi `getMonthlySalary(supabase, report.sales_id, periodMonth)`. Cùng client anon-key chịu RLS chỉ trả lương own-or-admin. Số thô đi vào view-model để format VND; `null` thành `-`.
+Sau khi `getReportForShare()` xác nhận người gọi được đọc báo cáo, route gọi `getPreviousVietnamMonthPeriod(report.report_date)` để lấy ngày đầu tháng liền trước rồi mới gọi `getMonthlySalary(supabase, report.sales_id, previousSalaryPeriod)`. Ví dụ `report_date = 2026-09-10` đọc kỳ `2026-08-01`; tháng 01 lùi sang tháng 12 năm trước (DEC-078). Cùng client anon-key chịu RLS chỉ trả lương own-or-admin. Số thô đi vào view-model để format VND; `null` thành `-`. Route tổng kết tháng tiếp tục đọc đúng kỳ tháng Admin chọn.

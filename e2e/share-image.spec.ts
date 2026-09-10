@@ -287,7 +287,8 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     await page.getByRole('button', { name: /Lưu công tác phí/ }).click();
     await expect(page.getByText('Đã lưu công tác phí tháng.')).toBeVisible({ timeout: 30_000 });
 
-    await page.goto('/admin/salaries?month=2026-09');
+    // BR-030 / DEC-078: ảnh báo cáo tháng 09 đọc lương kỳ tháng 08.
+    await page.goto('/admin/salaries?month=2026-08');
     const salaryRow = page.locator('form > ul > li').filter({ hasText: E2E_DONE_SALES_NAME });
     await salaryRow.locator('input[name^="amount__"]').fill('15000000');
     await page.getByRole('button', { name: /Lưu lương/ }).click();

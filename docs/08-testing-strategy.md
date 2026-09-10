@@ -1459,3 +1459,4 @@ footer còn nguyên. Unit khóa nguyên mapping cột/chỉ tiêu; typecheck, li
 - RLS: Admin insert/update/select; số âm bị CHECK từ chối; Sales chỉ đọc own, không đọc người khác và không ghi; anon không đọc.
 - E2E ba viewport: vị trí sidebar, nhập/lưu/tải lại, không cuộn ngang và Sales không truy cập route.
 - Share-card unit: lương dương format VND, `0` không thành thiếu dữ liệu, `null` hiện đúng `-`; E2E render ảnh sau khi Admin nhập cả công tác phí và lương.
+- Kỳ lương ảnh ngày: unit khóa `10/09/2026 → 2026-08-01`, lùi qua đầu năm và đầu vào sai; E2E nhập lương tháng 08 trước khi render ảnh báo cáo tháng 09 (DEC-078).

@@ -6,7 +6,12 @@ import { z } from 'zod';
 
 import { DailyReportShareCard } from '@/features/report-share/daily-report-share-card';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
-import { getVietnamCurrentMonth, getVietnamToday, shiftVietnamMonth } from '@/lib/date';
+import {
+  getPreviousVietnamMonthPeriod,
+  getVietnamCurrentMonth,
+  getVietnamToday,
+  shiftVietnamMonth,
+} from '@/lib/date';
 import { REPORT_MESSAGES } from '@/lib/reports/messages';
 import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { summarizeMonthToDate } from '@/lib/reports/month-summary';
@@ -260,7 +265,8 @@ export async function GET(request: Request, context: ShareImageContext): Promise
    *       `target_amount` của AMIS lẫn tổng cam kết ngày ở (1).
    *    4. `getMonthlyTravelExpense` → công tác phí của Sales ở tháng liền trước
    *       tháng hiện tại theo giờ Việt Nam (BR-028).
-   *    5. `getMonthlySalary` → lương của Sales trong tháng chứa ngày báo cáo (BR-030).
+   *    5. `getMonthlySalary` → lương của Sales ở tháng liền trước tháng chứa
+   *       ngày báo cáo (BR-030, DEC-078).
    *
    *  Cả năm đi qua CÙNG một client chịu RLS, nên Sales không mượn được số của
    *  người khác và Admin xuất ảnh hộ Sales vẫn đúng (BR-022).
@@ -288,6 +294,7 @@ export async function GET(request: Request, context: ShareImageContext): Promise
   const isCurrentSaleWorkDate = report.report_date === getVietnamToday();
   const previousMonth = shiftVietnamMonth(getVietnamCurrentMonth(), -1);
   const previousExpensePeriod = previousMonth === null ? null : `${previousMonth}-01`;
+  const previousSalaryPeriod = getPreviousVietnamMonthPeriod(report.report_date);
   const [amis, monthlyTargets, saleWorkReport, previousMonthTravelExpense, monthlySalary] = await Promise.all([
     getAmisMetricsForShare(supabase, report.sales.amis_employee_name, periodMonth),
     getMonthlyTargets(supabase, report.sales_id, periodMonth),
@@ -297,7 +304,9 @@ export async function GET(request: Request, context: ShareImageContext): Promise
     previousExpensePeriod === null
       ? Promise.resolve(null)
       : getMonthlyTravelExpense(supabase, report.sales_id, previousExpensePeriod),
-    getMonthlySalary(supabase, report.sales_id, periodMonth),
+    previousSalaryPeriod === null
+      ? Promise.resolve(null)
+      : getMonthlySalary(supabase, report.sales_id, previousSalaryPeriod),
   ]);
 
   const performance =

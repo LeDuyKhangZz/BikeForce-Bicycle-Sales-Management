@@ -346,6 +346,19 @@ export function shiftVietnamMonth(yyyyMM: string, delta: number): string | null 
   return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+/**
+ * Kỳ tháng liền trước của một ngày nghiệp vụ.
+ *
+ * Dùng cho các khoản được chốt sau khi tháng kết thúc, ví dụ ảnh báo cáo ngày
+ * trong tháng 09/2026 đọc lương kỳ 08/2026 (BR-030, DEC-078).
+ */
+export function getPreviousVietnamMonthPeriod(date: string): string | null {
+  if (!isValidVietnamDate(date)) return null;
+
+  const previousMonth = shiftVietnamMonth(date.slice(0, 7), -1);
+  return previousMonth === null ? null : `${previousMonth}-01`;
+}
+
 /** Khoảng "từ đầu tháng đến một mốc" — PHASE 17, DEC-068. Inclusive hai đầu. */
 export type MonthToDateRange = {
   /** `'YYYY-MM'` — tháng của báo cáo đang xuất ảnh. */

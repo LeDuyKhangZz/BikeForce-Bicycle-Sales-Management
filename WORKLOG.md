@@ -3437,3 +3437,9 @@ Kiểm chứng đã chạy: typecheck sạch; lint sạch; toàn bộ unit 743/7
 Theo yêu cầu tiếp theo, cả ảnh cam kết sáng và kết quả chiều có thêm dòng “Lương” dưới công tác phí. Route lấy lương theo tháng chứa ngày báo cáo; view-model format VND và trả đúng `-` khi chưa nhập, trong khi `0` vẫn hiển thị là tiền thật. Policy SELECT được mở tối thiểu cho Sales đọc dòng own; ghi vẫn Admin-only.
 
 Đã thêm unit cho đủ ba nhánh lương, cập nhật RLS test và mở rộng E2E ảnh để Admin nhập lương trước khi Sales render PNG. Typecheck/lint sạch; toàn bộ unit 746/746; production build thành công với 28 route. RLS/E2E chưa chạy vì local Supabase/Docker chưa hoạt động.
+
+## Entry 050 — 2026-09-10 — Ảnh ngày lấy lương tháng liền trước
+
+Sau khi nhập lương kỳ 08/2026, người dùng mở ảnh báo cáo ngày 10/09/2026 và thấy dấu `-`. Nguyên nhân là DEC-076 cũ đọc lương theo tháng chứa `report_date`. Người dùng chốt lại: chỉ dòng “Lương” của ảnh báo cáo hằng ngày phải đọc tháng liền trước; các tháng sau tiếp tục cùng quy tắc.
+
+Route ảnh ngày nay suy kỳ bằng `getPreviousVietnamMonthPeriod(report.report_date)` trước khi gọi service; ảnh ngày tháng 01 lùi đúng sang tháng 12 năm trước. Màn nhập lương và tổng kết tháng không đổi. E2E ảnh đổi dữ liệu chuẩn bị từ kỳ 09 sang kỳ 08; unit khóa tháng 09, biên năm và ngày sai. Quyết định được ghi thành DEC-078 và BR-030 được cập nhật.
