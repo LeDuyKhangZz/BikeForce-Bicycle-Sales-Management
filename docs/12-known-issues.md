@@ -2096,3 +2096,24 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Fix:** thêm mapping đã đối chiếu từ danh sách SaleWork; tách tập tháng 9 tài khoản khỏi tập ngày 8 tài khoản. `MONTH_ONLY` dùng tập tháng và chỉ ghi namespace tháng; nhánh ngày giữ nguyên tập/khóa hiện hữu.
 
 **Verification:** chạy thật tháng 08 ghi đủ 9 tài khoản và log “dữ liệu ngày không thay đổi”. Service đọc Dương trả `88` hội thoại, `1.135` tin gửi, `1.878` tin nhận, `32` cuộc gọi đi, `53` cuộc gọi đến và `2.20 giờ`; full unit 768/768, typecheck, lint và production build 29 route đều sạch.
+
+---
+
+### ISSUE-048
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** scraper công nợ MISA cho Tổng kết tháng
+
+**Description:** nguồn API cũ phải cộng dòng khách hàng và phụ thuộc cache ACT; popup lọc còn có thể báo “Bạn chưa chọn Nhân viên”, khiến script nhìn tiêu đề báo cáo cũ phía sau và nhận nhầm là đã đổi kỳ.
+
+**Expected:** Playwright lấy trực tiếp tên, mã và “Số tiền thanh toán” ở dòng tổng nhân viên, đặt 100 dòng/trang, đi hết trang và chỉ bàn giao dữ liệu đúng tháng cho UPSERT cũ.
+
+**Actual:** luồng tháng chưa scrape các dòng tổng; xác nhận kỳ chỉ dựa vào tiêu đề, không kiểm popup tham số đã đóng. Chromium headless còn giữ lớp nền chặn thao tác trên control phân trang.
+
+**Root Cause:** trạng thái bộ lọc, trạng thái popup và bảng báo cáo bị coi là một bước; nguồn tổng tiền dùng payload chi tiết thay vì chính dòng nhóm người dùng đối chiếu trên màn hình.
+
+**Fix:** riêng `--month` mở Chromium có giao diện bằng profile duy nhất, tick cả hai “Chọn tất cả”, chờ popup đóng, đặt 100 dòng/trang và parse `tr-level-1` qua regex. Scraper chờ response từng trang, dừng khi next disabled và khử trùng tổng lặp ở biên trang. File trung gian mang kỳ `YYYY-MM`; Python từ chối file sai kỳ. Luồng ngày vẫn headless và không gọi scraper này.
+
+**Verification:** chạy tự động thật tháng 08/2026 qua 3 trang trả 11 nhân viên; Dương Văn Thịnh `360.356.200`, tổng `3.209.116.245`. UPSERT production ghi 18 dòng/12 cột và nguồn công nợ báo OK. Full unit TypeScript 773/773, unit Python liên quan 4/4, typecheck, lint và production build 29 route đều sạch.

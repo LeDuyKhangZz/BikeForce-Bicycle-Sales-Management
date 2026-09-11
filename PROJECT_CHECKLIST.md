@@ -1178,3 +1178,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Công nợ đọc đủ mọi trang chi tiết; tháng 08/2026 có 207 dòng/11 nhân viên, Dương Văn Thịnh `360.356.200` (ISSUE-045)
 - [x] Harvester chỉ dùng một profile, tái sử dụng JWT/cookie CRM còn hạn và không bắt đăng nhập lại vì trang không phát request mới (ISSUE-046)
 - [x] Tổng kết tháng ánh xạ Dương Văn Thịnh sang SaleWork, đồng bộ tháng đủ 9 tài khoản; tập 8 tài khoản và khóa báo cáo ngày không đổi (ISSUE-047)
+- [x] Công nợ Tổng kết tháng scrape trực tiếp 11 dòng tổng nhân viên qua 3 trang MISA; file bàn giao khóa đúng kỳ và luồng báo cáo ngày không đổi (ISSUE-048)

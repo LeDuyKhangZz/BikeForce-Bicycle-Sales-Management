@@ -3577,3 +3577,13 @@ Kiểm chứng cuối: full unit 766/766, typecheck, lint và production build 2
 Kiểm chứng cuối: full unit 768/768, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`, chờ deploy rồi tải lại ảnh Dương tháng 08.
+
+## Entry 062 — 2026-09-11 — Scrape trực tiếp dòng tổng công nợ MISA cho báo cáo tháng
+
+Theo yêu cầu người dùng, nguồn dòng 2 “Doanh thu đã ghi” của Tổng kết tháng không còn cộng từ chi tiết khách hàng. Playwright mở đúng báo cáo “Tổng hợp thanh toán công nợ khách hàng theo nhân viên”, chọn toàn bộ hai bộ lọc, đặt 100 dòng/trang, chỉ đọc `tr-level-1` và đi tới khi next disabled. Dòng nhóm lặp ở biên trang được khử trùng; tổng mâu thuẫn làm lượt chạy thất bại thay vì cộng sai.
+
+Chạy tự động thật tháng 08 trả 6 dòng ở trang 1, 6 dòng ở trang 2, 1 dòng ở trang 3 và còn đúng 11 nhân viên. Dương Văn Thịnh là `360.356.200`; tổng là `3.209.116.245`. File trung gian gắn kỳ `2026-08`, Python từ chối kỳ khác rồi dùng nguyên logic UPSERT tháng cũ. Production ghi thành công; nhánh không có `--month` vẫn headless và không gọi scraper/file tháng.
+
+Kiểm chứng cuối: full unit TypeScript 773/773, unit Python liên quan 4/4, typecheck, lint và production build 29 route đều sạch. ISSUE-048 đóng.
+
+**Next Exact Steps:** commit/push `main`, rồi tải lại ảnh Tổng kết tháng 08 để xác nhận các nhân viên hiển thị dòng 2 theo tổng MISA.

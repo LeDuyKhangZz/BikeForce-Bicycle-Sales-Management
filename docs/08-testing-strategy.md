@@ -1477,8 +1477,9 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - E2E mobile 375px và desktop 1440px phải bấm thật **Sao chép hình ảnh**, mock đúng response PNG của route ảnh, xác nhận trạng thái “Đã sao chép hình ảnh” và không cuộn ngang.
 - Kiểm thử script thật phải đối chiếu cả snapshot tháng và xác nhận khóa SaleWork ngày/CRM ngày không đổi.
 - Unit parser ACT phải giữ đúng `p_session_key`, `p_branch_id` và cờ chi nhánh phụ thuộc từ request thật; body lỗi không được tự đoán giá trị.
-- Unit Python phải chứng minh phân trang dựa trên số dòng chi tiết đã flatten, không dựa trên số nhóm nhân viên trong `Data`.
-- Kiểm thử thật kỳ lịch sử phải thấy đúng tiêu đề tháng trên MISA trước khi đọc API; tháng 08/2026 phải có Dương Văn Thịnh `360.356.200` và đọc đủ 207 dòng qua 3 trang.
+- Unit parser Playwright phải nhận dòng tổng có/không có khoảng trắng, bỏ dòng khách hàng, khử trùng cùng tổng ở biên trang và từ chối hai tổng mâu thuẫn.
+- Unit Python phải nhận file Playwright đúng kỳ và từ chối file khác tháng trước khi UPSERT.
+- Kiểm thử thật kỳ lịch sử phải tự chọn toàn bộ hai bộ lọc, đặt 100 dòng/trang và đi đến nút next disabled; tháng 08/2026 phải trả 11 nhân viên qua 3 trang, Dương Văn Thịnh `360.356.200` và tổng `3.209.116.245`.
 - Unit phiên AMIS phải nhận JWT còn hơn ngưỡng an toàn, từ chối token sắp hết hạn/rác; chạy ẩn phải tái sử dụng một profile và không phát cảnh báo khi token/cookie đã lưu còn dùng được.
 - Unit mapping phải khóa `Dương Văn Thịnh → Abraham Thịnh Miền Trung`, xác nhận tài khoản này có trong tập tháng nhưng không nằm trong tập ngày 8 tài khoản.
 - Kiểm thử thật `MONTH_ONLY` tháng 08 phải ghi đủ 9 snapshot tháng; đọc service theo khóa của Dương trả `88 / 1.135 / 1.878` và không tạo/ghi đè khóa ngày.

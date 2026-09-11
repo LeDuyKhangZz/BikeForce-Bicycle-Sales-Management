@@ -25,11 +25,13 @@ import { actReportParametersFromBody } from '../../lib/amis/act-report-parameter
 import { isJwtSessionUsable } from '../../lib/amis/jwt-session';
 import { formatVietnamShortDate, getVietnamMonthRange } from '../../lib/date';
 import { sendTelegramAlert } from './telegram-alert';
+import { scrapeReceivableEmployeeSummaries } from './receivable-report-scraper';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = resolve(HERE, '.env');
 const ALERT_PATH = resolve(HERE, 'alert.log');
 const PROFILE_DIR = resolve(HERE, '../../.playwright-amis-profile');
+const RECEIVABLE_SUMMARY_PATH = resolve(HERE, 'receivable-employee-summary.json');
 
 config({ path: ENV_PATH, quiet: true });
 
@@ -177,7 +179,43 @@ async function selectActMonth(page: Page, month: string): Promise<void> {
     );
   }
 
-  await page.getByRole('button', { name: 'Xem báo cáo', exact: true }).click();
+  // Báo cáo lồng hai bộ lọc. MISA mở popup với cả hai danh sách chưa chọn,
+  // nên phải chọn toàn bộ nhân viên và khách hàng trước khi xem báo cáo.
+  const selectAllLabels = page.getByText('Chọn tất cả', { exact: true });
+  await selectAllLabels.first().waitFor({ state: 'visible', timeout: 30_000 });
+  const selectAllCount = await selectAllLabels.count();
+  if (selectAllCount < 2) {
+    throw new Error('MISA khong hien du hai bo loc Nhan vien va Khach hang.');
+  }
+  await selectAllLabels.first().click();
+  await selectAllLabels.last().click();
+
+  const viewReportButton = page.getByRole('button', {
+    name: 'Xem báo cáo',
+    exact: true,
+  });
+  await viewReportButton.click();
+
+  const missingSelectionWarning = page.getByText(/Bạn chưa chọn/u).first();
+  const reportState = await Promise.race([
+    viewReportButton
+      .waitFor({ state: 'hidden', timeout: 120_000 })
+      .then(() => 'accepted' as const)
+      .catch(() => 'timeout' as const),
+    missingSelectionWarning
+      .waitFor({ state: 'visible', timeout: 120_000 })
+      .then(() => 'warning' as const)
+      .catch(() => 'timeout' as const),
+  ]);
+  if (reportState === 'warning') {
+    throw new Error(
+      (await missingSelectionWarning.textContent())?.trim() ??
+        'MISA khong chap nhan bo loc bao cao thang.',
+    );
+  }
+  if (reportState !== 'accepted') {
+    throw new Error('MISA khong dong bo loc bao cao thang trong thoi gian cho.');
+  }
 
   const [year, monthNumber] = month.split('-') as [string, string];
   await page
@@ -225,6 +263,23 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
 
   if (requestedMonth) {
     await selectActMonth(page, requestedMonth);
+    const receivableSummaries = await scrapeReceivableEmployeeSummaries(page);
+    writeFileSync(
+      RECEIVABLE_SUMMARY_PATH,
+      JSON.stringify(
+        {
+          month: requestedMonth,
+          generatedAt: new Date().toISOString(),
+          rows: receivableSummaries,
+        },
+        null,
+        2,
+      ),
+      { encoding: 'utf8' },
+    );
+    console.log(
+      `   -> Da lay ${receivableSummaries.length} dong tong cong no rieng cho thang ${requestedMonth}.`,
+    );
   } else {
     // Tu dong bam nut "Xem bao cao" trong popup "Chon tham so" neu no xuat hien.
     // Playwright thao tac tren DOM, khong bi anh huong boi viec cua so hien
@@ -277,15 +332,17 @@ async function main(): Promise<void> {
   );
 
   const ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
-    headless: !loginMode,
+    // Riêng luồng tháng cần cửa sổ thật: ACT giữ một lớp chặn click vô hạn
+    // trong Chromium headless. Luồng ngày vẫn giữ nguyên chế độ headless cũ.
+    headless: requestedMonth ? false : !loginMode,
     locale: 'vi-VN',
     timezoneId: 'Asia/Ho_Chi_Minh',
     // Che do login: khong ep kich thuoc co dinh (de tranh cua so to hon
     // man hinh that, khien footer/nut bam bi day ra ngoai vung nhin thay
     // duoc). De Chromium tu mo va maximize theo man hinh that.
     // Che do tu dong (headless): dung viewport co dinh nhu binh thuong.
-    viewport: loginMode ? null : { width: 1920, height: 1080 },
-    args: loginMode ? ['--start-maximized'] : [],
+    viewport: loginMode || requestedMonth ? null : { width: 1920, height: 1080 },
+    args: loginMode || requestedMonth ? ['--start-maximized'] : [],
   });
 
   const storedCrmToken = process.env.AMIS_BEARER_TOKEN?.trim() ?? '';

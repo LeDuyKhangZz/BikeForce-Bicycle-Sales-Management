@@ -2430,3 +2430,14 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Full unit 768/768, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`, tải lại ảnh Dương tháng 08 sau deploy.
+
+### FIX 2026-09-11 — Scraper dòng tổng công nợ chỉ cho Tổng kết tháng
+
+- `amis-harvest.ts --month YYYY-MM` tự chọn toàn bộ nhân viên/khách hàng, chỉ xác nhận kỳ khi popup tham số đóng.
+- Scraper đặt 100 dòng/trang, parse riêng `tr-level-1`, chờ response từng trang, dừng ở next disabled và khử trùng dòng nhóm nằm ở biên trang.
+- Artifact `{ month, rows }` là đầu vào công nợ của `push_amis.py`; sai kỳ bị từ chối trước khi ghi.
+- Chạy thật `2026-08`: 11 nhân viên/3 trang, Dương `360.356.200`, tổng `3.209.116.245`; production UPSERT báo OK.
+- Luồng không có `--month` vẫn headless, không đọc scraper/artifact tháng và không thay đổi báo cáo ngày.
+- Kiểm chứng cuối: full unit TypeScript 773/773, unit Python liên quan 4/4, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`, chờ deploy rồi kiểm tra lại ảnh tháng 08.

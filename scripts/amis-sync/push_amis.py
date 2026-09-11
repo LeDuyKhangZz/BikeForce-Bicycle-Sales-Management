@@ -18,9 +18,11 @@ Chọn kỳ khác (mặc định là tháng hiện tại):
     $env:PUSH_YEAR="2026"; $env:PUSH_MONTH="7"; python push_amis.py
 """
 
+import json
 import os
 import sys
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 import requests # type: ignore
@@ -33,7 +35,6 @@ if hasattr(sys.stderr, "reconfigure"):
 
 # Tái sử dụng nguyên logic đã kiểm chứng từ các script cũ.
 import test_amis_revenue as revenue_mod
-import test_act_receivable as receivable_mod
 import crawl_nvkd as nvkd_mod
 
 load_dotenv(override=True)
@@ -75,8 +76,9 @@ NVKD_COLUMNS = [
 # Nguồn 2 — CRM dashboard doanh số (`test_amis_revenue.py`).
 REVENUE_COLUMNS = ["target_amount", "current_amount"]
 
-# Nguồn 3 — AMIS Kế toán (`test_act_receivable.py`).
+# Nguồn 3 — dòng tổng do Playwright đọc từ AMIS Kế toán.
 RECEIVABLE_COLUMNS = ["receive_amount"]
+RECEIVABLE_SUMMARY_PATH = Path(__file__).resolve().parent / "receivable-employee-summary.json"
 
 
 def to_number(value: Any) -> float:
@@ -231,17 +233,32 @@ def pull_receivable(year: int, month: int) -> dict[str, float]:
     Con số này khớp cột "Số tiền thanh toán" ở dòng tổng của mỗi nhân viên trên
     báo cáo `SummaryCustomerReceivableByEmployee` của actapp.misa.vn.
     """
-    from_date, to_date = receivable_mod.month_bounds_act(year, month)
-    rows = receivable_mod.fetch_all(from_date, to_date)
+    if not RECEIVABLE_SUMMARY_PATH.exists():
+        raise RuntimeError(
+            "Chua co ket qua Playwright cong no thang. Chay amis-harvest.ts --month truoc."
+        )
+
+    payload = json.loads(RECEIVABLE_SUMMARY_PATH.read_text(encoding="utf-8"))
+    expected_month = f"{year:04d}-{month:02d}"
+    if payload.get("month") != expected_month:
+        raise RuntimeError(
+            f"Ket qua Playwright la thang {payload.get('month')}, khong phai {expected_month}."
+        )
+
+    rows = payload.get("rows")
+    if not isinstance(rows, list) or not rows:
+        raise RuntimeError("Ket qua Playwright cong no khong co dong nhan vien.")
 
     totals: dict[str, float] = {}
-
     for row in rows:
-        name = str(row.get("employee_name") or "").strip()
-        if not name:
+        if not isinstance(row, dict):
             continue
-        totals[name] = totals.get(name, 0.0) + to_number(row.get("receive_amount"))
+        name = str(row.get("tenNhanVien") or "").strip()
+        if name:
+            totals[name] = to_number(row.get("soTienThanhToan"))
 
+    if not totals:
+        raise RuntimeError("Khong doc duoc tong cong no nhan vien tu ket qua Playwright.")
     return totals
 
 
