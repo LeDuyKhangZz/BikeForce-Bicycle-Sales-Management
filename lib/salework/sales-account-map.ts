@@ -11,6 +11,7 @@ const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Phan Thành Khải': 'Abraham Khải Khánh Hoà',
   'Tô Kim Sang': 'Abraham Sang Miền Tây',
   'Võ Trí Tính': 'Abraham Bà Rịa - Vũng Tàu',
+  'Dương Văn Thịnh': 'Abraham Thịnh Miền Trung',
 };
 
 /**
@@ -23,7 +24,19 @@ export function normalizeSaleWorkAccountName(accountName: string): string {
 }
 
 /** Danh sách tài khoản phải được script SaleWork chọn để dữ liệu luôn được đồng bộ. */
-export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = Object.values(
+// Giữ nguyên tập đồng bộ NGÀY đã vận hành; Dương chỉ được thêm vào snapshot
+// THÁNG theo yêu cầu, tránh thay đổi điều kiện đủ và dữ liệu báo cáo hằng ngày.
+export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
+  'Abraham San Miền Trung',
+  'Abraham Khải Hcm',
+  'Abraham Nguyễn Thiện',
+  'Abraham Khải Khánh Hoà',
+  'Abraham Sang Miền Tây',
+  'Abraham Bà Rịa - Vũng Tàu',
+];
+
+/** Tập Sales cần snapshot tháng cho màn Tổng kết tháng. */
+export const MONTHLY_SALEWORK_ACCOUNT_NAMES: readonly string[] = Object.values(
   SALES_SALEWORK_ACCOUNT_MAP,
 );
 

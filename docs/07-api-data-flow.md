@@ -745,4 +745,9 @@ còn bị hiểu nhầm là hết phiên và không gửi cảnh báo Telegram o
 
 `MonthlySyncButton` → `requestMonthlySyncAction(FormData)` → validate `YYYY-MM` → auth/active/Admin → `createMonthlySyncJob()` bằng anon client chịu RLS. Worker local đọc job `PENDING`, chuyển atomically sang `RUNNING`, gọi `amis-harvest.ts --month YYYY-MM`; Playwright nhập ngày kết thúc trước rồi ngày bắt đầu bằng thao tác bàn phím thật, bấm “Xem báo cáo”, chờ đúng tiêu đề tháng và bắt lại token/session/bộ lọc chi nhánh từ request `paging_filter` của kỳ đó. `fetch_receivable.py` đọc toàn bộ trang chi tiết theo số dòng đã flatten, cộng `receive_amount` theo nhân viên; sau đó worker chạy SaleWork `MONTH_ONLY` và cập nhật kết quả. Nút không gọi API chạy script trên Vercel và không truyền secret xuống trình duyệt.
 
+SaleWork giữ hai tập tài khoản độc lập: tập ngày hiện hữu gồm 8 tài khoản và không đổi; tập tháng thêm
+`Abraham Thịnh Miền Trung` để phục vụ `Dương Văn Thịnh`. `MONTH_ONLY` kiểm đủ 9 tài khoản rồi chỉ UPSERT
+khóa `__SALEWORK_MONTH__:YYYY-MM-01:*`. Route Tổng kết tháng ánh xạ Dương sang khóa tháng này; route và
+script ngày vẫn dùng tập/khóa cũ, không đọc snapshot tháng và không ghi thêm dòng ngày.
+
 Nút **Sao chép hình ảnh** trong preview tháng gọi `fetch()` tới chính URL `GET /api/admin/monthly-summaries/[salesId]/image?month=YYYY-MM` bằng cookie cùng origin, yêu cầu response `image/png`, rồi truyền Promise của blob vào `ClipboardItem` trước khi user activation hết hiệu lực. Không tạo endpoint mới, không đưa service-role key xuống client và vẫn giữ `Cache-Control: private, no-store` của route ảnh.

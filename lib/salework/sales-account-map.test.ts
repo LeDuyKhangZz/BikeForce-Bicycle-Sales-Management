@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getSaleWorkAccountName,
+  MONTHLY_SALEWORK_ACCOUNT_NAMES,
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
 } from '@/lib/salework/sales-account-map';
@@ -14,6 +15,7 @@ describe('getSaleWorkAccountName', () => {
     ['Phan Thành Khải', 'Abraham Khải Khánh Hoà'],
     ['Tô Kim Sang', 'Abraham Sang Miền Tây'],
     ['Võ Trí Tính', 'Abraham Bà Rịa - Vũng Tàu'],
+    ['Dương Văn Thịnh', 'Abraham Thịnh Miền Trung'],
   ])('ánh xạ %s sang %s', (salesName, accountName) => {
     expect(getSaleWorkAccountName(salesName)).toBe(accountName);
   });
@@ -29,6 +31,12 @@ describe('getSaleWorkAccountName', () => {
   it('đưa Abraham Khải Hcm vào danh sách tài khoản cần đồng bộ', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(6);
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
+  });
+
+  it('chỉ thêm Dương Văn Thịnh vào tập tháng, không đổi tập ngày', () => {
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Abraham Thịnh Miền Trung');
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(7);
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Thịnh Miền Trung');
   });
 });
 

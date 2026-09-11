@@ -3567,3 +3567,13 @@ Người dùng phản hồi việc phải đăng nhập ra/vào nhiều lần. L
 Kiểm chứng cuối: full unit 766/766, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`; từ đây chỉ dùng `--login` khi Telegram báo sau lúc JWT thật sự gần hết hạn.
+
+## Entry 061 — 2026-09-11 — Bổ sung hoạt động SaleWork tháng cho Dương Văn Thịnh
+
+Ảnh Dương tháng 08 thiếu toàn bộ hoạt động online vì bảng ánh xạ chưa có tài khoản tương ứng. Đọc trực tiếp danh sách SaleWork xác nhận tên thật là `(OFF) Abraham Thịnh Miền Trung`; cơ chế chuẩn hóa hiện hữu bỏ tiền tố trạng thái thành `Abraham Thịnh Miền Trung`.
+
+Đã thêm mapping nhưng tách riêng tập tháng: `MONTH_ONLY` chọn 9 tài khoản, còn nhánh ngày tiếp tục đúng 8 tài khoản và khóa không prefix như trước. Chạy thật tháng 08 thành công, chỉ ghi namespace tháng. Service production trả Dương `88 / 1.135 / 1.878`, 32 gọi đi, 53 gọi đến, thời lượng 2.20 giờ.
+
+Kiểm chứng cuối: full unit 768/768, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`, chờ deploy rồi tải lại ảnh Dương tháng 08.

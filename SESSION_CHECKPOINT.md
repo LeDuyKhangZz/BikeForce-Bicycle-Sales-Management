@@ -2421,3 +2421,12 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Full unit 766/766, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`; chỉ chạy `--login` khi phiên thật sự hết hạn.
+
+### FIX 2026-09-11 — Hoạt động online tháng của Dương Văn Thịnh
+
+- SaleWork xác nhận `(OFF) Abraham Thịnh Miền Trung`; mapping chuẩn hóa là `Abraham Thịnh Miền Trung`.
+- Tập tháng có 9 tài khoản; tập ngày giữ nguyên 8 tài khoản nên logic và snapshot ngày không đổi.
+- Chạy thật tháng 08 ghi đủ 9 khóa `__SALEWORK_MONTH__`; service đọc Dương trả `88 / 1.135 / 1.878`, 32 gọi đi, 53 gọi đến và 2.20 giờ.
+- Full unit 768/768, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`, tải lại ảnh Dương tháng 08 sau deploy.

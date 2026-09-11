@@ -2075,3 +2075,24 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Fix:** kiểm `exp` JWT với khoảng an toàn 15 phút, khởi tạo harvester từ token/cookie đã lưu, vẫn cập nhật nếu trình duyệt phát token mới và tiếp tục dùng duy nhất `.playwright-amis-profile`.
 
 **Verification:** chạy tự động ẩn ghi `Tai su dung phien CRM da luu va con han`, CRM/ACT đều `OK`, ghi đủ 8 biến và exit 0 mà không mở cửa sổ đăng nhập. Full unit 766/766, typecheck, lint và production build 29 route đều sạch.
+
+---
+
+### ISSUE-047
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** hoạt động SaleWork trên ảnh Tổng kết tháng
+
+**Description:** ảnh tháng 08 của Dương Văn Thịnh hiện “Chưa có dữ liệu SaleWork của tháng này” dù tài khoản SaleWork có số liệu.
+
+**Expected:** khối “Hoạt động online trong tháng” đọc đúng snapshot tháng của Dương, không thay đổi đồng bộ hoặc ảnh báo cáo ngày.
+
+**Actual:** mapping Sales chỉ có 6 người, thiếu Dương; script tháng cũng chỉ chọn tập dùng chung cũ nên không tạo khóa snapshot tháng cho tài khoản này.
+
+**Root Cause:** tên hai hệ thống khác nhau và chưa có ánh xạ tường minh `Dương Văn Thịnh → Abraham Thịnh Miền Trung`.
+
+**Fix:** thêm mapping đã đối chiếu từ danh sách SaleWork; tách tập tháng 9 tài khoản khỏi tập ngày 8 tài khoản. `MONTH_ONLY` dùng tập tháng và chỉ ghi namespace tháng; nhánh ngày giữ nguyên tập/khóa hiện hữu.
+
+**Verification:** chạy thật tháng 08 ghi đủ 9 tài khoản và log “dữ liệu ngày không thay đổi”. Service đọc Dương trả `88` hội thoại, `1.135` tin gửi, `1.878` tin nhận, `32` cuộc gọi đi, `53` cuộc gọi đến và `2.20 giờ`; full unit 768/768, typecheck, lint và production build 29 route đều sạch.

@@ -17,6 +17,7 @@ import {
   saleWorkCalendarMonthValue,
 } from '../lib/salework/monthly-snapshot';
 import {
+  MONTHLY_SALEWORK_ACCOUNT_NAMES,
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
 } from '../lib/salework/sales-account-map';
@@ -42,7 +43,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: { persistSession: false },
 });
 
-const TARGET_ACCOUNT_NAMES = [
+const DAILY_TARGET_ACCOUNT_NAMES = [
   'Abraham Kế Toán Bánhàng',
   'Giao - Kế Toán bán hàng',
   ...SALES_SALEWORK_ACCOUNT_NAMES,
@@ -51,6 +52,13 @@ const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
 let activeBrowserContext: BrowserContext | null = null;
 const syncMode = process.env.SALEWORK_SYNC_MODE?.trim();
 const requestedMonth = process.env.SALEWORK_SYNC_MONTH?.trim() ?? '';
+const targetAccountNames = syncMode === 'MONTH_ONLY'
+  ? [
+      'Abraham Kế Toán Bánhàng',
+      'Giao - Kế Toán bán hàng',
+      ...MONTHLY_SALEWORK_ACCOUNT_NAMES,
+    ]
+  : DAILY_TARGET_ACCOUNT_NAMES;
 
 function numberAfter(text: string, label: string): number {
   const match = text.match(new RegExp(`${label}\\s*:\\s*(\\d+)`, 'i'));
@@ -207,7 +215,7 @@ async function main(): Promise<void> {
   const accountSearchInput = page.getByRole('textbox').first();
   await accountSearchInput.waitFor({ state: 'visible', timeout: 30_000 });
 
-  for (const accountName of TARGET_ACCOUNT_NAMES) {
+  for (const accountName of targetAccountNames) {
     // SaleWork dùng danh sách dài/ảo hóa. Gõ từng tên vào ô tìm kiếm trước khi
     // click giúp kết quả luôn có trong DOM, đúng thao tác đã xác nhận thủ công.
     await accountSearchInput.fill(accountName);
@@ -252,7 +260,7 @@ async function main(): Promise<void> {
     await aggregateButton.waitFor({ state: 'visible', timeout: 30_000 });
   } catch {
     throw new Error(
-      `Không thấy nút Tổng hợp sau khi chọn ${TARGET_ACCOUNT_NAMES.join(', ')}. Trang hiện tại: ${await summarizePage()}`,
+      `Không thấy nút Tổng hợp sau khi chọn ${targetAccountNames.join(', ')}. Trang hiện tại: ${await summarizePage()}`,
     );
   }
 
@@ -286,7 +294,7 @@ async function main(): Promise<void> {
       );
       monthlyAttempts.push(monthlyResult.reports);
       stableMonthlyReports = findStableCompleteSaleWorkReports(
-        TARGET_ACCOUNT_NAMES,
+        targetAccountNames,
         monthlyAttempts,
       );
       if (stableMonthlyReports !== null) break;
@@ -314,7 +322,7 @@ async function main(): Promise<void> {
 
   let completeDailyReports: SaleWorkReport[];
   try {
-    completeDailyReports = requireCompleteSaleWorkReports(TARGET_ACCOUNT_NAMES, reports);
+    completeDailyReports = requireCompleteSaleWorkReports(targetAccountNames, reports);
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'thiếu dữ liệu không xác định';
     throw new Error(
