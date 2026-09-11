@@ -2412,3 +2412,12 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Kiểm chứng cuối: unit TypeScript 764/764, unit Python 2/2, typecheck, lint, Python compile và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`, tải lại ảnh tháng 08 và xác nhận dòng 2 của Dương hiện `440tr / 360,4tr`.
+
+### FIX 2026-09-11 — Một profile, không đăng nhập lại oan
+
+- Cửa sổ “Chrome test” là `.playwright-amis-profile` duy nhất; đóng nó khi `--login` đang chạy sẽ làm lượt đó thất bại.
+- Harvester nay tái sử dụng JWT CRM còn ít nhất 15 phút và cookie đã lưu; trang dùng cache không còn gây cảnh báo Telegram sai.
+- Chạy ẩn xác nhận CRM/ACT đều OK, ghi đủ 8 biến, exit 0 và không mở phiên đăng nhập tương tác.
+- Full unit 766/766, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`; chỉ chạy `--login` khi phiên thật sự hết hạn.

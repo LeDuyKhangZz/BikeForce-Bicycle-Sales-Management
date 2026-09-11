@@ -22,6 +22,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
 import { actReportParametersFromBody } from '../../lib/amis/act-report-parameters';
+import { isJwtSessionUsable } from '../../lib/amis/jwt-session';
 import { formatVietnamShortDate, getVietnamMonthRange } from '../../lib/date';
 import { sendTelegramAlert } from './telegram-alert';
 
@@ -107,7 +108,7 @@ async function logAlert(message: string, telegramKey?: string): Promise<void> {
 
 async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
   ctx.on('request', (req) => {
-    if (got.crmToken || !CRM_TARGET.test(req.url())) return;
+    if (!CRM_TARGET.test(req.url())) return;
     const auth = req.headers()['authorization'] ?? '';
     if (auth.startsWith('Bearer ')) got.crmToken = auth.slice(7);
   });
@@ -123,10 +124,11 @@ async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
     await page.waitForTimeout(1000);
   }
 
-  got.crmCookie = (await ctx.cookies('https://amisapp.misa.vn'))
+  const browserCookie = (await ctx.cookies('https://amisapp.misa.vn'))
     .filter((c) => WANTED_COOKIES.includes(c.name))
     .map((c) => `${c.name}=${c.value}`)
     .join('; ');
+  got.crmCookie = browserCookie || got.crmCookie;
 
   console.log(`   token=${got.crmToken ? 'OK' : 'THIEU'}, cookie=${got.crmCookie ? 'OK' : 'THIEU'}`);
 
@@ -286,7 +288,16 @@ async function main(): Promise<void> {
     args: loginMode ? ['--start-maximized'] : [],
   });
 
-  const got: Harvested = {};
+  const storedCrmToken = process.env.AMIS_BEARER_TOKEN?.trim() ?? '';
+  const storedCrmCookie = process.env.AMIS_COOKIE?.trim() ?? '';
+  const got: Harvested = {
+    ...(isJwtSessionUsable(storedCrmToken) ? { crmToken: storedCrmToken } : {}),
+    ...(storedCrmCookie ? { crmCookie: storedCrmCookie } : {}),
+  };
+
+  if (got.crmToken) {
+    console.log('   -> Tai su dung phien CRM da luu va con han.');
+  }
 
   await harvestCrm(ctx, got);
   if (!crmOnly) {

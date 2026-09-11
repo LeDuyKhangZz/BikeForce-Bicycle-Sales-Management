@@ -2054,3 +2054,24 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Fix:** `amis-harvest.ts --month YYYY-MM` mở bộ lọc, nhập ngày cuối trước/ngày đầu sau, chờ đúng tiêu đề tháng rồi bắt lại session/chi nhánh từ request thật. Python giữ đúng scope đó và tiếp tục phân trang khi số dòng đã flatten bằng `PAGE_SIZE`.
 
 **Verification:** chạy thật tháng 08/2026 hiện đúng tiêu đề, đọc 207 dòng qua 3 trang và 11 nhân viên; Dương Văn Thịnh `360.356.200`. UPSERT production trả `OK`; unit TypeScript 764/764, unit Python 2/2, typecheck, lint, Python compile và production build 29 route đều sạch.
+
+---
+
+### ISSUE-046
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** phiên CRM của `amis-harvest.ts`, cảnh báo Telegram
+
+**Description:** bot báo cần đăng nhập lại CRM dù JWT/cookie đã lưu vẫn còn hạn; người dùng phải mở “Chrome test” nhiều lần.
+
+**Expected:** cả CRM và Kế toán dùng một profile bền vững; token còn hạn được tái sử dụng và chỉ yêu cầu đăng nhập khi phiên thật sự hết.
+
+**Actual:** mỗi lượt chỉ công nhận token bắt được từ request dashboard mới. Khi trang dùng cache và không phát request phù hợp, script báo `THIEU` rồi gửi Telegram oan.
+
+**Root Cause:** trạng thái đã lưu trong `.env` không được dùng làm điểm khởi đầu có kiểm tra hạn JWT.
+
+**Fix:** kiểm `exp` JWT với khoảng an toàn 15 phút, khởi tạo harvester từ token/cookie đã lưu, vẫn cập nhật nếu trình duyệt phát token mới và tiếp tục dùng duy nhất `.playwright-amis-profile`.
+
+**Verification:** chạy tự động ẩn ghi `Tai su dung phien CRM da luu va con han`, CRM/ACT đều `OK`, ghi đủ 8 biến và exit 0 mà không mở cửa sổ đăng nhập. Full unit 766/766, typecheck, lint và production build 29 route đều sạch.

@@ -736,6 +736,11 @@ Trong chạy lịch, `amis-harvest.ts` phát hiện thiếu thông tin xác th�
 cục bộ giới hạn cùng một khóa cảnh báo tối đa một lần mỗi 6 giờ. Lỗi Telegram chỉ được ghi ra stderr,
 không che lỗi gốc và không làm gián đoạn nhánh đồng bộ còn chạy được.
 
+Harvester dùng duy nhất `.playwright-amis-profile` cho cả CRM và Kế toán. Trước khi chờ đăng nhập, nó
+tái sử dụng JWT CRM đã lưu nếu còn ít nhất 15 phút và giữ cookie profile hiện hữu; request dashboard mới
+nếu xuất hiện vẫn được quyền thay bằng token mới hơn. Vì vậy trang không phát lại request do cache không
+còn bị hiểu nhầm là hết phiên và không gửi cảnh báo Telegram oan.
+
 ## Yêu cầu đồng bộ tháng từ Admin (DEC-082)
 
 `MonthlySyncButton` → `requestMonthlySyncAction(FormData)` → validate `YYYY-MM` → auth/active/Admin → `createMonthlySyncJob()` bằng anon client chịu RLS. Worker local đọc job `PENDING`, chuyển atomically sang `RUNNING`, gọi `amis-harvest.ts --month YYYY-MM`; Playwright nhập ngày kết thúc trước rồi ngày bắt đầu bằng thao tác bàn phím thật, bấm “Xem báo cáo”, chờ đúng tiêu đề tháng và bắt lại token/session/bộ lọc chi nhánh từ request `paging_filter` của kỳ đó. `fetch_receivable.py` đọc toàn bộ trang chi tiết theo số dòng đã flatten, cộng `receive_amount` theo nhân viên; sau đó worker chạy SaleWork `MONTH_ONLY` và cập nhật kết quả. Nút không gọi API chạy script trên Vercel và không truyền secret xuống trình duyệt.

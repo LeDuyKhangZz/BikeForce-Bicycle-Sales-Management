@@ -1479,3 +1479,4 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - Unit parser ACT phải giữ đúng `p_session_key`, `p_branch_id` và cờ chi nhánh phụ thuộc từ request thật; body lỗi không được tự đoán giá trị.
 - Unit Python phải chứng minh phân trang dựa trên số dòng chi tiết đã flatten, không dựa trên số nhóm nhân viên trong `Data`.
 - Kiểm thử thật kỳ lịch sử phải thấy đúng tiêu đề tháng trên MISA trước khi đọc API; tháng 08/2026 phải có Dương Văn Thịnh `360.356.200` và đọc đủ 207 dòng qua 3 trang.
+- Unit phiên AMIS phải nhận JWT còn hơn ngưỡng an toàn, từ chối token sắp hết hạn/rác; chạy ẩn phải tái sử dụng một profile và không phát cảnh báo khi token/cookie đã lưu còn dùng được.

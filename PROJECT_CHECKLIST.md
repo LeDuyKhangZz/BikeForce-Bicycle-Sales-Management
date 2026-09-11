@@ -1176,3 +1176,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Nhãn MISA trên ảnh tháng ghi riêng kỳ dữ liệu và ngày đồng bộ; đã đối chiếu production của Dương Văn Thịnh tháng 08/09 và có unit hồi quy (ISSUE-044)
 - [x] Harvester tháng mở đúng kỳ MISA Kế toán bằng `--month YYYY-MM`, bắt session và bộ lọc chi nhánh từ request của kỳ đã chọn (ISSUE-045)
 - [x] Công nợ đọc đủ mọi trang chi tiết; tháng 08/2026 có 207 dòng/11 nhân viên, Dương Văn Thịnh `360.356.200` (ISSUE-045)
+- [x] Harvester chỉ dùng một profile, tái sử dụng JWT/cookie CRM còn hạn và không bắt đăng nhập lại vì trang không phát request mới (ISSUE-046)

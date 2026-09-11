@@ -3557,3 +3557,13 @@ Harvester nay nhận `--month YYYY-MM`, thao tác đúng bộ lọc MISA và b�
 Kiểm chứng cuối: unit TypeScript 764/764, unit Python 2/2, typecheck, lint, Python compile và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`, sau đó tải lại ảnh tháng 08 để kiểm tra dòng “Doanh thu đã ghi” hiện `360,4tr` cho Dương Văn Thịnh.
+
+## Entry 060 — 2026-09-11 — Tái sử dụng một phiên Playwright, bỏ cảnh báo đăng nhập oan
+
+Người dùng phản hồi việc phải đăng nhập ra/vào nhiều lần. Lượt tương tác bị đóng giữa chừng xác nhận cửa sổ “Chrome test” chính là profile bot, nhưng nguyên nhân Telegram báo lại là harvester chỉ chấp nhận token từ request dashboard mới và bỏ qua token/cookie đã lưu còn hạn.
+
+Đã thêm kiểm tra `exp` JWT với khoảng an toàn 15 phút và khởi tạo CRM từ phiên đã lưu trong đúng một `.playwright-amis-profile`; request mới vẫn cập nhật token nếu có. Chạy tự động ẩn xác nhận CRM/ACT đều OK, ghi 8 biến và exit 0, không yêu cầu người dùng đăng nhập.
+
+Kiểm chứng cuối: full unit 766/766, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`; từ đây chỉ dùng `--login` khi Telegram báo sau lúc JWT thật sự gần hết hạn.
