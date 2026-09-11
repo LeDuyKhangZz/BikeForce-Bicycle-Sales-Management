@@ -21,6 +21,13 @@ test.describe('Tổng kết tháng', () => {
     await expectNoHorizontalScroll(page);
   });
 
+  test('Admin gửi yêu cầu đồng bộ đúng tháng từ nút riêng', async ({ page }) => {
+    await signIn(page, E2E_ADMIN_EMAIL);
+    await page.goto(PAGE_PATH);
+    await page.getByRole('button', { name: 'Đồng bộ dữ liệu tháng' }).click();
+    await expect(page.getByText(/Đã gửi yêu cầu đồng bộ tháng|đã có một lượt đồng bộ/)).toBeVisible();
+  });
+
   test('Sales không mở được màn hình tổng kết tháng', async ({ page }) => {
     await signIn(page, E2E_DONE_SALES_EMAIL);
     await page.goto(PAGE_PATH);

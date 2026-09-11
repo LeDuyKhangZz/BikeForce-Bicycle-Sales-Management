@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { SaleWorkReport } from '../services/salework';
 import { getVietnamMonthRange } from '../lib/date';
 import { requireCompleteSaleWorkReports } from '../lib/salework/report-completeness';
+import { monthlySaleWorkPrefix } from '../lib/salework/monthly-snapshot';
 import {
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
@@ -41,7 +42,8 @@ const TARGET_ACCOUNT_NAMES = [
 ];
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
 let activeBrowserContext: BrowserContext | null = null;
-const MONTHLY_SALEWORK_ROW_PREFIX = '__SALEWORK_MONTH__:';
+const syncMode = process.env.SALEWORK_SYNC_MODE?.trim();
+const requestedMonth = process.env.SALEWORK_SYNC_MONTH?.trim() ?? '';
 
 function numberAfter(text: string, label: string): number {
   const match = text.match(new RegExp(`${label}\\s*:\\s*(\\d+)`, 'i'));
@@ -231,6 +233,31 @@ async function main(): Promise<void> {
       `Không thấy nút Tổng hợp sau khi chọn ${TARGET_ACCOUNT_NAMES.join(', ')}. Trang hiện tại: ${await summarizePage()}`,
     );
   }
+
+  // Luồng tháng dừng tại đây: không bấm/lưu bảng mặc định của ngày và không gọi CRM Report 70.
+  if (syncMode === 'MONTH_ONLY') {
+    if (getVietnamMonthRange(requestedMonth) === null) {
+      throw new Error('SALEWORK_SYNC_MONTH không hợp lệ; cần định dạng YYYY-MM.');
+    }
+    await selectSaleWorkMonth(page, requestedMonth);
+    await aggregateButton.click();
+    console.log(`Đang đọc riêng dữ liệu SaleWork tháng ${requestedMonth}…`);
+    const monthlyResult = await readPaginatedReports(page);
+    const completeMonthlyReports = requireCompleteSaleWorkReports(
+      TARGET_ACCOUNT_NAMES,
+      monthlyResult.reports,
+    );
+    const accountNamePrefix = monthlySaleWorkPrefix(requestedMonth);
+    if (accountNamePrefix === null) throw new Error('Không tạo được khóa snapshot tháng.');
+    await saveReportsToSupabase(completeMonthlyReports, accountNamePrefix);
+    console.log(
+      `Đã đồng bộ ${completeMonthlyReports.length} tài khoản SaleWork tháng ${requestedMonth}; dữ liệu ngày không thay đổi.`,
+    );
+    await context.close();
+    activeBrowserContext = null;
+    return;
+  }
+
   await aggregateButton.click();
   console.log('Đã bấm Tổng hợp; đang cuộn và đọc toàn bộ bảng SaleWork…');
   const dailyResult = await readPaginatedReports(page);
@@ -256,39 +283,7 @@ async function main(): Promise<void> {
   await saveReportsToSupabase(completeDailyReports);
   console.log(`Đã lưu ${completeDailyReports.length} tài khoản ngày vào Supabase.`);
 
-  // SaleWork và AMIS đều có bộ lọc tháng. Snapshot tháng dùng khoá riêng để dữ liệu
-  // lịch sử không bị lần đồng bộ ngày sau ghi đè bằng số của tháng hiện tại.
-  const monthlySyncMonth = process.env.SALEWORK_SYNC_MONTH?.trim() || null;
-  let monthlyReportCount = 0;
-  if (monthlySyncMonth !== null) {
-    try {
-      await selectSaleWorkMonth(page, monthlySyncMonth);
-      await aggregateButton.click();
-      const monthlyResult = await readPaginatedReports(page);
-      await saveReportsToSupabase(
-        monthlyResult.reports,
-        `${MONTHLY_SALEWORK_ROW_PREFIX}${monthlySyncMonth}-01:`,
-      );
-      monthlyReportCount = monthlyResult.reports.length;
-    } catch (error) {
-      // Snapshot tháng là nhánh phụ. Giao diện SaleWork có thể đổi/ẩn bộ chọn
-      // khoảng ngày; không được để lỗi đó chặn snapshot NGÀY đã ghi và script
-      // CRM Report 70 chạy kế tiếp trong `npm run salework:sync` (ISSUE-037).
-      console.warn(
-        `CẢNH BÁO: chưa cập nhật được snapshot SaleWork tháng ${monthlySyncMonth}: ${
-          error instanceof Error ? error.message : 'lỗi không xác định'
-        }`,
-      );
-    }
-  } else {
-    console.log('Bỏ qua snapshot tháng; đặt SALEWORK_SYNC_MONTH=YYYY-MM khi cần chạy riêng.');
-  }
-
-  console.log(
-    monthlySyncMonth === null
-      ? `Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày lên Supabase.`
-      : `Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày và ${monthlyReportCount} tài khoản tháng ${monthlySyncMonth} lên Supabase.`,
-  );
+  console.log(`Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày lên Supabase.`);
   await context.close();
   activeBrowserContext = null;
 }
@@ -407,15 +402,29 @@ async function selectSaleWorkMonth(page: Page, month: string): Promise<void> {
   const range = getVietnamMonthRange(month);
   if (range === null) throw new Error(`SALEWORK_SYNC_MONTH không hợp lệ: ${month}`);
 
-  const dateRange = page.locator('.el-date-editor--daterange').first();
-  await dateRange.waitFor({ state: 'visible', timeout: 30_000 });
-  const inputs = dateRange.locator('input');
-  if ((await inputs.count()) < 2) {
-    throw new Error('Không tìm thấy đủ hai ô ngày bắt đầu/kết thúc của bộ lọc SaleWork.');
-  }
+  // SaleWork đã đổi từ một daterange sang hai date input riêng. Giữ selector cũ làm
+  // đường tương thích, rồi tìm theo placeholder/aria-label thay vì vị trí toàn trang.
+  const legacyInputs = page.locator('.el-date-editor--daterange input:visible');
+  const startInput = (await legacyInputs.count()) >= 2
+    ? legacyInputs.nth(0)
+    : page.locator(
+        'input:visible[placeholder*="Bắt đầu"], input:visible[placeholder*="Từ ngày"], input:visible[aria-label*="bắt đầu" i]',
+      ).first();
+  const endInput = (await legacyInputs.count()) >= 2
+    ? legacyInputs.nth(1)
+    : page.locator(
+        'input:visible[placeholder*="Kết thúc"], input:visible[placeholder*="Đến ngày"], input:visible[aria-label*="kết thúc" i]',
+      ).first();
 
-  await inputs.nth(0).fill(range.from);
-  await inputs.nth(1).fill(range.to);
+  await startInput.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {
+    throw new Error('Không tìm thấy ô ngày bắt đầu của bộ lọc SaleWork.');
+  });
+  await endInput.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {
+    throw new Error('Không tìm thấy ô ngày kết thúc của bộ lọc SaleWork.');
+  });
+
+  await startInput.fill(range.from);
+  await endInput.fill(range.to);
   await page.keyboard.press('Enter');
 }
 

@@ -1468,3 +1468,10 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - E2E ba viewport: vị trí sidebar, nhập/lưu/tải lại, không cuộn ngang và Sales không truy cập route.
 - Share-card ngày: cả `MORNING` và `EVENING` không có dòng lương và route không truy vấn bảng lương (DEC-080).
 - Ảnh tổng kết tháng: lương dương format VND; `0` không thành thiếu dữ liệu; `null` hiện đúng `-`.
+
+## Đồng bộ tháng (DEC-082)
+
+- Unit khóa namespace `__SALEWORK_MONTH__:YYYY-MM-01:` và từ chối tháng sai.
+- RLS JWT thật: Admin tạo/đọc; Sales và anon không thấy/không tạo; service role chỉ cập nhật trạng thái và không insert.
+- E2E phải bấm thật nút trên `/admin/monthly-summaries`, xác nhận phản hồi queued/conflict; không chạy worker ngoài trong E2E.
+- Kiểm thử script thật phải đối chiếu cả snapshot tháng và xác nhận khóa SaleWork ngày/CRM ngày không đổi.

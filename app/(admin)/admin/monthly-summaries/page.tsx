@@ -15,12 +15,14 @@ import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { PreviewImageViewer } from '@/features/admin-report-previews/preview-image-viewer';
+import { MonthlySyncButton } from '@/features/admin-monthly-summaries/monthly-sync-button';
 import { requireRole } from '@/features/auth/queries';
 import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { monthlySummaryImagePath } from '@/lib/reports/monthly-summary-card';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 import { listSalesOptions } from '@/services/profiles';
+import { getLatestMonthlySyncJob } from '@/services/monthly-sync-jobs';
 
 export const metadata: Metadata = { title: 'Tổng kết tháng · BikeForce' };
 const PAGE_PATH = '/admin/monthly-summaries';
@@ -34,7 +36,10 @@ export default async function AdminMonthlySummariesPage({ searchParams }: Props)
   const previousMonth = shiftVietnamMonth(month, -1);
   const nextMonth = shiftVietnamMonth(month, 1);
   const supabase = await createClient();
-  const salesList = await listSalesOptions(supabase);
+  const [salesList, latestSyncJob] = await Promise.all([
+    listSalesOptions(supabase),
+    getLatestMonthlySyncJob(supabase, `${month}-01`),
+  ]);
   const selectedSales = salesList.find((sales) => sales.id === params.sales) ?? null;
 
   return (
@@ -53,6 +58,23 @@ export default async function AdminMonthlySummariesPage({ searchParams }: Props)
         <MonthLink href={previousMonth && `${PAGE_PATH}?month=${previousMonth}`} label="Tháng trước" icon={<ChevronLeft aria-hidden="true" className="size-5" />} />
         <p aria-live="polite" className="tabular text-base font-semibold text-heading">{formatVietnamMonth(month)}</p>
         <MonthLink href={nextMonth && `${PAGE_PATH}?month=${nextMonth}`} label="Tháng sau" icon={<ChevronRight aria-hidden="true" className="size-5" />} />
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <div>
+          <CardTitle className="text-base">Dữ liệu hệ thống của tháng</CardTitle>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Đồng bộ riêng AMIS và SaleWork cho tháng đang chọn. Tác vụ này không đọc hoặc ghi snapshot báo cáo ngày.
+          </p>
+        </div>
+        <MonthlySyncButton
+          month={month}
+          status={latestSyncJob?.status ?? null}
+          requestedAt={latestSyncJob?.requested_at ?? null}
+          completedAt={latestSyncJob?.completed_at ?? null}
+          syncedRows={latestSyncJob?.synced_rows ?? null}
+          errorMessage={latestSyncJob?.error_message ?? null}
+        />
       </Card>
 
       <Card className="flex flex-col gap-3">

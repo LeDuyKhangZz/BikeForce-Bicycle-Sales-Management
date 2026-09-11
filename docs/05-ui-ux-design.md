@@ -1323,3 +1323,7 @@ không cho biết đang ở dòng của ai.
 - Route `/admin/salaries` giữ cùng cấu trúc với màn Công tác phí: chuyển tháng, một nhân viên mỗi hàng, ô VND có label luôn hiển thị, helper format tiền, tổng tháng và nút “Lưu lương”.
 - Input giữ tối thiểu 48px, bàn phím số, lỗi ngay dưới field; các nút chuyển tháng và lưu đáp ứng touch target tối thiểu 44px.
 - Ảnh tổng kết tháng vẫn có dòng “Lương”. Hai ảnh báo cáo ngày của Sales tạm thời không hiển thị dòng này (DEC-080).
+
+## Nút đồng bộ dữ liệu tháng (DEC-082)
+
+Thẻ “Dữ liệu hệ thống của tháng” nằm ngay dưới bộ chuyển tháng của `/admin/monthly-summaries`. Nút cao 52px, có spinner chống bấm hai lần, bị khóa khi job `PENDING/RUNNING`, công bố trạng thái qua `aria-live` và hiển thị thời điểm/kết quả gần nhất. Lỗi worker có `role="alert"`; việc xem danh sách và ảnh tổng kết vẫn dùng được khi đồng bộ thất bại.

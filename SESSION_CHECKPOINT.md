@@ -2316,3 +2316,37 @@ lần tự động kế tiếp tiếp tục exit 0.
 - BR-030 chuyển `SUSPENDED`; DEC-076/078 tạm bị thay trong phạm vi ảnh ngày.
 - Đã render/nhìn trực tiếp cả hai PNG 1080×1920; không còn lương, công tác phí/footer vẫn đủ.
 - Unit 753/753, typecheck, lint và production build đều sạch.
+
+## CHECKPOINT 2026-09-10 — Cảnh báo AMIS qua Telegram
+
+- Bot mới không có backend trả lời `/start`; tin `/start` chỉ dùng để `getUpdates` tìm đúng private chat.
+- Chạy `npm.cmd run telegram:setup`, dán Bot Token tại prompt; script tự lưu token/chat ID vào
+  `scripts/amis-sync/.env` và gửi tin thử.
+- `amis-harvest.ts` gửi Telegram khi CRM hoặc bộ xác thực ACT không đầy đủ, đồng thời vẫn ghi
+  `alert.log` như trước.
+- Chống spam theo loại lỗi trong 6 giờ; file trạng thái và secret đều bị Git bỏ qua.
+- Typecheck, full lint, unit **753/753** và production build sạch; cấu hình thật và tin nhắn thử đang
+  chờ Bot Token của người dùng.
+
+**Next Exact Steps:** để Task Scheduler chạy bình thường; khi Telegram báo hết phiên, chạy
+`npx.cmd tsx scripts/amis-sync/amis-harvest.ts --login`. Không gửi hoặc chụp màn hình Bot Token.
+
+### ISSUE-040 — ACT đã bấm “Xem báo cáo” nhưng harvester vẫn chờ
+
+- Trang/báo cáo người dùng chọn là đúng.
+- Listener cũ dừng quá sớm khi mới có token; bản sửa tiếp tục gom các request cho tới khi đủ bốn trường.
+- CMD nay in trạng thái từng request khớp mà không in giá trị secret.
+- Typecheck/ESLint sạch; cần dừng process `--login` cũ và chạy lại để nạp code mới.
+
+## CHECKPOINT 2026-09-11 — Nút đồng bộ Tổng kết tháng
+
+- UI có nút đồng bộ đúng tháng và trạng thái chờ/chạy/xong/lỗi.
+- Vercel chỉ tạo job; Windows worker giữ profile SaleWork/AMIS và xử lý mỗi phút.
+- SaleWork tháng chạy `MONTH_ONLY`, ghi `__SALEWORK_MONTH__:YYYY-MM-01:*`; luồng ngày không chạy nhánh tháng.
+- AMIS nhận đúng `PUSH_YEAR/PUSH_MONTH`; lỗi một nguồn không ngăn nguồn còn lại thử chạy.
+- Migration local + generated types hoàn tất; typecheck/lint, full unit 755/755, RLS 3/3 và build 29 route pass.
+- E2E mobile hoàn tất 3/3 assertion nhưng runner treo teardown; DB local đã sạch job test sau lượt chạy.
+- Đã liên kết Supabase project `rnmywhwanpxmipqducqu`, repair sổ migration cho năm migration đã tồn tại sẵn và push thành công `20260911090000_monthly_sync_jobs.sql`.
+- Đã cài Task `BikeForce - Monthly Sync Worker`; kiểm tra chỉ đọc cho thấy task `Ready`, production đọc được bảng hàng đợi và hiện có `0` job.
+
+**Next Exact Steps:** người dùng bấm lại nút đồng bộ trên Tổng kết tháng; chờ worker xử lý rồi xác nhận trạng thái `COMPLETED` và dữ liệu tháng hiển thị. Không chạy cưỡng bức worker khi chưa có job do thao tác đó ghi dữ liệu thật.

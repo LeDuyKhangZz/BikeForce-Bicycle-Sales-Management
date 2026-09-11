@@ -1200,3 +1200,37 @@ Nếu profile MISA hết phiên hoàn toàn, đăng nhập lại một lần b�
 ```powershell
 npx.cmd tsx scripts/amis-sync/amis-harvest.ts --login
 ```
+
+### Cảnh báo hết phiên qua Telegram
+
+Bot Telegram không cần trả lời lệnh `/start`; tin nhắn này chỉ tạo một update để BikeForce nhận diện đúng
+cuộc chat. Sau khi đã tạo bot bằng `@BotFather`, mở bot và gửi `/start`, rồi chạy tại thư mục dự án:
+
+```powershell
+npm.cmd run telegram:setup
+```
+
+Dán Bot Token khi được hỏi. Script tự lấy `chat_id`, ghi `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID` vào
+`scripts/amis-sync/.env` (file bị Git bỏ qua), rồi gửi một tin thử nghiệm. Không đưa Bot Token vào source,
+tài liệu, ảnh chụp màn hình hoặc tham số dòng lệnh.
+
+Khi lần chạy tự động không lấy đủ token/device/context/session key của CRM hoặc AMIS Kế toán,
+`amis-harvest.ts` vẫn ghi `alert.log` và đồng thời gửi Telegram. Cùng một loại lỗi được giới hạn một tin
+trong mỗi 6 giờ để Task Scheduler chạy hằng giờ không làm spam. Telegram lỗi mạng không chặn pipeline;
+chi tiết vẫn còn trong CMD và `alert.log`.
+
+Nếu setup báo `fetch failed` nhưng `curl.exe -I https://api.telegram.org` trả HTTP 302, kết nối Telegram
+đang hoạt động và khác biệt thường nằm ở lựa chọn IPv6 của Node trên Windows. Client cảnh báo chủ động
+ưu tiên IPv4 để tránh trường hợp DNS có bản ghi IPv6 nhưng mạng không định tuyến IPv6.
+
+### Cài worker đồng bộ tháng theo yêu cầu
+
+Sau khi migration `20260911090000_monthly_sync_jobs.sql` đã được push lên Supabase đích, chạy một lần trên máy Windows giữ profile SaleWork/AMIS:
+
+```powershell
+npm.cmd run monthly-sync:install
+```
+
+Task `BikeForce - Monthly Sync Worker` kiểm tra hàng đợi mỗi phút, bỏ qua khi không có job và không mở hai instance cùng lúc. Log nằm tại `scripts/amis-sync/monthly-sync.log`. Có thể chạy một lượt thủ công bằng `npm.cmd run monthly-sync:worker`. Máy phải đang đăng nhập Windows và có `.env.local`/profile trình duyệt hiện hữu.
+
+**Trạng thái 2026-09-11:** migration `20260911090000` đã được áp dụng lên project đích `rnmywhwanpxmipqducqu`; lịch sử migration local/remote đã khớp. Task đã cài và ở trạng thái `Ready`. Truy vấn chỉ đọc production xác nhận bảng hàng đợi hoạt động và chưa có job; cần bấm nút một tháng thật để kiểm chứng toàn tuyến trước khi đóng ISSUE-037.

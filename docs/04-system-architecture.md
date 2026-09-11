@@ -684,3 +684,7 @@ Route Server Component `app/(admin)/admin/salaries/page.tsx` điều phối dữ
 
 Route ảnh báo cáo ngày không truy vấn lương và component Satori không render dòng “Lương” (DEC-080).
 Module Admin và route ảnh tổng kết tháng vẫn dùng `getMonthlySalary()` theo đúng tháng được chọn.
+
+## Worker đồng bộ tháng (DEC-082)
+
+Vercel không giữ profile trình duyệt SaleWork/AMIS nên chỉ ghi yêu cầu vào `monthly_sync_jobs` bằng server client chịu RLS. Worker chạy trên máy Windows đã đăng nhập, dùng service role riêng cho bảng hàng đợi và các bảng tích hợp hiện hữu. `scripts/salework-monthly-sync.ts` kích hoạt `MONTH_ONLY`; script ngày giữ đường chạy riêng. Không dùng `child_process` trong Server Action hoặc Route Handler.

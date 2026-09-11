@@ -2544,6 +2544,29 @@ mục. Module phụ SaleWork chỉ nằm trong sidebar desktop.
 **Impact:** `ADMIN_NAV_ITEMS` có sáu mục; test khóa trần 375px.
 **Status:** APPROVED
 
+## DEC-082 — Nút đồng bộ tháng dùng hàng đợi và worker local tách khỏi báo cáo ngày
+
+**Date:** 2026-09-11
+**Decision:** Nút tại `/admin/monthly-summaries` chỉ tạo job theo tháng trong Supabase. Worker trên máy Windows giữ phiên AMIS/SaleWork nhận job và chạy script tháng riêng; SaleWork dùng chế độ `MONTH_ONLY` và namespace `__SALEWORK_MONTH__`, không chạy hoặc ghi snapshot ngày.
+**Reason:** Vercel không giữ profile trình duyệt và không phù hợp với tác vụ Playwright dài. Người dùng cần chủ động đồng bộ khi xem Tổng kết tháng nhưng không được làm hỏng pipeline báo cáo ngày.
+**Alternatives:** Chạy `child_process` trực tiếp trong Server Action bị loại vì không hoạt động ổn định trên Vercel; ghép tháng vào task ngày bị loại vì tái tạo ISSUE-037 và làm hai luồng ảnh hưởng nhau; gọi localhost từ trình duyệt bị loại vì HTTPS/private-network và máy người dùng không ổn định.
+**Impact:** BR-032; thêm `monthly_sync_jobs`, service/action/button, worker và Scheduled Task riêng, unit/RLS/E2E. Cần push migration lên Supabase đích trước khi deploy UI.
+**Status:** APPROVED
+
+## DEC-081 — Cảnh báo hết phiên AMIS qua Telegram
+
+**Date:** 2026-09-10
+**Decision:** Task đồng bộ gửi Telegram khi không lấy đủ thông tin xác thực CRM hoặc AMIS Kế toán.
+Bot Token/chat ID chỉ nằm trong `scripts/amis-sync/.env`; lệnh setup tự lấy private chat mới nhất sau
+tin `/start` và gửi tin xác nhận. Cùng một lỗi chỉ gửi lại sau 6 giờ; lỗi Telegram không chặn pipeline.
+**Reason:** Cảnh báo trước đây chỉ in CMD và ghi `alert.log`, nên người vận hành phải chủ động mở máy
+kiểm tra và có thể không biết phiên MISA đã hết hạn.
+**Alternatives:** Windows toast — không đáng tin khi Task Scheduler chạy nền; email — cần thêm SMTP và
+credential; gửi Telegram mỗi giờ — gây spam khi lỗi chưa được xử lý.
+**Impact:** Thêm Telegram Bot API `getUpdates`/`sendMessage`, lệnh setup cục bộ, hai biến secret và file
+trạng thái chống spam bị Git bỏ qua. Không đổi database, RLS hoặc dữ liệu báo cáo.
+**Status:** APPROVED
+
 ## DEC-077 — Tổng kết tháng dùng dữ liệu nguồn đã lọc theo tháng, không dùng báo cáo ngày tự nhập
 
 **Date:** 2026-09-10

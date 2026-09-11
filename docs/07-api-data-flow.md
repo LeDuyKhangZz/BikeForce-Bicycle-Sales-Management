@@ -687,8 +687,8 @@ chuỗi ngày chuẩn `YYYY-MM-DD` với `getVietnamToday()`, giữ nguyên th�
 Script mở đúng tab **Tin nhắn**, gõ từng tên vào ô tìm kiếm trước khi chọn để không phụ thuộc danh sách
 ảo hóa, rồi sau khi bấm **Tổng hợp** phải cuộn hết vùng bảng ảo và đọc tuần tự mọi trang nếu có. Script
 chỉ UPSERT khi tập đã gom chứa đủ cả tám tài khoản; “chưa thấy trong DOM” không được suy thành số 0.
-Browser context luôn được đóng cả khi thành công lẫn khi có lỗi. Lệnh ngày mặc định không chạy snapshot
-tháng; muốn chạy nhánh đó phải truyền tường minh `SALEWORK_SYNC_MONTH=YYYY-MM`.
+Browser context luôn được đóng cả khi thành công lẫn khi có lỗi. Lệnh ngày không chạy snapshot tháng;
+luồng tháng dùng script riêng `npm run salework:sync:month -- YYYY-MM` hoặc worker của DEC-082.
 Tên hiển thị có thể được SaleWork thêm tiền tố trạng thái `(OFF)` khi nhân viên nghỉ. Script bỏ tiền tố
 này cho **mọi** tài khoản trước khi đối chiếu và UPSERT; trạng thái online/offline không được tạo hai khoá
 `account_name` cho cùng một người. Khi kiểm lựa chọn, script đọc cả trạng thái checkbox con của option để
@@ -724,3 +724,18 @@ FormData → parse `month` và từng `amount__<salesId>` bằng Zod → auth �
 Route ảnh báo cáo ngày không gọi `getMonthlySalary()` và view-model ngày không chứa trường lương
 (DEC-080). Route ảnh tổng kết tháng tiếp tục đọc và hiển thị lương đúng kỳ tháng Admin chọn. Module nhập
 lương, dữ liệu và policy hiện hữu không bị xoá.
+
+## Cảnh báo Telegram cho đồng bộ AMIS (DEC-081)
+
+`npm run telegram:setup` nhận Bot Token qua prompt cục bộ → gọi Telegram `getUpdates` → chọn private
+chat mới nhất đã gửi `/start` → ghi token/chat ID vào `scripts/amis-sync/.env` → gọi `sendMessage` để
+xác nhận. Token không đi qua tham số dòng lệnh và không được commit.
+
+Trong chạy lịch, `amis-harvest.ts` phát hiện thiếu thông tin xác thực CRM hoặc một trong bốn trường ACT
+(`token`, `device`, `context`, `sessionKey`) → ghi `alert.log` → gọi Telegram `sendMessage`. Trạng thái
+cục bộ giới hạn cùng một khóa cảnh báo tối đa một lần mỗi 6 giờ. Lỗi Telegram chỉ được ghi ra stderr,
+không che lỗi gốc và không làm gián đoạn nhánh đồng bộ còn chạy được.
+
+## Yêu cầu đồng bộ tháng từ Admin (DEC-082)
+
+`MonthlySyncButton` → `requestMonthlySyncAction(FormData)` → validate `YYYY-MM` → auth/active/Admin → `createMonthlySyncJob()` bằng anon client chịu RLS. Worker local đọc job `PENDING`, chuyển atomically sang `RUNNING`, chạy AMIS đúng `PUSH_YEAR/PUSH_MONTH` và SaleWork `MONTH_ONLY`, rồi cập nhật kết quả. Nút không gọi API chạy script trên Vercel và không truyền secret xuống trình duyệt.

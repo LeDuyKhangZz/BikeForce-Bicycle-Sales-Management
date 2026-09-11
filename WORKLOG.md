@@ -3474,3 +3474,38 @@ BR-030 chuyển `SUSPENDED` và DEC-080 ghi nhận việc tạm thay DEC-076/078
 Đã render và nhìn trực tiếp hai PNG 1080×1920 với đủ SaleWork + MISA: cả đầu ngày và cuối ngày đều
 không còn lương, công tác phí/footer vẫn nguyên vẹn. Unit **753/753**, typecheck, lint và production
 build đều sạch.
+
+## Entry 053 — 2026-09-10 — Cảnh báo hết phiên AMIS qua Telegram
+
+Theo yêu cầu người dùng, luồng đồng bộ không còn chỉ ghi cảnh báo vào CMD/`alert.log`. Đã thêm tiện ích
+Telegram Bot API, lệnh `npm run telegram:setup` tự lấy private chat mới nhất sau `/start`, lưu Bot
+Token/chat ID trong `scripts/amis-sync/.env` bị Git bỏ qua và gửi tin xác nhận kết nối.
+
+`amis-harvest.ts` nay cảnh báo nếu CRM thiếu token hoặc ACT thiếu bất kỳ trường token/device/context/
+session key nào. Cùng một loại lỗi chỉ gửi tối đa một lần trong 6 giờ; lỗi mạng Telegram không chặn
+pipeline hay làm mất cảnh báo file. Đã chạy typecheck, full lint, unit **753/753** và production build
+thành công (29 trang tĩnh được tạo). Chưa thể kiểm thử API Telegram thật vì người dùng chưa chạy setup
+với Bot Token cục bộ.
+
+**Next Exact Steps:** chạy `npm.cmd run telegram:setup`, dán Bot Token và xác nhận điện thoại nhận tin
+thử; sau đó để Task Scheduler chạy bình thường và chỉ đăng nhập lại MISA khi Telegram báo.
+
+Sau lần setup đầu báo `fetch failed`, kiểm tra từ CMD trả `HTTP 302` cho `api.telegram.org`, chứng minh
+HTTPS hoạt động. Client Telegram được chỉnh ưu tiên IPv4 để tránh Node chọn tuyến IPv6 không khả dụng
+trên Windows; typecheck và lint liên quan tiếp tục sạch. Token xuất hiện trong ảnh người dùng phải được
+thu hồi bằng BotFather trước khi thử lại. Sau khi thêm fallback `curl.exe` qua stdin cho trường hợp
+firewall chặn `node.exe`, người dùng xác nhận setup và tin thử đã hoàn tất. Typecheck và lint ba script
+chạy lại sạch.
+
+Khi đăng nhập lại ACT, người dùng đã mở đúng báo cáo và bấm “Xem báo cáo” nhưng script vẫn chờ. Root
+cause là listener dừng nhận request ngay khi request đầu có token, dù session key có thể chỉ xuất hiện
+ở request sau. ISSUE-040 sửa điều kiện hoàn tất thành đủ cả bốn trường, cộng dồn dữ liệu qua nhiều
+request và log trạng thái không lộ secret. Typecheck và ESLint liên quan sạch; chờ chạy tương tác lại.
+
+## Entry 049 — 2026-09-11 — Đồng bộ tháng tách riêng khỏi báo cáo ngày
+
+Theo yêu cầu người dùng, thêm nút **Đồng bộ dữ liệu tháng** tại màn Tổng kết tháng. Nút không chạy Playwright trên Vercel mà tạo job có RLS. Worker Windows kiểm tra hàng đợi mỗi phút, làm mới AMIS và đẩy đúng kỳ, sau đó chạy SaleWork `MONTH_ONLY`; khóa snapshot tháng có namespace riêng nên không ghi đè dữ liệu ngày. Script ngày đã bỏ hoàn toàn nhánh tháng.
+
+Đã thêm migration `monthly_sync_jobs`, generated types, service, Server Action, client button có polling, worker, installer Task Scheduler, unit namespace và RLS test. Migration đã áp local không reset dữ liệu. Typecheck/lint sạch; full unit 755/755; RLS mới 3/3; production build thành công với 29 route. E2E mobile hoàn tất 3/3 assertion, gồm bấm thật nút, nhưng runner treo teardown nên đã ngắt và không ghi toàn lệnh PASS; kiểm tra DB sau đó không còn job test. In-app Browser không khởi tạo được trong môi trường hiện tại. Supabase CLI đang đăng nhập nhưng không có quyền thấy project ref trong `.env.local`, nên chưa push migration production và chưa cài task để tránh worker polling một bảng chưa tồn tại.
+
+Sau khi người dùng đăng nhập lại Supabase CLI và xác nhận cho phép triển khai, đã link project `rnmywhwanpxmipqducqu`. Production đã có sẵn schema công tác phí/lương nhưng thiếu lịch sử migration tương ứng, nên đã kiểm tra schema chỉ đọc, repair năm version hiện hữu rồi push riêng migration `20260911090000`. Danh sách migration local/remote hiện khớp hoàn toàn. Đã cài Task `BikeForce - Monthly Sync Worker`; task ở trạng thái `Ready`. Truy vấn chỉ đọc bằng integration credential xác nhận bảng `monthly_sync_jobs` truy cập được và hiện trống. Chưa chạy cưỡng bức job tháng thật; bước còn lại là người dùng bấm lại nút và xác nhận job hoàn tất.

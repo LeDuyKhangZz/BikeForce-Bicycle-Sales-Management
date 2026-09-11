@@ -1320,3 +1320,7 @@ không có quyền. Index
 ## Bổ sung 2026-09-10 — snapshot SaleWork theo tháng
 
 Không thêm bảng public mới. Bảng tích hợp `salework_reports` lưu snapshot tháng bằng khoá `account_name = __SALEWORK_MONTH__:<YYYY-MM-01>:<account-name>` để không ghi đè snapshot ngày hiện hữu. AMIS tiếp tục dùng khoá kỳ chuẩn `amis_employee_metrics.period_month = YYYY-MM-01`.
+
+## `monthly_sync_jobs` — hàng đợi đồng bộ tháng (DEC-082)
+
+Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái đi theo `PENDING → RUNNING → COMPLETED|FAILED`; partial unique index trên `period_month` chặn hai job đang hoạt động cùng kỳ. Admin active chỉ được `SELECT/INSERT` qua RLS và phải ghi `requested_by = auth.uid()`. `service_role` chỉ được `SELECT/UPDATE` bảng vận hành này để worker nhận job và trả trạng thái; không có quyền `INSERT/DELETE`. Bảng force RLS và không chứa số liệu báo cáo.

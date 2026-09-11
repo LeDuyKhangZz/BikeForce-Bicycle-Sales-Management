@@ -1149,3 +1149,24 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Policy own-read hiện hữu được giữ tạm; route ảnh ngày không còn dùng quyền này (DEC-080)
 - [x] Ảnh báo cáo hằng ngày từng lấy lương tháng liền trước; đã tạm ngừng bởi DEC-080
 - [x] Gỡ dòng lương và truy vấn lương khỏi cả ảnh đầu ngày/cuối ngày; giữ nguyên module Admin và tổng kết tháng (DEC-080)
+
+## Cảnh báo Telegram cho đồng bộ AMIS — DEC-081 (2026-09-10)
+
+- [x] Có lệnh `npm run telegram:setup` tự lấy private `chat_id` từ tin `/start`
+- [x] Bot Token và chat ID chỉ lưu trong `scripts/amis-sync/.env`, không commit
+- [x] Thiếu token/cookie CRM hoặc token/device/context/session key ACT gửi cảnh báo Telegram
+- [x] Cùng một lỗi giới hạn một tin mỗi 6 giờ; Telegram lỗi không chặn pipeline
+- [x] Chạy setup với Bot Token thật và nhận tin nhắn thử trên điện thoại
+- [x] Listener ACT tiếp tục gom nhiều request tới khi đủ token/device/context/session key (ISSUE-040)
+
+## Đồng bộ Tổng kết tháng theo yêu cầu — BR-032 / DEC-082 (2026-09-11)
+
+- [x] Script SaleWork tháng riêng dùng `MONTH_ONLY` và namespace tháng; luồng ngày không còn chứa nhánh tháng
+- [x] Nút Admin tạo job đúng tháng, khóa double-submit và tự cập nhật trạng thái
+- [x] Worker local đồng bộ AMIS + SaleWork độc lập và trả `COMPLETED/FAILED`
+- [x] Migration force RLS, partial unique chống job trùng, service role chỉ select/update
+- [x] Unit namespace 2/2, full unit 755/755 và RLS hàng đợi 3/3
+- [x] Typecheck, lint và production build 29 route sạch
+- [ ] E2E mobile hoàn tất 3/3 assertion nhưng runner treo teardown; chưa kiểm trực quan desktop 1440
+- [x] Push migration `20260911090000` lên Supabase đích và cài Task `BikeForce - Monthly Sync Worker`; đã xác minh task `Ready` và bảng production truy cập được
+- [ ] Bấm nút trên production và xác nhận một job tháng thật đi hết `PENDING → RUNNING → COMPLETED`

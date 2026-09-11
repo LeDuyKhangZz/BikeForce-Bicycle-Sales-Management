@@ -1107,8 +1107,8 @@ cho khối này (DEC-079). Khối “trong tháng” phía trên vẫn giữ ngu
 Luồng đồng bộ SaleWork ngày: chọn đủ tám tài khoản → bấm **Tổng hợp** → tìm vùng cuộn dọc của bảng →
 cuộn từ đầu đến cuối và gom các dòng DOM ảo → kiểm tra đủ đúng tám tên → UPSERT một mẻ vào Supabase →
 đóng browser → chạy CRM Report 70. Thiếu một tên ở bất kỳ bước nào thì dừng trước UPSERT; không tự suy
-thành số 0. Snapshot tháng không chạy mặc định trong lệnh ngày và chỉ được bật bằng
-`SALEWORK_SYNC_MONTH=YYYY-MM` (ISSUE-037, ISSUE-039).
+thành số 0. Lệnh ngày không chứa nhánh tháng. Đồng bộ tháng chỉ đi qua job Admin hoặc lệnh riêng
+`npm run salework:sync:month -- YYYY-MM` (ISSUE-037, ISSUE-039, DEC-082).
 ## Luồng Admin nhập công tác phí tháng (BR-027, DEC-073)
 
 `/admin/travel-expenses` → chọn tháng → nhập một số tiền VND cho từng Sales → kiểm tra tổng → bấm
@@ -1125,3 +1125,7 @@ kỳ `2026-08-01`. Cả ảnh đầu ngày và cuối ngày đặt dòng này cu
 
 Theo DEC-080, ảnh báo cáo hằng ngày không còn đọc hoặc hiển thị lương. Màn Admin nhập lương và ảnh tổng
 kết tháng vẫn đọc đúng tháng Admin chọn; dữ liệu lương không bị xoá.
+
+## Luồng đồng bộ Tổng kết tháng (BR-032, DEC-082)
+
+Admin chọn tháng tại `/admin/monthly-summaries` → bấm **Đồng bộ dữ liệu tháng** → Server Action kiểm tra tháng, phiên, trạng thái active và vai Admin → tạo job `PENDING`. Windows Task Scheduler chạy worker mỗi phút → nhận một job → làm mới phiên AMIS và đẩy đúng kỳ → chạy SaleWork ở chế độ `MONTH_ONLY` → ghi khóa `__SALEWORK_MONTH__:YYYY-MM-01:*` → cập nhật `COMPLETED` hoặc `FAILED`. Trang tự làm mới trạng thái mỗi 5 giây khi job đang chờ/chạy. Luồng này không gọi script CRM ngày và không ghi khóa SaleWork ngày.

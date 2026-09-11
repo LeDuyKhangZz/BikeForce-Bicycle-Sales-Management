@@ -146,6 +146,50 @@ export type Database = {
           },
         ]
       }
+      monthly_sync_jobs: {
+        Row: {
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          period_month: string
+          requested_at: string
+          requested_by: string
+          started_at: string | null
+          status: string
+          synced_rows: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          period_month: string
+          requested_at?: string
+          requested_by: string
+          started_at?: string | null
+          status?: string
+          synced_rows?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          period_month?: string
+          requested_at?: string
+          requested_by?: string
+          started_at?: string | null
+          status?: string
+          synced_rows?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_sync_jobs_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           amis_employee_name: string | null
@@ -185,6 +229,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_monthly_salaries: {
+        Row: {
+          amount: number | null
+          period_month: string
+          sales_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          period_month: string
+          sales_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          period_month?: string
+          sales_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_monthly_salaries_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_monthly_salaries_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_monthly_targets: {
         Row: {
           period_month: string
@@ -220,45 +303,6 @@ export type Database = {
           },
           {
             foreignKeyName: "sales_monthly_targets_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sales_monthly_salaries: {
-        Row: {
-          amount: number | null
-          period_month: string
-          sales_id: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          amount?: number | null
-          period_month: string
-          sales_id: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          amount?: number | null
-          period_month?: string
-          sales_id?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sales_monthly_salaries_sales_id_fkey"
-            columns: ["sales_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_monthly_salaries_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -430,6 +474,7 @@ export type Database = {
     }
   }
 }
+
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]

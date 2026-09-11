@@ -1842,7 +1842,7 @@ cuộc gọi AMIS trong ngày.
 
 **Severity:** P2
 
-**Status:** OPEN — 2026-09-10
+**Status:** VERIFY — 2026-09-11
 **Module:** script đồng bộ SaleWork tháng
 
 **Description:** Sau khi ghi snapshot ngày, bước chọn khoảng tháng có thể không tìm thấy
@@ -1855,12 +1855,13 @@ selector tháng theo giao diện SaleWork mới trong một lượt riêng.
 
 **Root Cause:** giao diện SaleWork hiện không còn hiển thị bộ chọn khoảng ngày bằng selector đã ghi lại.
 
-**Fix:** lệnh đồng bộ ngày bỏ qua hẳn snapshot tháng nếu không truyền `SALEWORK_SYNC_MONTH=YYYY-MM`, nên
-đóng trình duyệt và chạy Report 70 ngay. Nhánh tháng chỉ chạy khi được yêu cầu tường minh. Chưa đóng issue
-cho tới khi selector tháng mới được xác định và test thật.
+**Fix:** lệnh ngày không còn chứa nhánh tháng. Script tháng riêng chạy `MONTH_ONLY`, tìm cả daterange cũ lẫn
+hai ô ngày mới theo placeholder/aria-label và ghi namespace tháng riêng. Nút Admin tạo job cho worker local;
+không có `child_process` trên Vercel.
 
 **Verification:** chạy lại `npm run salework:sync`; đủ tám dòng ngày được lưu, nhánh tháng được bỏ qua,
 AMIS `Period=0` chạy tiếp và toàn bộ lệnh exit 0 trong khoảng 18 giây.
+Unit namespace và RLS hàng đợi đã pass; còn phải chạy một job tháng thật trên SaleWork trước khi chuyển CLOSED.
 
 ---
 
@@ -1919,3 +1920,30 @@ mọi lần ghi nếu chưa có đủ tám tài khoản.
 **Verification:** chạy thật `npm run salework:sync` sau sửa: log xác nhận bấm Tổng hợp, đọc/lưu đủ 8 tài
 khoản, bỏ qua nhánh tháng và tiếp tục CRM. Đọc lại service: Nguyễn Thiện 19/43/70 hội thoại-tin gửi-tin
 nhận và 11 cuộc gọi đi; San 20/18/77 và 0 cuộc gọi đi; sáu tài khoản còn lại cũng có snapshot thật.
+
+---
+
+### ISSUE-040
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** thu thập phiên AMIS Kế toán
+
+**Description:** Người dùng mở đúng báo cáo công nợ, bấm “Xem báo cáo” nhưng CMD không báo đã lấy đủ
+token/device/context/session key và tiếp tục chờ tới timeout.
+
+**Expected:** script tiếp tục quan sát các request `paging_filter` cho tới khi gom đủ bốn trường và báo
+trạng thái ngay sau mỗi request phù hợp.
+
+**Actual:** request phù hợp đầu tiên có Bearer token nhưng thiếu session key khiến listener bỏ qua toàn
+bộ request tiếp theo.
+
+**Root Cause:** điều kiện thoát sớm chỉ kiểm tra `got.actToken`; việc có token bị hiểu nhầm là đã hoàn
+tất cả dữ liệu xác thực ACT.
+
+**Fix:** chỉ ngừng listener khi đủ cả token/device/context/session key, giữ giá trị đã bắt giữa nhiều
+request và in trạng thái OK/THIẾU không chứa secret sau mỗi request khớp.
+
+**Verification:** typecheck và ESLint của `amis-harvest.ts` sạch. Kiểm thử tương tác thật cần dừng tiến
+trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.

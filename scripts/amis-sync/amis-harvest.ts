@@ -20,11 +20,15 @@ import { chromium, type BrowserContext } from '@playwright/test';
 import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config } from 'dotenv';
+import { sendTelegramAlert } from './telegram-alert';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = resolve(HERE, '.env');
 const ALERT_PATH = resolve(HERE, 'alert.log');
 const PROFILE_DIR = resolve(HERE, '../../.playwright-amis-profile');
+
+config({ path: ENV_PATH, quiet: true });
 
 const CRM_URL = 'https://amisapp.misa.vn/crm/dashboard/main';
 const CRM_TARGET = /\/crm\/g\d\/api\/dashboard\/Dashboard\/\d+\/data/;
@@ -81,13 +85,14 @@ function expiryOf(jwt: string): string {
   }
 }
 
-/** Ghi 1 dong canh bao co dau thoi gian vao alert.log. */
-function logAlert(message: string): void {
+/** Ghi log va gui Telegram neu canh bao co khoa chong spam. */
+async function logAlert(message: string, telegramKey?: string): Promise<void> {
   const stamp = new Date().toLocaleString('vi-VN');
   const line = `[${stamp}] ${message}\n`;
   appendFileSync(ALERT_PATH, line, { encoding: 'utf8' });
   console.error(`\n!! CANH BAO: ${message}`);
   console.error(`   (da ghi vao ${ALERT_PATH})`);
+  if (telegramKey) await sendTelegramAlert(message, telegramKey);
 }
 
 /** p_session_key nam trong body, truong "parameters" ma hoa base64. */
@@ -131,10 +136,11 @@ async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
   console.log(`   token=${got.crmToken ? 'OK' : 'THIEU'}, cookie=${got.crmCookie ? 'OK' : 'THIEU'}`);
 
   if (!loginMode && !got.crmToken) {
-    logAlert(
+    await logAlert(
       'CRM (amisapp.misa.vn): khong lay duoc token o che do tu dong. ' +
       'Phien dang nhap trong profile co the da het han. ' +
       'Hay chay: npx tsx scripts/amis-sync/amis-harvest.ts --login',
+      'crm-session-expired',
     );
   }
 
@@ -142,16 +148,26 @@ async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
 }
 
 async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
+  let matchedRequestCount = 0;
   ctx.on('request', (req) => {
-    if (got.actToken || !ACT_TARGET.test(req.url())) return;
+    if (!ACT_TARGET.test(req.url())) return;
+    if (got.actToken && got.actDevice && got.actContext && got.actSessionKey) return;
+
+    matchedRequestCount += 1;
     const h = req.headers();
     const auth = h['authorization'] ?? '';
-    if (!auth.startsWith('Bearer ')) return;
+    if (auth.startsWith('Bearer ')) got.actToken = auth.slice(7);
+    got.actDevice = h['x-device'] ?? got.actDevice;
+    got.actContext = h['x-misa-context'] ?? got.actContext;
+    got.actSessionKey = sessionKeyFromBody(req.postData()) ?? got.actSessionKey;
 
-    got.actToken = auth.slice(7);
-    got.actDevice = h['x-device'];
-    got.actContext = h['x-misa-context'];
-    got.actSessionKey = sessionKeyFromBody(req.postData());
+    console.log(
+      `   -> Da bat request ACT #${matchedRequestCount}: ` +
+      `token=${got.actToken ? 'OK' : 'THIEU'}, ` +
+      `device=${got.actDevice ? 'OK' : 'THIEU'}, ` +
+      `context=${got.actContext ? 'OK' : 'THIEU'}, ` +
+      `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}`,
+    );
   });
 
   const page = await ctx.newPage();
@@ -184,11 +200,12 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}`,
   );
 
-  if (!loginMode && !got.actToken) {
-    logAlert(
+  if (!loginMode && (!got.actToken || !got.actDevice || !got.actContext || !got.actSessionKey)) {
+    await logAlert(
       'KE TOAN (actapp.misa.vn): khong lay duoc token o che do tu dong. ' +
       'Phien dang nhap trong profile co the da het han. ' +
       'Hay chay: npx tsx scripts/amis-sync/amis-harvest.ts --login',
+      'act-session-expired',
     );
   }
 
@@ -231,7 +248,7 @@ async function main(): Promise<void> {
   if (Object.keys(updates).length === 0) {
     const msg = 'Khong lay duoc gi tu ca 2 he. Chay lai voi --login.';
     console.error(`\n${msg}`);
-    if (!loginMode) logAlert(msg);
+    if (!loginMode) await logAlert(msg);
     process.exit(1);
   }
 
@@ -243,19 +260,28 @@ async function main(): Promise<void> {
   // CRM la nguon chinh — thieu no thi coi nhu that bai.
   if (!got.crmToken) {
     if (!loginMode) {
-      logAlert('CRM token van THIEU sau khi chay xong — can dang nhap lai (--login).');
+      await logAlert('CRM token van THIEU sau khi chay xong — can dang nhap lai (--login).');
     }
     process.exit(1);
   }
 
   // KE TOAN thieu thi khong chan qua trinh, nhung phai canh bao ro.
-  if (!crmOnly && !got.actToken && !loginMode) {
-    logAlert('ACT (KE TOAN) token van THIEU sau khi chay xong — can dang nhap lai (--login).');
+  if (
+    !crmOnly &&
+    !loginMode &&
+    (!got.actToken || !got.actDevice || !got.actContext || !got.actSessionKey)
+  ) {
+    await logAlert('ACT (KE TOAN) token van THIEU sau khi chay xong — can dang nhap lai (--login).');
   }
 }
 
-main().catch((e) => {
+main().catch(async (e) => {
   console.error(e);
-  if (!loginMode) logAlert(`Loi khong luong truoc: ${e instanceof Error ? e.message : String(e)}`);
+  if (!loginMode) {
+    await logAlert(
+      `Loi khong luong truoc: ${e instanceof Error ? e.message : String(e)}`,
+      'amis-harvest-unexpected',
+    );
+  }
   process.exit(1);
 });

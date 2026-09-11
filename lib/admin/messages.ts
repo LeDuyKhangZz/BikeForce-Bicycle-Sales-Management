@@ -56,3 +56,11 @@ export const SALARY_MESSAGES = {
   FORBIDDEN: 'Bạn không có quyền nhập lương.',
   FAILED: 'Không lưu được lúc này. Vui lòng thử lại.',
 } as const;
+
+export const MONTHLY_SYNC_MESSAGES = {
+  QUEUED: 'Đã gửi yêu cầu đồng bộ tháng. Máy đồng bộ sẽ xử lý trong ít phút.',
+  ALREADY_ACTIVE: 'Tháng này đã có một lượt đồng bộ đang chờ hoặc đang chạy.',
+  INVALID_MONTH: 'Tháng cần đồng bộ không hợp lệ.',
+  FORBIDDEN: 'Bạn không có quyền đồng bộ dữ liệu tháng.',
+  FAILED: 'Không tạo được yêu cầu đồng bộ lúc này. Vui lòng thử lại.',
+} as const;

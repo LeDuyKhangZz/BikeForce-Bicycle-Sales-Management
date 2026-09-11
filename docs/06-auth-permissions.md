@@ -867,3 +867,13 @@ vẫn Admin-only. Server Action vẫn tự kiểm lại auth → active → role
 ## Quyền trên lương tháng (DEC-075, DEC-076)
 
 `sales_monthly_salaries` là dữ liệu Admin quản lý. Admin active được đọc/thêm/sửa; Sales chỉ đọc dòng của chính mình để route dựng ảnh báo cáo, không được đọc người khác hoặc ghi; anon không có quyền; không vai trò ứng dụng nào được xoá. Policy select là `sales_id = auth.uid() OR is_admin()`; các policy ghi vẫn Admin-only. `service_role` bị thu hồi DML theo DEC-031.
+
+## Quyền hàng đợi đồng bộ tháng (DEC-082)
+
+| Vai | Đọc | Tạo | Cập nhật | Xoá |
+|---|---|---|---|---|
+| Admin active | Tất cả job | Có, `requested_by = auth.uid()` | Không | Không |
+| Sales / anon | Không | Không | Không | Không |
+| Worker service role | Có | Không | Có, chỉ để claim/trả trạng thái | Không |
+
+Server Action vẫn kiểm tra tháng → auth → active → role trước khi insert. Service role chỉ được cấp trên bảng vận hành `monthly_sync_jobs`, không nới quyền trên `profiles`, `daily_reports` hoặc các bảng nghiệp vụ đã khóa bởi DEC-031.

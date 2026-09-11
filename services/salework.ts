@@ -6,6 +6,7 @@ import {
   parseSaleWorkDurationSeconds,
 } from '@/lib/salework/call-metrics';
 import { getCrmCallEmployeeCode } from '@/lib/salework/crm-employee-map';
+import { monthlySaleWorkAccountKey } from '@/lib/salework/monthly-snapshot';
 
 export type SaleWorkReport = {
   accountName: string;
@@ -225,8 +226,8 @@ export async function getMonthlySaleWorkReportByAccountName(
 ): Promise<SaleWorkReport | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    const period = `${month}-01`;
-    const monthlyKey = `${MONTHLY_SALEWORK_ROW_PREFIX}${period}:${accountName}`;
+    const monthlyKey = monthlySaleWorkAccountKey(month, accountName);
+    if (monthlyKey === null) return null;
     const { data, error } = await supabase
       .from('salework_reports')
       .select(
