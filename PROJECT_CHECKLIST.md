@@ -1169,4 +1169,7 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Typecheck, lint và production build 29 route sạch
 - [ ] E2E mobile hoàn tất 3/3 assertion nhưng runner treo teardown; chưa kiểm trực quan desktop 1440
 - [x] Push migration `20260911090000` lên Supabase đích và cài Task `BikeForce - Monthly Sync Worker`; đã xác minh task `Ready` và bảng production truy cập được
-- [ ] Bấm nút trên production và xác nhận một job tháng thật đi hết `PENDING → RUNNING → COMPLETED`
+- [x] Job production tháng 09/2026 đi qua worker thật; AMIS ghi kỳ tháng, SaleWork ghi đủ 8 snapshot và job kết thúc `COMPLETED`
+- [x] Chỉ ghi snapshot tháng khi hai lượt đọc đầy đủ liên tiếp giống hệt nhau; không ghép số tạm từ các lượt cuộn ảo khác nhau (ISSUE-042)
+- [x] Chuyển tháng lịch sử hoạt động: chờ bảng ảo tải ổn định và retry khi lịch ngày đang giữ Chrome profile; tháng 08/2026 đã `COMPLETED` đủ 8 dòng (ISSUE-043)
+- [x] Preview Tổng kết tháng có nút “Sao chép hình ảnh”; loading/success/error rõ ràng, giữ user activation cho Safari/iOS và E2E bấm thật ở 375px + 1440px

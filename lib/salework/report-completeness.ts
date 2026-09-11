@@ -27,3 +27,30 @@ export function requireCompleteSaleWorkReports<T extends NamedReport>(
     return report;
   });
 }
+
+export function findStableCompleteSaleWorkReports<T extends NamedReport>(
+  targetAccountNames: readonly string[],
+  attempts: readonly (readonly T[])[],
+): T[] | null {
+  let previousCompleteReports: T[] | null = null;
+
+  for (const reports of attempts) {
+    let completeReports: T[];
+    try {
+      completeReports = requireCompleteSaleWorkReports(targetAccountNames, reports);
+    } catch {
+      previousCompleteReports = null;
+      continue;
+    }
+
+    if (
+      previousCompleteReports !== null &&
+      JSON.stringify(previousCompleteReports) === JSON.stringify(completeReports)
+    ) {
+      return completeReports;
+    }
+    previousCompleteReports = completeReports;
+  }
+
+  return null;
+}

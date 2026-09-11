@@ -3509,3 +3509,35 @@ Theo yêu cầu người dùng, thêm nút **Đồng bộ dữ liệu tháng** t
 Đã thêm migration `monthly_sync_jobs`, generated types, service, Server Action, client button có polling, worker, installer Task Scheduler, unit namespace và RLS test. Migration đã áp local không reset dữ liệu. Typecheck/lint sạch; full unit 755/755; RLS mới 3/3; production build thành công với 29 route. E2E mobile hoàn tất 3/3 assertion, gồm bấm thật nút, nhưng runner treo teardown nên đã ngắt và không ghi toàn lệnh PASS; kiểm tra DB sau đó không còn job test. In-app Browser không khởi tạo được trong môi trường hiện tại. Supabase CLI đang đăng nhập nhưng không có quyền thấy project ref trong `.env.local`, nên chưa push migration production và chưa cài task để tránh worker polling một bảng chưa tồn tại.
 
 Sau khi người dùng đăng nhập lại Supabase CLI và xác nhận cho phép triển khai, đã link project `rnmywhwanpxmipqducqu`. Production đã có sẵn schema công tác phí/lương nhưng thiếu lịch sử migration tương ứng, nên đã kiểm tra schema chỉ đọc, repair năm version hiện hữu rồi push riêng migration `20260911090000`. Danh sách migration local/remote hiện khớp hoàn toàn. Đã cài Task `BikeForce - Monthly Sync Worker`; task ở trạng thái `Ready`. Truy vấn chỉ đọc bằng integration credential xác nhận bảng `monthly_sync_jobs` truy cập được và hiện trống. Chưa chạy cưỡng bức job tháng thật; bước còn lại là người dùng bấm lại nút và xác nhận job hoàn tất.
+
+## Entry 054 — 2026-09-11 — Sửa worker tháng và chạy thật tháng 09/2026
+
+Hai job đầu tiên từ nút production đều tới được worker nhưng báo `AMIS: spawn EINVAL | SaleWork: spawn EINVAL`. Root cause là `spawn()` trực tiếp shim `npx.cmd`/`npm.cmd` trên Windows. Đã chuyển mọi tiến trình TypeScript con sang `node.exe` + CLI `tsx` cục bộ và thêm unit hồi quy.
+
+Sau khi qua lỗi tiến trình, DOM thật cho thấy SaleWork dùng nhãn “Từ … Đến …” để mở `daterangepicker`, tháng mang giá trị `1–12`, năm là input number và ngày có `data-date`. Đã sửa thao tác lịch, chờ loading và hợp nhất tối đa ba lượt đọc bảng cuộn ảo; lần chạy thật có lượt đầu thiếu dòng nhưng lượt hai gom đủ tám, chứng minh retry cần thiết. AMIS đã ghi dữ liệu kỳ 09/2026; ACT hết phiên nên giữ công nợ cũ theo hành vi hiện hữu. SaleWork ghi đủ 8 namespace tháng, không đổi snapshot ngày. Job cuối được chốt `COMPLETED`, `synced_rows = 8`, `error_message = null`.
+
+Kiểm chứng: typecheck sạch; lint sạch; unit 757/757; production build 29 route; `npm.cmd run salework:sync:month -- 2026-09` exit 0. ISSUE-037 đóng; ISSUE-041 ghi nhận và đóng.
+
+## Entry 055 — 2026-09-11 — Sửa snapshot SaleWork tháng bị trộn giữa các lượt cuộn
+
+Người dùng đối chiếu ảnh và phát hiện Phan Thành Khải trên tổng kết là `67 / 528 / 1.959`, khác bảng SaleWork `67 / 901 / 1.960`. Đọc trực tiếp production xác nhận DB đang giữ bộ số sai; mapping nhân viên và route ảnh đều đúng. Root cause là retry bảng cuộn ảo đã hợp nhất các tài khoản từ nhiều lượt đọc, nên một tài khoản có thể giữ payload tạm của lượt trước dù lượt sau không còn thấy dòng đó.
+
+Đã thay điều kiện hoàn tất: không ghép dữ liệu giữa các lượt; chỉ chấp nhận hai lượt đầy đủ liên tiếp giống hệt nhau, tối đa năm lượt rồi fail-closed. Test hồi quy khóa cả trường hợp hai lượt thiếu bù nhau và trường hợp payload đầy đủ thay đổi. Chạy thật tháng 09 cần ba lượt, hai lượt cuối cùng cùng đủ tám và giống nhau. Snapshot production Phan Thành Khải hiện là `67 / 901 / 1.960`, đúng ảnh nguồn; dữ liệu ngày không đổi. ISSUE-042 đóng.
+
+## Entry 056 — 2026-09-11 — Đồng bộ linh hoạt tháng lịch sử và chống tranh Chrome profile
+
+Người dùng chọn tháng 08/2026 và job báo SaleWork exit 1. Log thời gian xác nhận job tháng bắt đầu 15:19:15 nhưng lịch `SaleWork Daily Sync` tự chạy 15:19:52; cả hai dùng cùng `.salework-browser-profile`, khiến Chrome tháng thoát `exitCode 21`. Đã thêm retry có giới hạn cho đúng nhóm lỗi profile/browser có thể phục hồi, chờ 5 giây mỗi lần tối đa 2 phút; không dùng `shell`, không kill tiến trình và lỗi khác vẫn fail ngay.
+
+Lần chạy kế tiếp còn cho thấy bảng lịch sử nạp hàng chậm sau khi loading mask biến mất. Đã chờ ổn định thêm 5 giây và tiếp tục yêu cầu hai lượt đầy đủ giống nhau. Chạy thật `2026-08` trả đủ 8 tài khoản ở cả hai lượt, ghi 8 snapshot tháng, không chạm dữ liệu ngày. Job production tháng 08 được chốt `COMPLETED`, `synced_rows = 8`, không có lỗi. ISSUE-043 đóng.
+
+Kiểm chứng cuối: unit 761/761, typecheck và lint sạch; production build thành công với 29 route.
+
+## Entry 057 — 2026-09-11 — Sao chép ảnh Tổng kết tháng vào clipboard
+
+Theo yêu cầu người dùng, preview Tổng kết tháng có thêm nút **Sao chép hình ảnh** cạnh nút xem toàn màn hình. Nút chỉ được bật tại màn Tổng kết tháng, tải lại PNG qua route ảnh cùng origin rồi ghi trực tiếp vào clipboard bằng `ClipboardItem`; không thêm endpoint, không đọc dữ liệu báo cáo ngày và không làm thay đổi ảnh nguồn.
+
+Luồng tương tác có trạng thái đang sao chép, xác nhận thành công và lỗi tiếng Việt. Promise tải PNG được đưa thẳng vào `ClipboardItem` trong thao tác bấm để giữ user activation trên Safari/iOS. E2E đã bấm thật nút và xác nhận trạng thái thành công ở cả `mobile-375` và `desktop-1440`, đồng thời giữ kiểm tra không cuộn ngang.
+
+Kiểm chứng cuối: unit 761/761, typecheck và lint sạch; production build thành công với 29 route.
+
+Kiểm chứng cuối: unit 759/759, typecheck sạch, lint sạch và production build thành công với 29 route.

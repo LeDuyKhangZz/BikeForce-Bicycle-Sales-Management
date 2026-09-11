@@ -2350,3 +2350,45 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Đã cài Task `BikeForce - Monthly Sync Worker`; kiểm tra chỉ đọc cho thấy task `Ready`, production đọc được bảng hàng đợi và hiện có `0` job.
 
 **Next Exact Steps:** người dùng bấm lại nút đồng bộ trên Tổng kết tháng; chờ worker xử lý rồi xác nhận trạng thái `COMPLETED` và dữ liệu tháng hiển thị. Không chạy cưỡng bức worker khi chưa có job do thao tác đó ghi dữ liệu thật.
+
+### FIX 2026-09-11 — Worker tháng trên Windows và lịch SaleWork
+
+- Job production đầu tiên nhận được nhưng cả AMIS/SaleWork báo `spawn EINVAL`: Node trên Windows không spawn trực tiếp shim `npx.cmd`/`npm.cmd` theo cấu hình hiện tại.
+- Worker và wrapper SaleWork nay gọi `process.execPath` + `node_modules/tsx/dist/cli.mjs`, không phụ thuộc shim `.cmd` hay PATH của Task Scheduler.
+- SaleWork hiện dùng `daterangepicker` tùy biến: trigger là nhãn “Từ … Đến …”, tháng dùng giá trị `1–12`, năm là input number và ô ngày có `data-date`.
+- Nhánh tháng chờ loading và hợp nhất tối đa ba lượt cuộn để xử lý bảng ảo; vẫn fail-closed nếu chưa đủ tám tài khoản, không điền 0.
+- Chạy thật tháng 09/2026: AMIS có dữ liệu kỳ tháng; SaleWork ghi đủ 8 snapshot; job `COMPLETED`, `synced_rows = 8`, không có lỗi. ACT hết phiên nên công nợ giữ giá trị cũ và đã cảnh báo theo cơ chế hiện hữu.
+- Kiểm chứng cuối: typecheck sạch; lint sạch; unit 757/757; production build 29 route; lệnh SaleWork tháng exit 0.
+
+**Next Exact Steps:** tải lại `/admin/monthly-summaries?month=2026-09` và đối chiếu số liệu/ảnh tổng kết. Khi cần công nợ mới, đăng nhập lại ACT bằng `amis-harvest.ts --login`.
+
+### FIX 2026-09-11 — Số SaleWork tháng không khớp ảnh nguồn
+
+- Ảnh tổng kết Phan Thành Khải từng hiện `67 / 528 / 1.959`, trong khi SaleWork là `67 / 901 / 1.960`.
+- Mapping và route ảnh đúng; snapshot production đã chứa số sai do cơ chế hợp nhất tài khoản từ các lượt cuộn ảo khác nhau, giữ lại số tạm của lượt trước.
+- Bỏ cách ghép lượt. Snapshot chỉ được ghi khi có hai lượt đầy đủ liên tiếp với toàn bộ payload giống hệt nhau; tối đa năm lượt rồi fail-closed.
+- Chạy thật cần ba lượt: lượt 1 thiếu hai tài khoản, lượt 2 đủ tám, lượt 3 đủ tám và giống lượt 2. Production của Phan Thành Khải hiện đúng `67 / 901 / 1.960`, cuộc gọi đi `0`.
+- Kiểm chứng cuối sau bản sửa: unit 759/759, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** người dùng tải lại ảnh tổng kết tháng 09/2026. Không cần bấm đồng bộ thêm cho kỳ này.
+
+### FIX 2026-09-11 — Tháng 08 lỗi do lịch ngày chạy trùng
+
+- Job tháng 08 bắt đầu lúc 15:19:15; `SaleWork Daily Sync` chạy lúc 15:19:52 và tranh cùng `.salework-browser-profile`, làm Chrome tháng thoát `exitCode 21`.
+- `salework-sync.ts` nay retry riêng lỗi profile/browser có thể phục hồi tối đa 2 phút; không kill Chrome hay nới lỏng lỗi khác.
+- Bảng tháng lịch sử tiếp tục nạp hàng sau khi loading mask tắt, nên nhánh tháng chờ thêm 5 giây rồi yêu cầu hai lượt đầy đủ liên tiếp giống nhau.
+- Chạy lại tháng 08/2026 thành công: hai lượt đều đủ 8 tài khoản; production có 8 snapshot tháng; job `COMPLETED`, không có lỗi.
+- Kiểm chứng cuối: unit 761/761, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** tải lại trang tháng 08/2026 và tạo lại ảnh. Các tháng khác dùng cùng luồng động `YYYY-MM`, không viết cứng tháng 08/09.
+
+### FEATURE 2026-09-11 — Sao chép ảnh Tổng kết tháng
+
+- Preview `/admin/monthly-summaries` có nút **Sao chép hình ảnh** cạnh **Xem toàn màn hình**; các preview báo cáo khác không hiện nút này.
+- Nút lấy PNG từ route ảnh cùng origin với `cache: no-store`, kiểm tra response/MIME rồi ghi qua Clipboard API.
+- `ClipboardItem` nhận trực tiếp promise tải ảnh để không làm mất user activation trên Safari/iOS.
+- Có trạng thái đang xử lý, thành công và lỗi có hướng dẫn cấp quyền clipboard.
+- E2E thao tác thật đã pass riêng ở `mobile-375` và `desktop-1440`, bao gồm kiểm tra không cuộn ngang.
+- Unit 761/761, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit toàn bộ thay đổi tháng hiện tại, push `main`, chờ hệ thống triển khai rồi thử nút trên trình duyệt production có HTTPS.

@@ -1842,7 +1842,7 @@ cuộc gọi AMIS trong ngày.
 
 **Severity:** P2
 
-**Status:** VERIFY — 2026-09-11
+**Status:** CLOSED — 2026-09-11
 **Module:** script đồng bộ SaleWork tháng
 
 **Description:** Sau khi ghi snapshot ngày, bước chọn khoảng tháng có thể không tìm thấy
@@ -1861,7 +1861,72 @@ không có `child_process` trên Vercel.
 
 **Verification:** chạy lại `npm run salework:sync`; đủ tám dòng ngày được lưu, nhánh tháng được bỏ qua,
 AMIS `Period=0` chạy tiếp và toàn bộ lệnh exit 0 trong khoảng 18 giây.
-Unit namespace và RLS hàng đợi đã pass; còn phải chạy một job tháng thật trên SaleWork trước khi chuyển CLOSED.
+Unit namespace và RLS hàng đợi đã pass. Kiểm chứng production thật được ghi bổ sung ngay dưới đây.
+
+Đã chạy thật tháng 09/2026: điều khiển `daterangepicker` được chọn bằng tháng `1–12` và `data-date`; bảng cuộn ảo cần hai lượt đọc mới gom đủ tám tài khoản. Production có đủ 8 snapshot tháng và job kết thúc `COMPLETED`, `synced_rows = 8`, không có lỗi. Luồng ngày không được gọi trong lần chạy này.
+
+---
+
+### ISSUE-041
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** `scripts/monthly-sync-worker.ts`, `scripts/salework-monthly-sync.ts`
+
+**Description:** Job tạo thành công từ UI nhưng worker Windows trả `AMIS: spawn EINVAL | SaleWork: spawn EINVAL` ngay khi gọi tiến trình con.
+
+**Expected:** Task Scheduler khởi chạy được AMIS và SaleWork bằng runtime cục bộ của repository.
+
+**Actual:** Node nhận tên shim `npx.cmd`/`npm.cmd` trực tiếp trong `spawn()` và phát lỗi `EINVAL`; không nguồn nào bắt đầu chạy.
+
+**Root Cause:** cách spawn file command shim `.cmd` không tương thích với Node/Windows hiện tại. Worker còn phụ thuộc PATH của phiên Task Scheduler.
+
+**Fix:** dùng `process.execPath` gọi trực tiếp `node_modules/tsx/dist/cli.mjs`; helper `buildLocalTsxCommand()` dùng chung cho worker và wrapper SaleWork. Không bật `shell: true`.
+
+**Verification:** unit khóa command không kết thúc bằng `.cmd`; lệnh thử CLI cục bộ in `LOCAL_TSX_OK`; job production chuyển được sang `RUNNING`, AMIS ghi kỳ tháng và SaleWork chạy thật. Typecheck/lint sạch, unit 757/757, build 29 route.
+
+---
+
+### ISSUE-042
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** `scripts/salework-sync.ts`, `lib/salework/report-completeness.ts`
+
+**Description:** ảnh tổng kết tháng của Phan Thành Khải hiện `67 / 528 / 1.959`, không khớp bảng SaleWork `67 / 901 / 1.960`.
+
+**Expected:** snapshot tháng chỉ ghi một bộ số đầy đủ, ổn định và đúng với toàn bộ hàng đang hiển thị sau khi tổng hợp.
+
+**Actual:** mapping nhân viên đúng nhưng snapshot production chứa payload tạm của một lượt cuộn trước.
+
+**Root Cause:** cơ chế retry đã hợp nhất các tài khoản từ nhiều lượt đọc bảng ảo. Hai lượt thiếu bù nhau có thể tạo thành tập đủ tám nhưng các payload không cùng một trạng thái render.
+
+**Fix:** không hợp nhất lượt đọc. `findStableCompleteSaleWorkReports()` chỉ trả dữ liệu khi hai lượt đầy đủ liên tiếp giống hệt nhau; tối đa năm lượt rồi dừng toàn bộ, không ghi số 0 hay snapshot không ổn định.
+
+**Verification:** unit từ chối hai lượt thiếu bù nhau và chỉ nhận hai payload đầy đủ liên tiếp giống nhau. Chạy thật tháng 09/2026 cần ba lượt; hai lượt cuối cùng cùng đủ tám. Đọc production xác nhận Phan Thành Khải `67` hội thoại, `901` tin gửi, `1.960` tin nhận, `0` cuộc gọi đi — khớp ảnh nguồn.
+
+---
+
+### ISSUE-043
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** `scripts/salework-sync.ts`, Windows Task Scheduler
+
+**Description:** chọn tháng 08/2026 tạo job được nhưng SaleWork kết thúc mã 1.
+
+**Expected:** mọi kỳ `YYYY-MM` hợp lệ chạy cùng một luồng, kể cả khi lịch ngày tới giờ trong lúc job tháng đang xử lý AMIS.
+
+**Actual:** job tháng bắt đầu 15:19:15; `SaleWork Daily Sync` chạy 15:19:52. Hai tiến trình tranh `.salework-browser-profile`; Chrome tháng thoát `exitCode 21`. Một lượt sau không tranh profile vẫn chỉ thấy vài hàng đầu vì bảng lịch sử tiếp tục nạp sau khi loading mask tắt.
+
+**Root Cause:** ba lịch Windows độc lập, chỉ có `IgnoreNew` trong từng task chứ không khóa chéo. Nhánh tháng chưa chờ đủ lâu cho bảng ảo lịch sử.
+
+**Fix:** retry tối đa 2 phút riêng cho lỗi profile/browser có thể phục hồi; chờ thêm 5 giây sau loading rồi chỉ nhận hai lượt đầy đủ liên tiếp giống nhau. Không kill Chrome, không tự điền 0 và không nới điều kiện đủ tám tài khoản.
+
+**Verification:** unit retry và ổn định bảng; chạy thật tháng 08/2026 có hai lượt cùng đủ 8 tài khoản. Production có 8 snapshot tháng; job `COMPLETED`, `synced_rows = 8`, `error_message = null`.
 
 ---
 

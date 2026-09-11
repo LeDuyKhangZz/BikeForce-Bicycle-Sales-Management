@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { requireCompleteSaleWorkReports } from './report-completeness';
+import {
+  findStableCompleteSaleWorkReports,
+  requireCompleteSaleWorkReports,
+} from './report-completeness';
 
 describe('requireCompleteSaleWorkReports', () => {
   it('trả đủ dữ liệu theo đúng thứ tự tài khoản cấu hình', () => {
@@ -29,5 +32,35 @@ describe('requireCompleteSaleWorkReports', () => {
 
   it('không tự tạo dòng số 0 cho tài khoản chưa đọc được', () => {
     expect(() => requireCompleteSaleWorkReports(['A'], [])).toThrow();
+  });
+});
+
+describe('findStableCompleteSaleWorkReports', () => {
+  const targets = ['A', 'B'];
+
+  it('không ghép dữ liệu của hai lượt đọc thiếu khác nhau', () => {
+    expect(
+      findStableCompleteSaleWorkReports(targets, [
+        [{ accountName: 'A', value: 1 }],
+        [{ accountName: 'B', value: 2 }],
+      ]),
+    ).toBeNull();
+  });
+
+  it('chỉ nhận hai lượt đầy đủ liên tiếp có số liệu giống hệt nhau', () => {
+    const stable = [
+      { accountName: 'A', value: 10 },
+      { accountName: 'B', value: 20 },
+    ];
+    expect(
+      findStableCompleteSaleWorkReports(targets, [
+        [
+          { accountName: 'A', value: 1 },
+          { accountName: 'B', value: 2 },
+        ],
+        stable,
+        stable,
+      ]),
+    ).toEqual(stable);
   });
 });

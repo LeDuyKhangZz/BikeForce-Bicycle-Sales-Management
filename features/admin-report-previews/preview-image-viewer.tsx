@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Maximize2, X } from 'lucide-react';
+import { Check, Copy, Maximize2, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -12,10 +12,15 @@ type Props = {
   alt: string;
   width: number;
   height: number;
+  allowCopy?: boolean;
 };
 
-export function PreviewImageViewer({ src, alt, width, height }: Props) {
+type CopyState = 'idle' | 'success' | 'error';
+
+export function PreviewImageViewer({ src, alt, width, height, allowCopy = false }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
   const titleId = useId();
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -40,9 +45,52 @@ export function PreviewImageViewer({ src, alt, width, height }: Props) {
     };
   }, [isOpen]);
 
+  async function copyImage() {
+    setIsCopying(true);
+    setCopyState('idle');
+
+    try {
+      if (typeof ClipboardItem !== 'function' || typeof navigator.clipboard?.write !== 'function') {
+        throw new Error('Clipboard image is not supported.');
+      }
+      const pngPromise = fetch(src, { credentials: 'same-origin', cache: 'no-store' }).then(
+        async (response) => {
+          if (!response.ok) throw new Error('Image request failed.');
+          const blob = await response.blob();
+          if (blob.type !== 'image/png') throw new Error('Image is not PNG.');
+          return blob;
+        },
+      );
+
+      // Gọi clipboard.write ngay trong thao tác click để giữ user activation trên Safari/iOS.
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngPromise })]);
+      setCopyState('success');
+    } catch {
+      setCopyState('error');
+    } finally {
+      setIsCopying(false);
+    }
+  }
+
   return (
     <>
-      <div className="flex justify-end">
+      <div className="flex flex-col justify-end gap-2 sm:flex-row">
+        {allowCopy && (
+          <Button
+            variant="secondary"
+            className="w-full sm:w-auto"
+            loading={isCopying}
+            loadingText="Đang sao chép…"
+            onClick={copyImage}
+          >
+            {copyState === 'success' ? (
+              <Check aria-hidden="true" className="size-4" />
+            ) : (
+              <Copy aria-hidden="true" className="size-4" />
+            )}
+            {copyState === 'success' ? 'Đã sao chép hình ảnh' : 'Sao chép hình ảnh'}
+          </Button>
+        )}
         <Button
           ref={openButtonRef}
           variant="secondary"
@@ -54,6 +102,12 @@ export function PreviewImageViewer({ src, alt, width, height }: Props) {
           Xem toàn màn hình
         </Button>
       </div>
+
+      {allowCopy && copyState === 'error' && (
+        <p role="alert" className="text-sm text-destructive">
+          Không sao chép được hình ảnh. Hãy thử bằng Chrome hoặc Edge và cấp quyền clipboard.
+        </p>
+      )}
 
       <div className="mx-auto w-full max-w-[540px] overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <Image

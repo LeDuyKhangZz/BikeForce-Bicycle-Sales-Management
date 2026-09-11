@@ -7,7 +7,11 @@ import { createClient } from '@supabase/supabase-js';
 
 import type { SaleWorkReport } from '../services/salework';
 import { getVietnamMonthRange } from '../lib/date';
-import { requireCompleteSaleWorkReports } from '../lib/salework/report-completeness';
+import { retryAsync } from '../lib/process/retry-async';
+import {
+  findStableCompleteSaleWorkReports,
+  requireCompleteSaleWorkReports,
+} from '../lib/salework/report-completeness';
 import {
   monthlySaleWorkPrefix,
   saleWorkCalendarMonthValue,
@@ -114,15 +118,30 @@ async function saveReportsToSupabase(
 }
 
 async function main(): Promise<void> {
-  const context = await chromium.launchPersistentContext(PROFILE_PATH, {
-    // Hồ sơ này được người dùng đăng nhập bằng Chrome hệ thống. Dùng cùng
-    // channel để tránh Chromium bundled cũ hơn từ chối hồ sơ đã nâng version.
-    channel: 'chrome',
-    headless: !!process.env.CI,
-    locale: 'vi-VN',
-    timezoneId: 'Asia/Ho_Chi_Minh',
-    viewport: { width: 1440, height: 900 },
-  });
+  const context = await retryAsync(
+    () =>
+      chromium.launchPersistentContext(PROFILE_PATH, {
+        // Hồ sơ này được người dùng đăng nhập bằng Chrome hệ thống. Dùng cùng
+        // channel để tránh Chromium bundled cũ hơn từ chối hồ sơ đã nâng version.
+        channel: 'chrome',
+        headless: !!process.env.CI,
+        locale: 'vi-VN',
+        timezoneId: 'Asia/Ho_Chi_Minh',
+        viewport: { width: 1440, height: 900 },
+      }),
+    {
+      maxAttempts: 25,
+      delayMs: 5_000,
+      shouldRetry: (error) =>
+        error instanceof Error &&
+        /Target page, context or browser has been closed|exitCode=21|profile.*in use|ProcessSingleton/i.test(
+          error.message,
+        ),
+      onRetry: (attempt) => {
+        console.log(`Profile SaleWork đang được tác vụ khác sử dụng; chờ 5 giây rồi thử lại (${attempt}/24)…`);
+      },
+    },
+  );
   activeBrowserContext = context;
 
   const page = context.pages()[0] ?? (await context.newPage());
@@ -251,34 +270,37 @@ async function main(): Promise<void> {
       .last()
       .waitFor({ state: 'hidden', timeout: 60_000 })
       .catch(() => {});
-    await page.waitForTimeout(500);
-    const monthlyReportsByAccount = new Map<string, SaleWorkReport>();
-    let completeMonthlyReports: SaleWorkReport[] | null = null;
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
+    // Bảng lịch sử tiếp tục nạp các hàng ảo vài giây sau khi loading mask biến mất.
+    await page.waitForTimeout(5_000);
+    const monthlyAttempts: SaleWorkReport[][] = [];
+    let stableMonthlyReports: SaleWorkReport[] | null = null;
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
       const monthlyResult = await readPaginatedReports(page);
-      for (const report of monthlyResult.reports) {
-        monthlyReportsByAccount.set(report.accountName, report);
-      }
-      try {
-        completeMonthlyReports = requireCompleteSaleWorkReports(
-          TARGET_ACCOUNT_NAMES,
-          Array.from(monthlyReportsByAccount.values()),
-        );
-        break;
-      } catch (error) {
-        if (attempt === 3) throw error;
-        console.log(`Bảng SaleWork tháng chưa đủ sau lượt ${attempt}; đang cuộn đọc lại…`);
-        await page.waitForTimeout(750);
-      }
+      console.log(
+        `Lượt đọc SaleWork tháng ${attempt}: ${monthlyResult.reports
+          .map(
+            (report) =>
+              `${report.accountName}=${report.conversations}/${report.sentMessages}/${report.receivedMessages}`,
+          )
+          .join(' | ')}`,
+      );
+      monthlyAttempts.push(monthlyResult.reports);
+      stableMonthlyReports = findStableCompleteSaleWorkReports(
+        TARGET_ACCOUNT_NAMES,
+        monthlyAttempts,
+      );
+      if (stableMonthlyReports !== null) break;
+      console.log(`Bảng SaleWork tháng chưa ổn định sau lượt ${attempt}; đang cuộn đọc lại…`);
+      await page.waitForTimeout(750);
     }
-    if (completeMonthlyReports === null) {
-      throw new Error('Không hoàn tất được dữ liệu SaleWork tháng sau ba lượt đọc.');
+    if (stableMonthlyReports === null) {
+      throw new Error('Không hoàn tất được dữ liệu SaleWork tháng sau năm lượt đọc.');
     }
     const accountNamePrefix = monthlySaleWorkPrefix(requestedMonth);
     if (accountNamePrefix === null) throw new Error('Không tạo được khóa snapshot tháng.');
-    await saveReportsToSupabase(completeMonthlyReports, accountNamePrefix);
+    await saveReportsToSupabase(stableMonthlyReports, accountNamePrefix);
     console.log(
-      `Đã đồng bộ ${completeMonthlyReports.length} tài khoản SaleWork tháng ${requestedMonth}; dữ liệu ngày không thay đổi.`,
+      `Đã đồng bộ ${stableMonthlyReports.length} tài khoản có dữ liệu SaleWork tháng ${requestedMonth}; dữ liệu ngày không thay đổi.`,
     );
     await context.close();
     activeBrowserContext = null;

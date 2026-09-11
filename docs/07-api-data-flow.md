@@ -739,3 +739,5 @@ không che lỗi gốc và không làm gián đoạn nhánh đồng bộ còn ch
 ## Yêu cầu đồng bộ tháng từ Admin (DEC-082)
 
 `MonthlySyncButton` → `requestMonthlySyncAction(FormData)` → validate `YYYY-MM` → auth/active/Admin → `createMonthlySyncJob()` bằng anon client chịu RLS. Worker local đọc job `PENDING`, chuyển atomically sang `RUNNING`, chạy AMIS đúng `PUSH_YEAR/PUSH_MONTH` và SaleWork `MONTH_ONLY`, rồi cập nhật kết quả. Nút không gọi API chạy script trên Vercel và không truyền secret xuống trình duyệt.
+
+Nút **Sao chép hình ảnh** trong preview tháng gọi `fetch()` tới chính URL `GET /api/admin/monthly-summaries/[salesId]/image?month=YYYY-MM` bằng cookie cùng origin, yêu cầu response `image/png`, rồi truyền Promise của blob vào `ClipboardItem` trước khi user activation hết hiệu lực. Không tạo endpoint mới, không đưa service-role key xuống client và vẫn giữ `Cache-Control: private, no-store` của route ảnh.

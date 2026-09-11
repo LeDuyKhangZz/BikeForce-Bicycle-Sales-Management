@@ -1474,4 +1474,5 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - Unit khóa namespace `__SALEWORK_MONTH__:YYYY-MM-01:` và từ chối tháng sai.
 - RLS JWT thật: Admin tạo/đọc; Sales và anon không thấy/không tạo; service role chỉ cập nhật trạng thái và không insert.
 - E2E phải bấm thật nút trên `/admin/monthly-summaries`, xác nhận phản hồi queued/conflict; không chạy worker ngoài trong E2E.
+- E2E mobile 375px và desktop 1440px phải bấm thật **Sao chép hình ảnh**, mock đúng response PNG của route ảnh, xác nhận trạng thái “Đã sao chép hình ảnh” và không cuộn ngang.
 - Kiểm thử script thật phải đối chiếu cả snapshot tháng và xác nhận khóa SaleWork ngày/CRM ngày không đổi.

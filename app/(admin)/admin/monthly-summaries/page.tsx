@@ -113,7 +113,7 @@ export default async function AdminMonthlySummariesPage({ searchParams }: Props)
           <Card className="flex flex-col gap-3">
             <CardTitle id="monthly-summary-preview-title" className="text-base">Tổng kết {formatVietnamMonth(month).toLocaleLowerCase('vi-VN')} · {selectedSales.full_name}</CardTitle>
             <p className="text-sm text-muted-foreground">SaleWork và AMIS đều được lọc đúng tháng đang chọn; số liệu thiếu hiển thị “-”.</p>
-            <PreviewImageViewer src={monthlySummaryImagePath(selectedSales.id, month)} alt={`Tổng kết tháng của ${selectedSales.full_name}`} width={1080} height={1920} />
+            <PreviewImageViewer key={`${selectedSales.id}:${month}`} src={monthlySummaryImagePath(selectedSales.id, month)} alt={`Tổng kết tháng của ${selectedSales.full_name}`} width={1080} height={1920} allowCopy />
           </Card>
         </section>
       )}

@@ -7,6 +7,28 @@ const PAGE_PATH = '/admin/monthly-summaries?month=2026-08';
 
 test.describe('Tổng kết tháng', () => {
   test('Admin xem danh sách ưu tiên người đang làm việc và mở ảnh xem trước', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(globalThis, 'ClipboardItem', {
+        configurable: true,
+        value: class ClipboardItemMock {
+          constructor(_items: Record<string, Blob | Promise<Blob>>) {}
+        },
+      });
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { write: async () => undefined },
+      });
+    });
+    await page.route('**/api/admin/monthly-summaries/*/image?*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'image/png',
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          'base64',
+        ),
+      });
+    });
     await signIn(page, E2E_ADMIN_EMAIL);
     await page.goto(PAGE_PATH);
 
@@ -17,6 +39,8 @@ test.describe('Tổng kết tháng', () => {
     await rows.first().getByRole('link', { name: /Xem trước tổng kết tháng/ }).click();
     await expect(page).toHaveURL(/month=2026-08&sales=/);
     await expect(page.getByRole('button', { name: 'Xem toàn màn hình' })).toBeVisible();
+    await page.getByRole('button', { name: 'Sao chép hình ảnh' }).click();
+    await expect(page.getByRole('button', { name: 'Đã sao chép hình ảnh' })).toBeVisible();
     await expect(page.getByRole('img', { name: /Tổng kết tháng của/ })).toBeVisible();
     await expectNoHorizontalScroll(page);
   });
