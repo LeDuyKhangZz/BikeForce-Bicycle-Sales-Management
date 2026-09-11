@@ -2402,3 +2402,13 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Test liên quan 97/97, full unit 762/762, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** chạy toàn bộ unit/typecheck/lint/build, commit và push `main`, sau đó chờ triển khai rồi tải lại ảnh tháng 08.
+
+### FIX 2026-09-11 — Công nợ MISA đúng tháng và đủ trang
+
+- Profile Playwright không còn phiên trùng; lỗi còn lại là ACT trả cache của kỳ gần nhất nếu giao diện chưa tạo cache tháng lịch sử.
+- `amis-harvest.ts --month YYYY-MM` nhập đúng ngày đầu/cuối, chờ đúng tiêu đề báo cáo rồi lưu token/session/scope chi nhánh của request đó.
+- `fetch_receivable.py` phân trang theo dòng chi tiết đã flatten; tháng 08 có 207 dòng qua 3 trang, không phải 100 dòng trang đầu.
+- Production đã nhận 11 tổng tiền; Dương Văn Thịnh = `360.356.200`.
+- Kiểm chứng cuối: unit TypeScript 764/764, unit Python 2/2, typecheck, lint, Python compile và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`, tải lại ảnh tháng 08 và xác nhận dòng 2 của Dương hiện `440tr / 360,4tr`.

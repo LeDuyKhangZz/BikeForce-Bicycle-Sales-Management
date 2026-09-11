@@ -1476,3 +1476,6 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - E2E phải bấm thật nút trên `/admin/monthly-summaries`, xác nhận phản hồi queued/conflict; không chạy worker ngoài trong E2E.
 - E2E mobile 375px và desktop 1440px phải bấm thật **Sao chép hình ảnh**, mock đúng response PNG của route ảnh, xác nhận trạng thái “Đã sao chép hình ảnh” và không cuộn ngang.
 - Kiểm thử script thật phải đối chiếu cả snapshot tháng và xác nhận khóa SaleWork ngày/CRM ngày không đổi.
+- Unit parser ACT phải giữ đúng `p_session_key`, `p_branch_id` và cờ chi nhánh phụ thuộc từ request thật; body lỗi không được tự đoán giá trị.
+- Unit Python phải chứng minh phân trang dựa trên số dòng chi tiết đã flatten, không dựa trên số nhóm nhân viên trong `Data`.
+- Kiểm thử thật kỳ lịch sử phải thấy đúng tiêu đề tháng trên MISA trước khi đọc API; tháng 08/2026 phải có Dương Văn Thịnh `360.356.200` và đọc đủ 207 dòng qua 3 trang.

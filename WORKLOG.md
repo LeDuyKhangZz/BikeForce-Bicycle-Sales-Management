@@ -3547,3 +3547,13 @@ Người dùng thấy ảnh tháng 08/2026 của Dương Văn Thịnh ghi “S�
 Đã đổi riêng nhãn ảnh Tổng kết tháng thành “MISA tháng MM/YYYY · đồng bộ DD/MM/YYYY”, giữ nguyên hành vi ảnh báo cáo ngày. Thêm unit hồi quy đúng kỳ tháng 08 được đồng bộ vào tháng 09 và ghi nhận ISSUE-044.
 
 Kiểm chứng cuối: test liên quan 97/97, full unit 762/762, typecheck và lint sạch; production build thành công với 29 route.
+
+## Entry 059 — 2026-09-11 — Đồng bộ đúng công nợ MISA của tháng lịch sử
+
+Đã xác nhận không còn tiến trình Playwright tranh profile. Nguyên nhân số công nợ tháng 08 trống/sai là ACT chỉ trả cache báo cáo gần nhất, trong khi worker chưa mở giao diện để tạo cache của tháng được chọn; script còn dừng phân trang theo số nhóm thay vì số dòng chi tiết.
+
+Harvester nay nhận `--month YYYY-MM`, thao tác đúng bộ lọc MISA và bắt session/chi nhánh từ request của kỳ đó. Chạy thật tháng 08 đọc đủ 207 dòng qua 3 trang, 11 nhân viên; Dương Văn Thịnh là `360.356.200`. Đã UPSERT toàn bộ 11 tổng tiền vào production. Có unit hồi quy cho parser request và phân trang.
+
+Kiểm chứng cuối: unit TypeScript 764/764, unit Python 2/2, typecheck, lint, Python compile và production build 29 route đều sạch.
+
+**Next Exact Steps:** commit/push `main`, sau đó tải lại ảnh tháng 08 để kiểm tra dòng “Doanh thu đã ghi” hiện `360,4tr` cho Dương Văn Thịnh.

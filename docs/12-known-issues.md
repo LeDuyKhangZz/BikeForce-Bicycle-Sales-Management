@@ -2033,3 +2033,24 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Fix:** `buildShareCardPerformance()` nhận kỳ tùy chọn; riêng `buildMonthlySummaryCardModel()` truyền tháng đang chọn và tạo nhãn “MISA tháng MM/YYYY · đồng bộ DD/MM/YYYY”. Ảnh ngày không truyền kỳ nên giữ nguyên nhãn hiện hữu.
 
 **Verification:** truy vấn SELECT production xác nhận Dương Văn Thịnh có dòng `period_month = 2026-08-01` với doanh số `179.768.200`, trong khi dòng `2026-09-01` chưa có doanh số và chỉ có 1 khách tương tác. Unit hồi quy khóa nhãn “MISA tháng 08/2026 · đồng bộ 11/09/2026”; test liên quan 97/97, full unit 762/762, typecheck, lint và production build 29 route đều sạch.
+
+---
+
+### ISSUE-045
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-11
+**Module:** đồng bộ tháng MISA Kế toán, `amis-harvest.ts`, `fetch_receivable.py`
+
+**Description:** báo cáo Tổng kết tháng 08 của Dương Văn Thịnh để trống “Doanh thu đã ghi”, trong khi báo cáo “Tổng hợp thanh toán công nợ khách hàng theo nhân viên” có `360.356.200`; chọn tháng lịch sử vẫn có nguy cơ đọc cache tháng hiện tại.
+
+**Expected:** nút đồng bộ mở đúng kỳ đang chọn, lấy “Số tiền thanh toán” của từng nhân viên và đọc đủ mọi trang.
+
+**Actual:** API ACT với `p_is_refresh=false` đọc cache gần nhất; worker chỉ truyền tháng cho bước Python, không điều khiển giao diện tạo cache đúng kỳ. Phân trang còn dùng số nhóm `Data`, nên dừng sau trang đầu dù trang có đủ 100 dòng chi tiết.
+
+**Root Cause:** kỳ giao diện, session cache và bộ lọc chi nhánh của ACT chưa được coi là một bộ dữ liệu nguyên tử; điều kiện còn trang nhầm cấp dữ liệu nhóm với dòng chi tiết.
+
+**Fix:** `amis-harvest.ts --month YYYY-MM` mở bộ lọc, nhập ngày cuối trước/ngày đầu sau, chờ đúng tiêu đề tháng rồi bắt lại session/chi nhánh từ request thật. Python giữ đúng scope đó và tiếp tục phân trang khi số dòng đã flatten bằng `PAGE_SIZE`.
+
+**Verification:** chạy thật tháng 08/2026 hiện đúng tiêu đề, đọc 207 dòng qua 3 trang và 11 nhân viên; Dương Văn Thịnh `360.356.200`. UPSERT production trả `OK`; unit TypeScript 764/764, unit Python 2/2, typecheck, lint, Python compile và production build 29 route đều sạch.

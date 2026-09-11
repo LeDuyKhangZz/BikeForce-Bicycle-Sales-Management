@@ -30,7 +30,11 @@ API_URL = "https://actapp.misa.vn/g1/api/report/v1/report/dynamic/v2/paging_filt
 BEARER_TOKEN = os.getenv("ACT_BEARER_TOKEN", "").strip()
 DEVICE_ID = os.getenv("ACT_DEVICE", "").strip()
 MISA_CONTEXT = os.getenv("ACT_MISA_CONTEXT", "").strip()
-BRANCH_ID = os.getenv("ACT_BRANCH_ID", "64ef1827-297e-4286-8eb9-60af11b08215")
+LEGACY_BRANCH_ID = os.getenv("ACT_BRANCH_ID", "64ef1827-297e-4286-8eb9-60af11b08215")
+BRANCH_FILTER = os.getenv("ACT_BRANCH_FILTER", f"{LEGACY_BRANCH_ID},").strip()
+INCLUDE_DEPENDENT_BRANCH = os.getenv(
+    "ACT_INCLUDE_DEPENDENT_BRANCH", "false"
+).strip().lower() in ("1", "true", "yes")
 SESSION_KEY = os.getenv("ACT_SESSION_KEY", "").strip()
 
 SB_URL = (os.getenv("BIKEFORCE_SUPABASE_URL") or "").rstrip("/")
@@ -137,8 +141,8 @@ def find_rows(node: Any) -> list[dict[str, Any]] | None:
 
 def build_parameters(from_date: str, to_date: str) -> str:
     return b64({
-        "p_branch_id": f"{BRANCH_ID},",
-        "p_include_dependent_branch": False,
+        "p_branch_id": BRANCH_FILTER,
+        "p_include_dependent_branch": INCLUDE_DEPENDENT_BRANCH,
         "p_from_date": from_date,
         "p_to_date": to_date,
         "p_aog_misa_code_id": "",
@@ -148,7 +152,7 @@ def build_parameters(from_date: str, to_date: str) -> str:
         "p_list_customer_id": ALL_IDS,
         "p_list_employee_id": ALL_IDS,
         "p_is_management_book": False,
-        # PHAI la False: True -> Code 210 (chua co du lieu).
+        # PHAI la False: True -> Code 210/212 va can giao dien tao cache.
         "p_is_refresh": False,
         "p_session_key": SESSION_KEY,
     })
@@ -238,8 +242,10 @@ def fetch_all(from_date: str, to_date: str) -> list[dict[str, Any]]:
         print(f"  Trang {page}: {len(rows)} dong")
         all_rows.extend(rows)
 
-        groups = payload.get("Data")
-        if not isinstance(groups, list) or len(groups) < PAGE_SIZE:
+        # `Data` la danh sach NHOM nhan vien, khong phai danh sach dong chi
+        # tiet. Dung `len(Data)` se dung oan sau trang 1 du trang do da day 100
+        # dong. Chinh so dong da flatten moi quyet dinh con trang tiep theo.
+        if len(rows) < PAGE_SIZE:
             break
         page += 1
 

@@ -16,11 +16,13 @@
  * thoat voi ma loi khac 0, thay vi im lang that bai nhu truoc.
  */
 
-import { chromium, type BrowserContext } from '@playwright/test';
+import { chromium, type BrowserContext, type Page } from '@playwright/test';
 import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
+import { actReportParametersFromBody } from '../../lib/amis/act-report-parameters';
+import { formatVietnamShortDate, getVietnamMonthRange } from '../../lib/date';
 import { sendTelegramAlert } from './telegram-alert';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -44,6 +46,12 @@ const WANTED_COOKIES = [
 
 const loginMode = process.argv.includes('--login');
 const crmOnly = process.argv.includes('--crm-only');
+const monthFlagIndex = process.argv.indexOf('--month');
+const requestedMonth = monthFlagIndex >= 0 ? process.argv[monthFlagIndex + 1] : undefined;
+
+if (monthFlagIndex >= 0 && (!requestedMonth || getVietnamMonthRange(requestedMonth) === null)) {
+  throw new Error('Tham so --month phai co dang YYYY-MM hop le.');
+}
 
 type Harvested = {
   crmToken?: string;
@@ -52,6 +60,8 @@ type Harvested = {
   actDevice?: string;
   actContext?: string;
   actSessionKey?: string;
+  actBranchFilter?: string;
+  actIncludeDependentBranch?: boolean;
 };
 
 function upsertEnv(values: Record<string, string>): void {
@@ -95,21 +105,6 @@ async function logAlert(message: string, telegramKey?: string): Promise<void> {
   if (telegramKey) await sendTelegramAlert(message, telegramKey);
 }
 
-/** p_session_key nam trong body, truong "parameters" ma hoa base64. */
-function sessionKeyFromBody(body: string | null): string | undefined {
-  if (!body) return undefined;
-  try {
-    const parsed = JSON.parse(body) as { parameters?: string };
-    if (!parsed.parameters) return undefined;
-    const decoded = JSON.parse(
-      Buffer.from(parsed.parameters, 'base64').toString('utf8'),
-    ) as { p_session_key?: string };
-    return decoded.p_session_key;
-  } catch {
-    return undefined;
-  }
-}
-
 async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
   ctx.on('request', (req) => {
     if (got.crmToken || !CRM_TARGET.test(req.url())) return;
@@ -147,11 +142,53 @@ async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
   await page.close();
 }
 
+async function replaceDateInput(page: Page, index: number, value: string): Promise<void> {
+  const input = page.locator('input[placeholder="DD/MM/YYYY"]:visible').nth(index);
+  await input.click();
+  await input.press('Control+A');
+  await input.pressSequentially(value);
+  await input.press('Tab');
+}
+
+async function selectActMonth(page: Page, month: string): Promise<void> {
+  const range = getVietnamMonthRange(month);
+  if (range === null) throw new Error(`Ky bao cao khong hop le: ${month}`);
+
+  await page.getByRole('button', { name: /Chọn tham số/i }).first().click({ timeout: 60_000 });
+  const dateInputs = page.locator('input[placeholder="DD/MM/YYYY"]:visible');
+  await dateInputs.first().waitFor({ state: 'visible', timeout: 30_000 });
+
+  const fromDate = formatVietnamShortDate(range.from);
+  const toDate = formatVietnamShortDate(range.to);
+
+  // MISA rang buoc cap ngay theo "Ky bao cao". Nhap nhu ban phim that va
+  // doi ngay ket thuc truoc de Vue khong khoi phuc lai moc dau ve thang hien tai.
+  await replaceDateInput(page, 1, toDate);
+  await replaceDateInput(page, 0, fromDate);
+
+  const selectedDates = await dateInputs.evaluateAll((nodes) =>
+    nodes.map((node) => (node instanceof HTMLInputElement ? node.value : '')),
+  );
+  if (selectedDates[0] !== fromDate || selectedDates[1] !== toDate) {
+    throw new Error(
+      `MISA khong nhan ky ${month}: dang co ${selectedDates.join(' - ') || 'rong'}.`,
+    );
+  }
+
+  await page.getByRole('button', { name: 'Xem báo cáo', exact: true }).click();
+
+  const [year, monthNumber] = month.split('-') as [string, string];
+  await page
+    .getByText(`Tháng ${Number(monthNumber)} năm ${year}`, { exact: true })
+    .first()
+    .waitFor({ state: 'visible', timeout: 120_000 });
+  console.log(`   -> Da mo dung bao cao thang ${month}.`);
+}
+
 async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
   let matchedRequestCount = 0;
   ctx.on('request', (req) => {
     if (!ACT_TARGET.test(req.url())) return;
-    if (got.actToken && got.actDevice && got.actContext && got.actSessionKey) return;
 
     matchedRequestCount += 1;
     const h = req.headers();
@@ -159,14 +196,20 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     if (auth.startsWith('Bearer ')) got.actToken = auth.slice(7);
     got.actDevice = h['x-device'] ?? got.actDevice;
     got.actContext = h['x-misa-context'] ?? got.actContext;
-    got.actSessionKey = sessionKeyFromBody(req.postData()) ?? got.actSessionKey;
+    const parameters = actReportParametersFromBody(req.postData());
+    got.actSessionKey = parameters.sessionKey ?? got.actSessionKey;
+    got.actBranchFilter = parameters.branchFilter ?? got.actBranchFilter;
+    got.actIncludeDependentBranch =
+      parameters.includeDependentBranch ?? got.actIncludeDependentBranch;
 
     console.log(
       `   -> Da bat request ACT #${matchedRequestCount}: ` +
       `token=${got.actToken ? 'OK' : 'THIEU'}, ` +
       `device=${got.actDevice ? 'OK' : 'THIEU'}, ` +
       `context=${got.actContext ? 'OK' : 'THIEU'}, ` +
-      `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}`,
+      `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}, ` +
+      `branch=${got.actBranchFilter ? 'OK' : 'THIEU'}, ` +
+      `dependent=${got.actIncludeDependentBranch !== undefined ? 'OK' : 'THIEU'}`,
     );
   });
 
@@ -178,15 +221,19 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     console.log('   -> Dang nhap neu duoc hoi, cho bang bao cao hien ra.');
   }
 
-  // Tu dong bam nut "Xem bao cao" trong popup "Chon tham so" neu no xuat hien.
-  // Playwright thao tac tren DOM, khong bi anh huong boi viec cua so hien
-  // thi bi cat/khong thay nut bang mat thuong.
-  await page
-    .getByRole('button', { name: 'Xem báo cáo' })
-    .click({ timeout: loginMode ? 300_000 : 30_000 })
-    .catch(() => {
-      console.log('   -> Khong thay nut "Xem bao cao" (co the da bam roi hoac popup khac cau truc).');
-    });
+  if (requestedMonth) {
+    await selectActMonth(page, requestedMonth);
+  } else {
+    // Tu dong bam nut "Xem bao cao" trong popup "Chon tham so" neu no xuat hien.
+    // Playwright thao tac tren DOM, khong bi anh huong boi viec cua so hien
+    // thi bi cat/khong thay nut bang mat thuong.
+    await page
+      .getByRole('button', { name: 'Xem báo cáo' })
+      .click({ timeout: loginMode ? 300_000 : 30_000 })
+      .catch(() => {
+        console.log('   -> Khong thay nut "Xem bao cao" (co the da bam roi hoac popup khac cau truc).');
+      });
+  }
 
   const deadline = Date.now() + (loginMode ? 300_000 : 90_000);
   while (!got.actToken && Date.now() < deadline) {
@@ -197,10 +244,20 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     `   token=${got.actToken ? 'OK' : 'THIEU'}, ` +
     `device=${got.actDevice ? 'OK' : 'THIEU'}, ` +
     `context=${got.actContext ? 'OK' : 'THIEU'}, ` +
-    `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}`,
+    `sessionKey=${got.actSessionKey ? 'OK' : 'THIEU'}, ` +
+    `branch=${got.actBranchFilter ? 'OK' : 'THIEU'}, ` +
+    `dependent=${got.actIncludeDependentBranch !== undefined ? 'OK' : 'THIEU'}`,
   );
 
-  if (!loginMode && (!got.actToken || !got.actDevice || !got.actContext || !got.actSessionKey)) {
+  if (
+    !loginMode &&
+    (!got.actToken ||
+      !got.actDevice ||
+      !got.actContext ||
+      !got.actSessionKey ||
+      !got.actBranchFilter ||
+      got.actIncludeDependentBranch === undefined)
+  ) {
     await logAlert(
       'KE TOAN (actapp.misa.vn): khong lay duoc token o che do tu dong. ' +
       'Phien dang nhap trong profile co the da het han. ' +
@@ -244,6 +301,10 @@ async function main(): Promise<void> {
   if (got.actDevice) updates['ACT_DEVICE'] = got.actDevice;
   if (got.actContext) updates['ACT_MISA_CONTEXT'] = got.actContext;
   if (got.actSessionKey) updates['ACT_SESSION_KEY'] = got.actSessionKey;
+  if (got.actBranchFilter) updates['ACT_BRANCH_FILTER'] = got.actBranchFilter;
+  if (got.actIncludeDependentBranch !== undefined) {
+    updates['ACT_INCLUDE_DEPENDENT_BRANCH'] = String(got.actIncludeDependentBranch);
+  }
 
   if (Object.keys(updates).length === 0) {
     const msg = 'Khong lay duoc gi tu ca 2 he. Chay lai voi --login.';
@@ -257,19 +318,27 @@ async function main(): Promise<void> {
   if (got.crmToken) console.log(`  CRM het han: ${expiryOf(got.crmToken)}`);
   if (got.actToken) console.log(`  ACT het han: ${expiryOf(got.actToken)}`);
 
-  // CRM la nguon chinh — thieu no thi coi nhu that bai.
+  // CRM la nguon chinh — thieu no thi coi nhu that bai trong luong ngay.
   if (!got.crmToken) {
     if (!loginMode) {
       await logAlert('CRM token van THIEU sau khi chay xong — can dang nhap lai (--login).');
     }
-    process.exit(1);
+    // Dong bo thang van de `push_amis.py` thu token CRM da luu trong .env.
+    // Neu token cu that su het han, chinh request CRM se fail ro rang; khong
+    // chan oan ACT vua tao dung cache cua ky lich su.
+    if (!requestedMonth) process.exit(1);
   }
 
   // KE TOAN thieu thi khong chan qua trinh, nhung phai canh bao ro.
   if (
     !crmOnly &&
     !loginMode &&
-    (!got.actToken || !got.actDevice || !got.actContext || !got.actSessionKey)
+    (!got.actToken ||
+      !got.actDevice ||
+      !got.actContext ||
+      !got.actSessionKey ||
+      !got.actBranchFilter ||
+      got.actIncludeDependentBranch === undefined)
   ) {
     await logAlert('ACT (KE TOAN) token van THIEU sau khi chay xong — can dang nhap lai (--login).');
   }

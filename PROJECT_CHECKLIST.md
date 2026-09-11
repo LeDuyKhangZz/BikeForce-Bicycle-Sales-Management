@@ -1174,3 +1174,5 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Chuyển tháng lịch sử hoạt động: chờ bảng ảo tải ổn định và retry khi lịch ngày đang giữ Chrome profile; tháng 08/2026 đã `COMPLETED` đủ 8 dòng (ISSUE-043)
 - [x] Preview Tổng kết tháng có nút “Sao chép hình ảnh”; loading/success/error rõ ràng, giữ user activation cho Safari/iOS và E2E bấm thật ở 375px + 1440px
 - [x] Nhãn MISA trên ảnh tháng ghi riêng kỳ dữ liệu và ngày đồng bộ; đã đối chiếu production của Dương Văn Thịnh tháng 08/09 và có unit hồi quy (ISSUE-044)
+- [x] Harvester tháng mở đúng kỳ MISA Kế toán bằng `--month YYYY-MM`, bắt session và bộ lọc chi nhánh từ request của kỳ đã chọn (ISSUE-045)
+- [x] Công nợ đọc đủ mọi trang chi tiết; tháng 08/2026 có 207 dòng/11 nhân viên, Dương Văn Thịnh `360.356.200` (ISSUE-045)

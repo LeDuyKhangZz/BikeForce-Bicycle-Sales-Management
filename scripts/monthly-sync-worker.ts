@@ -79,6 +79,7 @@ async function main(): Promise<void> {
       process.cwd(),
       process.execPath,
       'scripts/amis-sync/amis-harvest.ts',
+      ['--month', month],
     );
     await run(harvestCommand.command, harvestCommand.args);
     await run(process.platform === 'win32' ? 'python.exe' : 'python3', ['scripts/amis-sync/push_amis.py'], {
