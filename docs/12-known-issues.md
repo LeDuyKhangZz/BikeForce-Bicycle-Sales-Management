@@ -2012,3 +2012,24 @@ request và in trạng thái OK/THIẾU không chứa secret sau mỗi request k
 
 **Verification:** typecheck và ESLint của `amis-harvest.ts` sạch. Kiểm thử tương tác thật cần dừng tiến
 trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
+
+---
+
+### ISSUE-044
+
+**Severity:** P2
+
+**Status:** CLOSED — 2026-09-11
+**Module:** ảnh Tổng kết tháng, `lib/reports/monthly-summary-card.ts`
+
+**Description:** ảnh Tổng kết tháng 08/2026 của Dương Văn Thịnh ghi “Số liệu MISA tính đến 11/09/2026”, khiến người đọc hiểu rằng ảnh tháng 08 đang lấy số MISA tháng 09.
+
+**Expected:** ảnh phải cho biết độc lập kỳ dữ liệu MISA và ngày máy chạy đồng bộ.
+
+**Actual:** nhãn chỉ hiển thị ngày `synced_at`, không hiển thị `period_month` dù truy vấn đã lọc đúng kỳ.
+
+**Root Cause:** Tổng kết tháng tái sử dụng nhãn của ảnh báo cáo ngày. Nhãn cũ mô tả độ mới của snapshot nhưng không đủ ngữ cảnh cho một ảnh lịch sử được đồng bộ vào tháng sau.
+
+**Fix:** `buildShareCardPerformance()` nhận kỳ tùy chọn; riêng `buildMonthlySummaryCardModel()` truyền tháng đang chọn và tạo nhãn “MISA tháng MM/YYYY · đồng bộ DD/MM/YYYY”. Ảnh ngày không truyền kỳ nên giữ nguyên nhãn hiện hữu.
+
+**Verification:** truy vấn SELECT production xác nhận Dương Văn Thịnh có dòng `period_month = 2026-08-01` với doanh số `179.768.200`, trong khi dòng `2026-09-01` chưa có doanh số và chỉ có 1 khách tương tác. Unit hồi quy khóa nhãn “MISA tháng 08/2026 · đồng bộ 11/09/2026”; test liên quan 97/97, full unit 762/762, typecheck, lint và production build 29 route đều sạch.

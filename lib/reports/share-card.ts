@@ -25,6 +25,7 @@ import {
 import { formatCurrencyVND, formatThousands } from '@/lib/currency';
 import {
   formatVietnamDate,
+  formatVietnamMonth,
   formatVietnamShortDate,
   getVietnamMonthToDateRange,
   shiftVietnamDate,
@@ -731,7 +732,10 @@ function formatOrderCount(orderCount: number | null): string {
   return `${formatThousands(orderCount)} đơn`;
 }
 
-export function buildShareCardPerformance(source: ShareCardPerformanceSource): ShareCardPerformance {
+export function buildShareCardPerformance(
+  source: ShareCardPerformanceSource,
+  dataMonth?: string,
+): ShareCardPerformance {
   const syncedDate = source.syncedAt === null ? null : vietnamDatePart(source.syncedAt);
   const averageOrderValue = calculateAverageOrderValue(
     source.amisSalesActual,
@@ -741,11 +745,15 @@ export function buildShareCardPerformance(source: ShareCardPerformanceSource): S
   return {
     title: 'TÌNH TRẠNG THỰC HIỆN',
     rangeText:
-      syncedDate === null
-        ? // Nói thẳng ra thay vì im lặng: bốn con số không rõ tính đến bao giờ
-          // thì vô dụng với người đọc.
-          'Chưa rõ mốc đồng bộ từ MISA'
-        : `Số liệu MISA tính đến ${formatVietnamShortDate(syncedDate)}`,
+      dataMonth === undefined
+        ? syncedDate === null
+          ? // Nói thẳng ra thay vì im lặng: bốn con số không rõ tính đến bao giờ
+            // thì vô dụng với người đọc.
+            'Chưa rõ mốc đồng bộ từ MISA'
+          : `Số liệu MISA tính đến ${formatVietnamShortDate(syncedDate)}`
+        : syncedDate === null
+          ? `MISA ${formatVietnamMonth(dataMonth).toLocaleLowerCase('vi-VN')} · chưa rõ ngày đồng bộ`
+          : `MISA ${formatVietnamMonth(dataMonth).toLocaleLowerCase('vi-VN')} · đồng bộ ${formatVietnamShortDate(syncedDate)}`,
     rows: [
       // Hai dòng tiền lấy chỉ tiêu từ bảng KPI tháng của Admin (DEC-071); chỉ khi
       // chưa giao mới rơi về đường cũ. `??` chứ không `||`: chỉ tiêu 0 là con số

@@ -1329,3 +1329,5 @@ không cho biết đang ở dòng của ai.
 Thẻ “Dữ liệu hệ thống của tháng” nằm ngay dưới bộ chuyển tháng của `/admin/monthly-summaries`. Nút cao 52px, có spinner chống bấm hai lần, bị khóa khi job `PENDING/RUNNING`, công bố trạng thái qua `aria-live` và hiển thị thời điểm/kết quả gần nhất. Lỗi worker có `role="alert"`; việc xem danh sách và ảnh tổng kết vẫn dùng được khi đồng bộ thất bại.
 
 Khối xem trước ảnh của một nhân viên có hai nút cùng hàng từ `sm`: **Sao chép hình ảnh** và **Xem toàn màn hình**; ở mobile hai nút xếp dọc, rộng toàn khối và giữ touch target 44px. Nút copy có spinner, đổi thành icon dấu kiểm + “Đã sao chép hình ảnh” khi thành công, và hiển thị lỗi có `role="alert"` nếu trình duyệt không hỗ trợ clipboard ảnh hoặc từ chối quyền. Tính năng chỉ bật cho Tổng kết tháng qua prop `allowCopy`, không tự xuất hiện ở các màn preview khác.
+
+Trong ảnh Tổng kết tháng, nhãn nguồn MISA phải tách rõ **kỳ dữ liệu** và **ngày đồng bộ**, ví dụ: “MISA tháng 08/2026 · đồng bộ 11/09/2026”. Không dùng riêng cụm “tính đến 11/09/2026” vì người đọc có thể hiểu nhầm ngày chạy worker là kỳ số liệu.

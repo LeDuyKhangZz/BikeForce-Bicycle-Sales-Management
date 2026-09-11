@@ -24,6 +24,35 @@ describe('buildMonthlySummaryCardModel', () => {
     expect(model.travelExpenseText).toBe('-');
     expect(model.salaryText).toBe('-');
   });
+
+  it('ghi rõ kỳ MISA khác với ngày đồng bộ để không bị hiểu là lấy chéo tháng', () => {
+    const model = buildMonthlySummaryCardModel({
+      month: '2026-08',
+      salesName: 'Dương Văn Thịnh',
+      employeeCode: 'KD-MTR3-003',
+      performance: {
+        amisTargetAmount: 550_000_000,
+        amisSalesActual: 179_768_200,
+        amisReceiveAmount: null,
+        amisAccountInCharge: 0,
+        amisAccountInteractive: 103,
+        amisAccountSold: 18,
+        amisOrderCount: 21,
+        amisReturnAmount: 0,
+        syncedAt: '2026-09-11T08:29:05.467857+00:00',
+        monthlyTargetSalesAmount: 550_000_000,
+        monthlyTargetRevenue: 440_000_000,
+        targetRevenue: 0,
+      },
+      saleWork: null,
+      travelExpense: null,
+      salary: null,
+    });
+
+    expect(model.performance?.rangeText).toBe(
+      'MISA tháng 08/2026 · đồng bộ 11/09/2026',
+    );
+  });
 });
 
 it('dựng URL ảnh theo nhân viên và tháng', () => {

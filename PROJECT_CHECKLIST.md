@@ -1173,3 +1173,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Chỉ ghi snapshot tháng khi hai lượt đọc đầy đủ liên tiếp giống hệt nhau; không ghép số tạm từ các lượt cuộn ảo khác nhau (ISSUE-042)
 - [x] Chuyển tháng lịch sử hoạt động: chờ bảng ảo tải ổn định và retry khi lịch ngày đang giữ Chrome profile; tháng 08/2026 đã `COMPLETED` đủ 8 dòng (ISSUE-043)
 - [x] Preview Tổng kết tháng có nút “Sao chép hình ảnh”; loading/success/error rõ ràng, giữ user activation cho Safari/iOS và E2E bấm thật ở 375px + 1440px
+- [x] Nhãn MISA trên ảnh tháng ghi riêng kỳ dữ liệu và ngày đồng bộ; đã đối chiếu production của Dương Văn Thịnh tháng 08/09 và có unit hồi quy (ISSUE-044)

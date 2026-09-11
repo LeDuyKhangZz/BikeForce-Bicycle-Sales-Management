@@ -2392,3 +2392,13 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Unit 761/761, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit toàn bộ thay đổi tháng hiện tại, push `main`, chờ hệ thống triển khai rồi thử nút trên trình duyệt production có HTTPS.
+
+### FIX 2026-09-11 — Nhãn MISA ảnh tháng gây hiểu nhầm kỳ dữ liệu
+
+- Production xác nhận Dương Văn Thịnh tháng 08 có khóa `2026-08-01` và doanh số `179.768.200`; tháng 09 là dòng khác, chưa có doanh số và chỉ có 1 khách tương tác.
+- Ngày `11/09/2026` trên ảnh cũ là `synced_at`, không phải tháng của số liệu.
+- Ảnh Tổng kết tháng nay ghi “MISA tháng 08/2026 · đồng bộ 11/09/2026”; ảnh báo cáo ngày không đổi.
+- Unit hồi quy khóa trường hợp đồng bộ tháng lịch sử vào tháng sau; ISSUE-044 đã đóng.
+- Test liên quan 97/97, full unit 762/762, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** chạy toàn bộ unit/typecheck/lint/build, commit và push `main`, sau đó chờ triển khai rồi tải lại ảnh tháng 08.

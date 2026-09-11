@@ -3540,4 +3540,10 @@ Luồng tương tác có trạng thái đang sao chép, xác nhận thành công
 
 Kiểm chứng cuối: unit 761/761, typecheck và lint sạch; production build thành công với 29 route.
 
-Kiểm chứng cuối: unit 759/759, typecheck sạch, lint sạch và production build thành công với 29 route.
+## Entry 058 — 2026-09-11 — Làm rõ kỳ MISA trên ảnh Tổng kết tháng
+
+Người dùng thấy ảnh tháng 08/2026 của Dương Văn Thịnh ghi “Số liệu MISA tính đến 11/09/2026” và nghi dữ liệu bị lấy từ tháng 09. Đối chiếu production xác nhận route và DB đều lọc đúng `period_month = 2026-08-01`: dòng tháng 08 có doanh số `179.768.200`, 103 khách tương tác, 18 khách mua và 21 đơn; dòng tháng 09 chưa có doanh số và chỉ có 1 khách tương tác. `11/09/2026` thực tế là ngày `synced_at` của lần chạy worker.
+
+Đã đổi riêng nhãn ảnh Tổng kết tháng thành “MISA tháng MM/YYYY · đồng bộ DD/MM/YYYY”, giữ nguyên hành vi ảnh báo cáo ngày. Thêm unit hồi quy đúng kỳ tháng 08 được đồng bộ vào tháng 09 và ghi nhận ISSUE-044.
+
+Kiểm chứng cuối: test liên quan 97/97, full unit 762/762, typecheck và lint sạch; production build thành công với 29 route.

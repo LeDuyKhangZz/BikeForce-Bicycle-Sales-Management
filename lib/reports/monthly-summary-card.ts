@@ -28,12 +28,16 @@ export function buildMonthlySummaryCardModel(input: {
   travelExpense: number | null;
   salary: number | null;
 }): MonthlySummaryCardModel {
+  const monthText = formatVietnamMonth(input.month);
+
   return {
-    monthText: formatVietnamMonth(input.month),
+    monthText,
     salesName: input.salesName.trim().toLocaleUpperCase('vi-VN'),
     employeeCode: input.employeeCode?.trim() || null,
     performance:
-      input.performance === null ? null : buildShareCardPerformance(input.performance),
+      input.performance === null
+        ? null
+        : buildShareCardPerformance(input.performance, input.month),
     saleWorkMetrics: input.saleWork === null ? null : buildSaleWorkMetrics(input.saleWork),
     travelExpenseText:
       input.travelExpense === null ? '-' : formatCurrencyVND(input.travelExpense),
