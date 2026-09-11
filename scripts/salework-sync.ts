@@ -8,7 +8,10 @@ import { createClient } from '@supabase/supabase-js';
 import type { SaleWorkReport } from '../services/salework';
 import { getVietnamMonthRange } from '../lib/date';
 import { requireCompleteSaleWorkReports } from '../lib/salework/report-completeness';
-import { monthlySaleWorkPrefix } from '../lib/salework/monthly-snapshot';
+import {
+  monthlySaleWorkPrefix,
+  saleWorkCalendarMonthValue,
+} from '../lib/salework/monthly-snapshot';
 import {
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
@@ -242,11 +245,35 @@ async function main(): Promise<void> {
     await selectSaleWorkMonth(page, requestedMonth);
     await aggregateButton.click();
     console.log(`Đang đọc riêng dữ liệu SaleWork tháng ${requestedMonth}…`);
-    const monthlyResult = await readPaginatedReports(page);
-    const completeMonthlyReports = requireCompleteSaleWorkReports(
-      TARGET_ACCOUNT_NAMES,
-      monthlyResult.reports,
-    );
+    await page.waitForTimeout(1000);
+    await page
+      .locator('.el-loading-mask:visible')
+      .last()
+      .waitFor({ state: 'hidden', timeout: 60_000 })
+      .catch(() => {});
+    await page.waitForTimeout(500);
+    const monthlyReportsByAccount = new Map<string, SaleWorkReport>();
+    let completeMonthlyReports: SaleWorkReport[] | null = null;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const monthlyResult = await readPaginatedReports(page);
+      for (const report of monthlyResult.reports) {
+        monthlyReportsByAccount.set(report.accountName, report);
+      }
+      try {
+        completeMonthlyReports = requireCompleteSaleWorkReports(
+          TARGET_ACCOUNT_NAMES,
+          Array.from(monthlyReportsByAccount.values()),
+        );
+        break;
+      } catch (error) {
+        if (attempt === 3) throw error;
+        console.log(`Bảng SaleWork tháng chưa đủ sau lượt ${attempt}; đang cuộn đọc lại…`);
+        await page.waitForTimeout(750);
+      }
+    }
+    if (completeMonthlyReports === null) {
+      throw new Error('Không hoàn tất được dữ liệu SaleWork tháng sau ba lượt đọc.');
+    }
     const accountNamePrefix = monthlySaleWorkPrefix(requestedMonth);
     if (accountNamePrefix === null) throw new Error('Không tạo được khóa snapshot tháng.');
     await saveReportsToSupabase(completeMonthlyReports, accountNamePrefix);
@@ -405,19 +432,91 @@ async function selectSaleWorkMonth(page: Page, month: string): Promise<void> {
   // SaleWork đã đổi từ một daterange sang hai date input riêng. Giữ selector cũ làm
   // đường tương thích, rồi tìm theo placeholder/aria-label thay vì vị trí toàn trang.
   const legacyInputs = page.locator('.el-date-editor--daterange input:visible');
-  const startInput = (await legacyInputs.count()) >= 2
+  let startInput = (await legacyInputs.count()) >= 2
     ? legacyInputs.nth(0)
     : page.locator(
         'input:visible[placeholder*="Bắt đầu"], input:visible[placeholder*="Từ ngày"], input:visible[aria-label*="bắt đầu" i]',
       ).first();
-  const endInput = (await legacyInputs.count()) >= 2
+  let endInput = (await legacyInputs.count()) >= 2
     ? legacyInputs.nth(1)
     : page.locator(
         'input:visible[placeholder*="Kết thúc"], input:visible[placeholder*="Đến ngày"], input:visible[aria-label*="kết thúc" i]',
       ).first();
 
-  await startInput.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {
-    throw new Error('Không tìm thấy ô ngày bắt đầu của bộ lọc SaleWork.');
+  if (!(await startInput.isVisible())) {
+    const rangeTrigger = page.getByText(/Từ\s+\d{1,2}\/\d{1,2}\/\d{4}\s+Đến\s+\d{1,2}\/\d{1,2}\/\d{4}/).first();
+    if (await rangeTrigger.isVisible()) {
+      await rangeTrigger.click();
+      await page.waitForTimeout(300);
+      const dateRangePicker = page.locator('.daterangepicker:visible').first();
+      if (await dateRangePicker.isVisible()) {
+        const [year, monthNumber, startDay] = range.from.split('-');
+        const endDay = range.to.split('-')[2];
+        if (!year || !monthNumber || !startDay || !endDay) {
+          throw new Error(`Khoảng tháng SaleWork không hợp lệ: ${range.from} - ${range.to}`);
+        }
+        const calendarMonthValue = saleWorkCalendarMonthValue(month);
+        if (calendarMonthValue === null) {
+          throw new Error(`Tháng của lịch SaleWork không hợp lệ: ${month}`);
+        }
+
+        const leftCalendar = dateRangePicker.locator('.drp-calendar.left');
+        await leftCalendar.locator('.monthselect').selectOption(calendarMonthValue);
+        await leftCalendar.locator('.yearselect').fill(year);
+        await leftCalendar.locator('.yearselect').press('Enter');
+        const startDateCell = leftCalendar.locator(`td[data-date="${range.from}"]`).first();
+        if ((await startDateCell.count()) === 0) {
+          throw new Error(`Không tìm thấy ngày đầu tháng trong lịch SaleWork: ${(await dateRangePicker.innerHTML()).slice(0, 6000)}`);
+        }
+        await startDateCell.click();
+
+        await leftCalendar.locator('.monthselect').selectOption(calendarMonthValue);
+        await leftCalendar.locator('.yearselect').fill(year);
+        await leftCalendar.locator('.yearselect').press('Enter');
+        const endDateCell = leftCalendar.locator(`td[data-date="${range.to}"]`).first();
+        if ((await endDateCell.count()) === 0) {
+          throw new Error(`Không tìm thấy ngày cuối tháng trong lịch SaleWork: ${(await dateRangePicker.innerHTML()).slice(0, 6000)}`);
+        }
+        await endDateCell.click();
+
+        const applyButton = dateRangePicker.locator('.applyBtn');
+        if (await applyButton.isVisible()) await applyButton.click();
+        return;
+      }
+
+      const openedInputs = page.locator(
+        '.date-range-picker input:visible, input:visible[type="text"][value*="/"]',
+      );
+      if ((await openedInputs.count()) >= 2) {
+        startInput = openedInputs.nth(0);
+        endInput = openedInputs.nth(1);
+      }
+    }
+  }
+
+  await startInput.waitFor({ state: 'visible', timeout: 3_000 }).catch(async () => {
+    const visibleInputs = await page.locator('input:visible').evaluateAll((inputs) =>
+      inputs.map((input) => ({
+        type: input.getAttribute('type'),
+        placeholder: input.getAttribute('placeholder'),
+        ariaLabel: input.getAttribute('aria-label'),
+        value: input instanceof HTMLInputElement ? input.value : null,
+        className: input.getAttribute('class'),
+      })),
+    );
+    const visibleText = (await page.locator('body').innerText()).slice(0, 1200);
+    const dateControlHtml = await page.locator('body *').evaluateAll((elements) =>
+      elements
+        .filter((element) => {
+          const text = element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+          return /^Từ \d{1,2}\/\d{1,2}\/\d{4} Đến \d{1,2}\/\d{1,2}\/\d{4}$/.test(text);
+        })
+        .slice(-5)
+        .map((element) => element.outerHTML.slice(0, 1000)),
+    );
+    throw new Error(
+      `Không tìm thấy ô ngày bắt đầu của bộ lọc SaleWork. Điều khiển hiện có: ${JSON.stringify({ visibleInputs, dateControlHtml, visibleText })}`,
+    );
   });
   await endInput.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {
     throw new Error('Không tìm thấy ô ngày kết thúc của bộ lọc SaleWork.');

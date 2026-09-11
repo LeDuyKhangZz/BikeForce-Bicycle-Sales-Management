@@ -12,3 +12,9 @@ export function monthlySaleWorkAccountKey(month: string, accountName: string): s
   const prefix = monthlySaleWorkPrefix(month);
   return prefix === null ? null : `${prefix}${accountName}`;
 }
+
+export function saleWorkCalendarMonthValue(month: string): string | null {
+  if (getVietnamMonthRange(month) === null) return null;
+  const monthPart = month.split('-')[1];
+  return monthPart === undefined ? null : String(Number(monthPart));
+}

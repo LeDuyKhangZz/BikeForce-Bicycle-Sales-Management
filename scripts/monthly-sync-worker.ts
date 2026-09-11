@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
+import { buildLocalTsxCommand } from '../lib/process/local-tsx-command';
 import type { Database } from '../types/database.types';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
@@ -74,7 +75,12 @@ async function main(): Promise<void> {
 
   const errors: string[] = [];
   try {
-    await run(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['tsx', 'scripts/amis-sync/amis-harvest.ts']);
+    const harvestCommand = buildLocalTsxCommand(
+      process.cwd(),
+      process.execPath,
+      'scripts/amis-sync/amis-harvest.ts',
+    );
+    await run(harvestCommand.command, harvestCommand.args);
     await run(process.platform === 'win32' ? 'python.exe' : 'python3', ['scripts/amis-sync/push_amis.py'], {
       PUSH_YEAR: year,
       PUSH_MONTH: String(Number(monthNumber)),
@@ -85,7 +91,13 @@ async function main(): Promise<void> {
 
   let saleWorkSucceeded = false;
   try {
-    await run(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'salework:sync:month', '--', month]);
+    const saleWorkCommand = buildLocalTsxCommand(
+      process.cwd(),
+      process.execPath,
+      'scripts/salework-monthly-sync.ts',
+      [month],
+    );
+    await run(saleWorkCommand.command, saleWorkCommand.args);
     saleWorkSucceeded = true;
   } catch (error) {
     errors.push(`SaleWork: ${error instanceof Error ? error.message : 'lỗi không xác định'}`);

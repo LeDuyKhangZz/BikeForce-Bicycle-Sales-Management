@@ -1,17 +1,15 @@
 import { spawn } from 'node:child_process';
-import { resolve } from 'node:path';
 
 import { getVietnamMonthRange } from '../lib/date';
+import { buildLocalTsxCommand } from '../lib/process/local-tsx-command';
 
 const month = process.argv[2]?.trim() ?? '';
 if (getVietnamMonthRange(month) === null) {
   throw new Error('Cách dùng: npm run salework:sync:month -- YYYY-MM');
 }
 
-const child = spawn(
-  process.platform === 'win32' ? 'npx.cmd' : 'npx',
-  ['tsx', resolve(process.cwd(), 'scripts/salework-sync.ts')],
-  {
+const syncCommand = buildLocalTsxCommand(process.cwd(), process.execPath, 'scripts/salework-sync.ts');
+const child = spawn(syncCommand.command, [...syncCommand.args], {
     cwd: process.cwd(),
     env: {
       ...process.env,
@@ -20,8 +18,7 @@ const child = spawn(
     },
     stdio: 'inherit',
     windowsHide: true,
-  },
-);
+  });
 
 child.on('error', (error) => {
   console.error(`Không khởi động được đồng bộ SaleWork tháng: ${error.message}`);
