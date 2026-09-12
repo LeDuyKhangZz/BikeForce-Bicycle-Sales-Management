@@ -1,5 +1,9 @@
 # 05 — UI/UX Design
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Form công tác phí Admin giữ layout/controls cũ, thêm ba người báo cáo tháng; lưu/mở lại đúng tháng. Báo cáo tháng dùng dòng Công tác phí hiện có; không thêm menu Sales. Không mở Chrome test; 375px chưa kiểm tra trực quan trong task này.
+
 ## Bổ sung 12/09/2026 — DEC-088
 
 Giữ form lương Admin hiện có; bổ sung ba nhân viên báo cáo tháng, nhập/lưu theo tháng. Menu Sales không có Lương hoặc Tổng kết tháng; truy cập URL Admin bị guard. Không thêm giao diện lương nhân viên, không thay layout/input hiện có.

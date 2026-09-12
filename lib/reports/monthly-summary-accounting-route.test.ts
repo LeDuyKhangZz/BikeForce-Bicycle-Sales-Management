@@ -57,7 +57,7 @@ describe('ảnh tổng kết tháng kế toán', () => {
     expect(mocks.saleWork).not.toHaveBeenCalled();
     expect(mocks.targets).not.toHaveBeenCalled();
     expect(mocks.salary).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'amis-kim-huong', '2026-08-01');
-    expect(mocks.travel).not.toHaveBeenCalled();
+    expect(mocks.travel).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'amis-kim-huong', '2026-08-01');
   });
   it('chấp nhận ID tích hợp, lọc đúng tháng cả hai nguồn, không hỏi bảng khoản Sales bằng ID giả', async () => {
     const response = await request();
@@ -67,7 +67,7 @@ describe('ảnh tổng kết tháng kế toán', () => {
     expect(mocks.saleWork).toHaveBeenCalledWith('Abraham Kế Toán Bánhàng', '2026-08');
     expect(mocks.targets).not.toHaveBeenCalled();
     expect(mocks.salary).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'salework-accounting-sales', '2026-08-01');
-    expect(mocks.travel).not.toHaveBeenCalled();
+    expect(mocks.travel).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'salework-accounting-sales', '2026-08-01');
   });
 
   it('chưa đăng nhập bị chặn trước khi đọc số liệu', async () => {

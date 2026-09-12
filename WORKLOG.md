@@ -1,5 +1,9 @@
 # BikeForce Worklog
 
+## Entry 072 — 12/09/2026, DEC-089 công tác phí ba nhân viên
+
+Thêm Khoa/Abraham/Kim Hương vào form Admin và nối khoản lưu cùng key/tháng vào báo cáo. Feature queries/services session RLS; bảng participant + RPC invoker nguyên tử bảo toàn bảng Sales cũ; không đổi AMIS/lương. Unit 813/813, typecheck/lint pass, RLS công tác phí 10/10 local, HTTP E2E 1/1 và build test 29 route pass. Linked migration/types thành công; website chưa xác nhận deployment, không Chrome test.
+
 ## Entry 071 — 12/09/2026, DEC-088 lương Admin → báo cáo tháng
 
 Nối form Admin cho Khoa/Abraham/Kim Hương với nguồn lương cùng key/tháng; giữ Sales UUID thật, không tạo profile giả. Thêm bảng participant forced RLS Admin-only + RPC nguyên tử, push local/linked thành công, regenerate types. Unit 807/807, RLS liên quan 8/8, HTTP E2E action thật + ba PNG 1/1; typecheck/lint/build 29 route pass. Full DB 216/217, ISSUE-052 ngoài phạm vi. Không mở Chrome test; không thêm mục lương cho Sales. Chưa xác nhận website deployment, không retry push main đã bị chặn.

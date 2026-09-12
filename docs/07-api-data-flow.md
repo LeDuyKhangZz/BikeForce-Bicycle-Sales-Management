@@ -1,5 +1,9 @@
 # 07 — API & Data Flow
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Form công tác phí → Zod tháng → auth/Admin active → danh sách người nhận server + Zod tiền → RPC nguyên tử → revalidate công tác phí/tổng kết tháng. Ảnh tháng gọi getMonthlyTravelExpense theo `profileId ?? id`, đúng period; null/0 phân biệt, không gán kỳ khác. Không thêm CRUD REST.
+
 ## Bổ sung 12/09/2026 — DEC-088
 
 Admin chọn tháng → form ba nhân viên → Server Action validate tháng/auth/Admin active/người nhận server/tiền → service RPC lưu nguyên tử → revalidate lương và tổng kết tháng. Ảnh tháng lấy lương theo `profileId ?? participant.id` và đúng period; null là chưa nhập, 0 là số tiền đã nhập. Không thêm CRUD REST.

@@ -1,5 +1,14 @@
 # 11 — Decision Log
 
+## DEC-089 — Công tác phí ba participant báo cáo tháng
+
+- Date: 2026-09-12.
+- Decision: Admin nhập công tác phí cho Khoa, Abraham, Kim Hương; báo cáo tháng đọc cùng key/kỳ như lương. Giữ UUID Sales thật nếu có; thêm bảng participant riêng và RPC SECURITY INVOKER nguyên tử.
+- Reason: hai participant không có Sales profile, không thể lưu vào FK bảng cũ.
+- Alternatives: tạo profile giả hoặc sửa khóa bảng cũ (loại để giữ dữ liệu/quyền hiện có).
+- Impact: bảng mới forced RLS Admin-only SELECT/INSERT/UPDATE, không DELETE/service_role; feature query riêng, form cũ giữ nguyên. Không thêm mục công tác phí vào menu Sales, không đổi nguồn AMIS/lương.
+- Status: APPROVED — yêu cầu trực tiếp người dùng.
+
 ## DEC-088 — Lương Admin cho participant tổng kết tháng
 
 - Date: 2026-09-12.

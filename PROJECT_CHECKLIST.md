@@ -1,5 +1,13 @@
 # BikeForce Project Checklist
 
+## DEC-089 — 12/09/2026
+
+- [x] Công tác phí Admin ba người → báo cáo tháng cùng key/kỳ, giữ UUID Sales thật.
+- [x] Migration local forced RLS Admin-only/RPC nguyên tử; unit 813/813, RLS 10/10, typecheck/lint.
+- [x] HTTP E2E 1/1, build test 29 route, linked migration/types.
+- [ ] Website chưa xác nhận deployment; push main chờ quyền trực tiếp.
+- [ ] Chưa kiểm tra trực quan 375px; không Chrome test, không đổi quyền bảng cũ.
+
 ## DEC-088 — 12/09/2026
 
 - [x] Admin nhập lương ba nhân viên và báo cáo lấy cùng key/tháng; không thêm menu lương Sales.

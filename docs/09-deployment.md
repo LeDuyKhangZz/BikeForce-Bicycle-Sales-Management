@@ -1,5 +1,9 @@
 # 09 — Deployment (Supabase + Vercel)
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Migration công tác phí participant đã áp dụng local/linked thành công, regenerate linked types bằng UTF-8; RLS local 10/10. Không ghi dữ liệu công tác phí production. Website cần deployment, chưa xác nhận UI production; không retry push main đã bị auto-review chặn khi chưa có quyền trực tiếp.
+
 ## Bổ sung 12/09/2026 — DEC-088
 
 Migration `20260912110000_monthly_participant_salaries.sql` đã push local và linked thành công, không chạy seed hoặc sửa dữ liệu lương production. Code website cần deployment; chưa xác nhận production UI. Push main đang chờ quyền trực tiếp vì auto-review trước đó đã chặn, không bypass.

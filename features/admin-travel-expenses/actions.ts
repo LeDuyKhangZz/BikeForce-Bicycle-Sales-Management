@@ -11,9 +11,10 @@ import {
   travelExpenseMonthSchema,
 } from '@/lib/validation/travel-expenses';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
-import { getSessionProfile, listSalesOptions } from '@/services/profiles';
+import { getSessionProfile } from '@/services/profiles';
+import { listTravelExpenseParticipants } from './queries';
 import {
-  saveMonthlyTravelExpenses,
+  saveTravelExpenseEntries,
   type MonthlyTravelExpenseWrite,
 } from '@/services/travel-expenses';
 import type { ActionResult } from '@/types/action-result';
@@ -42,7 +43,7 @@ export async function saveTravelExpensesAction(
     return { ok: false, code: 'FORBIDDEN', message: TRAVEL_EXPENSE_MESSAGES.FORBIDDEN };
   }
 
-  const salesList = await listSalesOptions(supabase);
+  const salesList = await listTravelExpenseParticipants(supabase);
   if (salesList.length === 0) {
     return { ok: false, code: 'NOT_FOUND', message: TRAVEL_EXPENSE_MESSAGES.NO_SALES };
   }
@@ -68,16 +69,16 @@ export async function saveTravelExpensesAction(
     };
   }
 
-  const result = await saveMonthlyTravelExpenses(
+  const result = await saveTravelExpenseEntries(
     supabase,
     periodMonthOf(monthResult.data),
     rows,
-    profile.id,
   );
   if (!result.ok) {
     return { ok: false, code: 'UNKNOWN', message: TRAVEL_EXPENSE_MESSAGES.FAILED };
   }
 
   revalidatePath('/admin/travel-expenses');
+  revalidatePath('/admin/monthly-summaries');
   return { ok: true, data: { notice: TRAVEL_EXPENSE_MESSAGES.SAVED } };
 }

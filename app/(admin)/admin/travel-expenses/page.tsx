@@ -7,15 +7,13 @@ import { Card } from '@/components/ui/card';
 import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import {
   MonthlyTravelExpensesForm,
-  type TravelExpenseSalesRow,
 } from '@/features/admin-travel-expenses/monthly-travel-expenses-form';
 import { requireRole } from '@/features/auth/queries';
 import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
-import { listSalesOptions } from '@/services/profiles';
-import { listMonthlyTravelExpenses } from '@/services/travel-expenses';
+import { getTravelExpensePageData } from '@/features/admin-travel-expenses/queries';
 
 export const metadata: Metadata = { title: 'Công tác phí · BikeForce' };
 const PAGE_PATH = '/admin/travel-expenses';
@@ -28,18 +26,7 @@ export default async function AdminTravelExpensesPage({ searchParams }: Props) {
   const previousMonth = shiftVietnamMonth(month, -1);
   const nextMonth = shiftVietnamMonth(month, 1);
   const supabase = await createClient();
-  const [salesList, expenses] = await Promise.all([
-    listSalesOptions(supabase),
-    listMonthlyTravelExpenses(supabase, periodMonthOf(month)),
-  ]);
-
-  const salesRows: TravelExpenseSalesRow[] = salesList.map((sales) => ({
-    id: sales.id,
-    full_name: sales.full_name,
-    employee_code: sales.employee_code,
-    is_active: sales.is_active,
-  }));
-  const currentAmounts = Object.fromEntries(expenses.map((row) => [row.sales_id, row.amount]));
+  const { salesRows, currentAmounts } = await getTravelExpensePageData(supabase, periodMonthOf(month));
 
   return (
     <div className="flex flex-col gap-4">

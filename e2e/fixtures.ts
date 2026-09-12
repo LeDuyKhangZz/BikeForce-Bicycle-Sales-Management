@@ -87,6 +87,7 @@ async function deleteUserByEmail(email: string): Promise<void> {
   // FK là ON DELETE RESTRICT — báo cáo phải đi trước.
   await sql('delete from public.daily_reports where sales_id = $1', [id]);
   await sql('delete from public.monthly_participant_salaries where updated_by = $1', [id]);
+  await sql('delete from public.monthly_participant_travel_expenses where updated_by = $1', [id]);
   await authAdmin.auth.admin.deleteUser(id);
 }
 

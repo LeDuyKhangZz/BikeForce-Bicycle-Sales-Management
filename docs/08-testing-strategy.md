@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+## Kiểm chứng 12/09/2026 — DEC-089
+
+Unit 813/813, typecheck/lint pass; RLS công tác phí cũ + participant 10/10 trên local bằng JWT thật: Admin đọc/ghi, null/0/tách tháng, deny Sales/anon/inactive, atomic rollback, forced RLS/no service_role/invoker. HTTP-only E2E action thật 1/1 pass: lưu/mở lại/đối chiếu dữ liệu và xuất PNG ba người, build test 29 route thành công. Không mở Chrome test hoặc ghi UI 375px PASS.
+
 ## Kiểm chứng 12/09/2026 — DEC-088
 
 Đã chạy unit 808/808 gồm test menu nhân viên không có Lương; typecheck/lint/build 29 route; RLS lương cũ + participant 8/8; HTTP E2E Server Action thật nhập/lưu/mở lại và PNG cả ba người 1/1, không mở Chrome test. Full DB: 216 passed/1 failed (ISSUE-052 bảng targets cũ chưa forced RLS). E2E browser/màn hình 375px chưa chạy; không ghi PASS.

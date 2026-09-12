@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { isMonthlySalaryParticipant } from '@/lib/reports/monthly-summary-participants';
 import type { Database } from '@/types/database.types';
 
 const MAX_TEAM_SIZE = 200;
@@ -13,6 +14,16 @@ export async function getMonthlyTravelExpense(
   salesId: string,
   periodMonth: string,
 ): Promise<number | null> {
+  if (isMonthlySalaryParticipant(salesId)) {
+    const { data, error } = await supabase.from('monthly_participant_travel_expenses')
+      .select('amount').eq('participant_key', salesId).eq('period_month', periodMonth)
+      .maybeSingle<Pick<Database['public']['Tables']['monthly_participant_travel_expenses']['Row'], 'amount'>>();
+    if (error) {
+      console.error('[getMonthlyTravelExpense:participant]', error.code, error.message);
+      return null;
+    }
+    return data?.amount ?? null;
+  }
   const { data, error } = await supabase
     .from('sales_monthly_travel_expenses')
     .select('amount')
@@ -33,9 +44,9 @@ export async function listMonthlyTravelExpenses(
 ): Promise<MonthlyTravelExpenseRow[]> {
   const { data, error } = await supabase
     .from('sales_monthly_travel_expenses')
-    .select('sales_id, amount')
+    .select('sales_id, amount', { count: 'exact' })
     .eq('period_month', periodMonth)
-    .limit(MAX_TEAM_SIZE)
+    .order('sales_id').range(0, MAX_TEAM_SIZE - 1)
     .returns<MonthlyTravelExpenseRow[]>();
 
   if (error) {
@@ -43,6 +54,34 @@ export async function listMonthlyTravelExpenses(
     return [];
   }
   return data ?? [];
+}
+
+export async function listTravelExpenseEntries(supabase: SupabaseClient<Database>, periodMonth: string): Promise<MonthlyTravelExpenseRow[]> {
+  const [salesRows, participantResult] = await Promise.all([
+    listMonthlyTravelExpenses(supabase, periodMonth),
+    supabase.from('monthly_participant_travel_expenses').select('participant_key, amount', { count: 'exact' })
+      .eq('period_month', periodMonth).order('participant_key').range(0, MAX_TEAM_SIZE - 1)
+      .returns<Pick<Database['public']['Tables']['monthly_participant_travel_expenses']['Row'], 'participant_key' | 'amount'>[]>(),
+  ]);
+  if (participantResult.error) {
+    console.error('[listTravelExpenseEntries]', participantResult.error.code, participantResult.error.message);
+    return salesRows;
+  }
+  return [...salesRows, ...(participantResult.data ?? []).map(row => ({ sales_id: row.participant_key, amount: row.amount }))];
+}
+
+export async function saveTravelExpenseEntries(
+  supabase: SupabaseClient<Database>, periodMonth: string, rows: readonly MonthlyTravelExpenseWrite[],
+): Promise<{ ok: true; saved: number } | { ok: false }> {
+  const { data, error } = await supabase.rpc('save_monthly_travel_expense_entries', {
+    p_period_month: periodMonth,
+    p_entries: rows.map(row => ({ participant_id: row.sales_id, amount: row.amount ?? null })),
+  });
+  if (error || data === null) {
+    console.error('[saveTravelExpenseEntries]', error?.code, error?.message);
+    return { ok: false };
+  }
+  return { ok: true, saved: data };
 }
 
 export async function saveMonthlyTravelExpenses(

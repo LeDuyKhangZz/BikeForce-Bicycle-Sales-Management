@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — DEC-089 công tác phí (12/09/2026)
+
+Người dùng yêu cầu thêm ba người như lương. Đã nối form Admin/Server Action RPC nguyên tử/services/report key đúng tháng; bảng participant forced RLS Admin-only, giữ UUID Sales thật, không tạo profile giả/không đổi AMIS. Local migration, unit 813/813, RLS công tác phí 10/10, typecheck/lint pass. HTTP-only E2E và linked migration/types đang chốt; không mở Chrome test.
+
+HTTP E2E 1/1 pass, build test 29 route pass; migration linked và generate types UTF-8 thành công. Không ghi dữ liệu công tác phí production.
+
+**Next Exact Steps:** commit bàn giao và xác nhận website khi deployment. Push main bị auto-review chặn trước đó nên không retry/bypass khi chưa có quyền trực tiếp. Không sửa ISSUE-052 targets ngoài phạm vi.
+
 ## Mới nhất — DEC-088, lương Admin (12/09/2026)
 
 Code nhập/lưu/đọc báo cáo cho Khoa/Abraham/Kim Hương đã nối, không tạo profile giả. Migration participant salaries + RPC Admin-only đã push local/linked thành công. Unit 807/807, RLS lương 8/8, HTTP E2E không mở Chrome 1/1, typecheck/lint/build 29 route đã pass. Full DB 216/217: ISSUE-052 targets cũ chưa forced RLS, không sửa ngoài phạm vi. Người dùng nhấn mạnh chỉ Admin có mục lương; menu Sales hiện không có và thêm regression test.

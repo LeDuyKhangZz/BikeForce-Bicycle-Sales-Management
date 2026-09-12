@@ -1,5 +1,9 @@
 # 02 — Database Design
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Migration `20260912120000_monthly_participant_travel_expenses.sql`: bảng `monthly_participant_travel_expenses` PK `(period_month,participant_key)`, bigint nullable không âm, CHECK ngày 01/allowlist ba người, audit updated_by/updated_at. Enabled + forced RLS, Admin-only SELECT/INSERT/UPDATE; không DELETE/service_role. RPC `save_monthly_travel_expense_entries` SECURITY INVOKER xác thực Admin/người nhận, lưu nguyên tử cả bảng Sales cũ và participant. Không đổi dữ liệu/quyền bảng công tác phí cũ.
+
 ## Bổ sung 12/09/2026 — DEC-088
 
 Migration `20260912110000_monthly_participant_salaries.sql`: bảng lương participant PK `(period_month, participant_key)`, bigint nullable không âm, tháng ngày 01, allowlist ba participant, audit `updated_by/updated_at`; RLS enabled + forced, chỉ Admin active SELECT/INSERT/UPDATE, không DELETE/service_role. RPC `save_monthly_salary_entries` SECURITY INVOKER lưu nguyên tử bảng cũ cho Sales UUID và bảng mới cho participant; xác thực Admin, kiểm tra người nhận. Không đổi bảng/RLS/lương Sales cũ.

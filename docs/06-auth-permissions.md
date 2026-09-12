@@ -1,5 +1,9 @@
 # 06 — Xác thực & Phân quyền (Auth & Permissions)
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Bảng participant công tác phí forced RLS, policies SELECT/INSERT/UPDATE chỉ `(select public.is_admin())`; không cấp DELETE/service_role. RPC invoker kiểm tra Admin active và người nhận hợp lệ. Trang/Server Action Admin guard độc lập, ảnh báo cáo Admin active/no-store; quyền bảng Sales cũ giữ nguyên.
+
 ## Bổ sung 12/09/2026 — DEC-088
 
 Lương mới chỉ Admin active đọc/ghi bằng session anon key chịu RLS; bảng forced RLS, chính sách riêng SELECT/INSERT/UPDATE dùng `(select public.is_admin())`; không cấp DELETE/service_role. RPC SECURITY INVOKER kiểm tra Admin và người nhận từ danh sách server. Trang `/admin/salaries` requireRole ADMIN; menu Sales không có mục lương; ảnh tổng kết tháng kiểm tra Admin active/no-store. Quyền bảng lương Sales cũ không thay đổi.

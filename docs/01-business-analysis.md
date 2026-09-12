@@ -1,5 +1,9 @@
 # 01 — Business Analysis (Phân tích nghiệp vụ)
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Admin nhập công tác phí theo tháng cho Nguyễn Trần Đăng Khoa, Abraham Kế Toán Bánhàng, Nguyễn Thị Kim Hương; báo cáo tháng hiển thị đúng khoản đã lưu. Không tạo tài khoản Sales giả, không thêm giao diện nhập công tác phí cho nhân viên.
+
 ## Bổ sung 12/09/2026 — Lương báo cáo tháng (DEC-088)
 
 Admin nhập lương theo tháng cho Nguyễn Trần Đăng Khoa, Abraham Kế Toán Bánhàng và Nguyễn Thị Kim Hương; báo cáo tháng Admin lấy đúng khoản đã lưu của tháng đang xem. Không thêm mục lương vào tài khoản nhân viên, không tạo tài khoản Sales giả.

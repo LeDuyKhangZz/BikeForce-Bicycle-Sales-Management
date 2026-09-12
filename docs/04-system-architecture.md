@@ -1,5 +1,9 @@
 # 04 — Kiến trúc hệ thống (System Architecture)
 
+## Bổ sung 12/09/2026 — DEC-089
+
+Trang công tác phí → feature queries riêng → services session/RLS; dùng helper participant chung báo cáo tháng như lương. Giữ UUID Khoa khi có profile thật, không query/data mapping trong component.
+
 ## Bổ sung 12/09/2026 — DEC-088
 
 Trang lương gọi `features/admin-salaries/queries.ts` → services client session/RLS. Helper participant chung ở lib bảo đảm cùng ID với báo cáo tháng, tránh trùng Khoa nếu đã có Sales profile thật. Component form không query hoặc tự ánh xạ người nhận.

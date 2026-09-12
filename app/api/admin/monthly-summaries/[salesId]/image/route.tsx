@@ -85,7 +85,7 @@ export async function GET(request: Request, context: Context): Promise<Response>
     saleWorkAccountName === null
       ? Promise.resolve(null)
       : getMonthlySaleWorkReportByAccountName(saleWorkAccountName, month),
-    sales.profileId === null ? Promise.resolve(null) : getMonthlyTravelExpense(supabase, sales.profileId, periodMonth),
+    getMonthlyTravelExpense(supabase, sales.profileId ?? sales.id, periodMonth),
     getMonthlySalary(supabase, sales.profileId ?? sales.id, periodMonth),
   ]);
 
