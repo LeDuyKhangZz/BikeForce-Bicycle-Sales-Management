@@ -1,5 +1,9 @@
 # 07 — API & Data Flow
 
+DEC-087 source: Report 119 scope cũ chưa chứa Kim Hương, `push_amis.pull_nvkd` chỉ bổ sung đúng tên + ID 23 từ THỐNG ĐẠT GROUP (1), không đổi scope/dòng của người khác. Nếu scope cũ đã có tên thì không override. Dashboard/Kế toán như sale khác, không hardcode tiền. API tháng 8 xác minh doanh số 168.805.000, công nợ 163.821.200, KH mua trong kỳ 7, đơn 10; trả hàng 369.000. Sync tháng 8 chỉ UPSERT dòng Kim Hương và đối chiếu response sau ghi.
+
+DEC-087: Tổng kết tháng `amis-kim-huong` → AMIS `Nguyễn Thị Kim Hương` + period_month của tháng chọn, dùng current_amount/receive_amount/các cột thống kê như sale khác. SaleWork account null nên không gọi getter SaleWork; không mở browser hoặc sửa worker/tập sync SaleWork. Chỉ tiêu/lương/công tác phí chưa liên kết Sales profile để null.
+
 ### Ngoại lệ August accounting (DEC-085)
 
 DEC-086: Feature đọc thêm `getAmisMetricsForShare(sessionClient, 'Nguyễn Thị Như Quỳnh', '2026-08-01')`, chỉ ghép `receive_amount` vào Abraham tháng 8. Target lấy dòng CRM gốc, các số còn lại snapshot Report 119. Không hardcode số tiền, nguồn thiếu trả null; tháng khác không đọc thêm dòng này. Cột nguồn receive_amount tháng 8 đã đồng bộ riêng và so sánh response thành công: 391.973.996.

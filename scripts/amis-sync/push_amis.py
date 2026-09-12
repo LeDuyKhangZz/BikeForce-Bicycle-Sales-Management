@@ -162,6 +162,17 @@ def pull_nvkd(year: int, month: int, period: int) -> dict[str, dict[str, Any]]:
         period,
     )
 
+    # Nhân viên AMIS-only mới không nằm trong scope Phòng kinh doanh cũ.
+    # Chỉ thêm Kim Hương, không thay dữ liệu/scope của các sale hiện hữu.
+    kim_huong_name = 'Nguyễn Thị Kim Hương'
+    kim_huong_from_group = not any(row.get('Name') == kim_huong_name for row in rows)
+    if kim_huong_from_group:
+        group_rows = nvkd_mod.fetch(1, 'THỐNG ĐẠT GROUP', True, from_date, to_date, period)
+        matches = [row for row in group_rows if row.get('Name') == kim_huong_name and row.get('ID') == 23]
+        if len(matches) != 1:
+            raise RuntimeError('Không có duy nhất Nguyễn Thị Kim Hương (23) trong Report 119 toàn đơn vị; giữ dữ liệu nguồn cũ.')
+        rows = [*rows, matches[0]]
+
     result: dict[str, dict[str, Any]] = {}
 
     for row in rows:
@@ -186,7 +197,7 @@ def pull_nvkd(year: int, month: int, period: int) -> dict[str, dict[str, Any]]:
             "qty_account_sold_this_period": int(
                 to_number(row.get("QuantityAccountSoldThisPeriod"))
             ),
-            "org_unit_name": nvkd_mod.ROOT_UNIT_TEXT,
+            "org_unit_name": 'THỐNG ĐẠT GROUP' if name == kim_huong_name and kim_huong_from_group else nvkd_mod.ROOT_UNIT_TEXT,
         }
 
     return result

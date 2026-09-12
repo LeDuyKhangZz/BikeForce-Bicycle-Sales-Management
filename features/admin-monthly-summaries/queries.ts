@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { MONTHLY_ACCOUNTING_AUGUST_KEY, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, usesAccountingAugustReport119 } from '@/lib/reports/monthly-accounting-august';
-import { includeMonthlyAccountingParticipant, MONTHLY_ACCOUNTING_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
+import { includeMonthlySummaryParticipants, MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
 import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { getMonthlySummarySales, listSalesOptions } from '@/services/profiles';
 import { getAmisMetricsForShare } from '@/services/reports';
@@ -31,10 +31,18 @@ export async function getMonthlySummaryAmisMetrics(
 }
 
 export async function listMonthlySummaryParticipants(supabase: SupabaseClient<Database>) {
-  return includeMonthlyAccountingParticipant(await listSalesOptions(supabase));
+  return includeMonthlySummaryParticipants(await listSalesOptions(supabase));
 }
 
 export async function getMonthlySummaryParticipant(supabase: SupabaseClient<Database>, id: string) {
+  if (id === MONTHLY_KIM_HUONG_PARTICIPANT.id) {
+    return {
+      ...MONTHLY_KIM_HUONG_PARTICIPANT,
+      profileId: null,
+      saleWorkAccountName: null,
+      amis_employee_name: MONTHLY_KIM_HUONG_PARTICIPANT.full_name,
+    };
+  }
   if (id === MONTHLY_ACCOUNTING_PARTICIPANT.id) {
     return {
       ...MONTHLY_ACCOUNTING_PARTICIPANT,

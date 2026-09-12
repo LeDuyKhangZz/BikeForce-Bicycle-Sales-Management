@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { includeMonthlyAccountingParticipant, MONTHLY_ACCOUNTING_PARTICIPANT } from './monthly-summary-participants';
+import { includeMonthlyAccountingParticipant, includeMonthlySummaryParticipants, MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT } from './monthly-summary-participants';
 
 describe('includeMonthlyAccountingParticipant', () => {
+  it('thêm nhân viên AMIS-only vào báo cáo tháng, không trùng nếu đã có profile', () => {
+    expect(includeMonthlySummaryParticipants([])).toEqual([MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT]);
+    const profile = { ...MONTHLY_KIM_HUONG_PARTICIPANT, id: 'existing-sales-uuid' };
+    const result = includeMonthlySummaryParticipants([profile]);
+    expect(result.filter(person => person.full_name === profile.full_name)).toEqual([profile]);
+  });
   it('bổ sung kế toán kể cả khi không có profile Sales', () => {
     expect(includeMonthlyAccountingParticipant([])).toEqual([MONTHLY_ACCOUNTING_PARTICIPANT]);
   });

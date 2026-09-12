@@ -2665,6 +2665,17 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 
 ## DEC-085 — Ngoại lệ lịch sử Report 119 riêng tháng 08/2026 Abraham
 
+### DEC-087 — Nhân viên tháng AMIS-only Nguyễn Thị Kim Hương
+
+**Date:** 2026-09-12
+**Decision:** Bổ sung Nguyễn Thị Kim Hương vào danh sách/ảnh Tổng kết tháng bằng ID tích hợp `amis-kim-huong`, AMIS đọc theo tên Nguyễn Thị Kim Hương cùng kỳ như sale khác. Không có SaleWork nên account null, không truy vấn/sync tài khoản giả hoặc hiển thị online 0. Không tạo auth/profile giả; mã nhân viên chưa biết để null. Nếu danh sách Sales đã có cùng tên/ID thì không thêm dòng trùng.
+**Reason:** Người dùng yêu cầu báo cáo tháng cho nhân viên có AMIS nhưng không có SaleWork.
+**Alternatives:** Tạo user Sales giả ảnh hưởng auth; thêm mapping SaleWork giả sai nguồn; chỉ thêm tên mà không mở allowlist route ảnh vẫn lỗi. Dùng participant tích hợp như kế toán, nguồn AMIS thông thường, không áp dụng ngoại lệ Abraham tháng 8.
+**Impact:** Helper danh sách/query feature/allowlist route và test; khoản/chỉ tiêu Sales chưa có profile để null, auth Admin active/no-store giữ nguyên. Không schema/RLS/mapping ngày hoặc SaleWork mới. Ngoại lệ Abraham và mọi sale cũ giữ nguyên.
+**Status:** APPROVED — yêu cầu trực tiếp của người dùng.
+
+**Kiểm chứng DEC-087:** API tháng 08/2026 trả Kim Hương dashboard 168.805.000, công nợ Kế toán 163.821.200. Scope Report 119 cũ không có Kim Hương, group ID 1 có employee ID 23: phụ trách 2, tương tác 8, mua trong kỳ 7, 10 đơn, trả hàng 369.000. `pull_nvkd` giữ scope/dòng mọi sale cũ, chỉ bổ sung Kim Hương từ group nếu chưa có tên trong scope cũ; thiếu/trùng nguồn mới phải báo lỗi thay vì tự tạo số 0. Không đổi công thức doanh số (vẫn dashboard current_amount như sale khác). Đồng bộ một dòng Kim Hương tháng 8, không gọi sync SaleWork.
+
 **Bổ sung DEC-086 (2026-09-12, APPROVED):** Người dùng xác nhận tên Kế toán của Abraham là `Nguyễn Thị Như Quỳnh (37)`, số tiền đúng `391.973.996` (đính chính số gõ nhầm `391.973.966`). Riêng khoản `receive_amount` tháng 08/2026 đọc dòng nguồn tên này, không dùng tên CRM `Kế Toán Bán Hàng`. Các quy tắc Report 119/tháng khác của DEC-085 giữ nguyên.
 
 ### DEC-086 — Mapping công nợ Kế toán riêng Abraham tháng 08/2026

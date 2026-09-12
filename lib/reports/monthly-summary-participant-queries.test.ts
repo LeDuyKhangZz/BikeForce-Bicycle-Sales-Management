@@ -15,6 +15,13 @@ const client = createClient<Database>('http://127.0.0.1:54321', 'unit-test-key')
 beforeEach(() => vi.clearAllMocks());
 
 describe('monthly summary participant queries', () => {
+  it('Kim Hương dùng đúng tên AMIS, không có SaleWork hoặc profile giả', async () => {
+    expect(await getMonthlySummaryParticipant(client, 'amis-kim-huong')).toMatchObject({
+      full_name: 'Nguyễn Thị Kim Hương', profileId: null,
+      saleWorkAccountName: null, amis_employee_name: 'Nguyễn Thị Kim Hương', employee_code: null,
+    });
+    expect(getMonthlySummarySales).not.toHaveBeenCalled();
+  });
   it('lấy kế toán không cần profile Sales và ghép đúng AMIS cũ', async () => {
     const person = await getMonthlySummaryParticipant(client, 'salework-accounting-sales');
     expect(person).toMatchObject({
@@ -46,6 +53,7 @@ describe('monthly summary participant queries', () => {
     vi.mocked(listSalesOptions).mockResolvedValue([]);
     expect(await listMonthlySummaryParticipants(client)).toEqual([
       expect.objectContaining({ id: 'salework-accounting-sales' }),
+      expect.objectContaining({ id: 'amis-kim-huong' }),
     ]);
   });
 });

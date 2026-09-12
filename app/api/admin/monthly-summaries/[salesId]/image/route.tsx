@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { MonthlySummaryCard } from '@/features/report-share/monthly-summary-card';
 import { buildMonthlySummaryCardModel } from '@/lib/reports/monthly-summary-card';
-import { MONTHLY_ACCOUNTING_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
+import { MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
 import { getMonthlySummaryAmisMetrics, getMonthlySummaryParticipant } from '@/features/admin-monthly-summaries/queries';
 import { createClient } from '@/lib/supabase/server';
 import { salaryMonthSchema } from '@/lib/validation/salaries';
@@ -20,7 +20,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const preferredRegion = 'sin1';
 
-const salesIdSchema = z.union([z.uuid(), z.literal(MONTHLY_ACCOUNTING_PARTICIPANT.id)]);
+const salesIdSchema = z.union([z.uuid(), z.literal(MONTHLY_ACCOUNTING_PARTICIPANT.id), z.literal(MONTHLY_KIM_HUONG_PARTICIPANT.id)]);
 const FONT_FILES = [
   { file: 'Inter-Regular.ttf', weight: 400 },
   { file: 'Inter-SemiBold.ttf', weight: 600 },

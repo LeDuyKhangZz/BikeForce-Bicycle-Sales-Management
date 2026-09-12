@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] DEC-087: thêm Nguyễn Thị Kim Hương vào Tổng kết tháng, AMIS như sale khác; không SaleWork/account giả/profile giả, không trùng dòng; unit 800/800.
+- [x] DEC-087 kiểm chứng typecheck/lint/build 29 route, source Report119 group bổ sung riêng Kim Hương và Python 3/3; API tháng 8 xác minh số liệu như sale khác.
+- [ ] DEC-087 triển khai website còn cần quyền push main; E2E/RLS local chưa xác minh (offline, không Chrome test).
+
 - [x] DEC-086: Abraham tháng 08/2026 lấy doanh thu Kế toán từ Nguyễn Thị Như Quỳnh (37) = 391.973.996 đ; browser/API/source sync xác minh đúng tiền. Giữ tháng 9/CRM/người khác, không Chrome test.
 - [x] DEC-086 kiểm chứng: unit 797/797, typecheck/lint sạch, build 29 route thành công.
 - [ ] DEC-086 triển khai website: cần quyền trực tiếp push main sau auto-review chặn trước đó; chưa có xác nhận deployment/ảnh production.

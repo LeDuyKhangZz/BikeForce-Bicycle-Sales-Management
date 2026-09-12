@@ -1,5 +1,7 @@
 # 01 — Business Analysis (Phân tích nghiệp vụ)
 
+DEC-087: Nguyễn Thị Kim Hương có Tổng kết tháng dùng AMIS cùng tên/kỳ như các sale; không có tài khoản SaleWork, online hiển thị trạng thái không có dữ liệu, không suy diễn thành 0. Không giới hạn chỉ tháng 8 và không dùng ngoại lệ nguồn của Abraham.
+
 ### Đính chính lịch sử 2026-09-12 — DEC-085
 
 **Bổ sung DEC-086:** Doanh thu tháng 08/2026 của Abraham lấy cột Số tiền thanh toán của `Nguyễn Thị Như Quỳnh (37)` bên Kế toán: **391.973.996 đ**, đã được người dùng xác nhận và đối chiếu API/browser. Không lấy công nợ theo tên CRM Kế Toán Bán Hàng. Tháng 9/người khác/CRM giữ nguyên. Nhận xét thiếu tên bên dưới là tình trạng trước khi người dùng xác nhận mapping Kế toán này.

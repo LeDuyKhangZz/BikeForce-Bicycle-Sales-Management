@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+DEC-087 Python: test bổ sung đúng Kim Hương (ID 23) từ group Report 119, không đưa Abraham/người khác từ group vào kết quả, giữ số/scope sale cũ; scope cũ đã có Kim Hương không đọc/override; thiếu nguồn mới fail an toàn thay vì gán 0.
+
+DEC-087: unit helper bổ sung Kim Hương/không trùng profile, feature đúng AMIS + account/profile null, route chấp nhận slug hợp lệ, AMIS đúng tên/kỳ và no-store; không gọi SaleWork/khoản UUID giả. Hồi quy Abraham tháng 8 và sale khác phải giữ nguyên. Không mở Chrome test để E2E khi người dùng đã cấm; DB/RLS local offline không được ghi PASS.
+
 ### Hồi quy DEC-085 — Abraham chỉ tháng 08/2026
 
 DEC-086 bổ sung test mapping Quỳnh chỉ cho khoản doanh thu: đọc đúng tên/tháng, kết quả 391.973.996; tiền khác ở dòng CRM không được lấy thay. Nguồn thiếu giữ null, nguồn có 0 giữ 0. Giữ các test tháng 9/người khác nguyên object cũ. Không mở Chrome test; đọc browser chung người dùng đang mở để đối chiếu dòng thật không phải E2E.

@@ -1,5 +1,15 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — DEC-087 Nguyễn Thị Kim Hương
+
+Đã sync duy nhất Kim Hương 2026-08, so sánh response thành công: 168.805.000/163.821.200/7 khách/10 đơn. Python push liên quan 5/5. Các tháng khác cần source sync đúng kỳ như thường lệ, không dùng số tháng 8 thay tháng 9.
+
+Kiểm chứng cuối: unit 800/800, typecheck/lint sạch, build 29 route thành công, Python source mới 3/3. Source Report119 cũ thiếu Kim Hương nên `pull_nvkd` bổ sung duy nhất employee23 từ group1 khi cần, không override sale khác. API tháng 8 xác minh 168.805.000 doanh số/163.821.200 công nợ/7 khách mua/10 đơn/369.000 trả hàng. Không mở Chrome test, chưa xác minh UI/RLS/E2E local; chưa có deployment/quyền push main.
+
+Participant AMIS-only `amis-kim-huong`, tên AMIS Nguyễn Thị Kim Hương, SaleWork account null; danh sách không thêm trùng nếu đã có cùng tên/ID. Route allowlist đúng ID, auth Admin active/no-store cũ; chưa có Sales UUID nên khoản/chỉ tiêu null. Không ảnh hưởng Abraham/tháng 9/SaleWork sync. Unit 800/800 đã đạt; typecheck/lint/build đang kiểm chứng.
+
+**Next Exact Steps:** kiểm chứng cuối, commit source/doc; push main chỉ khi được phê duyệt trực tiếp sau auto-review đã chặn, không bypass. Chưa xác minh UI/E2E/RLS local (không Chrome test, local offline).
+
 ## Mới nhất — DEC-086, doanh thu Abraham tháng 08/2026
 
 Kiểm chứng cuối: unit 797/797, typecheck/lint sạch, production build 29 route thành công. Chưa có xác nhận deployment cho bản ghép nguồn công nợ mới, chưa xác minh ảnh production; cần quyền push main trực tiếp theo chặn auto-review trước đó.

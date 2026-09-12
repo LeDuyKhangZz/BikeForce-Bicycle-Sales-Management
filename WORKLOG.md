@@ -1,5 +1,13 @@
 # BikeForce Worklog
 
+## Entry 069 — 2026-09-12 — Tổng kết tháng Nguyễn Thị Kim Hương
+
+Đồng bộ duy nhất dòng Kim Hương tháng 08/2026 và đối chiếu response exit 0: dashboard 168.805.000/công nợ 163.821.200/7 khách/10 đơn. Không ghi người khác/SaleWork. Python bộ push liên quan 5/5 chạy thật. Tháng khác được pipeline source bổ sung Kim Hương ở lần sync tương ứng, không suy diễn snapshot tháng 8 sang tháng 9.
+
+Kiểm chứng cuối: full unit 800/800, typecheck/lint exit 0, production build 29 route exit 0. API tháng 8 dashboard 168.805.000, Kế toán 163.821.200; scope Report119 cũ không có Kim Hương nên bổ sung riêng employee 23 từ group1 (khách phụ trách 2, tương tác 8, mua trong kỳ 7, 10 đơn, trả hàng 369.000). Không thay scope/số mọi sale khác. Python hồi quy source mới 3/3. Không mở browser/test Chrome, không RLS/E2E local PASS khi offline. Source/doc chuẩn bị commit, chưa có quyền push main/deployment.
+
+DEC-087: thêm participant AMIS-only `amis-kim-huong`, tên AMIS cùng tên, account SaleWork null, không tạo profile/role giả hoặc sửa SaleWork sync. Helper không thêm dòng trùng nếu đã có Sales profile cùng tên/ID. Route allowlist đúng slug, auth/no-store giữ nguyên; không hỏi khoản UUID giả. AMIS dùng logic sale thường, không áp dụng ngoại lệ Abraham. Unit 800/800 đã chạy; typecheck/lint/build cuối ghi sau. E2E không mở Chrome test; RLS local vẫn nợ môi trường offline đã xác nhận trước.
+
 ## Entry 068 — 2026-09-12 — Xác nhận nguồn doanh thu Abraham tháng 8
 
 Kiểm chứng thật cuối: full unit 797/797; typecheck/lint exit 0; production build exit 0, 29 route. Chưa xác minh ảnh production; không chạy lại Chrome test/RLS (môi trường local offline đã xác nhận trước). Source mapping đã sửa, dữ liệu nguồn đã có; còn bước commit/push triển khai, quyền push main cần xác nhận trực tiếp sau auto-review từ chối trước đó.

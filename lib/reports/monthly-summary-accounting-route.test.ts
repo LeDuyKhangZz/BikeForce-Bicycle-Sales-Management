@@ -49,6 +49,16 @@ beforeEach(() => {
 });
 
 describe('ảnh tổng kết tháng kế toán', () => {
+  it('Kim Hương chỉ đọc AMIS cùng tên/kỳ, không gọi SaleWork hoặc bảng khoản theo UUID giả', async () => {
+    const response = await request('amis-kim-huong');
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(mocks.amis).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'Nguyễn Thị Kim Hương', '2026-08-01');
+    expect(mocks.saleWork).not.toHaveBeenCalled();
+    expect(mocks.targets).not.toHaveBeenCalled();
+    expect(mocks.salary).not.toHaveBeenCalled();
+    expect(mocks.travel).not.toHaveBeenCalled();
+  });
   it('chấp nhận ID tích hợp, lọc đúng tháng cả hai nguồn, không hỏi bảng khoản Sales bằng ID giả', async () => {
     const response = await request();
     expect(response.status).toBe(200);

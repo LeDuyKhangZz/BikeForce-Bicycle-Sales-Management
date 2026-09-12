@@ -1,5 +1,7 @@
 # 04 — Kiến trúc hệ thống (System Architecture)
 
+DEC-087: participant AMIS-only `amis-kim-huong` do helper lib bổ sung, feature trả tên AMIS + SaleWork account null + profileId null. Route ảnh dùng service/query/model có sẵn, bỏ qua nguồn/khoản không có khóa; không auth user hoặc schema mới.
+
 ### Snapshot lịch sử giới hạn kỳ/người (DEC-085)
 
 DEC-086: Hai tên nguồn được tách theo khoản, không sửa mapping CRM toàn cục. Feature dùng session service đọc công nợ `Nguyễn Thị Như Quỳnh` riêng đúng Abraham tháng 8, CRM tiếp tục `Kế Toán Bán Hàng`/snapshot Report 119. Giữ layering/RLS hiện hữu.
