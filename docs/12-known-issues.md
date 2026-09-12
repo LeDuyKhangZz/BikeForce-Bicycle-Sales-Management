@@ -2137,7 +2137,7 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 
 **Fix:** thêm mapping vào nguồn chuẩn; tập tháng tự nhận thêm `Tàu - MT`, còn tập ngày giữ nguyên. Không sửa trường `amis_employee_name` hoặc truy vấn AMIS.
 
-**Verification:** unit mapping 16/16 xác nhận đúng tên, tập tháng có 8 tài khoản Sales và chứa `Tàu - MT`, tập ngày không chứa tài khoản này. Full unit 774/774, typecheck, lint và production build 29 route đều sạch. Việc chạy sync thật để tạo snapshot cho kỳ cần xem được thực hiện sau khi mã mới triển khai.
+**Verification:** unit mapping 16/16 xác nhận đúng tên, tập tháng có 8 tài khoản Sales và chứa `Tàu - MT`, tập ngày không chứa tài khoản này. Full unit 774/774, typecheck, lint và production build 29 route đều sạch. Bổ sung 2026-09-12: chạy sync thật tháng 08/2026 exit 0 ghi đủ 10 snapshot; đọc ngược bằng service báo cáo theo mapping Khoa trả 244 hội thoại, 2.778 tin gửi, 3.674 tin nhận, 122 gọi đến, 38 gọi đi, 46 gọi nhỡ, 2.90 giờ. Không chạy lại AMIS hoặc ghi dữ liệu ngày.
 
 ---
 

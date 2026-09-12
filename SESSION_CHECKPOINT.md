@@ -2462,3 +2462,10 @@ lần tự động kế tiếp tiếp tục exit 0.
 - QA cuối: full unit 778/778, typecheck/lint sạch, production build 29 route thành công; ESLint bỏ qua extension/cache trong profile AMIS bị Git ignore.
 
 **Next Exact Steps:** giữ cửa sổ Chrome AMIS chung để các script tái sử dụng; chỉ đăng nhập tại cửa sổ này, không đăng nhập thêm ở profile khác. Đồng bộ lại đúng kỳ tháng cần xem.
+
+### ĐÃ NẠP 2026-09-12 — SaleWork Khoa tháng 08/2026
+
+- Chạy `salework:sync:month -- 2026-08` exit 0, ghi đủ 10 snapshot tháng sau hai lượt đọc giống nhau; dữ liệu ngày không đổi, không chạy AMIS.
+- Service báo cáo đọc mapping Khoa → `Tàu - MT` trả 244 hội thoại, 2.778 tin gửi, 3.674 tin nhận, 122 gọi đến, 38 gọi đi, 46 gọi nhỡ, 2.90 giờ.
+
+**Next Exact Steps:** tải lại preview Tổng kết tháng 08/2026 của Nguyễn Trần Đăng Khoa để lấy ảnh mới; không cần đăng nhập/đồng bộ AMIS lại.

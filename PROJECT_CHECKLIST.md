@@ -1180,5 +1180,6 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Tổng kết tháng ánh xạ Dương Văn Thịnh sang SaleWork, đồng bộ tháng đủ 9 tài khoản; tập 8 tài khoản và khóa báo cáo ngày không đổi (ISSUE-047)
 - [x] Công nợ Tổng kết tháng scrape trực tiếp 11 dòng tổng nhân viên qua 3 trang MISA; file bàn giao khóa đúng kỳ và luồng báo cáo ngày không đổi (ISSUE-048)
 - [x] Tổng kết tháng ánh xạ Nguyễn Trần Đăng Khoa sang SaleWork `Tàu - MT`; AMIS tiếp tục lấy bằng `amis_employee_name`, tập và khóa báo cáo ngày không đổi (ISSUE-049)
+- [x] Chạy sync thật tháng 08/2026 đủ 10 snapshot; service đọc Khoa → `Tàu - MT` trả 244 hội thoại / 2.778 tin gửi / 3.674 tin nhận, không chạy lại AMIS
 - [x] Script AMIS gắn CDP vào một Google Chrome thường đang chạy, một profile/context/tab chung, khóa PID chống song song và giữ Chrome mở khi xong (DEC-083, ISSUE-050)
 - [x] Chạy thật `amis-harvest.ts --login` ghi đủ 8 biến, exit 0; chạy tiếp `--crm-only` tái sử dụng cùng endpoint/token không cần đăng nhập

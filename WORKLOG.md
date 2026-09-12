@@ -3605,3 +3605,9 @@ Worker tháng đồng thời bỏ số cứng `synced_rows = 8`, chuyển sang s
 Lượt thử trung gian dùng `channel: chrome` vẫn chưa giải quyết việc chia browser, bị đóng tại CRM và exit 1. Bản CDP cuối cùng đã chạy thật `--login`: CRM/ACT đều đủ thông tin, ghi 8 biến vào `.env`, exit 0. Chrome vẫn mở; chạy tiếp `--crm-only` gắn lại cùng endpoint, tái sử dụng token còn hạn, ghi 2 biến CRM và exit 0 mà không đăng nhập mới.
 
 Kiểm chứng cuối: full unit 778/778, typecheck sạch, production build 29 route thành công. Lint lần đầu đọc nhầm extension/cache trong profile AMIS; đã thêm đúng thư mục runtime này vào global ignore giống SaleWork (không tắt rule source), chạy lại lint sạch. Cookie/token/profile không được stage hoặc commit.
+
+## Entry 065 — 2026-09-12 — Nạp snapshot SaleWork tháng 08 của Nguyễn Trần Đăng Khoa
+
+Ảnh người dùng gửi xác định kỳ thiếu là 08/2026. Mapping đã có nhưng lần trước chưa chạy sync tạo snapshot. Đã chạy thật `npm.cmd run salework:sync:month -- 2026-08`, hai lượt đầy đủ giống nhau và ghi thành công 10 tài khoản namespace tháng; script báo dữ liệu ngày không thay đổi. Không chạy lại AMIS.
+
+Đọc ngược bằng chính `getSaleWorkAccountName('Nguyễn Trần Đăng Khoa')` và `getMonthlySaleWorkReportByAccountName(..., '2026-08')` từ nguồn báo cáo trả `Tàu - MT`: 244 hội thoại, 2.778 tin gửi, 3.674 tin nhận, 122 gọi đến, 38 gọi đi, 46 gọi nhỡ và 2.90 giờ. Hai lệnh exit 0. Không thay source/schema; không chạy lại build/unit cho thao tác nạp dữ liệu này.
