@@ -3612,6 +3612,14 @@ Kiểm chứng cuối: full unit 778/778, typecheck sạch, production build 29 
 
 Đọc ngược bằng chính `getSaleWorkAccountName('Nguyễn Trần Đăng Khoa')` và `getMonthlySaleWorkReportByAccountName(..., '2026-08')` từ nguồn báo cáo trả `Tàu - MT`: 244 hội thoại, 2.778 tin gửi, 3.674 tin nhận, 122 gọi đến, 38 gọi đi, 46 gọi nhỡ và 2.90 giờ. Hai lệnh exit 0. Không thay source/schema; không chạy lại build/unit cho thao tác nạp dữ liệu này.
 
+## Entry 067 — 2026-09-12 — Đính chính riêng Abraham tháng 08/2026
+
+Kiểm chứng cuối sau helper loại snapshot: unit **796/796**, Python **3/3**, typecheck/lint exit 0, production build **29 route** exit 0. Đồng bộ nguồn thực tế thành công, không có browser mới. Chưa xác minh ảnh production qua phiên Admin; DB/RLS vẫn bị local offline, E2E không chạy lại theo ràng buộc không mở Chrome test.
+
+DEC-085/ISSUE-051: API thật Report 119 THỐNG ĐẠT GROUP > Phòng kế toán ID 10 > Kế Toán Bán Hàng ID 60 trả Sales 477.633.500, NetSales 458.661.000, khách mua trong kỳ 30, tương tác 31, phụ trách 0, đơn 35, trả hàng 18.972.500. Script chuyên biệt ghi một snapshot riêng, so sánh response sau ghi exit 0, không mở browser. Lượt đầu HTTP 400 vì JSON số lượng float, đã chuẩn hóa integer và chạy lại thành công. Không sửa dòng AMIS thường/tháng 9/SaleWork. Công nợ query giữ logic dòng AMIS cũ; summary ACT hiện không có tên này nên không tự gán 0/nhầm người.
+
+Feature chọn snapshot duy nhất cho participant tháng 8; các tháng khác trả nguyên object cũ. Snapshot kỹ thuật bị loại khỏi đối chiếu Admin; raw SQL view vẫn chứa dòng tích hợp. Tests unit 795/795 trước bổ sung test loại snapshot, Python 3/3, typecheck/lint và build 29 route thành công. DB/RLS chạy thật thất bại vì ECONNREFUSED 127.0.0.1:54322 (3 passed/210 skipped, 16 suite failed). E2E không chạy lại vì người dùng không cho mở Chrome test, local cũng tắt. Chưa ghi PASS E2E/RLS. Kiểm chứng cuối/source deployment cập nhật sau.
+
 ## Entry 066 — 2026-09-12 — Tổng kết tháng cho Abraham Kế Toán Bánhàng
 
 Thêm participant tích hợp vào danh sách và route ảnh tháng bằng slug ổn định, không tạo auth/profile giả. Query feature dùng SaleWork `Abraham Kế Toán Bánhàng` và AMIS `Kế Toán Bán Hàng` từ mapping cũ. Sales giữ nguyên profile/mapping; tài khoản tích hợp bỏ qua bảng khoản/chỉ tiêu theo Sales UUID. Auth Admin active và no-store giữ nguyên.

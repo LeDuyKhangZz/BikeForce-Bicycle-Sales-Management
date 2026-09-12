@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] DEC-085/ISSUE-051: chỉ Abraham tháng 08/2026 dùng Report 119 Phòng kế toán > Kế Toán Bán Hàng; API và đồng bộ một snapshot xác nhận 477.633.500 doanh số, 30 khách, 35 đơn, 18.972.500 trả hàng. Công nợ giữ logic Kế toán cũ; tháng 9/người khác/dòng AMIS thường/SaleWork không đổi.
+- [x] Unit hồi quy 796/796, Python 3/3, typecheck/lint sạch; không mở Chrome test. Snapshot kỹ thuật không xuất hiện thành nhân viên ở đối chiếu Admin.
+- [ ] DB/RLS local chưa xác minh: chạy thật bị ECONNREFUSED 127.0.0.1:54322; không nới policy hoặc test production.
+
 > Status: ACTIVE | Phase: 18 — Thanh tiến độ + ngọn lửa vượt chỉ tiêu (DEC-069) | Last updated: 2026-08-15
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

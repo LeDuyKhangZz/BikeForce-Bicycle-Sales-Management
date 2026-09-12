@@ -2141,6 +2141,18 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 
 ---
 
+### ISSUE-051
+
+**Severity:** P1
+**Status:** CLOSED — 2026-09-12
+**Module:** Tổng kết tháng Abraham 08/2026
+**Description:** Thêm participant nhưng chưa ghép đúng Report 119 Phòng kế toán theo logic người dùng đã chỉ.
+**Expected:** Doanh số bán ra 477.633.500, 30 khách mua trong kỳ, 35 đơn, trả hàng 18.972.500; công nợ vẫn Kế toán. Chỉ sửa tháng 8 của Abraham.
+**Actual:** Doanh số thuần/dashboard 458.661.000, khách mua/đơn/trả hàng 0 từ scope sai.
+**Root Cause:** Route luôn dùng nguồn AMIS cũ, không có ngoại lệ kỳ/scope.
+**Fix:** DEC-085, snapshot riêng đọc API thật, feature chỉ chọn đúng participant + kỳ; không ghi đè dòng AMIS thường hay logic tháng 9. Loại khóa kỹ thuật khỏi đối chiếu Admin.
+**Verification:** API đúng đơn vị/nhân viên trả bốn số trên. Đồng bộ một snapshot và đối chiếu response sau ghi exit 0. Unit hồi quy giới hạn kỳ/người/công nợ và Python unittest nguồn/scope. DB/RLS chưa xác minh do local ECONNREFUSED, không nới policy.
+
 ### ISSUE-050
 
 **Severity:** P1

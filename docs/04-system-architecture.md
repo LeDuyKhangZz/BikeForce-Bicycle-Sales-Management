@@ -1,5 +1,9 @@
 # 04 — Kiến trúc hệ thống (System Architecture)
 
+### Snapshot lịch sử giới hạn kỳ/người (DEC-085)
+
+Ngoại lệ Report 119 của Abraham tháng 08/2026 do script tích hợp ghi vào khóa kỹ thuật riêng của bảng AMIS hiện hữu, không ghi đè dòng nhân viên thường. Service đọc vẫn nhận session client chịu RLS; feature tháng ghép snapshot với công nợ nguồn cũ khi helper lib xác nhận đúng participant/kỳ. Admin đối chiếu loại đúng snapshot kỹ thuật khỏi view FULL JOIN. Không đổi schema/role/policy; tháng 9 và người khác dùng nguyên đường dữ liệu cũ.
+
 > Bổ sung DEC-084: `features/admin-monthly-summaries/queries.ts` tổng hợp participant từ hồ sơ Sales và một tài khoản kế toán tích hợp được cho phép tường minh. Page/route ảnh gọi query feature; tài khoản tích hợp có `profileId = null`, không truyền ID giả vào bảng chỉ tiêu/lương/công tác phí.
 > Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này

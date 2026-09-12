@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ReconciliationTable } from "@/features/admin-reconciliation/reconciliation-table";
 import { formatVietnamDateTime } from "@/lib/date";
 import type { ReconciliationRow } from "@/lib/reports/amis-reconciliation";
+import { excludeAccountingAugustSnapshot } from '@/lib/reports/monthly-accounting-august';
 
 export const metadata = { title: "Đối chiếu AMIS" };
 
@@ -28,7 +29,7 @@ export default async function ReconciliationPage() {
 
   // View trả về nhiều cột nullable hơn kiểu ReconciliationRow mô tả,
   // nên phải ép qua unknown thay vì cast trực tiếp.
-  const rows = (data ?? []) as unknown as ReconciliationRow[];
+  const rows = excludeAccountingAugustSnapshot(data ?? []) as unknown as ReconciliationRow[];
   const lastSync = rows.find((row) => row.synced_at)?.synced_at;
 
   return (

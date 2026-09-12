@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Đính chính mới nhất 2026-09-12 — DEC-085/ISSUE-051
+
+Kiểm chứng cuối: unit 796/796, Python 3/3, typecheck/lint sạch, production build 29 route thành công. Đồng bộ nguồn thật exit 0. E2E không chạy lại/DB-RLS local offline, chưa xác minh ảnh production bằng phiên Admin.
+
+Chỉ Tổng kết tháng `2026-08` participant `salework-accounting-sales` đọc snapshot Report 119 riêng `__MONTHLY119__:2026-08:10:60`; scope Phòng kế toán ID 10, employee 60 Kế Toán Bán Hàng. Đã ghi/đối chiếu response thành công: Sales 477.633.500, mua trong kỳ 30, đơn 35, trả hàng 18.972.500; tương tác 31, phụ trách 0. Doanh thu công nợ giữ query/mapping Kế toán cũ; summary hiện chưa có dòng tên này, không bịa 0. Tháng 09/2026 trở đi và mọi nhân viên khác giữ nguyên. Không mở browser trong tác vụ này. View SQL đối chiếu có snapshot kỹ thuật; helper loại đúng dòng này ở Admin.
+
+**Next Exact Steps:** hoàn tất kiểm chứng cuối/commit/push, xác nhận Vercel, rồi tải lại ảnh tháng 8. Không chạy Chrome test, không thay logic tháng 9 hoặc mapping người khác. DB/RLS local chưa chạy được (`ECONNREFUSED 127.0.0.1:54322`); không ghi PASS và không chạy fixture production.
+
 > Status: ACTIVE | Phase: **SaleWork — nối dữ liệu AMIS** | Last updated: 2026-09-04
 
 ## ✅ PHIÊN HIỆN TẠI — script thống kê cuộc gọi AMIS (2026-09-04)

@@ -2663,6 +2663,15 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 **Impact:** thêm helper CDP, khóa PID, cấu hình browser chung và test hồi quy. AMIS ngày không còn chạy Chromium headless riêng; không đổi nguồn dữ liệu, token lưu, RLS hoặc công thức AMIS. CDP chỉ bind loopback; profile/cookie vẫn bị Git ignore.
 **Status:** APPROVED
 
+## DEC-085 — Ngoại lệ lịch sử Report 119 riêng tháng 08/2026 Abraham
+
+**Date:** 2026-09-12
+**Decision:** Chỉ `salework-accounting-sales` tháng `2026-08` dùng Report 119, THỐNG ĐẠT GROUP > Phòng kế toán (ID 10) > Kế Toán Bán Hàng (ID 60). Doanh số thực đạt lấy `Sales` (không `NetSales`/dashboard); khách mua lấy `QuantityAccountSoldThisPeriod`; đơn hàng `NoOfOrders`; trả hàng `ReturnSales`. Công nợ giữ `receive_amount` dòng AMIS hiện hữu theo logic Kế toán. Tháng 09/2026 trở đi và nhân viên khác giữ nguyên.
+**Reason:** Mapping tên cũ vẫn lấy nhầm thống kê scope Phòng kinh doanh và doanh số thuần dashboard; người dùng chỉ rõ nguồn và giới hạn riêng tháng 8.
+**Alternatives:** Ghi đè dòng AMIS thường ảnh hưởng ảnh khác; đổi toàn bộ tháng trái yêu cầu; hardcode số chụp màn hình không lấy nguồn. Chọn snapshot tích hợp riêng trong bảng AMIS hiện hữu, khóa `__MONTHLY119__:2026-08:10:60`.
+**Impact:** Script kỳ/scope/nhân viên cố định, mặc định dry-run, `--write` UPSERT một khóa và đối chiếu response sau ghi. Công nợ không ghi trong snapshot, feature ghép dòng cũ. Thiếu snapshot không fallback về scope sai. Không schema/RLS/mapping mới. Helper loại đúng khóa kỹ thuật khỏi danh sách đối chiếu Admin vì view FULL JOIN trả cả dòng tích hợp; giữ mọi dòng khác/NULL. Raw view SQL vẫn chứa snapshot kỹ thuật. Báo cáo Sales và SaleWork giữ nguyên.
+**Status:** APPROVED — người dùng chốt rõ chỉ tháng 08/2026.
+
 ## DEC-084 — Tổng kết tháng có participant kế toán tích hợp không cần user Sales
 
 **Date:** 2026-09-12

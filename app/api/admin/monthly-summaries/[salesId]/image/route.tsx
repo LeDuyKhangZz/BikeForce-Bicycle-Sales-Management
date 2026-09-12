@@ -7,12 +7,11 @@ import { z } from 'zod';
 import { MonthlySummaryCard } from '@/features/report-share/monthly-summary-card';
 import { buildMonthlySummaryCardModel } from '@/lib/reports/monthly-summary-card';
 import { MONTHLY_ACCOUNTING_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
-import { getMonthlySummaryParticipant } from '@/features/admin-monthly-summaries/queries';
+import { getMonthlySummaryAmisMetrics, getMonthlySummaryParticipant } from '@/features/admin-monthly-summaries/queries';
 import { createClient } from '@/lib/supabase/server';
 import { salaryMonthSchema } from '@/lib/validation/salaries';
 import { getMonthlyTargets } from '@/services/monthly-targets';
 import { getSessionProfile } from '@/services/profiles';
-import { getAmisMetricsForShare } from '@/services/reports';
 import { getMonthlySalary } from '@/services/salaries';
 import { getMonthlySaleWorkReportByAccountName } from '@/services/salework';
 import { getMonthlyTravelExpense } from '@/services/travel-expenses';
@@ -81,7 +80,7 @@ export async function GET(request: Request, context: Context): Promise<Response>
 
   const saleWorkAccountName = sales.saleWorkAccountName;
   const [amis, monthlyTargets, saleWorkReport, travelExpense, salary] = await Promise.all([
-    getAmisMetricsForShare(supabase, sales.amis_employee_name, periodMonth),
+    getMonthlySummaryAmisMetrics(supabase, sales.id, sales.amis_employee_name, month),
     sales.profileId === null ? Promise.resolve(null) : getMonthlyTargets(supabase, sales.profileId, periodMonth),
     saleWorkAccountName === null
       ? Promise.resolve(null)
