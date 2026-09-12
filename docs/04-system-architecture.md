@@ -1,4 +1,6 @@
 # 04 — Kiến trúc hệ thống (System Architecture)
+
+> Bổ sung DEC-084: `features/admin-monthly-summaries/queries.ts` tổng hợp participant từ hồ sơ Sales và một tài khoản kế toán tích hợp được cho phép tường minh. Page/route ảnh gọi query feature; tài khoản tích hợp có `profileId = null`, không truyền ID giả vào bảng chỉ tiêu/lương/công tác phí.
 > Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

@@ -2469,3 +2469,13 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Service báo cáo đọc mapping Khoa → `Tàu - MT` trả 244 hội thoại, 2.778 tin gửi, 3.674 tin nhận, 122 gọi đến, 38 gọi đi, 46 gọi nhỡ, 2.90 giờ.
 
 **Next Exact Steps:** tải lại preview Tổng kết tháng 08/2026 của Nguyễn Trần Đăng Khoa để lấy ảnh mới; không cần đăng nhập/đồng bộ AMIS lại.
+
+### BỔ SUNG 2026-09-12 — Tổng kết tháng kế toán (DEC-084)
+
+- Participant `salework-accounting-sales` xuất hiện trong danh sách và route ảnh tháng; không tạo user/profile/role mới.
+- SaleWork dùng `Abraham Kế Toán Bánhàng`, AMIS dùng mapping cũ `Kế Toán Bán Hàng`. Khoản Sales chưa liên kết hiện `-`.
+- Snapshot tháng 08 thật đã có 634/30.796/25.868, 202 gọi đi, 153 gọi đến, 16.11 giờ; đã render/nhìn PNG.
+- E2E có assertion hàng kế toán/preview/không cuộn ngang; chưa chạy vì Docker local tắt.
+- Full unit 788/788, typecheck/lint sạch, production build 29 route thành công.
+
+**Next Exact Steps:** triển khai commit rồi mở `/admin/monthly-summaries?month=2026-08&sales=salework-accounting-sales`; khi Docker sẵn sàng chạy E2E tháng 375/1440 và đối chiếu ảnh tích hợp đủ AMIS.

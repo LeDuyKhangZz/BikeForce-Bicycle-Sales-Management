@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+> Bổ sung DEC-084: unit danh sách có kế toán không cần profile, giữ nguyên Sales; unit query khóa mapping SaleWork/AMIS cũ; test route khóa đúng kỳ, không gọi bảng khoản Sales bằng ID tích hợp, 401/403/400 và no-store. E2E tháng phải thấy đúng một hàng kế toán, bấm mở preview, không cuộn ngang ở 375/1440. E2E chưa chạy nếu Docker local không sẵn sàng; không được dùng production làm fixture.
+
 > Status: ACTIVE | Phase: 16 | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

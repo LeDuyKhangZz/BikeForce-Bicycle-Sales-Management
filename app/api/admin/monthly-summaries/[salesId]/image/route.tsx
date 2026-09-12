@@ -6,11 +6,12 @@ import { z } from 'zod';
 
 import { MonthlySummaryCard } from '@/features/report-share/monthly-summary-card';
 import { buildMonthlySummaryCardModel } from '@/lib/reports/monthly-summary-card';
-import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
+import { MONTHLY_ACCOUNTING_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
+import { getMonthlySummaryParticipant } from '@/features/admin-monthly-summaries/queries';
 import { createClient } from '@/lib/supabase/server';
 import { salaryMonthSchema } from '@/lib/validation/salaries';
 import { getMonthlyTargets } from '@/services/monthly-targets';
-import { getMonthlySummarySales, getSessionProfile } from '@/services/profiles';
+import { getSessionProfile } from '@/services/profiles';
 import { getAmisMetricsForShare } from '@/services/reports';
 import { getMonthlySalary } from '@/services/salaries';
 import { getMonthlySaleWorkReportByAccountName } from '@/services/salework';
@@ -20,7 +21,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const preferredRegion = 'sin1';
 
-const salesIdSchema = z.uuid();
+const salesIdSchema = z.union([z.uuid(), z.literal(MONTHLY_ACCOUNTING_PARTICIPANT.id)]);
 const FONT_FILES = [
   { file: 'Inter-Regular.ttf', weight: 400 },
   { file: 'Inter-SemiBold.ttf', weight: 600 },
@@ -75,18 +76,18 @@ export async function GET(request: Request, context: Context): Promise<Response>
     return jsonError(403, 'Bạn không có quyền xem tổng kết tháng.');
   }
 
-  const sales = await getMonthlySummarySales(supabase, salesId);
+  const sales = await getMonthlySummaryParticipant(supabase, salesId);
   if (sales === null) return jsonError(404, 'Không tìm thấy nhân viên.');
 
-  const saleWorkAccountName = getSaleWorkAccountName(sales.full_name);
+  const saleWorkAccountName = sales.saleWorkAccountName;
   const [amis, monthlyTargets, saleWorkReport, travelExpense, salary] = await Promise.all([
     getAmisMetricsForShare(supabase, sales.amis_employee_name, periodMonth),
-    getMonthlyTargets(supabase, sales.id, periodMonth),
+    sales.profileId === null ? Promise.resolve(null) : getMonthlyTargets(supabase, sales.profileId, periodMonth),
     saleWorkAccountName === null
       ? Promise.resolve(null)
       : getMonthlySaleWorkReportByAccountName(saleWorkAccountName, month),
-    getMonthlyTravelExpense(supabase, sales.id, periodMonth),
-    getMonthlySalary(supabase, sales.id, periodMonth),
+    sales.profileId === null ? Promise.resolve(null) : getMonthlyTravelExpense(supabase, sales.profileId, periodMonth),
+    sales.profileId === null ? Promise.resolve(null) : getMonthlySalary(supabase, sales.profileId, periodMonth),
   ]);
 
   const performance =

@@ -21,7 +21,7 @@ import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/li
 import { monthlySummaryImagePath } from '@/lib/reports/monthly-summary-card';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
-import { listSalesOptions } from '@/services/profiles';
+import { listMonthlySummaryParticipants } from '@/features/admin-monthly-summaries/queries';
 import { getLatestMonthlySyncJob } from '@/services/monthly-sync-jobs';
 
 export const metadata: Metadata = { title: 'Tổng kết tháng · BikeForce' };
@@ -37,7 +37,7 @@ export default async function AdminMonthlySummariesPage({ searchParams }: Props)
   const nextMonth = shiftVietnamMonth(month, 1);
   const supabase = await createClient();
   const [salesList, latestSyncJob] = await Promise.all([
-    listSalesOptions(supabase),
+    listMonthlySummaryParticipants(supabase),
     getLatestMonthlySyncJob(supabase, `${month}-01`),
   ]);
   const selectedSales = salesList.find((sales) => sales.id === params.sales) ?? null;

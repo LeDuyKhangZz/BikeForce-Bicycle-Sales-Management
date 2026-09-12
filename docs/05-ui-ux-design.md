@@ -1,5 +1,7 @@
 # 05 — UI/UX Design
 
+> Bổ sung 2026-09-12 (DEC-084): danh sách Tổng kết tháng có thêm hàng `Abraham Kế Toán Bánhàng`, mã `VP-SA-001`, cùng nút Xem trước và Sao chép hình ảnh như Sales. Giữ nhóm đang làm việc trước nhóm đã nghỉ; ảnh dùng nguyên mẫu tháng hiện hữu, không thêm menu/module mới.
+
 > Status: ACTIVE | Phase: 16 | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 > Đáp ứng Master Spec §3, §4, §28, §33, §49.

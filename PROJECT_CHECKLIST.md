@@ -1183,3 +1183,6 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Chạy sync thật tháng 08/2026 đủ 10 snapshot; service đọc Khoa → `Tàu - MT` trả 244 hội thoại / 2.778 tin gửi / 3.674 tin nhận, không chạy lại AMIS
 - [x] Script AMIS gắn CDP vào một Google Chrome thường đang chạy, một profile/context/tab chung, khóa PID chống song song và giữ Chrome mở khi xong (DEC-083, ISSUE-050)
 - [x] Chạy thật `amis-harvest.ts --login` ghi đủ 8 biến, exit 0; chạy tiếp `--crm-only` tái sử dụng cùng endpoint/token không cần đăng nhập
+- [x] Thêm `Abraham Kế Toán Bánhàng` vào danh sách/ảnh Tổng kết tháng, mapping AMIS cũ và SaleWork đúng kỳ; không tạo user Sales giả (DEC-084)
+- [x] Unit participant/query và security route ảnh kế toán; render/nhìn ảnh 1080×1920 từ snapshot SaleWork tháng 08 thật
+- [ ] E2E kế toán 375/1440 đã thêm nhưng chưa chạy: Docker local đang tắt, không dùng production thay thế

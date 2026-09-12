@@ -1,4 +1,6 @@
 # 06 — Xác thực & Phân quyền (Auth & Permissions)
+
+> Bổ sung DEC-084: ID tích hợp `salework-accounting-sales` chỉ dùng trong module Tổng kết tháng. Route ảnh vẫn kiểm auth → Admin đang hoạt động trước khi đọc cả hai nguồn; Sales nhận 403, anon 401, ID tích hợp không nằm trong allowlist nhận 400. Không tạo tài khoản đăng nhập, thay role, migration hoặc nới RLS.
 > Status: ACTIVE | Phase: 2 (đã triển khai và kiểm chứng) | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

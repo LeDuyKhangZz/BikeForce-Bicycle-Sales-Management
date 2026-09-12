@@ -3611,3 +3611,13 @@ Kiểm chứng cuối: full unit 778/778, typecheck sạch, production build 29 
 Ảnh người dùng gửi xác định kỳ thiếu là 08/2026. Mapping đã có nhưng lần trước chưa chạy sync tạo snapshot. Đã chạy thật `npm.cmd run salework:sync:month -- 2026-08`, hai lượt đầy đủ giống nhau và ghi thành công 10 tài khoản namespace tháng; script báo dữ liệu ngày không thay đổi. Không chạy lại AMIS.
 
 Đọc ngược bằng chính `getSaleWorkAccountName('Nguyễn Trần Đăng Khoa')` và `getMonthlySaleWorkReportByAccountName(..., '2026-08')` từ nguồn báo cáo trả `Tàu - MT`: 244 hội thoại, 2.778 tin gửi, 3.674 tin nhận, 122 gọi đến, 38 gọi đi, 46 gọi nhỡ và 2.90 giờ. Hai lệnh exit 0. Không thay source/schema; không chạy lại build/unit cho thao tác nạp dữ liệu này.
+
+## Entry 066 — 2026-09-12 — Tổng kết tháng cho Abraham Kế Toán Bánhàng
+
+Thêm participant tích hợp vào danh sách và route ảnh tháng bằng slug ổn định, không tạo auth/profile giả. Query feature dùng SaleWork `Abraham Kế Toán Bánhàng` và AMIS `Kế Toán Bán Hàng` từ mapping cũ. Sales giữ nguyên profile/mapping; tài khoản tích hợp bỏ qua bảng khoản/chỉ tiêu theo Sales UUID. Auth Admin active và no-store giữ nguyên.
+
+Đọc snapshot thật tháng 08 trả 634 hội thoại, 30.796 tin gửi, 25.868 tin nhận, 202 gọi đi, 153 gọi đến, 16.11 giờ. Đã render và nhìn PNG 1080×1920 có tên/mã/sáu chỉ số đầy đủ; render kiểm tra này chỉ dùng snapshot SaleWork, không xác minh số AMIS production. Route test xác minh mapping AMIS và đúng kỳ bằng mock. E2E đã bổ sung nhưng Docker local không chạy nên chưa thực thi; không ghi PASS cho E2E/UI 375/1440.
+
+Kiểm chứng cuối: full unit 788/788, typecheck/lint sạch, production build 29 route thành công. Snapshot SaleWork tháng 08 đã sẵn trong nguồn chung nên không cần đăng nhập hay chạy lại AMIS/SaleWork để thêm participant này.
+
+Đã thử E2E tháng với `mobile-375`/`desktop-1440`; build test thành công nhưng global setup/teardown bị `ECONNREFUSED 127.0.0.1:54322`, chưa chạy test UI. Docker local đang tắt; không đổi sang production để chạy fixture.

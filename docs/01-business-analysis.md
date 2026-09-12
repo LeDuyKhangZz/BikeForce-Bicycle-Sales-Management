@@ -1,4 +1,6 @@
 # 01 — Business Analysis (Phân tích nghiệp vụ)
+
+> Bổ sung 2026-09-12 (DEC-084, mở rộng BR-031 theo yêu cầu người dùng): Tổng kết tháng gồm cả tài khoản tích hợp `Abraham Kế Toán Bánhàng`, không phụ thuộc profile Sales. SaleWork lọc tháng theo tên tài khoản; AMIS dùng ánh xạ cũ `Kế Toán Bán Hàng`. Không tạo user/role mới; khoản lương/công tác phí chưa có hồ sơ liên kết hiện `-`.
 > Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

@@ -36,6 +36,14 @@ test.describe('Tổng kết tháng', () => {
     const rows = page.getByRole('list', { name: 'Danh sách nhân viên' }).getByRole('listitem');
     await expect(rows.first().getByText('Đang làm việc')).toBeVisible();
 
+    const accounting = rows.filter({ hasText: 'Abraham Kế Toán Bánhàng' });
+    await expect(accounting).toHaveCount(1);
+    await accounting.getByRole('link', { name: 'Xem trước tổng kết tháng của Abraham Kế Toán Bánhàng' }).click();
+    await expect(page).toHaveURL(/sales=salework-accounting-sales/);
+    await expect(page.getByRole('img', { name: 'Tổng kết tháng của Abraham Kế Toán Bánhàng' })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await page.goto(PAGE_PATH);
+
     await rows.first().getByRole('link', { name: /Xem trước tổng kết tháng/ }).click();
     await expect(page).toHaveURL(/month=2026-08&sales=/);
     await expect(page.getByRole('button', { name: 'Xem toàn màn hình' })).toBeVisible();

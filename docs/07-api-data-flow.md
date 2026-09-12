@@ -1,5 +1,7 @@
 # 07 — API & Data Flow
 
+> Bổ sung DEC-084: `/admin/monthly-summaries?month=YYYY-MM&sales=salework-accounting-sales` mở ảnh theo route tháng hiện hữu. Feature query ánh xạ participant sang SaleWork `Abraham Kế Toán Bánhàng` và AMIS `Kế Toán Bán Hàng` từ `AMIS_EMPLOYEE_MAP`; cả hai cùng lọc kỳ đang chọn. Participant không có `profileId`, vì vậy bỏ qua query chỉ tiêu/lương/công tác phí theo UUID và trả các khoản chưa liên kết là null. Route vẫn `private, no-store`.
+
 > Status: ACTIVE | Phase: 16 | Last updated: 2026-08-11
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 > Đáp ứng Master Spec §51.

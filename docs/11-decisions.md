@@ -2662,3 +2662,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 **Alternatives:** chỉ dùng chung profile nhưng mở/đóng browser theo từng script — chưa tái sử dụng một browser đang chạy; dùng hai profile CRM/ACT — làm tăng số phiên MISA; chiếm profile Chrome cá nhân đang mở — Chrome không cho phép và có rủi ro tác động dữ liệu duyệt web cá nhân.
 **Impact:** thêm helper CDP, khóa PID, cấu hình browser chung và test hồi quy. AMIS ngày không còn chạy Chromium headless riêng; không đổi nguồn dữ liệu, token lưu, RLS hoặc công thức AMIS. CDP chỉ bind loopback; profile/cookie vẫn bị Git ignore.
 **Status:** APPROVED
+
+## DEC-084 — Tổng kết tháng có participant kế toán tích hợp không cần user Sales
+
+**Date:** 2026-09-12
+**Decision:** Thêm `Abraham Kế Toán Bánhàng` vào danh sách/ảnh tháng bằng ID ổn định `salework-accounting-sales`; SaleWork dùng tên tài khoản, AMIS dùng mapping `Kế Toán Bán Hàng` hiện hữu. Participant không có profile UUID nên chưa đọc khoản lương/công tác phí/chỉ tiêu Sales, hiển thị khoản thiếu là `-`.
+**Reason:** Người dùng yêu cầu Tổng kết tháng cho tài khoản kế toán đã có snapshot nguồn nhưng bị bỏ qua vì danh sách chỉ lấy role SALES.
+**Alternatives:** Tạo user Sales giả hoặc sửa role — không cần thiết, ảnh hưởng auth; chỉ thêm tên ở danh sách — route ảnh vẫn từ chối ID và không có dữ liệu; thêm route riêng — lặp auth và render tháng.
+**Impact:** Mở rộng BR-031 trong phạm vi tài khoản được yêu cầu; thêm participant/helper/query feature, mở allowlist đúng một ID ở route ảnh, test unit/security/E2E. Không schema/migration/RLS mới và không đổi báo cáo ngày.
+**Status:** APPROVED
