@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
 import { buildLocalTsxCommand } from '../lib/process/local-tsx-command';
+import { MONTHLY_SALEWORK_ACCOUNT_NAMES } from '../lib/salework/sales-account-map';
 import type { Database } from '../types/database.types';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
@@ -110,7 +111,8 @@ async function main(): Promise<void> {
     .update({
       status: errors.length === 0 ? 'COMPLETED' : 'FAILED',
       completed_at: finishedAt,
-      synced_rows: saleWorkSucceeded ? 8 : null,
+      // Hai tài khoản kế toán được đồng bộ cùng tập Sales theo tháng.
+      synced_rows: saleWorkSucceeded ? MONTHLY_SALEWORK_ACCOUNT_NAMES.length + 2 : null,
       error_message: errors.length === 0 ? null : errors.join(' | ').slice(0, 1000),
     })
     .eq('id', job.id);

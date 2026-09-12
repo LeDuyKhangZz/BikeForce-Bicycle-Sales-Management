@@ -2451,3 +2451,14 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Kiểm chứng: full unit 774/774, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** chạy đồng bộ lại đúng tháng cần xem để tạo snapshot `Tàu - MT`, sau đó mở preview Tổng kết tháng của Nguyễn Trần Đăng Khoa.
+
+### ĐÃ XÁC MINH 2026-09-12 — Một trình duyệt AMIS dùng chung
+
+- `amis-harvest.ts` và `amis-recon.ts` gắn CDP vào một Google Chrome thường tại `127.0.0.1:9223`, cùng `.playwright-amis-profile`.
+- Helper chỉ mở Chrome nếu endpoint chưa chạy; không mở Chrome test và không đóng Chrome khi script xong.
+- Một context mặc định/một tab; CRM → Kế toán điều hướng tuần tự. Khóa PID ngăn script chạy song song.
+- Worker tháng tính `synced_rows` theo tập tháng hiện tại; sau mapping Khoa là 10 thay vì số cứng 8.
+- Bản CDP chạy `--login` ghi đủ 8 biến, exit 0; chạy tiếp `--crm-only` tái sử dụng endpoint/token, exit 0 không cần đăng nhập.
+- QA cuối: full unit 778/778, typecheck/lint sạch, production build 29 route thành công; ESLint bỏ qua extension/cache trong profile AMIS bị Git ignore.
+
+**Next Exact Steps:** giữ cửa sổ Chrome AMIS chung để các script tái sử dụng; chỉ đăng nhập tại cửa sổ này, không đăng nhập thêm ở profile khác. Đồng bộ lại đúng kỳ tháng cần xem.

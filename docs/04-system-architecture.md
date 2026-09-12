@@ -664,6 +664,12 @@ Không thêm cột database và không đưa truy vấn vào `.tsx`.
 Tập tháng mở rộng thêm `Nguyễn Trần Đăng Khoa → Tàu - MT` nhưng tập ngày không đổi. Nhánh AMIS của
 Tổng kết tháng độc lập với ánh xạ này: route tiếp tục truyền `profiles.amis_employee_name` vào service AMIS.
 
+Mọi script Playwright của AMIS kết nối CDP vào một Google Chrome thường đang chạy tại
+`127.0.0.1:9223`, cùng `.playwright-amis-profile`, context mặc định và một tab. Nếu Chrome chung chưa
+chạy, helper mở Chrome hệ thống một lần, không dùng `--enable-automation` hoặc Chromium Playwright.
+CRM và Kế toán điều hướng tuần tự trên tab đó; khóa PID ngăn hai script điều khiển đồng thời. Khi xong,
+script chỉ ngắt CDP và giữ Chrome mở để lượt sau tái sử dụng, không đăng nhập ở browser/profile mới (DEC-083).
+
 Snapshot CRM Report 70 dùng cùng bảng tích hợp nhưng có namespace khóa
 `__CRM70__:YYYY-MM-DD:<employee_code>`. `scripts/amis-sync/fetch_call_statistics.py` chịu trách nhiệm
 đảm bảo grain ngày ngay từ nguồn (`Period=0` + khoảng ngày Việt Nam); `services/salework.ts` chỉ chọn

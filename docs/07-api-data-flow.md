@@ -745,7 +745,14 @@ còn bị hiểu nhầm là hết phiên và không gửi cảnh báo Telegram o
 
 `MonthlySyncButton` → `requestMonthlySyncAction(FormData)` → validate `YYYY-MM` → auth/active/Admin → `createMonthlySyncJob()` bằng anon client chịu RLS. Worker local đọc job `PENDING`, chuyển atomically sang `RUNNING`, gọi `amis-harvest.ts --month YYYY-MM`; Playwright nhập ngày kết thúc trước rồi ngày bắt đầu, chọn toàn bộ nhân viên/khách hàng, bấm “Xem báo cáo” và chỉ tiếp tục khi popup tham số đóng. Scraper đặt `pageSize=100`, chỉ parse dòng nhóm `tr-level-1` theo `Tên nhân viên: <tên> (<mã>) <tiền>`, lặp tới nút next disabled và khử trùng nhóm lặp ở biên trang. Kết quả `{ tenNhanVien, maSo, soTienThanhToan }[]` được lưu kèm kỳ; `push_amis.py` từ chối file khác tháng rồi đưa `soTienThanhToan` vào `receive_amount` bằng logic UPSERT cũ. Sau đó worker chạy SaleWork `MONTH_ONLY` và cập nhật kết quả. Nút không gọi API chạy script trên Vercel và không truyền secret xuống trình duyệt.
 
-ACT chỉ mở cửa sổ Chromium thật trong nhánh `--month` vì giao diện giữ lớp chặn click vô hạn ở headless; cửa sổ dùng lại duy nhất `.playwright-amis-profile` và tự đóng sau khi scrape. Nhánh không có `--month` vẫn giữ cấu hình headless, không đọc file tổng tháng và không thay đổi luồng báo cáo ngày.
+ACT cần cửa sổ thật vì giao diện giữ lớp chặn click vô hạn ở headless. Từ DEC-083, mọi nhánh AMIS đều
+dùng Google Chrome chung; nhánh không có `--month` vẫn không đọc file tổng tháng hoặc đổi logic dữ liệu ngày.
+
+Từ DEC-083, `amis-harvest.ts` và `amis-recon.ts` cùng gọi `connectToSharedAmisBrowser()` vào CDP
+`http://127.0.0.1:9223`. Helper chỉ mở Chrome hệ thống nếu endpoint chưa chạy, dùng duy nhất
+`.playwright-amis-profile` và không bật cờ Chrome test. `getSingleBrowserPage()` giữ một tab; CRM rồi Kế
+toán dùng cùng page. Khóa PID chặn chạy song song. Kết thúc chỉ ngắt CDP, không tắt Chrome. Worker tháng
+và task ngày tái sử dụng browser này. CDP chỉ bind loopback, tuyệt đối không expose ra LAN/Internet.
 
 SaleWork giữ hai tập tài khoản độc lập: tập ngày hiện hữu gồm 8 tài khoản và không đổi; tập tháng thêm
 `Abraham Thịnh Miền Trung` cho `Dương Văn Thịnh` và `Tàu - MT` cho `Nguyễn Trần Đăng Khoa`.

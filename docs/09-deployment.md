@@ -1234,3 +1234,16 @@ npm.cmd run monthly-sync:install
 Task `BikeForce - Monthly Sync Worker` kiểm tra hàng đợi mỗi phút, bỏ qua khi không có job và không mở hai instance cùng lúc. Log nằm tại `scripts/amis-sync/monthly-sync.log`. Có thể chạy một lượt thủ công bằng `npm.cmd run monthly-sync:worker`. Máy phải đang đăng nhập Windows và có `.env.local`/profile trình duyệt hiện hữu.
 
 **Trạng thái 2026-09-11:** migration `20260911090000` đã được áp dụng lên project đích `rnmywhwanpxmipqducqu`; lịch sử migration local/remote đã khớp. Task đã cài và ở trạng thái `Ready`. Truy vấn chỉ đọc production xác nhận bảng hàng đợi hoạt động và chưa có job; cần bấm nút một tháng thật để kiểm chứng toàn tuyến trước khi đóng ISSUE-037.
+
+### Trình duyệt AMIS dùng chung (DEC-083)
+
+`amis-harvest.ts` và `amis-recon.ts` dùng một Google Chrome thường tại CDP `127.0.0.1:9223` với profile
+`.playwright-amis-profile`. Đăng nhập bằng `npx.cmd tsx scripts/amis-sync/amis-harvest.ts --login` đúng
+một lần trong cửa sổ này. Script giữ Chrome mở sau khi ghi token; các task ngày/tháng chỉ gắn lại vào
+browser đó. Không đăng nhập thêm AMIS ở profile/trình duyệt khác vì MISA có thể vô hiệu phiên trước.
+
+Chrome được tìm ở hai thư mục cài đặt Windows chuẩn; nếu máy dùng đường dẫn khác, đặt
+`AMIS_CHROME_EXECUTABLE=<absolute-path-to-chrome.exe>` trong `scripts/amis-sync/.env`. Không mở cổng
+9223 ra LAN/Internet; CDP có quyền truy cập phiên đăng nhập. Profile và lock PID đều nằm trong thư mục
+bị Git ignore. Nếu báo một script AMIS khác đang dùng browser, chờ lượt đó hoàn tất, không đăng nhập
+browser thứ hai. Chỉ khi không còn endpoint, helper mới khởi động Chrome chung lại với cùng profile.

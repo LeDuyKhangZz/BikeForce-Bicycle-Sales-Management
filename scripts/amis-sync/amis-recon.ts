@@ -1,9 +1,8 @@
-import { chromium } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
+import { connectToSharedAmisBrowser } from './shared-browser';
 
-const PROFILE = path.resolve('.playwright-amis-profile');
 const OUT = path.resolve('scripts/amis-sync/amis-recon.json');
 const wait = (msg: string) =>
   new Promise<void>((res) => {
@@ -21,13 +20,9 @@ type CapturedRequest = {
 (async () => {
   const captured: CapturedRequest[] = [];
 
-  const ctx = await chromium.launchPersistentContext(PROFILE, {
-    headless: false,
-    viewport: null,
-    args: ['--start-maximized'],
-  });
-
-  const page = ctx.pages()[0] ?? (await ctx.newPage());
+  const sharedBrowser = await connectToSharedAmisBrowser();
+  const { page } = sharedBrowser;
+  try {
 
   page.on('request', (req) => {
     const h = req.headers();
@@ -75,5 +70,7 @@ type CapturedRequest = {
   findJwt(act.sessionStorage, 'ACT sessionStorage');
   console.log(`\n✅ ${captured.length} request có Bearer → ${OUT}`);
 
-  await ctx.close();
+  } finally {
+    await sharedBrowser.disconnect();
+  }
 })();

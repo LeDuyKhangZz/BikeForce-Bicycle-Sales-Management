@@ -3595,3 +3595,13 @@ Theo yêu cầu người dùng, đã bổ sung ánh xạ `Nguyễn Trần Đăng
 Route Tổng kết tháng không dùng tên SaleWork để tìm AMIS. Nó tiếp tục lấy `profiles.amis_employee_name` của Khoa và gọi service AMIS theo đúng kỳ như logic cũ. Unit khóa cả mapping, tư cách thành viên của tập tháng và việc `Tàu - MT` không lọt vào tập ngày.
 
 Kiểm chứng cuối: unit mapping 16/16, full unit 774/774, typecheck và lint sạch; production build thành công với 29 route. Chưa chạy sync thật vì người dùng chưa chỉ định kỳ tháng cần lấy.
+
+## Entry 064 — 2026-09-12 — Hợp nhất trình duyệt đăng nhập AMIS
+
+Theo yêu cầu người dùng, đã đổi cả `amis-harvest.ts` và `amis-recon.ts` sang cơ chế CDP dùng một Google Chrome thường đang chạy tại `127.0.0.1:9223`, vẫn dùng duy nhất `.playwright-amis-profile`. Helper chỉ mở Chrome khi endpoint chưa chạy, không bật Chrome test, giữ context mặc định và một tab. Khóa PID ngăn các script điều khiển đồng thời. CRM và Kế toán dùng cùng `Page`; kết thúc chỉ ngắt CDP, không đóng Chrome.
+
+Worker tháng đồng thời bỏ số cứng `synced_rows = 8`, chuyển sang số tài khoản tháng hiện tại cộng hai tài khoản kế toán; với mapping Nguyễn Trần Đăng Khoa hiện là 10. Unit helper và mapping liên quan đã xanh; typecheck và lint file liên quan sạch.
+
+Lượt thử trung gian dùng `channel: chrome` vẫn chưa giải quyết việc chia browser, bị đóng tại CRM và exit 1. Bản CDP cuối cùng đã chạy thật `--login`: CRM/ACT đều đủ thông tin, ghi 8 biến vào `.env`, exit 0. Chrome vẫn mở; chạy tiếp `--crm-only` gắn lại cùng endpoint, tái sử dụng token còn hạn, ghi 2 biến CRM và exit 0 mà không đăng nhập mới.
+
+Kiểm chứng cuối: full unit 778/778, typecheck sạch, production build 29 route thành công. Lint lần đầu đọc nhầm extension/cache trong profile AMIS; đã thêm đúng thư mục runtime này vào global ignore giống SaleWork (không tắt rule source), chạy lại lint sạch. Cookie/token/profile không được stage hoặc commit.

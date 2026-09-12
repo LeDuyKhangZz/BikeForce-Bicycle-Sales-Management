@@ -1481,5 +1481,6 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 - Unit Python phải nhận file Playwright đúng kỳ và từ chối file khác tháng trước khi UPSERT.
 - Kiểm thử thật kỳ lịch sử phải tự chọn toàn bộ hai bộ lọc, đặt 100 dòng/trang và đi đến nút next disabled; tháng 08/2026 phải trả 11 nhân viên qua 3 trang, Dương Văn Thịnh `360.356.200` và tổng `3.209.116.245`.
 - Unit phiên AMIS phải nhận JWT còn hơn ngưỡng an toàn, từ chối token sắp hết hạn/rác; chạy ẩn phải tái sử dụng một profile và không phát cảnh báo khi token/cookie đã lưu còn dùng được.
+- Unit browser AMIS phải tái sử dụng tab đầu tiên, đóng mọi tab thừa do profile khôi phục và chỉ tạo một tab khi context rỗng; launch args chỉ dùng profile chung, CDP loopback và không có `--enable-automation`. Chạy thật `--login` xong phải giữ Chrome mở; lượt `--crm-only` sau đó phải gắn lại cùng endpoint và tái sử dụng token không cần đăng nhập.
 - Unit mapping phải khóa `Dương Văn Thịnh → Abraham Thịnh Miền Trung` và `Nguyễn Trần Đăng Khoa → Tàu - MT`, xác nhận hai tài khoản này có trong tập tháng nhưng không nằm trong tập ngày 8 tài khoản.
 - Kiểm thử thật `MONTH_ONLY` phải ghi đủ 10 snapshot tháng; đọc service theo khóa tháng của từng hồ sơ và xác nhận không tạo/ghi đè khóa ngày. Mốc đối chiếu tháng 08 của Dương là `88 / 1.135 / 1.878`.

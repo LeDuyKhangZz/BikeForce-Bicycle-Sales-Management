@@ -16,7 +16,7 @@
  * thoat voi ma loi khac 0, thay vi im lang that bai nhu truoc.
  */
 
-import { chromium, type BrowserContext, type Page } from '@playwright/test';
+import { type BrowserContext, type Page } from '@playwright/test';
 import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,11 +26,11 @@ import { isJwtSessionUsable } from '../../lib/amis/jwt-session';
 import { formatVietnamShortDate, getVietnamMonthRange } from '../../lib/date';
 import { sendTelegramAlert } from './telegram-alert';
 import { scrapeReceivableEmployeeSummaries } from './receivable-report-scraper';
+import { connectToSharedAmisBrowser } from './shared-browser';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = resolve(HERE, '.env');
 const ALERT_PATH = resolve(HERE, 'alert.log');
-const PROFILE_DIR = resolve(HERE, '../../.playwright-amis-profile');
 const RECEIVABLE_SUMMARY_PATH = resolve(HERE, 'receivable-employee-summary.json');
 
 config({ path: ENV_PATH, quiet: true });
@@ -108,14 +108,13 @@ async function logAlert(message: string, telegramKey?: string): Promise<void> {
   if (telegramKey) await sendTelegramAlert(message, telegramKey);
 }
 
-async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
+async function harvestCrm(ctx: BrowserContext, page: Page, got: Harvested): Promise<void> {
   ctx.on('request', (req) => {
     if (!CRM_TARGET.test(req.url())) return;
     const auth = req.headers()['authorization'] ?? '';
     if (auth.startsWith('Bearer ')) got.crmToken = auth.slice(7);
   });
 
-  const page = await ctx.newPage();
   console.log('\n[1/2] CRM — amisapp.misa.vn');
   await page.goto(CRM_URL, { waitUntil: 'domcontentloaded', timeout: 90_000 });
 
@@ -143,7 +142,6 @@ async function harvestCrm(ctx: BrowserContext, got: Harvested): Promise<void> {
     );
   }
 
-  await page.close();
 }
 
 async function replaceDateInput(page: Page, index: number, value: string): Promise<void> {
@@ -225,7 +223,7 @@ async function selectActMonth(page: Page, month: string): Promise<void> {
   console.log(`   -> Da mo dung bao cao thang ${month}.`);
 }
 
-async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
+async function harvestAct(ctx: BrowserContext, page: Page, got: Harvested): Promise<void> {
   let matchedRequestCount = 0;
   ctx.on('request', (req) => {
     if (!ACT_TARGET.test(req.url())) return;
@@ -253,7 +251,6 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     );
   });
 
-  const page = await ctx.newPage();
   console.log('\n[2/2] KE TOAN — actapp.misa.vn');
   await page.goto(ACT_URL, { waitUntil: 'domcontentloaded', timeout: 90_000 });
 
@@ -323,7 +320,6 @@ async function harvestAct(ctx: BrowserContext, got: Harvested): Promise<void> {
     );
   }
 
-  await page.close();
 }
 
 async function main(): Promise<void> {
@@ -331,19 +327,8 @@ async function main(): Promise<void> {
     `${loginMode ? 'CHE DO DANG NHAP' : 'CHE DO TU DONG'}${crmOnly ? ' — CHI CRM' : ''}`,
   );
 
-  const ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
-    // Riêng luồng tháng cần cửa sổ thật: ACT giữ một lớp chặn click vô hạn
-    // trong Chromium headless. Luồng ngày vẫn giữ nguyên chế độ headless cũ.
-    headless: requestedMonth ? false : !loginMode,
-    locale: 'vi-VN',
-    timezoneId: 'Asia/Ho_Chi_Minh',
-    // Che do login: khong ep kich thuoc co dinh (de tranh cua so to hon
-    // man hinh that, khien footer/nut bam bi day ra ngoai vung nhin thay
-    // duoc). De Chromium tu mo va maximize theo man hinh that.
-    // Che do tu dong (headless): dung viewport co dinh nhu binh thuong.
-    viewport: loginMode || requestedMonth ? null : { width: 1920, height: 1080 },
-    args: loginMode || requestedMonth ? ['--start-maximized'] : [],
-  });
+  const sharedBrowser = await connectToSharedAmisBrowser();
+  const { context: ctx, page } = sharedBrowser;
 
   const storedCrmToken = process.env.AMIS_BEARER_TOKEN?.trim() ?? '';
   const storedCrmCookie = process.env.AMIS_COOKIE?.trim() ?? '';
@@ -356,11 +341,14 @@ async function main(): Promise<void> {
     console.log('   -> Tai su dung phien CRM da luu va con han.');
   }
 
-  await harvestCrm(ctx, got);
-  if (!crmOnly) {
-    await harvestAct(ctx, got);
+  try {
+    await harvestCrm(ctx, page, got);
+    if (!crmOnly) {
+      await harvestAct(ctx, page, got);
+    }
+  } finally {
+    await sharedBrowser.disconnect();
   }
-  await ctx.close();
 
   const updates: Record<string, string> = {};
   if (got.crmToken) updates['AMIS_BEARER_TOKEN'] = got.crmToken;

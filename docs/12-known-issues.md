@@ -2138,3 +2138,26 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Fix:** thêm mapping vào nguồn chuẩn; tập tháng tự nhận thêm `Tàu - MT`, còn tập ngày giữ nguyên. Không sửa trường `amis_employee_name` hoặc truy vấn AMIS.
 
 **Verification:** unit mapping 16/16 xác nhận đúng tên, tập tháng có 8 tài khoản Sales và chứa `Tàu - MT`, tập ngày không chứa tài khoản này. Full unit 774/774, typecheck, lint và production build 29 route đều sạch. Việc chạy sync thật để tạo snapshot cho kỳ cần xem được thực hiện sau khi mã mới triển khai.
+
+---
+
+### ISSUE-050
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-12
+**Module:** đăng nhập và thu thập phiên AMIS
+
+**Description:** người vận hành phải đăng nhập AMIS qua nhiều cửa sổ/tab tự động; MISA vô hiệu phiên ở nơi khác nên đăng nhập được một hệ có thể làm hệ kia đăng xuất.
+
+**Expected:** mọi script AMIS dùng cùng Google Chrome/profile và mỗi lượt chỉ duy trì một tab, điều hướng tuần tự CRM rồi Kế toán.
+
+**Actual:** các script tự mở/đóng Chromium Playwright theo từng lượt; profile chung trên đĩa chưa bảo đảm tái sử dụng một browser đang chạy. Harvester còn tạo page riêng cho từng hệ.
+
+**Root Cause:** vòng đời browser/context/page chưa có helper dùng chung đang chạy; người vận hành đăng nhập ở browser/profile khác có thể làm MISA vô hiệu phiên trước. Nhiều tab cùng context tự nó không chứng minh là nguyên nhân MISA đăng xuất.
+
+**Fix:** cả hai script dùng `connectToSharedAmisBrowser()` gắn CDP vào Chrome thường `127.0.0.1:9223`, một profile/context/page và khóa PID chống song song. Helper chỉ mở Chrome nếu chưa chạy, không có cờ `--enable-automation`; khi xong chỉ ngắt CDP, giữ browser mở. Worker tháng bỏ số snapshot cứng để theo đúng tập tài khoản hiện tại.
+
+**Verification:** unit helper/config xác nhận một tab, profile chung, CDP loopback và không có cờ automation. Chạy thật bản CDP `--login` ghi đủ 8 biến CRM/ACT, exit 0; Chrome vẫn mở. Lượt `--crm-only` kế tiếp gắn lại cùng endpoint và tái sử dụng token còn hạn, exit 0 không cần đăng nhập lại.
+
+Full unit 778/778, typecheck/lint sạch và production build 29 route thành công. ESLint chỉ bỏ qua extension/cache runtime của profile AMIS, không nới rule kiểm tra source.

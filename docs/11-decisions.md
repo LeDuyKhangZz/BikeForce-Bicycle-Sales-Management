@@ -2653,3 +2653,12 @@ thiết; xoá module/bảng lương — bị loại vì người dùng chỉ yê
 **Impact:** Tạm thay DEC-076 và DEC-078 trong phạm vi ảnh ngày; BR-030 chuyển `SUSPENDED`. Không đổi
 schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổng kết tháng không đổi.
 **Status:** APPROVED
+
+## DEC-083 — Mọi script AMIS dùng một trình duyệt, profile và tab chung
+
+**Date:** 2026-09-12
+**Decision:** `amis-harvest.ts` và `amis-recon.ts` kết nối CDP vào một Google Chrome thường tại `127.0.0.1:9223`, dùng `.playwright-amis-profile`, context mặc định và một tab. Helper chỉ khởi động Chrome hệ thống khi chưa có endpoint, không dùng `--enable-automation` hoặc Chromium Playwright. CRM và Kế toán chạy tuần tự; khóa PID ngăn script chạy đồng thời. Khi xong chỉ ngắt CDP, Chrome giữ mở cho mọi lượt sau.
+**Reason:** MISA có thể vô hiệu phiên ở trình duyệt khác khi người vận hành đăng nhập nhiều phiên; nhiều tab/context AMIS đồng thời khiến đăng nhập được hệ này thì hệ kia bị đăng xuất.
+**Alternatives:** chỉ dùng chung profile nhưng mở/đóng browser theo từng script — chưa tái sử dụng một browser đang chạy; dùng hai profile CRM/ACT — làm tăng số phiên MISA; chiếm profile Chrome cá nhân đang mở — Chrome không cho phép và có rủi ro tác động dữ liệu duyệt web cá nhân.
+**Impact:** thêm helper CDP, khóa PID, cấu hình browser chung và test hồi quy. AMIS ngày không còn chạy Chromium headless riêng; không đổi nguồn dữ liệu, token lưu, RLS hoặc công thức AMIS. CDP chỉ bind loopback; profile/cookie vẫn bị Git ignore.
+**Status:** APPROVED
