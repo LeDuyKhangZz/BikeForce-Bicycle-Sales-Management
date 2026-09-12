@@ -25,6 +25,14 @@ import {
  */
 const MAX_NAV_ITEMS = 6;
 
+describe('lương chỉ dành cho Admin', () => {
+  it('không có mục lương hoặc tổng kết tháng trong menu nhân viên', () => {
+    expect(SALES_NAV_ITEMS.some(item => item.key === 'ADMIN_SALARIES' || item.href.includes('salaries') || item.label === 'Lương')).toBe(false);
+    expect(SALES_NAV_ITEMS.some(item => item.key === 'ADMIN_MONTHLY_SUMMARIES')).toBe(false);
+    expect(ADMIN_SIDEBAR_ITEMS.some(item => item.key === 'ADMIN_SALARIES')).toBe(true);
+  });
+});
+
 describe('cấu hình nav — ràng buộc DEC-018 (nới bởi DEC-072)', () => {
   it.each([
     ['Sales', SALES_NAV_ITEMS, 4],

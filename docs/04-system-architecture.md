@@ -1,5 +1,9 @@
 # 04 — Kiến trúc hệ thống (System Architecture)
 
+## Bổ sung 12/09/2026 — DEC-088
+
+Trang lương gọi `features/admin-salaries/queries.ts` → services client session/RLS. Helper participant chung ở lib bảo đảm cùng ID với báo cáo tháng, tránh trùng Khoa nếu đã có Sales profile thật. Component form không query hoặc tự ánh xạ người nhận.
+
 DEC-087: participant AMIS-only `amis-kim-huong` do helper lib bổ sung, feature trả tên AMIS + SaleWork account null + profileId null. Route ảnh dùng service/query/model có sẵn, bỏ qua nguồn/khoản không có khóa; không auth user hoặc schema mới.
 
 ### Snapshot lịch sử giới hạn kỳ/người (DEC-085)

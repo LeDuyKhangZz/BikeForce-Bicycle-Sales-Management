@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+## Kiểm chứng 12/09/2026 — DEC-088
+
+Đã chạy unit 808/808 gồm test menu nhân viên không có Lương; typecheck/lint/build 29 route; RLS lương cũ + participant 8/8; HTTP E2E Server Action thật nhập/lưu/mở lại và PNG cả ba người 1/1, không mở Chrome test. Full DB: 216 passed/1 failed (ISSUE-052 bảng targets cũ chưa forced RLS). E2E browser/màn hình 375px chưa chạy; không ghi PASS.
+
 2026-09-12 nhãn cột ảnh tháng: unit SSR xác nhận đúng thứ tự/nội dung/độ rộng/cột tên trống trước các dòng KPI, giữ số liệu và không có nhãn khi AMIS null. Render Satori PNG 1080×1920 với fixture sáu dòng online để kiểm tra sức chứa/căn lề, không dùng snapshot production để kiểm tra nguồn và không mở Chrome test. Fixture stress có số online giả lập, không khẳng định Kim Hương có SaleWork. Đã nhìn ảnh: nhãn không chồng/cắt, bảng/các khoản/footer nằm trong khung; không phải E2E 375px hoặc RLS.
 
 DEC-087 Python: test bổ sung đúng Kim Hương (ID 23) từ group Report 119, không đưa Abraham/người khác từ group vào kết quả, giữ số/scope sale cũ; scope cũ đã có Kim Hương không đọc/override; thiếu nguồn mới fail an toàn thay vì gán 0.

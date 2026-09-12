@@ -1,5 +1,13 @@
 # BikeForce Project Checklist
 
+## DEC-088 — 12/09/2026
+
+- [x] Admin nhập lương ba nhân viên và báo cáo lấy cùng key/tháng; không thêm menu lương Sales.
+- [x] Migration local/linked; forced RLS Admin-only, RPC nguyên tử; DB types regenerate.
+- [x] Unit 807/807, RLS lương 8/8, HTTP E2E Server Action + PNG 1/1; typecheck/lint/build.
+- [ ] Xác nhận website sau deployment; push main cần quyền trực tiếp do chặn auto-review.
+- [ ] Browser 375px chưa kiểm chứng; full DB còn ISSUE-052 ngoài phạm vi.
+
 - [x] 2026-09-12 ảnh tháng: thêm nhãn Chỉ tiêu / Thực đạt / % hoàn thành, cột tên để trống; giữ số liệu/logic. Unit 802/802 và render Satori kiểm tra bố cục, không Chrome test.
 - [x] Nhãn cột: typecheck/lint sạch, production build 29 route thành công.
 - [ ] Bản nhãn cột cần triển khai website sau khi có quyền push main; chưa xác minh ảnh production.

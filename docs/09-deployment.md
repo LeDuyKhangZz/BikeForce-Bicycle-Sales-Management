@@ -1,4 +1,8 @@
 # 09 — Deployment (Supabase + Vercel)
+
+## Bổ sung 12/09/2026 — DEC-088
+
+Migration `20260912110000_monthly_participant_salaries.sql` đã push local và linked thành công, không chạy seed hoặc sửa dữ liệu lương production. Code website cần deployment; chưa xác nhận production UI. Push main đang chờ quyền trực tiếp vì auto-review trước đó đã chặn, không bypass.
 > Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

@@ -1,5 +1,17 @@
 # 12 — Known Issues
 
+## ISSUE-052 — Bảng targets cũ chưa forced RLS
+
+- Severity: MEDIUM.
+- Status: OPEN.
+- Module: database / `sales_monthly_targets`.
+- Description: full DB regression trong task lương phát hiện catalog assertion failed.
+- Expected: mọi bảng public forced RLS theo hợp đồng engineering.
+- Actual: bảng targets cũ chưa forced RLS; 216/217 DB tests pass.
+- Root Cause: schema targets trước task này chưa đặt FORCE ROW LEVEL SECURITY; migration lương không sửa bảng targets.
+- Fix: chưa thực hiện, ngoài phạm vi lương; cần migration riêng và kiểm chứng policy targets.
+- Verification: `tests/integration/db-functions.test.ts` thất bại assertion forced RLS; RLS lương liên quan 8/8 pass.
+
 > Status: ACTIVE | Phase: 16 | Last updated: 2026-08-12
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

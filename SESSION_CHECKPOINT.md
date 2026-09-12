@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — DEC-088, lương Admin (12/09/2026)
+
+Code nhập/lưu/đọc báo cáo cho Khoa/Abraham/Kim Hương đã nối, không tạo profile giả. Migration participant salaries + RPC Admin-only đã push local/linked thành công. Unit 807/807, RLS lương 8/8, HTTP E2E không mở Chrome 1/1, typecheck/lint/build 29 route đã pass. Full DB 216/217: ISSUE-052 targets cũ chưa forced RLS, không sửa ngoài phạm vi. Người dùng nhấn mạnh chỉ Admin có mục lương; menu Sales hiện không có và thêm regression test.
+
+**Next Exact Steps:** chạy test menu/regression cuối, commit docs/test; xác nhận website deployment khi được cấp quyền push main trực tiếp (đã bị auto-review chặn trước đó, không retry/bypass). Không mở Chrome test; không đổi AMIS hoặc logic tháng 8.
+
+Kiểm chứng cuối sau yêu cầu không hiện lương Sales: unit 808/808, typecheck/lint sạch. Types đã generate từ linked bằng UTF-8; regression menu Sales không có Lương pass.
+
 ## Mới nhất — nhãn cột ảnh Tổng kết tháng (2026-09-12)
 
 Kết quả cuối: unit 802/802, typecheck/lint sạch, build 29 route thành công. Bản nhãn cột chưa triển khai production/quyền push main còn cần xác nhận trực tiếp.

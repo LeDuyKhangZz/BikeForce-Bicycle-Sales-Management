@@ -1,5 +1,9 @@
 # 06 — Xác thực & Phân quyền (Auth & Permissions)
 
+## Bổ sung 12/09/2026 — DEC-088
+
+Lương mới chỉ Admin active đọc/ghi bằng session anon key chịu RLS; bảng forced RLS, chính sách riêng SELECT/INSERT/UPDATE dùng `(select public.is_admin())`; không cấp DELETE/service_role. RPC SECURITY INVOKER kiểm tra Admin và người nhận từ danh sách server. Trang `/admin/salaries` requireRole ADMIN; menu Sales không có mục lương; ảnh tổng kết tháng kiểm tra Admin active/no-store. Quyền bảng lương Sales cũ không thay đổi.
+
 DEC-087: allowlist ảnh tháng thêm đúng `amis-kim-huong` cho participant tích hợp, vẫn kiểm auth + Admin active trước đọc nguồn. Không cấp user/role cho nhân viên AMIS-only; không nới policy. AMIS đọc bằng session client, khoản theo Sales UUID bỏ qua khi chưa có profile; không fake UUID.
 
 > Bổ sung DEC-084: ID tích hợp `salework-accounting-sales` chỉ dùng trong module Tổng kết tháng. Route ảnh vẫn kiểm auth → Admin đang hoạt động trước khi đọc cả hai nguồn; Sales nhận 403, anon 401, ID tích hợp không nằm trong allowlist nhận 400. Không tạo tài khoản đăng nhập, thay role, migration hoặc nới RLS.

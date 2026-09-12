@@ -1,5 +1,14 @@
 # 11 — Decision Log
 
+## DEC-088 — Lương Admin cho participant tổng kết tháng
+
+- Date: 2026-09-12.
+- Decision: Admin nhập lương theo tháng cho Khoa, Abraham, Kim Hương; dùng Sales UUID thật nếu có, bảng participant riêng nếu không. Báo cáo tháng Admin đọc cùng key/tháng; không hiện mục lương trên tài khoản nhân viên.
+- Reason: Abraham/Kim Hương chưa có Sales UUID, form cũ không lưu được; không cần tạo tài khoản giả.
+- Alternatives: tạo Sales profile giả (loại); thay khóa bảng lương cũ (loại để bảo toàn dữ liệu).
+- Impact: thêm bảng forced RLS Admin-only và RPC SECURITY INVOKER lưu nguyên tử; types generate; danh sách/form/report dùng chung participant. Không đổi AMIS/SaleWork hoặc tháng 8 đặc biệt.
+- Status: APPROVED — người dùng xác nhận yêu cầu nhập và hiển thị; migration đã push linked, website chưa xác nhận deployment.
+
 > Status: ACTIVE | Phase: 0 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 > Đây là **sổ quyết định** của dự án. Theo Master Spec §66, file này đứng ngay sau Master Spec trong thứ tự ưu tiên sự thật.

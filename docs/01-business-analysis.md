@@ -1,5 +1,9 @@
 # 01 — Business Analysis (Phân tích nghiệp vụ)
 
+## Bổ sung 12/09/2026 — Lương báo cáo tháng (DEC-088)
+
+Admin nhập lương theo tháng cho Nguyễn Trần Đăng Khoa, Abraham Kế Toán Bánhàng và Nguyễn Thị Kim Hương; báo cáo tháng Admin lấy đúng khoản đã lưu của tháng đang xem. Không thêm mục lương vào tài khoản nhân viên, không tạo tài khoản Sales giả.
+
 DEC-087: Nguyễn Thị Kim Hương có Tổng kết tháng dùng AMIS cùng tên/kỳ như các sale; không có tài khoản SaleWork, online hiển thị trạng thái không có dữ liệu, không suy diễn thành 0. Không giới hạn chỉ tháng 8 và không dùng ngoại lệ nguồn của Abraham.
 
 ### Đính chính lịch sử 2026-09-12 — DEC-085
