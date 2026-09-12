@@ -3587,3 +3587,11 @@ Chạy tự động thật tháng 08 trả 6 dòng ở trang 1, 6 dòng ở tran
 Kiểm chứng cuối: full unit TypeScript 773/773, unit Python liên quan 4/4, typecheck, lint và production build 29 route đều sạch. ISSUE-048 đóng.
 
 **Next Exact Steps:** commit/push `main`, rồi tải lại ảnh Tổng kết tháng 08 để xác nhận các nhân viên hiển thị dòng 2 theo tổng MISA.
+
+## Entry 063 — 2026-09-12 — Ánh xạ SaleWork tháng cho Nguyễn Trần Đăng Khoa
+
+Theo yêu cầu người dùng, đã bổ sung ánh xạ `Nguyễn Trần Đăng Khoa → Tàu - MT` vào nguồn chuẩn dùng cho ảnh Tổng kết tháng. `MONTH_ONLY` vì vậy chọn thêm tài khoản này và sẽ lưu snapshot bằng namespace tháng; danh sách đồng bộ ngày vẫn giữ nguyên.
+
+Route Tổng kết tháng không dùng tên SaleWork để tìm AMIS. Nó tiếp tục lấy `profiles.amis_employee_name` của Khoa và gọi service AMIS theo đúng kỳ như logic cũ. Unit khóa cả mapping, tư cách thành viên của tập tháng và việc `Tàu - MT` không lọt vào tập ngày.
+
+Kiểm chứng cuối: unit mapping 16/16, full unit 774/774, typecheck và lint sạch; production build thành công với 29 route. Chưa chạy sync thật vì người dùng chưa chỉ định kỳ tháng cần lấy.

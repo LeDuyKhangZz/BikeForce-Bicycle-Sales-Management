@@ -11,6 +11,7 @@ describe('getSaleWorkAccountName', () => {
   it.each([
     ['Ngô Thế San', 'Abraham San Miền Trung'],
     ['Nguyễn Minh Khải', 'Abraham Khải Hcm'],
+    ['Nguyễn Trần Đăng Khoa', 'Tàu - MT'],
     ['Nguyễn Trần Hoàn Thiện', 'Abraham Nguyễn Thiện'],
     ['Phan Thành Khải', 'Abraham Khải Khánh Hoà'],
     ['Tô Kim Sang', 'Abraham Sang Miền Tây'],
@@ -33,10 +34,12 @@ describe('getSaleWorkAccountName', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
   });
 
-  it('chỉ thêm Dương Văn Thịnh vào tập tháng, không đổi tập ngày', () => {
+  it('chỉ thêm Dương Văn Thịnh và Nguyễn Trần Đăng Khoa vào tập tháng, không đổi tập ngày', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Abraham Thịnh Miền Trung');
-    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(7);
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Tàu - MT');
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(8);
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Thịnh Miền Trung');
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Tàu - MT');
   });
 });
 

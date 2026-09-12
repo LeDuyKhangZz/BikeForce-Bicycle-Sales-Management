@@ -661,6 +661,9 @@ danh sách cho script đồng bộ, tránh khai báo hai bản. Route `share-ima
 đã qua auth + RLS; `lib/reports/share-card.ts` dựng sáu chuỗi hiển thị, còn component Satori chỉ render.
 Không thêm cột database và không đưa truy vấn vào `.tsx`.
 
+Tập tháng mở rộng thêm `Nguyễn Trần Đăng Khoa → Tàu - MT` nhưng tập ngày không đổi. Nhánh AMIS của
+Tổng kết tháng độc lập với ánh xạ này: route tiếp tục truyền `profiles.amis_employee_name` vào service AMIS.
+
 Snapshot CRM Report 70 dùng cùng bảng tích hợp nhưng có namespace khóa
 `__CRM70__:YYYY-MM-DD:<employee_code>`. `scripts/amis-sync/fetch_call_statistics.py` chịu trách nhiệm
 đảm bảo grain ngày ngay từ nguồn (`Period=0` + khoảng ngày Việt Nam); `services/salework.ts` chỉ chọn

@@ -2441,3 +2441,13 @@ lần tự động kế tiếp tiếp tục exit 0.
 - Kiểm chứng cuối: full unit TypeScript 773/773, unit Python liên quan 4/4, typecheck, lint và production build 29 route đều sạch.
 
 **Next Exact Steps:** commit/push `main`, chờ deploy rồi kiểm tra lại ảnh tháng 08.
+
+### BỔ SUNG 2026-09-12 — SaleWork tháng của Nguyễn Trần Đăng Khoa
+
+- Ánh xạ tháng mới: `Nguyễn Trần Đăng Khoa → Tàu - MT`.
+- `MONTH_ONLY` nay yêu cầu 10 tài khoản tổng cộng; tập đồng bộ ngày vẫn giữ nguyên 8 tài khoản.
+- Route tháng tiếp tục lấy AMIS bằng `profiles.amis_employee_name`; tên `Tàu - MT` chỉ dùng để đọc snapshot SaleWork.
+- Unit ánh xạ khóa việc `Tàu - MT` thuộc tập tháng nhưng không thuộc tập ngày.
+- Kiểm chứng: full unit 774/774, typecheck, lint và production build 29 route đều sạch.
+
+**Next Exact Steps:** chạy đồng bộ lại đúng tháng cần xem để tạo snapshot `Tàu - MT`, sau đó mở preview Tổng kết tháng của Nguyễn Trần Đăng Khoa.

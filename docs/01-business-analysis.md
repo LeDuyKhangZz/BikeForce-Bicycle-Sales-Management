@@ -914,3 +914,5 @@ lượt đồng bộ cùng các tài khoản hiện tại.
 **BR-031 (APPROVED):** Admin có màn hình Tổng kết tháng liệt kê toàn bộ Sales, ưu tiên hồ sơ đang làm việc trước. Mỗi nhân viên có nút xem trước ảnh tổng hợp từ ngày đầu đến ngày cuối của tháng được chọn. Ảnh không chứa tuyến, cam kết, thực đạt, ghi chú hay bất kỳ dữ liệu nào Sales tự nhập trong báo cáo ngày. SaleWork và AMIS đều phải lọc đúng tháng; công tác phí và lương lấy đúng kỳ tháng đó, dữ liệu thiếu hiển thị `-`.
 
 **BR-032 (APPROVED 2026-09-11):** Admin có nút đồng bộ dữ liệu tháng ngay trên màn hình Tổng kết tháng. Nút chỉ tạo yêu cầu cho kỳ đang chọn; worker trên máy đồng bộ lấy AMIS và SaleWork theo tháng, dùng namespace snapshot tháng riêng và tuyệt đối không chạy hoặc ghi đè luồng báo cáo ngày.
+
+Ánh xạ SaleWork riêng cho Tổng kết tháng gồm `Nguyễn Trần Đăng Khoa → Tàu - MT`. Phần AMIS của Khoa vẫn lấy theo `profiles.amis_employee_name` và toàn bộ logic lọc kỳ hiện hữu; không ánh xạ tên AMIS qua tên tài khoản SaleWork.

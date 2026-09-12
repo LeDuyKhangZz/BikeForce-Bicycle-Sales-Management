@@ -2117,3 +2117,24 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Fix:** riêng `--month` mở Chromium có giao diện bằng profile duy nhất, tick cả hai “Chọn tất cả”, chờ popup đóng, đặt 100 dòng/trang và parse `tr-level-1` qua regex. Scraper chờ response từng trang, dừng khi next disabled và khử trùng tổng lặp ở biên trang. File trung gian mang kỳ `YYYY-MM`; Python từ chối file sai kỳ. Luồng ngày vẫn headless và không gọi scraper này.
 
 **Verification:** chạy tự động thật tháng 08/2026 qua 3 trang trả 11 nhân viên; Dương Văn Thịnh `360.356.200`, tổng `3.209.116.245`. UPSERT production ghi 18 dòng/12 cột và nguồn công nợ báo OK. Full unit TypeScript 773/773, unit Python liên quan 4/4, typecheck, lint và production build 29 route đều sạch.
+
+---
+
+### ISSUE-049
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-09-12
+**Module:** hoạt động SaleWork trên ảnh Tổng kết tháng
+
+**Description:** Tổng kết tháng của Nguyễn Trần Đăng Khoa chưa lấy được hoạt động online từ tài khoản SaleWork `Tàu - MT`.
+
+**Expected:** worker tháng tạo snapshot của `Tàu - MT` và route Tổng kết tháng ghép snapshot này cho Nguyễn Trần Đăng Khoa; AMIS vẫn dùng ánh xạ hồ sơ hiện hữu.
+
+**Actual:** nguồn ánh xạ SaleWork chưa có Nguyễn Trần Đăng Khoa nên `MONTH_ONLY` không chọn tài khoản và route không tìm snapshot tương ứng.
+
+**Root Cause:** hai hệ thống dùng tên hiển thị khác nhau và chưa có ánh xạ tường minh `Nguyễn Trần Đăng Khoa → Tàu - MT`.
+
+**Fix:** thêm mapping vào nguồn chuẩn; tập tháng tự nhận thêm `Tàu - MT`, còn tập ngày giữ nguyên. Không sửa trường `amis_employee_name` hoặc truy vấn AMIS.
+
+**Verification:** unit mapping 16/16 xác nhận đúng tên, tập tháng có 8 tài khoản Sales và chứa `Tàu - MT`, tập ngày không chứa tài khoản này. Full unit 774/774, typecheck, lint và production build 29 route đều sạch. Việc chạy sync thật để tạo snapshot cho kỳ cần xem được thực hiện sau khi mã mới triển khai.

@@ -748,8 +748,9 @@ còn bị hiểu nhầm là hết phiên và không gửi cảnh báo Telegram o
 ACT chỉ mở cửa sổ Chromium thật trong nhánh `--month` vì giao diện giữ lớp chặn click vô hạn ở headless; cửa sổ dùng lại duy nhất `.playwright-amis-profile` và tự đóng sau khi scrape. Nhánh không có `--month` vẫn giữ cấu hình headless, không đọc file tổng tháng và không thay đổi luồng báo cáo ngày.
 
 SaleWork giữ hai tập tài khoản độc lập: tập ngày hiện hữu gồm 8 tài khoản và không đổi; tập tháng thêm
-`Abraham Thịnh Miền Trung` để phục vụ `Dương Văn Thịnh`. `MONTH_ONLY` kiểm đủ 9 tài khoản rồi chỉ UPSERT
-khóa `__SALEWORK_MONTH__:YYYY-MM-01:*`. Route Tổng kết tháng ánh xạ Dương sang khóa tháng này; route và
-script ngày vẫn dùng tập/khóa cũ, không đọc snapshot tháng và không ghi thêm dòng ngày.
+`Abraham Thịnh Miền Trung` cho `Dương Văn Thịnh` và `Tàu - MT` cho `Nguyễn Trần Đăng Khoa`.
+`MONTH_ONLY` kiểm đủ 10 tài khoản rồi chỉ UPSERT khóa `__SALEWORK_MONTH__:YYYY-MM-01:*`. Route Tổng kết
+tháng ánh xạ hai hồ sơ sang khóa tháng tương ứng; route và script ngày vẫn dùng tập/khóa cũ, không đọc
+snapshot tháng và không ghi thêm dòng ngày. AMIS vẫn truy vấn bằng `profiles.amis_employee_name` như cũ.
 
 Nút **Sao chép hình ảnh** trong preview tháng gọi `fetch()` tới chính URL `GET /api/admin/monthly-summaries/[salesId]/image?month=YYYY-MM` bằng cookie cùng origin, yêu cầu response `image/png`, rồi truyền Promise của blob vào `ClipboardItem` trước khi user activation hết hiệu lực. Không tạo endpoint mới, không đưa service-role key xuống client và vẫn giữ `Cache-Control: private, no-store` của route ảnh.

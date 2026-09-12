@@ -7,6 +7,7 @@
 const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Ngô Thế San': 'Abraham San Miền Trung',
   'Nguyễn Minh Khải': 'Abraham Khải Hcm',
+  'Nguyễn Trần Đăng Khoa': 'Tàu - MT',
   'Nguyễn Trần Hoàn Thiện': 'Abraham Nguyễn Thiện',
   'Phan Thành Khải': 'Abraham Khải Khánh Hoà',
   'Tô Kim Sang': 'Abraham Sang Miền Tây',
@@ -24,8 +25,8 @@ export function normalizeSaleWorkAccountName(accountName: string): string {
 }
 
 /** Danh sách tài khoản phải được script SaleWork chọn để dữ liệu luôn được đồng bộ. */
-// Giữ nguyên tập đồng bộ NGÀY đã vận hành; Dương chỉ được thêm vào snapshot
-// THÁNG theo yêu cầu, tránh thay đổi điều kiện đủ và dữ liệu báo cáo hằng ngày.
+// Giữ nguyên tập đồng bộ NGÀY đã vận hành; Dương và Khoa chỉ được thêm vào
+// snapshot THÁNG theo yêu cầu, tránh thay đổi điều kiện đủ và dữ liệu báo cáo hằng ngày.
 export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
   'Abraham San Miền Trung',
   'Abraham Khải Hcm',
