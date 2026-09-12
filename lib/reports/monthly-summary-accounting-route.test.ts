@@ -56,7 +56,7 @@ describe('ảnh tổng kết tháng kế toán', () => {
     expect(mocks.amis).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'Nguyễn Thị Kim Hương', '2026-08-01');
     expect(mocks.saleWork).not.toHaveBeenCalled();
     expect(mocks.targets).not.toHaveBeenCalled();
-    expect(mocks.salary).not.toHaveBeenCalled();
+    expect(mocks.salary).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'amis-kim-huong', '2026-08-01');
     expect(mocks.travel).not.toHaveBeenCalled();
   });
   it('chấp nhận ID tích hợp, lọc đúng tháng cả hai nguồn, không hỏi bảng khoản Sales bằng ID giả', async () => {
@@ -66,7 +66,7 @@ describe('ảnh tổng kết tháng kế toán', () => {
     expect(mocks.amis).toHaveBeenCalledWith(expect.anything(), 'Kế Toán Bán Hàng', '2026-08-01');
     expect(mocks.saleWork).toHaveBeenCalledWith('Abraham Kế Toán Bánhàng', '2026-08');
     expect(mocks.targets).not.toHaveBeenCalled();
-    expect(mocks.salary).not.toHaveBeenCalled();
+    expect(mocks.salary).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'salework-accounting-sales', '2026-08-01');
     expect(mocks.travel).not.toHaveBeenCalled();
   });
 

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { isMonthlySalaryParticipant } from '@/lib/reports/monthly-summary-participants';
 import type { Database } from '@/types/database.types';
 
 const MAX_TEAM_SIZE = 200;
@@ -13,6 +14,16 @@ export async function getMonthlySalary(
   salesId: string,
   periodMonth: string,
 ): Promise<number | null> {
+  if (isMonthlySalaryParticipant(salesId)) {
+    const { data, error } = await supabase.from('monthly_participant_salaries')
+      .select('amount').eq('participant_key', salesId).eq('period_month', periodMonth)
+      .maybeSingle<Pick<Database['public']['Tables']['monthly_participant_salaries']['Row'], 'amount'>>();
+    if (error) {
+      console.error('[getMonthlySalary:participant]', error.code, error.message);
+      return null;
+    }
+    return data?.amount ?? null;
+  }
   const { data, error } = await supabase
     .from('sales_monthly_salaries')
     .select('amount')
@@ -25,6 +36,36 @@ export async function getMonthlySalary(
     return null;
   }
   return data?.amount ?? null;
+}
+
+/** Form Lương và ảnh tháng dùng cùng khóa người nhận; dữ liệu Sales cũ giữ nguyên. */
+export async function listSalaryEntries(supabase: SupabaseClient<Database>, periodMonth: string): Promise<MonthlySalaryRow[]> {
+  const [salesRows, participantResult] = await Promise.all([
+    listMonthlySalaries(supabase, periodMonth),
+    supabase.from('monthly_participant_salaries').select('participant_key, amount', { count: 'exact' })
+      .eq('period_month', periodMonth).order('participant_key').range(0, MAX_TEAM_SIZE - 1)
+      .returns<Pick<Database['public']['Tables']['monthly_participant_salaries']['Row'], 'participant_key' | 'amount'>[]>(),
+  ]);
+  if (participantResult.error) {
+    console.error('[listSalaryEntries]', participantResult.error.code, participantResult.error.message);
+    return salesRows;
+  }
+  return [...salesRows, ...(participantResult.data ?? []).map(row => ({ sales_id: row.participant_key, amount: row.amount }))];
+}
+
+/** RPC SECURITY INVOKER lưu một transaction, không lưu dở khi một khoản sai. */
+export async function saveSalaryEntries(
+  supabase: SupabaseClient<Database>, periodMonth: string, rows: readonly MonthlySalaryWrite[],
+): Promise<{ ok: true; saved: number } | { ok: false }> {
+  const { data, error } = await supabase.rpc('save_monthly_salary_entries', {
+    p_period_month: periodMonth,
+    p_entries: rows.map(row => ({ participant_id: row.sales_id, amount: row.amount ?? null })),
+  });
+  if (error || data === null) {
+    console.error('[saveSalaryEntries]', error?.code, error?.message);
+    return { ok: false };
+  }
+  return { ok: true, saved: data };
 }
 
 export async function listMonthlySalaries(

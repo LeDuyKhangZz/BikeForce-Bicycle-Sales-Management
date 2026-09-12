@@ -54,6 +54,7 @@ describe('monthly summary participant queries', () => {
     expect(await listMonthlySummaryParticipants(client)).toEqual([
       expect.objectContaining({ id: 'salework-accounting-sales' }),
       expect.objectContaining({ id: 'amis-kim-huong' }),
+      expect.objectContaining({ id: 'amis-dang-khoa' }),
     ]);
   });
 });

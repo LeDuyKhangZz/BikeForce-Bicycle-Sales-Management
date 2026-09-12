@@ -6,6 +6,25 @@ import { expectNoHorizontalScroll, signIn } from './helpers';
 const PAGE_PATH = '/admin/salaries?month=2032-07';
 
 test.describe('Admin nhập lương theo tháng', () => {
+  test('ba nhân viên báo cáo tháng nhập/lưu/mở lại và xem được ảnh tổng kết cùng tháng', async ({ page }) => {
+    await signIn(page, E2E_ADMIN_EMAIL);
+    await page.goto(PAGE_PATH);
+    const names = ['Nguyễn Trần Đăng Khoa', 'Abraham Kế Toán Bánhàng', 'Nguyễn Thị Kim Hương'];
+    for (const name of names) {
+      const row = page.locator('form > ul > li').filter({ hasText: name });
+      await expect(row).toHaveCount(1);
+      await row.locator('input[name^="amount__"]').fill('18000000');
+    }
+    await page.getByRole('button', { name: /Lưu lương/ }).click();
+    await expect(page.getByText('Đã lưu lương tháng.')).toBeVisible({ timeout: 30_000 });
+    await page.reload();
+    for (const name of names) {
+      await expect(page.locator('form > ul > li').filter({ hasText: name }).locator('input[name^="amount__"]')).toHaveValue('18.000.000');
+    }
+    await expectNoHorizontalScroll(page);
+    await page.goto('/admin/monthly-summaries?month=2032-07&sales=salework-accounting-sales');
+    await expect(page.getByRole('img', { name: 'Tổng kết tháng của Abraham Kế Toán Bánhàng' })).toBeVisible();
+  });
   test('nút Lương nằm ngay dưới Công tác phí trong sidebar desktop', async ({ page }) => {
     await signIn(page, E2E_ADMIN_EMAIL);
     await page.goto(PAGE_PATH);

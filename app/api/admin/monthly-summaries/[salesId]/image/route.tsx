@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { MonthlySummaryCard } from '@/features/report-share/monthly-summary-card';
 import { buildMonthlySummaryCardModel } from '@/lib/reports/monthly-summary-card';
-import { MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
+import { MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT, MONTHLY_KHOA_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
 import { getMonthlySummaryAmisMetrics, getMonthlySummaryParticipant } from '@/features/admin-monthly-summaries/queries';
 import { createClient } from '@/lib/supabase/server';
 import { salaryMonthSchema } from '@/lib/validation/salaries';
@@ -20,7 +20,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const preferredRegion = 'sin1';
 
-const salesIdSchema = z.union([z.uuid(), z.literal(MONTHLY_ACCOUNTING_PARTICIPANT.id), z.literal(MONTHLY_KIM_HUONG_PARTICIPANT.id)]);
+const salesIdSchema = z.union([z.uuid(), z.literal(MONTHLY_ACCOUNTING_PARTICIPANT.id), z.literal(MONTHLY_KIM_HUONG_PARTICIPANT.id), z.literal(MONTHLY_KHOA_PARTICIPANT.id)]);
 const FONT_FILES = [
   { file: 'Inter-Regular.ttf', weight: 400 },
   { file: 'Inter-SemiBold.ttf', weight: 600 },
@@ -86,7 +86,7 @@ export async function GET(request: Request, context: Context): Promise<Response>
       ? Promise.resolve(null)
       : getMonthlySaleWorkReportByAccountName(saleWorkAccountName, month),
     sales.profileId === null ? Promise.resolve(null) : getMonthlyTravelExpense(supabase, sales.profileId, periodMonth),
-    sales.profileId === null ? Promise.resolve(null) : getMonthlySalary(supabase, sales.profileId, periodMonth),
+    getMonthlySalary(supabase, sales.profileId ?? sales.id, periodMonth),
   ]);
 
   const performance =

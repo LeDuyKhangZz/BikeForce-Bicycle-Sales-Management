@@ -146,6 +146,38 @@ export type Database = {
           },
         ]
       }
+      monthly_participant_salaries: {
+        Row: {
+          amount: number | null
+          participant_key: string
+          period_month: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          participant_key: string
+          period_month: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          participant_key?: string
+          period_month?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_participant_salaries_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_sync_jobs: {
         Row: {
           completed_at: string | null
@@ -463,6 +495,10 @@ export type Database = {
       }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      save_monthly_salary_entries: {
+        Args: { p_entries: Json; p_period_month: string }
+        Returns: number
+      }
       vn_today: { Args: never; Returns: string }
     }
     Enums: {
@@ -600,3 +636,4 @@ export const Constants = {
     },
   },
 } as const
+

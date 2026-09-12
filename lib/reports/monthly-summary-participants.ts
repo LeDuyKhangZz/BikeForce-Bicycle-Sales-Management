@@ -12,18 +12,25 @@ export const MONTHLY_KIM_HUONG_PARTICIPANT = {
   is_active: true,
 } as const;
 
+export const MONTHLY_KHOA_PARTICIPANT = {
+  id: 'amis-dang-khoa', full_name: 'Nguyễn Trần Đăng Khoa', employee_code: null, is_active: true,
+} as const;
+
+export const MONTHLY_SALARY_PARTICIPANTS = [MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT, MONTHLY_KHOA_PARTICIPANT] as const;
+
+export function isMonthlySalaryParticipant(id: string): boolean {
+  return MONTHLY_SALARY_PARTICIPANTS.some(person => person.id === id);
+}
+
 /** Nhân viên AMIS-only không cần tạo user Sales hay tài khoản SaleWork giả. */
 export function includeMonthlySummaryParticipants<
   T extends { id: string; full_name: string; employee_code: string | null; is_active: boolean },
 >(sales: readonly T[]) {
-  const participants = includeMonthlyAccountingParticipant(sales);
-  if (sales.some(person => person.id === MONTHLY_KIM_HUONG_PARTICIPANT.id || person.full_name.trim() === MONTHLY_KIM_HUONG_PARTICIPANT.full_name)) {
-    return participants;
-  }
+  const additions = MONTHLY_SALARY_PARTICIPANTS.filter(person => !sales.some(profile => profile.id === person.id || profile.full_name.trim() === person.full_name));
   return [
-    ...participants.filter(person => person.is_active),
-    MONTHLY_KIM_HUONG_PARTICIPANT,
-    ...participants.filter(person => !person.is_active),
+    ...sales.filter(person => person.is_active),
+    ...additions,
+    ...sales.filter(person => !person.is_active),
   ];
 }
 

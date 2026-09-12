@@ -5,17 +5,13 @@ import { Banknote, ChevronLeft, ChevronRight, UsersRound } from 'lucide-react';
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
-import {
-  MonthlySalariesForm,
-  type SalarySalesRow,
-} from '@/features/admin-salaries/monthly-salaries-form';
+import { MonthlySalariesForm } from '@/features/admin-salaries/monthly-salaries-form';
+import { getSalaryPageData } from '@/features/admin-salaries/queries';
 import { requireRole } from '@/features/auth/queries';
 import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
-import { listSalesOptions } from '@/services/profiles';
-import { listMonthlySalaries } from '@/services/salaries';
 
 export const metadata: Metadata = { title: 'Lương · BikeForce' };
 const PAGE_PATH = '/admin/salaries';
@@ -28,18 +24,7 @@ export default async function AdminSalariesPage({ searchParams }: Props) {
   const previousMonth = shiftVietnamMonth(month, -1);
   const nextMonth = shiftVietnamMonth(month, 1);
   const supabase = await createClient();
-  const [salesList, salaries] = await Promise.all([
-    listSalesOptions(supabase),
-    listMonthlySalaries(supabase, periodMonthOf(month)),
-  ]);
-
-  const salesRows: SalarySalesRow[] = salesList.map((sales) => ({
-    id: sales.id,
-    full_name: sales.full_name,
-    employee_code: sales.employee_code,
-    is_active: sales.is_active,
-  }));
-  const currentAmounts = Object.fromEntries(salaries.map((row) => [row.sales_id, row.amount]));
+  const { salesRows, currentAmounts } = await getSalaryPageData(supabase, periodMonthOf(month));
 
   return (
     <div className="flex flex-col gap-4">

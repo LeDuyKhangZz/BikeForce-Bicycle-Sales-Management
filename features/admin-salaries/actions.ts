@@ -7,9 +7,10 @@ import { AUTH_MESSAGES } from '@/lib/auth/messages';
 import { createClient } from '@/lib/supabase/server';
 import { salaryFieldName, salaryInputSchema, salaryMonthSchema } from '@/lib/validation/salaries';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
-import { getSessionProfile, listSalesOptions } from '@/services/profiles';
-import { saveMonthlySalaries, type MonthlySalaryWrite } from '@/services/salaries';
+import { getSessionProfile } from '@/services/profiles';
+import { saveSalaryEntries, type MonthlySalaryWrite } from '@/services/salaries';
 import type { ActionResult } from '@/types/action-result';
+import { listSalaryParticipants } from './queries';
 
 export type SaveSalariesState = ActionResult<{ notice: string }> | null;
 
@@ -35,7 +36,7 @@ export async function saveSalariesAction(
     return { ok: false, code: 'FORBIDDEN', message: SALARY_MESSAGES.FORBIDDEN };
   }
 
-  const salesList = await listSalesOptions(supabase);
+  const salesList = await listSalaryParticipants(supabase);
   if (salesList.length === 0) {
     return { ok: false, code: 'NOT_FOUND', message: SALARY_MESSAGES.NO_SALES };
   }
@@ -61,16 +62,16 @@ export async function saveSalariesAction(
     };
   }
 
-  const result = await saveMonthlySalaries(
+  const result = await saveSalaryEntries(
     supabase,
     periodMonthOf(monthResult.data),
     rows,
-    profile.id,
   );
   if (!result.ok) {
     return { ok: false, code: 'UNKNOWN', message: SALARY_MESSAGES.FAILED };
   }
 
   revalidatePath('/admin/salaries');
+  revalidatePath('/admin/monthly-summaries');
   return { ok: true, data: { notice: SALARY_MESSAGES.SAVED } };
 }
