@@ -2,6 +2,8 @@
 
 ### Hồi quy DEC-085 — Abraham chỉ tháng 08/2026
 
+DEC-086 bổ sung test mapping Quỳnh chỉ cho khoản doanh thu: đọc đúng tên/tháng, kết quả 391.973.996; tiền khác ở dòng CRM không được lấy thay. Nguồn thiếu giữ null, nguồn có 0 giữ 0. Giữ các test tháng 9/người khác nguyên object cũ. Không mở Chrome test; đọc browser chung người dùng đang mở để đối chiếu dòng thật không phải E2E.
+
 Unit khóa participant + kỳ, doanh số `Sales` khác `NetSales`, khách trong kỳ 30 khác khách mua all-time 0, đơn/trả hàng, công nợ nguồn cũ, snapshot thiếu và đối chiếu Admin không có nhân viên kỹ thuật. Các tháng 09/10/2026 và 08/2027 phải trả nguyên object cũ, nhân viên khác tháng 8 không đọc snapshot. Python unittest mock API xác nhận unit 10, employee 60, ngày cố định, thiếu/trùng employee và thiếu cột không ghi số 0. Không kiểm thử bằng Chrome test hoặc phiên mới. Kết quả thật ghi WORKLOG; DB/RLS chỉ local, không chuyển fixture sang production khi local tắt.
 
 > Bổ sung DEC-084: unit danh sách có kế toán không cần profile, giữ nguyên Sales; unit query khóa mapping SaleWork/AMIS cũ; test route khóa đúng kỳ, không gọi bảng khoản Sales bằng ID tích hợp, 401/403/400 và no-store. E2E tháng phải thấy đúng một hàng kế toán, bấm mở preview, không cuộn ngang ở 375/1440. E2E chưa chạy nếu Docker local không sẵn sàng; không được dùng production làm fixture.

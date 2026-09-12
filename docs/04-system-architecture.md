@@ -2,6 +2,8 @@
 
 ### Snapshot lịch sử giới hạn kỳ/người (DEC-085)
 
+DEC-086: Hai tên nguồn được tách theo khoản, không sửa mapping CRM toàn cục. Feature dùng session service đọc công nợ `Nguyễn Thị Như Quỳnh` riêng đúng Abraham tháng 8, CRM tiếp tục `Kế Toán Bán Hàng`/snapshot Report 119. Giữ layering/RLS hiện hữu.
+
 Ngoại lệ Report 119 của Abraham tháng 08/2026 do script tích hợp ghi vào khóa kỹ thuật riêng của bảng AMIS hiện hữu, không ghi đè dòng nhân viên thường. Service đọc vẫn nhận session client chịu RLS; feature tháng ghép snapshot với công nợ nguồn cũ khi helper lib xác nhận đúng participant/kỳ. Admin đối chiếu loại đúng snapshot kỹ thuật khỏi view FULL JOIN. Không đổi schema/role/policy; tháng 9 và người khác dùng nguyên đường dữ liệu cũ.
 
 > Bổ sung DEC-084: `features/admin-monthly-summaries/queries.ts` tổng hợp participant từ hồ sơ Sales và một tài khoản kế toán tích hợp được cho phép tường minh. Page/route ảnh gọi query feature; tài khoản tích hợp có `profileId = null`, không truyền ID giả vào bảng chỉ tiêu/lương/công tác phí.

@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## Entry 068 — 2026-09-12 — Xác nhận nguồn doanh thu Abraham tháng 8
+
+Kiểm chứng thật cuối: full unit 797/797; typecheck/lint exit 0; production build exit 0, 29 route. Chưa xác minh ảnh production; không chạy lại Chrome test/RLS (môi trường local offline đã xác nhận trước). Source mapping đã sửa, dữ liệu nguồn đã có; còn bước commit/push triển khai, quyền push main cần xác nhận trực tiếp sau auto-review từ chối trước đó.
+
+Người dùng tìm dòng Kế toán Nguyễn Thị Như Quỳnh và xác nhận số đúng 391.973.996 (đính chính nhầm 966). Đã đọc browser chung đúng kỳ, employee 37, số 391.973.996; API đã kiểm tra đủ 207 dòng/3 trang cùng số. Mở báo cáo theo yêu cầu bằng Chrome chung, không Chrome test. DEC-086: feature chỉ ghép công nợ tên Quỳnh cho Abraham tháng 08/2026; không đổi CRM/tháng 9/người khác. Đồng bộ riêng cột nguồn receive_amount tháng 8, response đối chiếu thành công exit 0, không sửa cột CRM/SaleWork/kỳ khác. Kiểm chứng cuối/deployment ghi sau, không coi xác nhận số tiền là quyền push main mới.
+
 > Status: ACTIVE | Phase: 18 — Thanh tiến độ + ngọn lửa vượt chỉ tiêu (DEC-069) | Last updated: 2026-08-15
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

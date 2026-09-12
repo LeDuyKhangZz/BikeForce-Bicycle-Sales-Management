@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — DEC-086, doanh thu Abraham tháng 08/2026
+
+Kiểm chứng cuối: unit 797/797, typecheck/lint sạch, production build 29 route thành công. Chưa có xác nhận deployment cho bản ghép nguồn công nợ mới, chưa xác minh ảnh production; cần quyền push main trực tiếp theo chặn auto-review trước đó.
+
+Người dùng xác nhận source Kế toán Nguyễn Thị Như Quỳnh (37), tiền 391.973.996; đã đọc đúng browser chung/API 207 dòng/3 trang và đồng bộ riêng cột receive_amount nguồn tháng 8, đối chiếu response exit 0. Feature chỉ ghép công nợ Quỳnh khi Abraham + 2026-08; CRM/tháng 9 trở đi/người khác giữ nguyên. Không hardcode tiền, không fallback tiền từ tên CRM khi nguồn thiếu.
+
+**Next Exact Steps:** kiểm chứng cuối và commit bản ghép nguồn; cần quyền trực tiếp push main nếu auto-review vẫn chặn, không dùng cách khác vượt chặn. Bản 7fc972a đã có commit sau b390715 của người dùng, không ghi đè. RLS/E2E local còn nợ vì local offline và không mở Chrome test.
+
 ## Đính chính mới nhất 2026-09-12 — DEC-085/ISSUE-051
 
 Kiểm chứng cuối: unit 796/796, Python 3/3, typecheck/lint sạch, production build 29 route thành công. Đồng bộ nguồn thật exit 0. E2E không chạy lại/DB-RLS local offline, chưa xác minh ảnh production bằng phiên Admin.

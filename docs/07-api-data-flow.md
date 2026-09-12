@@ -2,6 +2,8 @@
 
 ### Ngoại lệ August accounting (DEC-085)
 
+DEC-086: Feature đọc thêm `getAmisMetricsForShare(sessionClient, 'Nguyễn Thị Như Quỳnh', '2026-08-01')`, chỉ ghép `receive_amount` vào Abraham tháng 8. Target lấy dòng CRM gốc, các số còn lại snapshot Report 119. Không hardcode số tiền, nguồn thiếu trả null; tháng khác không đọc thêm dòng này. Cột nguồn receive_amount tháng 8 đã đồng bộ riêng và so sánh response thành công: 391.973.996.
+
 `python scripts/amis-sync/sync_monthly_accounting_august.py --write` đọc Report 119 kỳ tùy chọn `Period=0`, 01–31/08/2026, đơn vị 10, nhân viên 60; ghi một snapshot `amis_employee_metrics` khóa `__MONTHLY119__:2026-08:10:60`. Số lượng chuẩn hóa integer, thiếu cột/nhân viên trùng phải lỗi, sau ghi so sánh response với payload. `current_amount` snapshot này lấy `Sales`, không đổi nghĩa cột ở dòng AMIS thường. Feature tháng chỉ dùng snapshot cho đúng participant/tháng, giữ target/công nợ từ AMIS thường; thiếu snapshot không lấy scope sai. Admin đối chiếu loại snapshot kỹ thuật, view SQL thô vẫn chứa nó. Không mở browser, không sửa snapshot SaleWork/dòng AMIS thường/tháng 9.
 
 > Bổ sung DEC-084: `/admin/monthly-summaries?month=YYYY-MM&sales=salework-accounting-sales` mở ảnh theo route tháng hiện hữu. Feature query ánh xạ participant sang SaleWork `Abraham Kế Toán Bánhàng` và AMIS `Kế Toán Bán Hàng` từ `AMIS_EMPLOYEE_MAP`; cả hai cùng lọc kỳ đang chọn. Participant không có `profileId`, vì vậy bỏ qua query chỉ tiêu/lương/công tác phí theo UUID và trả các khoản chưa liên kết là null. Route vẫn `private, no-store`.

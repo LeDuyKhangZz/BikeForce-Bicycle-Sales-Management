@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { MONTHLY_ACCOUNTING_AUGUST_KEY, usesAccountingAugustReport119 } from '@/lib/reports/monthly-accounting-august';
+import { MONTHLY_ACCOUNTING_AUGUST_KEY, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, usesAccountingAugustReport119 } from '@/lib/reports/monthly-accounting-august';
 import { includeMonthlyAccountingParticipant, MONTHLY_ACCOUNTING_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
 import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { getMonthlySummarySales, listSalesOptions } from '@/services/profiles';
@@ -21,11 +21,12 @@ export async function getMonthlySummaryAmisMetrics(
   const report119 = await getAmisMetricsForShare(supabase, MONTHLY_ACCOUNTING_AUGUST_KEY, periodMonth);
   // Không quay về số dashboard/scope sai nếu snapshot riêng chưa được đồng bộ.
   if (report119 === null) return null;
+  const receivable = await getAmisMetricsForShare(supabase, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, periodMonth);
   return {
     ...report119,
     target_amount: original?.target_amount ?? null,
-    // Công nợ vẫn từ AMIS Kế toán theo mapping/logic hiện hữu, không từ CRM.
-    receive_amount: original?.receive_amount ?? null,
+    // Chỉ khoản công nợ tháng 8 của Abraham dùng tên Kế toán đã được xác nhận.
+    receive_amount: receivable?.receive_amount ?? null,
   };
 }
 

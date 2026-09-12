@@ -2,6 +2,8 @@
 
 ### Đính chính lịch sử 2026-09-12 — DEC-085
 
+**Bổ sung DEC-086:** Doanh thu tháng 08/2026 của Abraham lấy cột Số tiền thanh toán của `Nguyễn Thị Như Quỳnh (37)` bên Kế toán: **391.973.996 đ**, đã được người dùng xác nhận và đối chiếu API/browser. Không lấy công nợ theo tên CRM Kế Toán Bán Hàng. Tháng 9/người khác/CRM giữ nguyên. Nhận xét thiếu tên bên dưới là tình trạng trước khi người dùng xác nhận mapping Kế toán này.
+
 Riêng Tổng kết tháng 08/2026 `Abraham Kế Toán Bánhàng`: Report 119 > THỐNG ĐẠT GROUP > Phòng kế toán > Kế Toán Bán Hàng. Doanh số dùng Doanh số bán ra, khách mua dùng SL KH mua trong kỳ, đơn dùng SL đơn hàng, trả hàng dùng Doanh số trả lại; doanh thu công nợ vẫn AMIS Kế toán như nhân viên khác. Không thay đổi tháng 09/2026 trở đi hay người khác. API thật xác nhận `477.633.500 / 30 / 35 / 18.972.500`; tương tác 31, phụ trách 0. File công nợ tháng 8 hiện không có dòng Kế Toán Bán Hàng, không suy diễn công nợ là 0 hay lấy số nhân viên khác.
 
 > Bổ sung 2026-09-12 (DEC-084, mở rộng BR-031 theo yêu cầu người dùng): Tổng kết tháng gồm cả tài khoản tích hợp `Abraham Kế Toán Bánhàng`, không phụ thuộc profile Sales. SaleWork lọc tháng theo tên tài khoản; AMIS dùng ánh xạ cũ `Kế Toán Bán Hàng`. Không tạo user/role mới; khoản lương/công tác phí chưa có hồ sơ liên kết hiện `-`.

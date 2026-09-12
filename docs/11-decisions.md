@@ -2665,6 +2665,17 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 
 ## DEC-085 — Ngoại lệ lịch sử Report 119 riêng tháng 08/2026 Abraham
 
+**Bổ sung DEC-086 (2026-09-12, APPROVED):** Người dùng xác nhận tên Kế toán của Abraham là `Nguyễn Thị Như Quỳnh (37)`, số tiền đúng `391.973.996` (đính chính số gõ nhầm `391.973.966`). Riêng khoản `receive_amount` tháng 08/2026 đọc dòng nguồn tên này, không dùng tên CRM `Kế Toán Bán Hàng`. Các quy tắc Report 119/tháng khác của DEC-085 giữ nguyên.
+
+### DEC-086 — Mapping công nợ Kế toán riêng Abraham tháng 08/2026
+
+**Date:** 2026-09-12
+**Decision:** Query feature chọn `receive_amount` của `Nguyễn Thị Như Quỳnh` cùng `period_month=2026-08-01` chỉ khi participant Abraham và kỳ tháng 8. Giữ mapping CRM và toàn bộ số Report 119, không đổi tháng 9 trở đi/người khác. Nguồn thiếu hiển thị thiếu, không fallback sang tên CRM hoặc tự tạo 0.
+**Reason:** Người vận hành tìm và xác nhận dòng trên Kế toán; browser chung và API đủ 207 dòng/3 trang cùng trả 391.973.996 cho nhân viên 37. Tên CRM không trùng tên Kế toán.
+**Alternatives:** Đổi mapping CRM chung sẽ làm hỏng doanh số/khách/đơn; hardcode tiền không theo nguồn; áp dụng toàn bộ tháng trái giới hạn đã chốt. Tách mapping khoản công nợ trong ngoại lệ tháng 8.
+**Impact:** Một lần đọc service bổ sung bằng session client chịu RLS, không schema/policy mới. Đồng bộ riêng cột công nợ của dòng nguồn Nguyễn Thị Như Quỳnh tháng 8 và kiểm tra response sau ghi; không sửa cột CRM/SaleWork/kỳ khác. Unit khóa tên nguồn/kỳ, tiền đúng, nguồn thiếu và 0 thật.
+**Status:** APPROVED — người dùng xác nhận tên và tiền.
+
 **Date:** 2026-09-12
 **Decision:** Chỉ `salework-accounting-sales` tháng `2026-08` dùng Report 119, THỐNG ĐẠT GROUP > Phòng kế toán (ID 10) > Kế Toán Bán Hàng (ID 60). Doanh số thực đạt lấy `Sales` (không `NetSales`/dashboard); khách mua lấy `QuantityAccountSoldThisPeriod`; đơn hàng `NoOfOrders`; trả hàng `ReturnSales`. Công nợ giữ `receive_amount` dòng AMIS hiện hữu theo logic Kế toán. Tháng 09/2026 trở đi và nhân viên khác giữ nguyên.
 **Reason:** Mapping tên cũ vẫn lấy nhầm thống kê scope Phòng kinh doanh và doanh số thuần dashboard; người dùng chỉ rõ nguồn và giới hạn riêng tháng 8.

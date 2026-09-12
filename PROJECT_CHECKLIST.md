@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] DEC-086: Abraham tháng 08/2026 lấy doanh thu Kế toán từ Nguyễn Thị Như Quỳnh (37) = 391.973.996 đ; browser/API/source sync xác minh đúng tiền. Giữ tháng 9/CRM/người khác, không Chrome test.
+- [x] DEC-086 kiểm chứng: unit 797/797, typecheck/lint sạch, build 29 route thành công.
+- [ ] DEC-086 triển khai website: cần quyền trực tiếp push main sau auto-review chặn trước đó; chưa có xác nhận deployment/ảnh production.
+
 - [x] DEC-085/ISSUE-051: chỉ Abraham tháng 08/2026 dùng Report 119 Phòng kế toán > Kế Toán Bán Hàng; API và đồng bộ một snapshot xác nhận 477.633.500 doanh số, 30 khách, 35 đơn, 18.972.500 trả hàng. Công nợ giữ logic Kế toán cũ; tháng 9/người khác/dòng AMIS thường/SaleWork không đổi.
 - [x] Unit hồi quy 796/796, Python 3/3, typecheck/lint sạch; không mở Chrome test. Snapshot kỹ thuật không xuất hiện thành nhân viên ở đối chiếu Admin.
 - [ ] DB/RLS local chưa xác minh: chạy thật bị ECONNREFUSED 127.0.0.1:54322; không nới policy hoặc test production.

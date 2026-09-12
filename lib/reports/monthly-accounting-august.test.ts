@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getMonthlySummaryAmisMetrics } from '@/features/admin-monthly-summaries/queries';
-import { excludeAccountingAugustSnapshot, MONTHLY_ACCOUNTING_AUGUST_KEY, usesAccountingAugustReport119 } from '@/lib/reports/monthly-accounting-august';
+import { excludeAccountingAugustSnapshot, MONTHLY_ACCOUNTING_AUGUST_KEY, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, usesAccountingAugustReport119 } from '@/lib/reports/monthly-accounting-august';
 import { getAmisMetricsForShare, type AmisShareMetrics } from '@/services/reports';
 import type { Database } from '@/types/database.types';
 
@@ -43,10 +43,12 @@ describe('ngoại lệ Report 119 tháng 08/2026 Abraham', () => {
   });
 
   it('doanh số Sales không NetSales, khách mua trong kỳ, đơn/trả hàng từ phòng kế toán; giữ công nợ ACT', async () => {
-    vi.mocked(getAmisMetricsForShare).mockResolvedValueOnce(original).mockResolvedValueOnce(snapshot);
+    vi.mocked(getAmisMetricsForShare).mockResolvedValueOnce(original).mockResolvedValueOnce(snapshot)
+      .mockResolvedValueOnce({ ...original, receive_amount: 391973996 });
     const metrics = await getMonthlySummaryAmisMetrics(client, id, employee, '2026-08');
-    expect(metrics).toEqual({ ...snapshot, receive_amount: original.receive_amount });
+    expect(metrics).toEqual({ ...snapshot, receive_amount: 391973996 });
     expect(getAmisMetricsForShare).toHaveBeenNthCalledWith(2, client, MONTHLY_ACCOUNTING_AUGUST_KEY, '2026-08-01');
+    expect(getAmisMetricsForShare).toHaveBeenNthCalledWith(3, client, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, '2026-08-01');
   });
 
   it.each(['2026-09', '2026-10', '2027-08'])('tháng %s giữ nguyên object/logic cũ, không đọc snapshot', async (month) => {
@@ -59,6 +61,14 @@ describe('ngoại lệ Report 119 tháng 08/2026 Abraham', () => {
     vi.mocked(getAmisMetricsForShare).mockResolvedValue(original);
     expect(await getMonthlySummaryAmisMetrics(client, 'sales-khoa', 'Khoa', '2026-08')).toBe(original);
     expect(getAmisMetricsForShare).toHaveBeenCalledTimes(1);
+  });
+
+  it('không lấy doanh thu từ tên CRM khi nguồn Quỳnh thiếu; số 0 thật của nguồn vẫn giữ nguyên', async () => {
+    vi.mocked(getAmisMetricsForShare).mockResolvedValueOnce(original).mockResolvedValueOnce(snapshot).mockResolvedValueOnce(null);
+    expect(await getMonthlySummaryAmisMetrics(client, id, employee, '2026-08')).toMatchObject({ receive_amount: null });
+    vi.mocked(getAmisMetricsForShare).mockResolvedValueOnce(original).mockResolvedValueOnce(snapshot)
+      .mockResolvedValueOnce({ ...original, receive_amount: 0 });
+    expect(await getMonthlySummaryAmisMetrics(client, id, employee, '2026-08')).toMatchObject({ receive_amount: 0 });
   });
 
   it('không fallback sang scope sai khi snapshot thiếu, không lấy công nợ CRM', async () => {

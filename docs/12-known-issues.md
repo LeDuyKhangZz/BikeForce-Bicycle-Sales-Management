@@ -2143,6 +2143,8 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 
 ### ISSUE-051
 
+**Bổ sung DEC-086:** Người dùng xác nhận công nợ Abraham tháng 8 ánh xạ Nguyễn Thị Như Quỳnh (37), không tên CRM. Query đã tách nguồn khoản công nợ, browser/API/sync source xác minh 391.973.996; unit 797/797 và typecheck/lint/build thành công. Chưa triển khai bản mapping nguồn mới do cần quyền push main sau chặn auto-review; không ghi đã xác minh ảnh production.
+
 **Severity:** P1
 **Status:** CLOSED — 2026-09-12
 **Module:** Tổng kết tháng Abraham 08/2026
