@@ -3621,3 +3621,5 @@ Thêm participant tích hợp vào danh sách và route ảnh tháng bằng slug
 Kiểm chứng cuối: full unit 788/788, typecheck/lint sạch, production build 29 route thành công. Snapshot SaleWork tháng 08 đã sẵn trong nguồn chung nên không cần đăng nhập hay chạy lại AMIS/SaleWork để thêm participant này.
 
 Đã thử E2E tháng với `mobile-375`/`desktop-1440`; build test thành công nhưng global setup/teardown bị `ECONNREFUSED 127.0.0.1:54322`, chưa chạy test UI. Docker local đang tắt; không đổi sang production để chạy fixture.
+
+Đã push source commit `d1281cd` lên `origin/main`. GitHub commit status Vercel trả `success` / `Deployment has completed`; bản website đã triển khai source kế toán. Chưa xác minh giao diện đăng nhập production, E2E vẫn nợ môi trường local.

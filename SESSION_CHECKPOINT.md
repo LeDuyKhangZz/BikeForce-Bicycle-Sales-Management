@@ -2478,4 +2478,6 @@ lần tự động kế tiếp tiếp tục exit 0.
 - E2E có assertion hàng kế toán/preview/không cuộn ngang; chưa chạy vì Docker local tắt.
 - Full unit 788/788, typecheck/lint sạch, production build 29 route thành công.
 
-**Next Exact Steps:** triển khai commit rồi mở `/admin/monthly-summaries?month=2026-08&sales=salework-accounting-sales`; khi Docker sẵn sàng chạy E2E tháng 375/1440 và đối chiếu ảnh tích hợp đủ AMIS.
+Source commit `d1281cd` đã push; Vercel commit status xác nhận `success` / `Deployment has completed`.
+
+**Next Exact Steps:** mở `/admin/monthly-summaries?month=2026-08&sales=salework-accounting-sales`; khi Docker sẵn sàng chạy E2E tháng 375/1440 và đối chiếu ảnh tích hợp đủ AMIS. Không cần đồng bộ SaleWork/AMIS lại chỉ để thêm hàng kế toán.
