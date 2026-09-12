@@ -6,7 +6,7 @@ Kiểm chứng cuối: unit 796/796, Python 3/3, typecheck/lint sạch, producti
 
 Chỉ Tổng kết tháng `2026-08` participant `salework-accounting-sales` đọc snapshot Report 119 riêng `__MONTHLY119__:2026-08:10:60`; scope Phòng kế toán ID 10, employee 60 Kế Toán Bán Hàng. Đã ghi/đối chiếu response thành công: Sales 477.633.500, mua trong kỳ 30, đơn 35, trả hàng 18.972.500; tương tác 31, phụ trách 0. Doanh thu công nợ giữ query/mapping Kế toán cũ; summary hiện chưa có dòng tên này, không bịa 0. Tháng 09/2026 trở đi và mọi nhân viên khác giữ nguyên. Không mở browser trong tác vụ này. View SQL đối chiếu có snapshot kỹ thuật; helper loại đúng dòng này ở Admin.
 
-**Next Exact Steps:** hoàn tất kiểm chứng cuối/commit/push, xác nhận Vercel, rồi tải lại ảnh tháng 8. Không chạy Chrome test, không thay logic tháng 9 hoặc mapping người khác. DB/RLS local chưa chạy được (`ECONNREFUSED 127.0.0.1:54322`); không ghi PASS và không chạy fixture production.
+**Next Exact Steps:** source đã commit `7fc972a`, nhưng push `origin/main` bị auto-review từ chối cả sau khi kiểm chứng standing rule CLAUDE.md: cần phê duyệt trực tiếp của người dùng cho push nhánh mặc định/triển khai. Chưa push/chưa có xác nhận Vercel cho bản sửa. Xin quyền push, sau đó xác nhận deployment và tải lại ảnh tháng 8. Không chạy Chrome test, không thay logic tháng 9 hoặc mapping người khác. DB/RLS local chưa chạy được (`ECONNREFUSED 127.0.0.1:54322`); không ghi PASS và không chạy fixture production.
 
 > Status: ACTIVE | Phase: **SaleWork — nối dữ liệu AMIS** | Last updated: 2026-09-04
 

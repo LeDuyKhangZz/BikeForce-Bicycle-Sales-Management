@@ -3614,6 +3614,8 @@ Kiểm chứng cuối: full unit 778/778, typecheck sạch, production build 29 
 
 ## Entry 067 — 2026-09-12 — Đính chính riêng Abraham tháng 08/2026
 
+Source commit `7fc972a` đã tạo. Push `origin/main` bị auto-review từ chối hai lượt dù đã đọc lại quyền standing CLAUDE.md dòng 8/54 và xác minh remote; không dùng cách khác vượt chặn. Cần người dùng trực tiếp phê duyệt push nhánh mặc định, do thao tác chia sẻ/triển khai source. Chưa có deployment bản sửa; dữ liệu snapshot tích hợp đã đồng bộ thành công trước đó.
+
 Kiểm chứng cuối sau helper loại snapshot: unit **796/796**, Python **3/3**, typecheck/lint exit 0, production build **29 route** exit 0. Đồng bộ nguồn thực tế thành công, không có browser mới. Chưa xác minh ảnh production qua phiên Admin; DB/RLS vẫn bị local offline, E2E không chạy lại theo ràng buộc không mở Chrome test.
 
 DEC-085/ISSUE-051: API thật Report 119 THỐNG ĐẠT GROUP > Phòng kế toán ID 10 > Kế Toán Bán Hàng ID 60 trả Sales 477.633.500, NetSales 458.661.000, khách mua trong kỳ 30, tương tác 31, phụ trách 0, đơn 35, trả hàng 18.972.500. Script chuyên biệt ghi một snapshot riêng, so sánh response sau ghi exit 0, không mở browser. Lượt đầu HTTP 400 vì JSON số lượng float, đã chuẩn hóa integer và chạy lại thành công. Không sửa dòng AMIS thường/tháng 9/SaleWork. Công nợ query giữ logic dòng AMIS cũ; summary ACT hiện không có tên này nên không tự gán 0/nhầm người.
