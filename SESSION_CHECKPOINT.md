@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — nhãn cột ảnh Tổng kết tháng (2026-09-12)
+
+Kết quả cuối: unit 802/802, typecheck/lint sạch, build 29 route thành công. Bản nhãn cột chưa triển khai production/quyền push main còn cần xác nhận trực tiếp.
+
+Component tháng thêm hàng nhãn cột tên trống / Chỉ tiêu / Thực đạt / % hoàn thành, giữ độ rộng 35/22/22/21% và số liệu/logic. Full unit 802/802. Đã nhìn PNG Satori fixture stress sáu dòng online, nhãn không tràn/chồng và mọi khối trong khung; đây không phải xác minh nguồn production/Kim Hương có online. Không Chrome test hoặc thay DB/RLS. Typecheck/lint/build đang chốt.
+
+**Next Exact Steps:** kiểm chứng cuối, commit source/docs; nhánh main chưa được cấp quyền push trực tiếp sau chặn auto-review trước đó, không bypass. Chưa triển khai/xác minh ảnh production. Dữ liệu tháng 8 Kim Hương đã đủ các dòng; không dùng số tháng 8 lấp tháng 9, tháng 9 cần sync đúng kỳ nếu muốn đối soát tiếp.
+
 ## Mới nhất — DEC-087 Nguyễn Thị Kim Hương
 
 Đã sync duy nhất Kim Hương 2026-08, so sánh response thành công: 168.805.000/163.821.200/7 khách/10 đơn. Python push liên quan 5/5. Các tháng khác cần source sync đúng kỳ như thường lệ, không dùng số tháng 8 thay tháng 9.

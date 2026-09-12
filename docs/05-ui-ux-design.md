@@ -1,5 +1,7 @@
 # 05 — UI/UX Design
 
+2026-09-12: bảng Tình trạng thực hiện trên ảnh Tổng kết tháng thêm hàng nhãn, cột tên dòng để trống; cột 2 `Chỉ tiêu`, cột 3 `Thực đạt`, cột 4 `% hoàn thành`. Nhãn giữ đúng độ rộng 35/22/22/21% của số liệu, căn phải ba cột giá trị, font 18px, trước bốn dòng KPI. Chưa có AMIS không vẽ bảng nhãn. Không đổi số/công thức/ngưỡng/nguồn hoặc các dòng bổ sung.
+
 DEC-087: danh sách Tổng kết tháng thêm Nguyễn Thị Kim Hương (không thêm dòng trùng nếu đã có Sales profile). Ảnh AMIS-only không có online thì dùng empty state hiện hữu; mã/khoản chưa có hiển thị thiếu, không dựng số 0. Không thay đổi layout/kích thước control.
 
 > Bổ sung 2026-09-12 (DEC-084): danh sách Tổng kết tháng có thêm hàng `Abraham Kế Toán Bánhàng`, mã `VP-SA-001`, cùng nút Xem trước và Sao chép hình ảnh như Sales. Giữ nhóm đang làm việc trước nhóm đã nghỉ; ảnh dùng nguyên mẫu tháng hiện hữu, không thêm menu/module mới.

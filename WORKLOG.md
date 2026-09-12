@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## Entry 070 — 2026-09-12 — Nhãn cột Tình trạng thực hiện ảnh tháng
+
+Kiểm chứng cuối thật: unit 802/802, typecheck/lint exit 0, production build 29 route exit 0. Không nguồn/số liệu mới, không migration/RLS. Bản sửa chuẩn bị commit local; chưa push main do chưa có phê duyệt trực tiếp sau chặn auto-review, chưa triển khai/xác minh production.
+
+Thêm hàng nhãn cột tên để trống / Chỉ tiêu / Thực đạt / % hoàn thành, giữ độ rộng/căn lề như số liệu. Không thay nguồn/con số/công thức/achievement hay logic tháng. Unit SSR hai case nhãn có đúng thứ tự/kích thước và AMIS null không vẽ nhãn; full unit 802/802 đã đạt. Đã render/nhìn PNG Satori 1080×1920 fixture stress sáu dòng online để kiểm tra sức chứa, không phải dữ liệu production/Kim Hương có SaleWork. Nhãn đủ một dòng, không chồng/cắt, không vượt khung. Không mở Chrome test/E2E, không thay DB/RLS. Typecheck/lint/build cuối và source commit ghi sau; chưa triển khai website/quyền push main.
+
 ## Entry 069 — 2026-09-12 — Tổng kết tháng Nguyễn Thị Kim Hương
 
 Đồng bộ duy nhất dòng Kim Hương tháng 08/2026 và đối chiếu response exit 0: dashboard 168.805.000/công nợ 163.821.200/7 khách/10 đơn. Không ghi người khác/SaleWork. Python bộ push liên quan 5/5 chạy thật. Tháng khác được pipeline source bổ sung Kim Hương ở lần sync tương ứng, không suy diễn snapshot tháng 8 sang tháng 9.

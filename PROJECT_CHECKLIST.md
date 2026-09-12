@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] 2026-09-12 ảnh tháng: thêm nhãn Chỉ tiêu / Thực đạt / % hoàn thành, cột tên để trống; giữ số liệu/logic. Unit 802/802 và render Satori kiểm tra bố cục, không Chrome test.
+- [x] Nhãn cột: typecheck/lint sạch, production build 29 route thành công.
+- [ ] Bản nhãn cột cần triển khai website sau khi có quyền push main; chưa xác minh ảnh production.
+
 - [x] DEC-087: thêm Nguyễn Thị Kim Hương vào Tổng kết tháng, AMIS như sale khác; không SaleWork/account giả/profile giả, không trùng dòng; unit 800/800.
 - [x] DEC-087 kiểm chứng typecheck/lint/build 29 route, source Report119 group bổ sung riêng Kim Hương và Python 3/3; API tháng 8 xác minh số liệu như sale khác.
 - [ ] DEC-087 triển khai website còn cần quyền push main; E2E/RLS local chưa xác minh (offline, không Chrome test).

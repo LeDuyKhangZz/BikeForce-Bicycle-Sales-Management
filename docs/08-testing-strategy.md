@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+2026-09-12 nhãn cột ảnh tháng: unit SSR xác nhận đúng thứ tự/nội dung/độ rộng/cột tên trống trước các dòng KPI, giữ số liệu và không có nhãn khi AMIS null. Render Satori PNG 1080×1920 với fixture sáu dòng online để kiểm tra sức chứa/căn lề, không dùng snapshot production để kiểm tra nguồn và không mở Chrome test. Fixture stress có số online giả lập, không khẳng định Kim Hương có SaleWork. Đã nhìn ảnh: nhãn không chồng/cắt, bảng/các khoản/footer nằm trong khung; không phải E2E 375px hoặc RLS.
+
 DEC-087 Python: test bổ sung đúng Kim Hương (ID 23) từ group Report 119, không đưa Abraham/người khác từ group vào kết quả, giữ số/scope sale cũ; scope cũ đã có Kim Hương không đọc/override; thiếu nguồn mới fail an toàn thay vì gán 0.
 
 DEC-087: unit helper bổ sung Kim Hương/không trùng profile, feature đúng AMIS + account/profile null, route chấp nhận slug hợp lệ, AMIS đúng tên/kỳ và no-store; không gọi SaleWork/khoản UUID giả. Hồi quy Abraham tháng 8 và sale khác phải giữ nguyên. Không mở Chrome test để E2E khi người dùng đã cấm; DB/RLS local offline không được ghi PASS.

@@ -66,6 +66,12 @@ export function MonthlySummaryCard({ model }: Props) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
             <div style={{ display: 'flex', color: COLOR.muted, fontSize: '20px', marginBottom: '12px' }}>{model.performance.rangeText}</div>
+            <div style={{ display: 'flex', alignItems: 'center', borderTop: `1px solid ${COLOR.border}`, padding: '12px 0', color: COLOR.muted, fontSize: '18px', fontWeight: 700 }}>
+              <div style={{ display: 'flex', width: '35%' }} />
+              <div style={{ display: 'flex', width: '22%', justifyContent: 'flex-end' }}>Chỉ tiêu</div>
+              <div style={{ display: 'flex', width: '22%', justifyContent: 'flex-end' }}>Thực đạt</div>
+              <div style={{ display: 'flex', width: '21%', justifyContent: 'flex-end' }}>% hoàn thành</div>
+            </div>
             {model.performance.rows.map((row) => (
               <div key={row.label} style={{ display: 'flex', alignItems: 'center', borderTop: `1px solid ${COLOR.border}`, padding: '14px 0', fontSize: '22px' }}>
                 <div style={{ display: 'flex', width: '35%', fontWeight: 600 }}>{row.label}</div>
