@@ -3665,3 +3665,5 @@ Kiểm chứng cuối: full unit 788/788, typecheck/lint sạch, production buil
 ### 2026-09-13 — Ẩn CMD của Auto Sync Reports
 
 Đã đọc action task thật và giữ nguyên batch/logic reports:sync. Thêm launcher VBS, wrapper PowerShell thu log/che token/báo Telegram chỉ khi lỗi, installer có backup XML và chống chạy chồng. Đã cập nhật task thật sang wscript.exe; backup logs/auto-sync-task-20260913-213714.xml. Smoke HTTP giả lập pass, typecheck/lint/build exit 0 (build chạy lại có mạng sau lỗi tải Inter). Chưa gửi thử Telegram thật hoặc xác nhận trực quan cửa sổ trong desktop người dùng. Hướng dẫn docs/hidden-report-sync.md.
+
+**Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.

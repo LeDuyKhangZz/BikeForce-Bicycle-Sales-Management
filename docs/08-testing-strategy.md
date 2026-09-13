@@ -1510,3 +1510,5 @@ bấm Tổng hợp, đã lưu đủ 8 tài khoản, sau đó CRM tiếp tục ch
 ### 2026-09-13 — Smoke test wrapper Windows
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-hidden-sync.ps1: đã chạy pass; batch thành công không gọi Telegram, exit 7 giữ nguyên và kèm stderr che token, thiếu batch trả 1 và báo exception. HTTP giả lập, không gửi Telegram thật. Build/typecheck/lint đã chạy exit 0; build cần mạng để tải Inter.
+
+**Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.

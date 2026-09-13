@@ -60,3 +60,5 @@ Không gửi tin Telegram thật trong kiểm thử. Xem Last Run Result của T
 và `logs/auto-sync.log` sau lượt lịch tiếp theo để kiểm tra đồng bộ thật.
 
 API Telegram: [sendMessage](https://core.telegram.org/bots/api#sendmessage).
+
+**Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.

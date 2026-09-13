@@ -1225,3 +1225,5 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Log stdout/stderr, giữ exit code, Telegram chỉ khi lỗi, che token và ngăn cảnh báo lồng.
 - [x] Smoke success/error/exception bằng HTTP giả lập; build/typecheck/lint exit 0.
 - [ ] Xác nhận trực quan không lóe CMD trên desktop người dùng; kiểm tra nhận Telegram trong lỗi thật.
+
+**Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.

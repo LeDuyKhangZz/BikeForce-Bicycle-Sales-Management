@@ -2537,3 +2537,7 @@ Source commit `d1281cd` đã push; Vercel commit status xác nhận `success` / 
 Task thật đã đổi từ cmd.exe sang wscript.exe gọi scripts/sync-all-reports-hidden.vbs. Wrapper PS giữ nguyên scripts/sync-all-reports.bat, ghi logs/auto-sync.log, chỉ gửi Telegram khi exit khác 0/exception, tắt AMIS alert lồng và khóa chạy chồng. MultipleInstances=IgnoreNew; XML dự phòng logs/auto-sync-task-20260913-213714.xml. Smoke HTTP giả lập, typecheck/lint/build pass thật; Telegram thật/desktop chưa xác nhận. Không sửa schema/UI/data logic.
 
 **Next Exact Steps:** xem Last Run Result và logs/auto-sync.log sau lượt lịch tiếp theo; xác nhận desktop không lóe CMD. Khi cần cài lại chạy powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-hidden-report-sync.ps1. Chi tiết docs/hidden-report-sync.md.
+
+**Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.
+
+**Next Exact Steps:** xem logs/auto-sync.log ở lượt lịch tiếp theo để biết kết nối upsert đã phục hồi chưa; xác nhận desktop không lóe CMD. Push chỉ tiếp tục sau khi người dùng cấp phép chia sẻ commit lên GitHub.
