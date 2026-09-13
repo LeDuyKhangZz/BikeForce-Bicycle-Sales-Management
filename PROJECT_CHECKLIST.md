@@ -1218,3 +1218,10 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Thêm `Abraham Kế Toán Bánhàng` vào danh sách/ảnh Tổng kết tháng, mapping AMIS cũ và SaleWork đúng kỳ; không tạo user Sales giả (DEC-084)
 - [x] Unit participant/query và security route ảnh kế toán; render/nhìn ảnh 1080×1920 từ snapshot SaleWork tháng 08 thật
 - [ ] E2E kế toán 375/1440 đã thêm nhưng chưa chạy: Docker local đang tắt, không dùng production thay thế
+
+### 2026-09-13 — Scheduled Task ẩn
+
+- [x] Task thật dùng wscript.exe, giữ lịch/tài khoản và batch cũ; backup XML trước khi sửa.
+- [x] Log stdout/stderr, giữ exit code, Telegram chỉ khi lỗi, che token và ngăn cảnh báo lồng.
+- [x] Smoke success/error/exception bằng HTTP giả lập; build/typecheck/lint exit 0.
+- [ ] Xác nhận trực quan không lóe CMD trên desktop người dùng; kiểm tra nhận Telegram trong lỗi thật.

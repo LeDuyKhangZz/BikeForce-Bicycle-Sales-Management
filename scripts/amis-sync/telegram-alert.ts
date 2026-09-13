@@ -184,6 +184,7 @@ export async function sendTelegramMessage(
 }
 
 export async function sendTelegramAlert(message: string, alertKey: string): Promise<void> {
+  if (process.env.BIKEFORCE_TASK_ALERT_OWNER === 'wrapper') return;
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
   if (!token || !chatId) return;

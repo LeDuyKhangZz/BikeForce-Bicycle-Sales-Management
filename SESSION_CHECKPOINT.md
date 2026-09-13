@@ -2531,3 +2531,9 @@ lần tự động kế tiếp tiếp tục exit 0.
 Source commit `d1281cd` đã push; Vercel commit status xác nhận `success` / `Deployment has completed`.
 
 **Next Exact Steps:** mở `/admin/monthly-summaries?month=2026-08&sales=salework-accounting-sales`; khi Docker sẵn sàng chạy E2E tháng 375/1440 và đối chiếu ảnh tích hợp đủ AMIS. Không cần đồng bộ SaleWork/AMIS lại chỉ để thêm hàng kế toán.
+
+### 2026-09-13 — Auto Sync Reports chạy ẩn
+
+Task thật đã đổi từ cmd.exe sang wscript.exe gọi scripts/sync-all-reports-hidden.vbs. Wrapper PS giữ nguyên scripts/sync-all-reports.bat, ghi logs/auto-sync.log, chỉ gửi Telegram khi exit khác 0/exception, tắt AMIS alert lồng và khóa chạy chồng. MultipleInstances=IgnoreNew; XML dự phòng logs/auto-sync-task-20260913-213714.xml. Smoke HTTP giả lập, typecheck/lint/build pass thật; Telegram thật/desktop chưa xác nhận. Không sửa schema/UI/data logic.
+
+**Next Exact Steps:** xem Last Run Result và logs/auto-sync.log sau lượt lịch tiếp theo; xác nhận desktop không lóe CMD. Khi cần cài lại chạy powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-hidden-report-sync.ps1. Chi tiết docs/hidden-report-sync.md.

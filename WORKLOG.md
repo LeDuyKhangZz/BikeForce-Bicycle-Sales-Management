@@ -3661,3 +3661,7 @@ Kiểm chứng cuối: full unit 788/788, typecheck/lint sạch, production buil
 Đã thử E2E tháng với `mobile-375`/`desktop-1440`; build test thành công nhưng global setup/teardown bị `ECONNREFUSED 127.0.0.1:54322`, chưa chạy test UI. Docker local đang tắt; không đổi sang production để chạy fixture.
 
 Đã push source commit `d1281cd` lên `origin/main`. GitHub commit status Vercel trả `success` / `Deployment has completed`; bản website đã triển khai source kế toán. Chưa xác minh giao diện đăng nhập production, E2E vẫn nợ môi trường local.
+
+### 2026-09-13 — Ẩn CMD của Auto Sync Reports
+
+Đã đọc action task thật và giữ nguyên batch/logic reports:sync. Thêm launcher VBS, wrapper PowerShell thu log/che token/báo Telegram chỉ khi lỗi, installer có backup XML và chống chạy chồng. Đã cập nhật task thật sang wscript.exe; backup logs/auto-sync-task-20260913-213714.xml. Smoke HTTP giả lập pass, typecheck/lint/build exit 0 (build chạy lại có mạng sau lỗi tải Inter). Chưa gửi thử Telegram thật hoặc xác nhận trực quan cửa sổ trong desktop người dùng. Hướng dẫn docs/hidden-report-sync.md.

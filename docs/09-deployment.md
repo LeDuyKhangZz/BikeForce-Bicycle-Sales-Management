@@ -1255,3 +1255,7 @@ Chrome được tìm ở hai thư mục cài đặt Windows chuẩn; nếu máy 
 9223 ra LAN/Internet; CDP có quyền truy cập phiên đăng nhập. Profile và lock PID đều nằm trong thư mục
 bị Git ignore. Nếu báo một script AMIS khác đang dùng browser, chờ lượt đó hoàn tất, không đăng nhập
 browser thứ hai. Chỉ khi không còn endpoint, helper mới khởi động Chrome chung lại với cùng profile.
+
+### 2026-09-13 — Scheduled Task đồng bộ chạy ẩn
+
+Task BikeForce - Auto Sync Reports dùng wscript.exe → sync-all-reports-hidden.vbs → PowerShell CreateNoWindow → batch cũ. Giữ lịch/tài khoản, MultipleInstances=IgnoreNew, XML dự phòng trong logs. Hướng dẫn: docs/hidden-report-sync.md.

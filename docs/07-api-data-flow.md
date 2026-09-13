@@ -781,3 +781,7 @@ tháng ánh xạ hai hồ sơ sang khóa tháng tương ứng; route và script 
 snapshot tháng và không ghi thêm dòng ngày. AMIS vẫn truy vấn bằng `profiles.amis_employee_name` như cũ.
 
 Nút **Sao chép hình ảnh** trong preview tháng gọi `fetch()` tới chính URL `GET /api/admin/monthly-summaries/[salesId]/image?month=YYYY-MM` bằng cookie cùng origin, yêu cầu response `image/png`, rồi truyền Promise của blob vào `ClipboardItem` trước khi user activation hết hiệu lực. Không tạo endpoint mới, không đưa service-role key xuống client và vẫn giữ `Cache-Control: private, no-store` của route ảnh.
+
+### 2026-09-13 — Cảnh báo task đồng bộ
+
+Wrapper chạy nguyên sync-all-reports.bat, thu stdout/stderr vào logs/auto-sync.log. Exit khác 0/exception gọi Telegram sendMessage, thành công không gửi; BIKEFORCE_TASK_ALERT_OWNER=wrapper tắt cảnh báo AMIS lồng trong lượt này. Không thay đổi luồng dữ liệu hay RLS. Chi tiết: docs/hidden-report-sync.md.
