@@ -2187,3 +2187,15 @@ trình cũ, chạy lại `--login` và bấm “Xem báo cáo”.
 **Verification:** unit helper/config xác nhận một tab, profile chung, CDP loopback và không có cờ automation. Chạy thật bản CDP `--login` ghi đủ 8 biến CRM/ACT, exit 0; Chrome vẫn mở. Lượt `--crm-only` kế tiếp gắn lại cùng endpoint và tái sử dụng token còn hạn, exit 0 không cần đăng nhập lại.
 
 Full unit 778/778, typecheck/lint sạch và production build 29 route thành công. ESLint chỉ bỏ qua extension/cache runtime của profile AMIS, không nới rule kiểm tra source.
+
+### ISSUE-052
+
+**Severity:** P2
+**Status:** CLOSED — 2026-09-13
+**Module:** scripts/amis-sync/push_amis.py / Scheduled Task Auto Sync Reports
+**Description:** Kết nối UPSERT lên Supabase bị reset (WinError 10054), làm cả chuỗi đồng bộ dừng; lỗi HTTP trước đây chỉ in log rồi trả thành công.
+**Expected:** Thử lại lỗi kết nối tạm thời có giới hạn; chỉ báo lỗi sau khi hết retry; HTTP vĩnh viễn phải trả exit khác 0.
+**Actual:** Một request duy nhất, ConnectionError không được xử lý; HTTP lỗi bị nuốt.
+**Root Cause:** Thiếu retry ở điểm ghi idempotent và nhánh HTTP lỗi return thay vì raise. Chưa xác định nguyên nhân hạ tầng gây reset.
+**Fix:** 3 lần tối đa, chờ 2/5 giây cho ConnectionError/Timeout/HTTP tạm thời; cùng payload/synced_at và khóa UPSERT; lỗi TLS/HTTP khác fail ngay; hết retry raise RuntimeError để wrapper báo Telegram.
+**Verification:** Test mới đã fail tái hiện trước fix; 12/12 Python pass sau fix, build/typecheck/lint exit 0. Task thật 21:44:15–21:45:10 exit 0, stderr rỗng, không Telegram; phục hồi qua retry được test mock, không khẳng định lượt thật đã retry. DB/RLS chưa xác minh: ECONNREFUSED 127.0.0.1:54322; không đổi schema/RLS.

@@ -785,3 +785,10 @@ Nút **Sao chép hình ảnh** trong preview tháng gọi `fetch()` tới chính
 ### 2026-09-13 — Cảnh báo task đồng bộ
 
 Wrapper chạy nguyên sync-all-reports.bat, thu stdout/stderr vào logs/auto-sync.log. Exit khác 0/exception gọi Telegram sendMessage, thành công không gửi; BIKEFORCE_TASK_ALERT_OWNER=wrapper tắt cảnh báo AMIS lồng trong lượt này. Không thay đổi luồng dữ liệu hay RLS. Chi tiết: docs/hidden-report-sync.md.
+### 2026-09-13 — Retry UPSERT AMIS
+
+`push_amis.py` thử ghi cùng payload/synced_at vào `amis_employee_metrics` tối đa
+3 lần khi ConnectionError/Timeout hoặc HTTP 429/500/502/503/504; chờ 2 rồi 5 giây.
+Giữ khóa `(period_month, employee_name)` và tập cột theo nguồn, không kéo lại nguồn
+trong vòng retry. Lỗi TLS/chứng chỉ hoặc HTTP khác thất bại ngay; hết retry ném lỗi
+để batch trả exit khác 0 và wrapper gửi Telegram. Không thay đổi schema/policy.

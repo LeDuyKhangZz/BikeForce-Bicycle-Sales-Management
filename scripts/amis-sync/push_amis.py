@@ -21,6 +21,7 @@ Chọn kỳ khác (mặc định là tháng hiện tại):
 import json
 import os
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -79,6 +80,9 @@ REVENUE_COLUMNS = ["target_amount", "current_amount"]
 # Nguồn 3 — dòng tổng do Playwright đọc từ AMIS Kế toán.
 RECEIVABLE_COLUMNS = ["receive_amount"]
 RECEIVABLE_SUMMARY_PATH = Path(__file__).resolve().parent / "receivable-employee-summary.json"
+UPSERT_MAX_ATTEMPTS = 3
+UPSERT_RETRY_DELAYS_SECONDS = (2, 5)
+UPSERT_RETRY_HTTP_STATUSES = {429, 500, 502, 503, 504}
 
 
 def to_number(value: Any) -> float:
@@ -125,22 +129,49 @@ def upsert(rows: list[dict[str, Any]], columns: list[str]) -> None:
         for row in rows
     ]
 
-    response = requests.post(
-        f"{SUPABASE_URL}/rest/v1/amis_employee_metrics",
-        headers={
-            "apikey": SERVICE_KEY,
-            "Authorization": f"Bearer {SERVICE_KEY}",
-            "Content-Type": "application/json",
-            "Prefer": "resolution=merge-duplicates",
-        },
-        json=payload,
-        timeout=60,
-    )
+    # Chỉ thử lại UPSERT có khóa cố định, cùng payload/synced_at: request trước
+    # có thể đã commit rồi mới mất kết nối; gửi lại vẫn cập nhật cùng các dòng.
+    for attempt in range(1, UPSERT_MAX_ATTEMPTS + 1):
+        try:
+            response = requests.post(
+                f"{SUPABASE_URL}/rest/v1/amis_employee_metrics",
+                headers={
+                    "apikey": SERVICE_KEY,
+                    "Authorization": f"Bearer {SERVICE_KEY}",
+                    "Content-Type": "application/json",
+                    "Prefer": "resolution=merge-duplicates",
+                },
+                json=payload,
+                timeout=60,
+            )
+        except requests.exceptions.SSLError:
+            # Lỗi chứng chỉ cần sửa cấu hình, không tắt xác minh TLS.
+            raise
+        except (requests.ConnectionError, requests.Timeout) as error:
+            if attempt == UPSERT_MAX_ATTEMPTS:
+                raise RuntimeError(
+                    f"Supabase UPSERT that bai sau {attempt} lan: {type(error).__name__}"
+                ) from error
+            retry_reason = type(error).__name__
+        else:
+            if response.ok:
+                response.close()
+                break
+            status = response.status_code
+            error_text = response.text[:400]
+            response.close()
+            if status not in UPSERT_RETRY_HTTP_STATUSES or attempt == UPSERT_MAX_ATTEMPTS:
+                # HTTP lỗi cũng phải trả exit khác 0 để wrapper báo Telegram.
+                raise RuntimeError(f"Supabase UPSERT HTTP {status}: {error_text}")
+            retry_reason = f"HTTP {status}"
 
-    if not response.ok:
-        print(f"  LOI ghi Supabase HTTP {response.status_code}")
-        print(f"  {response.text[:400]}")
-        return
+        delay = UPSERT_RETRY_DELAYS_SECONDS[attempt - 1]
+        print(
+            f"  UPSERT lan {attempt}/{UPSERT_MAX_ATTEMPTS}: {retry_reason}; "
+            f"thu lai sau {delay}s.",
+            flush=True,
+        )
+        time.sleep(delay)
 
     data_columns = [c for c in columns if c not in KEY_COLUMNS]
     print(f"  Da ghi {len(payload)} dong, {len(data_columns)} cot du lieu.")

@@ -1227,3 +1227,10 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [ ] Xác nhận trực quan không lóe CMD trên desktop người dùng; kiểm tra nhận Telegram trong lỗi thật.
 
 **Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.
+
+### 2026-09-13 — Fix retry UPSERT Supabase (ISSUE-052)
+
+Đã thêm tối đa 3 lần thử ConnectionError/Timeout hoặc HTTP 429/500/502/503/504, chờ 2 rồi 5 giây; cùng payload và synced_at, giữ cột nguồn thất bại ngoài payload. HTTP khác hoặc hết retry trả lỗi thay vì thoát 0. Lỗi chứng chỉ không retry, TLS giữ nguyên. Hồi quy tái hiện trước fix; Python 12/12 pass sau fix, build/typecheck/lint exit 0. Task thật chạy 21:44:15–21:45:10 exit 0, stderr rỗng, không Telegram. Lượt thật không cần retry; nhánh retry được xác minh bằng mock. DB/RLS đã chạy nhưng 18 suite fail/218 test skipped do Supabase local ECONNREFUSED 127.0.0.1:54322, không đổi schema/quyền/policy. Push vẫn chờ cấp phép sau auto-review chặn trước đó.
+
+- [x] Retry và lỗi HTTP UPSERT đã fix; 12/12 hồi quy và task thật exit 0.
+- [ ] Chạy lại test:db khi Supabase local hoạt động.

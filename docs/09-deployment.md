@@ -1259,3 +1259,9 @@ browser thứ hai. Chỉ khi không còn endpoint, helper mới khởi động C
 ### 2026-09-13 — Scheduled Task đồng bộ chạy ẩn
 
 Task BikeForce - Auto Sync Reports dùng wscript.exe → sync-all-reports-hidden.vbs → PowerShell CreateNoWindow → batch cũ. Giữ lịch/tài khoản, MultipleInstances=IgnoreNew, XML dự phòng trong logs. Hướng dẫn: docs/hidden-report-sync.md.
+### 2026-09-13 — Retry ghi AMIS
+
+Task chạy ẩn hiện dùng bản `push_amis.py` có tối đa 3 lần thử UPSERT, chờ 2/5 giây
+giữa các lần. Mỗi request giữ timeout 60 giây. Task vẫn IgnoreNew/khóa wrapper,
+không chạy chồng khi retry kéo dài. Telegram chỉ gửi lỗi nếu hết lượt retry hoặc
+lỗi không retry được; khi phục hồi và toàn bộ chuỗi thành công thì không gửi tin.

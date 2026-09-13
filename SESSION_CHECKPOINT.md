@@ -2541,3 +2541,9 @@ Task thật đã đổi từ cmd.exe sang wscript.exe gọi scripts/sync-all-rep
 **Kiểm chứng thật 2026-09-13 21:39:** đã chạy task qua launcher mới. push_amis.py gặp ConnectionResetError/WinError 10054 tại upsert; wrapper giữ exit 1, lưu traceback đầy đủ, Telegram API xác nhận gửi thành công lúc 21:39:50. Đồng bộ lượt này chưa hoàn tất vì kết nối bị reset; không phải lỗi launcher. Chưa xác nhận trực quan desktop. Push commit bị auto-review chặn vì quyền chia sẻ lên remote chưa xác minh; chờ người dùng cho phép.
 
 **Next Exact Steps:** xem logs/auto-sync.log ở lượt lịch tiếp theo để biết kết nối upsert đã phục hồi chưa; xác nhận desktop không lóe CMD. Push chỉ tiếp tục sau khi người dùng cấp phép chia sẻ commit lên GitHub.
+
+### 2026-09-13 — Fix retry UPSERT Supabase (ISSUE-052)
+
+Đã thêm tối đa 3 lần thử ConnectionError/Timeout hoặc HTTP 429/500/502/503/504, chờ 2 rồi 5 giây; cùng payload và synced_at, giữ cột nguồn thất bại ngoài payload. HTTP khác hoặc hết retry trả lỗi thay vì thoát 0. Lỗi chứng chỉ không retry, TLS giữ nguyên. Hồi quy tái hiện trước fix; Python 12/12 pass sau fix, build/typecheck/lint exit 0. Task thật chạy 21:44:15–21:45:10 exit 0, stderr rỗng, không Telegram. Lượt thật không cần retry; nhánh retry được xác minh bằng mock. DB/RLS đã chạy nhưng 18 suite fail/218 test skipped do Supabase local ECONNREFUSED 127.0.0.1:54322, không đổi schema/quyền/policy. Push vẫn chờ cấp phép sau auto-review chặn trước đó.
+
+**Next Exact Steps:** theo dõi logs/auto-sync.log của lượt lịch tiếp theo; khi Supabase local sẵn sàng chạy npm.cmd run test:db. Không push khi chưa có phép chia sẻ lên remote.
