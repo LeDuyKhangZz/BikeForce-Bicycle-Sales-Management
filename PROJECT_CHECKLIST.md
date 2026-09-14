@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] 2026-09-14 ISSUE-053: SaleWork chờ tải/reload một lần, ACT harvest ngày tạo cache đúng tháng VN.
+- [x] Unit 818/818, Python công nợ 2/2, typecheck/lint/build; ACT tháng 09 và push thật exit 0.
+- [ ] ISSUE-053: SaleWork nguồn HTTP 500/403/e.reduce vẫn kẹt; cần xác minh phục hồi và task lịch exit 0.
+
 ## DEC-089 — 12/09/2026
 
 - [x] Công tác phí Admin ba người → báo cáo tháng cùng key/kỳ, giữ UUID Sales thật.

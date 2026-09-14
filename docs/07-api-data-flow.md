@@ -1,5 +1,9 @@
 # 07 — API & Data Flow
 
+### Cập nhật 2026-09-14 — ISSUE-053
+
+`reports:sync` giữ thứ tự harvest → push AMIS → SaleWork → Report70. Harvest tự chọn tháng hiện tại theo giờ VN khi không truyền --month, tạo cache tổng công nợ cùng kỳ trước push; login không scrape trừ khi yêu cầu --month. Cache khác kỳ tiếp tục bị từ chối. SaleWork chờ mọi loading mask và tải lại tối đa một lần trong bước mở bộ lọc trước chọn tài khoản/ghi; lỗi tải cuối cùng trả exit 1.
+
 ## Bổ sung 12/09/2026 — DEC-089
 
 Form công tác phí → Zod tháng → auth/Admin active → danh sách người nhận server + Zod tiền → RPC nguyên tử → revalidate công tác phí/tổng kết tháng. Ảnh tháng gọi getMonthlyTravelExpense theo `profileId ?? id`, đúng period; null/0 phân biệt, không gán kỳ khác. Không thêm CRUD REST.

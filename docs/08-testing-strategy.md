@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+### Hồi quy 2026-09-14 — ISSUE-053
+
+`lib/salework/report-readiness.test.ts` kiểm tra selector mọi mask hiển thị, reload đúng một lần khi TimeoutError, giới hạn retry và không retry lỗi quyền. Python `test_push_amis_receivable.py` kiểm tra cache cùng kỳ và từ chối sai kỳ. Unit 818/818, Python 2/2, typecheck/lint/build exit 0. ACT/push thật tháng 09 exit 0; SaleWork thật vẫn kẹt với HTTP 500/403/e.reduce, chưa chứng minh toàn chuỗi thành công. Không chạy full DB/E2E UI cho thay đổi script này.
+
 ## Kiểm chứng 12/09/2026 — DEC-089
 
 Unit 813/813, typecheck/lint pass; RLS công tác phí cũ + participant 10/10 trên local bằng JWT thật: Admin đọc/ghi, null/0/tách tháng, deny Sales/anon/inactive, atomic rollback, forced RLS/no service_role/invoker. HTTP-only E2E action thật 1/1 pass: lưu/mở lại/đối chiếu dữ liệu và xuất PNG ba người, build test 29 route thành công. Không mở Chrome test hoặc ghi UI 375px PASS.

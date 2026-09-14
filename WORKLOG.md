@@ -1,5 +1,9 @@
 # BikeForce Worklog
 
+## 2026-09-14 — ISSUE-053, sửa auto-sync
+
+SaleWork chờ mọi loading mask trước mở bộ lọc, TimeoutError tải lại một lần trước chọn tài khoản/ghi. Bỏ nuốt timeout loading luồng tháng. AMIS harvest ngày chọn tháng hiện tại VN và tạo cache công nợ đúng kỳ trước push; lịch sử --month giữ nguyên. Unit 818/818, Python công nợ 2/2, typecheck/lint/build exit 0. Thử thật ngoài sandbox: ACT lấy 9 nhân viên tháng 09, push ghi 13 dòng/12 cột exit 0; SaleWork HTTP 500/403 + e.reduce, retry một lần vẫn fail và chưa ghi. Không gửi Telegram trong kiểm tra. ISSUE-053 còn OPEN vì chưa chứng minh nguồn SaleWork/task phục hồi; không đổi DB/RLS. Không retry push main từng bị chặn ở phiên trước.
+
 ## Entry 072 — 12/09/2026, DEC-089 công tác phí ba nhân viên
 
 Thêm Khoa/Abraham/Kim Hương vào form Admin và nối khoản lưu cùng key/tháng vào báo cáo. Feature queries/services session RLS; bảng participant + RPC invoker nguyên tử bảo toàn bảng Sales cũ; không đổi AMIS/lương. Unit 813/813, typecheck/lint pass, RLS công tác phí 10/10 local, HTTP E2E 1/1 và build test 29 route pass. Linked migration/types thành công; website chưa xác nhận deployment, không Chrome test.

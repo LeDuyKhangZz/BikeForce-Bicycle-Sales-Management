@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
 import { actReportParametersFromBody } from '../../lib/amis/act-report-parameters';
 import { isJwtSessionUsable } from '../../lib/amis/jwt-session';
-import { formatVietnamShortDate, getVietnamMonthRange } from '../../lib/date';
+import { formatVietnamShortDate, getVietnamCurrentMonth, getVietnamMonthRange } from '../../lib/date';
 import { sendTelegramAlert } from './telegram-alert';
 import { scrapeReceivableEmployeeSummaries } from './receivable-report-scraper';
 import { connectToSharedAmisBrowser } from './shared-browser';
@@ -258,14 +258,15 @@ async function harvestAct(ctx: BrowserContext, page: Page, got: Harvested): Prom
     console.log('   -> Dang nhap neu duoc hoi, cho bang bao cao hien ra.');
   }
 
-  if (requestedMonth) {
-    await selectActMonth(page, requestedMonth);
+  if (requestedMonth || !loginMode) {
+    const reportMonth = requestedMonth ?? getVietnamCurrentMonth();
+    await selectActMonth(page, reportMonth);
     const receivableSummaries = await scrapeReceivableEmployeeSummaries(page);
     writeFileSync(
       RECEIVABLE_SUMMARY_PATH,
       JSON.stringify(
         {
-          month: requestedMonth,
+          month: reportMonth,
           generatedAt: new Date().toISOString(),
           rows: receivableSummaries,
         },
@@ -275,7 +276,7 @@ async function harvestAct(ctx: BrowserContext, page: Page, got: Harvested): Prom
       { encoding: 'utf8' },
     );
     console.log(
-      `   -> Da lay ${receivableSummaries.length} dong tong cong no rieng cho thang ${requestedMonth}.`,
+      `   -> Da lay ${receivableSummaries.length} dong tong cong no rieng cho thang ${reportMonth}.`,
     );
   } else {
     // Tu dong bam nut "Xem bao cao" trong popup "Chon tham so" neu no xuat hien.

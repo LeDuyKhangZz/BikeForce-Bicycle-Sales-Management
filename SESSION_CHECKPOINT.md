@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — 2026-09-14, ISSUE-053 auto-sync
+
+Đã sửa chờ loading/reload có giới hạn tại SaleWork và harvest công nợ tháng hiện tại VN trong lượt ngày. 818 unit/2 Python pass, typecheck/lint/build exit 0. ACT thật scrape 9 nhân viên tháng 2026-09, push thật 13 dòng/12 cột gồm receive_amount exit 0. SaleWork thật HTTP 500/403 và e.reduce is not a function, reload một lần vẫn kẹt, chưa ghi dữ liệu SaleWork. Không gửi Telegram kiểm tra; không đổi schema/RLS.
+
+**Next Exact Steps:** Chạy `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/sync-all-reports-hidden.ps1 -NoTelegram` sau khi SaleWork phục hồi; xem `logs/auto-sync.log` và xác minh exit 0. Nếu vẫn lỗi, kiểm tra phản hồi API SaleWork và phiên đăng nhập, không bỏ loading mask/force click/ghi số rỗng. ISSUE-053 còn OPEN. Không retry push main từng bị auto-review chặn khi chưa có phê duyệt trực tiếp.
+
 ## Mới nhất — DEC-089 công tác phí (12/09/2026)
 
 Người dùng yêu cầu thêm ba người như lương. Đã nối form Admin/Server Action RPC nguyên tử/services/report key đúng tháng; bảng participant forced RLS Admin-only, giữ UUID Sales thật, không tạo profile giả/không đổi AMIS. Local migration, unit 813/813, RLS công tác phí 10/10, typecheck/lint pass. HTTP-only E2E và linked migration/types đang chốt; không mở Chrome test.

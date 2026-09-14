@@ -1,5 +1,17 @@
 # 12 — Known Issues
 
+## ISSUE-053 — Auto-sync bị loading mask SaleWork chặn và cache công nợ sai tháng
+
+**Severity:** P1
+**Status:** OPEN — 2026-09-14, sửa script đã kiểm chứng; nguồn SaleWork còn lỗi.
+**Module:** scripts/salework-sync.ts, scripts/amis-sync/amis-harvest.ts
+**Description:** Task thoát 1 tại `.el-select` do `.el-loading-mask` chặn; công nợ kỳ 09 chỉ có cache 08.
+**Expected:** Chờ tải trước thao tác, phục hồi có giới hạn; lấy công nợ đúng kỳ.
+**Actual:** SaleWork click timeout 30s; harvest ngày không tạo cache công nợ hiện tại.
+**Root Cause:** Thiếu chờ loading khi mở bộ lọc, chỉ scrape ACT khi truyền --month. Lượt thật còn ghi nhận SaleWork HTTP 500/403 và `e.reduce is not a function`; chưa xác định nguyên nhân phía nguồn.
+**Fix:** Chờ mọi mask hiển thị biến mất tối đa 60s, tải lại và mở bộ lọc một lần nếu TimeoutError; không retry vô hạn/force click/ghi dữ liệu chưa tải. ACT tự chọn tháng hiện tại theo giờ VN và scrape trước push, giữ --month lịch sử và chế độ login.
+**Verification:** 818/818 unit, Python công nợ 2/2, typecheck/lint/build exit 0. ACT thật lấy 9 dòng tháng 2026-09; push thật exit 0, 13 dòng/12 cột gồm receive_amount. SaleWork thật đã retry nhưng vẫn fail do nguồn bị kẹt; chưa ghi dữ liệu SaleWork. Không đổi schema/RLS, không chạy full DB/E2E UI, chưa xác minh task lịch tự chạy.
+
 ## ISSUE-052 — Bảng targets cũ chưa forced RLS
 
 - Severity: MEDIUM.

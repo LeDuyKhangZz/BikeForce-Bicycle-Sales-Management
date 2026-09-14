@@ -1,5 +1,7 @@
 # Chạy Scheduled Task đồng bộ ẩn
 
+**2026-09-14 — ISSUE-053:** Script SaleWork chờ loading và reload một lần nếu kẹt trước chọn tài khoản; không force click. AMIS tự tạo cache công nợ tháng hiện tại VN trong harvest ngày. Kiểm tra thật: ACT tháng 09 + push thành công, SaleWork vẫn lỗi nguồn HTTP 500/403/e.reduce sau retry; task toàn chuỗi chưa xác nhận thành công.
+
 Task `BikeForce - Auto Sync Reports` giữ nguyên lịch mỗi phút và logic trong
 `scripts/sync-all-reports.bat` → `npm.cmd run reports:sync`.
 

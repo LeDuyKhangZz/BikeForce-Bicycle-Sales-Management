@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { SaleWorkReport } from '../services/salework';
 import { getVietnamMonthRange } from '../lib/date';
 import { retryAsync } from '../lib/process/retry-async';
+import { openSaleWorkFilters, waitForSaleWorkIdle } from '../lib/salework/report-readiness';
 import {
   findStableCompleteSaleWorkReports,
   requireCompleteSaleWorkReports,
@@ -188,32 +189,39 @@ async function main(): Promise<void> {
 
   // Trang cần vài giây để tải dữ liệu xong rồi mới bật popup (nếu có),
   // nên chờ một chút trước khi kiểm tra.
-  await page.waitForTimeout(1500);
-
-  // Đóng popup "BẠN CÓ TÀI KHOẢN HẾT HẠN LIÊN KẾT VỚI ZALO" nếu xuất hiện —
-  // popup này che ô chọn tài khoản và khiến các bước click phía dưới bị treo.
-  const expiredLinkCloseButton = page.getByRole('button', { name: 'Đóng' });
-  if (await expiredLinkCloseButton.count() > 0) {
-    await expiredLinkCloseButton.first().click();
-    await expiredLinkCloseButton.first().waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
-  }
-
-  // Đúng chuỗi thao tác đã ghi bằng Playwright Codegen trên giao diện SaleWork:
-  // mở nhóm tài khoản trước, sau đó chọn tab Tin nhắn bên trong nhóm đó.
-  const accountTabCount = await accountTab.count();
-  if (accountTabCount > 0 && (await accountTab.isVisible())) {
-    await accountTab.click();
-  }
-
-  const messageTab = page.getByText('Tin nhắn').nth(1);
-  await messageTab.waitFor({ state: 'visible', timeout: 30_000 });
-  await messageTab.click();
-
   const accountSelect = page.locator('.el-select').first();
-  await accountSelect.waitFor({ state: 'visible', timeout: 30_000 });
-  await accountSelect.click();
   const accountSearchInput = page.getByRole('textbox').first();
-  await accountSearchInput.waitFor({ state: 'visible', timeout: 30_000 });
+  await openSaleWorkFilters(page, async () => {
+    await accountTab.waitFor({ state: 'visible', timeout: 60_000 });
+    await waitForSaleWorkIdle(page);
+
+    // Đóng popup "BẠN CÓ TÀI KHOẢN HẾT HẠN LIÊN KẾT VỚI ZALO" nếu xuất hiện —
+    // popup này che ô chọn tài khoản và khiến các bước click phía dưới bị treo.
+    const expiredLinkCloseButton = page.getByRole('button', { name: 'Đóng' });
+    if (await expiredLinkCloseButton.count() > 0) {
+      await expiredLinkCloseButton.first().click();
+      await expiredLinkCloseButton.first().waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+    }
+
+    // Đúng chuỗi thao tác đã ghi bằng Playwright Codegen trên giao diện SaleWork:
+    // mở nhóm tài khoản trước, sau đó chọn tab Tin nhắn bên trong nhóm đó.
+    const accountTabCount = await accountTab.count();
+    if (accountTabCount > 0 && (await accountTab.isVisible())) {
+      await accountTab.click();
+      await waitForSaleWorkIdle(page);
+    }
+
+    const messageTab = page.getByText('Tin nhắn').nth(1);
+    await messageTab.waitFor({ state: 'visible', timeout: 30_000 });
+    await messageTab.click();
+    await waitForSaleWorkIdle(page);
+
+    await accountSelect.waitFor({ state: 'visible', timeout: 30_000 });
+    await waitForSaleWorkIdle(page);
+    await accountSelect.click({ timeout: 60_000 });
+    await accountSearchInput.waitFor({ state: 'visible', timeout: 30_000 });
+
+  }, () => console.log('SaleWork loading timeout; reload and retry once.'));
 
   for (const accountName of targetAccountNames) {
     // SaleWork dùng danh sách dài/ảo hóa. Gõ từng tên vào ô tìm kiếm trước khi
@@ -273,11 +281,7 @@ async function main(): Promise<void> {
     await aggregateButton.click();
     console.log(`Đang đọc riêng dữ liệu SaleWork tháng ${requestedMonth}…`);
     await page.waitForTimeout(1000);
-    await page
-      .locator('.el-loading-mask:visible')
-      .last()
-      .waitFor({ state: 'hidden', timeout: 60_000 })
-      .catch(() => {});
+    await waitForSaleWorkIdle(page);
     // Bảng lịch sử tiếp tục nạp các hàng ảo vài giây sau khi loading mask biến mất.
     await page.waitForTimeout(5_000);
     const monthlyAttempts: SaleWorkReport[][] = [];
