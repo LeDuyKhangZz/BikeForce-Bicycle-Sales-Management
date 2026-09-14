@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## 2026-09-14 — ISSUE-054 AMIS Chọn tất cả
+
+**Kiểm chứng cuối:** Wrapper -NoTelegram 13:05:55–13:06:28 exit 0, stderr rỗng. Harvest AMIS lượt mở lại tiếp theo exit 0, đúng tháng 09, lấy 9 dòng tổng công nợ. Unit 826/826, typecheck/lint/build exit 0; ISSUE-054 CLOSED. Lịch 10 phút và đóng tab được giữ nguyên; không cần deploy website. Chỉ commit source/docs local, không push remote từng bị chặn.
+
+Lỗi task13:01 “Bạn chưa chọn Nhân viên”: DOM xác minh checkbox cảhai bộlọc được restorechecked, nhânviên0 banđầu rồi187 khi dữliệu tải, khách5585. Clickvôđiềukiện đảo thànhfalse. Sửa ensureSelected chỉclick khi unchecked, wait checkboxtrue/count>0 cảhai trước Xem báo cáo tối đa60s. Hồi quy failthật với code cũ, pass3/3, fullunit826/826, typecheck/lint/build exit0. Wrapper-NoTelegram đang kiểm tra; không đổi schema/RLS/lịch10phút/cleanup tab, không cầndeploywebsite.
+
 ## 2026-09-14 — DEC-090 đóng tab AMIS, lịch 10 phút
 
 **Kiểm chứng cuối:** Unit823/823, typecheck/lint/build exit0. Wrapper -NoTelegram kết thúc12:00:22 exit0/stderr rỗng; CDP endpoint đã đóng. Harvest --crm-only lượt kế tiếp tự mởChrome cùngprofile, token/cookieOK, exit0 rồi endpoint đóng lần nữa. Task đọc lại vẫnPT10M. Không gửiTelegram kiểm tra, không đổi schema/RLS; không deploywebsite. Script và task đã áp dụng trênmáy; source/docs commitlocal.

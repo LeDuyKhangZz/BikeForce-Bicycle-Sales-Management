@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] ISSUE-054: không đảo checkbox Chọn tất cả AMIS đang bật; chờ số lượng cảhai bộlọc >0 sau tải.
+- [x] Hồi quy fail trướcfix/pass3/3 saufix; fullunit826/826, typecheck/lint/build exit0.
+- [x] Wrapper sau sửa exit 0 lúc 13:06:28, stderr rỗng; harvest AMIS lượt mở lại tiếp theo exit 0, đúng tháng 09 và 9 dòng tổng công nợ; ISSUE-054 CLOSED.
+
 - [x] DEC-090: script đóng tab AMIS sau thao tác; installer mặc định10 phút; task Windows đã xác minh PT10M, backup XML và giữ launcher ẩn.
 - [x] Unit 823/823, typecheck sạch.
 - [x] Wrapper -NoTelegram exit0 lúc12:00:22, stderr rỗng; Chrome endpoint đóng. CRM lượt kế tiếp tự mở/cótoken/đóng thành công; lint/build exit0.

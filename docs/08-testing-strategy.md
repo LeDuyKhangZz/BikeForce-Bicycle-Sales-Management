@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+**ISSUE-054 kiểm chứng cuối:** Wrapper -NoTelegram 13:05:55–13:06:28 exit 0, stderr rỗng; harvest AMIS lượt mở lại kế tiếp exit 0, đúng tháng 09, 9 dòng công nợ. 826 unit, typecheck/lint/build đã chạy thành công. Chưa quan sát lượt lịch sau sửa.
+
+**ISSUE-054 (2026-09-14):** lib/amis/ensure-selected.test.ts táihiện clicklại checkboxrestore làm bỏchọn, failvới logiccũ/pass3/3 saubản sửa; fullunit826/826,typecheck/lint/build exit0. DOM thật NV0→187 sau tải, khách5585, checkboxđãchecked. Wrapper-NoTelegram đang kiểmtra, chưaghiPASS cho lượtthật. Không đổiDB/RLS.
+
 **DEC-090 (2026-09-14):** 823 unit/typecheck/lint/build pass thật. Hidden installer thực thi thành công và đọc lại task triggerPT10M. Wrapper thật -NoTelegram exit0/stderr rỗng lúc12:00:22, endpoint Chrome đã đóng; lượt harvest --crm-only tiếp theo tựmở cùngprofile, token/cookieOK, exit0 rồi endpoint đóng lần nữa. Không fullDB/RLS do không đổi schema/dữliệu quyền.
 
 **Kết quả wrapper ISSUE-053:** Lượt -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng, AMIS/SaleWork hoàn tất. Report70 HTTP200/0 nhân viên, không khẳng định có dữ liệu cuộc gọi. Chưa quan sát lượt Scheduled Task kế tiếp.

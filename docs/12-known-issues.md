@@ -1,5 +1,19 @@
 # 12 — Known Issues
 
+## ISSUE-054 — AMIS bỏ chọn nhân viên khi checkbox đã bật sẵn
+
+**Severity:** P1
+**Status:** CLOSED — 2026-09-14.
+**Module:** scripts/amis-sync/amis-harvest.ts / selectActMonth
+
+**Kiểm chứng cuối:** Wrapper -NoTelegram chạy 13:05:55–13:06:28, exit 0, stderr rỗng. Harvest AMIS mở lại ở lượt kế tiếp cũng exit 0, đúng tháng 2026-09, lấy 9 dòng tổng công nợ; trạng thái checkbox được khôi phục không bị đảo. Unit 826/826, typecheck/lint/build exit 0. Không đổi schema/RLS; lịch 10 phút và đóng tab vẫn giữ nguyên. Lượt lịch sau sửa chưa được quan sát.
+**Description:** Lượt lịch13:01:37 trả “Bạn chưa chọn Nhân viên” dù tokenACT đầy đủ.
+**Expected:** Chọn toàn bộ nhân viên/khách hàng đúng một lần, chờ danh sách tải trước Xem báo cáo.
+**Actual:** Script click vô điều kiện hai nhãn Chọn tất cả, đảo checkbox được MISA khôi phục thành bỏ chọn.
+**Root Cause:** Giả định popup luôn chưa chọn. DOM thật input.checked=true ở cả hai bộ lọc; nhân viên ban đầu0 rồi sau tải187, khách hàng5585. Không kiểm tra trạng thái hoặc count sau tải.
+**Fix:** ensureSelected chỉ click checkbox chưa bật; chờ cảhai checkbox bật và counter .title-check-all b >0 tối đa60s trước submit. Giữ bộ lọc tháng, không ghi dữ liệu rỗng hoặc thay token.
+**Verification:** Hồi quy đã fail với click vô điều kiện rồi pass3/3 sau sửa; full unit826/826, typecheck/lint/build exit0. Wrapper -NoTelegram đang chạy thật. Không đổi schema/RLS, lịch10phút/đóngtab không đổi.
+
 ## ISSUE-053 — Auto-sync bị loading mask SaleWork chặn và cache công nợ sai tháng
 
 **Severity:** P1

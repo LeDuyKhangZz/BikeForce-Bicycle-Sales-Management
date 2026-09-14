@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — ISSUE-054, 2026-09-14
+
+Task13:01 báo chưa chọn Nhânviên. DOM thật Chọn tất cả đãchecked cảhai; counterNV0 banđầu rồi187 sau3s, khách5585. Scriptclickvôđiềukiện gâybỏchọn. Sửa ensureSelected chỉclick khi unchecked; chờ cảhai checkboxtrue/counter>0 trướcsubmit60s. Unit826/826,typecheck/lint/build exit0; hồi quyfailtrướcsửa/pass3/3. Wrapper-NoTelegram đang kiểm tra. Lịch10phút/đóngtab giữnguyên, khôngđổiDB/RLS.
+
+**Kiểm chứng cuối:** Wrapper -NoTelegram 13:05:55–13:06:28 exit 0, stderr rỗng. Harvest AMIS lượt mở lại tiếp theo exit 0, đúng tháng 2026-09, 9 dòng tổng công nợ. ISSUE-054 CLOSED; unit 826/826, typecheck/lint/build exit 0.
+
+**Next Exact Steps:** Theo dõi lượt Scheduled Task kế tiếp trong logs/auto-sync.log. Bản sửa đã áp dụng trên máy, không cần deploy website. Giữ lịch 10 phút và đóng tab; không click vô điều kiện checkbox đã chọn. Source/docs commit local; không push remote từng bị chặn khi chưa có phê duyệt trực tiếp.
+
 ## Mới nhất — DEC-090, 2026-09-14
 
 Người dùng yêu cầu đóng tab AMIS sau thao tác, lượt tiếp theo mở lại, đổi sync10 phút. Đã sửa cleanup page.close trước ngắtCDP, always release khóa. Task thực tế PT10M, hidden launcher/IgnoreNew giữ nguyên, XML backup 115918 trong logs. Unit823/typecheck pass; wrapper thật và lifecycle đang kiểm tra; không đổi DB/RLS/website.

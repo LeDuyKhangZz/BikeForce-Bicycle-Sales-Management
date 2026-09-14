@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
 import { actReportParametersFromBody } from '../../lib/amis/act-report-parameters';
 import { isJwtSessionUsable } from '../../lib/amis/jwt-session';
+import { ensureSelected } from '../../lib/amis/ensure-selected';
 import { formatVietnamShortDate, getVietnamCurrentMonth, getVietnamMonthRange } from '../../lib/date';
 import { sendTelegramAlert } from './telegram-alert';
 import { scrapeReceivableEmployeeSummaries } from './receivable-report-scraper';
@@ -177,16 +178,29 @@ async function selectActMonth(page: Page, month: string): Promise<void> {
     );
   }
 
-  // Báo cáo lồng hai bộ lọc. MISA mở popup với cả hai danh sách chưa chọn,
-  // nên phải chọn toàn bộ nhân viên và khách hàng trước khi xem báo cáo.
-  const selectAllLabels = page.getByText('Chọn tất cả', { exact: true });
+  // MISA có thể khôi phục checkbox đã chọn từ lần trước. Không click lại để
+  // tránh bỏ chọn; số lượng danh sách còn được cập nhật sau khi popup mở.
+  const selectAllLabels = page.locator('label.con-ms-checkbox:visible').filter({ hasText: 'Chọn tất cả' });
   await selectAllLabels.first().waitFor({ state: 'visible', timeout: 30_000 });
   const selectAllCount = await selectAllLabels.count();
-  if (selectAllCount < 2) {
+  if (selectAllCount !== 2) {
     throw new Error('MISA khong hien du hai bo loc Nhan vien va Khach hang.');
   }
-  await selectAllLabels.first().click();
-  await selectAllLabels.last().click();
+  for (let index = 0; index < selectAllCount; index += 1) {
+    const label = selectAllLabels.nth(index);
+    await ensureSelected({
+      isChecked: () => label.locator('input[type="checkbox"]').isChecked(),
+      select: () => label.click(),
+    });
+  }
+  await page.waitForFunction(() => {
+    const labels = Array.from(document.querySelectorAll('label.con-ms-checkbox'))
+      .filter(label => label.textContent?.trim() === 'Chọn tất cả' && label.getClientRects().length > 0);
+    return labels.length === 2 && labels.every(label =>
+      label.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked === true &&
+      Number(label.parentElement?.querySelector('.title-check-all b')?.textContent?.trim()) > 0,
+    );
+  }, undefined, { timeout: 60_000 });
 
   const viewReportButton = page.getByRole('button', {
     name: 'Xem báo cáo',
