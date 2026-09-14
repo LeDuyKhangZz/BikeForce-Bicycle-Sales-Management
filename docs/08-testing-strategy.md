@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+**DEC-090 (2026-09-14):** 823 unit/typecheck/lint/build pass thật. Hidden installer thực thi thành công và đọc lại task triggerPT10M. Wrapper thật -NoTelegram exit0/stderr rỗng lúc12:00:22, endpoint Chrome đã đóng; lượt harvest --crm-only tiếp theo tựmở cùngprofile, token/cookieOK, exit0 rồi endpoint đóng lần nữa. Không fullDB/RLS do không đổi schema/dữliệu quyền.
+
 **Kết quả wrapper ISSUE-053:** Lượt -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng, AMIS/SaleWork hoàn tất. Report70 HTTP200/0 nhân viên, không khẳng định có dữ liệu cuộc gọi. Chưa quan sát lượt Scheduled Task kế tiếp.
 
 **2026-09-14 cập nhật ISSUE-053:** 823 unit pass gồm parser STOMP/SockJS subscription session và hồi quy bảng tải dần/thay số liệu chỉ nhận hai lượt đầy đủ ổn định. Typecheck/lint/build exit 0. Lượt SaleWork thật trước sửa đọc thiếu 6 tài khoản; sau sửa chờ Tổng hợp/tải hoàn tất và đọc lại ổn định, exit 0, ghi đủ 8 tài khoản. Wrapper toàn chuỗi đang kiểm tra -NoTelegram; chưa ghi PASS cho lượt lịch. Không chạy full DB/RLS, không đổi schema/quyền.

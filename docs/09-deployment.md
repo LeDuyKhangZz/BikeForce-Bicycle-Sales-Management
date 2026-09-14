@@ -1,5 +1,7 @@
 # 09 — Deployment (Supabase + Vercel)
 
+**DEC-090 (2026-09-14):** Auto-sync Windows chạy mỗi 10 phút. Cập nhật task hiện có qua `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-hidden-report-sync.ps1 -IntervalMinutes 10`; backup XML trong logs, giữ launcher ẩn và IgnoreNew. Đã xác minh trigger thực tế PT10M. Tab AMIS đóng sau thao tác, lượt tiếp theo mở bằng cùng profile; không cần deploy Vercel cho thay đổi script/task này.
+
 ## Bổ sung 12/09/2026 — DEC-089
 
 Migration công tác phí participant đã áp dụng local/linked thành công, regenerate linked types bằng UTF-8; RLS local 10/10. Không ghi dữ liệu công tác phí production. Website cần deployment, chưa xác nhận UI production; không retry push main đã bị auto-review chặn khi chưa có quyền trực tiếp.

@@ -1,5 +1,7 @@
 # 04 — Kiến trúc hệ thống (System Architecture)
 
+**DEC-090 (2026-09-14):** AMIS dùng cùng profile/context và đúng một tab mỗi lượt; disconnect đóng tab rồi ngắt CDP, luôn giải phóng khóa PID. Nếu Chrome đã thoát khi đóng tab cuối, lượt kế tiếp khởi động bằng cùng profile. Scheduled Task Windows lặp 10 phút, không chạy chồng.
+
 ## Bổ sung 12/09/2026 — DEC-089
 
 Trang công tác phí → feature queries riêng → services session/RLS; dùng helper participant chung báo cáo tháng như lương. Giữ UUID Khoa khi có profile thật, không query/data mapping trong component.

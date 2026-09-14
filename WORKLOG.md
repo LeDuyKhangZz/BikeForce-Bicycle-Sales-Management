@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## 2026-09-14 — DEC-090 đóng tab AMIS, lịch 10 phút
+
+**Kiểm chứng cuối:** Unit823/823, typecheck/lint/build exit0. Wrapper -NoTelegram kết thúc12:00:22 exit0/stderr rỗng; CDP endpoint đã đóng. Harvest --crm-only lượt kế tiếp tự mởChrome cùngprofile, token/cookieOK, exit0 rồi endpoint đóng lần nữa. Task đọc lại vẫnPT10M. Không gửiTelegram kiểm tra, không đổi schema/RLS; không deploywebsite. Script và task đã áp dụng trênmáy; source/docs commitlocal.
+
+Người dùng yêu cầu thao tác xong đóng tab, lượt sau mở lại, sync 10 phút. Helper disconnect đóng page trước ngắt CDP và luôn release khóa. Installer mặc định 10 phút; hidden installer backup và đổi riêng interval/action/IgnoreNew giữ cấu hình cũ. Đã áp dụng task thực tế, đọc lại trigger PT10M, launcher wscript ẩn giữ nguyên; backup logs/auto-sync-task-20260914-115918.xml. Unit 823/823 và typecheck pass; lint/build kết quả cuối đang thu thập, wrapper thật và mở lại đang kiểm tra. Không đổi nguồn/DB/RLS, không deploy website.
+
 **Kết quả cuối ISSUE-053:** Wrapper -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng; AMIS và SaleWork 8 tài khoản hoàn tất. Report70 HTTP 200/0 nhân viên, 0 dòng cập nhật. ISSUE-053 CLOSED; lượt lịch tự chạy tiếp theo chưa quan sát. Unit 823/823, typecheck/lint/build exit 0; không cần thao tác người dùng khác. Không push remote từng bị chặn.
 
 ## 2026-09-14 — ISSUE-053, xác minh SaleWork tải lại được

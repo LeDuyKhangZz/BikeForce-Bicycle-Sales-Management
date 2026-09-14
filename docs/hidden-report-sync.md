@@ -1,12 +1,14 @@
 # Chạy Scheduled Task đồng bộ ẩn
 
+**DEC-090 kiểm chứng thật:** TaskPT10M đã áp dụng. Wrapper -NoTelegram kết thúc12:00:22 exit0/stderr rỗng, Chrome AMIS đóng; harvestCRM lượt tiếp theo tựmở cùngprofile và đóng lại sau exit0. Không cần deploywebsite.
+
 **Kiểm chứng cuối 2026-09-14:** Wrapper -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng; AMIS và SaleWork hoàn tất. Lượt Scheduled Task tự chạy kế tiếp chưa quan sát.
 
 **Cập nhật ISSUE-053:** SaleWork đã chạy thật exit 0, ghi đủ 8 tài khoản sau khi chờ Tổng hợp tải hoàn tất (tối đa 180s) và hai lượt bảng đầy đủ/ổn định. Giữ thao tác cũ; script chờ session WebSocket trước mở thống kê. Kiểm tra wrapper dùng -NoTelegram; lượt lịch cần theo dõi riêng.
 
 **2026-09-14 — ISSUE-053:** Script SaleWork chờ loading và reload một lần nếu kẹt trước chọn tài khoản; không force click. AMIS tự tạo cache công nợ tháng hiện tại VN trong harvest ngày. Kiểm tra thật: ACT tháng 09 + push thành công, SaleWork vẫn lỗi nguồn HTTP 500/403/e.reduce sau retry; task toàn chuỗi chưa xác nhận thành công.
 
-Task `BikeForce - Auto Sync Reports` giữ nguyên lịch mỗi phút và logic trong
+Task `BikeForce - Auto Sync Reports` chạy mỗi 10 phút (DEC-090) với logic trong
 `scripts/sync-all-reports.bat` → `npm.cmd run reports:sync`.
 
 ## Action mới
@@ -29,7 +31,7 @@ Mở PowerShell có quyền quản lý task, chuyển vào thư mục dự án r
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-hidden-report-sync.ps1
 ```
 
-Installer chỉ thay action và `MultipleInstances`, giữ các thiết lập còn lại.
+Installer thay action, `MultipleInstances` và interval lặp (mặc định 10 phút), giữ các thiết lập còn lại.
 XML dự phòng được lưu trong `logs/auto-sync-task-<timestamp>.xml` trước khi sửa.
 Không cần thay task bằng chế độ chạy dưới tài khoản khác: profile Chrome AMIS hiện tại
 vẫn cần được dùng bởi tài khoản Windows đã đăng nhập AMIS.
@@ -51,8 +53,8 @@ log cũ của batch vẫn giữ nguyên. Secret đã biết và Bearer/JWT đư�
 log hoặc gửi Telegram. Tin Telegram giới hạn phần log ở 3.200 ký tự; log file giữ đầy đủ.
 Telegram thất bại được ghi vào log và không thay đổi exit code của đồng bộ.
 
-Chỉ cửa sổ console của chuỗi launcher/CMD được ẩn. Chrome dùng chung do script AMIS
-mở khi chưa chạy vẫn là trình duyệt tương tác theo logic hiện có.
+Chỉ cửa sổ console của chuỗi launcher/CMD được ẩn. Chrome AMIS mở tab tương tác cho mỗi lượt;
+tab được đóng sau thao tác, lượt kế tiếp tái sử dụng cùng hồ sơ đăng nhập.
 
 ## Kiểm chứng
 

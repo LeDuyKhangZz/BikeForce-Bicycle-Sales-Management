@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — DEC-090, 2026-09-14
+
+Người dùng yêu cầu đóng tab AMIS sau thao tác, lượt tiếp theo mở lại, đổi sync10 phút. Đã sửa cleanup page.close trước ngắtCDP, always release khóa. Task thực tế PT10M, hidden launcher/IgnoreNew giữ nguyên, XML backup 115918 trong logs. Unit823/typecheck pass; wrapper thật và lifecycle đang kiểm tra; không đổi DB/RLS/website.
+
+**Kiểm chứng cuối:** Unit823/823, typecheck/lint/build exit0; wrapper -NoTelegram kết thúc12:00:22 exit0/stderr rỗng, endpoint Chrome đóng. Harvest --crm-only lượt kế tiếp tựmở cùngprofile, token/cookieOK, exit0 và đóngChrome lần nữa. Task thực tếPT10M.
+
+**Next Exact Steps:** Theo dõi lượt Scheduled Task kế tiếp trong logs/auto-sync.log; lịch10phút và đóngtab đã áp dụng. Source/docs commitlocal, không cần deploywebsite; không retry push remote từng bị chặn. Giữ cùngprofile AMIS, không xóa cookie khi xửlý login.
+
 ## Cập nhật mới nhất — 2026-09-14, SaleWork đã sync thành công
 
 Theo xác nhận người dùng, luồng cũ tải lại được. Chạy thật tái hiện đọc bảng ngay sau Tổng hợp thiếu 6 tài khoản. Đã chờ Tổng hợp nhận tác vụ và tải/WebSocket xong tối đa 180s; lấy hai lượt đủ/ổn định, đọc lại từ trang đầu. Thêm chờ session subscription WebSocket trước mở tab. SaleWork thật exit 0, ghi đủ 8 tài khoản; unit 823/823, typecheck/lint/build exit 0. Không đổi dữ liệu/nghiệp vụ/DB/RLS; recording chỉ tmp text.

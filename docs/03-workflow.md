@@ -1,4 +1,6 @@
 # 03 — Workflow nghiệp vụ end-to-end
+
+**Auto-sync DEC-090 (2026-09-14):** Mỗi 10 phút → mở tab AMIS bằng profile hiện có → thu thập CRM/Kế toán tuần tự → đóng tab → push dữ liệu → SaleWork/Report70 → kết thúc. Lượt sau mở lại tab; không đổi workflow báo cáo Sales/Admin.
 > Status: DRAFT | Phase: 0 | Last updated: 2026-08-07
 > Nguồn sự thật cấp trên: BIKEFORCE_MASTER_SPEC.md → docs/11-decisions.md → tài liệu này
 

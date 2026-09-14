@@ -38,7 +38,7 @@ async function browserIsReady(): Promise<boolean> {
   } catch { return false; }
 }
 
-/** Mở Chrome thường một lần; các script sau chỉ gắn vào cùng browser/context/tab. */
+/** Tái sử dụng profile đăng nhập; mỗi lượt mở một tab và đóng tab khi hoàn tất. */
 export async function connectToSharedAmisBrowser() {
   const releaseLock = acquireLock();
   let connectedBrowser: Browser | undefined;
@@ -79,9 +79,13 @@ export async function connectToSharedAmisBrowser() {
       page,
       async disconnect() {
         try {
-          // Browser được connectOverCDP: close chỉ ngắt transport, không tắt Chrome.
-          await browser.close();
-        } finally { releaseLock(); }
+          await page.close();
+        } finally {
+          try {
+            // Ngắt transport sau khi đóng tab, kể cả khi đóng tab gặp lỗi.
+            await browser.close();
+          } finally { releaseLock(); }
+        }
       },
     };
   } catch (error) {

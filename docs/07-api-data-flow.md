@@ -1,5 +1,7 @@
 # 07 — API & Data Flow
 
+**DEC-090 (2026-09-14):** disconnect AMIS đóng tab trong finally trước ngắt transport CDP; khóa PID luôn giải phóng. Lượt kế tiếp dùng lại profile, mở tab mới hoặc Chrome nếu endpoint chưa chạy. Trigger Windows PT10M; thứ tự nguồn sync giữ nguyên.
+
 **ISSUE-053 cập nhật 2026-09-14:** SaleWork chờ đăng ký kênh `/session/` WebSocket trước mở thống kê. Nút Tổng hợp gửi `/api/statistic/overview` với statisticType conversation; HTTP trả số tác vụ, kết quả tới sau qua WebSocket. Chờ tiến độ tải biến mất tối đa 180s rồi lấy hai lượt bảng đủ tài khoản, ổn định mới ghi. Lượt đọc lại bắt đầu trang 1 để không mất các trang trước. Không sửa response phía nguồn/force click/ghi dữ liệu thiếu.
 
 ### Cập nhật 2026-09-14 — ISSUE-053

@@ -2672,7 +2672,18 @@ thiết; xoá module/bảng lương — bị loại vì người dùng chỉ yê
 schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổng kết tháng không đổi.
 **Status:** APPROVED
 
+## DEC-090 — Đóng tab AMIS sau thao tác, sync mỗi 10 phút
+
+**Date:** 2026-09-14
+**Decision:** Theo yêu cầu trực tiếp người dùng, helper AMIS đóng tab đang thao tác trong disconnect, sau đó ngắt CDP và giải phóng khóa kể cả khi cleanup lỗi. Lượt kế tiếp mở tab/Chrome bằng cùng profile đăng nhập. Scheduled Task Auto Sync Reports lặp PT10M; installer mặc định 10 phút, giữ launcher ẩn và IgnoreNew, backup XML trước cập nhật.
+**Reason:** Không để trang công nợ nằm mở sau sync; giảm tần suất chạy theo yêu cầu người vận hành.
+**Alternatives:** Giữ tab/cửa sổ mở hoặc chỉ thu nhỏ — không đáp ứng yêu cầu; dùng profile mới mỗi lượt — làm mất tái sử dụng phiên.
+**Impact:** Điều chỉnh vòng đời tab của DEC-083, không đổi nguồn/báo cáo/RLS/nghiệp vụ. Không cần deploy website; thay script và Scheduled Task trên Windows.
+**Status:** APPROVED — người dùng yêu cầu 2026-09-14.
+
 ## DEC-083 — Mọi script AMIS dùng một trình duyệt, profile và tab chung
+
+**Cập nhật 2026-09-14:** DEC-090 thay phần giữ tab mở sau lượt thao tác: nay đóng tab và ngắt CDP, lượt kế tiếp dùng lại cùng profile; quy tắc một profile/context/tab và khóa PID giữ nguyên.
 
 **Date:** 2026-09-12
 **Decision:** `amis-harvest.ts` và `amis-recon.ts` kết nối CDP vào một Google Chrome thường tại `127.0.0.1:9223`, dùng `.playwright-amis-profile`, context mặc định và một tab. Helper chỉ khởi động Chrome hệ thống khi chưa có endpoint, không dùng `--enable-automation` hoặc Chromium Playwright. CRM và Kế toán chạy tuần tự; khóa PID ngăn script chạy đồng thời. Khi xong chỉ ngắt CDP, Chrome giữ mở cho mọi lượt sau.

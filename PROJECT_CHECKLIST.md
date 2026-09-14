@@ -1,5 +1,9 @@
 # BikeForce Project Checklist
 
+- [x] DEC-090: script đóng tab AMIS sau thao tác; installer mặc định10 phút; task Windows đã xác minh PT10M, backup XML và giữ launcher ẩn.
+- [x] Unit 823/823, typecheck sạch.
+- [x] Wrapper -NoTelegram exit0 lúc12:00:22, stderr rỗng; Chrome endpoint đóng. CRM lượt kế tiếp tự mở/cótoken/đóng thành công; lint/build exit0.
+
 - [x] 2026-09-14 ISSUE-053 bổ sung: chờ Tổng hợp tải hoàn tất + hai lượt bảng ổn định, đọc lại từ trang đầu; session WebSocket sẵn sàng.
 - [x] SaleWork thật exit 0, đủ 8 tài khoản lưu Supabase; unit 823/823, typecheck/lint/build exit 0.
 - [x] Wrapper toàn chuỗi -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng; ISSUE-053 CLOSED.
