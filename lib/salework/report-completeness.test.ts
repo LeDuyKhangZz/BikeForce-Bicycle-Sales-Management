@@ -38,6 +38,17 @@ describe('requireCompleteSaleWorkReports', () => {
 describe('findStableCompleteSaleWorkReports', () => {
   const targets = ['A', 'B'];
 
+  it('chờ lượt đầy đủ ổn định sau khi bảng ngày tải dần và thay số liệu', () => {
+    const loaded = [{ accountName: 'A', value: 10 }, { accountName: 'B', value: 20 }];
+    const attempts = [
+      [{ accountName: 'A', value: 1 }],
+      [{ accountName: 'A', value: 1 }, { accountName: 'B', value: 2 }],
+      loaded,
+    ];
+    expect(findStableCompleteSaleWorkReports(targets, attempts)).toBeNull();
+    expect(findStableCompleteSaleWorkReports(targets, [...attempts, loaded])).toEqual(loaded);
+  });
+
   it('không ghép dữ liệu của hai lượt đọc thiếu khác nhau', () => {
     expect(
       findStableCompleteSaleWorkReports(targets, [

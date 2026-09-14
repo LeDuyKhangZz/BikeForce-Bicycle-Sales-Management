@@ -1,5 +1,9 @@
 # Chạy Scheduled Task đồng bộ ẩn
 
+**Kiểm chứng cuối 2026-09-14:** Wrapper -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng; AMIS và SaleWork hoàn tất. Lượt Scheduled Task tự chạy kế tiếp chưa quan sát.
+
+**Cập nhật ISSUE-053:** SaleWork đã chạy thật exit 0, ghi đủ 8 tài khoản sau khi chờ Tổng hợp tải hoàn tất (tối đa 180s) và hai lượt bảng đầy đủ/ổn định. Giữ thao tác cũ; script chờ session WebSocket trước mở thống kê. Kiểm tra wrapper dùng -NoTelegram; lượt lịch cần theo dõi riêng.
+
 **2026-09-14 — ISSUE-053:** Script SaleWork chờ loading và reload một lần nếu kẹt trước chọn tài khoản; không force click. AMIS tự tạo cache công nợ tháng hiện tại VN trong harvest ngày. Kiểm tra thật: ACT tháng 09 + push thành công, SaleWork vẫn lỗi nguồn HTTP 500/403/e.reduce sau retry; task toàn chuỗi chưa xác nhận thành công.
 
 Task `BikeForce - Auto Sync Reports` giữ nguyên lịch mỗi phút và logic trong

@@ -1,5 +1,7 @@
 # 07 — API & Data Flow
 
+**ISSUE-053 cập nhật 2026-09-14:** SaleWork chờ đăng ký kênh `/session/` WebSocket trước mở thống kê. Nút Tổng hợp gửi `/api/statistic/overview` với statisticType conversation; HTTP trả số tác vụ, kết quả tới sau qua WebSocket. Chờ tiến độ tải biến mất tối đa 180s rồi lấy hai lượt bảng đủ tài khoản, ổn định mới ghi. Lượt đọc lại bắt đầu trang 1 để không mất các trang trước. Không sửa response phía nguồn/force click/ghi dữ liệu thiếu.
+
 ### Cập nhật 2026-09-14 — ISSUE-053
 
 `reports:sync` giữ thứ tự harvest → push AMIS → SaleWork → Report70. Harvest tự chọn tháng hiện tại theo giờ VN khi không truyền --month, tạo cache tổng công nợ cùng kỳ trước push; login không scrape trừ khi yêu cầu --month. Cache khác kỳ tiếp tục bị từ chối. SaleWork chờ mọi loading mask và tải lại tối đa một lần trong bước mở bộ lọc trước chọn tài khoản/ghi; lỗi tải cuối cùng trả exit 1.

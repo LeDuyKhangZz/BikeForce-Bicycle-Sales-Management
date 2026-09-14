@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+**Kết quả cuối ISSUE-053:** Wrapper -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng; AMIS và SaleWork 8 tài khoản hoàn tất. Report70 HTTP 200/0 nhân viên, 0 dòng cập nhật. ISSUE-053 CLOSED; lượt lịch tự chạy tiếp theo chưa quan sát. Unit 823/823, typecheck/lint/build exit 0; không cần thao tác người dùng khác. Không push remote từng bị chặn.
+
+## 2026-09-14 — ISSUE-053, xác minh SaleWork tải lại được
+
+Người dùng xác nhận luồng cũ tải được. Chạy thật tái hiện bước Tổng hợp đọc quá sớm, thiếu sáu tài khoản và không ghi. Sửa chờ HTTP nhận tác vụ + tiến độ tải/WebSocket hoàn tất tối đa 180s, đọc đủ hai lượt liên tiếp ổn định, quay về trang đầu trước đọc lại. Thêm chờ đăng ký session WebSocket trước mở thống kê. Luồng thao tác giữ nguyên; không tạo số 0 cho dòng thiếu. SaleWork thật exit 0, lưu đủ 8 tài khoản. Unit 823/823, typecheck/lint/build exit 0; không đổi DB/RLS. Đang kiểm tra wrapper toàn chuỗi với -NoTelegram; kết quả cuối ghi sau. Giữ recording người dùng ở tmp dạng text, không commit dữ liệu runtime.
+
 ## 2026-09-14 — ISSUE-053, sửa auto-sync
 
 SaleWork chờ mọi loading mask trước mở bộ lọc, TimeoutError tải lại một lần trước chọn tài khoản/ghi. Bỏ nuốt timeout loading luồng tháng. AMIS harvest ngày chọn tháng hiện tại VN và tạo cache công nợ đúng kỳ trước push; lịch sử --month giữ nguyên. Unit 818/818, Python công nợ 2/2, typecheck/lint/build exit 0. Thử thật ngoài sandbox: ACT lấy 9 nhân viên tháng 09, push ghi 13 dòng/12 cột exit 0; SaleWork HTTP 500/403 + e.reduce, retry một lần vẫn fail và chưa ghi. Không gửi Telegram trong kiểm tra. ISSUE-053 còn OPEN vì chưa chứng minh nguồn SaleWork/task phục hồi; không đổi DB/RLS. Không retry push main từng bị chặn ở phiên trước.

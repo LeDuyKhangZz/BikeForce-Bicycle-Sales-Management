@@ -9,9 +9,9 @@ import type { SaleWorkReport } from '../services/salework';
 import { getVietnamMonthRange } from '../lib/date';
 import { retryAsync } from '../lib/process/retry-async';
 import { openSaleWorkFilters, waitForSaleWorkIdle } from '../lib/salework/report-readiness';
+import { aggregateSaleWorkReport, watchSaleWorkSession } from './salework-session';
 import {
   findStableCompleteSaleWorkReports,
-  requireCompleteSaleWorkReports,
 } from '../lib/salework/report-completeness';
 import {
   monthlySaleWorkPrefix,
@@ -154,6 +154,7 @@ async function main(): Promise<void> {
   activeBrowserContext = context;
 
   const page = context.pages()[0] ?? (await context.newPage());
+  const waitForReportSession = watchSaleWorkSession(page);
   page.on('pageerror', (error) => console.error(`[SaleWork pageerror] ${error.message}`));
   page.on('console', (message) => {
     if (message.type() === 'error') console.error(`[SaleWork console] ${message.text()}`);
@@ -193,6 +194,7 @@ async function main(): Promise<void> {
   const accountSearchInput = page.getByRole('textbox').first();
   await openSaleWorkFilters(page, async () => {
     await accountTab.waitFor({ state: 'visible', timeout: 60_000 });
+    await waitForReportSession();
     await waitForSaleWorkIdle(page);
 
     // Đóng popup "BẠN CÓ TÀI KHOẢN HẾT HẠN LIÊN KẾT VỚI ZALO" nếu xuất hiện —
@@ -278,7 +280,7 @@ async function main(): Promise<void> {
       throw new Error('SALEWORK_SYNC_MONTH không hợp lệ; cần định dạng YYYY-MM.');
     }
     await selectSaleWorkMonth(page, requestedMonth);
-    await aggregateButton.click();
+    await aggregateSaleWorkReport(page);
     console.log(`Đang đọc riêng dữ liệu SaleWork tháng ${requestedMonth}…`);
     await page.waitForTimeout(1000);
     await waitForSaleWorkIdle(page);
@@ -319,19 +321,20 @@ async function main(): Promise<void> {
     return;
   }
 
-  await aggregateButton.click();
+  await aggregateSaleWorkReport(page);
   console.log('Đã bấm Tổng hợp; đang cuộn và đọc toàn bộ bảng SaleWork…');
-  const dailyResult = await readPaginatedReports(page);
-  const reports = dailyResult.reports;
-
-  let completeDailyReports: SaleWorkReport[];
-  try {
-    completeDailyReports = requireCompleteSaleWorkReports(targetAccountNames, reports);
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : 'thiếu dữ liệu không xác định';
-    throw new Error(
-      `Chưa đọc đủ bảng sau ${dailyResult.visitedPageCount} trang (${reason}). Không ghi Supabase.`,
-    );
+  const dailyAttempts: SaleWorkReport[][] = [];
+  let completeDailyReports: SaleWorkReport[] | null = null;
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const result = await readPaginatedReports(page);
+    dailyAttempts.push(result.reports);
+    completeDailyReports = findStableCompleteSaleWorkReports(targetAccountNames, dailyAttempts);
+    if (completeDailyReports !== null) break;
+    console.log(`Bảng SaleWork ngày chưa đủ hoặc chưa ổn định (${attempt}/5); chờ rồi đọc lại…`);
+    await page.waitForTimeout(2_000);
+  }
+  if (completeDailyReports === null) {
+    throw new Error('Chưa đọc đủ dữ liệu SaleWork ngày ổn định sau năm lượt. Không ghi Supabase.');
   }
 
   // Vẫn giữ ghi ra file JSON cục bộ để tiện xem/debug nhanh trên máy —
@@ -419,6 +422,15 @@ async function readPaginatedReports(page: Page): Promise<{
 }> {
   const rows = page.locator('.el-table__body tbody tr');
   await rows.first().waitFor({ state: 'visible', timeout: 60_000 });
+
+  const firstPage = page.locator('.el-pagination:visible .el-pager .number').first();
+  if (await firstPage.isVisible() && !/(^|\s)active(\s|$)/u.test((await firstPage.getAttribute('class')) ?? '')) {
+    const previousText = (await rows.allTextContents()).join('\n');
+    await firstPage.click();
+    await page.waitForFunction(previous =>
+      Array.from(document.querySelectorAll('.el-table__body tbody tr'), row => row.textContent ?? '').join('\n') !== previous,
+    previousText, { timeout: 30_000 });
+  }
 
   const reportCells: string[][] = [];
   const visitedPages = new Set<string>();

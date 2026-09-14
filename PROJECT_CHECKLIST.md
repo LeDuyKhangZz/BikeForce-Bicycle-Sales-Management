@@ -1,5 +1,10 @@
 # BikeForce Project Checklist
 
+- [x] 2026-09-14 ISSUE-053 bổ sung: chờ Tổng hợp tải hoàn tất + hai lượt bảng ổn định, đọc lại từ trang đầu; session WebSocket sẵn sàng.
+- [x] SaleWork thật exit 0, đủ 8 tài khoản lưu Supabase; unit 823/823, typecheck/lint/build exit 0.
+- [x] Wrapper toàn chuỗi -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng; ISSUE-053 CLOSED.
+- [ ] Theo dõi lượt Scheduled Task tự chạy kế tiếp.
+
 - [x] 2026-09-14 ISSUE-053: SaleWork chờ tải/reload một lần, ACT harvest ngày tạo cache đúng tháng VN.
 - [x] Unit 818/818, Python công nợ 2/2, typecheck/lint/build; ACT tháng 09 và push thật exit 0.
 - [ ] ISSUE-053: SaleWork nguồn HTTP 500/403/e.reduce vẫn kẹt; cần xác minh phục hồi và task lịch exit 0.

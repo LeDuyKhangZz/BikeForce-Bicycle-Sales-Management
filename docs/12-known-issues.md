@@ -3,8 +3,12 @@
 ## ISSUE-053 — Auto-sync bị loading mask SaleWork chặn và cache công nợ sai tháng
 
 **Severity:** P1
-**Status:** OPEN — 2026-09-14, sửa script đã kiểm chứng; nguồn SaleWork còn lỗi.
+**Status:** CLOSED — 2026-09-14, SaleWork và wrapper toàn chuỗi chạy thật exit 0.
 **Module:** scripts/salework-sync.ts, scripts/amis-sync/amis-harvest.ts
+
+**Kiểm chứng cuối:** wrapper -NoTelegram chạy 11:52:54–11:53:25, exit 0, stderr rỗng; AMIS đủ công nợ tháng 09 và SaleWork đủ 8 tài khoản ghi Supabase. Report70 HTTP 200, 0 nhân viên ngày 14/09 nên 0 dòng cập nhật; không suy diễn thành có dữ liệu cuộc gọi. Chưa quan sát lượt lịch kế tiếp.
+
+**Cập nhật 2026-09-14 sau xác nhận người dùng:** SaleWork nguồn tải lại được; lượt sync tái hiện lỗi đọc bảng ngay sau Tổng hợp thiếu sáu tài khoản. Chờ session WebSocket đăng ký, Tổng hợp nhận tác vụ/tải hoàn tất tối đa 180s, hai lượt bảng đầy đủ ổn định trước ghi, reset trang 1 khi đọc lại. SaleWork thật exit 0, đủ 8 tài khoản ghi Supabase; unit 823/823, typecheck/lint/build exit 0. Phản hồi HTTP số tác vụ là bình thường, không kết luận đó là JSON sai shape. HTTP 500/403/e.reduce từng quan sát chưa xác định nguyên nhân phía nguồn. Wrapper toàn chuỗi đang kiểm tra, lượt lịch chưa xác minh.
 **Description:** Task thoát 1 tại `.el-select` do `.el-loading-mask` chặn; công nợ kỳ 09 chỉ có cache 08.
 **Expected:** Chờ tải trước thao tác, phục hồi có giới hạn; lấy công nợ đúng kỳ.
 **Actual:** SaleWork click timeout 30s; harvest ngày không tạo cache công nợ hiện tại.

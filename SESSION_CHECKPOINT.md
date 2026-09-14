@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## Cập nhật mới nhất — 2026-09-14, SaleWork đã sync thành công
+
+Theo xác nhận người dùng, luồng cũ tải lại được. Chạy thật tái hiện đọc bảng ngay sau Tổng hợp thiếu 6 tài khoản. Đã chờ Tổng hợp nhận tác vụ và tải/WebSocket xong tối đa 180s; lấy hai lượt đủ/ổn định, đọc lại từ trang đầu. Thêm chờ session subscription WebSocket trước mở tab. SaleWork thật exit 0, ghi đủ 8 tài khoản; unit 823/823, typecheck/lint/build exit 0. Không đổi dữ liệu/nghiệp vụ/DB/RLS; recording chỉ tmp text.
+
+**Kết quả wrapper:** -NoTelegram chạy 11:52:54–11:53:25 exit 0, stderr rỗng; AMIS và SaleWork đầy đủ; Report70 HTTP 200/0 nhân viên ngày 14/09, 0 dòng cập nhật. ISSUE-053 CLOSED.
+
+**Next Exact Steps:** Theo dõi lượt Scheduled Task tự chạy kế tiếp qua logs/auto-sync.log; không cần học lại thao tác. Source/docs commit local; không retry push main từng bị chặn khi chưa có phê duyệt trực tiếp. Nếu SaleWork chậm vượt 180s, kiểm tra tiến độ/kênh WebSocket trước sửa giới hạn; không bỏ kiểm tra dữ liệu đủ/ổn định.
+
 ## Mới nhất — 2026-09-14, ISSUE-053 auto-sync
 
 Đã sửa chờ loading/reload có giới hạn tại SaleWork và harvest công nợ tháng hiện tại VN trong lượt ngày. 818 unit/2 Python pass, typecheck/lint/build exit 0. ACT thật scrape 9 nhân viên tháng 2026-09, push thật 13 dòng/12 cột gồm receive_amount exit 0. SaleWork thật HTTP 500/403 và e.reduce is not a function, reload một lần vẫn kẹt, chưa ghi dữ liệu SaleWork. Không gửi Telegram kiểm tra; không đổi schema/RLS.

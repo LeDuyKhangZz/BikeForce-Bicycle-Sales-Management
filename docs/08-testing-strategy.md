@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+**Kết quả wrapper ISSUE-053:** Lượt -NoTelegram 11:52:54–11:53:25 exit 0, stderr rỗng, AMIS/SaleWork hoàn tất. Report70 HTTP200/0 nhân viên, không khẳng định có dữ liệu cuộc gọi. Chưa quan sát lượt Scheduled Task kế tiếp.
+
+**2026-09-14 cập nhật ISSUE-053:** 823 unit pass gồm parser STOMP/SockJS subscription session và hồi quy bảng tải dần/thay số liệu chỉ nhận hai lượt đầy đủ ổn định. Typecheck/lint/build exit 0. Lượt SaleWork thật trước sửa đọc thiếu 6 tài khoản; sau sửa chờ Tổng hợp/tải hoàn tất và đọc lại ổn định, exit 0, ghi đủ 8 tài khoản. Wrapper toàn chuỗi đang kiểm tra -NoTelegram; chưa ghi PASS cho lượt lịch. Không chạy full DB/RLS, không đổi schema/quyền.
+
 ### Hồi quy 2026-09-14 — ISSUE-053
 
 `lib/salework/report-readiness.test.ts` kiểm tra selector mọi mask hiển thị, reload đúng một lần khi TimeoutError, giới hạn retry và không retry lỗi quyền. Python `test_push_amis_receivable.py` kiểm tra cache cùng kỳ và từ chối sai kỳ. Unit 818/818, Python 2/2, typecheck/lint/build exit 0. ACT/push thật tháng 09 exit 0; SaleWork thật vẫn kẹt với HTTP 500/403/e.reduce, chưa chứng minh toàn chuỗi thành công. Không chạy full DB/E2E UI cho thay đổi script này.
