@@ -133,7 +133,7 @@ beforeAll(async () => {
          case when (extract(day from d)::int % 2) = 0 then 'COMPLETED' else 'MORNING_SUBMITTED' end::public.report_status,
          'Tuyen ' || to_char(d, 'DD/MM'),
          'Cham soc dai ly',
-         -- 12 chứ không phải 3: BR-026 đặt sàn 10 cho mục tiêu điểm viếng thăm
+         -- 12 vẫn hợp lệ: BR-026/DEC-091 đặt sàn 5 cho mục tiêu điểm viếng thăm
          -- (DEC-049). Doanh số là TIỀN từ DEC-050.
          12, 80000000, 100000000, 8,
          case when (extract(day from d)::int % 2) = 0 then 'Tuyen thuc te' end,

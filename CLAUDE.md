@@ -15,7 +15,7 @@
 >
 > | Chỉ tiêu | Đơn vị | Cột |
 > |---|---|---|
-> | Viếng thăm | điểm — **mục tiêu ∈ [10, 1000]** (BR-026) | `*_visit_points` |
+> | Viếng thăm | điểm — **mục tiêu ∈ [5, 1000]** (BR-026, DEC-091) | `*_visit_points` |
 > | **Doanh số** | **VND** *(trước là "số lượng xe")* | **`*_sales_amount`** (MỚI ở `0008`) |
 > | **Doanh thu công nợ** | **VND — tiền công nợ THU HỒI ĐƯỢC** *(trước là "giá trị đơn hàng")* | `*_revenue` |
 > | **Khách hàng đã gặp** | khách *(trước nhãn là "Khách hàng")* | `*_customer_visits` |
@@ -418,7 +418,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 `UC-01..UC-21` (use case) · `FR-001..FR-037` (functional) · `NFR-001..NFR-015` (non-functional) · `BR-001..BR-026` (business rule) · `OQ-01..OQ-19` (open question) · `DEC-001..DEC-069` (decision) · `ISSUE-001..ISSUE-032` (issue) · `AF-01..AF-15` (admin feature proposal).
 
 > ⚠ **`BR-026` là ngoại lệ DUY NHẤT của luật "dãy `BR` là dãy đóng".** Nó được mở ngày 2026-08-10 vì
-> **người dùng yêu cầu trực tiếp** (sàn 10 cho mục tiêu điểm viếng thăm, ảnh 2 của `§13c`). Đừng lấy
+> **người dùng yêu cầu trực tiếp** (sàn ban đầu là 10 ở ảnh 2 của `§13c`, đã hạ còn 5 theo DEC-091). Đừng lấy
 > nó làm tiền lệ để tự thêm `BR-027`.
 
 `UC`, `FR`, `NFR`, `BR`, `AF` là **dãy đóng** — không thêm ID mới nếu không có xác nhận của người dùng. `OQ`, `DEC`, `ISSUE` là **dãy mở**: cấp ID mới = số lớn nhất từng dùng + 1, **không bao giờ renumber, không tái sử dụng ID đã CLOSED**.
@@ -428,7 +428,7 @@ Trước khi kết thúc milestone/session, chạy đủ 8 bước:
 | ID | Rule |
 |---|---|
 | BR-001 | Mỗi Sales tối đa **một** báo cáo cho một ngày nghiệp vụ — `UNIQUE(sales_id, report_date)` |
-| **BR-026** | **Mục tiêu** điểm viếng thăm ∈ **[10, 1000]**. Sàn **không** áp cho `actual_visit_points` |
+| **BR-026** | **Mục tiêu** điểm viếng thăm ∈ **[5, 1000]**. Sàn **không** áp cho `actual_visit_points` (DEC-091) |
 | BR-002 | Chỉ xuất ảnh từ báo cáo **đã persist**; `status` chọn **biến thể** ảnh — sáng: thẻ CAM KẾT, chiều: thẻ KẾT QUẢ (**nới bởi DEC-058**) |
 | BR-003 | Sales không đọc được báo cáo của Sales khác |
 | BR-004 | Achievement được phép **> 100%**, không clamp |
@@ -492,7 +492,7 @@ Mười quyết định nghiệp vụ mà mọi session sau phải nhớ:
 
 | Chủ đề | Quyết định đã chốt | BR / DEC |
 |---|---|---|
-| Viếng thăm | ~~Giữ cả hai~~ → **PHASE 13: `visit_purpose` đã bị gỡ khỏi giao diện** (DEC-048). Còn `target_visit_points` (**sàn 10** — BR-026) + `actual_visit_points` + `actual_route` | DEC-029 **sửa bởi DEC-048/049** |
+| Viếng thăm | ~~Giữ cả hai~~ → **PHASE 13: `visit_purpose` đã bị gỡ khỏi giao diện** (DEC-048). Còn `target_visit_points` (**sàn 5** — BR-026) + `actual_visit_points` + `actual_route` | DEC-029 **sửa bởi DEC-048/049/091** |
 | Đơn vị | ~~Doanh số = số lượng xe~~ → **PHASE 13: Doanh số = TIỀN VND**; **Doanh thu = tiền công nợ THU HỒI ĐƯỢC trong ngày** | BR-006 **sửa bởi DEC-050**, BR-010 |
 | Sửa sau khi hoàn tất | **KHÔNG.** Khoá vĩnh viễn khi `status = 'COMPLETED'`, kể cả trong cùng ngày | BR-019, DEC-026 |
 | Admin sửa báo cáo | **KHÔNG.** Không tồn tại UPDATE policy nào cho Admin trên `daily_reports` | BR-020, DEC-026 |

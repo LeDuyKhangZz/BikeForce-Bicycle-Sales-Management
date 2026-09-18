@@ -1237,7 +1237,7 @@ Hai dòng này **không được diễn giải thành pass** dưới bất kỳ 
 
 | Trường | Biên CŨ | Biên MỚI | Nguồn |
 |---|---|---|---|
-| `target_visit_points` | `[0, 1000]` | **`[10, 1000]`** | BR-026, DEC-049 |
+| `target_visit_points` | `[0, 1000]` | **`[5, 1000]`** | BR-026, DEC-091 |
 | `actual_visit_points` | `[0, 1000]` | **không đổi** — sàn chỉ áp cho `target` | DEC-049 |
 | `target_sales_quantity` | `[0, 10_000]` | **cột DI SẢN, không còn test** | DEC-050 |
 | **`target_sales_amount`** | — | **`[0, 100_000_000_000]`** | DEC-050 |
@@ -1251,7 +1251,7 @@ bị từ chối.
 `tests/integration/daily-reports.constraints.test.ts` thêm ba bài, và điều chúng chứng minh mới là
 điểm chính: **`not valid` vẫn ép đủ với dòng MỚI**, nó chỉ tha cho dòng đã có.
 
-1. `target_visit_points ∈ {0, 1, 9}` → `23514` / `ck_target_visit_points`; đúng `10` thì qua.
+1. `target_visit_points ∈ {0, 1, 4}` → `23514` / `ck_target_visit_points`; đúng `5` thì qua.
 2. Cam kết sáng **thiếu** `target_sales_amount` → `ck_target_sales_amount_required`.
 3. `COMPLETED` mà chỉ điền cột **di sản** `actual_sales_quantity` → vẫn bị
    `ck_completed_requires_actuals` chặn; điền cột **mới** thì qua. Đây là bài chứng minh

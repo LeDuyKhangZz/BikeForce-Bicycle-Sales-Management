@@ -3693,3 +3693,8 @@ Kiểm chứng cuối: full unit 788/788, typecheck/lint sạch, production buil
 ### 2026-09-13 — Fix retry UPSERT Supabase (ISSUE-052)
 
 Đã thêm tối đa 3 lần thử ConnectionError/Timeout hoặc HTTP 429/500/502/503/504, chờ 2 rồi 5 giây; cùng payload và synced_at, giữ cột nguồn thất bại ngoài payload. HTTP khác hoặc hết retry trả lỗi thay vì thoát 0. Lỗi chứng chỉ không retry, TLS giữ nguyên. Hồi quy tái hiện trước fix; Python 12/12 pass sau fix, build/typecheck/lint exit 0. Task thật chạy 21:44:15–21:45:10 exit 0, stderr rỗng, không Telegram. Lượt thật không cần retry; nhánh retry được xác minh bằng mock. DB/RLS đã chạy nhưng 18 suite fail/218 test skipped do Supabase local ECONNREFUSED 127.0.0.1:54322, không đổi schema/quyền/policy. Push vẫn chờ cấp phép sau auto-review chặn trước đó.
+### 2026-09-18 — Hạ sàn cam kết điểm viếng thăm xuống 5
+
+Theo yêu cầu trực tiếp của người dùng, BR-026 được sửa bởi DEC-091: `target_visit_points` từ `[10, 1000]` thành `[5, 1000]`. Đã đổi hằng Zod dùng chung (nên helper/lỗi UI tự hiển thị 5), thêm migration thay CHECK database, cập nhật test biên và toàn bộ tài liệu bắt buộc. `actual_visit_points` vẫn cho phép từ 0; không đổi RLS.
+
+Kiểm chứng: unit validation 96/96 pass; `tsc --noEmit`, ESLint và production build exit 0. Integration DB chưa chạy vì Docker Desktop/Supabase local không hoạt động (không tìm thấy pipe `dockerDesktopLinuxEngine`); không ghi nhận PASS cho DB.

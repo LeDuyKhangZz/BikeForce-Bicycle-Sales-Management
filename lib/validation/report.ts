@@ -52,7 +52,7 @@ export const MAX_VISIT_POINTS = 1_000;
  * số điểm THỰC ĐẠT vẫn từ 0 vì đi được ít hơn cam kết là kết quả thật, không
  * phải dữ liệu sai.
  */
-export const MIN_TARGET_VISIT_POINTS = 10;
+export const MIN_TARGET_VISIT_POINTS = 5;
 /** BR-006 — `ck_target_customer_visits`. */
 export const MAX_CUSTOMER_VISITS = 1_000;
 /** `ck_planned_route_len` — đo sau `btrim`. */
@@ -91,9 +91,9 @@ function coerceInteger(value: unknown): unknown {
  * Một ô số nguyên bắt buộc, `min`..`max`.
  *
  * `min` mặc định 0 nên mọi lời gọi cũ giữ nguyên hành vi; chỉ mục tiêu điểm
- * viếng thăm truyền `min = 10` (BR-026, DEC-049). Thông điệp của cận dưới phân
+ * viếng thăm truyền `min = 5` (BR-026, DEC-091). Thông điệp của cận dưới phân
  * biệt hai ca: 0 thì nói "không được là số âm", còn sàn thật thì nói rõ con số —
- * "tối thiểu 10 điểm" hữu ích hơn nhiều so với "không được là số âm".
+ * "tối thiểu 5 điểm" hữu ích hơn nhiều so với "không được là số âm".
  */
 function integerField(max: number, label: string, min = 0) {
   const minMessage =

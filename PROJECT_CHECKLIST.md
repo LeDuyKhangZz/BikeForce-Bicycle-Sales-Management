@@ -1251,3 +1251,9 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 
 - [x] Retry và lỗi HTTP UPSERT đã fix; 12/12 hồi quy và task thật exit 0.
 - [ ] Chạy lại test:db khi Supabase local hoạt động.
+## Hạ sàn cam kết điểm viếng thăm — BR-026 / DEC-091 (2026-09-18)
+
+- [x] Màn cam kết đầu ngày hiển thị “Tối thiểu 5” và validation chấp nhận đúng 5
+- [x] Database CHECK đổi thành `[5, 1000]`; `actual_visit_points` vẫn `[0, 1000]`
+- [x] Unit và integration test biên đổi sang 4 bị từ chối, 5 được chấp nhận
+- [x] Business analysis, database design, workflow, UI, API/data flow, testing strategy và decision log đã đồng bộ

@@ -231,8 +231,8 @@ describe('CHECK constraints', () => {
    * `not valid`, nên bài test ở đây đang chứng minh đúng điều quan trọng nhất:
    * `not valid` **vẫn ép đủ với dòng MỚI**, nó chỉ tha cho dòng đã có.
    */
-  it('BR-026 — mục tiêu điểm viếng thăm dưới sàn 10 bị chặn (DEC-049)', async () => {
-    for (const belowFloor of [0, 1, 9]) {
+  it('BR-026 — mục tiêu điểm viếng thăm dưới sàn 5 bị chặn (DEC-091)', async () => {
+    for (const belowFloor of [0, 1, 4]) {
       const error = await expectSqlError(
         `insert into public.daily_reports
            (sales_id, report_date, planned_route, target_visit_points,
@@ -244,9 +244,9 @@ describe('CHECK constraints', () => {
       expect(error.constraint).toBe('ck_target_visit_points');
     }
 
-    // Biên inclusive: đúng 10 phải đi qua được.
+    // Biên inclusive: đúng 5 phải đi qua được.
     await expect(
-      insertMorningReport(salesA, today, { target_visit_points: 10 }),
+      insertMorningReport(salesA, today, { target_visit_points: 5 }),
     ).resolves.toBeTypeOf('string');
   });
 

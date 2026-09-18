@@ -920,7 +920,7 @@ phải component tự cắt chuỗi.
 Bỏ hẳn "Mục đích chuyến đi" (DEC-048). Thứ tự và kiểu ô:
 
 1. **Tuyến ghé thăm** — `<textarea>`
-2. **Mục tiêu điểm viếng thăm** — ô số, helper *"Số điểm dự kiến ghé trong ngày. **Tối thiểu 10**."*
+2. **Mục tiêu điểm viếng thăm** — ô số, helper *"Số điểm dự kiến ghé trong ngày. **Tối thiểu 5**."*
 3. **Mục tiêu doanh số** — **`CurrencyField`** (chip cộng nhanh `+1tr/+5tr/+10tr`)
 4. **Mục tiêu doanh thu công nợ** — **`CurrencyField`**
 5. **Mục tiêu số lượng khách hàng** — ô số, `enterKeyHint="done"`

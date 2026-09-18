@@ -2577,3 +2577,11 @@ Task thật đã đổi từ cmd.exe sang wscript.exe gọi scripts/sync-all-rep
 Đã thêm tối đa 3 lần thử ConnectionError/Timeout hoặc HTTP 429/500/502/503/504, chờ 2 rồi 5 giây; cùng payload và synced_at, giữ cột nguồn thất bại ngoài payload. HTTP khác hoặc hết retry trả lỗi thay vì thoát 0. Lỗi chứng chỉ không retry, TLS giữ nguyên. Hồi quy tái hiện trước fix; Python 12/12 pass sau fix, build/typecheck/lint exit 0. Task thật chạy 21:44:15–21:45:10 exit 0, stderr rỗng, không Telegram. Lượt thật không cần retry; nhánh retry được xác minh bằng mock. DB/RLS đã chạy nhưng 18 suite fail/218 test skipped do Supabase local ECONNREFUSED 127.0.0.1:54322, không đổi schema/quyền/policy. Push vẫn chờ cấp phép sau auto-review chặn trước đó.
 
 **Next Exact Steps:** theo dõi logs/auto-sync.log của lượt lịch tiếp theo; khi Supabase local sẵn sàng chạy npm.cmd run test:db. Không push khi chưa có phép chia sẻ lên remote.
+### 2026-09-18 — BR-026 / DEC-091
+
+- Cam kết đầu ngày `target_visit_points` nay có sàn **5**, trần 1.000.
+- UI helper và lỗi lấy từ `MIN_TARGET_VISIT_POINTS = 5`.
+- Migration mới: `20260918090000_lower_target_visit_points_floor.sql`.
+- Kết quả cuối ngày `actual_visit_points` vẫn nhận từ 0; RLS không đổi.
+- Verification: unit validation 96/96 pass; typecheck, lint và build pass. DB integration chưa chạy vì Docker Desktop/Supabase local đang tắt.
+- Next Exact Steps: bật Docker Desktop, chạy `npm run db:start` rồi `npm run test:db` để áp và xác minh migration local trước khi deploy.

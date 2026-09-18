@@ -148,7 +148,7 @@ export async function seedE2eFixture(): Promise<void> {
        target_visit_points, target_sales_amount, target_revenue, target_customer_visits,
        actual_route, actual_visit_points, actual_sales_amount, actual_revenue,
        actual_customer_visits, evening_note, evening_submitted_at
-     -- PHASE 13: điểm viếng thăm ≥ 10 (BR-026) và doanh số là TIỀN (DEC-050).
+     -- Điểm viếng thăm ≥ 5 (BR-026, DEC-091) và doanh số là TIỀN (DEC-050).
      -- Bốn cặp số cố ý cho bốn trạng thái khác nhau của BR-023:
      --   15/12 = 125% EXCEEDED · 60tr/80tr = 75% MISSED
      --   90tr/100tr = 90% NEAR · 10/10 = 100% EXCEEDED

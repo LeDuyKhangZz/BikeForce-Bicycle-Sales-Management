@@ -99,7 +99,7 @@ select
   -- rằng giao diện KHÔNG còn hiển thị nó ở bất kỳ đâu. Bốn báo cáo đặc biệt bên
   -- dưới không ghi cột này nữa, đúng như ứng dụng từ Phase 13.
   'Chăm sóc đại lý và giới thiệu dòng xe mới',
-  -- BR-026 (DEC-049): mục tiêu điểm viếng thăm có SÀN 10.
+  -- BR-026 (DEC-091): mục tiêu điểm viếng thăm có SÀN 5.
   10 + s.n + g.d,
   (50000000 + g.d * 5000000)::bigint,
   (80000000 + g.d * 10000000)::bigint,
@@ -172,7 +172,7 @@ from public.profiles where email = 'sales.b@bikeforce.local';
 --     Kỳ vọng hiển thị: percent = null + số vượt tuyệt đối
 --     (+3.000.000 ₫ doanh số, +5.000.000 ₫ doanh thu công nợ, +4 khách),
 --     nhãn "Vượt kế hoạch". KHÔNG BAO GIỜ NaN/∞.
---     ⚠ `target_visit_points` KHÔNG thể là 0 nữa — BR-026 đặt sàn 10 (DEC-049).
+--     ⚠ `target_visit_points` KHÔNG thể là 0 nữa — BR-026 đặt sàn 5 (DEC-091).
 --     Dòng này vì vậy vừa phủ BR-015 (ba chỉ tiêu) vừa phủ MISSED (điểm viếng thăm).
 insert into public.daily_reports (
   sales_id, report_date, status, planned_route,

@@ -25,8 +25,8 @@ afterEach(() => {
 /**
  * Payload hợp lệ tối thiểu; từng case chỉ ghi đè đúng field đang kiểm.
  *
- * PHASE 13: không còn `visit_purpose` (DEC-048); `target_visit_points` phải ≥ 10
- * (BR-026, DEC-049); `target_sales_amount` là TIỀN chứ không phải số xe (DEC-050).
+ * PHASE 13: không còn `visit_purpose` (DEC-048); `target_visit_points` phải ≥ 5
+ * (BR-026, DEC-091); `target_sales_amount` là TIỀN chứ không phải số xe (DEC-050).
  */
 function validMorningInput(overrides: Record<string, unknown> = {}) {
   return {
@@ -54,7 +54,7 @@ describe('morningReportSchema — miền giá trị số (BR-006, BR-017)', () =
     ['doanh thu vượt trần BR-017', 'target_revenue', MAX_REVENUE_VND + 1],
     ['doanh số vượt trần BR-017', 'target_sales_amount', MAX_SALES_AMOUNT_VND + 1],
     ['target_visit_points > 1000', 'target_visit_points', 1_001],
-    // BR-026 (DEC-049) — sàn 10 cho MỤC TIÊU điểm viếng thăm.
+    // BR-026 (DEC-091) — sàn 5 cho MỤC TIÊU điểm viếng thăm.
     ['target_visit_points dưới sàn BR-026', 'target_visit_points', MIN_TARGET_VISIT_POINTS - 1],
     ['target_visit_points = 0 (từng hợp lệ trước Phase 13)', 'target_visit_points', 0],
     ['target_customer_visits > 1000', 'target_customer_visits', 1_001],
@@ -72,7 +72,7 @@ describe('morningReportSchema — miền giá trị số (BR-006, BR-017)', () =
     ['đúng trần doanh thu (biên inclusive)', 'target_revenue', MAX_REVENUE_VND],
     ['đúng trần doanh số (biên inclusive)', 'target_sales_amount', MAX_SALES_AMOUNT_VND],
     ['đúng trần điểm viếng thăm', 'target_visit_points', 1_000],
-    // Biên DƯỚI của BR-026 — inclusive, đúng 10 phải đi qua được.
+    // Biên DƯỚI của BR-026 — inclusive, đúng 5 phải đi qua được.
     ['đúng sàn điểm viếng thăm BR-026', 'target_visit_points', MIN_TARGET_VISIT_POINTS],
   ])('chấp nhận %s', (_label, field, value) => {
     const result = morningReportSchema.safeParse(validMorningInput({ [field]: value }));

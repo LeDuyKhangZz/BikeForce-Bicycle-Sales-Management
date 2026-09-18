@@ -54,7 +54,7 @@ test.describe('Luồng Sales đầu-cuối', () => {
 
     /* ── 3. Cam kết sáng — 5 trường bắt buộc của FR-008 ────────────────────────
        PHASE 13: "Mục đích chuyến đi" ĐÃ BỊ GỠ (DEC-048) · điểm viếng thăm có
-       sàn 10 (BR-026, DEC-049) · doanh số nhập TIỀN (DEC-050).                */
+       sàn 5 (BR-026, DEC-091) · doanh số nhập TIỀN (DEC-050).                 */
     await expect(page.locator('[name="visit_purpose"]')).toHaveCount(0);
 
     await fillField(page, 'planned_route', 'Quận 1 → Quận 3 → Bình Thạnh');

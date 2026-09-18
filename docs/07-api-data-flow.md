@@ -556,8 +556,8 @@ planned_route · target_visit_points · target_sales_amount · target_revenue ·
   `sales_id` / `report_date` / `status` (QUY TẮC 2 & 3).
 - **`target_sales_amount` thay `target_sales_quantity`**, trần **100 tỷ VND** (dùng chung
   `MAX_REVENUE_VND`), không còn trần 10.000.
-- **`target_visit_points` có SÀN 10** (BR-026). `integerField()` nay nhận tham số `min` (mặc định 0)
-  và đổi thông điệp theo ca: `min = 0` → *"không được là số âm"*, `min > 0` → *"tối thiểu 10"*.
+- **`target_visit_points` có SÀN 5** (BR-026, DEC-091). `integerField()` nhận tham số `min` (mặc định 0)
+  và đổi thông điệp theo ca: `min = 0` → *"không được là số âm"*, `min > 0` → *"tối thiểu 5"*.
   Thông điệp thứ hai hữu ích hơn hẳn khi người dùng gõ `5`.
 - `docs/08 §3.6` nay khẳng định issue path là **`['target_sales_amount']`**.
 

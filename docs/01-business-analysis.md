@@ -343,7 +343,7 @@ Danh sách canonical. **Không đổi số, không tái đánh số.** Tính đ�
 | BR-023 | Trạng thái hiển thị achievement: ≥100% "Vượt mục tiêu", 80–99.99% "Gần đạt", <80% "Chưa đạt", chưa có actual → "Chờ số liệu" | `lib/kpi` `getAchievementStatus()` | APPROVED (technical) |
 | BR-024 | "Ngày đạt KPI" = ngày có **cả 4** chỉ tiêu ≥ 100% | `lib/kpi` | **APPROVED** (OQ-17) |
 | BR-025 | Email của profile phải khớp email trong `auth.users`, unique toàn hệ thống | DB unique + trigger | APPROVED (technical) |
-| **BR-026** | **Mục tiêu** điểm viếng thăm phải nằm trong **[10, 1000]**. Sàn 10 **không** áp cho `actual_visit_points` — đi được ít hơn cam kết là kết quả thật, không phải dữ liệu sai | `ck_target_visit_points` (0008, `not valid`) + Zod `MIN_TARGET_VISIT_POINTS` | **APPROVED 2026-08-10** (DEC-049) |
+| **BR-026** | **Mục tiêu** điểm viếng thăm phải nằm trong **[5, 1000]**. Sàn 5 **không** áp cho `actual_visit_points` — đi được ít hơn cam kết là kết quả thật, không phải dữ liệu sai | `ck_target_visit_points` (migration `20260918090000`, `not valid`) + Zod `MIN_TARGET_VISIT_POINTS` | **APPROVED — SỬA 2026-09-18 bởi DEC-091** |
 | **BR-027** | Admin nhập công tác phí nguyên VND cho từng nhân viên Sales theo từng tháng; một nhân viên chỉ có một giá trị trong một tháng, được phép sửa lại | `sales_monthly_travel_expenses` + `/admin/travel-expenses` | **APPROVED 2026-09-07** (DEC-073) |
 | **BR-028** | Ảnh báo cáo Sales luôn có dòng cuối “Công tác phí tháng trước”, lấy khoản của chính Sales ở tháng liền trước tháng hiện tại theo giờ Việt Nam; chưa nhập thì hiện `—` | share-image + `sales_monthly_travel_expenses` | **APPROVED 2026-09-07** (DEC-074) |
 | **BR-029** | Admin nhập lương nguyên VND cho từng nhân viên Sales theo từng tháng; một nhân viên chỉ có một giá trị trong một tháng, được phép sửa lại; Sales không được ghi dữ liệu lương | `sales_monthly_salaries` + `/admin/salaries` | **APPROVED 2026-09-10** (DEC-075, quyền đọc cập nhật bởi DEC-076) |
@@ -825,7 +825,7 @@ Log đầy đủ (Date / Decision / Reason / Alternatives / Impact / Status theo
 
 **Chặn cái gì:** migration `0008`, `lib/kpi.ts` (bảng đơn vị), `lib/validation/report.ts`,
 5 hàm SQL aggregate của `0006`/`0007`, thẻ ảnh 9:16, CSV, và **toàn bộ bài test có số liệu mẫu**.
-Hai yêu cầu còn lại của nhóm C (bỏ `visit_purpose`, sàn 10 cho điểm viếng thăm) **không** bị OQ-19
+Hai yêu cầu còn lại của nhóm C (bỏ `visit_purpose`, sàn điểm viếng thăm; hiện là 5 theo DEC-091) **không** bị OQ-19
 chặn và làm độc lập được.
 
 </details>

@@ -2731,3 +2731,11 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 **Alternatives:** Tạo user Sales giả hoặc sửa role — không cần thiết, ảnh hưởng auth; chỉ thêm tên ở danh sách — route ảnh vẫn từ chối ID và không có dữ liệu; thêm route riêng — lặp auth và render tháng.
 **Impact:** Mở rộng BR-031 trong phạm vi tài khoản được yêu cầu; thêm participant/helper/query feature, mở allowlist đúng một ID ở route ảnh, test unit/security/E2E. Không schema/migration/RLS mới và không đổi báo cáo ngày.
 **Status:** APPROVED
+## DEC-091 — Hạ sàn mục tiêu điểm viếng thăm đầu ngày từ 10 xuống 5
+
+**Date:** 2026-09-18
+**Decision:** Sửa BR-026: `target_visit_points` phải nằm trong **[5, 1000]**. Sàn mới chỉ áp cho mục tiêu đầu ngày; `actual_visit_points` tiếp tục nhận **[0, 1000]**. Helper và lỗi validation hiển thị “Tối thiểu 5”.
+**Reason:** Người dùng yêu cầu trực tiếp đổi cam kết đầu ngày của Sales từ tối thiểu 10 xuống tối thiểu 5.
+**Alternatives:** Chỉ đổi nội dung UI nhưng giữ validation/database ở 10 — bị loại vì tạo thông báo sai và khiến giá trị 5 vẫn không lưu được; bỏ hẳn sàn — bị loại vì vượt phạm vi yêu cầu.
+**Impact:** Thay thế phần sàn 10 của DEC-049; cập nhật Zod, UI helper, CHECK `ck_target_visit_points`, unit/integration test và tài liệu liên quan. Không đổi trần 1.000, actual, RLS hay dữ liệu hiện hữu.
+**Status:** APPROVED — yêu cầu trực tiếp của người dùng.

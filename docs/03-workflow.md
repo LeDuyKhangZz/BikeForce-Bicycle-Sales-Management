@@ -1073,7 +1073,7 @@ Bốn thứ **bên trong** các bước đó đã đổi:
 |---|---|---|
 | Cam kết đầu ngày (UC-04/05) | còn **5 trường** — bỏ "Mục đích chuyến đi" | DEC-048 |
 | Cam kết đầu ngày | "Mục tiêu doanh số" nhập **số tiền** (ô `CurrencyField`), không còn đếm xe | DEC-050 |
-| Cam kết đầu ngày | mục tiêu điểm viếng thăm có **sàn 10** | BR-026, DEC-049 |
+| Cam kết đầu ngày | mục tiêu điểm viếng thăm có **sàn 5** | BR-026, DEC-091 |
 | Hoàn tất cuối ngày (UC-06) | "Doanh thu" nay là **công nợ khách hàng THU HỒI ĐƯỢC trong ngày** | DEC-050 |
 | Xem lại báo cáo | **"Tuyến và ghi chú" hiển thị TRƯỚC "Cam kết và thực đạt"** ở cả ba màn hình | DEC-051 |
 
