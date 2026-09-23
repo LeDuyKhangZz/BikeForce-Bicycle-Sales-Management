@@ -18,7 +18,6 @@
 export type NavKey =
   | 'SALES_TODAY'
   | 'SALES_HISTORY'
-  | 'SALES_RECONCILIATION'
   | 'SALES_CUSTOMERS'
   | 'SALES_ACCOUNT'
   | 'ADMIN_OVERVIEW'
@@ -61,12 +60,6 @@ export const SALES_NAV_ITEMS: readonly NavItem[] = [
     // `/sales/reports/<id>` là màn hình CON của lịch sử (FR-022 mở từ FR-021),
     // nên nó giữ tab Lịch sử sáng thay vì làm tắt hết cả ba.
     matchPrefixes: ['/sales/history', '/sales/reports'],
-  },
-  {
-    key: 'SALES_RECONCILIATION',
-    label: 'Đối chiếu',
-    href: '/sales/reconciliation',
-    matchPrefixes: ['/sales/reconciliation'],
   },
   {
     key: 'SALES_CUSTOMERS',

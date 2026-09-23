@@ -1285,3 +1285,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Trang khách hàng nhân viên MISA đã đổi theo ảnh mẫu: tóm tắt, bảng 10 dòng/trang có số thứ tự, tìm kiếm CRM, xuất CSV trang hiện tại, phân trang số và bộ lọc bên phải.
 - [x] Sales có mục **Khách hàng**, chỉ xem snapshot Report 119 khớp `profiles.amis_employee_name`; có RLS chống truy cập chéo (2026-09-23)
 - [x] Trang Khách hàng dùng hết vùng desktop và hiển thị dạng card không cuộn ngang trên điện thoại (2026-09-23)
+- [x] Gỡ phần Đối chiếu khỏi giao diện và route của nhân viên; giữ nguyên Đối chiếu Admin (2026-09-23)

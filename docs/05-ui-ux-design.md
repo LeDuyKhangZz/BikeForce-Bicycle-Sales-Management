@@ -1367,3 +1367,5 @@ Mỗi tiêu chí đã chọn có menu điều kiện theo kiểu dữ liệu. C�
 
 Thanh điều hướng Sales có mục **Khách hàng**. Trang hiển thị riêng khách hàng MISA của tài khoản, hỗ trợ đổi tháng, tìm kiếm, bộ lọc, phân trang và xuất trang hiện tại ra CSV.
 Trên desktop, module dùng toàn bộ chiều rộng khả dụng bên phải sidebar; trên màn hình nhỏ, bảng chuyển thành danh sách thẻ và các control được phép xuống dòng, không cuộn ngang.
+
+Theo yêu cầu ngày 2026-09-23, giao diện Sales không còn mục **Đối chiếu**; route `/sales/reconciliation` đã được gỡ. Module đối chiếu của Admin được giữ nguyên.

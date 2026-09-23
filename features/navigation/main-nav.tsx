@@ -52,7 +52,6 @@ import { activeNavKey, type NavItem, type NavKey } from '@/lib/navigation/nav-it
 const NAV_ICON: Record<NavKey, LucideIcon> = {
   SALES_TODAY: Home,
   SALES_HISTORY: History,
-  SALES_RECONCILIATION: Scale,
   SALES_CUSTOMERS: ContactRound,
   SALES_ACCOUNT: User,
   ADMIN_OVERVIEW: LayoutDashboard,
