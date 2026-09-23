@@ -941,3 +941,5 @@ Trong danh sách khách hàng Report 119 của Admin và Sales: nhóm A có doan
 Số ngày chưa mua hàng được cảnh báo theo cùng một quy tắc ở Admin và Sales: 0–15 ngày hiển thị bình thường nền trắng; 16–30 ngày cảnh báo vàng; trên 30 ngày cảnh báo đỏ; dữ liệu trống hiển thị “—”.
 
 Mỗi khách hàng theo từng tháng có thêm **Tần suất/tháng** và **Doanh số cam kết**. Tần suất mặc định theo nhóm là A=4, B=2, C=1, D=1 lần/tháng; Sales chỉ sửa ngoại lệ và nhập cam kết cho khách trọng điểm. Chưa nhập cam kết là `null`, không đồng nghĩa 0. Hai giá trị do Sales nhập không bị tiến trình đồng bộ MISA thay đổi.
+
+**Điều chỉnh 2026-09-23:** Admin là vai duy nhất nhập/sửa tần suất và doanh số cam kết. Sales chỉ xem kế hoạch và tiến độ của khách hàng mình phụ trách.

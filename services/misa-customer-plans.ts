@@ -2,6 +2,28 @@ import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+export async function getSalesIdForMisaEmployee(
+  supabase: SupabaseClient,
+  periodMonth: string,
+  employeeId: number,
+): Promise<string | null> {
+  const { data: employee, error: employeeError } = await supabase
+    .from('misa_report119_employees')
+    .select('employee_name')
+    .eq('period_month', periodMonth)
+    .eq('misa_employee_id', employeeId)
+    .maybeSingle();
+  if (employeeError || employee === null || typeof employee.employee_name !== 'string') return null;
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('amis_employee_name', employee.employee_name)
+    .eq('role', 'SALES')
+    .maybeSingle();
+  if (profileError || profile === null || typeof profile.id !== 'string') return null;
+  return profile.id;
+}
+
 export async function upsertMisaCustomerPlan(
   supabase: SupabaseClient,
   values: {

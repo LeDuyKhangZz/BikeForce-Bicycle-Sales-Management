@@ -1381,3 +1381,5 @@ Danh sách có hai cột kế hoạch tháng: **Tần suất/tháng** và **Doan
 Mobile dùng bố cục dashboard-card: khối tổng hợp A/B/C/D đếm toàn bộ khách theo nhân viên, mỗi khách là card với lưới chỉ số hai cột và vùng kế hoạch ở cuối. Desktop tiếp tục dùng bảng để tận dụng chiều rộng.
 
 Ngay trên danh sách có thanh tiến độ cam kết toàn tháng: **Chưa cam kết X KH**, **Đã cam kết Y/Tổng** và phần trăm. Cam kết `0` là đã xác nhận; chỉ `null`/để trống mới tính chưa cam kết.
+
+Theo DEC-096, editor kế hoạch chỉ xuất hiện trên trang Admin. Trang Sales hiển thị hai giá trị dạng chỉ đọc cùng tiến độ, không có ô nhập hoặc nút lưu.

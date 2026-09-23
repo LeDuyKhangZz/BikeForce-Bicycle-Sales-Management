@@ -3757,3 +3757,5 @@ Thêm kế hoạch khách hàng theo tháng: bảng riêng không cascade với 
 Thiết kế lại mobile theo mockup người dùng: search card, tổng hợp nhóm toàn bộ danh sách bằng count server-side, customer card có metric tiles 2 cột và editor kế hoạch riêng. Không thay rule màu ngày chưa mua đã duyệt.
 
 Bổ sung commitment progress đếm server-side toàn tháng: chưa cam kết, đã cam kết/tổng và phần trăm; có unit test phép tính 0/25/100% và clamp.
+
+Chuyển quyền quản lý kế hoạch sang Admin theo DEC-096: editor nằm ở Admin, Sales chỉ xem; action xác thực Admin và tự resolve tài khoản Sales từ tên MISA. Migration mới gỡ policy ghi của Sales và cấp ghi cho Admin.

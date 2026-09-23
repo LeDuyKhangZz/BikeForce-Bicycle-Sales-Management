@@ -2783,3 +2783,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Thêm cột trực tiếp vào snapshot; bị loại vì mỗi sync delete/insert sẽ xóa dữ liệu thủ công.
 - **Impact:** Sales sửa kế hoạch của mình, Admin xem; dữ liệu lưu theo tháng và không có FK cascade tới snapshot.
 - **Status:** APPROVED
+
+## DEC-096 — Chỉ Admin nhập kế hoạch khách hàng
+
+- **Date:** 2026-09-23
+- **Decision:** Admin nhập/sửa tần suất và doanh số cam kết; Sales chỉ xem.
+- **Reason:** Số khách hàng lớn khiến việc yêu cầu từng nhân viên nhập kế hoạch không khả thi; Admin quản lý tập trung.
+- **Alternatives:** Sales tự nhập từng khách hoặc nhập hàng loạt; không chọn ở luồng hiện tại.
+- **Impact:** Gỡ quyền INSERT/UPDATE của Sales ở RLS, chuyển editor sang trang Admin; dữ liệu cũ giữ nguyên.
+- **Status:** APPROVED

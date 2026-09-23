@@ -2636,3 +2636,4 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 Đã triển khai DEC-095: migration `20260923170000_misa_customer_monthly_plans.sql`, RLS Sales-own/Admin-read, action lưu và hai trường kế hoạch trên desktop/mobile. Cần chạy migration production trước khi thao tác lưu hoạt động.
 Đã redesign mobile theo mockup và thêm `getCachedMisaCustomerGroupCounts()` với bốn count server-side; desktop giữ bảng.
 Đã thêm `getCachedMisaCustomerCommitmentStats()` và thanh progress toàn tháng; committed_sales khác null (kể cả 0) là đã cam kết.
+Đã đổi theo DEC-096: Admin edit, Sales read-only; cần chạy migration `20260923180000_admin_manage_misa_customer_plans.sql` trên production.
