@@ -1283,3 +1283,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 
 - [x] Trang Nhân viên MISA đã đổi sang bố cục theo ảnh mẫu: hero, thanh tháng/tìm kiếm/tổng số, danh sách hai cột với số KH và liên kết chi tiết.
 - [x] Trang khách hàng nhân viên MISA đã đổi theo ảnh mẫu: tóm tắt, bảng 10 dòng/trang có số thứ tự, tìm kiếm CRM, xuất CSV trang hiện tại, phân trang số và bộ lọc bên phải.
+- [x] Sales có mục **Khách hàng**, chỉ xem snapshot Report 119 khớp `profiles.amis_employee_name`; có RLS chống truy cập chéo (2026-09-23)

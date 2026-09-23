@@ -22,9 +22,10 @@ export type SessionProfile = {
   employee_code: string | null;
   role: UserRole;
   is_active: boolean;
+  amis_employee_name: string | null;
 };
 
-const SESSION_PROFILE_COLUMNS = 'id, full_name, email, employee_code, role, is_active';
+const SESSION_PROFILE_COLUMNS = 'id, full_name, email, employee_code, role, is_active, amis_employee_name';
 
 /**
  * Hồ sơ của một user. Trả `null` khi không có dòng nào — bao gồm cả trường hợp

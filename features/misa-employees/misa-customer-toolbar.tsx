@@ -9,6 +9,8 @@ import type { MisaCustomer } from '@/types/misa-customer';
 
 type Props = {
   employeeId: number;
+  path?: string;
+  monthPickerPath?: string;
   month: string;
   monthLabel: string;
   filters: MisaCustomerFilters;
@@ -16,7 +18,7 @@ type Props = {
   rows: MisaCustomer[];
 };
 
-export function MisaCustomerToolbar({ employeeId, month, monthLabel, filters, searchQuery, rows }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -29,7 +31,7 @@ export function MisaCustomerToolbar({ employeeId, month, monthLabel, filters, se
 
   return (
     <div className="flex flex-wrap items-end gap-3 border-b border-border p-3 sm:p-4">
-      <form action={`/admin/misa-employees/${employeeId}`} method="get" className="flex min-w-[min(100%,18rem)] flex-1 items-end gap-2">
+      <form action={path} method="get" className="flex min-w-[min(100%,18rem)] flex-1 items-end gap-2">
         <input type="hidden" name="month" value={month} />
         {MISA_CUSTOMER_FILTER_FIELDS.flatMap((field) => {
           const filter = filters[field.key];
@@ -50,7 +52,7 @@ export function MisaCustomerToolbar({ employeeId, month, monthLabel, filters, se
           <Search aria-hidden="true" className="size-5" />
         </button>
       </form>
-      <Link href={`/admin/misa-employees?month=${month}`} title="Chọn tháng ở danh sách nhân viên"
+      <Link href={`${monthPickerPath}?month=${month}`} title="Chọn tháng"
         className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-3 font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         <CalendarDays aria-hidden="true" className="size-5" /> {monthLabel} <ChevronDown aria-hidden="true" className="size-4" />
       </Link>

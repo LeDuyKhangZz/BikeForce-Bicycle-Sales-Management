@@ -889,3 +889,6 @@ vẫn Admin-only. Server Action vẫn tự kiểm lại auth → active → role
 | Worker service role | Có | Không | Có, chỉ để claim/trả trạng thái | Không |
 
 Server Action vẫn kiểm tra tháng → auth → active → role trước khi insert. Service role chỉ được cấp trên bảng vận hành `monthly_sync_jobs`, không nới quyền trên `profiles`, `daily_reports` hoặc các bảng nghiệp vụ đã khóa bởi DEC-031.
+## Quyền xem khách hàng MISA của Sales (2026-09-23)
+
+Route `/sales/customers` yêu cầu vai `SALES`. RLS chỉ trả nhân viên và khách hàng Report 119 khớp `profiles.amis_employee_name` của chính `auth.uid()`; tài khoản chưa ánh xạ không nhận dữ liệu.

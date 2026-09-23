@@ -3738,3 +3738,6 @@ Người dùng chỉ ra bộ lọc chỉ có “Chứa”. Đã thêm menu toán
 Theo ảnh mẫu mới, đã làm lại `/admin/misa-employees`: tiêu đề/giới thiệu nổi bật, thanh chuyển tháng, tìm kiếm tên tức thời, tổng số nhân viên và danh sách hai cột kiểu bảng. Giữ liên kết vào chi tiết khách hàng. Không mở trình duyệt để tránh làm gián đoạn người dùng. Typecheck, lint và build exit 0.
 
 Theo ảnh mẫu trang chi tiết, đã làm lại `/admin/misa-employees/[id]`: thẻ tóm tắt nhân viên, toolbar tìm kiếm/kỳ tháng/xuất CSV, bảng 10 dòng/trang với cột thứ tự, phân trang số và panel lọc bên phải. `AISearchKeyword` được API CRM kiểm tra thật với mã BDI0005 trả một dòng. Xuất chỉ 10 dòng hiện tại; CSV có BOM và chặn công thức từ text. Unit liên quan 6/6, typecheck/lint/build exit 0. Không mở trình duyệt.
+### 2026-09-23 — Sales xem khách hàng MISA của mình
+
+Thêm route `/sales/customers` và mục điều hướng **Khách hàng**. Route ghép tài khoản bằng `profiles.amis_employee_name`, tái sử dụng bảng/bộ lọc snapshot Report 119. Migration mới cấp SELECT theo đúng ánh xạ của `auth.uid()`; không mở dữ liệu nhân viên khác. `npm run typecheck` và `npm run lint` đã chạy sạch.

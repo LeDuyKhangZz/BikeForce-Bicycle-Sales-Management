@@ -2625,3 +2625,6 @@ Trang `/admin/misa-employees/[id]` đã có 9 checkbox bộ lọc, áp dụng/b�
 Trang danh sách Nhân viên MISA được bố trí lại theo ảnh người dùng: hero, thanh tháng/tìm kiếm/tổng số, danh sách hai cột desktop chia thứ tự 1–10/11–21 khi có 21 dòng; mobile một cột. Bấm tên/số KH vẫn mở chi tiết. Typecheck/lint/build exit 0. Không dùng trình duyệt để xác minh theo phản hồi người dùng. Next Exact Steps: khi được yêu cầu, kiểm tra trực quan trang ở 375px/1440px; làm mới token CRM nếu hết hạn.
 
 Trang chi tiết khách hàng đã thiết kế lại theo ảnh: header và tóm tắt nhân viên, toolbar tìm kiếm/kỳ tháng/xuất CSV, bảng 10 dòng/trang, phân trang số và panel lọc bên phải. Tìm kiếm MISA `AISearchKeyword` kiểm chứng với BDI0005 trả đúng 1 dòng; CSV chỉ xuất trang hiện tại và chống công thức. Unit 6/6, typecheck/lint/build exit 0. Không mở trình duyệt. Next Exact Steps: khi người dùng yêu cầu, kiểm tra trực quan 375px/1440px; nếu cần Excel `.xlsx` thật hoặc xuất toàn bộ 241 dòng, xây luồng xuất server-side riêng.
+## 2026-09-23 — Sales xem khách hàng MISA
+
+Đã thêm `/sales/customers`, mục nav **Khách hàng**, truy vấn theo `profiles.amis_employee_name`, và migration `20260923150000_sales_read_own_misa_customers.sql` để Sales chỉ SELECT dữ liệu của mình. Cần chạy migration trên Supabase production trước khi trang deploy có dữ liệu, sau đó deploy commit mới.

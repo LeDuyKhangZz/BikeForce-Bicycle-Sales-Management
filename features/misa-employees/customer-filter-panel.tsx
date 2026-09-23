@@ -9,12 +9,13 @@ import { MISA_CUSTOMER_FILTER_FIELDS, MISA_FILTER_OPERATORS, type MisaCustomerFi
 
 type Props = {
   employeeId: number;
+  path?: string;
   month: string;
   filters: MisaCustomerFilters;
   searchQuery: string;
 };
 
-export function CustomerFilterPanel({ employeeId, month, filters, searchQuery }: Props) {
+export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/${employeeId}`, month, filters, searchQuery }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<Set<MisaCustomerFilterKey>>(
     () => new Set(MISA_CUSTOMER_FILTER_FIELDS.filter((field) => filters[field.key] !== undefined).map((field) => field.key)),
@@ -25,7 +26,6 @@ export function CustomerFilterPanel({ employeeId, month, filters, searchQuery }:
       return filter ? [[field.key, filter.operator]] : [];
     })),
   );
-  const path = `/admin/misa-employees/${employeeId}`;
   const resetQuery = new URLSearchParams({ month });
   if (searchQuery) resetQuery.set('q', searchQuery);
 

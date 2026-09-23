@@ -822,3 +822,6 @@ Các tham số lọc trong URL được whitelist và kiểm tra kiểu/độ d�
 Menu điều kiện gửi `op_<field>` trong URL; server chỉ chấp nhận mã có trong danh sách toán tử của đúng kiểu trường. Đã đối chiếu từ giao diện CRM: chữ `1/8/11/12/13/14`, số `0/9/3/5/2/4/13/14`, ngày cụ thể `11`, trước/sau `17/18` và các mốc tương đối. Điều kiện không cần giá trị gửi `Value: ''` theo phản hồi thử API CRM; URL phân trang giữ cả toán tử lẫn giá trị.
 
 Giao diện chi tiết mới dùng `PageSize: 10` cho `Account/Grid`. Ô tìm kiếm gửi `q` đã giới hạn 120 ký tự vào `AISearchKeyword`, kết hợp với bộ lọc ID nhân viên và các tiêu chí đang áp dụng; chuyển trang giữ `q`. Nút xuất dữ liệu tạo CSV ngay từ 10 dòng đã được server trả về, không thêm endpoint và không dùng token CRM ở client.
+## Danh sách khách hàng MISA cho Sales (2026-09-23)
+
+`/sales/customers` lấy tên AMIS từ hồ sơ phiên server-side, tìm nhân viên trong snapshot tháng rồi đọc danh sách khách hàng có phân trang và lọc tại database. Client không gửi tên hoặc ID nhân viên để quyết định quyền truy cập; RLS kiểm tra lại ánh xạ.

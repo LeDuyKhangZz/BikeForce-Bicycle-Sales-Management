@@ -15,6 +15,7 @@ import {
   Target,
   User,
   Users,
+  ContactRound,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -52,6 +53,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   SALES_TODAY: Home,
   SALES_HISTORY: History,
   SALES_RECONCILIATION: Scale,
+  SALES_CUSTOMERS: ContactRound,
   SALES_ACCOUNT: User,
   ADMIN_OVERVIEW: LayoutDashboard,
   ADMIN_REPORTS: FileText,

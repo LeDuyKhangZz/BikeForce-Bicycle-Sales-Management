@@ -19,6 +19,7 @@ export type NavKey =
   | 'SALES_TODAY'
   | 'SALES_HISTORY'
   | 'SALES_RECONCILIATION'
+  | 'SALES_CUSTOMERS'
   | 'SALES_ACCOUNT'
   | 'ADMIN_OVERVIEW'
   | 'ADMIN_REPORTS'
@@ -66,6 +67,12 @@ export const SALES_NAV_ITEMS: readonly NavItem[] = [
     label: 'Đối chiếu',
     href: '/sales/reconciliation',
     matchPrefixes: ['/sales/reconciliation'],
+  },
+  {
+    key: 'SALES_CUSTOMERS',
+    label: 'Khách hàng',
+    href: '/sales/customers',
+    matchPrefixes: ['/sales/customers'],
   },
   {
     key: 'SALES_ACCOUNT',
