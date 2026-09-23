@@ -3741,3 +3741,5 @@ Theo ảnh mẫu trang chi tiết, đã làm lại `/admin/misa-employees/[id]`:
 ### 2026-09-23 — Sales xem khách hàng MISA của mình
 
 Thêm route `/sales/customers` và mục điều hướng **Khách hàng**. Route ghép tài khoản bằng `profiles.amis_employee_name`, tái sử dụng bảng/bộ lọc snapshot Report 119. Migration mới cấp SELECT theo đúng ánh xạ của `auth.uid()`; không mở dữ liệu nhân viên khác. `npm run typecheck` và `npm run lint` đã chạy sạch.
+
+Điều chỉnh responsive theo phản hồi thực tế: trang Khách hàng mở rộng tối đa 1600px trên desktop thay vì bị bó trong khung Sales 768px. Mobile tiếp tục dùng card, control và phân trang tự xuống dòng.

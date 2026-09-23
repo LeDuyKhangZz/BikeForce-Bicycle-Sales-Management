@@ -2628,3 +2628,4 @@ Trang chi tiết khách hàng đã thiết kế lại theo ảnh: header và tó
 ## 2026-09-23 — Sales xem khách hàng MISA
 
 Đã thêm `/sales/customers`, mục nav **Khách hàng**, truy vấn theo `profiles.amis_employee_name`, và migration `20260923150000_sales_read_own_misa_customers.sql` để Sales chỉ SELECT dữ liệu của mình. Cần chạy migration trên Supabase production trước khi trang deploy có dữ liệu, sau đó deploy commit mới.
+Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn lại bên phải sidebar (tối đa 1600px); mobile giữ danh sách card và layout xuống dòng.

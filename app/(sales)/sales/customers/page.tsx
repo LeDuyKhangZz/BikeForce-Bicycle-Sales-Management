@@ -63,7 +63,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   const lastRow = result ? Math.min(firstRow + result.rows.length, result.total) : 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:max-w-[1600px] xl:-translate-x-1/2">
       <header className="rounded-2xl bg-gradient-to-r from-primary/5 via-background to-primary/5 p-5">
         <h1 className="text-2xl font-bold tracking-tight text-heading sm:text-3xl">Khách hàng của tôi</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -82,7 +82,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card flush className="min-w-0 overflow-hidden rounded-2xl">
             <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />
             {result.rows.length === 0 ? (
@@ -90,7 +90,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
             ) : (
               <>
                 <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} startIndex={firstRow} />
-                <nav aria-label="Phân trang khách hàng" className="flex items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
+                <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
                   <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
                   <div className="flex items-center gap-2">
                     {result.page > 1 && <Link href={pageHref(result.page - 1)} className={buttonClassName({ variant: 'secondary' })}>Trước</Link>}
