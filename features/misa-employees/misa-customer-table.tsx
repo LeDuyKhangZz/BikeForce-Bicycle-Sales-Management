@@ -1,4 +1,7 @@
+import { AlertTriangle, CircleAlert } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
+import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
 import { CUSTOMER_REVENUE_GROUP_RULE_TEXT, customerRevenueGroupLabel, getCustomerRevenueGroup, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { MisaCustomer } from '@/types/misa-customer';
@@ -8,6 +11,18 @@ type Props = {
   employeeName: string;
   startIndex: number;
 };
+
+function CustomerDormancyBadge({ days }: { days: number | null }) {
+  const level = getCustomerDormancyLevel(days);
+  if (level === 'UNKNOWN') return <span className="text-muted-foreground">—</span>;
+  if (level === 'DANGER') {
+    return <Badge tone="danger" icon={<CircleAlert aria-hidden="true" className="size-3.5" />}>{days} ngày</Badge>;
+  }
+  if (level === 'WARNING') {
+    return <Badge tone="warning" icon={<AlertTriangle aria-hidden="true" className="size-3.5" />}>{days} ngày</Badge>;
+  }
+  return <span className="inline-flex min-h-8 items-center rounded-pill border border-border bg-card px-2.5 tabular-nums text-heading">{days} ngày</span>;
+}
 
 export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
   const groupTone: Record<CustomerRevenueGroup, 'success' | 'info' | 'warning' | 'neutral'> = {
@@ -55,7 +70,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
               <td className="px-2 py-2 text-center align-top"><Badge tone={groupTone[group]} className="text-xs">{customerRevenueGroupLabel(group)}</Badge></td>
               <td className="break-words px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</td>
               <td className="px-2 py-2 text-center align-top tabular-nums">
-                <span className="inline-block min-w-8 rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">{customer.daysWithoutPurchase ?? '—'}</span>
+                <CustomerDormancyBadge days={customer.daysWithoutPurchase} />
               </td>
               <td className="break-words px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.lastVisitDate)}</td>
               <td className="break-words px-2 py-2 align-top">{customer.owner || '—'}</td>
@@ -79,7 +94,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Công nợ:</dt><dd className="tabular-nums">{formatMisaAmount(customer.debt)}</dd></div>
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Doanh số đơn hàng:</dt><dd className="tabular-nums">{formatMisaAmount(customer.orderSales)}</dd></div>
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày mua hàng gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div>
-              <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Số ngày chưa mua hàng:</dt><dd className="tabular-nums">{customer.daysWithoutPurchase ?? '—'}</dd></div>
+              <div className="flex flex-wrap items-center gap-2"><dt className="text-muted-foreground">Số ngày chưa mua hàng:</dt><dd><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div>
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày ghé thăm gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.lastVisitDate)}</dd></div>
               <div><dt className="text-muted-foreground">Chủ sở hữu</dt><dd className="break-words">{customer.owner || '—'}</dd></div>
             </dl>

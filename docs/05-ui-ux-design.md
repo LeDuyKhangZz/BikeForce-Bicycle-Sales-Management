@@ -1371,3 +1371,5 @@ Trên desktop, module dùng toàn bộ chiều rộng khả dụng bên phải s
 Theo yêu cầu ngày 2026-09-23, giao diện Sales không còn mục **Đối chiếu**; route `/sales/reconciliation` đã được gỡ. Module đối chiếu của Admin được giữ nguyên.
 
 Danh sách khách hàng của cả Admin và Sales có badge **Nhóm A/B/C/D**, kèm chú thích ngưỡng phía trên bảng. Trên mobile, badge nằm ở đầu từng thẻ khách hàng.
+
+Trường **Số ngày chưa mua hàng**: 0–15 ngày dùng nền trắng; 16–30 ngày dùng badge vàng có icon cảnh báo; trên 30 ngày dùng badge đỏ có icon cảnh báo. Quy tắc giống nhau ở bảng desktop và thẻ mobile.

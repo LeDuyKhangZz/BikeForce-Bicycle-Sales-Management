@@ -2631,3 +2631,4 @@ Trang chi tiết khách hàng đã thiết kế lại theo ảnh: header và tó
 Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn lại bên phải sidebar (tối đa 1600px); mobile giữ danh sách card và layout xuống dòng.
 Đã gỡ `SALES_RECONCILIATION`, route `/sales/reconciliation` và component Sales liên quan; Admin reconciliation không đổi.
 Đã thêm DEC-093 và `getCustomerRevenueGroup()` dùng chung: A ≥150 triệu, B ≥50 và <150 triệu, C >0 và <50 triệu, D 0/null; hiển thị ở desktop/mobile và CSV.
+Đã thêm DEC-094 và `getCustomerDormancyLevel()`: 0–15 trắng, 16–30 vàng, >30 đỏ, null là “—”; desktop/mobile dùng chung và có icon cảnh báo.

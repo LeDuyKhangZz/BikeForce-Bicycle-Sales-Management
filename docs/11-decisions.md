@@ -2765,3 +2765,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Tính riêng trong từng component; bị loại vì nhân bản business logic.
 - **Impact:** Bảng, thẻ mobile và CSV đều hiển thị cùng nhóm; có unit test cho các biên.
 - **Status:** APPROVED
+
+## DEC-094 — Mốc màu số ngày chưa mua hàng
+
+- **Date:** 2026-09-23
+- **Decision:** Dùng chung `getCustomerDormancyLevel()`: 0–15 ngày bình thường; 16–30 ngày cảnh báo vàng; trên 30 ngày cảnh báo đỏ; `null` là chưa có dữ liệu.
+- **Reason:** Giúp Admin và Sales nhận ra khách lâu chưa mua, với kết quả giống nhau trên desktop và mobile.
+- **Alternatives:** Tô màu trực tiếp riêng trong từng component; bị loại vì nhân bản ngưỡng nghiệp vụ.
+- **Impact:** Trạng thái vàng/đỏ có thêm icon cảnh báo, không truyền đạt chỉ bằng màu.
+- **Status:** APPROVED

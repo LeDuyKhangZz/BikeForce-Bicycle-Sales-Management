@@ -937,3 +937,5 @@ lượt đồng bộ cùng các tài khoản hiện tại.
 ## Phân nhóm khách hàng theo doanh số đơn hàng (2026-09-23)
 
 Trong danh sách khách hàng Report 119 của Admin và Sales: nhóm A có doanh số đơn hàng từ 150 triệu đồng; nhóm B từ 50 triệu đến dưới 150 triệu; nhóm C lớn hơn 0 và dưới 50 triệu; nhóm D bằng 0 hoặc chưa phát sinh doanh số. Hai màn hình phải dùng chung một hàm phân loại.
+
+Số ngày chưa mua hàng được cảnh báo theo cùng một quy tắc ở Admin và Sales: 0–15 ngày hiển thị bình thường nền trắng; 16–30 ngày cảnh báo vàng; trên 30 ngày cảnh báo đỏ; dữ liệu trống hiển thị “—”.
