@@ -247,7 +247,9 @@ export function drawReportCard(
       // SaleWork chưa có trường chỉ tiêu doanh thu tháng tương ứng với `netSales`.
       // Không lấy một số thực đạt khác làm chỉ tiêu chỉ để lấp đầy ô.
       target: PLACEHOLDER,
-      value: amis ? formatCurrency(amis.netSales) : PLACEHOLDER,
+      value: amis?.receiveAmount !== null && amis?.receiveAmount !== undefined
+        ? formatCurrency(amis.receiveAmount)
+        : PLACEHOLDER,
       percent: PLACEHOLDER,
     },
   ];

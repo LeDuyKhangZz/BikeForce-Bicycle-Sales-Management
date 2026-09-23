@@ -2596,6 +2596,8 @@ Participant `salework-accounting-sales` nay hiển thị/đọc AMIS bằng Nguy
 
 Nhãn SaleWork hằng ngày cũng đã đổi ở danh sách preview, bảng và ảnh; khóa account cũ chỉ còn dùng nội bộ để truy vấn.
 
+Ảnh telesale đọc `receive_amount` cho THỰC ĐẠT dòng “Doanh thu đã ghi” (Như Quỳnh: 721.709.926), không còn dùng `net_sales`; báo cáo tháng giữ nguyên.
+
 Đã thêm hai bảng `misa_report119_employees`/`misa_report119_customers` và RPC service-role-only để thay snapshot tháng trong một transaction. Script `fetch_report119.py` cào đủ khách theo từng nhân viên, kiểm số lượng, sau đó mới gọi RPC; `reports:sync` và monthly worker đã chạy bước này. Typecheck/lint/Python compile/diff-check sạch. Người dùng đã chạy migration/RPC trên Supabase; sync thật tháng 09/2026 exit 0, ghi 11 nhân viên và 2.337 khách hàng, cộng 11 dòng KPI. Next Exact Steps: bật Docker để chạy DB/RLS test và generate lại `types/database.types.ts`; sau đó chuyển service giao diện sang đọc snapshot khi muốn không phụ thuộc token MISA.
 
 Đã thêm `/admin/misa-employees` ở sidebar ADMIN, gọi trực tiếp CRM Report 119 THỐNG ĐẠT GROUP; xác nhận API thật tháng 09/2026 trả 21 nhân viên. `AMIS_BEARER_TOKEN` và `AMIS_COMPANY_CODE` chỉ ở `.env.local`; khi token hết hạn cần làm mới. Typecheck/lint/build pass. Next Exact Steps: mở trang bằng tài khoản ADMIN để kiểm tra giao diện; nếu triển khai cloud, thiết kế cấp lại phiên CRM server-side vì token phiên có hạn.

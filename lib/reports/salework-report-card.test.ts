@@ -61,6 +61,7 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
         noOfOrders: 8,
         targetAmount: 500_000_000,
         currentAmount: 420_000_000,
+        receiveAmount: 380_000_000,
         syncedAt: '2026-09-03T02:15:00Z',
       },
     });
@@ -104,11 +105,13 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
         noOfOrders: 8,
         targetAmount: null,
         currentAmount: 458_661_000,
+        receiveAmount: 721_709_926,
         syncedAt: '2026-09-03T02:15:00Z',
       },
     });
 
     expect(texts.some((call) => call.text === '458.661.000')).toBe(true);
+    expect(texts.some((call) => call.text === '721.709.926')).toBe(true);
     expect(texts.some((call) => call.text === '0')).toBe(false);
   });
 });

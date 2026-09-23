@@ -2,6 +2,8 @@
 
 **DEC-092 (2026-09-23):** `fetch_report119.py` cào đủ nhân viên và mọi trang `Account/Grid`, đối chiếu số khách từng nhân viên rồi gọi RPC thay snapshot tháng nguyên tử. Lỗi token/phân trang/số lượng/ghi DB trả exit khác 0 và giữ snapshot cũ. `reports:sync` và monthly worker đều chạy bước này.
 
+**2026-09-23 — Telesale kế toán:** riêng view model ảnh SaleWork, dòng “Doanh thu đã ghi” lấy `amis_employee_metrics.receive_amount` làm THỰC ĐẠT; không dùng `net_sales`. Thay đổi này không chạm view model Tổng kết tháng.
+
 **ISSUE-054 (2026-09-14):** selectActMonth kiểm tra input.checked của từng Chọn tất cả, chỉclick nếu chưa chọn; chờ counterNV/khách>0 và cảhai checkboxchecked trước Xem báo cáo (60s). MISA restorechecked và tảicount saupopup, không giảđịnh danh sách chưachọn. Khôngđổi request/API/schema.
 
 **DEC-090 (2026-09-14):** disconnect AMIS đóng tab trong finally trước ngắt transport CDP; khóa PID luôn giải phóng. Lượt kế tiếp dùng lại profile, mở tab mới hoặc Chrome nếu endpoint chưa chạy. Trigger Windows PT10M; thứ tự nguồn sync giữ nguyên.

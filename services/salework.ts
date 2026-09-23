@@ -25,6 +25,7 @@ export type SaleWorkReport = {
     noOfOrders: number;
     targetAmount: number | null;
     currentAmount: number;
+    receiveAmount: number | null;
     syncedAt: string;
   } | null;
 };
@@ -49,6 +50,7 @@ type AmisEmployeeMetricRow = {
   no_of_orders: number | null;
   target_amount: number | null;
   current_amount: number | null;
+  receive_amount: number | null;
   synced_at: string;
 };
 
@@ -108,6 +110,7 @@ function toAmisData(row: AmisEmployeeMetricRow): SaleWorkReport['amis'] {
     noOfOrders: row.no_of_orders ?? 0,
     targetAmount: row.target_amount,
     currentAmount: row.current_amount ?? 0,
+    receiveAmount: row.receive_amount,
     syncedAt: row.synced_at,
   };
 }
@@ -179,7 +182,7 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     const { data: amisData, error: amisError } = await supabase
       .from('amis_employee_metrics')
       .select(
-        'employee_name,net_sales,sales,return_sales,no_of_orders,target_amount,current_amount,synced_at',
+        'employee_name,net_sales,sales,return_sales,no_of_orders,target_amount,current_amount,receive_amount,synced_at',
       )
       .eq('period_month', period)
       .in('employee_name', employeeNames);
