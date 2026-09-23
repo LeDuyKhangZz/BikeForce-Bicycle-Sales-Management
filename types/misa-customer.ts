@@ -9,4 +9,6 @@ export type MisaCustomer = {
   daysWithoutPurchase: number | null;
   lastVisitDate: string | null;
   owner: string;
+  monthlyFrequency?: number;
+  committedSales?: number | null;
 };

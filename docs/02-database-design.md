@@ -4,6 +4,8 @@
 
 > **2026-09-23:** Sales đã đăng nhập được đọc đúng snapshot có `employee_name = profiles.amis_employee_name` của mình. Hai policy `*_select_own` không cấp quyền xem nhân viên khác; Admin giữ quyền đọc toàn bộ.
 
+> **2026-09-23 — DEC-095:** `misa_customer_monthly_plans` lưu kế hoạch thủ công tách khỏi snapshot Report 119, khóa theo tháng + nhân viên MISA + khách hàng MISA. Bảng cố ý không có FK cascade tới snapshot vì worker thay snapshot bằng delete/insert. Sales chỉ đọc/ghi kế hoạch của mình qua RLS; Admin chỉ đọc.
+
 ## Bổ sung 12/09/2026 — DEC-089
 
 Migration `20260912120000_monthly_participant_travel_expenses.sql`: bảng `monthly_participant_travel_expenses` PK `(period_month,participant_key)`, bigint nullable không âm, CHECK ngày 01/allowlist ba người, audit updated_by/updated_at. Enabled + forced RLS, Admin-only SELECT/INSERT/UPDATE; không DELETE/service_role. RPC `save_monthly_travel_expense_entries` SECURITY INVOKER xác thực Admin/người nhận, lưu nguyên tử cả bảng Sales cũ và participant. Không đổi dữ liệu/quyền bảng công tác phí cũ.

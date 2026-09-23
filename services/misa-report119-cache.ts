@@ -172,9 +172,31 @@ export async function getCachedMisaEmployeeCustomers(
   if (params.page > totalPages) return null;
   const rows = (data ?? []).map(customerFromRow);
   if (rows.some((row) => row === null)) throw new Error('Snapshot khách hàng MISA không hợp lệ.');
+  const validRows = rows.filter((row) => row !== null);
+  const customerIds = validRows.map((row) => row.id);
+  let plans: unknown[] = [];
+  if (customerIds.length > 0) {
+    const planResult = await supabase
+      .from('misa_customer_monthly_plans')
+      .select('misa_customer_id,monthly_frequency,committed_sales')
+      .eq('period_month', periodMonth)
+      .eq('misa_employee_id', params.employeeId)
+      .in('misa_customer_id', customerIds);
+    if (planResult.error === null) plans = planResult.data ?? [];
+    else if (planResult.error.code !== '42P01' && planResult.error.code !== 'PGRST205') {
+      throw new Error(`Không đọc được kế hoạch khách hàng: ${planResult.error.message}`);
+    }
+  }
+  const planByCustomer = new Map<number, { monthlyFrequency: number; committedSales: number | null }>();
+  for (const plan of plans) {
+    if (typeof plan !== 'object' || plan === null || !('misa_customer_id' in plan) || typeof plan.misa_customer_id !== 'number' ||
+        !('monthly_frequency' in plan) || typeof plan.monthly_frequency !== 'number') continue;
+    const committedSales = 'committed_sales' in plan && typeof plan.committed_sales === 'number' ? plan.committed_sales : null;
+    planByCustomer.set(plan.misa_customer_id, { monthlyFrequency: plan.monthly_frequency, committedSales });
+  }
   return {
     employee: { id: employeeValue.misa_employee_id, name: employeeValue.employee_name, customerCount: employeeValue.customer_count },
-    rows: rows.filter((row) => row !== null),
+    rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id) })),
     page: params.page,
     pageSize: PAGE_SIZE,
     total,

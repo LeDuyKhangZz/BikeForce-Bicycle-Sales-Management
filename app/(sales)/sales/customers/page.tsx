@@ -89,7 +89,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
               <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
             ) : (
               <>
-                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} startIndex={firstRow} />
+                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} canEditPlans />
                 <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
                   <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
                   <div className="flex items-center gap-2">

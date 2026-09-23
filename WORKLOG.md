@@ -3751,3 +3751,5 @@ Thêm nguồn chuẩn `getCustomerRevenueGroup()` phân nhóm khách hàng theo 
 Thêm `getCustomerDormancyLevel()` và hiển thị mốc màu số ngày chưa mua hàng: 0–15 trắng, 16–30 vàng, >30 đỏ. Badge cảnh báo có icon; unit test khóa biên 15/16/30/31.
 
 Tinh chỉnh bảng khách hàng sau phản hồi UI: badge compact không bẻ dòng, cân lại 10 cột, ẩn cột Chủ sở hữu bị lặp, giữ owner trong CSV và giữ nhãn đầy đủ cho screen reader.
+
+Thêm kế hoạch khách hàng theo tháng: bảng riêng không cascade với snapshot, RLS theo Sales, action Zod + auth, tần suất mặc định A/B/C/D = 4/2/1/1 và doanh số cam kết nullable. Admin xem, Sales sửa trên bảng/thẻ; CSV có thêm hai cột.

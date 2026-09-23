@@ -2774,3 +2774,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Tô màu trực tiếp riêng trong từng component; bị loại vì nhân bản ngưỡng nghiệp vụ.
 - **Impact:** Trạng thái vàng/đỏ có thêm icon cảnh báo, không truyền đạt chỉ bằng màu.
 - **Status:** APPROVED
+
+## DEC-095 — Kế hoạch khách hàng tách khỏi snapshot MISA
+
+- **Date:** 2026-09-23
+- **Decision:** Lưu tần suất và doanh số cam kết trong `misa_customer_monthly_plans`, độc lập với bảng snapshot. Tần suất mặc định A/B/C/D lần lượt là 4/2/1/1; cam kết chưa nhập là `null`.
+- **Reason:** Có hàng trăm khách hàng nên tần suất cần tự gợi ý; dữ liệu người dùng nhập không được mất khi worker thay snapshot.
+- **Alternatives:** Thêm cột trực tiếp vào snapshot; bị loại vì mỗi sync delete/insert sẽ xóa dữ liệu thủ công.
+- **Impact:** Sales sửa kế hoạch của mình, Admin xem; dữ liệu lưu theo tháng và không có FK cascade tới snapshot.
+- **Status:** APPROVED

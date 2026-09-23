@@ -17,3 +17,9 @@ export function getCustomerRevenueGroup(orderSales: number | null): CustomerReve
 export function customerRevenueGroupLabel(group: CustomerRevenueGroup): string {
   return `Nhóm ${group}`;
 }
+
+export function defaultMonthlyFrequency(group: CustomerRevenueGroup): number {
+  if (group === 'A') return 4;
+  if (group === 'B') return 2;
+  return 1;
+}

@@ -825,3 +825,5 @@ Giao diện chi tiết mới dùng `PageSize: 10` cho `Account/Grid`. Ô tìm ki
 ## Danh sách khách hàng MISA cho Sales (2026-09-23)
 
 `/sales/customers` lấy tên AMIS từ hồ sơ phiên server-side, tìm nhân viên trong snapshot tháng rồi đọc danh sách khách hàng có phân trang và lọc tại database. Client không gửi tên hoặc ID nhân viên để quyết định quyền truy cập; RLS kiểm tra lại ánh xạ.
+
+Sau khi đọc một trang khách hàng, service đọc kế hoạch của đúng các customer ID trên trang rồi ghép vào view model. Server Action xác thực Zod, xác thực Sales server-side và upsert bảng kế hoạch dưới client chịu RLS. Worker MISA chỉ thay hai bảng snapshot, không ghi bảng kế hoạch.

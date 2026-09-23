@@ -1,15 +1,19 @@
 import { AlertTriangle, CircleAlert } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { CustomerPlanEditor } from '@/features/misa-employees/customer-plan-editor';
 import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
-import { CUSTOMER_REVENUE_GROUP_RULE_TEXT, customerRevenueGroupLabel, getCustomerRevenueGroup, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
+import { CUSTOMER_REVENUE_GROUP_RULE_TEXT, customerRevenueGroupLabel, defaultMonthlyFrequency, getCustomerRevenueGroup, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { MisaCustomer } from '@/types/misa-customer';
 
 type Props = {
   rows: MisaCustomer[];
   employeeName: string;
   startIndex: number;
+  employeeId: number;
+  month: string;
+  canEditPlans?: boolean;
 };
 
 function CustomerDormancyBadge({ days }: { days: number | null }) {
@@ -32,7 +36,7 @@ function CustomerDormancyBadge({ days }: { days: number | null }) {
   return <span className="inline-flex min-w-8 items-center justify-center whitespace-nowrap rounded-pill border border-border bg-card px-2 py-0.5 tabular-nums text-heading">{days}<span className="sr-only"> ngày</span></span>;
 }
 
-export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
+export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, month, canEditPlans = false }: Props) {
   const groupTone: Record<CustomerRevenueGroup, 'success' | 'info' | 'warning' | 'neutral'> = {
     A: 'success', B: 'info', C: 'warning', D: 'neutral',
   };
@@ -45,10 +49,10 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
       <table className="hidden w-full table-fixed text-left text-xs xl:table">
         <caption className="sr-only">Khách hàng phụ trách của {employeeName}</caption>
         <colgroup>
-          <col className="w-[4%]" /><col className="w-[9%]" /><col className="w-[18%]" />
-          <col className="w-[12%]" /><col className="w-[10%]" /><col className="w-[12%]" />
-          <col className="w-[7%]" /><col className="w-[11%]" /><col className="w-[8%]" />
-          <col className="w-[9%]" />
+          <col className="w-[3%]" /><col className="w-[7%]" /><col className="w-[12%]" />
+          <col className="w-[8%]" /><col className="w-[8%]" /><col className="w-[9%]" />
+          <col className="w-[5%]" /><col className="w-[8%]" /><col className="w-[16%]" />
+          <col className="w-[8%]" /><col className="w-[7%]" /><col className="w-[9%]" />
         </colgroup>
         <thead className="bg-primary/5 text-heading">
           <tr>
@@ -59,6 +63,8 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
             <th scope="col" className="px-2 py-3 text-right font-semibold">Công nợ</th>
             <th scope="col" className="px-2 py-3 text-right font-semibold">Doanh số đơn hàng</th>
             <th scope="col" className="px-2 py-3 text-center font-semibold">Nhóm</th>
+            <th scope="col" className="px-2 py-3 text-center font-semibold">Tần suất/tháng</th>
+            <th scope="col" className="px-2 py-3 text-right font-semibold">Doanh số cam kết</th>
             <th scope="col" className="px-2 py-3 font-semibold">Ngày mua hàng gần nhất</th>
             <th scope="col" className="px-2 py-3 text-center font-semibold">Số ngày chưa mua hàng</th>
             <th scope="col" className="px-2 py-3 font-semibold">Ngày ghé thăm gần nhất</th>
@@ -67,6 +73,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
         <tbody>
           {rows.map((customer, index) => {
             const group = getCustomerRevenueGroup(customer.orderSales);
+            const frequency = customer.monthlyFrequency ?? defaultMonthlyFrequency(group);
             return (
             <tr key={customer.id} className={index % 2 === 1 ? 'bg-primary/[0.035]' : 'bg-card'}>
               <td className="px-2 py-2 align-top tabular-nums">{startIndex + index + 1}</td>
@@ -76,6 +83,11 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
               <td className="px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.debt)}</td>
               <td className="px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.orderSales)}</td>
               <td className="px-2 py-2 text-center align-top"><Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge></td>
+              {canEditPlans ? (
+                <td colSpan={2} className="px-2 py-2 align-top"><CustomerPlanEditor month={month} employeeId={employeeId} customerId={customer.id} frequency={frequency} committedSales={customer.committedSales ?? null} /></td>
+              ) : (
+                <><td className="px-2 py-2 text-center align-top tabular-nums">{frequency} lần</td><td className="px-2 py-2 text-right align-top tabular-nums">{customer.committedSales === undefined || customer.committedSales === null ? 'Chưa cam kết' : formatMisaAmount(customer.committedSales)}</td></>
+              )}
               <td className="whitespace-nowrap px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</td>
               <td className="px-2 py-2 text-center align-top tabular-nums">
                 <CustomerDormancyBadge days={customer.daysWithoutPurchase} />
@@ -89,6 +101,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
       <ol className="divide-y divide-border xl:hidden">
         {rows.map((customer, index) => {
           const group = getCustomerRevenueGroup(customer.orderSales);
+          const frequency = customer.monthlyFrequency ?? defaultMonthlyFrequency(group);
           return (
           <li key={customer.id} className="min-w-0 px-4 py-4 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -104,6 +117,11 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
               <div className="flex flex-wrap items-center gap-2"><dt className="text-muted-foreground">Số ngày chưa mua hàng:</dt><dd><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div>
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày ghé thăm gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.lastVisitDate)}</dd></div>
             </dl>
+            <div className="mt-3 border-t border-border pt-3">
+              {canEditPlans ? <CustomerPlanEditor month={month} employeeId={employeeId} customerId={customer.id} frequency={frequency} committedSales={customer.committedSales ?? null} /> : (
+                <dl className="grid grid-cols-2 gap-3"><div><dt className="text-muted-foreground">Tần suất/tháng</dt><dd className="font-semibold">{frequency} lần</dd></div><div><dt className="text-muted-foreground">Doanh số cam kết</dt><dd className="font-semibold tabular-nums">{customer.committedSales === undefined || customer.committedSales === null ? 'Chưa cam kết' : formatMisaAmount(customer.committedSales)}</dd></div></dl>
+              )}
+            </div>
           </li>
           );
         })}

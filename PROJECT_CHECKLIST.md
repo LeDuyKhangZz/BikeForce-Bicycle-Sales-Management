@@ -1289,3 +1289,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Phân nhóm A/B/C/D theo doanh số đơn hàng trên danh sách khách hàng Admin, Sales, mobile và CSV (DEC-093)
 - [x] Đổi màu số ngày chưa mua hàng theo mốc 15/16/30/31, dùng chung Admin và Sales (DEC-094)
 - [x] Tối ưu CSS bảng khách hàng desktop/mobile: badge compact, cột cân đối, không lặp Chủ sở hữu (2026-09-23)
+- [x] Kế hoạch khách hàng theo tháng tách snapshot: tần suất mặc định theo nhóm, cam kết Sales nhập, Admin xem (DEC-095)

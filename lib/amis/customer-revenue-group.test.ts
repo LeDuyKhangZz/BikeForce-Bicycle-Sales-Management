@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCustomerRevenueGroup } from './customer-revenue-group';
+import { defaultMonthlyFrequency, getCustomerRevenueGroup } from './customer-revenue-group';
 
 describe('getCustomerRevenueGroup', () => {
   it.each([
@@ -13,5 +13,11 @@ describe('getCustomerRevenueGroup', () => {
     [null, 'D'],
   ] as const)('phân loại doanh số %s thành nhóm %s', (value, expected) => {
     expect(getCustomerRevenueGroup(value)).toBe(expected);
+  });
+});
+
+describe('defaultMonthlyFrequency', () => {
+  it.each([['A', 4], ['B', 2], ['C', 1], ['D', 1]] as const)('nhóm %s mặc định %s lần/tháng', (group, expected) => {
+    expect(defaultMonthlyFrequency(group)).toBe(expected);
   });
 });
