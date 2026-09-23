@@ -1369,3 +1369,5 @@ Thanh điều hướng Sales có mục **Khách hàng**. Trang hiển thị riê
 Trên desktop, module dùng toàn bộ chiều rộng khả dụng bên phải sidebar; trên màn hình nhỏ, bảng chuyển thành danh sách thẻ và các control được phép xuống dòng, không cuộn ngang.
 
 Theo yêu cầu ngày 2026-09-23, giao diện Sales không còn mục **Đối chiếu**; route `/sales/reconciliation` đã được gỡ. Module đối chiếu của Admin được giữ nguyên.
+
+Danh sách khách hàng của cả Admin và Sales có badge **Nhóm A/B/C/D**, kèm chú thích ngưỡng phía trên bảng. Trên mobile, badge nằm ở đầu từng thẻ khách hàng.

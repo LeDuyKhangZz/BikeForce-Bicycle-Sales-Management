@@ -2757,3 +2757,11 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 **Alternatives:** Chỉ đổi nội dung UI nhưng giữ validation/database ở 10 — bị loại vì tạo thông báo sai và khiến giá trị 5 vẫn không lưu được; bỏ hẳn sàn — bị loại vì vượt phạm vi yêu cầu.
 **Impact:** Thay thế phần sàn 10 của DEC-049; cập nhật Zod, UI helper, CHECK `ck_target_visit_points`, unit/integration test và tài liệu liên quan. Không đổi trần 1.000, actual, RLS hay dữ liệu hiện hữu.
 **Status:** APPROVED — yêu cầu trực tiếp của người dùng.
+## DEC-093 — Một nguồn phân nhóm khách hàng Report 119
+
+- **Date:** 2026-09-23
+- **Decision:** Cả Admin và Sales gọi chung `getCustomerRevenueGroup(orderSales)`: A ≥ 150 triệu; B ≥ 50 và < 150 triệu; C > 0 và < 50 triệu; D bằng 0 hoặc chưa có doanh số.
+- **Reason:** Hai vai đang hiển thị cùng snapshot và không được phép lệch nhóm ở các giá trị biên.
+- **Alternatives:** Tính riêng trong từng component; bị loại vì nhân bản business logic.
+- **Impact:** Bảng, thẻ mobile và CSV đều hiển thị cùng nhóm; có unit test cho các biên.
+- **Status:** APPROVED

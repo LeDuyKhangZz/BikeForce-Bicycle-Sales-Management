@@ -934,3 +934,6 @@ lượt đồng bộ cùng các tài khoản hiện tại.
 **BR-032 (APPROVED 2026-09-11):** Admin có nút đồng bộ dữ liệu tháng ngay trên màn hình Tổng kết tháng. Nút chỉ tạo yêu cầu cho kỳ đang chọn; worker trên máy đồng bộ lấy AMIS và SaleWork theo tháng, dùng namespace snapshot tháng riêng và tuyệt đối không chạy hoặc ghi đè luồng báo cáo ngày.
 
 Ánh xạ SaleWork riêng cho Tổng kết tháng gồm `Nguyễn Trần Đăng Khoa → Tàu - MT`. Phần AMIS của Khoa vẫn lấy theo `profiles.amis_employee_name` và toàn bộ logic lọc kỳ hiện hữu; không ánh xạ tên AMIS qua tên tài khoản SaleWork.
+## Phân nhóm khách hàng theo doanh số đơn hàng (2026-09-23)
+
+Trong danh sách khách hàng Report 119 của Admin và Sales: nhóm A có doanh số đơn hàng từ 150 triệu đồng; nhóm B từ 50 triệu đến dưới 150 triệu; nhóm C lớn hơn 0 và dưới 50 triệu; nhóm D bằng 0 hoặc chưa phát sinh doanh số. Hai màn hình phải dùng chung một hàm phân loại.

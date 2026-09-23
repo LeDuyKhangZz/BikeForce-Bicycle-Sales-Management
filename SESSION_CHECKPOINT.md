@@ -2630,3 +2630,4 @@ Trang chi tiết khách hàng đã thiết kế lại theo ảnh: header và tó
 Đã thêm `/sales/customers`, mục nav **Khách hàng**, truy vấn theo `profiles.amis_employee_name`, và migration `20260923150000_sales_read_own_misa_customers.sql` để Sales chỉ SELECT dữ liệu của mình. Cần chạy migration trên Supabase production trước khi trang deploy có dữ liệu, sau đó deploy commit mới.
 Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn lại bên phải sidebar (tối đa 1600px); mobile giữ danh sách card và layout xuống dòng.
 Đã gỡ `SALES_RECONCILIATION`, route `/sales/reconciliation` và component Sales liên quan; Admin reconciliation không đổi.
+Đã thêm DEC-093 và `getCustomerRevenueGroup()` dùng chung: A ≥150 triệu, B ≥50 và <150 triệu, C >0 và <50 triệu, D 0/null; hiển thị ở desktop/mobile và CSV.

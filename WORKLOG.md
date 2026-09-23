@@ -3745,3 +3745,5 @@ Thêm route `/sales/customers` và mục điều hướng **Khách hàng**. Rout
 Điều chỉnh responsive theo phản hồi thực tế: trang Khách hàng mở rộng tối đa 1600px trên desktop thay vì bị bó trong khung Sales 768px. Mobile tiếp tục dùng card, control và phân trang tự xuống dòng.
 
 Gỡ mục điều hướng và route Đối chiếu khỏi khu vực Sales theo yêu cầu; không thay đổi màn hình `/admin/reconciliation`.
+
+Thêm nguồn chuẩn `getCustomerRevenueGroup()` phân nhóm khách hàng theo `order_sales`, dùng chung cho bảng Admin, bảng Sales, thẻ mobile và CSV. Unit test khóa các biên 0, 50 triệu và 150 triệu.
