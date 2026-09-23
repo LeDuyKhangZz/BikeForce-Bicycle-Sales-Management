@@ -1373,3 +1373,5 @@ Theo yêu cầu ngày 2026-09-23, giao diện Sales không còn mục **Đối c
 Danh sách khách hàng của cả Admin và Sales có badge **Nhóm A/B/C/D**, kèm chú thích ngưỡng phía trên bảng. Trên mobile, badge nằm ở đầu từng thẻ khách hàng.
 
 Trường **Số ngày chưa mua hàng**: 0–15 ngày dùng nền trắng; 16–30 ngày dùng badge vàng có icon cảnh báo; trên 30 ngày dùng badge đỏ có icon cảnh báo. Quy tắc giống nhau ở bảng desktop và thẻ mobile.
+
+Sau kiểm tra giao diện thực tế, badge trong bảng desktop dùng dạng compact: nhóm chỉ hiện A/B/C/D, số ngày chỉ hiện số và icon; thông tin đầy đủ vẫn có nhãn hỗ trợ screen reader. Cột Chủ sở hữu được ẩn khỏi màn hình chi tiết vì đã trùng với nhân viên đang xem, nhưng vẫn giữ trong CSV.

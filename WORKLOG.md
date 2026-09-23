@@ -3749,3 +3749,5 @@ Gỡ mục điều hướng và route Đối chiếu khỏi khu vực Sales theo
 Thêm nguồn chuẩn `getCustomerRevenueGroup()` phân nhóm khách hàng theo `order_sales`, dùng chung cho bảng Admin, bảng Sales, thẻ mobile và CSV. Unit test khóa các biên 0, 50 triệu và 150 triệu.
 
 Thêm `getCustomerDormancyLevel()` và hiển thị mốc màu số ngày chưa mua hàng: 0–15 trắng, 16–30 vàng, >30 đỏ. Badge cảnh báo có icon; unit test khóa biên 15/16/30/31.
+
+Tinh chỉnh bảng khách hàng sau phản hồi UI: badge compact không bẻ dòng, cân lại 10 cột, ẩn cột Chủ sở hữu bị lặp, giữ owner trong CSV và giữ nhãn đầy đủ cho screen reader.

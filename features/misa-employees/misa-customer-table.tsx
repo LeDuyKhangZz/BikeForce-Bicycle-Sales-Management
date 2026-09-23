@@ -16,12 +16,20 @@ function CustomerDormancyBadge({ days }: { days: number | null }) {
   const level = getCustomerDormancyLevel(days);
   if (level === 'UNKNOWN') return <span className="text-muted-foreground">—</span>;
   if (level === 'DANGER') {
-    return <Badge tone="danger" icon={<CircleAlert aria-hidden="true" className="size-3.5" />}>{days} ngày</Badge>;
+    return (
+      <Badge tone="danger" icon={<CircleAlert aria-hidden="true" className="size-3" />} className="whitespace-nowrap px-2 py-0.5 text-xs">
+        {days}<span className="sr-only"> ngày, cảnh báo đỏ</span>
+      </Badge>
+    );
   }
   if (level === 'WARNING') {
-    return <Badge tone="warning" icon={<AlertTriangle aria-hidden="true" className="size-3.5" />}>{days} ngày</Badge>;
+    return (
+      <Badge tone="warning" icon={<AlertTriangle aria-hidden="true" className="size-3" />} className="whitespace-nowrap px-2 py-0.5 text-xs">
+        {days}<span className="sr-only"> ngày, cảnh báo vàng</span>
+      </Badge>
+    );
   }
-  return <span className="inline-flex min-h-8 items-center rounded-pill border border-border bg-card px-2.5 tabular-nums text-heading">{days} ngày</span>;
+  return <span className="inline-flex min-w-8 items-center justify-center whitespace-nowrap rounded-pill border border-border bg-card px-2 py-0.5 tabular-nums text-heading">{days}<span className="sr-only"> ngày</span></span>;
 }
 
 export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
@@ -30,16 +38,17 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
   };
   return (
     <>
-      <p className="border-b border-border bg-primary/[0.025] px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-        Quy tắc nhóm: {CUSTOMER_REVENUE_GROUP_RULE_TEXT}.
-      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-primary/[0.025] px-4 py-2.5 text-xs text-muted-foreground">
+        <span className="font-semibold text-heading">Phân nhóm doanh số</span>
+        <span>{CUSTOMER_REVENUE_GROUP_RULE_TEXT}</span>
+      </div>
       <table className="hidden w-full table-fixed text-left text-xs xl:table">
         <caption className="sr-only">Khách hàng phụ trách của {employeeName}</caption>
         <colgroup>
-          <col className="w-[3%]" /><col className="w-[7%]" /><col className="w-[13%]" />
-          <col className="w-[9%]" /><col className="w-[9%]" /><col className="w-[10%]" />
-          <col className="w-[6%]" /><col className="w-[9%]" /><col className="w-[8%]" />
-          <col className="w-[9%]" /><col className="w-[17%]" />
+          <col className="w-[4%]" /><col className="w-[9%]" /><col className="w-[18%]" />
+          <col className="w-[12%]" /><col className="w-[10%]" /><col className="w-[12%]" />
+          <col className="w-[7%]" /><col className="w-[11%]" /><col className="w-[8%]" />
+          <col className="w-[9%]" />
         </colgroup>
         <thead className="bg-primary/5 text-heading">
           <tr>
@@ -53,7 +62,6 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
             <th scope="col" className="px-2 py-3 font-semibold">Ngày mua hàng gần nhất</th>
             <th scope="col" className="px-2 py-3 text-center font-semibold">Số ngày chưa mua hàng</th>
             <th scope="col" className="px-2 py-3 font-semibold">Ngày ghé thăm gần nhất</th>
-            <th scope="col" className="px-2 py-3 font-semibold">Chủ sở hữu</th>
           </tr>
         </thead>
         <tbody>
@@ -65,15 +73,14 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
               <th scope="row" className="break-words px-2 py-2 align-top font-semibold text-primary">{customer.code || '—'}</th>
               <td className="break-words px-2 py-2 align-top">{customer.name || '—'}</td>
               <td className="break-words px-2 py-2 align-top">{customer.billingProvince || '—'}</td>
-              <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.debt)}</td>
-              <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.orderSales)}</td>
-              <td className="px-2 py-2 text-center align-top"><Badge tone={groupTone[group]} className="text-xs">{customerRevenueGroupLabel(group)}</Badge></td>
-              <td className="break-words px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</td>
+              <td className="px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.debt)}</td>
+              <td className="px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.orderSales)}</td>
+              <td className="px-2 py-2 text-center align-top"><Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge></td>
+              <td className="whitespace-nowrap px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</td>
               <td className="px-2 py-2 text-center align-top tabular-nums">
                 <CustomerDormancyBadge days={customer.daysWithoutPurchase} />
               </td>
-              <td className="break-words px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.lastVisitDate)}</td>
-              <td className="break-words px-2 py-2 align-top">{customer.owner || '—'}</td>
+              <td className="whitespace-nowrap px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.lastVisitDate)}</td>
             </tr>
             );
           })}
@@ -86,7 +93,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
           <li key={customer.id} className="min-w-0 px-4 py-4 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-semibold text-primary">{startIndex + index + 1}. {customer.code || '—'}</p>
-              <Badge tone={groupTone[group]} className="text-xs">{customerRevenueGroupLabel(group)}</Badge>
+              <Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge>
             </div>
             <h2 className="mt-1 break-words text-base font-semibold text-heading">{customer.name || '—'}</h2>
             <dl className="mt-2 grid gap-1.5">
@@ -96,7 +103,6 @@ export function MisaCustomerTable({ rows, employeeName, startIndex }: Props) {
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày mua hàng gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div>
               <div className="flex flex-wrap items-center gap-2"><dt className="text-muted-foreground">Số ngày chưa mua hàng:</dt><dd><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div>
               <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày ghé thăm gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.lastVisitDate)}</dd></div>
-              <div><dt className="text-muted-foreground">Chủ sở hữu</dt><dd className="break-words">{customer.owner || '—'}</dd></div>
             </dl>
           </li>
           );
