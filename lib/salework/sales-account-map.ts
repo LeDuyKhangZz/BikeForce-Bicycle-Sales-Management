@@ -15,6 +15,10 @@ const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Dương Văn Thịnh': 'Abraham Thịnh Miền Trung',
 };
 
+const SALEWORK_DISPLAY_NAME_MAP: Readonly<Record<string, string>> = {
+  'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
+};
+
 /**
  * SaleWork thêm tiền tố `(OFF)` vào tên hiển thị khi tài khoản đang nghỉ.
  * Đây chỉ là trạng thái tức thời, không phải một tài khoản khác, nên phải bỏ
@@ -43,4 +47,9 @@ export const MONTHLY_SALEWORK_ACCOUNT_NAMES: readonly string[] = Object.values(
 
 export function getSaleWorkAccountName(salesFullName: string): string | null {
   return SALES_SALEWORK_ACCOUNT_MAP[salesFullName.trim()] ?? null;
+}
+
+/** Đổi nhãn giao diện nhưng giữ nguyên account name làm khóa truy vấn SaleWork. */
+export function getSaleWorkDisplayName(accountName: string): string {
+  return SALEWORK_DISPLAY_NAME_MAP[accountName] ?? accountName;
 }

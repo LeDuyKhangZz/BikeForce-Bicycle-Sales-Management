@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getSaleWorkAccountName,
+  getSaleWorkDisplayName,
   MONTHLY_SALEWORK_ACCOUNT_NAMES,
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
@@ -51,5 +52,12 @@ describe('normalizeSaleWorkAccountName', () => {
     ['  (OFF)   Abraham Khải Hcm  ', 'Abraham Khải Hcm'],
   ])('chuẩn hoá %s thành %s', (source, expected) => {
     expect(normalizeSaleWorkAccountName(source)).toBe(expected);
+  });
+});
+
+describe('getSaleWorkDisplayName', () => {
+  it('đổi nhãn kế toán nhưng giữ nguyên tài khoản khác', () => {
+    expect(getSaleWorkDisplayName('Abraham Kế Toán Bánhàng')).toBe('Nguyễn Thị Như Quỳnh');
+    expect(getSaleWorkDisplayName('Abraham Khải Hcm')).toBe('Abraham Khải Hcm');
   });
 });

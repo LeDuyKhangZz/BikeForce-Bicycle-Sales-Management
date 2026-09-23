@@ -1,4 +1,5 @@
 import type { SaleWorkReport } from '@/services/salework';
+import { getSaleWorkDisplayName } from '@/lib/salework/sales-account-map';
 
 export const CARD_WIDTH = 540;
 export const CARD_HEIGHT = 960;
@@ -135,6 +136,7 @@ export function drawReportCard(
   const w = CARD_WIDTH;
   const h = CARD_HEIGHT;
   const amis = report.amis;
+  const displayName = getSaleWorkDisplayName(report.accountName);
 
   if (backgroundImage) {
     ctx.drawImage(backgroundImage, 0, 0, w, h);
@@ -154,11 +156,11 @@ export function drawReportCard(
   const maxNameWidth = 335;
   let nameFontSize = 30;
   ctx.font = `700 ${nameFontSize}px ReportFont-Bold`;
-  while (ctx.measureText(report.accountName).width > maxNameWidth && nameFontSize > 18) {
+  while (ctx.measureText(displayName).width > maxNameWidth && nameFontSize > 18) {
     nameFontSize -= 1;
     ctx.font = `700 ${nameFontSize}px ReportFont-Bold`;
   }
-  ctx.fillText(report.accountName, PAD, 126);
+  ctx.fillText(displayName, PAD, 126);
 
   ctx.fillStyle = COLORS.brand;
   ctx.font = '400 14px ReportFont';

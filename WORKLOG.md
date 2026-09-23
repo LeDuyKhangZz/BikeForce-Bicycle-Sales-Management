@@ -3707,6 +3707,8 @@ Kiểm chứng: unit validation 96/96 pass; `tsc --noEmit`, ESLint và productio
 
 MISA đổi tên nguồn kế toán sang Nguyễn Thị Như Quỳnh. Đã đổi tên participant và nguồn AMIS để báo cáo tháng lấy đúng `receive_amount`, giữ ID `salework-accounting-sales` và tài khoản SaleWork `Abraham Kế Toán Bánhàng` để không đứt telesale/lương/công tác phí lịch sử. Ngoại lệ tháng 08 giữ snapshot Report 119 và không đọc trùng công nợ. Targeted unit 29/29, typecheck, lint và production build pass.
 
+Bổ sung nhãn hiển thị dùng chung cho báo cáo SaleWork: danh sách xem trước, bảng SaleWork và ảnh telesale đều hiện Nguyễn Thị Như Quỳnh, trong khi URL/query/mã telesale vẫn dùng account cũ. Unit liên quan 20/20 và typecheck pass.
+
 Theo lựa chọn phương án 2 của người dùng, thêm migration `20260923110000_misa_report119_directory.sql` với hai bảng snapshot theo tháng và RPC thay nguyên tử. `fetch_report119.py` nay cào mọi trang `Account/Grid`, đối chiếu số khách từng nhân viên rồi mới ghi; lỗi giữa chừng giữ snapshot cũ. Đã nối vào `reports:sync` và monthly worker. Python compile, typecheck, lint và `git diff --check` sạch. Người dùng chạy migration/RPC trên Supabase; lượt sync thật tháng 09/2026 exit 0 và ghi 11 nhân viên, 2.337 khách hàng, đồng thời 11 dòng KPI tổng hợp. DB/RLS local chưa chạy vì Docker tắt nên không ghi PASS cho bộ DB test.
 
 Thêm mục sidebar và `/admin/misa-employees` đọc trực tiếp CRM Report 119 theo tháng. Service gọi thật tháng 09/2026 trả 21 tên, bắt đầu Dương Văn Thịnh và Ngô Thế San. Đã chạy typecheck, lint và build thành công. Token CRM được đặt cục bộ vào `.env.local` (gitignored); cần cập nhật khi phiên hết hạn.

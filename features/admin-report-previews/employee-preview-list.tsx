@@ -5,6 +5,7 @@ import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { LinkSpinner } from '@/components/ui/link-spinner';
 import { shareImageViewPath, type ShareCardVariant } from '@/lib/reports/share-card';
+import { getSaleWorkDisplayName } from '@/lib/salework/sales-account-map';
 import type { SalesDailyPreviewOption } from '@/services/profiles';
 import type { SaleWorkReport } from '@/services/salework';
 
@@ -73,13 +74,13 @@ export function EmployeePreviewList({
                   className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold break-words text-heading">{report.accountName}</p>
+                    <p className="font-semibold break-words text-heading">{getSaleWorkDisplayName(report.accountName)}</p>
                     <p className="text-sm text-muted-foreground">Báo cáo tin nhắn và cuộc gọi</p>
                   </div>
                   <Link
                     href={`/admin/report-previews?salework=${encodeURIComponent(report.accountName)}#report-preview`}
                     className={buttonClassName({ variant: 'secondary', className: 'shrink-0' })}
-                    aria-label={`Xem trước báo cáo SaleWork của ${report.accountName}`}
+                    aria-label={`Xem trước báo cáo SaleWork của ${getSaleWorkDisplayName(report.accountName)}`}
                   >
                     <Eye aria-hidden="true" className="size-4" />
                     Xem preview
@@ -113,7 +114,7 @@ export function EmployeePreviewList({
                   : selectedDaily.status === 'COMPLETED'
                     ? 'Báo cáo cuối ngày đã hoàn tất.'
                     : 'Bản cuối ngày xem trước; số liệu chưa nhập sẽ hiển thị “—” hoặc trạng thái chờ.'
-                : `Báo cáo SaleWork của ${selectedSaleWork?.accountName ?? 'nhân viên telesale'}.`}
+                : `Báo cáo SaleWork của ${selectedSaleWork ? getSaleWorkDisplayName(selectedSaleWork.accountName) : 'nhân viên telesale'}.`}
             </p>
             <PreviewImageViewer
               src={
@@ -124,7 +125,7 @@ export function EmployeePreviewList({
               alt={
                 selectedDaily
                   ? 'Bản xem trước báo cáo ngày của nhân viên'
-                  : `Bản xem trước báo cáo SaleWork của ${selectedSaleWork?.accountName ?? 'nhân viên telesale'}`
+                  : `Bản xem trước báo cáo SaleWork của ${selectedSaleWork ? getSaleWorkDisplayName(selectedSaleWork.accountName) : 'nhân viên telesale'}`
               }
               width={selectedDaily ? 1080 : 960}
               height={selectedDaily ? 1920 : 1560}

@@ -5,7 +5,6 @@ import { includeMonthlySummaryParticipants, MONTHLY_ACCOUNTING_PARTICIPANT, MONT
 import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { getMonthlySummarySales, listSalesOptions } from '@/services/profiles';
 import { getAmisMetricsForShare } from '@/services/reports';
-import { AMIS_EMPLOYEE_MAP } from '@/services/salework';
 import type { Database } from '@/types/database.types';
 
 export async function getMonthlySummaryAmisMetrics(

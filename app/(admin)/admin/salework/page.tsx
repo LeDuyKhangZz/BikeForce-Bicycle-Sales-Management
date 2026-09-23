@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
+import { getSaleWorkDisplayName } from '@/lib/salework/sales-account-map';
 import { getSaleWorkReport } from '@/services/salework';
 
 import { AccountExportButton, ExportReportButton } from './export-report-button';
@@ -70,7 +71,7 @@ export default async function SaleWorkPage() {
                     {reports.map((report) => (
                       <tr key={report.accountName} className="border-b border-border/70 last:border-0">
                         <th scope="row" className="px-3 py-4 font-semibold text-heading">
-                          {report.accountName}
+                          {getSaleWorkDisplayName(report.accountName)}
                         </th>
                         <td className="px-3 py-4 tabular-nums">{report.conversations}</td>
                         <td className="px-3 py-4 tabular-nums">{report.sentMessages}</td>
