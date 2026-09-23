@@ -1377,3 +1377,5 @@ Trường **Số ngày chưa mua hàng**: 0–15 ngày dùng nền trắng; 16�
 Sau kiểm tra giao diện thực tế, badge trong bảng desktop dùng dạng compact: nhóm chỉ hiện A/B/C/D, số ngày chỉ hiện số và icon; thông tin đầy đủ vẫn có nhãn hỗ trợ screen reader. Cột Chủ sở hữu được ẩn khỏi màn hình chi tiết vì đã trùng với nhân viên đang xem, nhưng vẫn giữ trong CSV.
 
 Danh sách có hai cột kế hoạch tháng: **Tần suất/tháng** và **Doanh số cam kết**. Sales chỉnh hai giá trị ngay trên dòng/thẻ và lưu riêng; Admin xem dạng chỉ đọc. Tần suất đã có mặc định theo nhóm nên không cần nhập hàng trăm dòng; cam kết trống hiển thị “Chưa cam kết”.
+
+Mobile dùng bố cục dashboard-card: khối tổng hợp A/B/C/D đếm toàn bộ khách theo nhân viên, mỗi khách là card với lưới chỉ số hai cột và vùng kế hoạch ở cuối. Desktop tiếp tục dùng bảng để tận dụng chiều rộng.

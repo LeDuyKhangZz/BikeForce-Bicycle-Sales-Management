@@ -2634,3 +2634,4 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 Đã thêm DEC-094 và `getCustomerDormancyLevel()`: 0–15 trắng, 16–30 vàng, >30 đỏ, null là “—”; desktop/mobile dùng chung và có icon cảnh báo.
 Đã compact hóa badge nhóm/ngày, bỏ chữ “Nhóm” và “ngày” khỏi phần nhìn trong ô, ẩn cột owner lặp lại, cân lại độ rộng bảng; aria-label/sr-only vẫn giữ nghĩa đầy đủ.
 Đã triển khai DEC-095: migration `20260923170000_misa_customer_monthly_plans.sql`, RLS Sales-own/Admin-read, action lưu và hai trường kế hoạch trên desktop/mobile. Cần chạy migration production trước khi thao tác lưu hoạt động.
+Đã redesign mobile theo mockup và thêm `getCachedMisaCustomerGroupCounts()` với bốn count server-side; desktop giữ bảng.

@@ -1,4 +1,4 @@
-import { AlertTriangle, CircleAlert } from 'lucide-react';
+import { AlertTriangle, BarChart3, CalendarDays, CircleAlert, Coins, MapPin, ShoppingCart, Store } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { CustomerPlanEditor } from '@/features/misa-employees/customer-plan-editor';
@@ -103,19 +103,19 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
           const group = getCustomerRevenueGroup(customer.orderSales);
           const frequency = customer.monthlyFrequency ?? defaultMonthlyFrequency(group);
           return (
-          <li key={customer.id} className="min-w-0 px-4 py-4 text-sm">
+          <li key={customer.id} className="min-w-0 px-4 py-5 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-semibold text-primary">{startIndex + index + 1}. {customer.code || '—'}</p>
               <Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge>
             </div>
-            <h2 className="mt-1 break-words text-base font-semibold text-heading">{customer.name || '—'}</h2>
-            <dl className="mt-2 grid gap-1.5">
-              <div><dt className="text-muted-foreground">Tỉnh/Thành phố (Hóa đơn)</dt><dd>{customer.billingProvince || '—'}</dd></div>
-              <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Công nợ:</dt><dd className="tabular-nums">{formatMisaAmount(customer.debt)}</dd></div>
-              <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Doanh số đơn hàng:</dt><dd className="tabular-nums">{formatMisaAmount(customer.orderSales)}</dd></div>
-              <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày mua hàng gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div>
-              <div className="flex flex-wrap items-center gap-2"><dt className="text-muted-foreground">Số ngày chưa mua hàng:</dt><dd><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div>
-              <div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">Ngày ghé thăm gần nhất:</dt><dd className="tabular-nums">{formatMisaDate(customer.lastVisitDate)}</dd></div>
+            <h2 className="mt-2 break-words text-xl font-bold leading-tight text-heading">{customer.name || '—'}</h2>
+            <p className="mt-2 flex items-center gap-2 text-muted-foreground"><MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />{customer.billingProvince || '—'}</p>
+            <dl className="mt-4 grid grid-cols-2 gap-2">
+              <div className="flex min-h-20 items-center gap-3 rounded-xl bg-status-exceeded-bg p-3 text-status-exceeded-fg"><Coins aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Công nợ</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaAmount(customer.debt)}</dd></div></div>
+              <div className="flex min-h-20 items-center gap-3 rounded-xl bg-status-info-bg p-3 text-status-info-fg"><BarChart3 aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Doanh số đơn hàng</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaAmount(customer.orderSales)}</dd></div></div>
+              <div className="flex min-h-20 items-center gap-3 rounded-xl bg-primary/5 p-3 text-heading"><ShoppingCart aria-hidden="true" className="size-7 shrink-0 text-primary" /><div><dt className="text-xs text-muted-foreground">Ngày mua gần nhất</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div></div>
+              <div className="flex min-h-20 items-center gap-3 rounded-xl border border-border bg-card p-3 text-heading"><CalendarDays aria-hidden="true" className="size-7 shrink-0 text-primary" /><div><dt className="text-xs text-muted-foreground">Số ngày chưa mua hàng</dt><dd className="mt-1"><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div></div>
+              <div className="flex min-h-20 items-center gap-3 rounded-xl bg-status-missed-bg p-3 text-status-missed-fg sm:col-span-2"><Store aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Ngày ghé thăm gần nhất</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaDate(customer.lastVisitDate)}</dd></div></div>
             </dl>
             <div className="mt-3 border-t border-border pt-3">
               {canEditPlans ? <CustomerPlanEditor month={month} employeeId={employeeId} customerId={customer.id} frequency={frequency} committedSales={customer.committedSales ?? null} /> : (

@@ -31,6 +31,7 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
 
   return (
     <div className="flex flex-wrap items-end gap-3 border-b border-border p-3 sm:p-4">
+      <h2 className="w-full text-lg font-bold text-heading xl:hidden">Tìm khách hàng</h2>
       <form action={path} method="get" className="flex min-w-[min(100%,18rem)] flex-1 items-end gap-2">
         <input type="hidden" name="month" value={month} />
         {MISA_CUSTOMER_FILTER_FIELDS.flatMap((field) => {
@@ -48,8 +49,9 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
             placeholder="Mã, tên khách hàng hoặc địa chỉ..."
             className="min-h-12 w-full rounded-xl border border-input-border bg-background px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
         </div>
-        <button type="submit" aria-label="Tìm kiếm khách hàng" className="grid size-12 shrink-0 place-items-center rounded-xl border border-input-border text-primary hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <button type="submit" aria-label="Tìm kiếm khách hàng" className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 font-semibold text-primary-foreground shadow-brand-sm hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
           <Search aria-hidden="true" className="size-5" />
+          <span className="hidden sm:inline">Tìm</span>
         </button>
       </form>
       <Link href={`${monthPickerPath}?month=${month}`} title="Chọn tháng"

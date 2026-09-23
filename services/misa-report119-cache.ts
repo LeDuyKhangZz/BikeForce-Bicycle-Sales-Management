@@ -9,6 +9,8 @@ import type { MisaCustomerPage, MisaEmployee } from '@/services/misa-report119';
 
 const PAGE_SIZE = 10;
 
+export type MisaCustomerGroupCounts = { A: number; B: number; C: number; D: number };
+
 type CacheEmployeeRow = {
   misa_employee_id: number;
   employee_name: string;
@@ -202,4 +204,22 @@ export async function getCachedMisaEmployeeCustomers(
     total,
     totalPages,
   };
+}
+
+export async function getCachedMisaCustomerGroupCounts(
+  supabase: SupabaseClient,
+  month: string,
+  employeeId: number,
+): Promise<MisaCustomerGroupCounts> {
+  const base = () => supabase.from('misa_report119_customers').select('misa_customer_id', { count: 'exact', head: true })
+    .eq('period_month', `${month}-01`).eq('misa_employee_id', employeeId);
+  const [a, b, c, d] = await Promise.all([
+    base().gte('order_sales', 150_000_000),
+    base().gte('order_sales', 50_000_000).lt('order_sales', 150_000_000),
+    base().gt('order_sales', 0).lt('order_sales', 50_000_000),
+    base().or('order_sales.is.null,order_sales.eq.0'),
+  ]);
+  const failed = [a, b, c, d].find((result) => result.error !== null);
+  if (failed?.error) throw new Error(`Không đếm được nhóm khách hàng: ${failed.error.message}`);
+  return { A: a.count ?? 0, B: b.count ?? 0, C: c.count ?? 0, D: d.count ?? 0 };
 }

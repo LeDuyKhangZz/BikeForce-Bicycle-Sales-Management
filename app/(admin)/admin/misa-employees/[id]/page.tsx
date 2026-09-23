@@ -9,11 +9,12 @@ import { requireRole } from '@/features/auth/queries';
 import { CustomerFilterPanel } from '@/features/misa-employees/customer-filter-panel';
 import { MisaCustomerTable } from '@/features/misa-employees/misa-customer-table';
 import { MisaCustomerToolbar } from '@/features/misa-employees/misa-customer-toolbar';
+import { CustomerGroupSummary } from '@/features/misa-employees/customer-group-summary';
 import { misaCustomerQuery, parseMisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { formatVietnamMonth, resolveVietnamMonth } from '@/lib/date';
 import { report119Period } from '@/lib/amis/report119-period';
 import { createClient } from '@/lib/supabase/server';
-import { getCachedMisaEmployeeCustomers } from '@/services/misa-report119-cache';
+import { getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeCustomers, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
 import type { MisaCustomerPage } from '@/services/misa-report119';
 
 export const metadata: Metadata = { title: 'Khách hàng MISA · BikeForce' };
@@ -41,9 +42,14 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
   if (period === null) notFound();
 
   let result: MisaCustomerPage | null = null;
+  let groupCounts: MisaCustomerGroupCounts = { A: 0, B: 0, C: 0, D: 0 };
   let error = false;
   try {
-    result = await getCachedMisaEmployeeCustomers(await createClient(), { month, employeeId, page, filters, searchQuery });
+    const supabase = await createClient();
+    [result, groupCounts] = await Promise.all([
+      getCachedMisaEmployeeCustomers(supabase, { month, employeeId, page, filters, searchQuery }),
+      getCachedMisaCustomerGroupCounts(supabase, month, employeeId),
+    ]);
   } catch (cause) {
     console.error('[MisaEmployeeCustomersPage]', cause);
     error = true;
@@ -92,6 +98,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
       </header>
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="xl:col-span-2"><CustomerGroupSummary counts={groupCounts} /></div>
         <Card flush className="min-w-0 overflow-hidden rounded-2xl">
           {result && <MisaCustomerToolbar employeeId={employeeId} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />}
           {error ? (

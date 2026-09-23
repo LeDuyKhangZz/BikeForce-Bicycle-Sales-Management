@@ -3753,3 +3753,5 @@ Thêm `getCustomerDormancyLevel()` và hiển thị mốc màu số ngày chưa 
 Tinh chỉnh bảng khách hàng sau phản hồi UI: badge compact không bẻ dòng, cân lại 10 cột, ẩn cột Chủ sở hữu bị lặp, giữ owner trong CSV và giữ nhãn đầy đủ cho screen reader.
 
 Thêm kế hoạch khách hàng theo tháng: bảng riêng không cascade với snapshot, RLS theo Sales, action Zod + auth, tần suất mặc định A/B/C/D = 4/2/1/1 và doanh số cam kết nullable. Admin xem, Sales sửa trên bảng/thẻ; CSV có thêm hai cột.
+
+Thiết kế lại mobile theo mockup người dùng: search card, tổng hợp nhóm toàn bộ danh sách bằng count server-side, customer card có metric tiles 2 cột và editor kế hoạch riêng. Không thay rule màu ngày chưa mua đã duyệt.
