@@ -3698,3 +3698,37 @@ Kiểm chứng cuối: full unit 788/788, typecheck/lint sạch, production buil
 Theo yêu cầu trực tiếp của người dùng, BR-026 được sửa bởi DEC-091: `target_visit_points` từ `[10, 1000]` thành `[5, 1000]`. Đã đổi hằng Zod dùng chung (nên helper/lỗi UI tự hiển thị 5), thêm migration thay CHECK database, cập nhật test biên và toàn bộ tài liệu bắt buộc. `actual_visit_points` vẫn cho phép từ 0; không đổi RLS.
 
 Kiểm chứng: unit validation 96/96 pass; `tsc --noEmit`, ESLint và production build exit 0. Integration DB chưa chạy vì Docker Desktop/Supabase local không hoạt động (không tìm thấy pipe `dockerDesktopLinuxEngine`); không ghi nhận PASS cho DB.
+
+### 2026-09-22 — Trang nhân viên MISA
+
+### 2026-09-23 — Lưu đầy đủ nhân viên và khách hàng Report 119
+
+### 2026-09-23 — Đổi mapping kế toán sang Nguyễn Thị Như Quỳnh
+
+MISA đổi tên nguồn kế toán sang Nguyễn Thị Như Quỳnh. Đã đổi tên participant và nguồn AMIS để báo cáo tháng lấy đúng `receive_amount`, giữ ID `salework-accounting-sales` và tài khoản SaleWork `Abraham Kế Toán Bánhàng` để không đứt telesale/lương/công tác phí lịch sử. Ngoại lệ tháng 08 giữ snapshot Report 119 và không đọc trùng công nợ. Targeted unit 29/29, typecheck, lint và production build pass.
+
+Theo lựa chọn phương án 2 của người dùng, thêm migration `20260923110000_misa_report119_directory.sql` với hai bảng snapshot theo tháng và RPC thay nguyên tử. `fetch_report119.py` nay cào mọi trang `Account/Grid`, đối chiếu số khách từng nhân viên rồi mới ghi; lỗi giữa chừng giữ snapshot cũ. Đã nối vào `reports:sync` và monthly worker. Python compile, typecheck, lint và `git diff --check` sạch. Người dùng chạy migration/RPC trên Supabase; lượt sync thật tháng 09/2026 exit 0 và ghi 11 nhân viên, 2.337 khách hàng, đồng thời 11 dòng KPI tổng hợp. DB/RLS local chưa chạy vì Docker tắt nên không ghi PASS cho bộ DB test.
+
+Thêm mục sidebar và `/admin/misa-employees` đọc trực tiếp CRM Report 119 theo tháng. Service gọi thật tháng 09/2026 trả 21 tên, bắt đầu Dương Văn Thịnh và Ngô Thế San. Đã chạy typecheck, lint và build thành công. Token CRM được đặt cục bộ vào `.env.local` (gitignored); cần cập nhật khi phiên hết hạn.
+
+### 2026-09-22 — Drilldown khách hàng MISA
+
+Bắt request thật khi bấm ô SL KH phụ trách 241 của Ngô Thế San: Report 119 trả `QuantityAccountInChargeIDs`, tiếp theo `Account/Grid` lọc ID. Thêm liên kết nhân viên và route `/admin/misa-employees/[id]`, card khách hàng và phân trang 20. API thật xác nhận 21 nhân viên; Ngô Thế San 241 khách hàng, trang đầu 20 dòng, mã đầu BDI0005.
+
+Theo yêu cầu tiếp theo, đổi UI chi tiết từ card sang bảng 6 cột ở desktop và danh sách dòng trên mobile, giữ đủ trường dữ liệu và phân trang.
+
+Người dùng chốt lại đúng 9 cột MISA. Đã bắt request Account/Grid thật để xác nhận tên trường, thay 6 cột cũ. Bản ghi BDI0005 trả BillingProvinceIDText=Bình Định, Debt=154.797.600, OrderSales=669.313.850, ngày mua 19/09/2026 và 3 ngày chưa mua. Bảng desktop 9 cột; mobile là danh sách dòng đủ 9 trường.
+
+Kiểm chứng sau sửa: `npm run typecheck`, `npm run lint`, `npm run build` đều exit 0; helper định dạng trả `19/09/2026` và `154.797.600 ₫`.
+
+### 2026-09-22 — Bộ lọc khách hàng MISA
+
+Thêm panel “Tiêu chí lọc” với checkbox cho đúng 9 cột của danh sách khách hàng. Chọn tiêu chí, nhập giá trị rồi áp dụng; có nút bỏ lọc. MISA `Account/Grid` xử lý điều kiện trên server cùng giới hạn ID khách hàng của nhân viên, trả tổng sau lọc để phân trang. Đã đối chiếu API thật: `BDI0005`/công nợ/ngày mua trả 1 dòng; Bình Định trả 94 dòng, trang 5 có 14 dòng. Unit 3/3, typecheck, lint và build exit 0. Chưa xem trực quan UI bằng tài khoản ADMIN.
+
+Theo yêu cầu tiếp theo, thu khung lọc desktop xuống 240px, giới hạn vùng tiêu chí ở 320px/45dvh và cho cuộn dọc riêng; các nút áp dụng/bỏ lọc ở ngoài vùng cuộn. Typecheck, lint, build exit 0.
+
+Người dùng chỉ ra bộ lọc chỉ có “Chứa”. Đã thêm menu toán tử lấy mã từ CRM: chữ đủ 6 lựa chọn như giao diện MISA; số và ngày có các điều kiện phù hợp. Trống/Không trống ẩn ô nhập, gửi `Value: ''`; API thật xác nhận kết quả. Giữ toán tử khi phân trang. Unit 5/5, typecheck/lint/build exit 0. Đã dừng thao tác mở trình duyệt MISA theo phản hồi người dùng.
+
+Theo ảnh mẫu mới, đã làm lại `/admin/misa-employees`: tiêu đề/giới thiệu nổi bật, thanh chuyển tháng, tìm kiếm tên tức thời, tổng số nhân viên và danh sách hai cột kiểu bảng. Giữ liên kết vào chi tiết khách hàng. Không mở trình duyệt để tránh làm gián đoạn người dùng. Typecheck, lint và build exit 0.
+
+Theo ảnh mẫu trang chi tiết, đã làm lại `/admin/misa-employees/[id]`: thẻ tóm tắt nhân viên, toolbar tìm kiếm/kỳ tháng/xuất CSV, bảng 10 dòng/trang với cột thứ tự, phân trang số và panel lọc bên phải. `AISearchKeyword` được API CRM kiểm tra thật với mã BDI0005 trả một dòng. Xuất chỉ 10 dòng hiện tại; CSV có BOM và chặn công thức từ text. Unit liên quan 6/6, typecheck/lint/build exit 0. Không mở trình duyệt.

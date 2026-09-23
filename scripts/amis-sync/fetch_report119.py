@@ -1,10 +1,11 @@
 ﻿"""
-Report 119 -> Supabase. Ban tu dong cua crawl_nvkd.py, khong hoi y/n.
-Chi ghi 4 cot cua rieng no, khong dung target_amount / current_amount.
+Report 119 -> Supabase. Ngoai cac chi so tong hop, script cao va thay the nguyen tu
+snapshot nhan vien + toan bo khach hang phu trach cua tung nhan vien.
 
 Chay:  python fetch_report119.py            (thang hien tai)
        python fetch_report119.py 2026 7     (chi dinh ky)
        python fetch_report119.py 2026 8 --dry
+       python fetch_report119.py 2026 9 --snapshot-only
 """
 
 import base64
@@ -17,9 +18,15 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 load_dotenv(Path(__file__).resolve().parent / ".env", encoding="utf-8-sig")
 
 API_URL = "https://amisapp.misa.vn/crm/g2/api/report/Report/reportPaging"
+ACCOUNT_API_URL = "https://amisapp.misa.vn/crm/g2/api/business/Account/Grid"
 TOKEN = os.getenv("AMIS_BEARER_TOKEN", "").strip()
 COMPANY = os.getenv("AMIS_COMPANY_CODE", "BEDTGJL2").strip()
 UNIT_ID = int(os.getenv("RPT_ROOT_UNIT_ID", "9"))
@@ -76,8 +83,20 @@ def find_rows(node):
                 if r is not None:
                     return r
         return None
-    return [{k: v for k, v in r.items() if not k.endswith("IDs")}
-            for r in (search(node) or [])]
+    return search(node) or []
+
+
+def headers(layout):
+    return {
+        "Accept": "application/json, text/plain, */*",
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json",
+        "companycode": COMPANY,
+        "layoutcode": layout,
+        "X-MISA-Language": "vi-VN",
+        "Origin": "https://amisapp.misa.vn",
+        "Referer": f"https://amisapp.misa.vn/crm/report/view/{REPORT_ID}/0",
+    }
 
 
 def fetch(from_d, to_d, period):
@@ -109,15 +128,7 @@ def fetch(from_d, to_d, period):
         "LayoutCodeCheckPermission": "Report",
         "AISearchKeyword": "", "SkipNormalSearch": False,
     }
-    r = requests.post(API_URL, headers={
-        "Accept": "application/json, text/plain, */*",
-        "Authorization": f"Bearer {TOKEN}",
-        "Content-Type": "application/json",
-        "companycode": COMPANY, "layoutcode": "report",
-        "X-MISA-Language": "vi-VN",
-        "Origin": "https://amisapp.misa.vn",
-        "Referer": f"https://amisapp.misa.vn/crm/report/view/{REPORT_ID}/0",
-    }, json=body, timeout=90)
+    r = requests.post(API_URL, headers=headers("report"), json=body, timeout=90)
 
     if r.status_code in (401, 403):
         sys.exit("Token het han. Chay amis-harvest.ts truoc.")
@@ -126,9 +137,125 @@ def fetch(from_d, to_d, period):
     return find_rows(r.json())
 
 
+def fetch_employee_customers(employee_id, customer_ids):
+    if not customer_ids:
+        return []
+    page_size = 200
+    page = 1
+    result = []
+    while True:
+        body = {
+            "Columns": b64(",".join([
+                "ID", "AccountNumber", "AccountName", "BillingProvinceID",
+                "BillingProvinceIDText", "Debt", "OrderSales", "PurchaseDateRecent",
+                "NumberDaysWithoutPurchase", "LastVisitDate", "OwnerID", "OwnerIDText",
+                "FormLayoutID", "FormLayoutIDText",
+            ])),
+            "Sorts": [], "Start": (page - 1) * page_size, "Page": page,
+            "PageSize": page_size,
+            "Filters": [{
+                "Addition": 1, "Group": None, "InputType": 5,
+                "IsFromFormula": False, "Operator": 0, "Property": "ID",
+                "FieldName": "ID", "Value": customer_ids,
+                "Text": "ID", "IsDefaultFilter": True,
+            }],
+            "LayoutCode": "Account", "DefaultTotal": False,
+            "IsMappingData": False, "IsApproved": False, "CustomPagingData": None,
+            "IsUsedELTS": True, "ListGmailPage": [], "ListFacebookPage": {},
+            "IsListPaging": True, "IsGetCache": False, "IsCheckInactive": False,
+            "IsConverted": False,
+            "SessionID": "94902524-7654-13c0-a7a9-43682c077251",
+            "LayoutCodeCheckPermission": "Account", "AISearchKeyword": "",
+            "SkipNormalSearch": False,
+        }
+        response = requests.post(
+            ACCOUNT_API_URL, headers=headers("account"), json=body, timeout=90)
+        if response.status_code in (401, 403):
+            sys.exit("Token het han khi cao khach hang. Chay amis-harvest.ts truoc.")
+        if not response.ok:
+            sys.exit(f"Account/Grid HTTP {response.status_code}: {response.text[:400]}")
+        payload = response.json()
+        rows = payload.get("Data") if isinstance(payload, dict) else None
+        total = payload.get("Total") if isinstance(payload, dict) else None
+        if not isinstance(rows, list) or not isinstance(total, int) or total < 0:
+            sys.exit("Account/Grid tra cau truc khong hop le.")
+        for row in rows:
+            if not isinstance(row, dict) or not isinstance(row.get("ID"), int):
+                sys.exit("Account/Grid co dong khach hang khong hop le.")
+            result.append({"employee_id": employee_id, **row})
+        if len(result) >= total:
+            break
+        if not rows:
+            sys.exit("Account/Grid dung phan trang truoc khi lay du du lieu.")
+        page += 1
+    return result
+
+
+def date_only(value):
+    if not isinstance(value, str) or len(value) < 10:
+        return None
+    candidate = value[:10]
+    try:
+        datetime.strptime(candidate, "%Y-%m-%d")
+        return candidate
+    except ValueError:
+        return None
+
+
+def replace_directory_snapshot(year, month, rows):
+    employees = []
+    customers = []
+    for row in rows:
+        employee_id = row.get("ID")
+        name = str(row.get("Name") or "").strip()
+        expected = int(num(row.get("QuantityAccountInCharge")))
+        customer_ids = row.get("QuantityAccountInChargeIDs")
+        if not isinstance(employee_id, int) or not name or expected < 0:
+            sys.exit("Report 119 co dong nhan vien khong hop le.")
+        if expected == 0:
+            ids = ""
+        elif not isinstance(customer_ids, str) or not customer_ids:
+            sys.exit(f"MISA thieu danh sach ID khach hang cua {name}.")
+        else:
+            ids = customer_ids
+        employee_customers = fetch_employee_customers(employee_id, ids)
+        if len(employee_customers) != expected:
+            sys.exit(
+                f"Khach hang cua {name}: cao duoc {len(employee_customers)}, MISA bao {expected}."
+            )
+        employees.append({"id": employee_id, "name": name, "customer_count": expected})
+        customers.extend({
+            "employee_id": employee_id,
+            "id": customer["ID"],
+            "code": str(customer.get("AccountNumber") or ""),
+            "name": str(customer.get("AccountName") or ""),
+            "billing_province": str(customer.get("BillingProvinceIDText") or ""),
+            "debt": int(num(customer["Debt"])) if customer.get("Debt") is not None else None,
+            "order_sales": int(num(customer["OrderSales"])) if customer.get("OrderSales") is not None else None,
+            "recent_purchase_date": date_only(customer.get("PurchaseDateRecent")),
+            "days_without_purchase": int(num(customer["NumberDaysWithoutPurchase"])) if customer.get("NumberDaysWithoutPurchase") is not None else None,
+            "last_visit_date": date_only(customer.get("LastVisitDate")),
+            "owner": str(customer.get("OwnerIDText") or ""),
+        } for customer in employee_customers)
+
+    response = requests.post(
+        f"{SB_URL}/rest/v1/rpc/replace_misa_report119_snapshot",
+        headers={"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
+                 "Content-Type": "application/json"},
+        json={
+            "p_period_month": f"{year:04d}-{month:02d}-01",
+            "p_employees": employees,
+            "p_customers": customers,
+        }, timeout=120)
+    if not response.ok:
+        sys.exit(f"Ghi snapshot Report 119 loi HTTP {response.status_code}: {response.text[:400]}")
+    print(f"Da thay snapshot: {len(employees)} nhan vien, {len(customers)} khach hang.")
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     dry = "--dry" in sys.argv
+    snapshot_only = "--snapshot-only" in sys.argv
 
     now = datetime.now(VN)
     if len(args) >= 2:
@@ -174,6 +301,12 @@ def main():
         return
     if not SB_URL or not SB_KEY:
         print("\nThieu bien Supabase -> bo qua ghi.")
+        return
+
+    print("\nCao toan bo khach hang va thay snapshot trong Supabase...")
+    replace_directory_snapshot(year, month, rows)
+    if snapshot_only:
+        print("Che do --snapshot-only: khong ghi lap bang KPI amis_employee_metrics.")
         return
 
     payload = [{

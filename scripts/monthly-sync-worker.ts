@@ -87,6 +87,10 @@ async function main(): Promise<void> {
       PUSH_YEAR: year,
       PUSH_MONTH: String(Number(monthNumber)),
     });
+    await run(
+      process.platform === 'win32' ? 'python.exe' : 'python3',
+      ['scripts/amis-sync/fetch_report119.py', year, String(Number(monthNumber)), '--snapshot-only'],
+    );
   } catch (error) {
     errors.push(`AMIS: ${error instanceof Error ? error.message : 'lỗi không xác định'}`);
   }

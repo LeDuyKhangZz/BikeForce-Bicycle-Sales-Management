@@ -2731,6 +2731,24 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 **Alternatives:** Tạo user Sales giả hoặc sửa role — không cần thiết, ảnh hưởng auth; chỉ thêm tên ở danh sách — route ảnh vẫn từ chối ID và không có dữ liệu; thêm route riêng — lặp auth và render tháng.
 **Impact:** Mở rộng BR-031 trong phạm vi tài khoản được yêu cầu; thêm participant/helper/query feature, mở allowlist đúng một ID ở route ảnh, test unit/security/E2E. Không schema/migration/RLS mới và không đổi báo cáo ngày.
 **Status:** APPROVED
+## DEC-093 — Đổi tên participant kế toán theo tên MISA hiện tại
+
+**Date:** 2026-09-23
+**Decision:** Participant `salework-accounting-sales` hiển thị và đọc AMIS bằng tên `Nguyễn Thị Như Quỳnh`; vẫn đọc telesale bằng tài khoản SaleWork lịch sử `Abraham Kế Toán Bánhàng`. Giữ nguyên ID participant để lương, công tác phí và URL cũ không bị đứt.
+**Reason:** MISA đã đổi tên nhân viên; mapping cũ đọc `Kế Toán Bán Hàng` nên báo cáo tháng 09 không lấy dòng `receive_amount` đúng.
+**Alternatives:** Đổi tên tài khoản SaleWork sẽ mất snapshot telesale cũ; tạo participant mới sẽ tách lịch sử khoản; sửa số thủ công sẽ sai ở lần sync tiếp theo.
+**Impact:** Đổi tên hiển thị và nguồn AMIS, giữ account SaleWork/ID ổn định. Ngoại lệ Report 119 tháng 08 vẫn dùng snapshot kỹ thuật và tái sử dụng công nợ Như Quỳnh đã đọc.
+**Status:** APPROVED — người dùng xác nhận MISA đã đổi tên.
+
+## DEC-092 — Lưu snapshot đầy đủ danh bạ Report 119
+
+**Date:** 2026-09-23
+**Decision:** Sau khi cào đủ Report 119 và toàn bộ `Account/Grid` của từng nhân viên, worker thay nguyên tử snapshot tháng trong `misa_report119_employees` và `misa_report119_customers`. Chỉ Admin được đọc qua RLS; `service_role` không có DML trực tiếp và chỉ được thực thi RPC thay snapshot.
+**Reason:** Dữ liệu chi tiết trước đây chỉ tồn tại trong response MISA nên không có bản lưu khi phiên CRM hết hạn. Người dùng chọn lưu cả nhân viên và toàn bộ khách hàng.
+**Alternatives:** Chỉ lưu tổng theo nhân viên không đủ chi tiết; upsert từng trang có thể tạo snapshot nửa vời; xóa trước khi cào xong có thể làm mất bản tốt.
+**Impact:** Thêm hai bảng, RPC transaction, mở rộng `fetch_report119.py`, `reports:sync` và worker tháng. Không lưu token/cookie MISA vào database.
+**Status:** APPROVED — người dùng chọn phương án 2.
+
 ## DEC-091 — Hạ sàn mục tiêu điểm viếng thăm đầu ngày từ 10 xuống 5
 
 **Date:** 2026-09-18

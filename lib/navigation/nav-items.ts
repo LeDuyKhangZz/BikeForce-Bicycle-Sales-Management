@@ -29,6 +29,7 @@ export type NavKey =
   | 'ADMIN_SALARIES'
   | 'ADMIN_MONTHLY_SUMMARIES'
   | 'ADMIN_SALEWORK'
+  | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_ACCOUNT';
 
 export type NavItem = {
@@ -131,6 +132,12 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
 
 /** Module bổ sung chỉ hiện trong sidebar desktop, không chen vào bottom nav. */
 export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
+  {
+    key: 'ADMIN_MISA_EMPLOYEES',
+    label: 'Nhân viên',
+    href: '/admin/misa-employees',
+    matchPrefixes: ['/admin/misa-employees'],
+  },
   {
     key: 'ADMIN_TRAVEL_EXPENSES',
     label: 'Công tác phí',

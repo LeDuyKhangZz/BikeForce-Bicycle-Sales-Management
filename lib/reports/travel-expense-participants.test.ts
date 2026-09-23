@@ -21,7 +21,7 @@ it('danh sách nhập công tác phí và danh sách báo cáo dùng cùng khóa
   ]);
   const result = await getTravelExpensePageData(client, '2026-08-01');
   expect(result.salesRows.map(person => person.full_name)).toEqual([
-    'Abraham Kế Toán Bánhàng', 'Nguyễn Thị Kim Hương', 'Nguyễn Trần Đăng Khoa',
+    'Nguyễn Thị Như Quỳnh', 'Nguyễn Thị Kim Hương', 'Nguyễn Trần Đăng Khoa',
   ]);
   expect(result.currentAmounts).toEqual({
     'salework-accounting-sales': 15000000, 'amis-kim-huong': 16000000, 'amis-dang-khoa': 17000000,

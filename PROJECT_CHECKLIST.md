@@ -1257,3 +1257,29 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Database CHECK đổi thành `[5, 1000]`; `actual_visit_points` vẫn `[0, 1000]`
 - [x] Unit và integration test biên đổi sang 4 bị từ chối, 5 được chấp nhận
 - [x] Business analysis, database design, workflow, UI, API/data flow, testing strategy và decision log đã đồng bộ
+
+## Nhân viên MISA (2026-09-22)
+
+- [x] DEC-093: báo cáo kế toán hiển thị/đọc AMIS bằng Nguyễn Thị Như Quỳnh, giữ account SaleWork cũ và ID tích hợp.
+
+- [x] DEC-092: schema snapshot lưu nhân viên và toàn bộ khách hàng Report 119 theo tháng; RPC thay nguyên tử sau khi cào đủ.
+- [x] `fetch_report119.py`, `reports:sync` và monthly worker đã nối bước cào + ghi snapshot.
+- [x] Migration đã chạy trên Supabase; lượt sync thật tháng 09/2026 exit 0, RPC ghi 11 nhân viên và 2.337 khách hàng.
+
+- [x] Mục sidebar “Nhân viên MISA” và trang danh sách Report 119 theo tháng.
+- [x] Service đọc thật 21 tên tháng 09/2026; typecheck, lint, build đạt.
+- [ ] Tự động làm mới token CRM cho môi trường triển khai; hiện dùng phiên server-only trong `.env.local`.
+
+- [x] Bấm nhân viên MISA mở khách hàng thuộc `QuantityAccountInChargeIDs`, phân trang 20 và hiển thị các trường trong ảnh.
+- [x] API thật Ngô Thế San: 241 khách hàng, trang đầu 20 dòng, mã đầu BDI0005.
+
+- [x] Danh sách khách hàng MISA hiển thị dạng bảng desktop, danh sách dòng trên mobile; không còn card chi tiết.
+- [x] Bảng khách hàng dùng đúng 9 cột MISA đã chốt; API thật BDI0005 khớp tỉnh Bình Định, công nợ 154.797.600 và doanh số đơn hàng 669.313.850.
+
+- [x] Bộ lọc 9 tiêu chí bằng checkbox trên danh sách khách hàng; request lọc và phân trang chạy tại CRM, có nút áp dụng/bỏ lọc. Unit 3/3, typecheck, lint và build đạt.
+- [ ] Kiểm tra trực quan thao tác bộ lọc ở 375px và 1440px bằng tài khoản ADMIN.
+- [x] Thu khung lọc desktop còn 240px; vùng tiêu chí cuộn dọc độc lập, nút thao tác luôn ngoài vùng cuộn.
+- [x] Thay điều kiện cố định bằng menu toán tử theo kiểu chữ/số/ngày; các điều kiện không cần giá trị ẩn ô nhập. Unit 5/5, typecheck/lint/build đạt.
+
+- [x] Trang Nhân viên MISA đã đổi sang bố cục theo ảnh mẫu: hero, thanh tháng/tìm kiếm/tổng số, danh sách hai cột với số KH và liên kết chi tiết.
+- [x] Trang khách hàng nhân viên MISA đã đổi theo ảnh mẫu: tóm tắt, bảng 10 dòng/trang có số thứ tự, tìm kiếm CRM, xuất CSV trang hiện tại, phân trang số và bộ lọc bên phải.

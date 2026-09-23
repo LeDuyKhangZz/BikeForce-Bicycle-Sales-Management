@@ -1,5 +1,7 @@
 # 07 — API & Data Flow
 
+**DEC-092 (2026-09-23):** `fetch_report119.py` cào đủ nhân viên và mọi trang `Account/Grid`, đối chiếu số khách từng nhân viên rồi gọi RPC thay snapshot tháng nguyên tử. Lỗi token/phân trang/số lượng/ghi DB trả exit khác 0 và giữ snapshot cũ. `reports:sync` và monthly worker đều chạy bước này.
+
 **ISSUE-054 (2026-09-14):** selectActMonth kiểm tra input.checked của từng Chọn tất cả, chỉclick nếu chưa chọn; chờ counterNV/khách>0 và cảhai checkboxchecked trước Xem báo cáo (60s). MISA restorechecked và tảicount saupopup, không giảđịnh danh sách chưachọn. Khôngđổi request/API/schema.
 
 **DEC-090 (2026-09-14):** disconnect AMIS đóng tab trong finally trước ngắt transport CDP; khóa PID luôn giải phóng. Lượt kế tiếp dùng lại profile, mở tab mới hoặc Chrome nếu endpoint chưa chạy. Trigger Windows PT10M; thứ tự nguồn sync giữ nguyên.
@@ -802,3 +804,17 @@ Wrapper chạy nguyên sync-all-reports.bat, thu stdout/stderr vào logs/auto-sy
 Giữ khóa `(period_month, employee_name)` và tập cột theo nguồn, không kéo lại nguồn
 trong vòng retry. Lỗi TLS/chứng chỉ hoặc HTTP khác thất bại ngay; hết retry ném lỗi
 để batch trả exit khác 0 và wrapper gửi Telegram. Không thay đổi schema/policy.
+
+### Trang danh sách nhân viên MISA (2026-09-22)
+
+`/admin/misa-employees` yêu cầu ADMIN, gọi server-side `services/misa-report119.ts` tới CRM Report 119 với THỐNG ĐẠT GROUP (ID 1), xem chi tiết theo nhân viên và kỳ tháng Việt Nam. Request chọn Name, QuantityAccountInCharge và NetSales; UI danh sách hiển thị tên và số khách hàng phụ trách. `AMIS_BEARER_TOKEN` và `AMIS_COMPANY_CODE` là cấu hình server-only trong `.env.local`. Không ghi Supabase. Phiên CRM hết hạn thì trang báo lỗi và cần làm mới token. Trang dừng nếu response chạm giới hạn 200 dòng để tránh xuất thiếu.
+
+### Drilldown SL KH phụ trách (2026-09-22)
+
+Khi Admin bấm nhân viên, server đọc lại Report 119 cùng tháng và tìm ID nhân viên trong phản hồi MISA. `QuantityAccountInChargeIDs` của đúng dòng là bộ lọc ID cho `POST /crm/g2/api/business/Account/Grid`; request dùng trang 10 dòng và các cột `ID, AccountNumber, AccountName, BillingProvinceID, BillingProvinceIDText, Debt, OrderSales, PurchaseDateRecent, NumberDaysWithoutPurchase, LastVisitDate, OwnerID, OwnerIDText, FormLayoutID, FormLayoutIDText`. UI hiển thị đúng 9 trường người dùng yêu cầu; tiền/ngày format ở `lib/`. Không nhận danh sách ID từ client. Kiểm tra số ID khớp `QuantityAccountInCharge`; lỗi thì dừng thay vì hiển thị danh sách thiếu. Chỉ ADMIN xem được; token ở server.
+
+Các tham số lọc trong URL được whitelist và kiểm tra kiểu/độ dài ở `lib/amis/customer-filters.ts`, rồi ghép với bộ lọc ID nhân viên trong request `Account/Grid`. Chuỗi dùng điều kiện chứa (`Operator: 1`), số dùng bằng (`Operator: 0`), ngày dùng đúng ngày (`Operator: 11`, mốc nửa đêm Việt Nam ở ISO UTC). Phân trang dùng `Total` của phản hồi sau lọc; đổi trang giữ nguyên điều kiện. Mỗi lượt mở trang đọc lại CRM nên dữ liệu phản ánh nguồn tại thời điểm tải, không tự cập nhật khi trang đang mở.
+
+Menu điều kiện gửi `op_<field>` trong URL; server chỉ chấp nhận mã có trong danh sách toán tử của đúng kiểu trường. Đã đối chiếu từ giao diện CRM: chữ `1/8/11/12/13/14`, số `0/9/3/5/2/4/13/14`, ngày cụ thể `11`, trước/sau `17/18` và các mốc tương đối. Điều kiện không cần giá trị gửi `Value: ''` theo phản hồi thử API CRM; URL phân trang giữ cả toán tử lẫn giá trị.
+
+Giao diện chi tiết mới dùng `PageSize: 10` cho `Account/Grid`. Ô tìm kiếm gửi `q` đã giới hạn 120 ký tự vào `AISearchKeyword`, kết hợp với bộ lọc ID nhân viên và các tiêu chí đang áp dụng; chuyển trang giữ `q`. Nút xuất dữ liệu tạo CSV ngay từ 10 dòng đã được server trả về, không thêm endpoint và không dùng token CRM ở client.

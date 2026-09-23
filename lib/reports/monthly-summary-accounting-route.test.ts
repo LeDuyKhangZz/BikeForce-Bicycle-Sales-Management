@@ -24,7 +24,7 @@ vi.mock('@/services/profiles', () => ({
   getMonthlySummarySales: vi.fn(), listSalesOptions: vi.fn(),
 }));
 vi.mock('@/services/salework', () => ({
-  AMIS_EMPLOYEE_MAP: { 'Abraham Kế Toán Bánhàng': 'Kế Toán Bán Hàng' },
+  AMIS_EMPLOYEE_MAP: { 'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh' },
   getMonthlySaleWorkReportByAccountName: mocks.saleWork,
 }));
 vi.mock('@/services/reports', () => ({ getAmisMetricsForShare: mocks.amis }));
@@ -63,7 +63,7 @@ describe('ảnh tổng kết tháng kế toán', () => {
     const response = await request();
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
-    expect(mocks.amis).toHaveBeenCalledWith(expect.anything(), 'Kế Toán Bán Hàng', '2026-08-01');
+    expect(mocks.amis).toHaveBeenCalledWith(expect.anything(), 'Nguyễn Thị Như Quỳnh', '2026-08-01');
     expect(mocks.saleWork).toHaveBeenCalledWith('Abraham Kế Toán Bánhàng', '2026-08');
     expect(mocks.targets).not.toHaveBeenCalled();
     expect(mocks.salary).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'salework-accounting-sales', '2026-08-01');

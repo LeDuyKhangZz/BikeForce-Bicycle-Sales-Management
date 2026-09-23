@@ -1,9 +1,12 @@
 export const MONTHLY_ACCOUNTING_PARTICIPANT = {
   id: 'salework-accounting-sales',
-  full_name: 'Abraham Kế Toán Bánhàng',
+  full_name: 'Nguyễn Thị Như Quỳnh',
   employee_code: 'VP-SA-001',
   is_active: true,
 } as const;
+
+/** Tên tài khoản SaleWork cũ được giữ để không làm đứt dữ liệu telesale lịch sử. */
+export const MONTHLY_ACCOUNTING_SALEWORK_ACCOUNT_NAME = 'Abraham Kế Toán Bánhàng';
 
 export const MONTHLY_KIM_HUONG_PARTICIPANT = {
   id: 'amis-kim-huong',

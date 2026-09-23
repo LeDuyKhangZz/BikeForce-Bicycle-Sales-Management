@@ -13,7 +13,7 @@
     "salework:sync:month": "tsx scripts/salework-monthly-sync.ts",
     "monthly-sync:worker": "tsx scripts/monthly-sync-worker.ts",
     "monthly-sync:install": "powershell -ExecutionPolicy Bypass -File scripts/install-monthly-sync-worker.ps1",
-    "reports:sync": "tsx scripts/amis-sync/amis-harvest.ts && python scripts/amis-sync/push_amis.py && tsx scripts/salework-sync.ts && python scripts/amis-sync/fetch_call_statistics.py",
+    "reports:sync": "tsx scripts/amis-sync/amis-harvest.ts && python scripts/amis-sync/push_amis.py && python scripts/amis-sync/fetch_report119.py --snapshot-only && tsx scripts/salework-sync.ts && python scripts/amis-sync/fetch_call_statistics.py",
     "telegram:setup": "tsx scripts/amis-sync/setup-telegram.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

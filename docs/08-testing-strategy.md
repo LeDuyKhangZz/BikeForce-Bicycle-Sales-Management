@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+**DEC-092:** DB test phải khóa Sales khỏi hai bảng snapshot, cho Admin đọc, chặn service role DML trực tiếp và xác nhận RPC thay nguyên tử. Test script phải chứng minh thiếu trang/sai tổng khách không gọi RPC và không làm mất snapshot cũ.
+
 **ISSUE-054 kiểm chứng cuối:** Wrapper -NoTelegram 13:05:55–13:06:28 exit 0, stderr rỗng; harvest AMIS lượt mở lại kế tiếp exit 0, đúng tháng 09, 9 dòng công nợ. 826 unit, typecheck/lint/build đã chạy thành công. Chưa quan sát lượt lịch sau sửa.
 
 **ISSUE-054 (2026-09-14):** lib/amis/ensure-selected.test.ts táihiện clicklại checkboxrestore làm bỏchọn, failvới logiccũ/pass3/3 saubản sửa; fullunit826/826,typecheck/lint/build exit0. DOM thật NV0→187 sau tải, khách5585, checkboxđãchecked. Wrapper-NoTelegram đang kiểmtra, chưaghiPASS cho lượtthật. Không đổiDB/RLS.
@@ -1533,3 +1535,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-hidden-sync
 kiểm tra phục hồi, cùng payload/synced_at, không thêm cột nguồn hỏng, giới hạn
 3 lần, timeout, HTTP tạm thời, HTTP vĩnh viễn và lỗi chứng chỉ không retry.
 Typecheck/lint/build đã chạy exit 0. Trạng thái RLS và lượt đồng bộ thật ghi ở checkpoint.
+
+### 2026-09-22 — Bộ lọc khách hàng MISA
+
+Unit `lib/amis/customer-filters.test.ts` kiểm tra whitelist/validation tham số URL, mapping toán tử và ngày Việt Nam sang bộ lọc MISA, cùng việc giữ điều kiện khi phân trang. Đã chạy 3/3 pass. Đối chiếu API CRM thật: mã `BDI0005`, công nợ `154797600` và ngày mua `2026-09-19` đều trả một dòng; tỉnh `Bình Định` trả 94 dòng, trang 5 có 14 dòng và `Total=94`. Typecheck, lint và build đã chạy exit 0. Chưa xác nhận thao tác giao diện thủ công ở 375px/1440px.
+
+Sau khi bổ sung menu toán tử, unit 5/5 pass. Đã đọc mã lựa chọn trong giao diện CRM và thử API trực tiếp: `Không chứa`/`Không là` trên mã BDI0005 trả 3427 dòng, `Trống` với `Value: ''` trả 0, `Không trống` trả 3428, `Hôm nay` cho ngày mua gần nhất trả 7. Typecheck, lint và build exit 0.
+
+Sau đổi giao diện chi tiết: test bộ lọc và CSV 6/6 pass, bao gồm chặn công thức trong text khách hàng khi mở CSV bằng Excel. API CRM thật với `AISearchKeyword=BDI0005` trả đúng 1 bản ghi; rỗng trả 3428. Typecheck/lint/build exit 0. Chưa kiểm tra trực quan trong trình duyệt theo phản hồi người dùng không muốn trình duyệt tự mở.

@@ -22,13 +22,13 @@ describe('monthly summary participant queries', () => {
     });
     expect(getMonthlySummarySales).not.toHaveBeenCalled();
   });
-  it('lấy kế toán không cần profile Sales và ghép đúng AMIS cũ', async () => {
+  it('lấy kế toán không cần profile Sales, giữ tài khoản SaleWork cũ và dùng tên MISA mới', async () => {
     const person = await getMonthlySummaryParticipant(client, 'salework-accounting-sales');
     expect(person).toMatchObject({
-      full_name: 'Abraham Kế Toán Bánhàng',
+      full_name: 'Nguyễn Thị Như Quỳnh',
       profileId: null,
       saleWorkAccountName: 'Abraham Kế Toán Bánhàng',
-      amis_employee_name: 'Kế Toán Bán Hàng',
+      amis_employee_name: 'Nguyễn Thị Như Quỳnh',
     });
     expect(getMonthlySummarySales).not.toHaveBeenCalled();
   });

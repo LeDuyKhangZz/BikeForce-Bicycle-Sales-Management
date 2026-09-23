@@ -2585,3 +2585,37 @@ Task thật đã đổi từ cmd.exe sang wscript.exe gọi scripts/sync-all-rep
 - Kết quả cuối ngày `actual_visit_points` vẫn nhận từ 0; RLS không đổi.
 - Verification: unit validation 96/96 pass; typecheck, lint và build pass. DB integration chưa chạy vì Docker Desktop/Supabase local đang tắt.
 - Next Exact Steps: bật Docker Desktop, chạy `npm run db:start` rồi `npm run test:db` để áp và xác minh migration local trước khi deploy.
+
+### 2026-09-22 — Nhân viên MISA
+
+### 2026-09-23 — Snapshot đầy đủ Report 119 (DEC-092)
+
+### 2026-09-23 — Mapping kế toán Nguyễn Thị Như Quỳnh (DEC-093)
+
+Participant `salework-accounting-sales` nay hiển thị/đọc AMIS bằng Nguyễn Thị Như Quỳnh nhưng vẫn đọc SaleWork bằng account Abraham Kế Toán Bánhàng. ID ổn định giữ nguyên các khoản lịch sử. Targeted unit 29/29, typecheck/lint/build pass. Next Exact Steps: reload ảnh Tổng kết tháng 09 và xác nhận tên/số trên PNG.
+
+Đã thêm hai bảng `misa_report119_employees`/`misa_report119_customers` và RPC service-role-only để thay snapshot tháng trong một transaction. Script `fetch_report119.py` cào đủ khách theo từng nhân viên, kiểm số lượng, sau đó mới gọi RPC; `reports:sync` và monthly worker đã chạy bước này. Typecheck/lint/Python compile/diff-check sạch. Người dùng đã chạy migration/RPC trên Supabase; sync thật tháng 09/2026 exit 0, ghi 11 nhân viên và 2.337 khách hàng, cộng 11 dòng KPI. Next Exact Steps: bật Docker để chạy DB/RLS test và generate lại `types/database.types.ts`; sau đó chuyển service giao diện sang đọc snapshot khi muốn không phụ thuộc token MISA.
+
+Đã thêm `/admin/misa-employees` ở sidebar ADMIN, gọi trực tiếp CRM Report 119 THỐNG ĐẠT GROUP; xác nhận API thật tháng 09/2026 trả 21 nhân viên. `AMIS_BEARER_TOKEN` và `AMIS_COMPANY_CODE` chỉ ở `.env.local`; khi token hết hạn cần làm mới. Typecheck/lint/build pass. Next Exact Steps: mở trang bằng tài khoản ADMIN để kiểm tra giao diện; nếu triển khai cloud, thiết kế cấp lại phiên CRM server-side vì token phiên có hạn.
+
+### 2026-09-22 — Drilldown nhân viên MISA
+
+`/admin/misa-employees/[id]` đọc lại Report 119, lấy `QuantityAccountInChargeIDs` của nhân viên và gọi `Account/Grid` phân trang 20; không nhận ID khách hàng từ URL/client. API thật Ngô Thế San: 241 khách, 20 dòng trang đầu, BDI0005 đầu tiên. Next Exact Steps: kiểm tra UI bằng tài khoản ADMIN ở 375px và làm mới token CRM khi hết hạn.
+
+Cập nhật UI theo yêu cầu: trang khách hàng MISA là bảng 6 cột từ 768px, danh sách dòng trên mobile; giữ phân trang 20.
+
+Cập nhật chốt cột: bảng nay có đúng 9 trường của Account/Grid (BillingProvinceIDText, Debt, OrderSales, PurchaseDateRecent, NumberDaysWithoutPurchase, LastVisitDate cộng mã/tên/chủ sở hữu). Hiện bảng từ 1280px; màn nhỏ là danh sách dòng không cuộn ngang. BDI0005 qua API thật khớp tỉnh Bình Định, nợ 154.797.600, doanh số đơn hàng 669.313.850.
+
+### 2026-09-22 — Bộ lọc khách hàng MISA
+
+Trang `/admin/misa-employees/[id]` đã có 9 checkbox bộ lọc, áp dụng/bỏ lọc và giữ điều kiện khi phân trang. Điều kiện được validate rồi đưa vào `Account/Grid` cùng bộ ID của nhân viên; `Total` sau lọc quyết định số trang. API thật xác nhận lọc mã/công nợ/ngày mua và tỉnh Bình Định (94 dòng). Unit 3/3, typecheck, lint, build exit 0. Chưa kiểm tra trực quan UI 375px/1440px bằng tài khoản ADMIN.
+
+**Next Exact Steps:** đăng nhập ADMIN, mở `/admin/misa-employees/59?month=2026-09`, kiểm tra bộ lọc ở 375px/1440px và thử tỉnh `Bình Định` (kỳ vọng 94 dòng); cập nhật `AMIS_BEARER_TOKEN` khi phiên CRM hết hạn.
+
+Đã thu khung lọc còn 240px trên desktop; danh sách 9 tiêu chí cuộn dọc riêng trong vùng tối đa 320px/45dvh, nút thao tác vẫn ở dưới. Typecheck/lint/build exit 0. Next Exact Steps giữ nguyên: kiểm tra trực quan ở 375px/1440px bằng ADMIN.
+
+Đã thêm menu toán tử theo kiểu trường vào panel lọc; chữ gồm Chứa/Không chứa/Là/Không là/Trống/Không trống đúng mã CRM, số có so sánh, ngày có ngày cụ thể/trước/sau/mốc tương đối. Không cần giá trị thì ẩn input và gửi chuỗi rỗng cho API. Unit 5/5, typecheck/lint/build exit 0. Không mở trình duyệt MISA thêm. Next Exact Steps: kiểm tra UI bằng ADMIN khi người dùng sẵn sàng, tránh tự mở trình duyệt MISA.
+
+Trang danh sách Nhân viên MISA được bố trí lại theo ảnh người dùng: hero, thanh tháng/tìm kiếm/tổng số, danh sách hai cột desktop chia thứ tự 1–10/11–21 khi có 21 dòng; mobile một cột. Bấm tên/số KH vẫn mở chi tiết. Typecheck/lint/build exit 0. Không dùng trình duyệt để xác minh theo phản hồi người dùng. Next Exact Steps: khi được yêu cầu, kiểm tra trực quan trang ở 375px/1440px; làm mới token CRM nếu hết hạn.
+
+Trang chi tiết khách hàng đã thiết kế lại theo ảnh: header và tóm tắt nhân viên, toolbar tìm kiếm/kỳ tháng/xuất CSV, bảng 10 dòng/trang, phân trang số và panel lọc bên phải. Tìm kiếm MISA `AISearchKeyword` kiểm chứng với BDI0005 trả đúng 1 dòng; CSV chỉ xuất trang hiện tại và chống công thức. Unit 6/6, typecheck/lint/build exit 0. Không mở trình duyệt. Next Exact Steps: khi người dùng yêu cầu, kiểm tra trực quan 375px/1440px; nếu cần Excel `.xlsx` thật hoặc xuất toàn bộ 241 dòng, xây luồng xuất server-side riêng.

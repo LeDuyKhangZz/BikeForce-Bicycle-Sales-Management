@@ -1345,3 +1345,21 @@ Thẻ “Dữ liệu hệ thống của tháng” nằm ngay dưới bộ chuy�
 Khối xem trước ảnh của một nhân viên có hai nút cùng hàng từ `sm`: **Sao chép hình ảnh** và **Xem toàn màn hình**; ở mobile hai nút xếp dọc, rộng toàn khối và giữ touch target 44px. Nút copy có spinner, đổi thành icon dấu kiểm + “Đã sao chép hình ảnh” khi thành công, và hiển thị lỗi có `role="alert"` nếu trình duyệt không hỗ trợ clipboard ảnh hoặc từ chối quyền. Tính năng chỉ bật cho Tổng kết tháng qua prop `allowCopy`, không tự xuất hiện ở các màn preview khác.
 
 Trong ảnh Tổng kết tháng, nhãn nguồn MISA phải tách rõ **kỳ dữ liệu** và **ngày đồng bộ**, ví dụ: “MISA tháng 08/2026 · đồng bộ 11/09/2026”. Không dùng riêng cụm “tính đến 11/09/2026” vì người đọc có thể hiểu nhầm ngày chạy worker là kỳ số liệu.
+
+### Nhân viên MISA (2026-09-22)
+
+Sidebar quản trị có mục “Nhân viên MISA” mở `/admin/misa-employees`. Trang liệt kê tên ở cột Nhân viên của CRM Report 119 theo tháng, dạng card/grid trên mobile, có điều hướng tháng và trạng thái rỗng/lỗi.
+
+Theo mẫu giao diện 2026-09-22, trang danh sách có tiêu đề lớn và dải giới thiệu, thanh chọn tháng + tìm kiếm tên + tổng số, kế đó là bảng danh sách hai cột trên desktop. Với 21 nhân viên, cột trái là thứ tự 1–10 và cột phải 11–21; mỗi hàng có số thứ tự, tên và số lượng KH dạng pill. Mobile giữ một cột, không cuộn ngang. Tìm kiếm lọc tức thời danh sách đang tải; bấm hàng mở khách hàng của nhân viên.
+
+### Chi tiết khách hàng MISA (2026-09-22)
+
+Mỗi nhân viên trong `/admin/misa-employees` là liên kết tới danh sách “SL KH phụ trách”. Trang chi tiết hiển thị bảng 9 trường MISA cùng cột số thứ tự từ 1280px: mã khách hàng, tên, tỉnh/thành phố hóa đơn, công nợ, doanh số đơn hàng, ngày mua gần nhất, số ngày chưa mua, ngày ghé thăm gần nhất và chủ sở hữu. Màn hình nhỏ hơn hiển thị danh sách dòng xếp dọc, đủ các trường và không cuộn ngang. Phân trang 10 dòng.
+
+Trang chi tiết có “Tiêu chí lọc” gồm 9 checkbox tương ứng 9 cột. Chọn tiêu chí sẽ hiện ô nhập có nhãn, sau đó bấm “Áp dụng”; “Bỏ lọc” trở về danh sách đầy đủ. Trên màn hình lớn bộ lọc ở bên phải bảng; trên mobile nút mở bộ lọc ở phía trên danh sách. Số lượng kết quả và liên kết phân trang phản ánh bộ lọc đang áp dụng.
+
+Khung lọc desktop rộng 260px; danh sách tiêu chí cao tối đa 320px hoặc 45% chiều cao màn hình và cuộn dọc độc lập. Nút áp dụng/đặt lại nằm ngoài vùng cuộn để luôn dễ thao tác.
+
+Trang chi tiết theo mẫu mới có dải tiêu đề và thẻ tóm tắt nhân viên, bên dưới là bảng khách hàng 10 dòng/trang kèm ô tìm kiếm, kỳ tháng, nút xuất dữ liệu và phân trang số. Bảng có thêm cột thứ tự, hàng xen nền nhạt và số ngày chưa mua trong pill. Bộ lọc rộng 260px ở bên phải từ desktop lớn, vẫn cuộn dọc trong vùng nhỏ; màn hẹp chuyển sang danh sách dọc không cuộn ngang. Nút “Xuất Excel” tạo CSV tương thích Excel cho **trang hiện tại**, không diễn đạt là xuất toàn bộ khách hàng.
+
+Mỗi tiêu chí đã chọn có menu điều kiện theo kiểu dữ liệu. Cột chữ dùng đúng sáu lựa chọn MISA: Chứa, Không chứa, Là, Không là, Trống, Không trống. Cột số có các phép so sánh và trạng thái trống; cột ngày có ngày cụ thể, trước/sau ngày và các mốc tương đối. Điều kiện không cần giá trị sẽ ẩn ô nhập.

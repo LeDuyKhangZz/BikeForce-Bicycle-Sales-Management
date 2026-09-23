@@ -58,7 +58,7 @@ type AmisEmployeeMetricRow = {
  * Thêm dòng mới khi có tài khoản SaleWork mới cần gắn số liệu AMIS.
  */
 export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
-  'Abraham Kế Toán Bánhàng': 'Kế Toán Bán Hàng',
+  'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
   'Giao - Kế Toán bán hàng': 'Trần Thị Quỳnh Giao',
 };
 

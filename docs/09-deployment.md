@@ -1,5 +1,7 @@
 # 09 — Deployment (Supabase + Vercel)
 
+**2026-09-23 — DEC-092:** push migration `20260923110000_misa_report119_directory.sql` trước khi chạy sync mới. Worker cần các biến server-only Supabase/MISA trong file gitignored; không đưa token hoặc key vào `NEXT_PUBLIC_*`.
+
 **DEC-090 (2026-09-14):** Auto-sync Windows chạy mỗi 10 phút. Cập nhật task hiện có qua `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-hidden-report-sync.ps1 -IntervalMinutes 10`; backup XML trong logs, giữ launcher ẩn và IgnoreNew. Đã xác minh trigger thực tế PT10M. Tab AMIS đóng sau thao tác, lượt tiếp theo mở bằng cùng profile; không cần deploy Vercel cho thay đổi script/task này.
 
 ## Bổ sung 12/09/2026 — DEC-089
@@ -1267,3 +1269,7 @@ Task chạy ẩn hiện dùng bản `push_amis.py` có tối đa 3 lần thử U
 giữa các lần. Mỗi request giữ timeout 60 giây. Task vẫn IgnoreNew/khóa wrapper,
 không chạy chồng khi retry kéo dài. Telegram chỉ gửi lỗi nếu hết lượt retry hoặc
 lỗi không retry được; khi phục hồi và toàn bộ chuỗi thành công thì không gửi tin.
+
+### Trang Nhân viên MISA (2026-09-22)
+
+Route `/admin/misa-employees` cần hai biến môi trường server-only `AMIS_BEARER_TOKEN` và `AMIS_COMPANY_CODE`. Token CRM là phiên có hạn; triển khai cloud cần cơ chế cấp lại phiên trước khi trang dùng ổn định. Không đưa hai biến vào `NEXT_PUBLIC_`.

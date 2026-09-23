@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { MONTHLY_ACCOUNTING_AUGUST_KEY, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, usesAccountingAugustReport119 } from '@/lib/reports/monthly-accounting-august';
-import { includeMonthlySummaryParticipants, MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_KIM_HUONG_PARTICIPANT, MONTHLY_KHOA_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
+import { includeMonthlySummaryParticipants, MONTHLY_ACCOUNTING_PARTICIPANT, MONTHLY_ACCOUNTING_SALEWORK_ACCOUNT_NAME, MONTHLY_KIM_HUONG_PARTICIPANT, MONTHLY_KHOA_PARTICIPANT } from '@/lib/reports/monthly-summary-participants';
 import { getSaleWorkAccountName } from '@/lib/salework/sales-account-map';
 import { getMonthlySummarySales, listSalesOptions } from '@/services/profiles';
 import { getAmisMetricsForShare } from '@/services/reports';
@@ -21,7 +21,9 @@ export async function getMonthlySummaryAmisMetrics(
   const report119 = await getAmisMetricsForShare(supabase, MONTHLY_ACCOUNTING_AUGUST_KEY, periodMonth);
   // Không quay về số dashboard/scope sai nếu snapshot riêng chưa được đồng bộ.
   if (report119 === null) return null;
-  const receivable = await getAmisMetricsForShare(supabase, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, periodMonth);
+  const receivable = employeeName === MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE
+    ? original
+    : await getAmisMetricsForShare(supabase, MONTHLY_ACCOUNTING_AUGUST_RECEIVABLE_EMPLOYEE, periodMonth);
   return {
     ...report119,
     target_amount: original?.target_amount ?? null,
@@ -54,8 +56,8 @@ export async function getMonthlySummaryParticipant(supabase: SupabaseClient<Data
     return {
       ...MONTHLY_ACCOUNTING_PARTICIPANT,
       profileId: null,
-      saleWorkAccountName: MONTHLY_ACCOUNTING_PARTICIPANT.full_name,
-      amis_employee_name: AMIS_EMPLOYEE_MAP[MONTHLY_ACCOUNTING_PARTICIPANT.full_name] ?? null,
+      saleWorkAccountName: MONTHLY_ACCOUNTING_SALEWORK_ACCOUNT_NAME,
+      amis_employee_name: MONTHLY_ACCOUNTING_PARTICIPANT.full_name,
     };
   }
   const sales = await getMonthlySummarySales(supabase, id);

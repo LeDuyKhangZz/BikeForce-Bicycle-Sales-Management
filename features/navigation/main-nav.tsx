@@ -62,6 +62,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_SALARIES: Banknote,
   ADMIN_MONTHLY_SUMMARIES: CalendarRange,
   ADMIN_SALEWORK: MessagesSquare,
+  ADMIN_MISA_EMPLOYEES: Users,
   ADMIN_ACCOUNT: User,
 };
 
