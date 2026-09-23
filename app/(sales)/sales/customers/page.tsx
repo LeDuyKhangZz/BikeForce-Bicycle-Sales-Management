@@ -9,11 +9,12 @@ import { CustomerFilterPanel } from '@/features/misa-employees/customer-filter-p
 import { MisaCustomerTable } from '@/features/misa-employees/misa-customer-table';
 import { MisaCustomerToolbar } from '@/features/misa-employees/misa-customer-toolbar';
 import { CustomerGroupSummary } from '@/features/misa-employees/customer-group-summary';
+import { CustomerCommitmentProgress } from '@/features/misa-employees/customer-commitment-progress';
 import { misaCustomerQuery, parseMisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { report119Period } from '@/lib/amis/report119-period';
 import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
-import { getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeByName, getCachedMisaEmployeeCustomers, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
+import { getCachedMisaCustomerCommitmentStats, getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeByName, getCachedMisaEmployeeCustomers, type MisaCustomerCommitmentStats, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
 import type { MisaCustomerPage } from '@/services/misa-report119';
 
 export const metadata: Metadata = { title: 'Khách hàng của tôi · BikeForce' };
@@ -37,6 +38,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
 
   let result: MisaCustomerPage | null = null;
   let groupCounts: MisaCustomerGroupCounts = { A: 0, B: 0, C: 0, D: 0 };
+  let commitmentStats: MisaCustomerCommitmentStats = { total: 0, committed: 0, uncommitted: 0 };
   let error: string | null = null;
   if (report119Period(month) === null || !Number.isSafeInteger(page) || page <= 0) {
     error = 'Tháng hoặc trang không hợp lệ.';
@@ -49,9 +51,10 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
       if (employee === null) {
         error = `Chưa có dữ liệu MISA của ${profile.amis_employee_name} trong ${formatVietnamMonth(month)}.`;
       } else {
-        [result, groupCounts] = await Promise.all([
+        [result, groupCounts, commitmentStats] = await Promise.all([
           getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery }),
           getCachedMisaCustomerGroupCounts(supabase, month, employee.id),
+          getCachedMisaCustomerCommitmentStats(supabase, month, employee.id, employee.customerCount),
         ]);
       }
     } catch (cause) {
@@ -85,7 +88,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <><CustomerGroupSummary counts={groupCounts} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <><CustomerGroupSummary counts={groupCounts} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card flush className="min-w-0 overflow-hidden rounded-2xl">
             <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />
             {result.rows.length === 0 ? (

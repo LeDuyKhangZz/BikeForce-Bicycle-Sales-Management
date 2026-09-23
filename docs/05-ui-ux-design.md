@@ -1379,3 +1379,5 @@ Sau kiểm tra giao diện thực tế, badge trong bảng desktop dùng dạng 
 Danh sách có hai cột kế hoạch tháng: **Tần suất/tháng** và **Doanh số cam kết**. Sales chỉnh hai giá trị ngay trên dòng/thẻ và lưu riêng; Admin xem dạng chỉ đọc. Tần suất đã có mặc định theo nhóm nên không cần nhập hàng trăm dòng; cam kết trống hiển thị “Chưa cam kết”.
 
 Mobile dùng bố cục dashboard-card: khối tổng hợp A/B/C/D đếm toàn bộ khách theo nhân viên, mỗi khách là card với lưới chỉ số hai cột và vùng kế hoạch ở cuối. Desktop tiếp tục dùng bảng để tận dụng chiều rộng.
+
+Ngay trên danh sách có thanh tiến độ cam kết toàn tháng: **Chưa cam kết X KH**, **Đã cam kết Y/Tổng** và phần trăm. Cam kết `0` là đã xác nhận; chỉ `null`/để trống mới tính chưa cam kết.

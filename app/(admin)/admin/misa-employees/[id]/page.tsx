@@ -10,11 +10,12 @@ import { CustomerFilterPanel } from '@/features/misa-employees/customer-filter-p
 import { MisaCustomerTable } from '@/features/misa-employees/misa-customer-table';
 import { MisaCustomerToolbar } from '@/features/misa-employees/misa-customer-toolbar';
 import { CustomerGroupSummary } from '@/features/misa-employees/customer-group-summary';
+import { CustomerCommitmentProgress } from '@/features/misa-employees/customer-commitment-progress';
 import { misaCustomerQuery, parseMisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { formatVietnamMonth, resolveVietnamMonth } from '@/lib/date';
 import { report119Period } from '@/lib/amis/report119-period';
 import { createClient } from '@/lib/supabase/server';
-import { getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeCustomers, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
+import { getCachedMisaCustomerCommitmentStats, getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeCustomers, type MisaCustomerCommitmentStats, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
 import type { MisaCustomerPage } from '@/services/misa-report119';
 
 export const metadata: Metadata = { title: 'Khách hàng MISA · BikeForce' };
@@ -43,6 +44,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
 
   let result: MisaCustomerPage | null = null;
   let groupCounts: MisaCustomerGroupCounts = { A: 0, B: 0, C: 0, D: 0 };
+  let commitmentStats: MisaCustomerCommitmentStats = { total: 0, committed: 0, uncommitted: 0 };
   let error = false;
   try {
     const supabase = await createClient();
@@ -50,6 +52,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
       getCachedMisaEmployeeCustomers(supabase, { month, employeeId, page, filters, searchQuery }),
       getCachedMisaCustomerGroupCounts(supabase, month, employeeId),
     ]);
+    if (result) commitmentStats = await getCachedMisaCustomerCommitmentStats(supabase, month, employeeId, result.employee.customerCount);
   } catch (cause) {
     console.error('[MisaEmployeeCustomersPage]', cause);
     error = true;
@@ -99,6 +102,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
         <div className="xl:col-span-2"><CustomerGroupSummary counts={groupCounts} /></div>
+        <div className="xl:col-span-2"><CustomerCommitmentProgress stats={commitmentStats} /></div>
         <Card flush className="min-w-0 overflow-hidden rounded-2xl">
           {result && <MisaCustomerToolbar employeeId={employeeId} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />}
           {error ? (

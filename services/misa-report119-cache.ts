@@ -10,6 +10,7 @@ import type { MisaCustomerPage, MisaEmployee } from '@/services/misa-report119';
 const PAGE_SIZE = 10;
 
 export type MisaCustomerGroupCounts = { A: number; B: number; C: number; D: number };
+export type MisaCustomerCommitmentStats = { total: number; committed: number; uncommitted: number };
 
 type CacheEmployeeRow = {
   misa_employee_id: number;
@@ -222,4 +223,21 @@ export async function getCachedMisaCustomerGroupCounts(
   const failed = [a, b, c, d].find((result) => result.error !== null);
   if (failed?.error) throw new Error(`Không đếm được nhóm khách hàng: ${failed.error.message}`);
   return { A: a.count ?? 0, B: b.count ?? 0, C: c.count ?? 0, D: d.count ?? 0 };
+}
+
+export async function getCachedMisaCustomerCommitmentStats(
+  supabase: SupabaseClient,
+  month: string,
+  employeeId: number,
+  total: number,
+): Promise<MisaCustomerCommitmentStats> {
+  const { count, error } = await supabase
+    .from('misa_customer_monthly_plans')
+    .select('misa_customer_id', { count: 'exact', head: true })
+    .eq('period_month', `${month}-01`)
+    .eq('misa_employee_id', employeeId)
+    .not('committed_sales', 'is', null);
+  if (error) throw new Error(`Không đếm được khách hàng đã cam kết: ${error.message}`);
+  const committed = Math.min(total, count ?? 0);
+  return { total, committed, uncommitted: Math.max(0, total - committed) };
 }
