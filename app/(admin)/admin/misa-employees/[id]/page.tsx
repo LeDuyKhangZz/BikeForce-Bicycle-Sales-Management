@@ -12,7 +12,9 @@ import { MisaCustomerToolbar } from '@/features/misa-employees/misa-customer-too
 import { misaCustomerQuery, parseMisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { formatVietnamMonth, resolveVietnamMonth } from '@/lib/date';
 import { report119Period } from '@/lib/amis/report119-period';
-import { getMisaEmployeeCustomers, type MisaCustomerPage } from '@/services/misa-report119';
+import { createClient } from '@/lib/supabase/server';
+import { getCachedMisaEmployeeCustomers } from '@/services/misa-report119-cache';
+import type { MisaCustomerPage } from '@/services/misa-report119';
 
 export const metadata: Metadata = { title: 'Khách hàng MISA · BikeForce' };
 
@@ -41,7 +43,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
   let result: MisaCustomerPage | null = null;
   let error = false;
   try {
-    result = await getMisaEmployeeCustomers({ ...period, employeeId, page, filters, searchQuery });
+    result = await getCachedMisaEmployeeCustomers(await createClient(), { month, employeeId, page, filters, searchQuery });
   } catch (cause) {
     console.error('[MisaEmployeeCustomersPage]', cause);
     error = true;
@@ -94,7 +96,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
           {result && <MisaCustomerToolbar employeeId={employeeId} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />}
           {error ? (
             <div className="flex flex-col items-start gap-3 p-5">
-              <p role="alert" className="text-sm text-destructive">Không tải được khách hàng từ MISA. Hãy kiểm tra phiên CRM rồi thử lại.</p>
+              <p role="alert" className="text-sm text-destructive">Không tải được khách hàng đã đồng bộ. Hãy thử lại sau.</p>
               <Link href={pageHref(page)} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
             </div>
           ) : result && result.rows.length === 0 ? (

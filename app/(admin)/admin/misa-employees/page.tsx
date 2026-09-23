@@ -8,7 +8,8 @@ import { requireRole } from '@/features/auth/queries';
 import { MisaEmployeeDirectory } from '@/features/misa-employees/misa-employee-directory';
 import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { report119Period } from '@/lib/amis/report119-period';
-import { listMisaReport119Employees } from '@/services/misa-report119';
+import { createClient } from '@/lib/supabase/server';
+import { listCachedMisaEmployees } from '@/services/misa-report119-cache';
 
 export const metadata: Metadata = { title: 'Nhân viên · BikeForce' };
 
@@ -22,14 +23,14 @@ export default async function MisaEmployeesPage({ searchParams }: Props) {
   const nextMonth = shiftVietnamMonth(month, 1);
   const availableNextMonth = nextMonth !== null && nextMonth <= getVietnamCurrentMonth() ? nextMonth : null;
 
-  let employees: Awaited<ReturnType<typeof listMisaReport119Employees>> = [];
+  let employees: Awaited<ReturnType<typeof listCachedMisaEmployees>> = [];
   let error: string | null = null;
   try {
-    if (period !== null) employees = await listMisaReport119Employees(period);
+    if (period !== null) employees = await listCachedMisaEmployees(await createClient(), month);
     else error = 'Tháng báo cáo không hợp lệ.';
   } catch (cause) {
     console.error('[MisaEmployeesPage]', cause);
-    error = 'Không tải được danh sách từ MISA. Hãy thử lại sau khi làm mới phiên CRM.';
+    error = 'Không tải được danh sách nhân viên đã đồng bộ. Hãy thử lại sau.';
   }
 
   return (

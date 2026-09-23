@@ -2,6 +2,8 @@
 
 **DEC-092 (2026-09-23):** `fetch_report119.py` cào đủ nhân viên và mọi trang `Account/Grid`, đối chiếu số khách từng nhân viên rồi gọi RPC thay snapshot tháng nguyên tử. Lỗi token/phân trang/số lượng/ghi DB trả exit khác 0 và giữ snapshot cũ. `reports:sync` và monthly worker đều chạy bước này.
 
+Trang `/admin/misa-employees` và route chi tiết đọc hai bảng snapshot bằng Supabase session client chịu RLS; không gọi API MISA trong request web. Tìm kiếm, bộ lọc và phân trang chạy server-side trên snapshot, nên Vercel không cần `AMIS_BEARER_TOKEN` để hiển thị dữ liệu đã đồng bộ.
+
 **2026-09-23 — Telesale kế toán:** riêng view model ảnh SaleWork, dòng “Doanh thu đã ghi” lấy `amis_employee_metrics.receive_amount` làm THỰC ĐẠT; không dùng `net_sales`. Thay đổi này không chạm view model Tổng kết tháng.
 
 **ISSUE-054 (2026-09-14):** selectActMonth kiểm tra input.checked của từng Chọn tất cả, chỉclick nếu chưa chọn; chờ counterNV/khách>0 và cảhai checkboxchecked trước Xem báo cáo (60s). MISA restorechecked và tảicount saupopup, không giảđịnh danh sách chưachọn. Khôngđổi request/API/schema.
