@@ -1293,3 +1293,7 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Mobile Khách hàng theo mockup: group summary toàn danh sách, metric card hai cột, editor kế hoạch (2026-09-23)
 - [x] Hiển thị số khách chưa cam kết, đã cam kết/tổng và tiến độ toàn tháng cho Admin/Sales (2026-09-23)
 - [x] Chỉ Admin nhập/sửa kế hoạch; Sales chỉ xem, được khóa cả UI lẫn RLS (DEC-096)
+- [x] Admin tải CSV mẫu toàn bộ khách của nhân viên/tháng, xem trước lỗi và nhập kế hoạch hàng loạt bằng một UPSERT (DEC-097)
+- [x] CSV dùng MISA customer ID, kiểm tra trùng/số ngoài giới hạn/khách ngoài nhân viên; không nhận sales ID từ client
+- [x] Unit liên quan 7/7, typecheck/lint/build sạch; full unit còn 1 lỗi nav có sẵn ngoài phạm vi (863/864)
+- [ ] Smoke test nhập CSV thực tế bằng phiên Admin sau deploy; kiểm tra 375px và 1440px

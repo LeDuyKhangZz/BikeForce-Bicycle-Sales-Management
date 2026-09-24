@@ -2792,3 +2792,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Sales tự nhập từng khách hoặc nhập hàng loạt; không chọn ở luồng hiện tại.
 - **Impact:** Gỡ quyền INSERT/UPDATE của Sales ở RLS, chuyển editor sang trang Admin; dữ liệu cũ giữ nguyên.
 - **Status:** APPROVED
+
+## DEC-097 — Admin nhập hàng loạt kế hoạch khách hàng bằng CSV
+
+- **Date:** 2026-09-24
+- **Decision:** Trang chi tiết nhân viên MISA cho phép Admin tải file mẫu CSV chứa toàn bộ khách hàng của đúng nhân viên/tháng, chỉnh `Tần suất/tháng` và `Doanh số cam kết (VND)`, xem trước lỗi rồi xác nhận cập nhật hàng loạt. `MISA customer ID` là khóa đối chiếu; tối đa 2.000 dòng mỗi lần.
+- **Reason:** Mỗi nhân viên có hàng trăm khách hàng nên lưu từng dòng không khả thi. CSV có BOM mở trực tiếp bằng Excel, không cần thêm dependency xử lý workbook.
+- **Alternatives:** Nhập từng dòng; bị loại vì quá nhiều thao tác. Nhận file `.xlsx`; chưa chọn vì tăng bề mặt parser/dependency trong khi CSV đáp ứng luồng Excel. Cho client gửi tên/mã nhân viên làm quyền; bị loại vì không an toàn.
+- **Impact:** Thêm endpoint Admin tải mẫu, parser/preview phía client, Zod + auth/role phía Server Action và một UPSERT mảng sau khi xác minh mọi customer ID thuộc nhân viên/tháng. Không đổi schema, GRANT hay RLS; Sales tiếp tục chỉ đọc theo DEC-096.
+- **Status:** APPROVED — yêu cầu trực tiếp của người dùng.

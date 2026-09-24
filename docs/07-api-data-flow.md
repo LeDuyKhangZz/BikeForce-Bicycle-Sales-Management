@@ -827,3 +827,7 @@ Giao diện chi tiết mới dùng `PageSize: 10` cho `Account/Grid`. Ô tìm ki
 `/sales/customers` lấy tên AMIS từ hồ sơ phiên server-side, tìm nhân viên trong snapshot tháng rồi đọc danh sách khách hàng có phân trang và lọc tại database. Client không gửi tên hoặc ID nhân viên để quyết định quyền truy cập; RLS kiểm tra lại ánh xạ.
 
 Sau khi đọc một trang khách hàng, service đọc kế hoạch của đúng các customer ID trên trang rồi ghép vào view model. Server Action xác thực Zod, xác thực Sales server-side và upsert bảng kế hoạch dưới client chịu RLS. Worker MISA chỉ thay hai bảng snapshot, không ghi bảng kế hoạch.
+
+### Nhập hàng loạt kế hoạch khách hàng (DEC-097)
+
+`GET /api/admin/misa-employees/[id]/plans/template?month=YYYY-MM` kiểm tra phiên Admin, đọc tối đa 2.000 khách của đúng nhân viên/tháng và kế hoạch hiện có, rồi trả CSV UTF-8 BOM với `Cache-Control: private, no-store`. Client chỉ phân tích để xem trước; khi xác nhận, `importMisaCustomerPlans` Zod-validate toàn bộ payload, kiểm tra lại auth/active/Admin, resolve `sales_id` từ mapping MISA phía server, đọc tập customer ID hợp lệ và từ chối nếu có ID ngoài tập. Toàn bộ dòng hợp lệ được UPSERT trong một statement theo khóa `(period_month, misa_employee_id, misa_customer_id)`. Không tin tên khách, mã hiển thị, role hoặc sales ID từ file/client.

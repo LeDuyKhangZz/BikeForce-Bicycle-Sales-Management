@@ -1362,6 +1362,8 @@ Khung lọc desktop rộng 260px; danh sách tiêu chí cao tối đa 320px ho�
 
 Trang chi tiết theo mẫu mới có dải tiêu đề và thẻ tóm tắt nhân viên, bên dưới là bảng khách hàng 10 dòng/trang kèm ô tìm kiếm, kỳ tháng, nút xuất dữ liệu và phân trang số. Bảng có thêm cột thứ tự, hàng xen nền nhạt và số ngày chưa mua trong pill. Bộ lọc rộng 260px ở bên phải từ desktop lớn, vẫn cuộn dọc trong vùng nhỏ; màn hẹp chuyển sang danh sách dọc không cuộn ngang. Nút “Xuất Excel” tạo CSV tương thích Excel cho **trang hiện tại**, không diễn đạt là xuất toàn bộ khách hàng.
 
+Theo DEC-097, toolbar Admin có thêm **Tải file mẫu** và **Nhập kế hoạch**. File mẫu chứa toàn bộ khách của nhân viên/tháng cùng giá trị kế hoạch hiện có. Sau khi chọn CSV, giao diện hiển thị tên file, số dòng hợp lệ, số dòng lỗi và tối đa 20 lỗi có số dòng; chỉ hiện nút xác nhận khi không còn lỗi. Nút và input giữ touch target tối thiểu, control được xuống dòng trên mobile và không tạo cuộn ngang.
+
 Mỗi tiêu chí đã chọn có menu điều kiện theo kiểu dữ liệu. Cột chữ dùng đúng sáu lựa chọn MISA: Chứa, Không chứa, Là, Không là, Trống, Không trống. Cột số có các phép so sánh và trạng thái trống; cột ngày có ngày cụ thể, trước/sau ngày và các mốc tương đối. Điều kiện không cần giá trị sẽ ẩn ô nhập.
 ## Mục Khách hàng của Sales (2026-09-23)
 

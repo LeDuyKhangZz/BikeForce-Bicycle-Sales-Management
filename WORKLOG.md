@@ -3759,3 +3759,7 @@ Thiết kế lại mobile theo mockup người dùng: search card, tổng hợp 
 Bổ sung commitment progress đếm server-side toàn tháng: chưa cam kết, đã cam kết/tổng và phần trăm; có unit test phép tính 0/25/100% và clamp.
 
 Chuyển quyền quản lý kế hoạch sang Admin theo DEC-096: editor nằm ở Admin, Sales chỉ xem; action xác thực Admin và tự resolve tài khoản Sales từ tên MISA. Migration mới gỡ policy ghi của Sales và cấp ghi cho Admin.
+
+### 2026-09-24 — Nhập hàng loạt kế hoạch khách hàng (DEC-097)
+
+Thêm file mẫu CSV toàn bộ khách theo nhân viên/tháng, giữ sẵn tần suất và doanh số cam kết hiện tại; Admin điền trong Excel rồi tải lên xem trước. Parser báo lỗi theo dòng, chặn header sai, ID lặp, tần suất ngoài 0–31 và tiền không phải số nguyên. Server Action kiểm tra Zod/auth/active/Admin, tự resolve Sales, xác minh mọi MISA customer ID thuộc đúng nhân viên/tháng rồi UPSERT mảng trong một statement. Không đổi schema/RLS. Unit liên quan 7/7, typecheck/lint sạch, production build 30 route pass. Full unit 863/864 do test nav cũ giới hạn nhãn 9 ký tự trong khi `Khách hàng` hiện có 10; không phát sinh từ thay đổi này. Chưa smoke test trình duyệt/production.

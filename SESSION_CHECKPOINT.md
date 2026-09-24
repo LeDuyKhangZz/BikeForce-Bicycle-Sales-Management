@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## Mới nhất — DEC-097, 2026-09-24
+
+Admin đã có luồng nhập hàng loạt kế hoạch khách hàng: tải CSV mẫu toàn bộ khách đúng nhân viên/tháng, điền bằng Excel, xem trước lỗi và xác nhận UPSERT tối đa 2.000 dòng. MISA customer ID là khóa; action kiểm tra Zod/auth/active/Admin, resolve Sales server-side và từ chối customer ngoài tập. Không đổi DB/RLS. Unit liên quan 7/7, typecheck/lint/build exit 0; full unit 863/864 vì test nav cũ giới hạn nhãn 9 ký tự nhưng `Khách hàng` đã dài 10, ngoài phạm vi DEC-097.
+
+**Next Exact Steps:** deploy rồi smoke test bằng phiên Admin với file mẫu thật ở 375px/1440px; xác nhận tiến độ cam kết cập nhật sau import. Không sửa test/nav ngoài phạm vi nếu chưa chốt nhãn mới.
+
 ## Mới nhất — ISSUE-054, 2026-09-14
 
 Task13:01 báo chưa chọn Nhânviên. DOM thật Chọn tất cả đãchecked cảhai; counterNV0 banđầu rồi187 sau3s, khách5585. Scriptclickvôđiềukiện gâybỏchọn. Sửa ensureSelected chỉclick khi unchecked; chờ cảhai checkboxtrue/counter>0 trướcsubmit60s. Unit826/826,typecheck/lint/build exit0; hồi quyfailtrướcsửa/pass3/3. Wrapper-NoTelegram đang kiểm tra. Lịch10phút/đóngtab giữnguyên, khôngđổiDB/RLS.

@@ -1,8 +1,9 @@
 'use client';
 
-import { CalendarDays, ChevronDown, Download, Search } from 'lucide-react';
+import { CalendarDays, ChevronDown, Download, FileSpreadsheet, Search } from 'lucide-react';
 import Link from 'next/link';
 
+import { CustomerPlanImport } from '@/features/misa-employees/customer-plan-import';
 import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { buildMisaCustomerCsv } from '@/lib/amis/customer-export';
 import type { MisaCustomer } from '@/types/misa-customer';
@@ -62,6 +63,11 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
         className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         <Download aria-hidden="true" className="size-5" /> Xuất Excel
       </button>
+      <a href={`/api/admin/misa-employees/${employeeId}/plans/template?month=${month}`}
+        className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <FileSpreadsheet aria-hidden="true" className="size-5" /> Tải file mẫu
+      </a>
+      <CustomerPlanImport employeeId={employeeId} month={month} />
     </div>
   );
 }
