@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Filter, RotateCcw, Search } from 'lucide-react';
+import { ChevronDown, Filter, RotateCcw, Search } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { MISA_CUSTOMER_FILTER_FIELDS, MISA_FILTER_OPERATORS, type MisaCustomerFilterKey, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
@@ -28,6 +28,7 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
   );
   const resetQuery = new URLSearchParams({ month });
   if (searchQuery) resetQuery.set('q', searchQuery);
+  const activeCount = Object.keys(filters).length;
 
   function toggle(key: MisaCustomerFilterKey) {
     setSelected((current) => {
@@ -39,26 +40,25 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
   }
 
   return (
-    <aside aria-label="Tiêu chí lọc khách hàng" className="order-first min-w-0 rounded-2xl border border-border bg-card p-4 shadow-sm xl:order-last xl:sticky xl:top-20 xl:self-start">
+    <aside aria-label="Tiêu chí lọc khách hàng" className="order-1 min-w-0 overflow-hidden rounded-2xl border border-input-border bg-card shadow-sm">
       <button
         type="button"
         aria-expanded={expanded}
         aria-controls="misa-customer-filter-form"
         onClick={() => setExpanded((value) => !value)}
-        className="flex min-h-11 w-full items-center gap-2 text-left font-semibold text-heading xl:hidden"
+        className="flex min-h-16 w-full items-center justify-between gap-3 bg-primary/5 px-4 py-3 text-left hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-ring"
       >
-        <Filter aria-hidden="true" className="size-5" /> Tiêu chí lọc
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground"><Filter aria-hidden="true" className="size-5" /></span>
+          <span><span className="block font-bold text-heading">Bộ lọc khách hàng</span><span className="block text-xs font-normal text-muted-foreground">{activeCount > 0 ? `Đang áp dụng ${activeCount} điều kiện` : 'Lọc theo mã, tên, khu vực, công nợ và ngày mua'}</span></span>
+        </span>
+        <span className="flex shrink-0 items-center gap-2 font-semibold text-primary"><span className="hidden sm:inline">{expanded ? 'Thu gọn' : 'Mở bộ lọc'}</span><ChevronDown aria-hidden="true" className={`size-5 transition-transform ${expanded ? 'rotate-180' : ''}`} /></span>
       </button>
-      <div id="misa-customer-filter-form" className={expanded ? 'block' : 'hidden xl:block'}>
-        <div className="mb-3 hidden items-center justify-between gap-2 xl:flex">
-          <h2 className="flex items-center gap-2 font-semibold text-heading"><Filter aria-hidden="true" className="size-5 text-primary" /> Bộ lọc</h2>
-          <Link href={`${path}?${resetQuery}`} className="inline-flex min-h-11 items-center gap-1 text-xs font-medium text-primary hover:underline"><RotateCcw aria-hidden="true" className="size-4" /> Đặt lại</Link>
-        </div>
-        <p className="mb-2 text-xs font-semibold text-heading">TIÊU CHÍ LỌC</p>
-        <form action={path} method="get" className="flex flex-col gap-2">
+      <div id="misa-customer-filter-form" className={expanded ? 'border-t border-border p-4' : 'hidden'}>
+        <form action={path} method="get" className="flex flex-col gap-3">
           <input type="hidden" name="month" value={month} />
           {searchQuery && <input type="hidden" name="q" value={searchQuery} />}
-          <div role="group" aria-label="Các tiêu chí lọc" className="max-h-[min(45dvh,20rem)] overflow-y-auto overscroll-contain pr-1">
+          <div role="group" aria-label="Các tiêu chí lọc" className="grid max-h-[min(42dvh,16rem)] grid-cols-1 gap-2 overflow-y-auto overscroll-contain pr-1 md:grid-cols-2 xl:grid-cols-3">
           {MISA_CUSTOMER_FILTER_FIELDS.map((field) => {
             const checked = selected.has(field.key);
             const inputId = `misa-filter-${field.key}`;
@@ -68,8 +68,8 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
               : field.kind === 'date' ? 'Ngày'
               : field.key === 'daysWithoutPurchase' ? 'Số ngày' : 'Số tiền (VND)';
             return (
-              <div key={field.key} className="border-b border-border/60 pb-2 last:border-b-0">
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-heading">
+              <div key={field.key} className={`rounded-xl border p-2 ${checked ? 'border-primary/40 bg-primary/5' : 'border-border'}`}>
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-heading">
                   <input
                     type="checkbox"
                     name={`use_${field.key}`}
@@ -81,7 +81,7 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
                   <span>{field.label}</span>
                 </label>
                 {checked && operator && (
-                  <div className="pb-2 pl-8">
+                  <div className="pb-1 pl-8 pr-1">
                     <label htmlFor={`${inputId}-operator`} className="mb-1 block text-sm text-muted-foreground">Điều kiện</label>
                     <select
                       id={`${inputId}-operator`}
@@ -113,11 +113,11 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
             );
           })}
           </div>
-          <div className="mt-2 flex flex-col gap-2">
-            <button type="submit" className={buttonClassName({ className: 'w-full' })}>
+          <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
+            <Link href={`${path}?${resetQuery}`} className={buttonClassName({ variant: 'secondary' })}><RotateCcw aria-hidden="true" className="size-4" /> Đặt lại</Link>
+            <button type="submit" className={buttonClassName()}>
               <Search aria-hidden="true" className="size-4" /> Áp dụng bộ lọc
             </button>
-            <Link href={`${path}?${resetQuery}`} className={buttonClassName({ variant: 'secondary', className: 'w-full xl:hidden' })}>Đặt lại</Link>
           </div>
         </form>
       </div>

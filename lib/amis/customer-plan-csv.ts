@@ -85,6 +85,10 @@ function integerFromCell(value: string): number | null {
 
 export function parseCustomerPlanCsv(text: string): CustomerPlanCsvResult {
   const parsedRows = parseCsv(text.replace(/^\uFEFF/, ''));
+  return parseCustomerPlanCells(parsedRows);
+}
+
+export function parseCustomerPlanCells(parsedRows: string[][]): CustomerPlanCsvResult {
   const header = parsedRows[0];
   if (header === undefined || CUSTOMER_PLAN_CSV_HEADERS.some((value, index) => header[index]?.trim() !== value)) {
     return { rows: [], errors: [{ line: 1, message: 'File không đúng mẫu kế hoạch khách hàng.' }] };

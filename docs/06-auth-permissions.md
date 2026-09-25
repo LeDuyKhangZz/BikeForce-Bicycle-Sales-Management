@@ -893,4 +893,8 @@ Server Action vẫn kiểm tra tháng → auth → active → role trước khi 
 
 Route `/sales/customers` yêu cầu vai `SALES`. RLS chỉ trả nhân viên và khách hàng Report 119 khớp `profiles.amis_employee_name` của chính `auth.uid()`; tài khoản chưa ánh xạ không nhận dữ liệu.
 
+### Quyền nhập kế hoạch khách hàng của Sales (2026-09-25 — DEC-098)
+
+Sales được SELECT/INSERT/UPDATE `misa_customer_monthly_plans` khi `sales_id = auth.uid()` và khách hàng thuộc đúng `misa_employee_id` được ánh xạ qua `profiles.amis_employee_name` của tài khoản Sales đang active. Sales không thể ghi kế hoạch của nhân viên khác; Admin vẫn dùng policy riêng để quản lý toàn bộ. Server Action lặp lại kiểm tra ownership trước khi gọi service.
+
 Sales chỉ được `SELECT` kế hoạch có `sales_id = auth.uid()`. Admin được `SELECT/INSERT/UPDATE`; Server Action tự xác thực lại vai Admin và tự tìm `sales_id` từ ánh xạ tên MISA, không nhận chủ sở hữu từ client.

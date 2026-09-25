@@ -2800,4 +2800,40 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Reason:** Mỗi nhân viên có hàng trăm khách hàng nên lưu từng dòng không khả thi. CSV có BOM mở trực tiếp bằng Excel, không cần thêm dependency xử lý workbook.
 - **Alternatives:** Nhập từng dòng; bị loại vì quá nhiều thao tác. Nhận file `.xlsx`; chưa chọn vì tăng bề mặt parser/dependency trong khi CSV đáp ứng luồng Excel. Cho client gửi tên/mã nhân viên làm quyền; bị loại vì không an toàn.
 - **Impact:** Thêm endpoint Admin tải mẫu, parser/preview phía client, Zod + auth/role phía Server Action và một UPSERT mảng sau khi xác minh mọi customer ID thuộc nhân viên/tháng. Không đổi schema, GRANT hay RLS; Sales tiếp tục chỉ đọc theo DEC-096.
+
+## DEC-098 — Sales tự nhập kế hoạch khách hàng
+
+- **Date:** 2026-09-25
+- **Decision:** Thay DEC-096: Sales được nhập/sửa `Tần suất/tháng` và `Doanh số cam kết` cho đúng khách hàng MISA mình phụ trách. Sales thao tác trực tiếp trong bảng hàng/cột trên web, có thể áp dụng giá trị cho một khoảng dòng rồi lưu toàn bộ. Admin vẫn có quyền quản lý toàn bộ.
+- **Reason:** Người vận hành yêu cầu nhân viên tự phân bổ kế hoạch cho khoảng 200 khách, ví dụ điền một lần rồi kéo xuống các nhóm 100/50/50 dòng.
+- **Alternatives:** Giữ Admin nhập tập trung; hoặc chỉ cho Sales sửa từng dòng. Hai phương án bị loại vì tạo nút thắt vận hành hoặc không phù hợp khối lượng hàng trăm khách.
+- **Impact:** Thêm policy INSERT/UPDATE Sales-own và bảng nhập hàng loạt trực tiếp trên `/sales/customers`; Server Action kiểm tra Sales chỉ thao tác `misa_employee_id` ánh xạ với chính `auth.uid()`. DEC-096 bị thay thế; CSV của DEC-097 vẫn dành cho Admin.
+- **Status:** APPROVED
+
+## DEC-099 — Gỡ tab nhập chỉ tiêu khỏi giao diện Sales
+
+- **Date:** 2026-09-25
+- **Decision:** `/sales/customers` chỉ hiển thị danh sách card; gỡ toàn bộ tab `Nhập chỉ tiêu`, bảng kéo-fill và CTA sửa khỏi giao diện Sales. Tần suất và doanh số cam kết vẫn hiển thị chỉ đọc.
+- **Reason:** Yêu cầu trực tiếp của người dùng sau khi xem giao diện thực tế.
+- **Alternatives:** Giữ hai tab; hoặc nhúng editor vào từng card. Cả hai bị loại theo yêu cầu bỏ nguyên tab nhập chỉ tiêu.
+- **Impact:** Không thay đổi schema hay policy đã triển khai; chỉ gỡ entry point UI của Sales. Admin và dữ liệu kế hoạch hiện hữu không đổi.
+- **Status:** APPROVED
+
+## DEC-100 — Admin chỉ nhập kế hoạch khách hàng bằng Excel
+
+- **Date:** 2026-09-25
+- **Decision:** Gỡ editor từng dòng khỏi bảng khách hàng MISA Admin. Hai cột kế hoạch chỉ hiển thị; mọi cập nhật dùng file mẫu CSV tương thích Excel và luồng nhập hàng loạt DEC-097.
+- **Reason:** Editor gộp hai cột làm lệch layout bảng và nhập từng khách quá chậm.
+- **Alternatives:** Giữ editor từng dòng và chỉnh CSS; bị loại vì người dùng chỉ muốn nhập qua Excel.
+- **Impact:** Bảng trở lại một cell cho mỗi cột theo colgroup; Server Action lưu một dòng vẫn còn nội bộ nhưng không có entry point UI. Luồng CSV Admin không đổi.
+- **Status:** APPROVED
+
+## DEC-101 — File mẫu kế hoạch là XLSX thật
+
+- **Date:** 2026-09-25
+- **Decision:** Thay định dạng CSV trong DEC-097 bằng workbook `.xlsx` thật cho cả tải mẫu và nhập lại. Workbook giữ đúng 5 cột, toàn bộ khách hàng và giá trị kế hoạch hiện có; hàng đầu được cố định, có AutoFilter và định dạng số VND.
+- **Reason:** Người dùng thao tác trực tiếp trong Excel và lưu workbook; upload cũ chỉ đọc CSV nên từ chối file `.xlsx` dù dữ liệu/hàng cột đúng.
+- **Alternatives:** Yêu cầu Save As CSV; bị loại vì không đúng quy trình người dùng mong muốn và dễ làm sai định dạng/dấu tiếng Việt.
+- **Impact:** Thêm `exceljs`; endpoint mẫu trả MIME OpenXML và tên `.xlsx`; client chỉ nhận `.xlsx`, đọc năm cột rồi tiếp tục validation/ownership/UPSERT hiện hữu. Giá trị `null` vẫn là ô trống, không đổi thành 0.
+- **Status:** APPROVED
 - **Status:** APPROVED — yêu cầu trực tiếp của người dùng.

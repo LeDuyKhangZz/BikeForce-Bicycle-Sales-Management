@@ -28,9 +28,11 @@ export async function saveMisaCustomerPlan(
   const profile = await getSessionProfile(supabase, user.id);
   if (!profile) return { ok: false, code: 'NOT_FOUND', message: AUTH_MESSAGES.PROFILE_MISSING };
   if (!profile.is_active) return { ok: false, code: 'ACCOUNT_DISABLED', message: AUTH_MESSAGES.ACCOUNT_DISABLED };
-  if (profile.role !== 'ADMIN') return { ok: false, code: 'FORBIDDEN', message: 'Chỉ quản trị viên được cập nhật kế hoạch khách hàng.' };
   const salesId = await getSalesIdForMisaEmployee(supabase, `${parsed.data.month}-01`, parsed.data.employeeId);
   if (salesId === null) return { ok: false, code: 'NOT_FOUND', message: 'Nhân viên MISA chưa được liên kết với tài khoản Sales.' };
+  if (profile.role === 'SALES' && salesId !== user.id) {
+    return { ok: false, code: 'FORBIDDEN', message: 'Bạn chỉ được cập nhật kế hoạch khách hàng của mình.' };
+  }
   const saved = await upsertMisaCustomerPlan(supabase, {
     salesId,
     periodMonth: `${parsed.data.month}-01`,
@@ -58,10 +60,12 @@ export async function importMisaCustomerPlans(input: unknown): Promise<ActionRes
   const profile = await getSessionProfile(supabase, user.id);
   if (!profile) return { ok: false, code: 'NOT_FOUND', message: AUTH_MESSAGES.PROFILE_MISSING };
   if (!profile.is_active) return { ok: false, code: 'ACCOUNT_DISABLED', message: AUTH_MESSAGES.ACCOUNT_DISABLED };
-  if (profile.role !== 'ADMIN') return { ok: false, code: 'FORBIDDEN', message: 'Chỉ quản trị viên được nhập kế hoạch khách hàng.' };
   const periodMonth = `${parsed.data.month}-01`;
   const salesId = await getSalesIdForMisaEmployee(supabase, periodMonth, parsed.data.employeeId);
   if (salesId === null) return { ok: false, code: 'NOT_FOUND', message: 'Nhân viên MISA chưa được liên kết với tài khoản Sales.' };
+  if (profile.role === 'SALES' && salesId !== user.id) {
+    return { ok: false, code: 'FORBIDDEN', message: 'Bạn chỉ được nhập kế hoạch khách hàng của mình.' };
+  }
   const saved = await upsertMisaCustomerPlans(supabase, {
     salesId,
     periodMonth,

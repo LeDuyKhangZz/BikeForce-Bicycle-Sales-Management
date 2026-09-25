@@ -5,7 +5,7 @@ import { FileSpreadsheet, Upload, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { importMisaCustomerPlans } from '@/features/misa-employees/actions';
-import { parseCustomerPlanCsv, type CustomerPlanCsvResult } from '@/lib/amis/customer-plan-csv';
+import { parseCustomerPlanCells, type CustomerPlanCsvResult } from '@/lib/amis/customer-plan-csv';
 
 type Props = { employeeId: number; month: string };
 
@@ -27,11 +27,28 @@ export function CustomerPlanImport({ employeeId, month }: Props) {
     setMessage('');
     if (!file) return;
     setFileName(file.name);
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      setPreview({ rows: [], errors: [{ line: 1, message: 'Chỉ chấp nhận file CSV được tải từ file mẫu.' }] });
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      setPreview({ rows: [], errors: [{ line: 1, message: 'Chỉ chấp nhận file Excel .xlsx được tải từ file mẫu.' }] });
       return;
     }
-    setPreview(parseCustomerPlanCsv(await file.text()));
+    try {
+      const ExcelJS = await import('exceljs');
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(await file.arrayBuffer());
+      const sheet = workbook.worksheets[0];
+      if (!sheet) {
+        setPreview({ rows: [], errors: [{ line: 1, message: 'File Excel không có trang dữ liệu.' }] });
+        return;
+      }
+      const cells: string[][] = [];
+      sheet.eachRow({ includeEmpty: false }, (row) => {
+        cells.push([1, 2, 3, 4, 5].map((column) => row.getCell(column).text.trim()));
+      });
+      setPreview(parseCustomerPlanCells(cells));
+    } catch (error) {
+      console.error('[CustomerPlanImport]', error);
+      setPreview({ rows: [], errors: [{ line: 1, message: 'Không đọc được file Excel. Hãy tải lại file mẫu mới.' }] });
+    }
   }
 
   function confirmImport() {
@@ -50,7 +67,7 @@ export function CustomerPlanImport({ employeeId, month }: Props) {
 
   return (
     <div className="w-full sm:w-auto">
-      <input ref={inputRef} type="file" accept=".csv,text/csv" className="sr-only"
+      <input ref={inputRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
         onChange={(event) => void selectFile(event.target.files?.[0])} />
       <button type="button" onClick={() => inputRef.current?.click()}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-auto">
@@ -78,7 +95,7 @@ export function CustomerPlanImport({ employeeId, month }: Props) {
           {preview && preview.errors.length === 0 && preview.rows.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <Button type="button" onClick={confirmImport} loading={pending} loadingText="Đang nhập…">Xác nhận nhập {preview.rows.length} khách</Button>
-              <p className="text-xs text-muted-foreground">Dữ liệu hiện có của các khách trong file sẽ được cập nhật.</p>
+              <p className="text-xs text-muted-foreground">Giữ nguyên 5 cột của file Excel mẫu; dữ liệu hiện có của các khách trong file sẽ được cập nhật.</p>
             </div>
           )}
         </section>

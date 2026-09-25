@@ -1362,6 +1362,20 @@ Khung lọc desktop rộng 260px; danh sách tiêu chí cao tối đa 320px ho�
 
 Trang chi tiết theo mẫu mới có dải tiêu đề và thẻ tóm tắt nhân viên, bên dưới là bảng khách hàng 10 dòng/trang kèm ô tìm kiếm, kỳ tháng, nút xuất dữ liệu và phân trang số. Bảng có thêm cột thứ tự, hàng xen nền nhạt và số ngày chưa mua trong pill. Bộ lọc rộng 260px ở bên phải từ desktop lớn, vẫn cuộn dọc trong vùng nhỏ; màn hẹp chuyển sang danh sách dọc không cuộn ngang. Nút “Xuất Excel” tạo CSV tương thích Excel cho **trang hiện tại**, không diễn đạt là xuất toàn bộ khách hàng.
 
+### Sales nhập chỉ tiêu khách hàng trực tiếp (2026-09-25)
+
+**Cập nhật 2026-09-25 (DEC-099):** `/sales/customers` chỉ còn danh sách card; tab `Nhập chỉ tiêu` và mọi CTA dẫn tới bảng nhập đã được gỡ theo yêu cầu người dùng. Card vẫn hiển thị tần suất và doanh số cam kết hiện có dưới dạng chỉ đọc.
+
+Thiết kế fill handle trước đó không còn được expose trên giao diện Sales sau DEC-099.
+
+**Cập nhật Admin 2026-09-25 (DEC-100):** bảng khách hàng MISA không render editor trong từng dòng. `Tần suất/tháng` và `Doanh số cam kết` là hai cột chỉ đọc, giữ đúng colgroup nên các cột sau không bị lệch. Admin chỉ cập nhật bằng `Tải file mẫu` → chỉnh trong Excel → `Nhập kế hoạch`.
+
+Panel lọc luôn nằm phía trên bảng dưới dạng accordion toàn chiều rộng; không đặt bên phải hoặc phía dưới ở bất kỳ breakpoint nào. Thứ tự cố định: tổng hợp → bộ lọc → bảng. Hai cột tiền được ưu tiên độ rộng 10%/11% để số VND đầy đủ không chồng lên nhau.
+
+Header accordion của bộ lọc phải nhận diện được ngay: icon phễu trong ô primary, nhãn `Bộ lọc khách hàng`, mô tả ngắn/số điều kiện active và CTA `Mở bộ lọc`. Khi mở, tiêu chí dùng grid 1/2/3 cột theo breakpoint, cao tối đa 256px và cuộn riêng; `Đặt lại`/`Áp dụng bộ lọc` nằm cùng hàng ở cuối để không che phần lớn viewport.
+
+Danh sách của Sales trên mobile dùng card riêng: số thứ tự tròn, mã/tên/địa phương, badge nhóm A–D, ba metric Công nợ/Doanh số đơn hàng/Ngày mua gần nhất và hai ô kế hoạch chỉ đọc. Biến thể này không áp dụng cho trang Admin.
+
 Theo DEC-097, toolbar Admin có thêm **Tải file mẫu** và **Nhập kế hoạch**. File mẫu chứa toàn bộ khách của nhân viên/tháng cùng giá trị kế hoạch hiện có. Sau khi chọn CSV, giao diện hiển thị tên file, số dòng hợp lệ, số dòng lỗi và tối đa 20 lỗi có số dòng; chỉ hiện nút xác nhận khi không còn lỗi. Nút và input giữ touch target tối thiểu, control được xuống dòng trên mobile và không tạo cuộn ngang.
 
 Mỗi tiêu chí đã chọn có menu điều kiện theo kiểu dữ liệu. Cột chữ dùng đúng sáu lựa chọn MISA: Chứa, Không chứa, Là, Không là, Trống, Không trống. Cột số có các phép so sánh và trạng thái trống; cột ngày có ngày cụ thể, trước/sau ngày và các mốc tương đối. Điều kiện không cần giá trị sẽ ẩn ô nhập.

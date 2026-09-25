@@ -3763,3 +3763,28 @@ Chuyển quyền quản lý kế hoạch sang Admin theo DEC-096: editor nằm �
 ### 2026-09-24 — Nhập hàng loạt kế hoạch khách hàng (DEC-097)
 
 Thêm file mẫu CSV toàn bộ khách theo nhân viên/tháng, giữ sẵn tần suất và doanh số cam kết hiện tại; Admin điền trong Excel rồi tải lên xem trước. Parser báo lỗi theo dòng, chặn header sai, ID lặp, tần suất ngoài 0–31 và tiền không phải số nguyên. Server Action kiểm tra Zod/auth/active/Admin, tự resolve Sales, xác minh mọi MISA customer ID thuộc đúng nhân viên/tháng rồi UPSERT mảng trong một statement. Không đổi schema/RLS. Unit liên quan 7/7, typecheck/lint sạch, production build 30 route pass. Full unit 863/864 do test nav cũ giới hạn nhãn 9 ký tự trong khi `Khách hàng` hiện có 10; không phát sinh từ thay đổi này. Chưa smoke test trình duyệt/production.
+### 2026-09-25 — Sales tự nhập kế hoạch khách hàng (DEC-098)
+
+Theo yêu cầu người dùng, đã thay DEC-096: Sales nhập trực tiếp toàn bộ khách trên `/sales/customers` theo dạng hàng/cột, có công cụ điền tần suất cho một khoảng dòng và lưu một lần. Server Action tự resolve Sales từ ánh xạ MISA và chặn nhân viên khác; migration mới cấp INSERT/UPDATE Sales-own, giữ policy Admin. Unit kế hoạch/CSV 7/7 và typecheck pass; cần chạy DB/RLS sau khi Supabase local hoạt động và chạy production build trước khi đóng task.
+
+Giao diện sau đó được chỉnh theo ảnh mẫu mobile: tab Danh sách/Nhập chỉ tiêu, checkbox từng dòng/chọn tất cả, cột nhập trực tiếp, dòng được chọn có nền và thanh dính cuối trang để điền cùng giá trị cho các khách đã chọn. Typecheck, lint và production build đều exit 0.
+
+Bổ sung fill handle ngay trên từng ô tần suất/doanh số: giữ chấm xanh và kéo dọc bằng chuột hoặc ngón tay để sao chép giá trị như Excel. Vùng kéo có viền xanh; dữ liệu vẫn chờ nút Lưu toàn bộ. Typecheck, lint và production build tiếp tục exit 0.
+
+Khắc phục lỗi thao tác trên điện thoại LAN: log Next dev cho thấy client chunks bị chặn cross-origin từ `192.168.1.74`. Đã thêm `allowedDevOrigins`, tăng vùng chạm fill handle lên 44px, giữ pointer capture và khởi động lại server cổng 3000.
+
+Tab Danh sách khách hàng phía Sales được đổi sang card mobile theo ảnh mẫu, tách bằng prop riêng để không ảnh hưởng Admin. Card có số thứ tự, nhóm, địa phương, ba metric và hai ô kế hoạch liên kết sang tab nhập. Typecheck, lint và production build exit 0.
+
+Theo yêu cầu tiếp theo, đã gỡ nguyên tab Nhập chỉ tiêu và mọi liên kết sửa khỏi Sales (DEC-099). Danh sách card vẫn hiển thị tần suất/doanh số cam kết dạng chỉ đọc; Admin và RLS không đổi. Typecheck/lint exit 0.
+
+Admin chuyển sang chỉ nhập kế hoạch bằng Excel (DEC-100): bỏ editor/nút lưu từng dòng khỏi `MisaCustomerTable`; hai cột kế hoạch hiển thị text riêng nên hết `colSpan` gây lệch các cột ngày. Luồng Tải file mẫu/Nhập kế hoạch giữ nguyên. Typecheck/lint exit 0.
+
+Sửa chồng số Công nợ/Doanh số trên bảng Admin: dời layout bảng + panel lọc từ `xl` lên `2xl`, đồng bộ breakpoint accordion của filter và tăng tỷ lệ hai cột tiền. Ở kích thước như ảnh, bảng nay chiếm toàn bộ chiều ngang thay vì bị panel 260px ép. Typecheck/lint exit 0.
+
+Theo phản hồi người dùng, bỏ hoàn toàn bố cục filter bên cạnh/bên dưới: Admin luôn hiển thị Bộ lọc dạng accordion toàn chiều rộng phía trên bảng, sau hai khối tổng hợp. Bảng tiếp tục dùng toàn bộ chiều ngang. Typecheck/lint exit 0.
+
+Thiết kế lại accordion Bộ lọc: header nhận diện rõ bằng icon phễu primary, tiêu đề/mô tả, badge ngữ nghĩa qua số điều kiện và CTA mở/thu gọn. Nội dung dùng grid responsive, giới hạn cao 256px có cuộn riêng và action ngang, không còn bung dài che màn hình. Typecheck/lint exit 0.
+
+Đổi file kế hoạch từ CSV sang Excel `.xlsx` thật (DEC-101). Endpoint tạo workbook 5 cột có sẵn toàn bộ khách và giá trị hiện tại, freeze header/AutoFilter/định dạng số; upload chỉ nhận `.xlsx` và đọc worksheet đầu bằng ExcelJS trước khi chạy validation/UPSERT cũ. Unit mục tiêu 8/8, typecheck và production build pass.
+
+Tái hiện upload workbook thật: client đọc đúng 241 dòng, 0 lỗi; server log xác nhận Supabase trả `42501 new row violates row-level security policy`. Thêm migration idempotent khôi phục policy INSERT/UPDATE Admin và GRANT trên `misa_customer_monthly_plans` (ISSUE-054). Cần áp migration production rồi bấm xác nhận lại, không cần sửa file XLSX.

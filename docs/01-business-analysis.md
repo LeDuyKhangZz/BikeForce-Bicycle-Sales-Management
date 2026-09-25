@@ -942,4 +942,4 @@ Số ngày chưa mua hàng được cảnh báo theo cùng một quy tắc ở A
 
 Mỗi khách hàng theo từng tháng có thêm **Tần suất/tháng** và **Doanh số cam kết**. Tần suất mặc định theo nhóm là A=4, B=2, C=1, D=1 lần/tháng; Sales chỉ sửa ngoại lệ và nhập cam kết cho khách trọng điểm. Chưa nhập cam kết là `null`, không đồng nghĩa 0. Hai giá trị do Sales nhập không bị tiến trình đồng bộ MISA thay đổi.
 
-**Điều chỉnh 2026-09-23:** Admin là vai duy nhất nhập/sửa tần suất và doanh số cam kết. Sales chỉ xem kế hoạch và tiến độ của khách hàng mình phụ trách.
+**Điều chỉnh 2026-09-25 (DEC-098, thay DEC-096):** Sales được nhập/sửa tần suất và doanh số cam kết cho đúng khách hàng mình phụ trách; Admin vẫn được quản lý toàn bộ. Sales nhập trực tiếp trong bảng hàng/cột trên web, có thể áp dụng một tần suất cho một khoảng dòng rồi lưu toàn bộ. RLS và Server Action kiểm tra ánh xạ `auth.uid() → profiles.amis_employee_name → misa_employee_id`.

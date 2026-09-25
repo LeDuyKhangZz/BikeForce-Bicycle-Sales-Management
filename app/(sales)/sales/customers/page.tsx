@@ -90,12 +90,12 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
       ) : result ? (
         <><CustomerGroupSummary counts={groupCounts} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card flush className="min-w-0 overflow-hidden rounded-2xl">
-            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />
+            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} />
             {result.rows.length === 0 ? (
               <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
             ) : (
               <>
-                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} />
+                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards />
                 <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
                   <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
                   <div className="flex items-center gap-2">

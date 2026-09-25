@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { getCurrentProfile } from '@/features/auth/queries';
-import { buildCustomerPlanCsv } from '@/lib/amis/customer-plan-csv';
+import { buildCustomerPlanXlsx } from '@/lib/amis/customer-plan-xlsx-server';
 import { defaultMonthlyFrequency, getCustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import { resolveVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
@@ -29,18 +29,18 @@ export async function GET(request: NextRequest, context: Context): Promise<NextR
     const supabase = await createClient();
     const rows = await listMisaCustomerPlanTemplateRows(supabase, `${month}-01`, employeeId);
     if (rows.length === 0) return NextResponse.json({ message: 'Nhân viên chưa có khách hàng trong tháng này.' }, { status: 404 });
-    const csv = buildCustomerPlanCsv(rows.map((row) => ({
+    const xlsx = await buildCustomerPlanXlsx(rows.map((row) => ({
       customerId: row.customerId,
       customerCode: row.customerCode,
       customerName: row.customerName,
       monthlyFrequency: row.monthlyFrequency ?? defaultMonthlyFrequency(getCustomerRevenueGroup(row.orderSales)),
       committedSales: row.committedSales,
     })));
-    return new NextResponse(csv, {
+    return new NextResponse(xlsx, {
       headers: {
         'Cache-Control': 'private, no-store',
-        'Content-Disposition': `attachment; filename="ke-hoach-khach-hang-${employeeId}-${month}.csv"`,
-        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="ke-hoach-khach-hang-${employeeId}-${month}.xlsx"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       },
     });
   } catch (error) {

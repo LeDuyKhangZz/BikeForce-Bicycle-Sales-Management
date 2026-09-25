@@ -100,10 +100,10 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
         )}
       </header>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
-        <div className="xl:col-span-2"><CustomerGroupSummary counts={groupCounts} /></div>
-        <div className="xl:col-span-2"><CustomerCommitmentProgress stats={commitmentStats} /></div>
-        <Card flush className="min-w-0 overflow-hidden rounded-2xl">
+      <div className="grid min-w-0 gap-4">
+        <CustomerGroupSummary counts={groupCounts} />
+        <CustomerCommitmentProgress stats={commitmentStats} />
+        <Card flush className="order-2 min-w-0 overflow-hidden rounded-2xl">
           {result && <MisaCustomerToolbar employeeId={employeeId} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} />}
           {error ? (
             <div className="flex flex-col items-start gap-3 p-5">
@@ -118,7 +118,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
             </div>
           ) : result ? (
             <>
-              <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} canEditPlans />
+              <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} />
               <nav aria-label="Phân trang khách hàng MISA" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
                 <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng · {result.pageSize} / trang</p>
                 <div className="flex items-center gap-1">

@@ -5,6 +5,10 @@
 > **2026-09-23:** Sales đã đăng nhập được đọc đúng snapshot có `employee_name = profiles.amis_employee_name` của mình. Hai policy `*_select_own` không cấp quyền xem nhân viên khác; Admin giữ quyền đọc toàn bộ.
 
 > **2026-09-23 — DEC-095:** `misa_customer_monthly_plans` lưu kế hoạch thủ công tách khỏi snapshot Report 119, khóa theo tháng + nhân viên MISA + khách hàng MISA. Bảng cố ý không có FK cascade tới snapshot vì worker thay snapshot bằng delete/insert. Sales chỉ đọc/ghi kế hoạch của mình qua RLS; Admin chỉ đọc.
+>
+> **2026-09-25 — DEC-098:** Migration `20260925090000_sales_manage_own_misa_customer_plans.sql` khôi phục INSERT/UPDATE cho Sales-own. Policy xác minh đồng thời `sales_id = auth.uid()`, profile Sales đang active, ánh xạ tên nhân viên MISA và customer ID thuộc đúng nhân viên/tháng. Policy Admin hiện hữu được giữ nguyên.
+>
+> **2026-09-25 — ISSUE-054:** Production có bảng nhưng thiếu policy ghi Admin, khiến workbook hợp lệ 241/241 dòng bị `42501`. Migration `20260925110000_restore_admin_manage_misa_customer_plans.sql` tạo lại idempotent policy INSERT/UPDATE Admin và GRANT tương ứng.
 
 > **2026-09-23 — DEC-096:** migration `20260923180000_admin_manage_misa_customer_plans.sql` gỡ policy ghi của Sales và cấp INSERT/UPDATE duy nhất cho Admin. Policy SELECT vẫn cho Sales xem dòng của chính mình.
 

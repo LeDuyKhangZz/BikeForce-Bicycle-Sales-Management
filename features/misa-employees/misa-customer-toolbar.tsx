@@ -17,9 +17,10 @@ type Props = {
   filters: MisaCustomerFilters;
   searchQuery: string;
   rows: MisaCustomer[];
+  showPlanImport?: boolean;
 };
 
-export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -63,11 +64,13 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
         className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         <Download aria-hidden="true" className="size-5" /> Xuất Excel
       </button>
-      <a href={`/api/admin/misa-employees/${employeeId}/plans/template?month=${month}`}
-        className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-        <FileSpreadsheet aria-hidden="true" className="size-5" /> Tải file mẫu
-      </a>
-      <CustomerPlanImport employeeId={employeeId} month={month} />
+      {showPlanImport && <>
+        <a href={`/api/admin/misa-employees/${employeeId}/plans/template?month=${month}`}
+          className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          <FileSpreadsheet aria-hidden="true" className="size-5" /> Tải file Excel mẫu
+        </a>
+        <CustomerPlanImport employeeId={employeeId} month={month} />
+      </>}
     </div>
   );
 }

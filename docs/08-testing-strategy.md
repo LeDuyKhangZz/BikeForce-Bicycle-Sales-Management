@@ -1546,4 +1546,12 @@ Sau khi bổ sung menu toán tử, unit 5/5 pass. Đã đọc mã lựa chọn t
 
 Unit parser CSV kiểm tra round-trip tên tiếng Việt/cell có dấu phẩy, cam kết `null`, tần suất ngoài 0–31, ID lặp và header sai; Zod import kiểm tra danh sách rỗng và giới hạn số. Test liên quan 7/7 pass; typecheck và lint exit 0; production build 30 trang/route exit 0 sau khi cấp mạng tải Inter. Full unit 863/864: một test nav có sẵn thất bại vì nhãn `Khách hàng` dài 10 ký tự vượt giới hạn cũ 9; thay đổi DEC-097 không sửa nav. Chưa chạy E2E trình duyệt hoặc RLS vì không đổi schema/policy; cần smoke test bằng phiên Admin với CSV mẫu thực tế sau deploy.
 
+### 2026-09-25 — Sales tự nhập kế hoạch khách hàng
+
+DEC-098 yêu cầu RLS test tối thiểu: Sales A INSERT/UPDATE khách của mình thành công; Sales A INSERT/UPDATE khách của Sales B bị từ chối; Sales inactive bị từ chối; Admin vẫn INSERT/UPDATE được. E2E Sales phải nhập trực tiếp theo khoảng dòng và lưu toàn bộ. Unit validation hiện có tiếp tục khóa giới hạn 0–31, tiền không âm và tối đa 2.000 dòng.
+
+### 2026-09-25 — Workbook kế hoạch XLSX
+
+Unit khóa parser năm cột đọc từ worksheet, bao gồm cam kết số và ô trống `null`; giữ các test biên tần suất/tiền/ID trùng. E2E Admin cần tải file `.xlsx`, xác nhận MIME/tên file, sửa một số ô bằng Excel-compatible reader rồi upload và kiểm tra dữ liệu đã cập nhật.
+
 Sau đổi giao diện chi tiết: test bộ lọc và CSV 6/6 pass, bao gồm chặn công thức trong text khách hàng khi mở CSV bằng Excel. API CRM thật với `AISearchKeyword=BDI0005` trả đúng 1 bản ghi; rỗng trả 3428. Typecheck/lint/build exit 0. Chưa kiểm tra trực quan trong trình duyệt theo phản hồi người dùng không muốn trình duyệt tự mở.

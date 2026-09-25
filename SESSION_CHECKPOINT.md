@@ -2643,3 +2643,14 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 Đã redesign mobile theo mockup và thêm `getCachedMisaCustomerGroupCounts()` với bốn count server-side; desktop giữ bảng.
 Đã thêm `getCachedMisaCustomerCommitmentStats()` và thanh progress toàn tháng; committed_sales khác null (kể cả 0) là đã cam kết.
 Đã đổi theo DEC-096: Admin edit, Sales read-only; cần chạy migration `20260923180000_admin_manage_misa_customer_plans.sql` trên production.
+### 2026-09-25 — Sales tự nhập kế hoạch khách hàng
+
+- DEC-098 thay DEC-096: Sales nhập trực tiếp theo bảng hàng/cột và áp dụng giá trị theo khoảng dòng cho đúng khách hàng mình phụ trách.
+- Migration mới: `20260925090000_sales_manage_own_misa_customer_plans.sql`; chưa ghi nhận đã push lên Supabase production.
+- Unit mục tiêu 7/7 và typecheck pass; cần chạy lint/build, sau đó DB/RLS khi Docker local sẵn sàng.
+- Next Exact Steps: áp migration lên Supabase, deploy ứng dụng, đăng nhập Sales và thử điền các khoảng 1–100, 101–150, 151–200 rồi lưu; xác nhận Sales khác bị từ chối.
+- UI mobile đã đổi theo ảnh mẫu: tab, checkbox, bulk-fill theo lựa chọn và lưu toàn bộ; typecheck/lint/build pass.
+- DEC-099: tab Nhập chỉ tiêu đã bị gỡ khỏi Sales; `/sales/customers` chỉ còn danh sách card và kế hoạch chỉ đọc.
+- DEC-100: bảng Admin chỉ hiển thị kế hoạch; nhập/sửa duy nhất qua file Excel/CSV hàng loạt, không còn editor từng dòng.
+- DEC-101: Tải file mẫu và Nhập kế hoạch dùng `.xlsx` thật; không còn yêu cầu Save As CSV. ExcelJS đã thêm vào dependencies; unit 8/8, typecheck/build pass.
+- ISSUE-054: XLSX 241/241 hợp lệ nhưng production thiếu policy ghi Admin (`42501`). Cần chạy migration `20260925110000_restore_admin_manage_misa_customer_plans.sql`, sau đó xác nhận nhập lại.

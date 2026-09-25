@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildCustomerPlanCsv, parseCustomerPlanCsv } from './customer-plan-csv';
+import { buildCustomerPlanCsv, CUSTOMER_PLAN_CSV_HEADERS, parseCustomerPlanCells, parseCustomerPlanCsv } from './customer-plan-csv';
 
 describe('customer plan CSV', () => {
   it('round-trips Vietnamese names and nullable commitments', () => {
@@ -29,5 +29,19 @@ describe('customer plan CSV', () => {
 
   it('rejects a foreign header', () => {
     expect(parseCustomerPlanCsv('customer_id,name\r\n1,A').errors[0]?.line).toBe(1);
+  });
+
+  it('parses the five columns read from an Excel workbook', () => {
+    expect(parseCustomerPlanCells([
+      [...CUSTOMER_PLAN_CSV_HEADERS],
+      ['27396', 'BDI0120', '6 Triệu - Tây Sơn', '4', '40000000'],
+      ['29829', 'BDI0172', 'A Thái Tây Sơn', '1', ''],
+    ])).toEqual({
+      rows: [
+        { customerId: 27396, monthlyFrequency: 4, committedSales: 40_000_000 },
+        { customerId: 29829, monthlyFrequency: 1, committedSales: null },
+      ],
+      errors: [],
+    });
   });
 });
