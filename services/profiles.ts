@@ -243,6 +243,26 @@ export async function getMonthlySummarySales(
   return data;
 }
 
+/** Hồ sơ Sales được nối với một nhân viên MISA bằng tên AMIS đã xác nhận. */
+export async function getSalesProfileByAmisEmployeeName(
+  supabase: SupabaseClient<Database>,
+  employeeName: string,
+): Promise<MonthlySummarySales | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, employee_code, is_active, amis_employee_name')
+    .eq('amis_employee_name', employeeName)
+    .eq('role', 'SALES')
+    .maybeSingle<MonthlySummarySales>();
+
+  if (error) {
+    console.error('[getSalesProfileByAmisEmployeeName]', error.code, error.message);
+    return null;
+  }
+
+  return data;
+}
+
 /**
  * Danh sách nhân viên kèm báo cáo gần nhất để Admin chọn xem trước.
  *

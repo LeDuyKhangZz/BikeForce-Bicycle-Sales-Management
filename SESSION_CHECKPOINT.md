@@ -2654,3 +2654,13 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 - DEC-100: bảng Admin chỉ hiển thị kế hoạch; nhập/sửa duy nhất qua file Excel/CSV hàng loạt, không còn editor từng dòng.
 - DEC-101: Tải file mẫu và Nhập kế hoạch dùng `.xlsx` thật; không còn yêu cầu Save As CSV. ExcelJS đã thêm vào dependencies; unit 8/8, typecheck/build pass.
 - ISSUE-054: XLSX 241/241 hợp lệ nhưng production thiếu policy ghi Admin (`42501`). Cần chạy migration `20260925110000_restore_admin_manage_misa_customer_plans.sql`, sau đó xác nhận nhập lại.
+
+### 2026-09-28 — Ghép dữ liệu hoạt động vào chi tiết nhân viên MISA
+
+- `/admin/misa-employees/[id]` có thêm hai khối Hoạt động online và Tình trạng thực hiện.
+- Chuỗi nối: tên snapshot MISA → `profiles.amis_employee_name` → `profiles.id/full_name` → `sales_monthly_targets` và mapping SaleWork. Không có profile/mapping thì hiện empty state, không lấy nhầm người.
+- Tháng hiện tại đọc SaleWork trong ngày; tháng lịch sử đọc snapshot SaleWork tháng. AMIS và chỉ tiêu luôn theo tháng trên URL.
+- Verification thật: `npm.cmd run test:unit -- lib/reports/share-card.test.ts` 93/93; typecheck, lint, production build exit 0.
+- Next Exact Steps: đăng nhập Admin, mở `/admin/misa-employees/59?month=2026-09`, đối chiếu số của Ngô Thế San và kiểm tra trực quan tại 375px/1440px.
+- UI cuối cùng: mở `/admin/misa-employees?month=2026-09`, bấm **Xem chi tiết** ở dòng Ngô Thế San; khối hoạt động mở ngay trong trang danh sách và có nút Đóng. Trang khách hàng `[id]` không còn khối này.
+- UI mới thay thế: icon mắt dẫn tới `/admin/misa-employees/59/activity?month=2026-09`; dữ liệu nằm trên trang riêng, không mở tại chỗ. Trang riêng có nút quay lại Nhân viên và nút Xem khách hàng.

@@ -3788,3 +3788,11 @@ Thiết kế lại accordion Bộ lọc: header nhận diện rõ bằng icon ph
 Đổi file kế hoạch từ CSV sang Excel `.xlsx` thật (DEC-101). Endpoint tạo workbook 5 cột có sẵn toàn bộ khách và giá trị hiện tại, freeze header/AutoFilter/định dạng số; upload chỉ nhận `.xlsx` và đọc worksheet đầu bằng ExcelJS trước khi chạy validation/UPSERT cũ. Unit mục tiêu 8/8, typecheck và production build pass.
 
 Tái hiện upload workbook thật: client đọc đúng 241 dòng, 0 lỗi; server log xác nhận Supabase trả `42501 new row violates row-level security policy`. Thêm migration idempotent khôi phục policy INSERT/UPDATE Admin và GRANT trên `misa_customer_monthly_plans` (ISSUE-054). Cần áp migration production rồi bấm xác nhận lại, không cần sửa file XLSX.
+
+### 2026-09-28 — Ghép hoạt động theo nhân viên MISA
+
+Trang `/admin/misa-employees/[id]` nay ghép nhân viên MISA với hồ sơ Sales qua `profiles.amis_employee_name`, sau đó lấy đúng dữ liệu AMIS, chỉ tiêu tháng và tài khoản SaleWork đã ánh xạ của người đó. Khối mới hiển thị hoạt động online cùng tình trạng thực hiện theo tháng đang chọn; tháng hiện tại dùng số SaleWork trong ngày, tháng cũ dùng snapshot tháng. Công thức KPI và định dạng tiếp tục tái sử dụng view model của thẻ báo cáo, không nhân bản trong component. Ngô Thế San được nối với account `Abraham San Miền Trung`. Unit share-card 93/93, typecheck, lint và production build đều pass. Chưa smoke test bằng phiên Admin trên production.
+
+Điều chỉnh theo phản hồi: khối hoạt động không còn nằm thường trực trên trang khách hàng. Danh sách `/admin/misa-employees` có nút **Xem chi tiết** cạnh số lượng khách của từng nhân viên; bấm mới tải và mở khối dữ liệu đúng người, có nút Đóng. Danh sách cho phép kéo ngang khi chiều rộng không đủ. Typecheck, lint và production build pass; dev server đã khởi động lại ở cổng 3000.
+
+Điều chỉnh lần cuối: icon mắt không mở nội dung tại chỗ nữa mà điều hướng tới trang riêng `/admin/misa-employees/[id]/activity?month=YYYY-MM`. Trang riêng hiển thị đầy đủ hoạt động online và tình trạng thực hiện, có đường quay lại danh sách nhân viên và nút xem khách hàng. Danh sách nhân viên trở lại bố cục vừa khung, không cuộn ngang. Typecheck và lint pass.

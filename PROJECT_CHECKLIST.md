@@ -1298,3 +1298,7 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] CSV dùng MISA customer ID, kiểm tra trùng/số ngoài giới hạn/khách ngoài nhân viên; không nhận sales ID từ client
 - [x] Unit liên quan 7/7, typecheck/lint/build sạch; full unit còn 1 lỗi nav có sẵn ngoài phạm vi (863/864)
 - [ ] Smoke test nhập CSV thực tế bằng phiên Admin sau deploy; kiểm tra 375px và 1440px
+- [x] Chi tiết nhân viên MISA ghép AMIS, chỉ tiêu tháng và SaleWork theo `profiles.amis_employee_name`; không ghép tên gần đúng (2026-09-28)
+- [x] Danh sách nhân viên có nút Xem chi tiết cạnh số lượng KH; chỉ tải/mở dữ liệu hoạt động của nhân viên được chọn (2026-09-28)
+- [x] Icon mắt mở trang hoạt động riêng của nhân viên; không bung dữ liệu trong trang danh sách (2026-09-28)
+- [ ] Smoke test khối hoạt động của Ngô Thế San tại `/admin/misa-employees/59?month=2026-09` ở 375px và 1440px

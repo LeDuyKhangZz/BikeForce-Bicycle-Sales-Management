@@ -98,6 +98,23 @@ export async function getCachedMisaEmployeeByName(
   return { id: data.misa_employee_id, name: data.employee_name, customerCount: data.customer_count };
 }
 
+export async function getCachedMisaEmployeeById(
+  supabase: SupabaseClient,
+  month: string,
+  employeeId: number,
+): Promise<MisaEmployee | null> {
+  const { data, error } = await supabase
+    .from('misa_report119_employees')
+    .select('misa_employee_id,employee_name,customer_count')
+    .eq('period_month', `${month}-01`)
+    .eq('misa_employee_id', employeeId)
+    .maybeSingle();
+  if (error) throw new Error(`Không đọc được nhân viên MISA: ${error.message}`);
+  if (data === null) return null;
+  if (!isEmployeeRow(data)) throw new Error('Snapshot nhân viên MISA không hợp lệ.');
+  return { id: data.misa_employee_id, name: data.employee_name, customerCount: data.customer_count };
+}
+
 export async function getCachedMisaEmployeeCustomers(
   supabase: SupabaseClient,
   params: {
