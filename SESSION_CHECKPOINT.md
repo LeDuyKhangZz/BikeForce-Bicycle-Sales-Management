@@ -1,6 +1,15 @@
 # BikeForce Session Checkpoint
 
 
+## 2026-10-01 — Doanh số đơn hàng tháng trước (DEC-104)
+
+Thêm doanh số tháng liền trước cạnh tháng đang xem, ghi rõ nhãn tháng trên bảng desktop và cặp thẻ mobile cho Admin/Sales. Ghép theo `misa_customer_id` trong cùng nhân viên từ snapshot tháng trước; truy vấn một lô tối đa bằng số khách trang hiện tại, không N+1. Thiếu dòng/null/không có quyền đọc hiện “Chưa có dữ liệu”; số 0 thật vẫn hiện 0 ₫. Khách chuyển nhân viên không tự lấy dữ liệu nhân viên cũ. Lỗi truy vấn đi vào error state. Không đổi doanh số hiện tại, nhóm A/B/C/D, DB/RLS, file nhập kế hoạch hoặc mẫu xuất hiện hữu.
+
+Kiểm chứng: build/typecheck/lint đạt; 16/16 unit liên quan pass; headless fixture Admin/Sales 375px/1440px không cuộn ngang, nhìn ảnh thật với doanh số 12 chữ số. Thêm case RLS đọc tháng trước đúng nhân viên, Sales bị chặn dữ liệu người khác, Admin đọc được; chưa chạy do môi trường Supabase local/Docker chưa sẵn sàng đã ghi ở phiên trước. Chưa E2E dữ liệu thật.
+
+Next Exact Steps: tải lại danh sách khách hàng để đối chiếu hai tháng; nếu hiện chưa có dữ liệu cần snapshot tháng trước cho đúng nhân viên/khách. Khi local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
+
+
 ## 2026-10-01 — Nút lọc nhóm khách hàng A/B/C/D
 
 Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên kết xem danh sách, hiển thị cả mobile và desktop. Bấm nhóm mở trang 1, bỏ tìm kiếm/cảnh báo trước đó để danh sách khớp số đếm toàn tập; nhóm đang chọn có viền và nhãn, có nút xem tất cả. Tìm kiếm, bộ lọc, phân trang giữ `group`. Query server-side trước range dùng điều kiện chung với số đếm. Nhóm D bao gồm null/<=0, thống nhất helper phân loại có sẵn; không đổi ngưỡng A/B/C. Không đổi DB/RLS.

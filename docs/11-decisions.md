@@ -2857,3 +2857,13 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Lọc trên 10 dòng hiện tại bị loại vì không khớp số đếm; modal riêng bị loại vì không tái sử dụng tìm kiếm/phân trang.
 - **Impact:** Dùng một điều kiện chung cho count và rows. D gồm null/<=0 đúng helper phân nhóm hiện có. Index prefix tháng/nhân viên hiện hữu phục vụ truy vấn; không đổi schema/quyền/ngưỡng nhóm.
 - **Status:** APPROVED — yêu cầu trực tiếp của người dùng.
+
+
+## DEC-104 — So sánh doanh số khách hàng với tháng liền trước
+
+- **Date:** 2026-10-01
+- **Decision:** Thêm cột tháng trước ngay cạnh doanh số tháng đang xem, mobile dùng hai ô cạnh nhau, ghi rõ kỳ. Ghép ID khách và cùng nhân viên, giữ RLS; thiếu dữ liệu hiện “Chưa có dữ liệu”.
+- **Reason:** Người dùng muốn thấy rõ doanh số hai tháng để đối chiếu.
+- **Alternatives:** Ghép tên dễ sai với tên trùng; lấy toàn bộ tháng trước không cần thiết; mặc định dữ liệu thiếu bằng 0 làm sai nghĩa. Không áp dụng các cách này.
+- **Impact:** Service batch select ID/doanh số của tháng liền trước với range giới hạn số khách hiện trên trang, dùng index PK tháng/nhân viên/khách. Không schema/migration; không lấy dữ liệu nhân viên khác để bù. Không thêm tỷ lệ hoặc thay tiêu chí nhóm.
+- **Status:** APPROVED — yêu cầu trực tiếp của người dùng.

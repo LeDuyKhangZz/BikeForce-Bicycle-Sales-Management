@@ -1,4 +1,5 @@
 import 'server-only';
+import { getPreviousMonthCustomerSales } from '@/services/misa-customer-previous-sales';
 import { customerRevenueGroupCondition, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import { customerAlertCondition, type CustomerAlert } from '@/lib/amis/customer-alerts';
 
@@ -203,6 +204,7 @@ export async function getCachedMisaEmployeeCustomers(
   if (rows.some((row) => row === null)) throw new Error('Snapshot khách hàng MISA không hợp lệ.');
   const validRows = rows.filter((row) => row !== null);
   const customerIds = validRows.map((row) => row.id);
+  const previousSales = await getPreviousMonthCustomerSales(supabase, params.month, params.employeeId, customerIds);
   let plans: unknown[] = [];
   if (customerIds.length > 0) {
     const planResult = await supabase
@@ -225,7 +227,7 @@ export async function getCachedMisaEmployeeCustomers(
   }
   return {
     employee: { id: employeeValue.misa_employee_id, name: employeeValue.employee_name, customerCount: employeeValue.customer_count },
-    rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id) })),
+    rows: validRows.map((row) => ({ ...row, previousMonthOrderSales: previousSales.get(row.id) ?? null, ...planByCustomer.get(row.id) })),
     page: params.page,
     pageSize: PAGE_SIZE,
     total,
