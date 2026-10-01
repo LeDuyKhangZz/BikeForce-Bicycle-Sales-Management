@@ -1,5 +1,6 @@
 import { isValidVietnamDate } from '@/lib/date';
 import type { CustomerAlert } from '@/lib/amis/customer-alerts';
+import type { CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 
 export const MISA_CUSTOMER_FILTER_FIELDS = [
   { key: 'code', label: 'Mã khách hàng', field: 'AccountNumber', kind: 'text' },
@@ -78,7 +79,7 @@ export function parseMisaCustomerFilters(search: Record<string, string | undefin
   return filters;
 }
 
-export function misaCustomerQuery(month: string, filters: MisaCustomerFilters, page?: number, searchQuery?: string, alert?: CustomerAlert): string {
+export function misaCustomerQuery(month: string, filters: MisaCustomerFilters, page?: number, searchQuery?: string, alert?: CustomerAlert, group?: CustomerRevenueGroup): string {
   const query = new URLSearchParams({ month });
   for (const field of MISA_CUSTOMER_FILTER_FIELDS) {
     const filter = filters[field.key];
@@ -90,6 +91,7 @@ export function misaCustomerQuery(month: string, filters: MisaCustomerFilters, p
   if (page !== undefined) query.set('page', String(page));
   if (searchQuery) query.set('q', searchQuery);
   if (alert) query.set('alert', alert);
+  if (group) query.set('group', group);
   return query.toString();
 }
 

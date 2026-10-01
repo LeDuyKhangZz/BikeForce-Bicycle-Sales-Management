@@ -1564,3 +1564,12 @@ Sau đổi giao diện chi tiết: test bộ lọc và CSV 6/6 pass, bao gồm c
 Unit: biên 29/30/31 ngày, ngày trống/tương lai/sai định dạng, năm nhuận, cuối tháng lịch sử, allowlist alert và round-trip URL; mock transport kiểm tra HEAD count toàn bộ tập, scope nhân viên/tháng, filter trước range và xử lý lỗi. SSR kiểm tra số đếm/link, biểu thị ngày trống và hidden input giữ alert. 23/23 test liên quan pass. Browser headless fixture 375px/1440px cho Admin/Sales: kiểm tra không cuộn ngang, target >=44px, focus ring, link cảnh báo. Đây là fixture, không phải E2E đăng nhập dữ liệu thật.
 
 Thêm `tests/rls/misa-customer-alerts.rls.test.ts` dùng JWT thật trên Supabase local để kiểm count 12 khách, trang 2 còn 2 khách, Sales không đọc nhóm người khác và Admin đọc được. Đã gọi lệnh nhưng chưa chạy được test: thiếu env DB local, Docker daemon chưa chạy. Không ghi PASS cho RLS/E2E. Không chạm production để test.
+
+
+## 2026-10-01 — Nút lọc nhóm khách hàng A/B/C/D
+
+Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên kết xem danh sách, hiển thị cả mobile và desktop. Bấm nhóm mở trang 1, bỏ tìm kiếm/cảnh báo trước đó để danh sách khớp số đếm toàn tập; nhóm đang chọn có viền và nhãn, có nút xem tất cả. Tìm kiếm, bộ lọc, phân trang giữ `group`. Query server-side trước range dùng điều kiện chung với số đếm. Nhóm D bao gồm null/<=0, thống nhất helper phân loại có sẵn; không đổi ngưỡng A/B/C. Không đổi DB/RLS.
+
+Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
+
+Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.

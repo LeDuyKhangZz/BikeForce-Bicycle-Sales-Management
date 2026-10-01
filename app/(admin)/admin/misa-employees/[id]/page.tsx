@@ -1,3 +1,4 @@
+import { parseCustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -42,6 +43,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
   const { month } = resolveVietnamMonth(search.month);
   const filters = parseMisaCustomerFilters(search);
   const alert = parseCustomerAlert(search.alert);
+  const group = parseCustomerRevenueGroup(search.group);
   const alertCutoff = customerAlertCutoff(month);
   const searchQuery = search.q?.trim().slice(0, 120) ?? '';
   const period = report119Period(month);
@@ -55,7 +57,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
   try {
     const supabase = await createClient();
     [result, groupCounts, alertCounts] = await Promise.all([
-      getCachedMisaEmployeeCustomers(supabase, { month, employeeId, page, filters, searchQuery, alert, alertCutoff }),
+      getCachedMisaEmployeeCustomers(supabase, { month, employeeId, page, filters, searchQuery, alert, alertCutoff, group }),
       getCachedMisaCustomerGroupCounts(supabase, month, employeeId),
       getMisaCustomerAlertCounts(supabase, month, employeeId, alertCutoff),
     ]);
@@ -67,7 +69,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
   if (!error && result === null) notFound();
 
   const path = `/admin/misa-employees/${employeeId}`;
-  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery, alert)}`;
+  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery, alert, group)}`;
   const firstRow = result ? (result.page - 1) * result.pageSize : 0;
   const lastRow = result ? Math.min(firstRow + result.rows.length, result.total) : 0;
   const pageStart = result ? Math.max(1, Math.min(result.page - 2, result.totalPages - 4)) : 1;
@@ -109,10 +111,10 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
 
       <div className="grid min-w-0 gap-4">
         {!error && result && <CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} />}
-        <CustomerGroupSummary counts={groupCounts} />
+        <CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} />
         <CustomerCommitmentProgress stats={commitmentStats} />
         <Card flush className="order-2 min-w-0 overflow-hidden rounded-2xl">
-          {result && <MisaCustomerToolbar employeeId={employeeId} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} alert={alert} />}
+          {result && <MisaCustomerToolbar employeeId={employeeId} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} alert={alert} group={group} />}
           {error ? (
             <div className="flex flex-col items-start gap-3 p-5">
               <p role="alert" className="text-sm text-destructive">Không tải được khách hàng đã đồng bộ. Hãy thử lại sau.</p>
@@ -148,7 +150,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
             </>
           ) : null}
         </Card>
-        <CustomerFilterPanel key={misaCustomerQuery(month, filters, undefined, undefined, alert)} employeeId={employeeId} month={month} filters={filters} searchQuery={searchQuery} alert={alert} />
+        <CustomerFilterPanel key={misaCustomerQuery(month, filters, undefined, undefined, alert, group)} employeeId={employeeId} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} />
       </div>
     </div>
   );

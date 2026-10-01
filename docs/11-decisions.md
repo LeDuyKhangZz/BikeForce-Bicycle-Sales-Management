@@ -2847,3 +2847,13 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Đếm trên trang hiện tại bị loại vì thiếu khách; yêu cầu đồng thời cả hai điều kiện bị loại vì hai ô thể hiện hai nhóm riêng. Một khách có thể nằm trong cả hai nhóm.
 - **Impact:** Đếm HEAD exact trên toàn bộ nhân viên/tháng, danh sách lọc server-side trước phân trang; cùng điều kiện SQL cho count và danh sách. Ngày chăm sóc lấy hôm nay Việt Nam cho tháng hiện tại, cuối tháng cho tháng lịch sử. Số ngày chưa mua dùng snapshot MISA đang xem. Không đổi schema/RLS, không ghi dữ liệu, không đổi cam kết. Badge mua hàng đỏ từ đúng 30 ngày (thay ngưỡng cũ >30).
 - **Status:** APPROVED — yêu cầu và xác nhận của người dùng trong phiên.
+
+
+## DEC-103 — Mở danh sách từ ô nhóm doanh số khách hàng
+
+- **Date:** 2026-10-01
+- **Decision:** A/B/C/D là liên kết lọc danh sách server-side cho Admin và Sales, trên mọi kích thước màn hình. URL `group` chỉ chấp nhận A/B/C/D. Click nhóm reset trang/tìm kiếm/cảnh báo; thao tác tìm kiếm và phân trang sau đó giữ nhóm. Có quay về tất cả.
+- **Reason:** Người dùng muốn xem cụ thể khách nào thuộc từng nhóm.
+- **Alternatives:** Lọc trên 10 dòng hiện tại bị loại vì không khớp số đếm; modal riêng bị loại vì không tái sử dụng tìm kiếm/phân trang.
+- **Impact:** Dùng một điều kiện chung cho count và rows. D gồm null/<=0 đúng helper phân nhóm hiện có. Index prefix tháng/nhân viên hiện hữu phục vụ truy vấn; không đổi schema/quyền/ngưỡng nhóm.
+- **Status:** APPROVED — yêu cầu trực tiếp của người dùng.

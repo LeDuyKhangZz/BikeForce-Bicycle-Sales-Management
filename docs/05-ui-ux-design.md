@@ -1415,3 +1415,12 @@ Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác 
 ### Cảnh báo khách hàng — DEC-102
 
 Đầu danh sách khách hàng Admin và Sales có mục “Khách hàng cần quan tâm”, gồm hai ô có số khách, icon, nhãn và liên kết xem danh sách. Mobile một cột, từ 768px hai cột; ô đang chọn có viền nổi và nhãn bộ lọc, có “Xem tất cả khách hàng”. Mua hàng đỏ từ 30 ngày; ghé thăm cảnh báo bằng icon + chữ khi từ 30 ngày hoặc ngày trống. Sales mobile cũng hiển thị cả số ngày chưa mua và lần ghé thăm. Giữ tìm kiếm/phân trang/bộ lọc trong nhóm cảnh báo. Hai ô đếm toàn bộ tập nhân viên/tháng; bấm ô bắt đầu trang 1, bỏ điều kiện tìm kiếm trước đó để danh sách khớp số đếm.
+
+
+## 2026-10-01 — Nút lọc nhóm khách hàng A/B/C/D
+
+Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên kết xem danh sách, hiển thị cả mobile và desktop. Bấm nhóm mở trang 1, bỏ tìm kiếm/cảnh báo trước đó để danh sách khớp số đếm toàn tập; nhóm đang chọn có viền và nhãn, có nút xem tất cả. Tìm kiếm, bộ lọc, phân trang giữ `group`. Query server-side trước range dùng điều kiện chung với số đếm. Nhóm D bao gồm null/<=0, thống nhất helper phân loại có sẵn; không đổi ngưỡng A/B/C. Không đổi DB/RLS.
+
+Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
+
+Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.

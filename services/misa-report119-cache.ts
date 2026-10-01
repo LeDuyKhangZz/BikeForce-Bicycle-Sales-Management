@@ -1,4 +1,5 @@
 import 'server-only';
+import { customerRevenueGroupCondition, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import { customerAlertCondition, type CustomerAlert } from '@/lib/amis/customer-alerts';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -126,6 +127,7 @@ export async function getCachedMisaEmployeeCustomers(
     searchQuery: string;
     alert?: CustomerAlert;
     alertCutoff?: string;
+    group?: CustomerRevenueGroup;
   },
 ): Promise<MisaCustomerPage | null> {
   const periodMonth = `${params.month}-01`;
@@ -145,6 +147,7 @@ export async function getCachedMisaEmployeeCustomers(
     .eq('period_month', periodMonth)
     .eq('misa_employee_id', params.employeeId);
 
+  if (params.group) query = query.or(customerRevenueGroupCondition(params.group));
   if (params.alert && params.alertCutoff) {
     query = query.or(customerAlertCondition(params.alert, params.alertCutoff));
   }
@@ -238,10 +241,10 @@ export async function getCachedMisaCustomerGroupCounts(
   const base = () => supabase.from('misa_report119_customers').select('misa_customer_id', { count: 'exact', head: true })
     .eq('period_month', `${month}-01`).eq('misa_employee_id', employeeId);
   const [a, b, c, d] = await Promise.all([
-    base().gte('order_sales', 150_000_000),
-    base().gte('order_sales', 50_000_000).lt('order_sales', 150_000_000),
-    base().gt('order_sales', 0).lt('order_sales', 50_000_000),
-    base().or('order_sales.is.null,order_sales.eq.0'),
+    base().or(customerRevenueGroupCondition('A')),
+    base().or(customerRevenueGroupCondition('B')),
+    base().or(customerRevenueGroupCondition('C')),
+    base().or(customerRevenueGroupCondition('D')),
   ]);
   const failed = [a, b, c, d].find((result) => result.error !== null);
   if (failed?.error) throw new Error(`Không đếm được nhóm khách hàng: ${failed.error.message}`);

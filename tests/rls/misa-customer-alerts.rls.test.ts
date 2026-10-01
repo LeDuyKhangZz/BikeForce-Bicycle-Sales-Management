@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { getMisaCustomerAlertCounts } from '@/services/misa-customer-alerts';
-import { getCachedMisaEmployeeCustomers } from '@/services/misa-report119-cache';
+import { getCachedMisaEmployeeCustomers, getCachedMisaCustomerGroupCounts } from '@/services/misa-report119-cache';
 import { closePool, sql } from '../integration/setup';
 import { setUpRlsFixture, tearDownRlsFixture, type RlsFixture } from './setup';
 
@@ -53,5 +53,15 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
     for (const id of [EMPLOYEE_A, EMPLOYEE_B]) {
       expect(await getMisaCustomerAlertCounts(fixture.clients.admin, MONTH, id, CUTOFF)).toEqual({ purchase: 12, care: 12 });
     }
+  });
+
+  it('lọc nhóm D và số đếm vẫn chỉ thấy khách hàng Sales được phép đọc', async () => {
+    expect(await getCachedMisaCustomerGroupCounts(fixture.clients.salesA, MONTH, EMPLOYEE_A)).toEqual({ A: 0, B: 0, C: 0, D: 12 });
+    expect(await getCachedMisaCustomerGroupCounts(fixture.clients.salesA, MONTH, EMPLOYEE_B)).toEqual({ A: 0, B: 0, C: 0, D: 0 });
+    const result = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {
+      month: MONTH, employeeId: EMPLOYEE_A, page: 2, filters: {}, searchQuery: '', group: 'D',
+    });
+    expect(result?.total).toBe(12);
+    expect(result?.rows).toHaveLength(2);
   });
 });

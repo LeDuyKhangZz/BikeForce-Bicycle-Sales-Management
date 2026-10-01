@@ -1,3 +1,4 @@
+import { parseCustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, UsersRound } from 'lucide-react';
@@ -34,6 +35,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   const page = search.page === undefined ? 1 : Number(search.page);
   const filters = parseMisaCustomerFilters(search);
   const alert = parseCustomerAlert(search.alert);
+  const group = parseCustomerRevenueGroup(search.group);
   const alertCutoff = customerAlertCutoff(month);
   const searchQuery = search.q?.trim().slice(0, 120) ?? '';
   const previousMonth = shiftVietnamMonth(month, -1);
@@ -58,7 +60,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
         error = `Chưa có dữ liệu MISA của ${profile.amis_employee_name} trong ${formatVietnamMonth(month)}.`;
       } else {
         [result, groupCounts, commitmentStats, alertCounts] = await Promise.all([
-          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff }),
+          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group }),
           getCachedMisaCustomerGroupCounts(supabase, month, employee.id),
           getCachedMisaCustomerCommitmentStats(supabase, month, employee.id, employee.customerCount),
           getMisaCustomerAlertCounts(supabase, month, employee.id, alertCutoff),
@@ -71,7 +73,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   }
 
   const employeeId = result?.employee.id ?? 0;
-  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery, alert)}`;
+  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery, alert, group)}`;
   const firstRow = result ? (result.page - 1) * result.pageSize : 0;
   const lastRow = result ? Math.min(firstRow + result.rows.length, result.total) : 0;
 
@@ -95,9 +97,9 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card flush className="min-w-0 overflow-hidden rounded-2xl">
-            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} />
+            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} />
             {result.rows.length === 0 ? (
               <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
             ) : (
@@ -114,7 +116,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
               </>
             )}
           </Card>
-          <CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} />
+          <CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} />
         </div></>
       ) : null}
     </div>

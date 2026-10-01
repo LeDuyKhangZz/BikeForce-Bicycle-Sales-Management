@@ -1325,3 +1325,12 @@ Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác 
 Kiểm chứng: 23/23 unit liên quan pass; build/typecheck/lint đạt trong phiên. UI headless fixture Admin/Sales 375px/1440px đã kiểm tra lại sau chỉnh một cột mobile, cả 4 trường hợp đạt: không tràn ngang, target ≥44px, focus ring và liên kết đúng. RLS đã thử nhưng bị chặn vì thiếu env local và Docker daemon chưa chạy; chưa E2E đăng nhập thật.
 
 Next Exact Steps: tải lại danh sách khách hàng, bấm từng ô để xem danh sách; khi Supabase local sẵn sàng, cấu hình `.env.test.local` rồi chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
+
+
+## 2026-10-01 — Nút lọc nhóm khách hàng A/B/C/D
+
+Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên kết xem danh sách, hiển thị cả mobile và desktop. Bấm nhóm mở trang 1, bỏ tìm kiếm/cảnh báo trước đó để danh sách khớp số đếm toàn tập; nhóm đang chọn có viền và nhãn, có nút xem tất cả. Tìm kiếm, bộ lọc, phân trang giữ `group`. Query server-side trước range dùng điều kiện chung với số đếm. Nhóm D bao gồm null/<=0, thống nhất helper phân loại có sẵn; không đổi ngưỡng A/B/C. Không đổi DB/RLS.
+
+Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
+
+Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.

@@ -1,6 +1,15 @@
 # BikeForce Session Checkpoint
 
 
+## 2026-10-01 — Nút lọc nhóm khách hàng A/B/C/D
+
+Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên kết xem danh sách, hiển thị cả mobile và desktop. Bấm nhóm mở trang 1, bỏ tìm kiếm/cảnh báo trước đó để danh sách khớp số đếm toàn tập; nhóm đang chọn có viền và nhãn, có nút xem tất cả. Tìm kiếm, bộ lọc, phân trang giữ `group`. Query server-side trước range dùng điều kiện chung với số đếm. Nhóm D bao gồm null/<=0, thống nhất helper phân loại có sẵn; không đổi ngưỡng A/B/C. Không đổi DB/RLS.
+
+Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
+
+Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
+
+
 ## 2026-10-01 — Cảnh báo khách hàng (DEC-102)
 
 Đã triển khai hai ô cảnh báo mua hàng >=30 ngày và chăm sóc >=30 ngày/ngày ghé thăm trống cho Admin/Sales; click mở danh sách phân trang, search/filter giữ nhóm cảnh báo. Không làm cảnh báo 40% theo chỉ đạo người dùng. Bộ đếm toàn tập theo nhân viên/tháng, badge và ngày ghé thăm có icon/chữ. Không đổi DB/RLS.
