@@ -3835,3 +3835,10 @@ Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên k�
 Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
 
 Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
+
+
+## 2026-10-01 — Hoàn tác doanh số tháng trước
+
+Theo yêu cầu người dùng, hoàn tác toàn bộ commit `9e1cae8` bằng `6dcadc3`. Đã kiểm tra cây file sau revert khớp chính xác `16e831a` (git diff exit 0). Giữ cảnh báo khách hàng và nút nhóm A/B/C/D. Không chạy lại build/test vì khôi phục nguyên trạng bản đã kiểm thử; không ghi nhận kết quả mới.
+
+Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh số tháng trước, không tự triển khai tiếp. Chưa push.

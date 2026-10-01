@@ -1,6 +1,13 @@
 # BikeForce Session Checkpoint
 
 
+## 2026-10-01 — Hoàn tác doanh số tháng trước
+
+Theo yêu cầu người dùng, hoàn tác toàn bộ commit `9e1cae8` bằng `6dcadc3`. Đã kiểm tra cây file sau revert khớp chính xác `16e831a` (git diff exit 0). Giữ cảnh báo khách hàng và nút nhóm A/B/C/D. Không chạy lại build/test vì khôi phục nguyên trạng bản đã kiểm thử; không ghi nhận kết quả mới.
+
+Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh số tháng trước, không tự triển khai tiếp. Chưa push.
+
+
 ## 2026-10-01 — Nút lọc nhóm khách hàng A/B/C/D
 
 Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên kết xem danh sách, hiển thị cả mobile và desktop. Bấm nhóm mở trang 1, bỏ tìm kiếm/cảnh báo trước đó để danh sách khớp số đếm toàn tập; nhóm đang chọn có viền và nhãn, có nút xem tất cả. Tìm kiếm, bộ lọc, phân trang giữ `group`. Query server-side trước range dùng điều kiện chung với số đếm. Nhóm D bao gồm null/<=0, thống nhất helper phân loại có sẵn; không đổi ngưỡng A/B/C. Không đổi DB/RLS.
