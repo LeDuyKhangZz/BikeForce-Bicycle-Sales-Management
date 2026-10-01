@@ -1,4 +1,5 @@
 import 'server-only';
+import { customerAlertCondition, type CustomerAlert } from '@/lib/amis/customer-alerts';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -123,6 +124,8 @@ export async function getCachedMisaEmployeeCustomers(
     page: number;
     filters: MisaCustomerFilters;
     searchQuery: string;
+    alert?: CustomerAlert;
+    alertCutoff?: string;
   },
 ): Promise<MisaCustomerPage | null> {
   const periodMonth = `${params.month}-01`;
@@ -142,6 +145,9 @@ export async function getCachedMisaEmployeeCustomers(
     .eq('period_month', periodMonth)
     .eq('misa_employee_id', params.employeeId);
 
+  if (params.alert && params.alertCutoff) {
+    query = query.or(customerAlertCondition(params.alert, params.alertCutoff));
+  }
   if (params.searchQuery) {
     const safe = params.searchQuery.replace(/[,%()]/g, ' ');
     query = query.or(`customer_code.ilike.%${safe}%,customer_name.ilike.%${safe}%,billing_province.ilike.%${safe}%,owner_name.ilike.%${safe}%`);

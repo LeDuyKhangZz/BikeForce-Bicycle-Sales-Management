@@ -1557,3 +1557,10 @@ DEC-098 yêu cầu RLS test tối thiểu: Sales A INSERT/UPDATE khách của m�
 Unit khóa parser năm cột đọc từ worksheet, bao gồm cam kết số và ô trống `null`; giữ các test biên tần suất/tiền/ID trùng. E2E Admin cần tải file `.xlsx`, xác nhận MIME/tên file, sửa một số ô bằng Excel-compatible reader rồi upload và kiểm tra dữ liệu đã cập nhật.
 
 Sau đổi giao diện chi tiết: test bộ lọc và CSV 6/6 pass, bao gồm chặn công thức trong text khách hàng khi mở CSV bằng Excel. API CRM thật với `AISearchKeyword=BDI0005` trả đúng 1 bản ghi; rỗng trả 3428. Typecheck/lint/build exit 0. Chưa kiểm tra trực quan trong trình duyệt theo phản hồi người dùng không muốn trình duyệt tự mở.
+
+
+### Kiểm thử cảnh báo khách hàng — DEC-102
+
+Unit: biên 29/30/31 ngày, ngày trống/tương lai/sai định dạng, năm nhuận, cuối tháng lịch sử, allowlist alert và round-trip URL; mock transport kiểm tra HEAD count toàn bộ tập, scope nhân viên/tháng, filter trước range và xử lý lỗi. SSR kiểm tra số đếm/link, biểu thị ngày trống và hidden input giữ alert. 23/23 test liên quan pass. Browser headless fixture 375px/1440px cho Admin/Sales: kiểm tra không cuộn ngang, target >=44px, focus ring, link cảnh báo. Đây là fixture, không phải E2E đăng nhập dữ liệu thật.
+
+Thêm `tests/rls/misa-customer-alerts.rls.test.ts` dùng JWT thật trên Supabase local để kiểm count 12 khách, trang 2 còn 2 khách, Sales không đọc nhóm người khác và Admin đọc được. Đã gọi lệnh nhưng chưa chạy được test: thiếu env DB local, Docker daemon chưa chạy. Không ghi PASS cho RLS/E2E. Không chạm production để test.

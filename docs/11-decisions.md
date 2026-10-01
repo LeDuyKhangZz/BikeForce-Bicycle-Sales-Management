@@ -2837,3 +2837,13 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Impact:** Thêm `exceljs`; endpoint mẫu trả MIME OpenXML và tên `.xlsx`; client chỉ nhận `.xlsx`, đọc năm cột rồi tiếp tục validation/ownership/UPSERT hiện hữu. Giá trị `null` vẫn là ô trống, không đổi thành 0.
 - **Status:** APPROVED
 - **Status:** APPROVED — yêu cầu trực tiếp của người dùng.
+
+
+## DEC-102 — Cảnh báo khách hàng chưa mua hàng hoặc chưa được chăm sóc
+
+- **Date:** 2026-10-01
+- **Decision:** Theo yêu cầu người dùng, thêm hai ô đếm độc lập ở đầu danh sách khách hàng Admin/Sales: `days_without_purchase >= 30`; `last_visit_date` từ 30 ngày trở lên hoặc chưa có ngày ghé thăm. Người dùng xác nhận tính ngày ghé thăm trống, hoãn cảnh báo cam kết dưới 40%.
+- **Reason:** Giúp nhận biết và mở danh sách khách cần liên hệ ngay, không dò từng trang.
+- **Alternatives:** Đếm trên trang hiện tại bị loại vì thiếu khách; yêu cầu đồng thời cả hai điều kiện bị loại vì hai ô thể hiện hai nhóm riêng. Một khách có thể nằm trong cả hai nhóm.
+- **Impact:** Đếm HEAD exact trên toàn bộ nhân viên/tháng, danh sách lọc server-side trước phân trang; cùng điều kiện SQL cho count và danh sách. Ngày chăm sóc lấy hôm nay Việt Nam cho tháng hiện tại, cuối tháng cho tháng lịch sử. Số ngày chưa mua dùng snapshot MISA đang xem. Không đổi schema/RLS, không ghi dữ liệu, không đổi cam kết. Badge mua hàng đỏ từ đúng 30 ngày (thay ngưỡng cũ >30).
+- **Status:** APPROVED — yêu cầu và xác nhận của người dùng trong phiên.

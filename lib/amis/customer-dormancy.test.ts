@@ -9,7 +9,8 @@ describe('getCustomerDormancyLevel', () => {
     [1, 'NORMAL'],
     [15, 'NORMAL'],
     [16, 'WARNING'],
-    [30, 'WARNING'],
+    [29, 'WARNING'],
+    [30, 'DANGER'],
     [31, 'DANGER'],
   ] as const)('phân loại %s ngày thành %s', (days, expected) => {
     expect(getCustomerDormancyLevel(days)).toBe(expected);

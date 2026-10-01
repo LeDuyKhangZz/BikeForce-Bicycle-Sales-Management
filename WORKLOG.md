@@ -3817,3 +3817,12 @@ Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại 
 Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
 
 Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.
+
+
+## 2026-10-01 — Cảnh báo khách hàng (DEC-102)
+
+Đã triển khai hai ô cảnh báo mua hàng >=30 ngày và chăm sóc >=30 ngày/ngày ghé thăm trống cho Admin/Sales; click mở danh sách phân trang, search/filter giữ nhóm cảnh báo. Không làm cảnh báo 40% theo chỉ đạo người dùng. Bộ đếm toàn tập theo nhân viên/tháng, badge và ngày ghé thăm có icon/chữ. Không đổi DB/RLS.
+
+Kiểm chứng: 23/23 unit liên quan pass; build/typecheck/lint đạt trong phiên. UI headless fixture Admin/Sales 375px/1440px đã kiểm tra lại sau chỉnh một cột mobile, cả 4 trường hợp đạt: không tràn ngang, target ≥44px, focus ring và liên kết đúng. RLS đã thử nhưng bị chặn vì thiếu env local và Docker daemon chưa chạy; chưa E2E đăng nhập thật.
+
+Next Exact Steps: tải lại danh sách khách hàng, bấm từng ô để xem danh sách; khi Supabase local sẵn sàng, cấu hình `.env.test.local` rồi chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.

@@ -1410,3 +1410,8 @@ Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại 
 Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
 
 Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.
+
+
+### Cảnh báo khách hàng — DEC-102
+
+Đầu danh sách khách hàng Admin và Sales có mục “Khách hàng cần quan tâm”, gồm hai ô có số khách, icon, nhãn và liên kết xem danh sách. Mobile một cột, từ 768px hai cột; ô đang chọn có viền nổi và nhãn bộ lọc, có “Xem tất cả khách hàng”. Mua hàng đỏ từ 30 ngày; ghé thăm cảnh báo bằng icon + chữ khi từ 30 ngày hoặc ngày trống. Sales mobile cũng hiển thị cả số ngày chưa mua và lần ghé thăm. Giữ tìm kiếm/phân trang/bộ lọc trong nhóm cảnh báo. Hai ô đếm toàn bộ tập nhân viên/tháng; bấm ô bắt đầu trang 1, bỏ điều kiện tìm kiếm trước đó để danh sách khớp số đếm.

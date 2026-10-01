@@ -7,6 +7,7 @@ import { CustomerPlanImport } from '@/features/misa-employees/customer-plan-impo
 import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { buildMisaCustomerCsv } from '@/lib/amis/customer-export';
 import type { MisaCustomer } from '@/types/misa-customer';
+import type { CustomerAlert } from '@/lib/amis/customer-alerts';
 
 type Props = {
   employeeId: number;
@@ -18,9 +19,10 @@ type Props = {
   searchQuery: string;
   rows: MisaCustomer[];
   showPlanImport?: boolean;
+  alert?: CustomerAlert;
 };
 
-export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -36,6 +38,7 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
       <h2 className="w-full text-lg font-bold text-heading xl:hidden">Tìm khách hàng</h2>
       <form action={path} method="get" className="flex min-w-[min(100%,18rem)] flex-1 items-end gap-2">
         <input type="hidden" name="month" value={month} />
+        {alert && <input type="hidden" name="alert" value={alert} />}
         {MISA_CUSTOMER_FILTER_FIELDS.flatMap((field) => {
           const filter = filters[field.key];
           if (!filter) return [];

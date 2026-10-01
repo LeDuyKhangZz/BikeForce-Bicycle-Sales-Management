@@ -10,6 +10,9 @@ import { MisaCustomerTable } from '@/features/misa-employees/misa-customer-table
 import { MisaCustomerToolbar } from '@/features/misa-employees/misa-customer-toolbar';
 import { CustomerGroupSummary } from '@/features/misa-employees/customer-group-summary';
 import { CustomerCommitmentProgress } from '@/features/misa-employees/customer-commitment-progress';
+import { CustomerAlertSummary } from '@/features/misa-employees/customer-alert-summary';
+import { customerAlertCutoff, parseCustomerAlert, type CustomerAlertCounts } from '@/lib/amis/customer-alerts';
+import { getMisaCustomerAlertCounts } from '@/services/misa-customer-alerts';
 import { misaCustomerQuery, parseMisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { report119Period } from '@/lib/amis/report119-period';
 import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
@@ -30,6 +33,8 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   const { month } = resolveVietnamMonth(search.month);
   const page = search.page === undefined ? 1 : Number(search.page);
   const filters = parseMisaCustomerFilters(search);
+  const alert = parseCustomerAlert(search.alert);
+  const alertCutoff = customerAlertCutoff(month);
   const searchQuery = search.q?.trim().slice(0, 120) ?? '';
   const previousMonth = shiftVietnamMonth(month, -1);
   const candidateNextMonth = shiftVietnamMonth(month, 1);
@@ -40,6 +45,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   let groupCounts: MisaCustomerGroupCounts = { A: 0, B: 0, C: 0, D: 0 };
   let commitmentStats: MisaCustomerCommitmentStats = { total: 0, committed: 0, uncommitted: 0 };
   let error: string | null = null;
+  let alertCounts: CustomerAlertCounts = { purchase: 0, care: 0 };
   if (report119Period(month) === null || !Number.isSafeInteger(page) || page <= 0) {
     error = 'Tháng hoặc trang không hợp lệ.';
   } else if (!profile.amis_employee_name) {
@@ -51,10 +57,11 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
       if (employee === null) {
         error = `Chưa có dữ liệu MISA của ${profile.amis_employee_name} trong ${formatVietnamMonth(month)}.`;
       } else {
-        [result, groupCounts, commitmentStats] = await Promise.all([
-          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery }),
+        [result, groupCounts, commitmentStats, alertCounts] = await Promise.all([
+          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff }),
           getCachedMisaCustomerGroupCounts(supabase, month, employee.id),
           getCachedMisaCustomerCommitmentStats(supabase, month, employee.id, employee.customerCount),
+          getMisaCustomerAlertCounts(supabase, month, employee.id, alertCutoff),
         ]);
       }
     } catch (cause) {
@@ -64,7 +71,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   }
 
   const employeeId = result?.employee.id ?? 0;
-  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery)}`;
+  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery, alert)}`;
   const firstRow = result ? (result.page - 1) * result.pageSize : 0;
   const lastRow = result ? Math.min(firstRow + result.rows.length, result.total) : 0;
 
@@ -88,14 +95,14 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <><CustomerGroupSummary counts={groupCounts} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card flush className="min-w-0 overflow-hidden rounded-2xl">
-            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} />
+            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} />
             {result.rows.length === 0 ? (
               <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
             ) : (
               <>
-                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards />
+                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} />
                 <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
                   <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
                   <div className="flex items-center gap-2">
@@ -107,7 +114,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
               </>
             )}
           </Card>
-          <CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} />
+          <CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} />
         </div></>
       ) : null}
     </div>

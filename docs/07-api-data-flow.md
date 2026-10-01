@@ -839,3 +839,8 @@ Sau khi đọc một trang khách hàng, service đọc kế hoạch của đún
 **Cập nhật DEC-098 (2026-09-25):** Sales nhập hàng loạt ngay trên bảng web. Bảng gửi danh sách đã validate vào Server Action dùng chung; action resolve tài khoản Sales từ nhân viên MISA phía server rồi từ chối nếu ID đó khác `auth.uid()`. Payload không nhận `sales_id`; service chỉ UPSERT các customer ID đã được đối chiếu với snapshot đúng nhân viên/tháng. Endpoint tải CSV tiếp tục chỉ dành cho Admin.
 
 `GET /api/admin/misa-employees/[id]/plans/template?month=YYYY-MM` kiểm tra phiên Admin, đọc tối đa 2.000 khách của đúng nhân viên/tháng và kế hoạch hiện có, rồi trả CSV UTF-8 BOM với `Cache-Control: private, no-store`. Client chỉ phân tích để xem trước; khi xác nhận, `importMisaCustomerPlans` Zod-validate toàn bộ payload, kiểm tra lại auth/active/Admin, resolve `sales_id` từ mapping MISA phía server, đọc tập customer ID hợp lệ và từ chối nếu có ID ngoài tập. Toàn bộ dòng hợp lệ được UPSERT trong một statement theo khóa `(period_month, misa_employee_id, misa_customer_id)`. Không tin tên khách, mã hiển thị, role hoặc sales ID từ file/client.
+
+
+### Luồng cảnh báo khách hàng — DEC-102
+
+RSC đọc `alert=purchase|care` qua allowlist, tính cutoff server-side từ ngày Việt Nam và tháng. `getMisaCustomerAlertCounts` gửi hai HEAD count exact, scope `period_month` và `misa_employee_id`. `getCachedMisaEmployeeCustomers` dùng cùng `customerAlertCondition`, lọc trước range 10 dòng và count exact. Search/filter kết hợp AND với nhóm cảnh báo; URL phân trang và form giữ alert. Dùng Supabase client session hiện hữu, giữ RLS và ánh xạ Sales server-side. Index `misa_report119_customers_employee_idx` phục vụ prefix tháng/nhân viên. Không tải toàn bộ khách về để cộng, không thêm API/RPC hoặc migration.

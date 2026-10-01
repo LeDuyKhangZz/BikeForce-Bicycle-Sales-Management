@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronDown, Filter, RotateCcw, Search } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
+import type { CustomerAlert } from '@/lib/amis/customer-alerts';
 import { MISA_CUSTOMER_FILTER_FIELDS, MISA_FILTER_OPERATORS, type MisaCustomerFilterKey, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
 
 type Props = {
@@ -13,9 +14,10 @@ type Props = {
   month: string;
   filters: MisaCustomerFilters;
   searchQuery: string;
+  alert?: CustomerAlert;
 };
 
-export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/${employeeId}`, month, filters, searchQuery }: Props) {
+export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/${employeeId}`, month, filters, searchQuery, alert }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<Set<MisaCustomerFilterKey>>(
     () => new Set(MISA_CUSTOMER_FILTER_FIELDS.filter((field) => filters[field.key] !== undefined).map((field) => field.key)),
@@ -28,6 +30,7 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
   );
   const resetQuery = new URLSearchParams({ month });
   if (searchQuery) resetQuery.set('q', searchQuery);
+  if (alert) resetQuery.set('alert', alert);
   const activeCount = Object.keys(filters).length;
 
   function toggle(key: MisaCustomerFilterKey) {
@@ -57,6 +60,7 @@ export function CustomerFilterPanel({ employeeId, path = `/admin/misa-employees/
       <div id="misa-customer-filter-form" className={expanded ? 'border-t border-border p-4' : 'hidden'}>
         <form action={path} method="get" className="flex flex-col gap-3">
           <input type="hidden" name="month" value={month} />
+          {alert && <input type="hidden" name="alert" value={alert} />}
           {searchQuery && <input type="hidden" name="q" value={searchQuery} />}
           <div role="group" aria-label="Các tiêu chí lọc" className="grid max-h-[min(42dvh,16rem)] grid-cols-1 gap-2 overflow-y-auto overscroll-contain pr-1 md:grid-cols-2 xl:grid-cols-3">
           {MISA_CUSTOMER_FILTER_FIELDS.map((field) => {

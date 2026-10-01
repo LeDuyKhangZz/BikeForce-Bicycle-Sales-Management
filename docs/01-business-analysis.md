@@ -943,3 +943,8 @@ Số ngày chưa mua hàng được cảnh báo theo cùng một quy tắc ở A
 Mỗi khách hàng theo từng tháng có thêm **Tần suất/tháng** và **Doanh số cam kết**. Tần suất mặc định theo nhóm là A=4, B=2, C=1, D=1 lần/tháng; Sales chỉ sửa ngoại lệ và nhập cam kết cho khách trọng điểm. Chưa nhập cam kết là `null`, không đồng nghĩa 0. Hai giá trị do Sales nhập không bị tiến trình đồng bộ MISA thay đổi.
 
 **Điều chỉnh 2026-09-25 (DEC-098, thay DEC-096):** Sales được nhập/sửa tần suất và doanh số cam kết cho đúng khách hàng mình phụ trách; Admin vẫn được quản lý toàn bộ. Sales nhập trực tiếp trong bảng hàng/cột trên web, có thể áp dụng một tần suất cho một khoảng dòng rồi lưu toàn bộ. RLS và Server Action kiểm tra ánh xạ `auth.uid() → profiles.amis_employee_name → misa_employee_id`.
+
+
+### Cảnh báo khách hàng — 2026-10-01 (DEC-102)
+
+Hai nhóm độc lập: từ 30 ngày chưa mua theo số ngày trong snapshot MISA; từ 30 ngày chưa ghé thăm hoặc chưa ghi nhận ngày ghé thăm. Một khách có thể thuộc cả hai nhóm. Ô đếm phía trên tính toàn bộ khách của nhân viên/tháng, bấm mở danh sách tương ứng. Ngày chăm sóc đối chiếu hôm nay Việt Nam hoặc cuối tháng lịch sử. Cảnh báo cam kết/doanh số dưới 40% được người dùng yêu cầu hoãn.
