@@ -2286,3 +2286,22 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 **Fix:** `scripts/reports-sync.ts` chạy ba nhóm AMIS, SaleWork và CRM cuộc gọi độc lập, thu tất cả lỗi sau khi đã thử mọi nguồn; `package.json` chuyển `reports:sync` sang orchestrator này.
 
 **Verification:** unit tái hiện AMIS throw nhưng SaleWork vẫn được gọi; targeted 109/109, typecheck và lint pass. Lần chạy thật xác nhận AMIS exit 1 xong tiến trình vẫn chuyển sang SaleWork. SaleWork lần đó gặp lỗi UI riêng khi không tìm thấy option `Abraham Khải Khánh Hoà`; không phải bị AMIS chặn.
+
+### ISSUE-058
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-01
+**Module:** đồng bộ tài khoản SaleWork của Phan Thành Khải
+
+**Description:** đồng bộ ngày dừng tại bộ lọc tài khoản vì SaleWork không còn trả option `Abraham Khải Khánh Hoà`.
+
+**Expected:** script chọn đúng tài khoản hiện tại của Phan Thành Khải nhưng tiếp tục dùng khóa snapshot lịch sử, không tạo một nhân viên mới.
+
+**Actual:** giao diện còn có thể giữ chip tên cũ, nhưng danh sách option thật đã đổi thành `Abraham Khải Miền Trung`; tìm tên cũ trả “Dữ liệu không phù hợp”.
+
+**Root Cause:** tên tài khoản bị đổi trực tiếp trên SaleWork trong khi mapping đồng bộ vẫn dùng nhãn cũ làm cả tên chọn UI và khóa dữ liệu.
+
+**Fix:** tách tên chọn SaleWork khỏi khóa canonical: chọn `Abraham Khải Miền Trung`, sau khi đọc chuẩn hóa về `Abraham Khải Khánh Hoà`. Nhánh chọn còn nhận diện chip cũ/mới và có fallback cuộn danh sách khi bộ lọc text không trả option.
+
+**Verification:** unit mapping 21/21, typecheck và lint sạch. Chạy thật `scripts/salework-sync.ts` ngày 01/10/2026 đã bấm Tổng hợp, đọc ổn định và ghi đủ 8 tài khoản ngày lên Supabase.

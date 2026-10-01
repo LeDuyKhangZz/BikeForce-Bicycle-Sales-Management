@@ -19,13 +19,27 @@ const SALEWORK_DISPLAY_NAME_MAP: Readonly<Record<string, string>> = {
   'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
 };
 
+const SALEWORK_ACCOUNT_SELECTION_NAME_MAP: Readonly<Record<string, string>> = {
+  // SaleWork đã đổi nhãn tài khoản; giữ khóa snapshot cũ để không tách lịch sử.
+  'Abraham Khải Khánh Hoà': 'Abraham Khải Miền Trung',
+};
+
+const SALEWORK_ACCOUNT_CANONICAL_NAME_MAP: Readonly<Record<string, string>> = {
+  'Abraham Khải Miền Trung': 'Abraham Khải Khánh Hoà',
+};
+
 /**
  * SaleWork thêm tiền tố `(OFF)` vào tên hiển thị khi tài khoản đang nghỉ.
  * Đây chỉ là trạng thái tức thời, không phải một tài khoản khác, nên phải bỏ
  * tiền tố trước khi đối chiếu và lưu snapshot để không tạo hai dòng cho một người.
  */
 export function normalizeSaleWorkAccountName(accountName: string): string {
-  return accountName.trim().replace(/^\(OFF\)\s*/i, '').trim();
+  const normalized = accountName.trim().replace(/^\(OFF\)\s*/i, '').trim();
+  return SALEWORK_ACCOUNT_CANONICAL_NAME_MAP[normalized] ?? normalized;
+}
+
+export function getSaleWorkAccountSelectionName(accountName: string): string {
+  return SALEWORK_ACCOUNT_SELECTION_NAME_MAP[accountName] ?? accountName;
 }
 
 /** Danh sách tài khoản phải được script SaleWork chọn để dữ liệu luôn được đồng bộ. */

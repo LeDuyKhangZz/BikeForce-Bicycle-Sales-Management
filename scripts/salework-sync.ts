@@ -18,6 +18,7 @@ import {
   saleWorkCalendarMonthValue,
 } from '../lib/salework/monthly-snapshot';
 import {
+  getSaleWorkAccountSelectionName,
   MONTHLY_SALEWORK_ACCOUNT_NAMES,
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
@@ -228,13 +229,49 @@ async function main(): Promise<void> {
   for (const accountName of targetAccountNames) {
     // SaleWork dùng danh sách dài/ảo hóa. Gõ từng tên vào ô tìm kiếm trước khi
     // click giúp kết quả luôn có trong DOM, đúng thao tác đã xác nhận thủ công.
-    await accountSearchInput.fill(accountName);
+    const selectionName = getSaleWorkAccountSelectionName(accountName);
+    await accountSearchInput.fill(selectionName);
 
-    const accountOption = page
+    // Element UI có thể ẩn option đã chọn khỏi dropdown và chỉ giữ nó dưới
+    // dạng chip. Khi đó chờ option sẽ timeout dù tài khoản đã được chọn đúng.
+    const selectedAccountText = await accountSelect.innerText();
+    if (
+      selectedAccountText.includes(accountName) ||
+      selectedAccountText.includes(selectionName)
+    ) continue;
+
+    let accountOption = page
       .locator('.el-select-dropdown__item')
-      .filter({ hasText: accountName })
+      .filter({ hasText: selectionName })
       .first();
-    await accountOption.waitFor({ state: 'visible', timeout: 30_000 });
+    const searchFoundOption = await accountOption.isVisible().catch(() => false);
+
+    if (!searchFoundOption) {
+      // Bộ lọc text của SaleWork đôi lúc báo “Dữ liệu không phù hợp” dù option
+      // vẫn tồn tại. Mở danh sách đầy đủ và cuộn danh sách ảo để tìm đúng tên.
+      await accountSearchInput.fill('');
+      const dropdown = page.locator('.el-select-dropdown__wrap:visible').last();
+      await dropdown.waitFor({ state: 'visible', timeout: 10_000 });
+      await dropdown.evaluate(element => { element.scrollTop = 0; });
+
+      for (let attempt = 0; attempt < 50; attempt += 1) {
+        accountOption = page
+          .locator('.el-select-dropdown__item:visible')
+          .filter({ hasText: selectionName })
+          .first();
+        if (await accountOption.isVisible()) break;
+
+        const reachedEnd = await dropdown.evaluate(element => {
+          const previousScrollTop = element.scrollTop;
+          element.scrollTop += element.clientHeight;
+          return element.scrollTop === previousScrollTop;
+        });
+        if (reachedEnd) break;
+        await page.waitForTimeout(100);
+      }
+    }
+
+    await accountOption.waitFor({ state: 'visible', timeout: 10_000 });
 
     // Element UI dùng class/aria để đánh dấu option đã chọn. Chỉ click mục còn
     // thiếu; click lại mục đang chọn sẽ biến thao tác "chọn đủ" thành bỏ chọn.

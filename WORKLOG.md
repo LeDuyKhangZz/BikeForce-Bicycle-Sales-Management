@@ -3793,6 +3793,8 @@ Sửa ISSUE-056: chặn snapshot SaleWork ngày trước bị gắn vào ảnh h
 
 Sửa ISSUE-057: thay chuỗi `&&` bằng orchestrator ba nguồn độc lập. AMIS tháng 10 rỗng/lỗi nay vẫn chuyển sang SaleWork. Unit 109/109, typecheck/lint pass; smoke thật xác nhận chuyển nguồn, nhưng SaleWork gặp lỗi UI riêng khi option tài khoản không hiển thị.
 
+Sửa ISSUE-058: xác minh danh sách option SaleWork thật cho thấy `Abraham Khải Khánh Hoà` đã đổi thành `Abraham Khải Miền Trung`, còn chip tên cũ có thể được UI giữ lại. Đã tách tên dùng để chọn khỏi khóa snapshot canonical, chuẩn hóa tên mới về khóa cũ để giữ liền lịch sử Phan Thành Khải, đồng thời nhận diện chip và có fallback cuộn danh sách. Unit mapping 21/21, typecheck/lint sạch; chạy sync thật ngày 01/10/2026 đã ghi đủ 8 tài khoản lên Supabase.
+
 Đổi file kế hoạch từ CSV sang Excel `.xlsx` thật (DEC-101). Endpoint tạo workbook 5 cột có sẵn toàn bộ khách và giá trị hiện tại, freeze header/AutoFilter/định dạng số; upload chỉ nhận `.xlsx` và đọc worksheet đầu bằng ExcelJS trước khi chạy validation/UPSERT cũ. Unit mục tiêu 8/8, typecheck và production build pass.
 
 Tái hiện upload workbook thật: client đọc đúng 241 dòng, 0 lỗi; server log xác nhận Supabase trả `42501 new row violates row-level security policy`. Thêm migration idempotent khôi phục policy INSERT/UPDATE Admin và GRANT trên `misa_customer_monthly_plans` (ISSUE-054). Cần áp migration production rồi bấm xác nhận lại, không cần sửa file XLSX.

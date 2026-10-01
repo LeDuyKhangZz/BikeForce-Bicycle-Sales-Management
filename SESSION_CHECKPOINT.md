@@ -2686,3 +2686,10 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 - Unit orchestrator + date 109/109, typecheck và lint pass.
 - Smoke thật: AMIS tháng 10 exit 1 nhưng SaleWork vẫn khởi chạy; lần SaleWork này fail riêng do dropdown không hiện `Abraham Khải Khánh Hoà`.
 - Next Exact Steps: làm cứng thao tác tìm/chọn account SaleWork khi dropdown tải chậm, sau đó chạy lại sync ngày.
+
+### 2026-10-01 — SaleWork đổi tên tài khoản Phan Thành Khải
+
+- Danh sách option thật đã đổi `Abraham Khải Khánh Hoà` thành `Abraham Khải Miền Trung`; chip cũ có thể còn hiển thị do trạng thái lựa chọn trước đó.
+- Script chọn bằng tên mới nhưng chuẩn hóa kết quả về khóa cũ để không tách snapshot lịch sử của Phan Thành Khải.
+- Unit mapping 21/21, typecheck/lint sạch; chạy sync thật đã ghi đủ 8 tài khoản ngày lên Supabase.
+- Next Exact Steps: theo dõi lượt Scheduled Task kế tiếp; nếu không còn cảnh báo ISSUE-058 thì không cần thao tác thêm.
