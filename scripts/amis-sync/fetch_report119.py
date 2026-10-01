@@ -23,7 +23,15 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-load_dotenv(Path(__file__).resolve().parent / ".env", encoding="utf-8-sig")
+# Worker tháng nạp `.env.local` trước khi spawn Python. Các biến AMIS
+# trong process cha có thể là token cũ, trong khi `amis-harvest.ts` vừa ghi
+# token mới vào file cạnh script. Luôn ưu tiên file vừa thu hoạch để
+# không gửi token hết hạn cho Report 119.
+load_dotenv(
+    Path(__file__).resolve().parent / ".env",
+    encoding="utf-8-sig",
+    override=True,
+)
 
 API_URL = "https://amisapp.misa.vn/crm/g2/api/report/Report/reportPaging"
 ACCOUNT_API_URL = "https://amisapp.misa.vn/crm/g2/api/business/Account/Grid"

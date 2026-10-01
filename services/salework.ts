@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-import { getVietnamCurrentMonth, getVietnamToday } from '@/lib/date';
+import {
+  getVietnamCurrentMonth,
+  getVietnamDateFromTimestamp,
+  getVietnamToday,
+} from '@/lib/date';
 import {
   combineCallMetrics,
   parseSaleWorkDurationSeconds,
@@ -40,6 +44,7 @@ type SaleWorkReportRow = {
   outgoing_calls: number;
   missed_calls: number;
   call_duration: string;
+  updated_at: string;
 };
 
 type AmisEmployeeMetricRow = {
@@ -152,7 +157,7 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     const { data: saleworkData, error: saleworkError } = await supabase
       .from('salework_reports')
       .select(
-        'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration',
+        'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration,updated_at',
       )
       .order('account_name', { ascending: true });
 
@@ -164,10 +169,11 @@ export async function getSaleWorkReport(): Promise<SaleWorkReport[]> {
     const period = currentPeriodMonth();
     const reportDate = getVietnamToday();
     const allSaleWorkRows: SaleWorkReportRow[] = saleworkData ?? [];
-  const baseReports = allSaleWorkRows
+    const baseReports = allSaleWorkRows
       .filter((row) =>
         !row.account_name.startsWith(CRM_CALL_ROW_PREFIX) &&
-        !row.account_name.startsWith(MONTHLY_SALEWORK_ROW_PREFIX),
+        !row.account_name.startsWith(MONTHLY_SALEWORK_ROW_PREFIX) &&
+        getVietnamDateFromTimestamp(row.updated_at) === reportDate,
       )
       .map(toSaleWorkReport);
     const crmCallsByEmployeeCode = new Map<string, SaleWorkReportRow>();
@@ -234,7 +240,7 @@ export async function getMonthlySaleWorkReportByAccountName(
     const { data, error } = await supabase
       .from('salework_reports')
       .select(
-        'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration',
+        'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration,updated_at',
       )
       .eq('account_name', monthlyKey)
       .maybeSingle<SaleWorkReportRow>();

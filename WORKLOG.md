@@ -3785,6 +3785,14 @@ Theo phản hồi người dùng, bỏ hoàn toàn bố cục filter bên cạnh
 
 Thiết kế lại accordion Bộ lọc: header nhận diện rõ bằng icon phễu primary, tiêu đề/mô tả, badge ngữ nghĩa qua số điều kiện và CTA mở/thu gọn. Nội dung dùng grid responsive, giới hạn cao 256px có cuộn riêng và action ngang, không còn bung dài che màn hình. Typecheck/lint exit 0.
 
+### 2026-10-01 — Khôi phục Tổng kết tháng 09/2026
+
+Sửa ISSUE-055: các script Python AMIS nay ưu tiên token mới nhất trong `scripts/amis-sync/.env`, kể cả khi worker kế thừa token cũ từ `.env.local`. Đã chạy thật AMIS và SaleWork cho 01/09–30/09/2026: AMIS ghi 15 dòng KPI/12 cột, thay snapshot 11 nhân viên/2.337 khách hàng; SaleWork ghi đủ 10 tài khoản. Python compile, typecheck, lint, build pass. Full unit 864/865 do test nhãn nav cũ ngoài phạm vi.
+
+Sửa ISSUE-056: chặn snapshot SaleWork ngày trước bị gắn vào ảnh hôm nay. Service nay so `updated_at` theo `Asia/Ho_Chi_Minh`; chưa đồng bộ hôm nay thì hiển thị `—`. Xác minh live Ngô Thế San trả 5,78 phút; unit 107/107, typecheck, lint và build pass.
+
+Sửa ISSUE-057: thay chuỗi `&&` bằng orchestrator ba nguồn độc lập. AMIS tháng 10 rỗng/lỗi nay vẫn chuyển sang SaleWork. Unit 109/109, typecheck/lint pass; smoke thật xác nhận chuyển nguồn, nhưng SaleWork gặp lỗi UI riêng khi option tài khoản không hiển thị.
+
 Đổi file kế hoạch từ CSV sang Excel `.xlsx` thật (DEC-101). Endpoint tạo workbook 5 cột có sẵn toàn bộ khách và giá trị hiện tại, freeze header/AutoFilter/định dạng số; upload chỉ nhận `.xlsx` và đọc worksheet đầu bằng ExcelJS trước khi chạy validation/UPSERT cũ. Unit mục tiêu 8/8, typecheck và production build pass.
 
 Tái hiện upload workbook thật: client đọc đúng 241 dòng, 0 lỗi; server log xác nhận Supabase trả `42501 new row violates row-level security policy`. Thêm migration idempotent khôi phục policy INSERT/UPDATE Admin và GRANT trên `misa_customer_monthly_plans` (ISSUE-054). Cần áp migration production rồi bấm xác nhận lại, không cần sửa file XLSX.

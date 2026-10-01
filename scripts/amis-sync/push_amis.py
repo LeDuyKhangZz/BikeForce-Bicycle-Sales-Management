@@ -34,11 +34,19 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+# Worker tháng nạp `.env.local` trước khi spawn Python, nhưng
+# `amis-harvest.ts` ghi phiên mới nhất vào `.env` cạnh script. Phải nạp
+# file này và ghi đè process env TRƯỚC khi import các module cũ, vì
+# hai module chốt token thành hằng số ngay lúc import.
+load_dotenv(
+    Path(__file__).resolve().parent / ".env",
+    encoding="utf-8-sig",
+    override=True,
+)
+
 # Tái sử dụng nguyên logic đã kiểm chứng từ các script cũ.
 import test_amis_revenue as revenue_mod
 import crawl_nvkd as nvkd_mod
-
-load_dotenv(override=True)
 
 SUPABASE_URL = os.getenv("BIKEFORCE_SUPABASE_URL", "").rstrip("/")
 SERVICE_KEY = os.getenv("BIKEFORCE_SERVICE_ROLE_KEY", "").strip()

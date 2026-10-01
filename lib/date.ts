@@ -54,6 +54,12 @@ export function getVietnamToday(): string {
   return isoDateFormatter.format(new Date());
 }
 
+/** ISO timestamp → ngày nghiệp vụ Việt Nam; `null` nếu timestamp không hợp lệ. */
+export function getVietnamDateFromTimestamp(isoTimestamp: string): string | null {
+  const parsed = Date.parse(isoTimestamp);
+  return Number.isNaN(parsed) ? null : isoDateFormatter.format(new Date(parsed));
+}
+
 /**
  * Kiểm tra `'YYYY-MM-DD'` là ngày CÓ THẬT trên lịch.
  *

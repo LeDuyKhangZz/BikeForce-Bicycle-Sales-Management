@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+> Hồi quy ISSUE-056: phải khóa biên ngày Việt Nam của timestamp SaleWork tại `16:59:59Z` và `17:00:00Z`; snapshot ngày trước không được xuất hiện trên ảnh ngày hiện tại.
+
 **DEC-092:** DB test phải khóa Sales khỏi hai bảng snapshot, cho Admin đọc, chặn service role DML trực tiếp và xác nhận RPC thay nguyên tử. Test script phải chứng minh thiếu trang/sai tổng khách không gọi RPC và không làm mất snapshot cũ.
 
 **ISSUE-054 kiểm chứng cuối:** Wrapper -NoTelegram 13:05:55–13:06:28 exit 0, stderr rỗng; harvest AMIS lượt mở lại kế tiếp exit 0, đúng tháng 09, 9 dòng công nợ. 826 unit, typecheck/lint/build đã chạy thành công. Chưa quan sát lượt lịch sau sửa.

@@ -1302,3 +1302,6 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] Danh sách nhân viên có nút Xem chi tiết cạnh số lượng KH; chỉ tải/mở dữ liệu hoạt động của nhân viên được chọn (2026-09-28)
 - [x] Icon mắt mở trang hoạt động riêng của nhân viên; không bung dữ liệu trong trang danh sách (2026-09-28)
 - [ ] Smoke test khối hoạt động của Ngô Thế San tại `/admin/misa-employees/59?month=2026-09` ở 375px và 1440px
+- [x] ISSUE-055: worker Tổng kết tháng ưu tiên token AMIS mới; đã đồng bộ thật đủ AMIS và 10 tài khoản SaleWork cho 09/2026 (2026-10-01)
+- [x] ISSUE-056: ảnh trong ngày từ chối snapshot SaleWork cũ khác ngày Việt Nam; không còn gắn số hôm qua lên ảnh hôm nay (2026-10-01)
+- [x] ISSUE-057: AMIS lỗi không còn chặn SaleWork/CRM cuộc gọi trong `reports:sync` (2026-10-01)

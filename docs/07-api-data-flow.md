@@ -1,5 +1,9 @@
 # 07 — API & Data Flow
 
+> Cập nhật 2026-10-01: dữ liệu SaleWork ngày chỉ được ghép vào ảnh chia sẻ khi `salework_reports.updated_at` quy đổi sang `Asia/Ho_Chi_Minh` trùng ngày nghiệp vụ hiện tại. Snapshot cũ phải hiển thị `—`, không fallback sang ngày trước (ISSUE-056).
+>
+> `reports:sync` chạy AMIS, SaleWork và CRM cuộc gọi thành ba nhóm độc lập. Nhóm trước thất bại không chặn nhóm sau; tác vụ chỉ tổng hợp exit thất bại sau khi đã thử cả ba nguồn (ISSUE-057).
+
 **DEC-092 (2026-09-23):** `fetch_report119.py` cào đủ nhân viên và mọi trang `Account/Grid`, đối chiếu số khách từng nhân viên rồi gọi RPC thay snapshot tháng nguyên tử. Lỗi token/phân trang/số lượng/ghi DB trả exit khác 0 và giữ snapshot cũ. `reports:sync` và monthly worker đều chạy bước này.
 
 Trang `/admin/misa-employees` và route chi tiết đọc hai bảng snapshot bằng Supabase session client chịu RLS; không gọi API MISA trong request web. Tìm kiếm, bộ lọc và phân trang chạy server-side trên snapshot, nên Vercel không cần `AMIS_BEARER_TOKEN` để hiển thị dữ liệu đã đồng bộ.

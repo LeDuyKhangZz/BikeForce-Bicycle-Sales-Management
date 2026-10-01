@@ -13,6 +13,7 @@ import {
   formatVietnamDateTime,
   formatVietnamShortDate,
   getVietnamCurrentMonth,
+  getVietnamDateFromTimestamp,
   getVietnamMonthRange,
   getVietnamMonthToDateRange,
   getVietnamToday,
@@ -309,6 +310,18 @@ describe('shiftVietnamMonth — nút Tháng trước / Tháng sau', () => {
   ])('%s → trả null, KHÔNG throw', (_label, month, delta) => {
     expect(() => shiftVietnamMonth(month, delta)).not.toThrow();
     expect(shiftVietnamMonth(month, delta)).toBeNull();
+  });
+});
+
+describe('getVietnamDateFromTimestamp — chặn snapshot SaleWork khác ngày', () => {
+  it('quy đổi timestamptz sang đúng ngày Việt Nam tại biên 17:00Z', () => {
+    expect(getVietnamDateFromTimestamp('2026-09-30T16:59:59Z')).toBe('2026-09-30');
+    expect(getVietnamDateFromTimestamp('2026-09-30T17:00:00Z')).toBe('2026-10-01');
+  });
+
+  it('trả null cho timestamp không hợp lệ', () => {
+    expect(getVietnamDateFromTimestamp('')).toBeNull();
+    expect(getVietnamDateFromTimestamp('không-phải-ngày')).toBeNull();
   });
 });
 

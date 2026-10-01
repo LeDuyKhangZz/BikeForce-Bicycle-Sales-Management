@@ -2229,3 +2229,60 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 **Root Cause:** Thiếu retry ở điểm ghi idempotent và nhánh HTTP lỗi return thay vì raise. Chưa xác định nguyên nhân hạ tầng gây reset.
 **Fix:** 3 lần tối đa, chờ 2/5 giây cho ConnectionError/Timeout/HTTP tạm thời; cùng payload/synced_at và khóa UPSERT; lỗi TLS/HTTP khác fail ngay; hết retry raise RuntimeError để wrapper báo Telegram.
 **Verification:** Test mới đã fail tái hiện trước fix; 12/12 Python pass sau fix, build/typecheck/lint exit 0. Task thật 21:44:15–21:45:10 exit 0, stderr rỗng, không Telegram; phục hồi qua retry được test mock, không khẳng định lượt thật đã retry. DB/RLS chưa xác minh: ECONNREFUSED 127.0.0.1:54322; không đổi schema/RLS.
+
+### ISSUE-055
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-01
+**Module:** đồng bộ AMIS trong Tổng kết tháng
+
+**Description:** worker tháng thu hoạch được token AMIS mới nhưng các tiến trình Python vẫn dùng token cũ từ `.env.local`, làm Report 119 và dashboard trả 401.
+
+**Expected:** `push_amis.py` và `fetch_report119.py` luôn dùng phiên mới nhất do `amis-harvest.ts` ghi vào `scripts/amis-sync/.env`.
+
+**Actual:** process con kế thừa `AMIS_BEARER_TOKEN` cũ; `python-dotenv` mặc định không ghi đè biến đã tồn tại. Hai module mà `push_amis.py` import còn chốt token thành hằng số trước khi file phiên mới được nạp.
+
+**Root Cause:** thứ tự nạp cấu hình và quy tắc `override` không phù hợp với worker spawn nhiều tiến trình.
+
+**Fix:** nạp `scripts/amis-sync/.env` với `override=True`; trong `push_amis.py`, thực hiện bước này trước khi import các module CRM cũ.
+
+**Verification:** Python compile, typecheck, lint và production build exit 0. Chạy thật kỳ 09/2026: AMIS ghi 15 nhân viên/12 cột, snapshot 11 nhân viên/2.337 khách hàng; SaleWork ghi đủ 10 tài khoản. Supabase có 22 dòng AMIS và 10 snapshot SaleWork cho kỳ. Full unit còn 1 lỗi cũ ngoài phạm vi: nhãn `Khách hàng` dài 10 ký tự so với giới hạn test 9.
+
+### ISSUE-056
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-01
+**Module:** Hoạt động online trong ngày trên ảnh chia sẻ
+
+**Description:** ảnh ngày 01/10 hiển thị snapshot SaleWork cuối ngày 30/09 khi các lượt đồng bộ đầu ngày chưa thành công.
+
+**Expected:** chỉ hiển thị hoạt động SaleWork nếu `updated_at` thuộc đúng ngày nghiệp vụ Việt Nam; chưa có snapshot hôm nay thì hiển thị `—`.
+
+**Actual:** service lấy mọi dòng ngày không mang prefix và không kiểm tra `updated_at`, nên số `9,43 phút` của hôm trước bị gắn lên ảnh hôm sau.
+
+**Root Cause:** bảng daily SaleWork lưu mỗi tài khoản bằng khóa duy nhất và ghi đè; service không dùng `updated_at` làm hàng rào ngày.
+
+**Fix:** thêm `getVietnamDateFromTimestamp()` trong `lib/date.ts`; `getSaleWorkReport()` chỉ nhận daily row có ngày `updated_at` trùng `getVietnamToday()`. Snapshot tháng và CRM theo ngày giữ nguyên luồng riêng.
+
+**Verification:** unit biên 16:59:59Z/17:00:00Z pass; targeted date 107/107, typecheck, lint và production build pass. Đọc thật qua service cho Ngô Thế San trả `106 / 209 / 12 / 2 / 0 / 5,78 phút`.
+
+### ISSUE-057
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-01
+**Module:** điều phối đồng bộ báo cáo tự động
+
+**Description:** `reports:sync` nối AMIS, SaleWork và CRM cuộc gọi bằng `&&`; AMIS tháng mới rỗng/lỗi làm SaleWork không bao giờ được chạy.
+
+**Expected:** các nguồn chạy tuần tự để không tranh browser profile nhưng thất bại độc lập; AMIS lỗi không chặn SaleWork.
+
+**Actual:** shell dừng ngay tại lệnh đầu tiên có exit khác 0, để lại snapshot SaleWork cũ.
+
+**Root Cause:** dùng chuỗi shell `&&` thay cho orchestrator hiểu ranh giới nguồn dữ liệu.
+
+**Fix:** `scripts/reports-sync.ts` chạy ba nhóm AMIS, SaleWork và CRM cuộc gọi độc lập, thu tất cả lỗi sau khi đã thử mọi nguồn; `package.json` chuyển `reports:sync` sang orchestrator này.
+
+**Verification:** unit tái hiện AMIS throw nhưng SaleWork vẫn được gọi; targeted 109/109, typecheck và lint pass. Lần chạy thật xác nhận AMIS exit 1 xong tiến trình vẫn chuyển sang SaleWork. SaleWork lần đó gặp lỗi UI riêng khi không tìm thấy option `Abraham Khải Khánh Hoà`; không phải bị AMIS chặn.

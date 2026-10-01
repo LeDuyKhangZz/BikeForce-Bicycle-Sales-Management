@@ -2664,3 +2664,25 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 - Next Exact Steps: đăng nhập Admin, mở `/admin/misa-employees/59?month=2026-09`, đối chiếu số của Ngô Thế San và kiểm tra trực quan tại 375px/1440px.
 - UI cuối cùng: mở `/admin/misa-employees?month=2026-09`, bấm **Xem chi tiết** ở dòng Ngô Thế San; khối hoạt động mở ngay trong trang danh sách và có nút Đóng. Trang khách hàng `[id]` không còn khối này.
 - UI mới thay thế: icon mắt dẫn tới `/admin/misa-employees/59/activity?month=2026-09`; dữ liệu nằm trên trang riêng, không mở tại chỗ. Trang riêng có nút quay lại Nhân viên và nút Xem khách hàng.
+
+### 2026-10-01 — Dữ liệu Tổng kết tháng 09/2026
+
+- ISSUE-055 đã đóng: `push_amis.py` và `fetch_report119.py` luôn nạp token mới từ `scripts/amis-sync/.env` thay vì giữ token cũ của worker.
+- Đã chạy production data thật cho 01/09–30/09/2026: AMIS đủ ba nguồn; snapshot 11 nhân viên/2.337 khách hàng; SaleWork đủ 10 tài khoản.
+- Supabase xác minh 22 dòng `amis_employee_metrics` và 10 dòng snapshot SaleWork của kỳ 09/2026.
+- Python compile, typecheck, lint và build pass. Full unit 864/865; test cũ `nav-items.test.ts` vẫn fail do nhãn `Khách hàng` dài 10 ký tự.
+- Next Exact Steps: tải lại `/admin/monthly-summaries?month=2026-09` và đối chiếu thẻ/PNG; nếu cần trạng thái job xanh, bấm Đồng bộ dữ liệu tháng lần nữa sau khi worker chạy.
+
+### 2026-10-01 — Chặn SaleWork sai ngày trên ảnh
+
+- ISSUE-056 đã đóng: daily row chỉ hợp lệ khi `updated_at` trùng ngày Việt Nam hiện tại.
+- Ngô Thế San đọc live qua service: 106 hội thoại, 209 tin gửi, 12 tin nhận, 2 gọi đi, 0 gọi đến, 5,78 phút.
+- Unit date 107/107, typecheck, lint và production build pass.
+- Next Exact Steps: tạo lại ảnh Cam kết đầu ngày; nếu SaleWork vừa phát sinh thêm tin nhắn sau lần sync 09:30, chạy sync ngày trước khi xuất ảnh.
+
+### 2026-10-01 — Tách nguồn đồng bộ
+
+- ISSUE-057 đã đóng: AMIS, SaleWork và CRM cuộc gọi chạy tuần tự nhưng không chặn nhau khi một nguồn lỗi.
+- Unit orchestrator + date 109/109, typecheck và lint pass.
+- Smoke thật: AMIS tháng 10 exit 1 nhưng SaleWork vẫn khởi chạy; lần SaleWork này fail riêng do dropdown không hiện `Abraham Khải Khánh Hoà`.
+- Next Exact Steps: làm cứng thao tác tìm/chọn account SaleWork khi dropdown tải chậm, sau đó chạy lại sync ngày.
