@@ -2305,3 +2305,22 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 **Fix:** tách tên chọn SaleWork khỏi khóa canonical: chọn `Abraham Khải Miền Trung`, sau khi đọc chuẩn hóa về `Abraham Khải Khánh Hoà`. Nhánh chọn còn nhận diện chip cũ/mới và có fallback cuộn danh sách khi bộ lọc text không trả option.
 
 **Verification:** unit mapping 21/21, typecheck và lint sạch. Chạy thật `scripts/salework-sync.ts` ngày 01/10/2026 đã bấm Tổng hợp, đọc ổn định và ghi đủ 8 tài khoản ngày lên Supabase.
+
+### ISSUE-059
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-01
+**Module:** Admin / Nhân viên MISA
+
+**Description:** sang đầu tháng mới, trang Nhân viên mặc định mở tháng hiện tại chưa có snapshot và chỉ hiện empty state; Admin không có điều khiển để quay lại tháng cũ.
+
+**Expected:** điều hướng tháng luôn hiện, kể cả khi tháng đang chọn chưa có dữ liệu hoặc truy vấn lỗi; Admin có thể quay về tháng trước và không thể mở tháng tương lai.
+
+**Actual:** thanh tháng nằm bên trong `MisaEmployeeDirectory`, nên chỉ được render khi danh sách có ít nhất một nhân viên.
+
+**Root Cause:** điều khiển phạm vi dữ liệu bị đặt trong component hiển thị kết quả thay vì ở cấp trang.
+
+**Fix:** tách `MisaEmployeeMonthNavigation` thành khối cấp trang, render trước mọi trạng thái loading/error/empty/data; danh sách client chỉ còn tìm kiếm và hiển thị nhân viên.
+
+**Verification:** unit render 2/2 xác nhận tháng hiện tại rỗng vẫn có link tháng trước, tháng lịch sử có đủ hai chiều và tháng tương lai bị khóa; typecheck, lint và production build 30 trang thành công.

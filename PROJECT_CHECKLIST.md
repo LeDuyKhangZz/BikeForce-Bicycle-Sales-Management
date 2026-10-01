@@ -1306,3 +1306,4 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] ISSUE-056: ảnh trong ngày từ chối snapshot SaleWork cũ khác ngày Việt Nam; không còn gắn số hôm qua lên ảnh hôm nay (2026-10-01)
 - [x] ISSUE-057: AMIS lỗi không còn chặn SaleWork/CRM cuộc gọi trong `reports:sync` (2026-10-01)
 - [x] ISSUE-058: SaleWork đổi `Abraham Khải Khánh Hoà` thành `Abraham Khải Miền Trung`; script chọn tên mới nhưng giữ khóa lịch sử, sync thật đủ 8 tài khoản (2026-10-01)
+- [x] ISSUE-059: trang Admin Nhân viên MISA luôn có điều hướng tháng, kể cả khi tháng hiện tại chưa có dữ liệu; không cho đi tới tháng tương lai (2026-10-01)

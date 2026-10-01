@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, ChevronLeft, ChevronRight, Eye, Search, UsersRound } from 'lucide-react';
+import { Eye, Search, UsersRound } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import type { MisaEmployee } from '@/services/misa-report119';
@@ -10,9 +10,6 @@ import type { MisaEmployee } from '@/services/misa-report119';
 type Props = {
   employees: MisaEmployee[];
   month: string;
-  monthLabel: string;
-  previousMonth: string | null;
-  nextMonth: string | null;
 };
 
 function EmployeeColumn({ employees, startIndex, month }: { employees: MisaEmployee[]; startIndex: number; month: string }) {
@@ -41,7 +38,7 @@ function EmployeeColumn({ employees, startIndex, month }: { employees: MisaEmplo
   );
 }
 
-export function MisaEmployeeDirectory({ employees, month, monthLabel, previousMonth, nextMonth }: Props) {
+export function MisaEmployeeDirectory({ employees, month }: Props) {
   const [query, setQuery] = useState('');
   const filtered = employees.filter((employee) => employee.name.toLocaleLowerCase('vi').includes(query.trim().toLocaleLowerCase('vi')));
   const midpoint = Math.floor(filtered.length / 2);
@@ -49,12 +46,7 @@ export function MisaEmployeeDirectory({ employees, month, monthLabel, previousMo
 
   return (
     <div className="flex flex-col gap-3">
-      <Card className="grid gap-4 rounded-2xl p-4 lg:grid-cols-[auto_minmax(16rem,1fr)_auto] lg:items-center lg:px-6">
-        <div className="flex items-center gap-2">
-          {previousMonth ? <Link href={`/admin/misa-employees?month=${previousMonth}`} aria-label="Tháng trước" className="grid size-11 shrink-0 place-items-center rounded-xl border border-input-border text-heading shadow-xs hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><ChevronLeft aria-hidden="true" className="size-5" /></Link> : <span className="size-11" />}
-          <span className="flex min-h-11 items-center gap-2 rounded-xl bg-primary/10 px-3 font-semibold text-primary"><CalendarDays aria-hidden="true" className="size-5" /> {monthLabel}</span>
-          {nextMonth ? <Link href={`/admin/misa-employees?month=${nextMonth}`} aria-label="Tháng sau" className="grid size-11 shrink-0 place-items-center rounded-xl border border-input-border text-heading shadow-xs hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><ChevronRight aria-hidden="true" className="size-5" /></Link> : <span className="size-11" />}
-        </div>
+      <Card className="grid gap-4 rounded-2xl p-4 lg:grid-cols-[minmax(16rem,1fr)_auto] lg:items-center lg:px-6">
         <div className="relative min-w-0 lg:ml-auto lg:w-full lg:max-w-sm">
           <label htmlFor="misa-employee-search" className="mb-1 block text-xs font-medium text-muted-foreground">Tìm kiếm nhân viên</label>
           <Search aria-hidden="true" className="pointer-events-none absolute bottom-3 left-3 size-5 text-muted-foreground" />

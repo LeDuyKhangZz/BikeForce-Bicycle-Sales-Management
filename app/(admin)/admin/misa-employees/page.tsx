@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { buttonClassName } from '@/components/ui/button';
 import { requireRole } from '@/features/auth/queries';
 import { MisaEmployeeDirectory } from '@/features/misa-employees/misa-employee-directory';
+import { MisaEmployeeMonthNavigation } from '@/features/misa-employees/misa-employee-month-navigation';
 import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { report119Period } from '@/lib/amis/report119-period';
 import { createClient } from '@/lib/supabase/server';
@@ -49,6 +50,12 @@ export default async function MisaEmployeesPage({ searchParams }: Props) {
         </div>
       </section>
 
+      <MisaEmployeeMonthNavigation
+        monthLabel={formatVietnamMonth(month)}
+        previousMonth={previousMonth}
+        nextMonth={availableNextMonth}
+      />
+
       {error ? (
         <Card className="flex flex-col items-start gap-3 rounded-2xl p-5" role="alert">
           <p className="text-sm text-destructive">{error}</p>
@@ -64,9 +71,6 @@ export default async function MisaEmployeesPage({ searchParams }: Props) {
         <MisaEmployeeDirectory
           employees={employees}
           month={month}
-          monthLabel={formatVietnamMonth(month)}
-          previousMonth={previousMonth}
-          nextMonth={availableNextMonth}
         />
       )}
     </div>

@@ -1350,6 +1350,8 @@ Trong ảnh Tổng kết tháng, nhãn nguồn MISA phải tách rõ **kỳ dữ
 
 Sidebar quản trị có mục “Nhân viên MISA” mở `/admin/misa-employees`. Trang liệt kê tên ở cột Nhân viên của CRM Report 119 theo tháng, dạng card/grid trên mobile, có điều hướng tháng và trạng thái rỗng/lỗi.
 
+**Cập nhật 2026-10-01:** điều hướng tháng là control cấp trang và luôn hiển thị trước trạng thái dữ liệu. Khi tháng hiện tại chưa có snapshot hoặc truy vấn lỗi, Admin vẫn quay được về tháng trước; nút tháng sau bị khóa nếu vượt quá tháng Việt Nam hiện tại. Empty state không được thay thế hoặc che mất control này.
+
 Theo mẫu giao diện 2026-09-22, trang danh sách có tiêu đề lớn và dải giới thiệu, thanh chọn tháng + tìm kiếm tên + tổng số, kế đó là bảng danh sách hai cột trên desktop. Với 21 nhân viên, cột trái là thứ tự 1–10 và cột phải 11–21; mỗi hàng có số thứ tự, tên và số lượng KH dạng pill. Mobile giữ một cột, không cuộn ngang. Tìm kiếm lọc tức thời danh sách đang tải; bấm hàng mở khách hàng của nhân viên.
 
 ### Chi tiết khách hàng MISA (2026-09-22)

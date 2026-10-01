@@ -3795,6 +3795,8 @@ Sửa ISSUE-057: thay chuỗi `&&` bằng orchestrator ba nguồn độc lập. 
 
 Sửa ISSUE-058: xác minh danh sách option SaleWork thật cho thấy `Abraham Khải Khánh Hoà` đã đổi thành `Abraham Khải Miền Trung`, còn chip tên cũ có thể được UI giữ lại. Đã tách tên dùng để chọn khỏi khóa snapshot canonical, chuẩn hóa tên mới về khóa cũ để giữ liền lịch sử Phan Thành Khải, đồng thời nhận diện chip và có fallback cuộn danh sách. Unit mapping 21/21, typecheck/lint sạch; chạy sync thật ngày 01/10/2026 đã ghi đủ 8 tài khoản lên Supabase.
 
+Sửa ISSUE-059: trang `/admin/misa-employees` trước đây chỉ render thanh tháng khi danh sách có dữ liệu, làm Admin bị kẹt ở empty state đầu tháng. Đã tách điều hướng tháng thành component cấp trang, luôn render trước error/empty/data và khóa tháng tương lai. Unit render 2/2, typecheck/lint sạch và production build 30 trang thành công.
+
 Đổi file kế hoạch từ CSV sang Excel `.xlsx` thật (DEC-101). Endpoint tạo workbook 5 cột có sẵn toàn bộ khách và giá trị hiện tại, freeze header/AutoFilter/định dạng số; upload chỉ nhận `.xlsx` và đọc worksheet đầu bằng ExcelJS trước khi chạy validation/UPSERT cũ. Unit mục tiêu 8/8, typecheck và production build pass.
 
 Tái hiện upload workbook thật: client đọc đúng 241 dòng, 0 lỗi; server log xác nhận Supabase trả `42501 new row violates row-level security policy`. Thêm migration idempotent khôi phục policy INSERT/UPDATE Admin và GRANT trên `misa_customer_monthly_plans` (ISSUE-054). Cần áp migration production rồi bấm xác nhận lại, không cần sửa file XLSX.

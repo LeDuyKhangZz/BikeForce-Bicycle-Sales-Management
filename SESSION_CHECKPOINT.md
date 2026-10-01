@@ -2693,3 +2693,10 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 - Script chọn bằng tên mới nhưng chuẩn hóa kết quả về khóa cũ để không tách snapshot lịch sử của Phan Thành Khải.
 - Unit mapping 21/21, typecheck/lint sạch; chạy sync thật đã ghi đủ 8 tài khoản ngày lên Supabase.
 - Next Exact Steps: theo dõi lượt Scheduled Task kế tiếp; nếu không còn cảnh báo ISSUE-058 thì không cần thao tác thêm.
+
+### 2026-10-01 — Chọn tháng trên trang Nhân viên MISA
+
+- ISSUE-059 đã đóng: thanh tháng được đưa lên cấp trang nên vẫn xuất hiện khi tháng mới chưa có nhân viên hoặc truy vấn lỗi.
+- Tháng hiện tại có nút về tháng trước và khóa tháng tương lai; tháng lịch sử có đủ hai chiều trong giới hạn hiện tại.
+- Unit render 2/2, typecheck, lint và production build 30 trang đều pass.
+- Next Exact Steps: sau deploy, mở `/admin/misa-employees` ở tháng rỗng và bấm Tháng trước để smoke test bằng phiên Admin production.
