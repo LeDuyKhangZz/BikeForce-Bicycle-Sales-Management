@@ -1401,3 +1401,12 @@ Mobile dùng bố cục dashboard-card: khối tổng hợp A/B/C/D đếm toàn
 Ngay trên danh sách có thanh tiến độ cam kết toàn tháng: **Chưa cam kết X KH**, **Đã cam kết Y/Tổng** và phần trăm. Cam kết `0` là đã xác nhận; chỉ `null`/để trống mới tính chưa cam kết.
 
 Theo DEC-096, editor kế hoạch chỉ xuất hiện trên trang Admin. Trang Sales hiển thị hai giá trị dạng chỉ đọc cùng tiến độ, không có ô nhập hoặc nút lưu.
+
+
+## 2026-10-01 — Danh sách Nhân viên MISA
+
+Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại `/admin/misa-employees` cho mọi tháng. Lọc phía server trước khi truyền danh sách vào component; tổng số, tìm kiếm và số thứ tự dùng danh sách đã lọc. Giữ nguyên dữ liệu và quyền. Không đổi DB/RLS hay bố cục.
+
+Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
+
+Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.

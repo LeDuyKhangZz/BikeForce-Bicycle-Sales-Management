@@ -1307,3 +1307,12 @@ Các OQ có thể làm **thay đổi nội dung checklist** này (danh sách đ�
 - [x] ISSUE-057: AMIS lỗi không còn chặn SaleWork/CRM cuộc gọi trong `reports:sync` (2026-10-01)
 - [x] ISSUE-058: SaleWork đổi `Abraham Khải Khánh Hoà` thành `Abraham Khải Miền Trung`; script chọn tên mới nhưng giữ khóa lịch sử, sync thật đủ 8 tài khoản (2026-10-01)
 - [x] ISSUE-059: trang Admin Nhân viên MISA luôn có điều hướng tháng, kể cả khi tháng hiện tại chưa có dữ liệu; không cho đi tới tháng tương lai (2026-10-01)
+
+
+## 2026-10-01 — Danh sách Nhân viên MISA
+
+Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại `/admin/misa-employees` cho mọi tháng. Lọc phía server trước khi truyền danh sách vào component; tổng số, tìm kiếm và số thứ tự dùng danh sách đã lọc. Giữ nguyên dữ liệu và quyền. Không đổi DB/RLS hay bố cục.
+
+Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
+
+Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.

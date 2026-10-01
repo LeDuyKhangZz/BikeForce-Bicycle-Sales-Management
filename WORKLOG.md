@@ -3808,3 +3808,12 @@ Trang `/admin/misa-employees/[id]` nay ghép nhân viên MISA với hồ sơ Sal
 Điều chỉnh theo phản hồi: khối hoạt động không còn nằm thường trực trên trang khách hàng. Danh sách `/admin/misa-employees` có nút **Xem chi tiết** cạnh số lượng khách của từng nhân viên; bấm mới tải và mở khối dữ liệu đúng người, có nút Đóng. Danh sách cho phép kéo ngang khi chiều rộng không đủ. Typecheck, lint và production build pass; dev server đã khởi động lại ở cổng 3000.
 
 Điều chỉnh lần cuối: icon mắt không mở nội dung tại chỗ nữa mà điều hướng tới trang riêng `/admin/misa-employees/[id]/activity?month=YYYY-MM`. Trang riêng hiển thị đầy đủ hoạt động online và tình trạng thực hiện, có đường quay lại danh sách nhân viên và nút xem khách hàng. Danh sách nhân viên trở lại bố cục vừa khung, không cuộn ngang. Typecheck và lint pass.
+
+
+## 2026-10-01 — Danh sách Nhân viên MISA
+
+Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại `/admin/misa-employees` cho mọi tháng. Lọc phía server trước khi truyền danh sách vào component; tổng số, tìm kiếm và số thứ tự dùng danh sách đã lọc. Giữ nguyên dữ liệu và quyền. Không đổi DB/RLS hay bố cục.
+
+Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
+
+Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.

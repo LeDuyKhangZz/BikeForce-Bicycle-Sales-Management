@@ -2700,3 +2700,12 @@ Sau phản hồi giao diện, wrapper trang được mở rộng theo vùng còn
 - Tháng hiện tại có nút về tháng trước và khóa tháng tương lai; tháng lịch sử có đủ hai chiều trong giới hạn hiện tại.
 - Unit render 2/2, typecheck, lint và production build 30 trang đều pass.
 - Next Exact Steps: sau deploy, mở `/admin/misa-employees` ở tháng rỗng và bấm Tháng trước để smoke test bằng phiên Admin production.
+
+
+## 2026-10-01 — Danh sách Nhân viên MISA
+
+Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại `/admin/misa-employees` cho mọi tháng. Lọc phía server trước khi truyền danh sách vào component; tổng số, tìm kiếm và số thứ tự dùng danh sách đã lọc. Giữ nguyên dữ liệu và quyền. Không đổi DB/RLS hay bố cục.
+
+Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
+
+Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.

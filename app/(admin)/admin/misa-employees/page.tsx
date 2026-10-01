@@ -9,6 +9,7 @@ import { MisaEmployeeDirectory } from '@/features/misa-employees/misa-employee-d
 import { MisaEmployeeMonthNavigation } from '@/features/misa-employees/misa-employee-month-navigation';
 import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { report119Period } from '@/lib/amis/report119-period';
+import { isVisibleDirectoryEmployee } from '@/lib/amis/employee-directory';
 import { createClient } from '@/lib/supabase/server';
 import { listCachedMisaEmployees } from '@/services/misa-report119-cache';
 
@@ -27,7 +28,9 @@ export default async function MisaEmployeesPage({ searchParams }: Props) {
   let employees: Awaited<ReturnType<typeof listCachedMisaEmployees>> = [];
   let error: string | null = null;
   try {
-    if (period !== null) employees = await listCachedMisaEmployees(await createClient(), month);
+    if (period !== null) {
+      employees = (await listCachedMisaEmployees(await createClient(), month)).filter(isVisibleDirectoryEmployee);
+    }
     else error = 'Tháng báo cáo không hợp lệ.';
   } catch (cause) {
     console.error('[MisaEmployeesPage]', cause);
