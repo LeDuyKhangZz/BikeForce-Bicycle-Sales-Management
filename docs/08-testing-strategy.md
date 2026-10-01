@@ -1573,12 +1573,3 @@ Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên k�
 Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
 
 Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
-
-
-## 2026-10-01 — Doanh số đơn hàng tháng trước (DEC-104)
-
-Thêm doanh số tháng liền trước cạnh tháng đang xem, ghi rõ nhãn tháng trên bảng desktop và cặp thẻ mobile cho Admin/Sales. Ghép theo `misa_customer_id` trong cùng nhân viên từ snapshot tháng trước; truy vấn một lô tối đa bằng số khách trang hiện tại, không N+1. Thiếu dòng/null/không có quyền đọc hiện “Chưa có dữ liệu”; số 0 thật vẫn hiện 0 ₫. Khách chuyển nhân viên không tự lấy dữ liệu nhân viên cũ. Lỗi truy vấn đi vào error state. Không đổi doanh số hiện tại, nhóm A/B/C/D, DB/RLS, file nhập kế hoạch hoặc mẫu xuất hiện hữu.
-
-Kiểm chứng: build/typecheck/lint đạt; 16/16 unit liên quan pass; headless fixture Admin/Sales 375px/1440px không cuộn ngang, nhìn ảnh thật với doanh số 12 chữ số. Thêm case RLS đọc tháng trước đúng nhân viên, Sales bị chặn dữ liệu người khác, Admin đọc được; chưa chạy do môi trường Supabase local/Docker chưa sẵn sàng đã ghi ở phiên trước. Chưa E2E dữ liệu thật.
-
-Next Exact Steps: tải lại danh sách khách hàng để đối chiếu hai tháng; nếu hiện chưa có dữ liệu cần snapshot tháng trước cho đúng nhân viên/khách. Khi local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
