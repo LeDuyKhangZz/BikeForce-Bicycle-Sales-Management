@@ -3881,4 +3881,6 @@ Chuyển nhóm doanh số A/B/C/D mobile sang 4 cột cùng một hàng, giữ c
 
 Người dùng đã xác nhận giao diện đẹp và yêu cầu hai cảnh báo bằng kích thước nút nhóm: tăng mobile từ 30px lên min-height 44px, bo góc rounded-lg; giữ hai cột/nhãn hiện tại. Typecheck/lint exit 0.
 
+Toolbar mobile ngoài popup: khung search/select và nút Tìm/Xem/tháng/Xuất đều cao 44px, bo góc rounded-lg; nút Tìm dùng semantic info pastel. Giữ font input/select 16px và không đổi desktop/popup. Typecheck/lint exit 0.
+
 Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.168.1.7` khiến CSS/JS trả 403 khi có Origin từ điện thoại. Bổ sung IP và khởi động lại dev server trên `0.0.0.0:3000`; kiểm tra thực tế 4 asset CSS/JS với Origin LAN đều trả 200.

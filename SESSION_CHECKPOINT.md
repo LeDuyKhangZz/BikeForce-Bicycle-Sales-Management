@@ -2773,4 +2773,6 @@ Nhóm doanh số mobile A/B/C/D đã xếp 4 cột trên một hàng, desktop gi
 
 Người dùng xác nhận giao diện; hai cảnh báo nay min-height 44px, bằng chiều cao nút nhóm A/B/C/D. Typecheck/lint exit 0. Next Exact Steps: tải lại LAN để xem hai cảnh báo cao bằng nhóm; desktop giữ nguyên.
 
+Toolbar mobile ngoài popup hiện đồng đều 44px với cảnh báo, nút Tìm pastel xanh. Typecheck/lint exit 0. Next Exact Steps: tải lại LAN kiểm tra chiều cao các hàng search/tháng/Xem/export; popup và desktop không đổi.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.

@@ -1364,4 +1364,5 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Thu bốn nút A/B/C/D trên mobile về một hàng 4 cột.
 - [x] Sửa breakpoint sm=375px gây kiểu desktop trên điện thoại; cảnh báo căn nhãn và số đếm ngay ngắn.
 - [x] Hai cảnh báo mobile cùng chiều cao 44px với nút nhóm A/B/C/D theo yêu cầu cuối.
+- [x] Đồng nhất toolbar mobile ngoài popup 44px và đổi nút Tìm sang pastel.
 - [x] Sửa allowedDevOrigins cho IP LAN 192.168.1.7; xác minh CSS/JS trả 200 và khởi động lại server.

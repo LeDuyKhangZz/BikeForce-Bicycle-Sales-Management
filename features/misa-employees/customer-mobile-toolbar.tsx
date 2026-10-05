@@ -4,7 +4,7 @@ import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/ami
 import { formatVietnamMonth } from '@/lib/date';
 
 type Props = { path: string; month: string; monthLabel: string; filters: MisaCustomerFilters; searchQuery: string; salesMonths: string[]; selectedSalesMonth?: string; onExport: () => void };
-const CONTROL = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-input-border bg-primary/5 px-2 text-xs font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring';
+const CONTROL = 'flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-input-border bg-primary/5 px-2 text-xs font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring';
 
 export function CustomerMobileToolbar({ path, month, monthLabel, filters, searchQuery, salesMonths, selectedSalesMonth, onExport }: Props) {
   return (
@@ -19,19 +19,19 @@ export function CustomerMobileToolbar({ path, month, monthLabel, filters, search
         <div>
           <label htmlFor="mobile-customer-search" className="mb-1 block text-xs text-muted-foreground">Mã, tên khách hàng hoặc địa chỉ</label>
           <div className="flex items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-input-border bg-primary/[0.025] px-2">
+            <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-lg border border-input-border bg-primary/[0.025] px-2">
               <Search aria-hidden="true" className="size-4 shrink-0 text-primary" />
-              <input id="mobile-customer-search" type="search" name="q" defaultValue={searchQuery} maxLength={120} enterKeyHint="search" placeholder="Nhập điều kiện tìm kiếm" className="min-h-12 min-w-0 flex-1 bg-transparent text-base focus-visible:outline-2 focus-visible:outline-ring" />
+              <input id="mobile-customer-search" type="search" name="q" defaultValue={searchQuery} maxLength={120} enterKeyHint="search" placeholder="Nhập điều kiện tìm kiếm" className="h-full min-h-0 min-w-0 flex-1 bg-transparent text-base focus-visible:outline-2 focus-visible:outline-ring" />
             </div>
-            <button type="submit" className="min-h-12 shrink-0 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-ring">Tìm</button>
+            <button type="submit" className="h-11 shrink-0 rounded-lg border border-input-border bg-status-info-bg px-3 text-sm font-semibold text-status-info-fg hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-ring">Tìm</button>
           </div>
         </div>
         <div>
           <label htmlFor="mobile-sales-month" className="mb-1 block text-xs font-medium text-muted-foreground">Doanh số theo tháng</label>
           <div className="grid grid-cols-[minmax(0,1fr)_112px] gap-2">
-            <div className="flex min-w-0 items-center gap-1 rounded-xl border border-input-border bg-primary/5 px-2 text-primary focus-within:outline-2 focus-within:outline-ring">
+            <div className="flex h-11 min-w-0 items-center gap-1 rounded-lg border border-input-border bg-primary/5 px-2 text-primary focus-within:outline-2 focus-within:outline-ring">
               <CalendarDays aria-hidden="true" className="size-4 shrink-0" />
-              <select id="mobile-sales-month" name="salesMonth" defaultValue={selectedSalesMonth} disabled={!salesMonths.length} className="min-h-12 min-w-0 flex-1 appearance-none bg-transparent p-0 text-base font-semibold focus:outline-none">
+              <select id="mobile-sales-month" name="salesMonth" defaultValue={selectedSalesMonth} disabled={!salesMonths.length} className="h-full min-h-0 min-w-0 flex-1 appearance-none bg-transparent p-0 text-base font-semibold focus:outline-none">
                 {!salesMonths.length && <option value="">Chưa có dữ liệu</option>}
                 {salesMonths.map((value) => <option key={value} value={value}>{formatVietnamMonth(value)}</option>)}
               </select>

@@ -1433,6 +1433,8 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 ### 2026-10-05 — Thu gọn nút tóm tắt trên mobile
 
+Theo yêu cầu đồng nhất kích thước, toolbar ngoài popup mobile có chiều cao 44px cho khung search, select và các nút Tìm/Xem/kỳ danh sách/Xuất Excel. Input/select giữ font 16px, chiều cao theo khung 44px là ngoại lệ được người dùng yêu cầu so với chuẩn 48px trước đó. Nút Tìm dùng nền semantic info pastel; desktop/popup giữ nguyên.
+
 Yêu cầu cuối: hai cảnh báo mobile tăng từ 30px lên min-height 44px và rounded-lg, bằng chiều cao/bo góc nút nhóm A/B/C/D; vẫn hai cột và nhãn gọn. Thay thế ngoại lệ 30px cũ.
 
 Bốn nút nhóm A/B/C/D trên điện thoại dùng lưới 4 cột cùng một hàng, cao tối thiểu 44px, khoảng cách 8px và min-w-0 để không tràn ngang. Kích thước và breakpoint desktop hiện có giữ nguyên.
