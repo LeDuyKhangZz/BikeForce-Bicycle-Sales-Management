@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { CustomerPlanImport } from '@/features/misa-employees/customer-plan-import';
 import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { buildMisaCustomerCsv } from '@/lib/amis/customer-export';
+import { formatVietnamMonth } from '@/lib/date';
 import type { MisaCustomer } from '@/types/misa-customer';
 import type { CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { CustomerAlert } from '@/lib/amis/customer-alerts';
@@ -22,9 +23,11 @@ type Props = {
   showPlanImport?: boolean;
   alert?: CustomerAlert;
   group?: CustomerRevenueGroup;
+  salesMonths?: string[];
+  selectedSalesMonth?: string;
 };
 
-export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -42,6 +45,7 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
         <input type="hidden" name="month" value={month} />
         {alert && <input type="hidden" name="alert" value={alert} />}
         {group && <input type="hidden" name="group" value={group} />}
+        {selectedSalesMonth && <input type="hidden" name="salesMonth" value={selectedSalesMonth} />}
         {MISA_CUSTOMER_FILTER_FIELDS.flatMap((field) => {
           const filter = filters[field.key];
           if (!filter) return [];
@@ -62,6 +66,17 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
           <span className="hidden sm:inline">Tìm</span>
         </button>
       </form>
+      {salesMonths.length > 0 && <form action={path} method="get" className="flex items-end gap-2">
+        <input type="hidden" name="month" value={month} />
+        {searchQuery && <input type="hidden" name="q" value={searchQuery} />}
+        {alert && <input type="hidden" name="alert" value={alert} />}
+        {group && <input type="hidden" name="group" value={group} />}
+        <div><label htmlFor="report44-sales-month" className="mb-1 block text-xs font-medium text-muted-foreground">Doanh số theo tháng</label>
+          <select id="report44-sales-month" name="salesMonth" defaultValue={selectedSalesMonth} className="min-h-12 rounded-xl border border-input-border bg-background px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+            {salesMonths.map((salesMonth) => <option key={salesMonth} value={salesMonth}>{formatVietnamMonth(salesMonth)}</option>)}
+          </select></div>
+        <button type="submit" className="min-h-12 rounded-xl border border-input-border bg-primary/5 px-4 font-semibold text-heading hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Xem</button>
+      </form>}
       <Link href={`${monthPickerPath}?month=${month}`} title="Chọn tháng"
         className="flex min-h-12 items-center gap-2 rounded-xl border border-input-border bg-primary/5 px-3 font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         <CalendarDays aria-hidden="true" className="size-5" /> {monthLabel} <ChevronDown aria-hidden="true" className="size-4" />

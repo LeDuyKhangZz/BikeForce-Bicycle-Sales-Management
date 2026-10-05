@@ -898,3 +898,7 @@ Route `/sales/customers` yêu cầu vai `SALES`. RLS chỉ trả nhân viên và
 Sales được SELECT/INSERT/UPDATE `misa_customer_monthly_plans` khi `sales_id = auth.uid()` và khách hàng thuộc đúng `misa_employee_id` được ánh xạ qua `profiles.amis_employee_name` của tài khoản Sales đang active. Sales không thể ghi kế hoạch của nhân viên khác; Admin vẫn dùng policy riêng để quản lý toàn bộ. Server Action lặp lại kiểm tra ownership trước khi gọi service.
 
 Sales chỉ được `SELECT` kế hoạch có `sales_id = auth.uid()`. Admin được `SELECT/INSERT/UPDATE`; Server Action tự xác thực lại vai Admin và tự tìm `sales_id` từ ánh xạ tên MISA, không nhận chủ sở hữu từ client.
+
+### Quyền xem doanh số khách hàng report 44 (2026-10-03 — DEC-102)
+
+Admin active được xem toàn bộ `misa_report44_customer_monthly_sales` qua policy dùng `(select public.is_admin())`. Sales active chỉ được xem dòng có `customer_code` thuộc danh sách report 119 của chính mình; policy ánh xạ qua `profiles.amis_employee_name` và khóa mã khách hàng. `anon` không có quyền. `service_role` không có DML trực tiếp; worker chỉ ghi qua RPC security-definer `replace_misa_report44_customer_sales`, function chỉ cấp EXECUTE cho `service_role`.

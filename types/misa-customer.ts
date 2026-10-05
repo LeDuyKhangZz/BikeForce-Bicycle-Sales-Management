@@ -5,6 +5,7 @@ export type MisaCustomer = {
   billingProvince: string;
   debt: number | null;
   orderSales: number | null;
+  report44OrderSales?: number | null;
   recentPurchaseDate: string | null;
   daysWithoutPurchase: number | null;
   lastVisitDate: string | null;

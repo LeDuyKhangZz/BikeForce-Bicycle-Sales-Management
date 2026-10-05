@@ -128,6 +128,7 @@ export async function getCachedMisaEmployeeCustomers(
     alert?: CustomerAlert;
     alertCutoff?: string;
     group?: CustomerRevenueGroup;
+    report44Month?: string;
   },
 ): Promise<MisaCustomerPage | null> {
   const periodMonth = `${params.month}-01`;
@@ -223,9 +224,26 @@ export async function getCachedMisaEmployeeCustomers(
     const committedSales = 'committed_sales' in plan && typeof plan.committed_sales === 'number' ? plan.committed_sales : null;
     planByCustomer.set(plan.misa_customer_id, { monthlyFrequency: plan.monthly_frequency, committedSales });
   }
+  const report44SalesByCustomerCode = new Map<string, number>();
+  const customerCodes = validRows.map((row) => row.code.trim().toUpperCase()).filter((code) => code !== '');
+  if (params.report44Month !== undefined && customerCodes.length > 0) {
+    const salesResult = await supabase.from('misa_report44_customer_monthly_sales')
+      .select('customer_code,order_sales')
+      .eq('period_month', `${params.report44Month}-01`)
+      .in('customer_code', customerCodes);
+    if (salesResult.error) throw new Error(`Không đọc được doanh số report 44: ${salesResult.error.message}`);
+    for (const sale of salesResult.data ?? []) {
+      if (typeof sale !== 'object' || sale === null || !('customer_code' in sale) || typeof sale.customer_code !== 'string' ||
+          !('order_sales' in sale) || typeof sale.order_sales !== 'number' || !Number.isFinite(sale.order_sales)) {
+        throw new Error('Dữ liệu doanh số report 44 không hợp lệ.');
+      }
+      report44SalesByCustomerCode.set(sale.customer_code, sale.order_sales);
+    }
+  }
   return {
     employee: { id: employeeValue.misa_employee_id, name: employeeValue.employee_name, customerCount: employeeValue.customer_count },
-    rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id) })),
+    rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id),
+      report44OrderSales: params.report44Month === undefined ? undefined : report44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null })),
     page: params.page,
     pageSize: PAGE_SIZE,
     total,

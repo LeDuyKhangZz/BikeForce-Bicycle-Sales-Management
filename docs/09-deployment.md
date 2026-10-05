@@ -1273,3 +1273,5 @@ lỗi không retry được; khi phục hồi và toàn bộ chuỗi thành côn
 ### Trang Nhân viên MISA (2026-09-22)
 
 Route `/admin/misa-employees` cần hai biến môi trường server-only `AMIS_BEARER_TOKEN` và `AMIS_COMPANY_CODE`. Token CRM là phiên có hạn; triển khai cloud cần cơ chế cấp lại phiên trước khi trang dùng ổn định. Không đưa hai biến vào `NEXT_PUBLIC_`.
+
+**2026-10-03 — DEC-102:** áp migration `20261003090000_misa_report44_customer_monthly_sales.sql` trước khi chạy `python scripts/amis-sync/fetch_report44.py 2026 8 --write`. Script dùng lại `AMIS_BEARER_TOKEN`, `AMIS_COMPANY_CODE`, `BIKEFORCE_SUPABASE_URL` và `BIKEFORCE_SERVICE_ROLE_KEY`; không thêm biến môi trường. Token/key chỉ nằm trong file gitignored. Lệnh trên thay nguyên tử đúng kỳ `08/2025–08/2026`; không tạo tháng 09–10/2026.

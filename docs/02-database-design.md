@@ -10,6 +10,10 @@
 >
 > **2026-09-25 — ISSUE-054:** Production có bảng nhưng thiếu policy ghi Admin, khiến workbook hợp lệ 241/241 dòng bị `42501`. Migration `20260925110000_restore_admin_manage_misa_customer_plans.sql` tạo lại idempotent policy INSERT/UPDATE Admin và GRANT tương ứng.
 
+> **2026-10-03 — DEC-102:** `misa_report44_customer_monthly_sales` lưu doanh số report 44 theo khóa `(period_month, customer_code)`. Bảng bật/ép RLS, chỉ Admin SELECT. `service_role` không có DML trực tiếp; chỉ execute RPC `replace_misa_report44_customer_sales` để thay nguyên tử một dải tháng. Index `(period_month, customer_name, customer_code)` phục vụ lọc tháng, sắp tên và phân trang.
+>
+> **2026-10-05 — mở rộng DEC-102:** Sales active được SELECT dòng report 44 khi `customer_code` đã xuất hiện trong danh sách report 119 của chính nhân viên đó. Policy ánh xạ `auth.uid() → profiles.amis_employee_name → misa_report119_employees → misa_report119_customers.customer_code`; không mở quyền xem toàn bộ report 44. Index `(customer_code, period_month, misa_employee_id)` hỗ trợ kiểm tra sở hữu.
+
 > **2026-09-23 — DEC-096:** migration `20260923180000_admin_manage_misa_customer_plans.sql` gỡ policy ghi của Sales và cấp INSERT/UPDATE duy nhất cho Admin. Policy SELECT vẫn cho Sales xem dòng của chính mình.
 
 ## Bổ sung 12/09/2026 — DEC-089

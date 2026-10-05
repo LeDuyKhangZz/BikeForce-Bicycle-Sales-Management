@@ -1364,6 +1364,12 @@ Khung lọc desktop rộng 260px; danh sách tiêu chí cao tối đa 320px ho�
 
 Trang chi tiết theo mẫu mới có dải tiêu đề và thẻ tóm tắt nhân viên, bên dưới là bảng khách hàng 10 dòng/trang kèm ô tìm kiếm, kỳ tháng, nút xuất dữ liệu và phân trang số. Bảng có thêm cột thứ tự, hàng xen nền nhạt và số ngày chưa mua trong pill. Bộ lọc rộng 260px ở bên phải từ desktop lớn, vẫn cuộn dọc trong vùng nhỏ; màn hẹp chuyển sang danh sách dọc không cuộn ngang. Nút “Xuất Excel” tạo CSV tương thích Excel cho **trang hiện tại**, không diễn đạt là xuất toàn bộ khách hàng.
 
+### Doanh số khách hàng theo tháng (2026-10-03)
+
+Khối “Doanh số đơn hàng theo khách hàng” trên `/admin/misa-employees` hiển thị report 44 dạng bảng ba cột từ 768px: mã khách hàng, tên khách hàng và doanh số đơn hàng; mobile chuyển thành card dọc, không cuộn ngang. Khối có bộ lọc tháng riêng (`salesMonth`), tìm mã/tên và nút tháng trước/sau chỉ chạy qua các tháng đã đồng bộ, độc lập với tháng của danh sách nhân viên. Mặc định chọn tháng dữ liệu mới nhất; khi chưa có snapshot hiển thị empty state thay vì tự tạo tháng hiện tại hoặc số 0. Mỗi trang 20 dòng, lọc và phân trang server-side.
+
+Trên `/sales/customers`, bộ chọn “Doanh số theo tháng” dùng tham số `salesMonth` độc lập với tháng danh bạ. Mỗi card/bảng khách hàng hiển thị thêm doanh số report 44 đã ghép theo mã; thiếu dữ liệu hiển thị `—`, không ép thành 0 ₫.
+
 ### Sales nhập chỉ tiêu khách hàng trực tiếp (2026-09-25)
 
 **Cập nhật 2026-09-25 (DEC-099):** `/sales/customers` chỉ còn danh sách card; tab `Nhập chỉ tiêu` và mọi CTA dẫn tới bảng nhập đã được gỡ theo yêu cầu người dùng. Card vẫn hiển thị tần suất và doanh số cam kết hiện có dưới dạng chỉ đọc.

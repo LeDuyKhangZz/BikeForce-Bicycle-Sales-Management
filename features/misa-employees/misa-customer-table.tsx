@@ -15,6 +15,7 @@ type Props = {
   month: string;
   salesMobileCards?: boolean;
   alertCutoff: string;
+  report44Month?: string;
 };
 
 function CustomerDormancyBadge({ days }: { days: number | null }) {
@@ -37,7 +38,7 @@ function CustomerDormancyBadge({ days }: { days: number | null }) {
   return <span className="inline-flex min-w-8 items-center justify-center whitespace-nowrap rounded-pill border border-border bg-card px-2 py-0.5 tabular-nums text-heading">{days}<span className="sr-only"> ngày</span></span>;
 }
 
-export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileCards = false, alertCutoff }: Props) {
+export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileCards = false, alertCutoff, report44Month }: Props) {
   const groupTone: Record<CustomerRevenueGroup, 'success' | 'info' | 'warning' | 'neutral'> = {
     A: 'success', B: 'info', C: 'warning', D: 'neutral',
   };
@@ -52,7 +53,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
         <colgroup>
           <col className="w-[3%]" /><col className="w-[7%]" /><col className="w-[11%]" />
           <col className="w-[8%]" /><col className="w-[10%]" /><col className="w-[11%]" />
-          <col className="w-[5%]" /><col className="w-[7%]" /><col className="w-[12%]" />
+          <col className="w-[8%]" /><col className="w-[5%]" /><col className="w-[7%]" /><col className="w-[10%]" />
           <col className="w-[9%]" /><col className="w-[8%]" /><col className="w-[9%]" />
         </colgroup>
         <thead className="bg-primary/5 text-heading">
@@ -63,6 +64,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
             <th scope="col" className="px-2 py-3 font-semibold">Tỉnh/Thành phố (Hóa đơn)</th>
             <th scope="col" className="px-2 py-3 text-right font-semibold">Công nợ</th>
             <th scope="col" className="px-2 py-3 text-right font-semibold">Doanh số đơn hàng</th>
+            <th scope="col" className="px-2 py-3 text-right font-semibold">Doanh số tháng</th>
             <th scope="col" className="px-2 py-3 text-center font-semibold">Nhóm</th>
             <th scope="col" className="px-2 py-3 text-center font-semibold">Tần suất/tháng</th>
             <th scope="col" className="px-2 py-3 text-right font-semibold">Doanh số cam kết</th>
@@ -83,6 +85,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
               <td className="break-words px-2 py-2 align-top">{customer.billingProvince || '—'}</td>
               <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.debt)}</td>
               <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.orderSales)}</td>
+              <td className="break-words px-2 py-2 text-right align-top font-semibold tabular-nums">{formatMisaAmount(customer.report44OrderSales ?? null)}</td>
               <td className="px-2 py-2 text-center align-top"><Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge></td>
               <td className="px-2 py-2 text-center align-top tabular-nums">{frequency} lần</td><td className="px-2 py-2 text-right align-top tabular-nums">{customer.committedSales === undefined || customer.committedSales === null ? 'Chưa cam kết' : formatMisaAmount(customer.committedSales)}</td>
               <td className="whitespace-nowrap px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</td>
@@ -116,9 +119,10 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
                     </div>
                   </div>
 
-                  <dl className="mt-4 grid grid-cols-3 gap-2">
+                  <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div className="min-w-0 rounded-xl bg-status-exceeded-bg p-2.5 text-status-exceeded-fg"><dt className="flex items-center gap-1 text-[11px]"><Coins aria-hidden="true" className="size-4 shrink-0" />Công nợ</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.debt)}</dd></div>
                     <div className="min-w-0 rounded-xl bg-status-info-bg p-2.5 text-status-info-fg"><dt className="flex items-center gap-1 text-[11px]"><BarChart3 aria-hidden="true" className="size-4 shrink-0" />Doanh số</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.orderSales)}</dd></div>
+                    <div className="min-w-0 rounded-xl bg-primary/10 p-2.5 text-primary"><dt className="flex items-center gap-1 text-[11px]"><BarChart3 aria-hidden="true" className="size-4 shrink-0" />{report44Month ? `Tháng ${report44Month.slice(5, 7)}` : 'Theo tháng'}</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.report44OrderSales ?? null)}</dd></div>
                     <div className="min-w-0 rounded-xl bg-primary/5 p-2.5 text-heading"><dt className="flex items-center gap-1 text-[11px] text-muted-foreground"><ShoppingCart aria-hidden="true" className="size-4 shrink-0 text-primary" />Mua gần nhất</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div>
                   </dl>
 

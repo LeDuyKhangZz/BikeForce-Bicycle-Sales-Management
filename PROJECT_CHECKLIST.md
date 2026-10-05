@@ -1341,3 +1341,9 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 Theo yêu cầu người dùng, hoàn tác toàn bộ commit `9e1cae8` bằng `6dcadc3`. Đã kiểm tra cây file sau revert khớp chính xác `16e831a` (git diff exit 0). Giữ cảnh báo khách hàng và nút nhóm A/B/C/D. Không chạy lại build/test vì khôi phục nguyên trạng bản đã kiểm thử; không ghi nhận kết quả mới.
 
 Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh số tháng trước, không tự triển khai tiếp. Chưa push.
+
+## 2026-10-05 — AMIS report 44 theo tháng
+
+- [x] Lưu report 44 theo `(period_month, customer_code)` và ghép vào khách hàng Sales.
+- [x] Thêm bộ chọn `salesMonth`, giữ cảnh báo và bộ lọc A/B/C/D trên `origin/main`.
+- [x] Thêm RLS chỉ cho Sales xem mã khách thuộc mình.

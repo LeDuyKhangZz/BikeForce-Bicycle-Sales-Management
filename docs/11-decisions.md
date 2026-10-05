@@ -2838,6 +2838,15 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Status:** APPROVED
 - **Status:** APPROVED — yêu cầu trực tiếp của người dùng.
 
+## DEC-102 — Lấy doanh số khách hàng theo tháng từ AMIS CRM report 44/0
+
+- **Date:** 2026-10-05
+- **Decision:** Lưu report 44 trong `misa_report44_customer_monthly_sales`, khóa `(period_month, customer_code)`; Sales chọn `salesMonth` và chỉ xem mã khách thuộc danh sách của mình qua RLS.
+- **Reason:** Report 44 là nguồn doanh số lịch sử theo tháng, trong khi report 119 là danh bạ phụ trách.
+- **Alternatives:** Ghép theo tên hoặc ghi đè `order_sales` report 119 bị loại vì không bền vững và lệch kỳ.
+- **Impact:** Thêm migration, script đồng bộ, service report 44, bộ chọn tháng và policy ownership.
+- **Status:** APPROVED — yêu cầu trực tiếp của người dùng.
+
 
 ## DEC-102 — Cảnh báo khách hàng chưa mua hàng hoặc chưa được chăm sóc
 

@@ -19,6 +19,7 @@ import { report119Period } from '@/lib/amis/report119-period';
 import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { getCachedMisaCustomerCommitmentStats, getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeByName, getCachedMisaEmployeeCustomers, type MisaCustomerCommitmentStats, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
+import { listMisaReport44Months } from '@/services/misa-report44';
 import type { MisaCustomerPage } from '@/services/misa-report119';
 
 export const metadata: Metadata = { title: 'Khách hàng của tôi · BikeForce' };
@@ -38,6 +39,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   const group = parseCustomerRevenueGroup(search.group);
   const alertCutoff = customerAlertCutoff(month);
   const searchQuery = search.q?.trim().slice(0, 120) ?? '';
+  const requestedSalesMonth = search.salesMonth;
   const previousMonth = shiftVietnamMonth(month, -1);
   const candidateNextMonth = shiftVietnamMonth(month, 1);
   const nextMonth = candidateNextMonth !== null && candidateNextMonth <= getVietnamCurrentMonth() ? candidateNextMonth : null;
@@ -48,6 +50,8 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   let commitmentStats: MisaCustomerCommitmentStats = { total: 0, committed: 0, uncommitted: 0 };
   let error: string | null = null;
   let alertCounts: CustomerAlertCounts = { purchase: 0, care: 0 };
+  let salesMonths: string[] = [];
+  let selectedSalesMonth: string | undefined;
   if (report119Period(month) === null || !Number.isSafeInteger(page) || page <= 0) {
     error = 'Tháng hoặc trang không hợp lệ.';
   } else if (!profile.amis_employee_name) {
@@ -55,12 +59,14 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   } else {
     try {
       const supabase = await createClient();
+      salesMonths = await listMisaReport44Months(supabase);
+      selectedSalesMonth = requestedSalesMonth && salesMonths.includes(requestedSalesMonth) ? requestedSalesMonth : salesMonths[0];
       const employee = await getCachedMisaEmployeeByName(supabase, month, profile.amis_employee_name);
       if (employee === null) {
         error = `Chưa có dữ liệu MISA của ${profile.amis_employee_name} trong ${formatVietnamMonth(month)}.`;
       } else {
         [result, groupCounts, commitmentStats, alertCounts] = await Promise.all([
-          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group }),
+          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group, report44Month: selectedSalesMonth }),
           getCachedMisaCustomerGroupCounts(supabase, month, employee.id),
           getCachedMisaCustomerCommitmentStats(supabase, month, employee.id, employee.customerCount),
           getMisaCustomerAlertCounts(supabase, month, employee.id, alertCutoff),
@@ -73,7 +79,11 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   }
 
   const employeeId = result?.employee.id ?? 0;
-  const pageHref = (target: number) => `${path}?${misaCustomerQuery(month, filters, target, searchQuery, alert, group)}`;
+  const pageHref = (target: number) => {
+    const params = new URLSearchParams(misaCustomerQuery(month, filters, target, searchQuery, alert, group));
+    if (selectedSalesMonth) params.set('salesMonth', selectedSalesMonth);
+    return `${path}?${params.toString()}`;
+  };
   const firstRow = result ? (result.page - 1) * result.pageSize : 0;
   const lastRow = result ? Math.min(firstRow + result.rows.length, result.total) : 0;
 
@@ -99,12 +109,12 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
       ) : result ? (
         <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card flush className="min-w-0 overflow-hidden rounded-2xl">
-            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} />
+            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} />
             {result.rows.length === 0 ? (
               <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
             ) : (
               <>
-                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} />
+                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} report44Month={selectedSalesMonth} />
                 <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
                   <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
                   <div className="flex items-center gap-2">

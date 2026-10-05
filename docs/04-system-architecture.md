@@ -717,3 +717,7 @@ Module Admin và route ảnh tổng kết tháng vẫn dùng `getMonthlySalary()
 ## Worker đồng bộ tháng (DEC-082)
 
 Vercel không giữ profile trình duyệt SaleWork/AMIS nên chỉ ghi yêu cầu vào `monthly_sync_jobs` bằng server client chịu RLS. Worker chạy trên máy Windows đã đăng nhập, dùng service role riêng cho bảng hàng đợi và các bảng tích hợp hiện hữu. `scripts/salework-monthly-sync.ts` kích hoạt `MONTH_ONLY`; script ngày giữ đường chạy riêng. Không dùng `child_process` trong Server Action hoặc Route Handler.
+
+**DEC-102:** Report 44 được lưu riêng trong `misa_report44_customer_monthly_sales`, tách khỏi snapshot report 119 vì hai nguồn có phạm vi tháng khác nhau. Script tích hợp thay nguyên tử cả dải 13 tháng qua RPC service-role-only. Trang Admin đọc bằng session client chịu RLS qua `services/misa-report44.ts`; component không gọi Supabase hoặc tự lọc dữ liệu.
+
+Trang `/sales/customers` cũng đọc report 44 bằng session client chịu RLS. Service chỉ lấy doanh số của các `customer_code` trên trang hiện tại và ghép vào view model; không truyền Supabase client xuống component.

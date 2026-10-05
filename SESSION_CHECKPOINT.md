@@ -2734,3 +2734,7 @@ Theo yêu cầu người dùng, ẩn Trần Minh Hải và Võ Trí Tính tại 
 Kiểm chứng: build, typecheck, lint exit 0; test điều hướng tháng 2/2 pass; kiểm tra trực tiếp helper loại đúng hai tên và giữ người khác exit 0. Chưa kiểm chứng giao diện bằng phiên Admin tại 375px.
 
 Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác nhận hai tên biến mất và tổng giảm từ 11 xuống 9 với dữ liệu trong ảnh.
+
+## 2026-10-05 — Report 44
+
+`/sales/customers` đã ghép report 44 theo `customer_code` và có bộ chọn `salesMonth`. Migration có policy Sales-own. Next Exact Steps: áp migration/snapshot production, regenerate database types và chạy RLS Sales A/B khi Docker local sẵn sàng.
