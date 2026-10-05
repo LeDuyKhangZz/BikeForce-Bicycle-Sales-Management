@@ -2767,4 +2767,6 @@ Danh sách ngoài popup dùng toolbar/card mới dưới 768px, desktop giữ ng
 
 Report 44 hiện chọn được từ 08/2025 tới tháng hiện tại (10/2026), mặc định hiện tại. Kỳ chưa đồng bộ vẫn chọn được; thiếu số → `—`, 0 thật → `0 ₫`. Đã đồng bộ 950 mã/12.350 dòng kỳ 10/2025–10/2026; AMIS tháng 9 có 220 mã có số khác 0, tháng 10 có 5. Build/typecheck/lint exit 0, 4 unit pass. Next Exact Steps: trên LAN tải lại và chọn tháng 09/2026 để kiểm tra doanh số khách theo mã; tháng hiện tại tự tăng theo lịch nhưng số liệu cần tiếp tục đồng bộ theo kỳ.
 
+Nhóm doanh số mobile A/B/C/D đã xếp 4 cột trên một hàng, desktop giữ nguyên. Typecheck/lint exit 0. Next Exact Steps: tải lại LAN kiểm tra bốn nút ở 375px và bấm từng nhóm mở popup.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.
