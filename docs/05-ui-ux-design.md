@@ -1433,6 +1433,8 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 ### 2026-10-05 — Thu gọn nút tóm tắt trên mobile
 
+Toolbar popup: nút kính lúp submit nằm bên phải input, có vùng chạm 44px; calendar/select/chevron dùng flex với icon riêng, không đè absolute lên chữ tháng. Input giữ 16px và chiều cao 48px, select đổi tháng tự submit và giữ query hiện tại.
+
 Nội dung popup theo ảnh tham chiếu: header icon/tiêu đề/mô tả, search riêng, chọn tháng doanh số và xuất CSV mở bằng Excel cùng một hàng; chọn tháng tự submit, không thêm nút Xem. Ghi rõ kỳ danh sách để phân biệt snapshot và report 44. Thẻ khách có số thứ tự, mã/tên/tỉnh, nhóm và bốn ô công nợ/doanh số/doanh số tháng/mua gần nhất; số tiền rút gọn theo triệu qua helper lib. Thông tin chăm sóc/tần suất/cam kết nằm trong details mở bằng header khách. Admin và danh sách ngoài popup giữ UI cũ.
 
 Popup kết quả render bằng React portal vào `document.body`, neo phía trên viewport cách 8px và dùng lớp dialog `z-index: 100`. Không đặt fixed dialog trong `main.animate-rise-in`, tránh ảnh hưởng containing block/stacking context của animation; bottom nav nằm dưới popup.

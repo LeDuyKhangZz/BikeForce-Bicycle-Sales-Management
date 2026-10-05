@@ -51,21 +51,21 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
         })}
         <div>
           <label htmlFor="popup-customer-search" className="mb-1 block text-xs font-medium text-muted-foreground">Tìm khách hàng</label>
-          <div className="relative">
-            <input id="popup-customer-search" name="q" type="search" defaultValue={searchQuery} maxLength={120} placeholder="Mã, tên khách hàng hoặc địa chỉ…" className="min-h-12 w-full rounded-full border border-input-border bg-primary/5 pl-11 pr-3 text-base focus-visible:outline-2 focus-visible:outline-ring" />
-            <button type="submit" aria-label="Tìm khách hàng" className="absolute inset-y-0 left-0 grid w-11 place-items-center rounded-full text-primary focus-visible:outline-2 focus-visible:outline-ring"><Search aria-hidden="true" className="size-5" /></button>
+          <div className="flex items-center gap-1 rounded-full border border-input-border bg-primary/5 pl-3 pr-1">
+            <input id="popup-customer-search" name="q" type="search" defaultValue={searchQuery} maxLength={120} enterKeyHint="search" placeholder="Mã, tên khách hàng hoặc địa chỉ…" className="min-h-12 min-w-0 flex-1 rounded-full bg-transparent text-base focus-visible:outline-2 focus-visible:outline-ring" />
+            <button type="submit" aria-label="Tìm khách hàng" className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-ring"><Search aria-hidden="true" className="size-5" /></button>
           </div>
         </div>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
           <div className="min-w-0">
             <label htmlFor="popup-sales-month" className="mb-1 block text-xs font-medium text-muted-foreground">Doanh số theo tháng</label>
-            <div className="relative">
-              <CalendarDays aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" />
-              <select id="popup-sales-month" name="salesMonth" defaultValue={selectedSalesMonth} disabled={salesMonths.length === 0} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="min-h-12 w-full min-w-0 appearance-none rounded-full border border-input-border bg-primary/5 pl-9 pr-7 text-base font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring">
+            <div className="flex min-h-12 min-w-0 items-center gap-1 rounded-full border border-input-border bg-primary/5 px-2 text-primary focus-within:outline-2 focus-within:outline-ring">
+              <CalendarDays aria-hidden="true" className="pointer-events-none size-4 shrink-0" />
+              <select id="popup-sales-month" name="salesMonth" defaultValue={selectedSalesMonth} disabled={salesMonths.length === 0} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="min-h-12 min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-base font-semibold text-primary focus:outline-none">
                 {salesMonths.length === 0 && <option value="">Chưa có dữ liệu</option>}
                 {salesMonths.map((salesMonth) => <option key={salesMonth} value={salesMonth}>{formatVietnamMonth(salesMonth)}</option>)}
               </select>
-              <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-primary" />
+              <ChevronDown aria-hidden="true" className="pointer-events-none size-3 shrink-0" />
             </div>
           </div>
           <button type="button" onClick={exportPage} title="Xuất trang hiện tại thành CSV mở bằng Excel" className="flex min-h-12 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-brand-sm hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-ring"><Download aria-hidden="true" className="size-4" />Xuất Excel</button>

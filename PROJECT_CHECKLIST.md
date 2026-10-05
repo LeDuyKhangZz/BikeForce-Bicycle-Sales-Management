@@ -1358,4 +1358,5 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Nâng popup mobile sát mép trên viewport, chỉ chừa 8px.
 - [x] Đưa popup vào body bằng portal và neo trên viewport để tránh animation của main và bottom nav che phủ.
 - [x] Sắp nội dung popup theo ảnh tham chiếu: search riêng, tháng/xuất một hàng, thẻ khách gọn và details thông tin bổ sung.
+- [x] Sửa icon lịch chồng chữ tháng; đặt nút tìm kiếm submit sang bên phải ô nhập.
 - [x] Sửa allowedDevOrigins cho IP LAN 192.168.1.7; xác minh CSS/JS trả 200 và khởi động lại server.

@@ -2761,4 +2761,6 @@ Popup mobile hiện cao `calc(100dvh - 8px)`, cách mép trên viewport 8px. Typ
 
 Popup đã có toolbar/card compact theo ảnh: tìm kiếm Enter, chọn tháng tự submit, xuất CSV mở bằng Excel, bốn metric/card và details thông tin bổ sung. Build/typecheck/lint exit 0. Next Exact Steps: kiểm tra trên điện thoại search/chọn tháng/export/mở details trong phiên Sales thật.
 
+Toolbar đã sửa calendar/select thành flex để tránh chồng chữ; nút kính lúp bên phải submit điều kiện tìm kiếm. Typecheck/lint exit 0; CSS LAN trả 200. Next Exact Steps: tải lại điện thoại, nhập mã khách và bấm kính lúp, kiểm tra chữ tháng không bị icon che.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.
