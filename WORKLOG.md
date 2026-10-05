@@ -3877,4 +3877,6 @@ Report 44: thêm helper sinh tháng tới hiện tại, mặc định hiện t�
 
 Chuyển nhóm doanh số A/B/C/D mobile sang 4 cột cùng một hàng, giữ chiều cao 44px và gap 8px; desktop không đổi. Typecheck/lint exit 0.
 
+Ảnh điện thoại xác nhận kiểu sm lớn vẫn áp dụng: globals.css định nghĩa sm=375px. Chuyển responsive summary từ sm sang md=768px; nhóm luôn 4 cột, nút đỏ nhãn ngắn và số đếm nowrap, desktop span h-auto để tránh tràn. Typecheck/lint exit 0; chưa kiểm chứng lại trên điện thoại thật.
+
 Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.168.1.7` khiến CSS/JS trả 403 khi có Origin từ điện thoại. Bổ sung IP và khởi động lại dev server trên `0.0.0.0:3000`; kiểm tra thực tế 4 asset CSS/JS với Origin LAN đều trả 200.

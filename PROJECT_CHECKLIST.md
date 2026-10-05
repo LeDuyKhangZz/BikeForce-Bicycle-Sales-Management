@@ -1362,4 +1362,5 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Thiết kế lại danh sách ngoài popup riêng trên mobile theo ảnh; desktop giữ nguyên.
 - [x] Bộ chọn report 44 mở đến tháng hiện tại dù chưa đồng bộ; lấy thêm dữ liệu tháng 9–10/2026.
 - [x] Thu bốn nút A/B/C/D trên mobile về một hàng 4 cột.
+- [x] Sửa breakpoint sm=375px gây kiểu desktop trên điện thoại; cảnh báo căn nhãn và số đếm ngay ngắn.
 - [x] Sửa allowedDevOrigins cho IP LAN 192.168.1.7; xác minh CSS/JS trả 200 và khởi động lại server.

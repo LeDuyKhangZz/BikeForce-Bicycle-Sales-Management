@@ -12,17 +12,17 @@ export function CustomerAlertSummary({ counts, path, month, active }: Props) {
     { key: 'care', label: 'Từ 30 ngày chưa chăm sóc', count: counts.care, icon: Store },
   ] as const;
   return (
-    <section aria-label="Cảnh báo khách hàng" className="min-w-0 rounded-xl border border-border bg-card p-2 sm:rounded-2xl sm:p-4">
-      <h2 className="flex items-center gap-1 text-sm font-bold text-heading sm:gap-2 sm:text-lg"><AlertTriangle aria-hidden="true" className="size-3.5 text-destructive sm:size-5" />Khách hàng cần quan tâm</h2>
-      <p className="mt-1 hidden text-sm text-muted-foreground sm:block">Toàn bộ khách hàng trong tháng đang xem. Chăm sóc tính theo ngày ghé thăm, gồm khách chưa có ngày ghé thăm.</p>
-      <div className="mt-1 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3">
+    <section aria-label="Cảnh báo khách hàng" className="min-w-0 rounded-xl border border-border bg-card p-2 md:rounded-2xl md:p-4">
+      <h2 className="flex items-center gap-1 text-sm font-bold text-heading md:gap-2 md:text-lg"><AlertTriangle aria-hidden="true" className="size-3.5 text-destructive md:size-5" />Khách hàng cần quan tâm</h2>
+      <p className="mt-1 hidden text-sm text-muted-foreground md:block">Toàn bộ khách hàng trong tháng đang xem. Chăm sóc tính theo ngày ghé thăm, gồm khách chưa có ngày ghé thăm.</p>
+      <div className="mt-1 grid grid-cols-2 gap-2 md:mt-3 md:gap-3">
         {items.map(({ key, label, count, icon: Icon }) => (
           <Link key={key} href={`${path}?${misaCustomerQuery(month, {}, 1, undefined, key)}`}
-            aria-current={active === key ? 'true' : undefined}
-            className="flex h-[30px] min-w-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-auto sm:min-h-24">
-            <span className={`flex h-[30px] w-full min-w-0 items-center gap-1 rounded-md border border-input-border px-1 sm:min-h-24 sm:gap-3 sm:rounded-xl sm:p-4 ${active === key ? 'ring-2 ring-destructive' : ''} ${count > 0 ? 'bg-status-missed-bg text-status-missed-fg' : 'bg-primary/5 text-heading'}`}>
-              <span className="grid size-5 shrink-0 place-items-center rounded bg-card/60 sm:contents"><Icon aria-hidden="true" className="size-3 sm:size-6" /></span>
-              <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold leading-none tabular-nums sm:text-2xl">{count} khách</span><span className="block text-[8px] leading-none sm:mt-0.5 sm:text-sm sm:leading-tight">{label}</span><span className="mt-1 hidden text-xs underline sm:block">Xem danh sách</span></span>
+            aria-current={active === key ? 'true' : undefined} aria-label={`${count} khách: ${label}`}
+            className="flex h-[30px] min-w-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-auto md:min-h-24">
+            <span className={`flex h-[30px] w-full min-w-0 items-center gap-1.5 rounded-md border border-input-border px-1.5 md:h-auto md:min-h-24 md:gap-3 md:rounded-xl md:p-4 ${active === key ? 'ring-2 ring-destructive' : ''} ${count > 0 ? 'bg-status-missed-bg text-status-missed-fg' : 'bg-primary/5 text-heading'}`}>
+              <span className="grid size-5 shrink-0 place-items-center rounded bg-card/60 md:contents"><Icon aria-hidden="true" className="size-3 md:size-6" /></span>
+              <span className="min-w-0 flex-1 text-left"><span className="block whitespace-nowrap text-[10px] font-bold leading-[12px] tabular-nums md:whitespace-normal md:text-2xl md:leading-tight">{count} khách</span><span className="block whitespace-nowrap text-[8px] leading-[10px] md:hidden">{key === 'purchase' ? '30 ngày chưa mua hàng' : '30 ngày chưa chăm sóc'}</span><span className="mt-0.5 hidden text-sm leading-tight md:block">{label}</span><span className="mt-1 hidden text-xs underline md:block">Xem danh sách</span></span>
             </span>
           </Link>
         ))}

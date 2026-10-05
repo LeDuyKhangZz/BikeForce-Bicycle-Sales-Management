@@ -15,17 +15,17 @@ const GROUPS = [
 
 export function CustomerGroupSummary({ counts, path, month, active }: Props) {
   return (
-    <section aria-labelledby="customer-groups-title" className="rounded-xl border border-border bg-card p-2 shadow-sm sm:rounded-2xl sm:p-4">
-      <h2 id="customer-groups-title" className="text-sm font-bold text-heading sm:text-lg">Phân nhóm doanh số</h2>
-      <div className="mt-1.5 grid grid-cols-4 gap-2 sm:mt-3 sm:grid-cols-2 sm:gap-3 md:grid-cols-4">
+    <section aria-labelledby="customer-groups-title" className="rounded-xl border border-border bg-card p-2 shadow-sm md:rounded-2xl md:p-4">
+      <h2 id="customer-groups-title" className="text-sm font-bold text-heading md:text-lg">Phân nhóm doanh số</h2>
+      <div className="mt-1.5 grid grid-cols-4 gap-2 md:mt-3 md:gap-3">
         {GROUPS.map((group) => (
           <Link key={group.key} href={`${path}?${misaCustomerQuery(month, {}, 1, undefined, undefined, group.key)}`}
             aria-label={`Xem nhóm ${group.key}: ${counts[group.key]} khách hàng`} aria-current={active === group.key ? 'true' : undefined}
-            className={`flex min-h-11 min-w-0 flex-col items-center justify-center rounded-lg border border-input-border px-0.5 py-0.5 text-center sm:min-h-28 sm:rounded-xl sm:p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${group.surface} ${active === group.key ? 'ring-2 ring-primary' : ''}`}>
-            <Badge tone={group.tone} className="size-4 justify-center rounded-full p-0 text-[8px] sm:size-9 sm:text-base">{group.key}</Badge>
-            <p className="text-[8px] font-medium leading-none sm:mt-2 sm:text-xs sm:leading-tight">{group.rule}</p>
-            <p className="text-[10px] font-bold leading-none tabular-nums sm:mt-1 sm:text-base">{counts[group.key]} KH</p>
-            <span className="mt-1 hidden text-xs underline sm:block">Xem danh sách</span>
+            className={`flex min-h-11 min-w-0 flex-col items-center justify-center rounded-lg border border-input-border px-0.5 py-0.5 text-center md:min-h-28 md:rounded-xl md:p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${group.surface} ${active === group.key ? 'ring-2 ring-primary' : ''}`}>
+            <Badge tone={group.tone} className="size-4 justify-center rounded-full p-0 text-[8px] md:size-9 md:text-base">{group.key}</Badge>
+            <p className="text-[8px] font-medium leading-none md:mt-2 md:text-xs md:leading-tight">{group.rule}</p>
+            <p className="text-[10px] font-bold leading-none tabular-nums md:mt-1 md:text-base">{counts[group.key]} KH</p>
+            <span className="mt-1 hidden text-xs underline md:block">Xem danh sách</span>
           </Link>
         ))}
       </div>
