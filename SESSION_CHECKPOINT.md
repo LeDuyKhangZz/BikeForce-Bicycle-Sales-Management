@@ -2738,3 +2738,27 @@ Next Exact Steps: tải lại `/admin/misa-employees` bằng phiên Admin, xác 
 ## 2026-10-05 — Report 44
 
 `/sales/customers` đã ghép report 44 theo `customer_code` và có bộ chọn `salesMonth`. Migration có policy Sales-own. Next Exact Steps: áp migration/snapshot production, regenerate database types và chạy RLS Sales A/B khi Docker local sẵn sàng.
+
+UI mobile của thẻ cảnh báo và nhóm doanh số đã được thu gọn; icon mũi tên đã bỏ. Typecheck/lint PASS; cần xác minh trực quan ở viewport 375px sau khi đăng nhập.
+
+Kết quả khi bấm cảnh báo hoặc A/B/C/D đã chuyển sang `CustomerResultsDialog`: bottom sheet mobile, dialog desktop, cuộn nội bộ và đóng bằng X/backdrop/Escape. Typecheck/lint PASS; cần xác minh trực quan 375px sau đăng nhập.
+
+Popup dùng page size 100; layout Sales đã bỏ header danh tính/đăng xuất. Đăng xuất vẫn có trong `/sales/account`. Typecheck/lint PASS.
+
+Bottom sheet mobile đã đổi sang chiều cao cố định `92dvh`, có safe-area và `z-index` cao hơn bottom nav; không còn khoảng trống khiến popup lệch xuống 1/3 màn hình. Typecheck/lint PASS.
+
+Thẻ cảnh báo mobile đã trở lại bố cục hai hàng như cũ, mỗi hàng khoảng 56px; nhóm doanh số giữ lưới 2×2 và được thu về cùng mật độ. Desktop không đổi. Typecheck/lint PASS.
+
+Đã thu tiếp các thẻ mobile tới touch target tối thiểu 44px, đồng thời giảm icon/chữ/padding; không áp dụng chiều cao 15px vì không thể bấm an toàn. Desktop không đổi. Typecheck/lint PASS.
+
+Hai nút cảnh báo mobile đã chuyển sang nằm cạnh nhau trên cùng một hàng; mỗi nút vẫn giữ touch target 44px.
+
+Sau xác nhận trực tiếp của người dùng, hai nút cảnh báo mobile hiện cao thực tế đúng 30px (ngoại lệ cục bộ touch target); desktop không đổi. Typecheck/lint PASS.
+
+Popup mobile hiện cao `calc(100dvh - 8px)`, cách mép trên viewport 8px. Typecheck/lint exit 0. Next Exact Steps: tải lại trang khách hàng trên điện thoại và kiểm tra cuộn danh sách trong popup; chưa kiểm chứng trực quan trên thiết bị.
+
+Đã sửa vị trí popup bằng portal vào document.body, tránh stacking context của main.animate-rise-in; neo trên 8px và z-index 100 cao hơn nav. Typecheck/lint exit 0. Next Exact Steps: tải lại trang LAN trên điện thoại và mở cảnh báo để kiểm tra vị trí thực tế.
+
+Popup đã có toolbar/card compact theo ảnh: tìm kiếm Enter, chọn tháng tự submit, xuất CSV mở bằng Excel, bốn metric/card và details thông tin bổ sung. Build/typecheck/lint exit 0. Next Exact Steps: kiểm tra trên điện thoại search/chọn tháng/export/mở details trong phiên Sales thật.
+
+LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.

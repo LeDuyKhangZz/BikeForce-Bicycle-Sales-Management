@@ -721,3 +721,5 @@ Vercel không giữ profile trình duyệt SaleWork/AMIS nên chỉ ghi yêu c�
 **DEC-102:** Report 44 được lưu riêng trong `misa_report44_customer_monthly_sales`, tách khỏi snapshot report 119 vì hai nguồn có phạm vi tháng khác nhau. Script tích hợp thay nguyên tử cả dải 13 tháng qua RPC service-role-only. Trang Admin đọc bằng session client chịu RLS qua `services/misa-report44.ts`; component không gọi Supabase hoặc tự lọc dữ liệu.
 
 Trang `/sales/customers` cũng đọc report 44 bằng session client chịu RLS. Service chỉ lấy doanh số của các `customer_code` trên trang hiện tại và ghép vào view model; không truyền Supabase client xuống component.
+
+Layout Sales không còn header danh tính/đăng xuất. Guard `requireRole('SALES')` vẫn chạy server-side; đăng xuất được thực hiện tại `/sales/account` từ tab Tài khoản.

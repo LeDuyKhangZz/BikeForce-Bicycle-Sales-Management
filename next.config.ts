@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   agentRules: false,
 
   // Cho phép điện thoại cùng Wi-Fi tải client chunks khi chạy `next dev` qua IP LAN.
-  allowedDevOrigins: ['192.168.1.74'],
+  allowedDevOrigins: ['192.168.1.74', '192.168.1.7'],
 
   /**
    * ⚠ Bắt buộc cho các route dùng package native (.node binary) như

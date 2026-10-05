@@ -11,6 +11,7 @@ import { MisaCustomerTable } from '@/features/misa-employees/misa-customer-table
 import { MisaCustomerToolbar } from '@/features/misa-employees/misa-customer-toolbar';
 import { CustomerGroupSummary } from '@/features/misa-employees/customer-group-summary';
 import { CustomerCommitmentProgress } from '@/features/misa-employees/customer-commitment-progress';
+import { CustomerResultsDialog } from '@/features/misa-employees/customer-results-dialog';
 import { CustomerAlertSummary } from '@/features/misa-employees/customer-alert-summary';
 import { customerAlertCutoff, parseCustomerAlert, type CustomerAlertCounts } from '@/lib/amis/customer-alerts';
 import { getMisaCustomerAlertCounts } from '@/services/misa-customer-alerts';
@@ -66,7 +67,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
         error = `Chưa có dữ liệu MISA của ${profile.amis_employee_name} trong ${formatVietnamMonth(month)}.`;
       } else {
         [result, groupCounts, commitmentStats, alertCounts] = await Promise.all([
-          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group, report44Month: selectedSalesMonth }),
+          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group, report44Month: selectedSalesMonth, pageSize: alert || group ? 100 : undefined }),
           getCachedMisaCustomerGroupCounts(supabase, month, employee.id),
           getCachedMisaCustomerCommitmentStats(supabase, month, employee.id, employee.customerCount),
           getMisaCustomerAlertCounts(supabase, month, employee.id, alertCutoff),
@@ -86,6 +87,36 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   };
   const firstRow = result ? (result.page - 1) * result.pageSize : 0;
   const lastRow = result ? Math.min(firstRow + result.rows.length, result.total) : 0;
+  const closeParams = new URLSearchParams({ month });
+  if (selectedSalesMonth) closeParams.set('salesMonth', selectedSalesMonth);
+  const closeHref = `${path}?${closeParams.toString()}`;
+  const dialogTitle = alert === 'purchase'
+    ? 'Khách từ 30 ngày chưa mua hàng'
+    : alert === 'care'
+      ? 'Khách từ 30 ngày chưa chăm sóc'
+      : group
+        ? `Khách hàng nhóm ${group}`
+        : '';
+  const customerResults = result ? (
+    <Card flush className={`min-w-0 overflow-hidden rounded-2xl ${alert || group ? 'border-0 shadow-none' : ''}`}>
+      <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} compact={Boolean(alert || group)} />
+      {result.rows.length === 0 ? (
+        <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
+      ) : (
+        <>
+          <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} report44Month={selectedSalesMonth} compact={Boolean(alert || group)} />
+          <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
+            <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
+            <div className="flex items-center gap-2">
+              {result.page > 1 && <Link href={pageHref(result.page - 1)} className={buttonClassName({ variant: 'secondary' })}>Trước</Link>}
+              <span className="tabular-nums text-muted-foreground">{result.page}/{result.totalPages}</span>
+              {result.page < result.totalPages && <Link href={pageHref(result.page + 1)} className={buttonClassName({ variant: 'secondary' })}>Sau</Link>}
+            </div>
+          </nav>
+        </>
+      )}
+    </Card>
+  ) : null;
 
   return (
     <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:max-w-[1600px] xl:-translate-x-1/2">
@@ -107,27 +138,9 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} /><div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <Card flush className="min-w-0 overflow-hidden rounded-2xl">
-            <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} />
-            {result.rows.length === 0 ? (
-              <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
-            ) : (
-              <>
-                <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} report44Month={selectedSalesMonth} />
-                <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
-                  <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
-                  <div className="flex items-center gap-2">
-                    {result.page > 1 && <Link href={pageHref(result.page - 1)} className={buttonClassName({ variant: 'secondary' })}>Trước</Link>}
-                    <span className="tabular-nums text-muted-foreground">{result.page}/{result.totalPages}</span>
-                    {result.page < result.totalPages && <Link href={pageHref(result.page + 1)} className={buttonClassName({ variant: 'secondary' })}>Sau</Link>}
-                  </div>
-                </nav>
-              </>
-            )}
-          </Card>
-          <CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} />
-        </div></>
+        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} />
+          {alert || group ? <CustomerResultsDialog title={dialogTitle} closeHref={closeHref}>{customerResults}</CustomerResultsDialog> : <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">{customerResults}<CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} /></div>}
+        </>
       ) : null}
     </div>
   );

@@ -25,9 +25,10 @@ type Props = {
   group?: CustomerRevenueGroup;
   salesMonths?: string[];
   selectedSalesMonth?: string;
+  compact?: boolean;
 };
 
-export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth, compact = false }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -37,6 +38,42 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+
+  if (compact) return (
+    <div className="space-y-3 p-3 sm:p-4">
+      <form action={path} method="get" className="space-y-3">
+        <input type="hidden" name="month" value={month} />
+        {alert && <input type="hidden" name="alert" value={alert} />}
+        {group && <input type="hidden" name="group" value={group} />}
+        {MISA_CUSTOMER_FILTER_FIELDS.flatMap((field) => {
+          const filter = filters[field.key];
+          return filter ? [<input key={`${field.key}-use`} type="hidden" name={`use_${field.key}`} value="1" />, <input key={`${field.key}-op`} type="hidden" name={`op_${field.key}`} value={filter.operator} />, <input key={field.key} type="hidden" name={field.key} value={filter.value} />] : [];
+        })}
+        <div>
+          <label htmlFor="popup-customer-search" className="mb-1 block text-xs font-medium text-muted-foreground">Tìm khách hàng</label>
+          <div className="relative">
+            <input id="popup-customer-search" name="q" type="search" defaultValue={searchQuery} maxLength={120} placeholder="Mã, tên khách hàng hoặc địa chỉ…" className="min-h-12 w-full rounded-full border border-input-border bg-primary/5 pl-11 pr-3 text-base focus-visible:outline-2 focus-visible:outline-ring" />
+            <button type="submit" aria-label="Tìm khách hàng" className="absolute inset-y-0 left-0 grid w-11 place-items-center rounded-full text-primary focus-visible:outline-2 focus-visible:outline-ring"><Search aria-hidden="true" className="size-5" /></button>
+          </div>
+        </div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+          <div className="min-w-0">
+            <label htmlFor="popup-sales-month" className="mb-1 block text-xs font-medium text-muted-foreground">Doanh số theo tháng</label>
+            <div className="relative">
+              <CalendarDays aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" />
+              <select id="popup-sales-month" name="salesMonth" defaultValue={selectedSalesMonth} disabled={salesMonths.length === 0} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="min-h-12 w-full min-w-0 appearance-none rounded-full border border-input-border bg-primary/5 pl-9 pr-7 text-base font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring">
+                {salesMonths.length === 0 && <option value="">Chưa có dữ liệu</option>}
+                {salesMonths.map((salesMonth) => <option key={salesMonth} value={salesMonth}>{formatVietnamMonth(salesMonth)}</option>)}
+              </select>
+              <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-primary" />
+            </div>
+          </div>
+          <button type="button" onClick={exportPage} title="Xuất trang hiện tại thành CSV mở bằng Excel" className="flex min-h-12 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-brand-sm hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-ring"><Download aria-hidden="true" className="size-4" />Xuất Excel</button>
+        </div>
+        <p className="text-xs text-muted-foreground">Danh sách khách hàng: {monthLabel}</p>
+      </form>
+    </div>
+  );
 
   return (
     <div className="flex flex-wrap items-end gap-3 border-b border-border p-3 sm:p-4">

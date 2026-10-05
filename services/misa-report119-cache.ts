@@ -129,6 +129,7 @@ export async function getCachedMisaEmployeeCustomers(
     alertCutoff?: string;
     group?: CustomerRevenueGroup;
     report44Month?: string;
+    pageSize?: number;
   },
 ): Promise<MisaCustomerPage | null> {
   const periodMonth = `${params.month}-01`;
@@ -191,14 +192,15 @@ export async function getCachedMisaEmployeeCustomers(
     }
   }
 
-  const from = (params.page - 1) * PAGE_SIZE;
+  const pageSize = params.pageSize === undefined ? PAGE_SIZE : Math.min(100, Math.max(1, Math.trunc(params.pageSize)));
+  const from = (params.page - 1) * pageSize;
   const { data, count, error } = await query
     .order('customer_name')
     .order('misa_customer_id')
-    .range(from, from + PAGE_SIZE - 1);
+    .range(from, from + pageSize - 1);
   if (error) throw new Error(`Không đọc được snapshot khách hàng MISA: ${error.message}`);
   const total = count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (params.page > totalPages) return null;
   const rows = (data ?? []).map(customerFromRow);
   if (rows.some((row) => row === null)) throw new Error('Snapshot khách hàng MISA không hợp lệ.');
@@ -245,7 +247,7 @@ export async function getCachedMisaEmployeeCustomers(
     rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id),
       report44OrderSales: params.report44Month === undefined ? undefined : report44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null })),
     page: params.page,
-    pageSize: PAGE_SIZE,
+    pageSize,
     total,
     totalPages,
   };

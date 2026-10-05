@@ -1430,3 +1430,15 @@ Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên k�
 Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
 
 Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
+
+### 2026-10-05 — Thu gọn nút tóm tắt trên mobile
+
+Nội dung popup theo ảnh tham chiếu: header icon/tiêu đề/mô tả, search riêng, chọn tháng doanh số và xuất CSV mở bằng Excel cùng một hàng; chọn tháng tự submit, không thêm nút Xem. Ghi rõ kỳ danh sách để phân biệt snapshot và report 44. Thẻ khách có số thứ tự, mã/tên/tỉnh, nhóm và bốn ô công nợ/doanh số/doanh số tháng/mua gần nhất; số tiền rút gọn theo triệu qua helper lib. Thông tin chăm sóc/tần suất/cam kết nằm trong details mở bằng header khách. Admin và danh sách ngoài popup giữ UI cũ.
+
+Popup kết quả render bằng React portal vào `document.body`, neo phía trên viewport cách 8px và dùng lớp dialog `z-index: 100`. Không đặt fixed dialog trong `main.animate-rise-in`, tránh ảnh hưởng containing block/stacking context của animation; bottom nav nằm dưới popup.
+
+Thẻ cảnh báo và thẻ nhóm A/B/C/D trên `/sales/customers` dùng padding, gap, icon và cỡ chữ nhỏ hơn ở mobile. Hai cảnh báo nằm cạnh nhau trên một hàng và, theo yêu cầu trực tiếp của người dùng ngày 2026-10-05, có chiều cao thực tế 30px trên mobile; đây là ngoại lệ cục bộ so với touch target 44px. Bốn nhóm doanh số giữ lưới 2×2; desktop giữ kích thước cũ. Bỏ icon mũi tên trong thẻ cảnh báo.
+
+Khi chọn cảnh báo hoặc nhóm A/B/C/D, kết quả hiển thị trong bottom sheet trên mobile và dialog giữa màn hình trên desktop. Trên mobile sheet cao `calc(100dvh - 8px)`, cách mép trên viewport 8px để tối đa diện tích xem danh sách; sheet nằm trên bottom nav và nội dung cuộn độc lập. Desktop giữ chiều cao tự nhiên, tối đa `90dvh`. Popup khóa cuộn trang nền, hỗ trợ phím Escape và có nút đóng 44px.
+
+Popup cảnh báo/nhóm phân trang 100 khách mỗi lần để các danh sách phổ biến có thể cuộn xem hết trong một sheet. Header Sales có tên tài khoản và nút Đăng xuất được bỏ; tab Tài khoản là đường duy nhất để đăng xuất.

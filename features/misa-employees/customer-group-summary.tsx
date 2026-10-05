@@ -15,17 +15,17 @@ const GROUPS = [
 
 export function CustomerGroupSummary({ counts, path, month, active }: Props) {
   return (
-    <section aria-labelledby="customer-groups-title" className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-      <h2 id="customer-groups-title" className="text-lg font-bold text-heading">Phân nhóm doanh số</h2>
-      <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+    <section aria-labelledby="customer-groups-title" className="rounded-xl border border-border bg-card p-2 shadow-sm sm:rounded-2xl sm:p-4">
+      <h2 id="customer-groups-title" className="text-sm font-bold text-heading sm:text-lg">Phân nhóm doanh số</h2>
+      <div className="mt-1.5 grid grid-cols-2 gap-1 sm:mt-3 sm:gap-3 md:grid-cols-4">
         {GROUPS.map((group) => (
           <Link key={group.key} href={`${path}?${misaCustomerQuery(month, {}, 1, undefined, undefined, group.key)}`}
             aria-label={`Xem nhóm ${group.key}: ${counts[group.key]} khách hàng`} aria-current={active === group.key ? 'true' : undefined}
-            className={`flex min-h-28 flex-col items-center justify-center rounded-xl border border-input-border p-3 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${group.surface} ${active === group.key ? 'ring-2 ring-primary' : ''}`}>
-            <Badge tone={group.tone} className="size-9 justify-center rounded-full p-0 text-base">{group.key}</Badge>
-            <p className="mt-2 text-xs font-medium">{group.rule}</p>
-            <p className="mt-1 font-bold tabular-nums">{counts[group.key]} KH</p>
-            <span className="mt-1 text-xs underline">Xem danh sách</span>
+            className={`flex min-h-11 flex-col items-center justify-center rounded-lg border border-input-border px-0.5 py-0.5 text-center sm:min-h-28 sm:rounded-xl sm:p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${group.surface} ${active === group.key ? 'ring-2 ring-primary' : ''}`}>
+            <Badge tone={group.tone} className="size-4 justify-center rounded-full p-0 text-[8px] sm:size-9 sm:text-base">{group.key}</Badge>
+            <p className="text-[8px] font-medium leading-none sm:mt-2 sm:text-xs sm:leading-tight">{group.rule}</p>
+            <p className="text-[10px] font-bold leading-none tabular-nums sm:mt-1 sm:text-base">{counts[group.key]} KH</p>
+            <span className="mt-1 hidden text-xs underline sm:block">Xem danh sách</span>
           </Link>
         ))}
       </div>

@@ -1,6 +1,7 @@
 import { AlertTriangle, BarChart3, CalendarDays, ChevronRight, CircleAlert, Coins, MapPin, ShoppingCart, Store } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { CustomerPopupCard } from '@/features/misa-employees/customer-popup-card';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
 import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
@@ -16,6 +17,7 @@ type Props = {
   salesMobileCards?: boolean;
   alertCutoff: string;
   report44Month?: string;
+  compact?: boolean;
 };
 
 function CustomerDormancyBadge({ days }: { days: number | null }) {
@@ -38,10 +40,21 @@ function CustomerDormancyBadge({ days }: { days: number | null }) {
   return <span className="inline-flex min-w-8 items-center justify-center whitespace-nowrap rounded-pill border border-border bg-card px-2 py-0.5 tabular-nums text-heading">{days}<span className="sr-only"> ngày</span></span>;
 }
 
-export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileCards = false, alertCutoff, report44Month }: Props) {
+export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileCards = false, alertCutoff, report44Month, compact = false }: Props) {
   const groupTone: Record<CustomerRevenueGroup, 'success' | 'info' | 'warning' | 'neutral'> = {
     A: 'success', B: 'info', C: 'warning', D: 'neutral',
   };
+  if (compact) return (
+    <div className="space-y-3 px-3 pb-3 sm:px-4">
+      <div className="rounded-xl border border-border bg-primary/[0.025] p-3">
+        <h3 className="text-sm font-bold text-heading">Phân nhóm doanh số</h3>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{CUSTOMER_REVENUE_GROUP_RULE_TEXT}</p>
+      </div>
+      <ol className="space-y-2.5" aria-label={`Khách hàng của ${employeeName}`}>
+        {rows.map((customer, index) => <li key={customer.id}><CustomerPopupCard customer={customer} index={startIndex + index + 1} report44Month={report44Month} alertCutoff={alertCutoff} /></li>)}
+      </ol>
+    </div>
+  );
   return (
     <>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-primary/[0.025] px-4 py-2.5 text-xs text-muted-foreground">

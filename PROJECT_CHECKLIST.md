@@ -1347,3 +1347,15 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Lưu report 44 theo `(period_month, customer_code)` và ghép vào khách hàng Sales.
 - [x] Thêm bộ chọn `salesMonth`, giữ cảnh báo và bộ lọc A/B/C/D trên `origin/main`.
 - [x] Thêm RLS chỉ cho Sales xem mã khách thuộc mình.
+- [x] Thu gọn thẻ cảnh báo và A/B/C/D trên mobile; bỏ icon mũi tên trong nút.
+- [x] Hiển thị kết quả cảnh báo/A–D trong popup cuộn độc lập thay vì đẩy danh sách xuống dưới.
+- [x] Popup tải tối đa 100 khách/lần; bỏ header tên tài khoản/Đăng xuất khỏi layout Sales.
+- [x] Bottom sheet mobile cao `92dvh`, nằm trên bottom nav và không còn lệch xuống khoảng 1/3 màn hình.
+- [x] Giữ bố cục cảnh báo hai hàng và nhóm doanh số 2×2; thu các thẻ mobile còn khoảng 56px, desktop không đổi.
+- [x] Thu thẻ mobile tới giới hạn vùng chạm 44px; icon/chữ thu nhỏ thêm, không đặt nút 15px vì không thể thao tác an toàn.
+- [x] Xếp hai nút cảnh báo cạnh nhau trên cùng một hàng mobile.
+- [x] Theo xác nhận trực tiếp của người dùng, đặt chiều cao thực tế hai nút cảnh báo mobile đúng 30px.
+- [x] Nâng popup mobile sát mép trên viewport, chỉ chừa 8px.
+- [x] Đưa popup vào body bằng portal và neo trên viewport để tránh animation của main và bottom nav che phủ.
+- [x] Sắp nội dung popup theo ảnh tham chiếu: search riêng, tháng/xuất một hàng, thẻ khách gọn và details thông tin bổ sung.
+- [x] Sửa allowedDevOrigins cho IP LAN 192.168.1.7; xác minh CSS/JS trả 200 và khởi động lại server.

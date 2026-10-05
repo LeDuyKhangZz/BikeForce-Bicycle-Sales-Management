@@ -3846,3 +3846,27 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 ## 2026-10-05 — Ghép doanh số AMIS report 44 theo mã khách
 
 Đã thêm migration, script đồng bộ 13 tháng, service và bộ chọn tháng trên `/sales/customers`. Khi rebase lên `origin/main`, giữ nguyên cảnh báo mua hàng/chăm sóc và bộ lọc A/B/C/D; không khôi phục tính năng “doanh số tháng trước” đã rollback.
+
+UI mobile đã thu gọn hai thẻ cảnh báo và bốn thẻ A/B/C/D, bỏ icon mũi tên trong thẻ cảnh báo. Typecheck và lint PASS.
+
+Kết quả lọc cảnh báo/A–D nay mở trong bottom sheet/dialog có cuộn nội bộ, nút X, backdrop và Escape; không còn hiển thị danh sách lọc bên dưới trang. Typecheck/lint PASS.
+
+Tăng page size riêng của popup lên 100 khách để danh sách 94/70 khách cuộn xem hết một lần. Bỏ toàn bộ header tên Sales/Đăng xuất; giữ đăng xuất trong trang Tài khoản. Typecheck/lint PASS.
+
+Chỉnh bottom sheet mobile cao cố định `92dvh`, thêm safe-area và nâng lớp hiển thị lên trên bottom nav để popup cân đối, không còn bắt đầu ở khoảng 1/3 màn hình. `npm run typecheck` và `npm run lint` exit 0.
+
+Theo ảnh tham chiếu mobile, khôi phục bố cục cảnh báo thành hai hàng xếp dọc nhưng thu chiều cao mỗi thẻ còn khoảng 56px; nhóm doanh số vẫn 2×2 và thu tương tự. Kích thước desktop giữ nguyên. `npm run typecheck` và `npm run lint` exit 0.
+
+Thu tiếp các thẻ mobile tới chiều cao tối thiểu 44px và giảm icon/chữ/padding. Không dùng chiều cao 15px vì thấp hơn touch target bắt buộc; desktop không đổi. `npm run typecheck` và `npm run lint` exit 0.
+
+Làm rõ yêu cầu kích thước: chuyển hai nút cảnh báo thành hai cột trên cùng một hàng mobile, giữ chiều cao vùng chạm 44px và không đổi nhóm doanh số 2×2.
+
+Người dùng xác nhận chấp nhận vùng bấm nhỏ và yêu cầu đúng 30px: đặt cả phần hiển thị lẫn link của hai cảnh báo cao 30px trên mobile; desktop vẫn dùng kích thước cũ. `npm run typecheck` và `npm run lint` exit 0.
+
+Nâng popup mobile từ 92dvh lên `calc(100dvh - 8px)` theo yêu cầu, tăng diện tích danh sách và chỉ chừa 8px phía trên viewport. Typecheck/lint exit 0; chưa kiểm tra trực quan trên thiết bị.
+
+Ảnh thiết bị vẫn cho thấy popup thấp và bottom nav che phủ: dialog nằm trong `main.animate-rise-in` có animation-fill-mode both, tạo stacking context. Đưa dialog vào body qua portal sau hydration, neo trên viewport và dùng z-index 100. Typecheck/lint exit 0; cần kiểm tra lại trên điện thoại.
+
+Thiết kế lại nội dung popup theo ảnh tham chiếu: toolbar compact với search riêng, select tháng tự submit và export cùng hàng; giữ các query filter và kỳ snapshot. Thêm CustomerPopupCard với bốn metric trên một hàng, format tiền theo triệu trong lib và details cho thông tin bổ sung. Không đổi truy vấn/RLS. Build/typecheck/lint exit 0; chưa kiểm chứng trực quan phiên Sales thật.
+
+Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.168.1.7` khiến CSS/JS trả 403 khi có Origin từ điện thoại. Bổ sung IP và khởi động lại dev server trên `0.0.0.0:3000`; kiểm tra thực tế 4 asset CSS/JS với Origin LAN đều trả 200.
