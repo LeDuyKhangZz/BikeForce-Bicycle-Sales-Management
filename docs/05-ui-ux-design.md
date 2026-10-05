@@ -1433,6 +1433,8 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 ### 2026-10-05 — Thu gọn nút tóm tắt trên mobile
 
+Danh sách Sales ngoài popup có toolbar/card riêng cho viewport dưới 768px theo ảnh mới: tìm kiếm cùng nút Tìm, select doanh số tháng cùng Xem, kỳ snapshot cùng Xuất Excel. Control gọn với icon riêng không đè chữ; input/select vẫn 16px/48px. Card khách có bốn metric một hàng với tiền đầy đủ và panel thông tin 2×2. Từ 768px giữ nguyên toolbar/card cũ; Admin và popup không đổi.
+
 Toolbar popup: nút kính lúp submit nằm bên phải input, có vùng chạm 44px; calendar/select/chevron dùng flex với icon riêng, không đè absolute lên chữ tháng. Input giữ 16px và chiều cao 48px, select đổi tháng tự submit và giữ query hiện tại.
 
 Nội dung popup theo ảnh tham chiếu: header icon/tiêu đề/mô tả, search riêng, chọn tháng doanh số và xuất CSV mở bằng Excel cùng một hàng; chọn tháng tự submit, không thêm nút Xem. Ghi rõ kỳ danh sách để phân biệt snapshot và report 44. Thẻ khách có số thứ tự, mã/tên/tỉnh, nhóm và bốn ô công nợ/doanh số/doanh số tháng/mua gần nhất; số tiền rút gọn theo triệu qua helper lib. Thông tin chăm sóc/tần suất/cam kết nằm trong details mở bằng header khách. Admin và danh sách ngoài popup giữ UI cũ.

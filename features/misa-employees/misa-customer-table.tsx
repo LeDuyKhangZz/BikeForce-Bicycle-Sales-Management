@@ -2,6 +2,7 @@ import { AlertTriangle, BarChart3, CalendarDays, ChevronRight, CircleAlert, Coin
 
 import { Badge } from '@/components/ui/badge';
 import { CustomerPopupCard } from '@/features/misa-employees/customer-popup-card';
+import { CustomerMobileCard } from '@/features/misa-employees/customer-mobile-card';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
 import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
@@ -57,7 +58,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
   );
   return (
     <>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-primary/[0.025] px-4 py-2.5 text-xs text-muted-foreground">
+      <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-primary/[0.025] px-4 py-2.5 text-xs text-muted-foreground ${salesMobileCards ? 'mx-3 mb-3 rounded-xl border md:mx-0 md:mb-0 md:rounded-none md:border-0 md:border-b' : ''}`}>
         <span className="font-semibold text-heading">Phân nhóm doanh số</span>
         <span>{CUSTOMER_REVENUE_GROUP_RULE_TEXT}</span>
       </div>
@@ -118,7 +119,8 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
           if (salesMobileCards) {
             return (
               <li key={customer.id} className="min-w-0 bg-primary/[0.025] px-3 py-2 text-sm">
-                <article className="rounded-2xl border border-border bg-card p-4 shadow-brand-sm">
+                <div className="md:hidden"><CustomerMobileCard customer={customer} index={startIndex + index + 1} report44Month={report44Month} alertCutoff={alertCutoff} /></div>
+                <article className="hidden rounded-2xl border border-border bg-card p-4 shadow-brand-sm md:block">
                   <div className="grid grid-cols-[3rem_minmax(0,1fr)_2.75rem] items-start gap-3">
                     <span className="grid size-11 place-items-center rounded-full bg-primary/10 text-base font-bold tabular-nums text-primary">{startIndex + index + 1}</span>
                     <div className="min-w-0">

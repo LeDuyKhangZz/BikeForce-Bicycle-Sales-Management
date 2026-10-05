@@ -2763,4 +2763,6 @@ Popup đã có toolbar/card compact theo ảnh: tìm kiếm Enter, chọn tháng
 
 Toolbar đã sửa calendar/select thành flex để tránh chồng chữ; nút kính lúp bên phải submit điều kiện tìm kiếm. Typecheck/lint exit 0; CSS LAN trả 200. Next Exact Steps: tải lại điện thoại, nhập mã khách và bấm kính lúp, kiểm tra chữ tháng không bị icon che.
 
+Danh sách ngoài popup dùng toolbar/card mới dưới 768px, desktop giữ nguyên; popup không đổi. Typecheck/lint exit 0 và 25 unit pass. Next Exact Steps: tải lại LAN, đóng popup, kiểm tra search/Xem tháng và card khách ở 375px; kiểm tra desktop giữ UI cũ.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.

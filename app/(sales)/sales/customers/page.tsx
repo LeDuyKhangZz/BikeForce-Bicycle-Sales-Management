@@ -99,7 +99,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
         : '';
   const customerResults = result ? (
     <Card flush className={`min-w-0 overflow-hidden rounded-2xl ${alert || group ? 'border-0 shadow-none' : ''}`}>
-      <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} compact={Boolean(alert || group)} />
+      <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} compact={Boolean(alert || group)} salesMobile />
       {result.rows.length === 0 ? (
         <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
       ) : (

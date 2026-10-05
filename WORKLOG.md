@@ -3871,4 +3871,6 @@ Thiết kế lại nội dung popup theo ảnh tham chiếu: toolbar compact v�
 
 Sửa toolbar theo ảnh điện thoại: thay icon lịch absolute bằng flex độc lập với select; đưa submit kính lúp sang phải trong hàng input. Typecheck/lint exit 0. CSS qua Origin LAN trả 200, có rule grid 4 cột và chiều cao popup; chưa xác minh trực quan thiết bị.
 
+Thêm CustomerMobileToolbar và CustomerMobileCard cho danh sách Sales ngoài popup dưới 768px theo ảnh: bố cục search/Tìm, tháng doanh số/Xem, tháng danh sách/export; card metric 4 cột và thông tin 2×2. Giữ nguyên UI desktop/Admin/popup và query/RLS. Typecheck/lint exit 0, 25 unit liên quan pass; chưa kiểm tra phiên Sales thật trên thiết bị.
+
 Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.168.1.7` khiến CSS/JS trả 403 khi có Origin từ điện thoại. Bổ sung IP và khởi động lại dev server trên `0.0.0.0:3000`; kiểm tra thực tế 4 asset CSS/JS với Origin LAN đều trả 200.

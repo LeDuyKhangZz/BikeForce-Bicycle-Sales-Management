@@ -2,6 +2,7 @@
 
 import { CalendarDays, ChevronDown, Download, FileSpreadsheet, Search } from 'lucide-react';
 import Link from 'next/link';
+import { CustomerMobileToolbar } from '@/features/misa-employees/customer-mobile-toolbar';
 
 import { CustomerPlanImport } from '@/features/misa-employees/customer-plan-import';
 import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
@@ -26,9 +27,10 @@ type Props = {
   salesMonths?: string[];
   selectedSalesMonth?: string;
   compact?: boolean;
+  salesMobile?: boolean;
 };
 
-export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth, compact = false }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth, compact = false, salesMobile = false }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -76,7 +78,9 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
   );
 
   return (
-    <div className="flex flex-wrap items-end gap-3 border-b border-border p-3 sm:p-4">
+    <>
+    {salesMobile && <div className="md:hidden"><CustomerMobileToolbar path={path} month={month} monthLabel={monthLabel} filters={filters} searchQuery={searchQuery} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} onExport={exportPage} /></div>}
+    <div className={`${salesMobile ? 'hidden md:flex' : 'flex'} flex-wrap items-end gap-3 border-b border-border p-3 sm:p-4`}>
       <h2 className="w-full text-lg font-bold text-heading xl:hidden">Tìm khách hàng</h2>
       <form action={path} method="get" className="flex min-w-[min(100%,18rem)] flex-1 items-end gap-2">
         <input type="hidden" name="month" value={month} />
@@ -130,5 +134,6 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
         <CustomerPlanImport employeeId={employeeId} month={month} />
       </>}
     </div>
+    </>
   );
 }
