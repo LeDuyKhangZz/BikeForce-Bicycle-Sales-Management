@@ -1,4 +1,5 @@
 import { parseCustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
+import { parseCustomerCommitmentFilter } from '@/lib/amis/customer-commitment-filter';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, UsersRound } from 'lucide-react';
@@ -39,6 +40,8 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   const filters = parseMisaCustomerFilters(search);
   const alert = parseCustomerAlert(search.alert);
   const group = parseCustomerRevenueGroup(search.group);
+  const commitment = parseCustomerCommitmentFilter(search.commitment);
+  const showResultsDialog = Boolean(alert || group || commitment);
   const alertCutoff = customerAlertCutoff(month);
   const searchQuery = search.q?.trim().slice(0, 120) ?? '';
   const requestedSalesMonth = search.salesMonth;
@@ -68,7 +71,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
         error = `Chưa có dữ liệu MISA của ${profile.amis_employee_name} trong ${formatVietnamMonth(month)}.`;
       } else {
         [result, groupCounts, commitmentStats, alertCounts] = await Promise.all([
-          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group, report44Month: selectedSalesMonth, pageSize: alert || group ? 100 : undefined }),
+          getCachedMisaEmployeeCustomers(supabase, { month, employeeId: employee.id, page, filters, searchQuery, alert, alertCutoff, group, commitment, report44Month: selectedSalesMonth, pageSize: showResultsDialog ? 100 : undefined }),
           getCachedMisaCustomerGroupCounts(supabase, month, employee.id),
           getCachedMisaCustomerCommitmentStats(supabase, month, employee.id, employee.customerCount),
           getMisaCustomerAlertCounts(supabase, month, employee.id, alertCutoff),
@@ -82,7 +85,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
 
   const employeeId = result?.employee.id ?? 0;
   const pageHref = (target: number) => {
-    const params = new URLSearchParams(misaCustomerQuery(month, filters, target, searchQuery, alert, group));
+    const params = new URLSearchParams(misaCustomerQuery(month, filters, target, searchQuery, alert, group, commitment));
     if (selectedSalesMonth) params.set('salesMonth', selectedSalesMonth);
     return `${path}?${params.toString()}`;
   };
@@ -97,15 +100,15 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
       ? 'Khách từ 30 ngày chưa chăm sóc'
       : group
         ? `Khách hàng nhóm ${group}`
-        : '';
+        : commitment === 'committed' ? 'Khách hàng đã cam kết' : 'Khách hàng chưa cam kết';
   const customerResults = result ? (
-    <Card flush className={`min-w-0 overflow-hidden rounded-2xl ${alert || group ? 'border-0 shadow-none' : ''}`}>
-      <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} compact={Boolean(alert || group)} salesMobile />
+    <Card flush className={`min-w-0 overflow-hidden rounded-2xl ${showResultsDialog ? 'border-0 shadow-none' : ''}`}>
+      <MisaCustomerToolbar employeeId={employeeId} path={path} monthPickerPath={path} month={month} monthLabel={formatVietnamMonth(month)} filters={filters} searchQuery={searchQuery} rows={result.rows} showPlanImport={false} alert={alert} group={group} commitment={commitment} salesMonths={salesMonths} selectedSalesMonth={selectedSalesMonth} compact={showResultsDialog} salesMobile />
       {result.rows.length === 0 ? (
         <div className="p-5 text-sm text-muted-foreground">Không có khách hàng phù hợp.</div>
       ) : (
         <>
-          <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} report44Month={selectedSalesMonth} compact={Boolean(alert || group)} />
+          <MisaCustomerTable rows={result.rows} employeeName={result.employee.name} employeeId={employeeId} month={month} startIndex={firstRow} salesMobileCards alertCutoff={alertCutoff} report44Month={selectedSalesMonth} compact={showResultsDialog} />
           <nav aria-label="Phân trang khách hàng" className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3 text-sm">
             <p className="text-muted-foreground">Hiển thị {firstRow + 1}–{lastRow} trong {result.total} khách hàng</p>
             <div className="flex items-center gap-2">
@@ -139,8 +142,8 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} />
-          {alert || group ? <CustomerResultsDialog title={dialogTitle} closeHref={closeHref}>{customerResults}</CustomerResultsDialog> : <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">{customerResults}<CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} /></div>}
+        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} path={path} month={month} salesMonth={selectedSalesMonth} />
+          {showResultsDialog ? <CustomerResultsDialog title={dialogTitle} closeHref={closeHref}>{customerResults}</CustomerResultsDialog> : <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">{customerResults}<CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} /></div>}
         </>
       ) : null}
     </div>

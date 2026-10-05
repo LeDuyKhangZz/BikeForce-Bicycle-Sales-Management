@@ -1433,6 +1433,8 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 ### 2026-10-05 — Thu gọn nút tóm tắt trên mobile
 
+Hai số đếm tiến độ cam kết trên trang Sales là link: Chưa cam kết mở popup `commitment=uncommitted`, Đã cam kết mở `commitment=committed`. Giữ kỳ danh sách và doanh số; tìm kiếm/đổi tháng/phân trang trong popup giữ trạng thái. Thẻ khách mở details để xem tần suất và doanh số cam kết. 0 là giá trị đã cam kết, null hoặc chưa có plan là chưa cam kết. Admin giữ tiến độ chỉ đọc.
+
 Theo yêu cầu đồng nhất kích thước, toolbar ngoài popup mobile có chiều cao 44px cho khung search, select và các nút Tìm/Xem/kỳ danh sách/Xuất Excel. Input/select giữ font 16px, chiều cao theo khung 44px là ngoại lệ được người dùng yêu cầu so với chuẩn 48px trước đó. Nút Tìm dùng nền semantic info pastel; desktop/popup giữ nguyên.
 
 Yêu cầu cuối: hai cảnh báo mobile tăng từ 30px lên min-height 44px và rounded-lg, bằng chiều cao/bo góc nút nhóm A/B/C/D; vẫn hai cột và nhãn gọn. Thay thế ngoại lệ 30px cũ.

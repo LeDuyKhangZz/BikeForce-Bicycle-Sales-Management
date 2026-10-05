@@ -11,6 +11,7 @@ import { formatVietnamMonth } from '@/lib/date';
 import type { MisaCustomer } from '@/types/misa-customer';
 import type { CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { CustomerAlert } from '@/lib/amis/customer-alerts';
+import type { CustomerCommitmentFilter } from '@/lib/amis/customer-commitment-filter';
 
 type Props = {
   employeeId: number;
@@ -28,9 +29,10 @@ type Props = {
   selectedSalesMonth?: string;
   compact?: boolean;
   salesMobile?: boolean;
+  commitment?: CustomerCommitmentFilter;
 };
 
-export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth, compact = false, salesMobile = false }: Props) {
+export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/${employeeId}`, monthPickerPath = '/admin/misa-employees', month, monthLabel, filters, searchQuery, rows, showPlanImport = true, alert, group, salesMonths = [], selectedSalesMonth, compact = false, salesMobile = false, commitment }: Props) {
   function exportPage() {
     const content = buildMisaCustomerCsv(rows);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
@@ -45,6 +47,7 @@ export function MisaCustomerToolbar({ employeeId, path = `/admin/misa-employees/
     <div className="space-y-3 p-3 sm:p-4">
       <form action={path} method="get" className="space-y-3">
         <input type="hidden" name="month" value={month} />
+        {commitment && <input type="hidden" name="commitment" value={commitment} />}
         {alert && <input type="hidden" name="alert" value={alert} />}
         {group && <input type="hidden" name="group" value={group} />}
         {MISA_CUSTOMER_FILTER_FIELDS.flatMap((field) => {

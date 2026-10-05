@@ -1,4 +1,5 @@
 import 'server-only';
+import type { CustomerCommitmentFilter } from '@/lib/amis/customer-commitment-filter';
 import { customerRevenueGroupCondition, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import { customerAlertCondition, type CustomerAlert } from '@/lib/amis/customer-alerts';
 
@@ -130,6 +131,7 @@ export async function getCachedMisaEmployeeCustomers(
     group?: CustomerRevenueGroup;
     report44Month?: string;
     pageSize?: number;
+    commitment?: CustomerCommitmentFilter;
   },
 ): Promise<MisaCustomerPage | null> {
   const periodMonth = `${params.month}-01`;
@@ -150,6 +152,27 @@ export async function getCachedMisaEmployeeCustomers(
     .eq('misa_employee_id', params.employeeId);
 
   if (params.group) query = query.or(customerRevenueGroupCondition(params.group));
+  if (params.commitment) {
+    const committedIds: number[] = [];
+    const planPageSize = 500;
+    let planOffset = 0;
+    while (true) {
+      const plans = await supabase.from('misa_customer_monthly_plans')
+        .select('misa_customer_id', { count: 'exact' })
+        .eq('period_month', periodMonth).eq('misa_employee_id', params.employeeId)
+        .not('committed_sales', 'is', null)
+        .order('misa_customer_id').range(planOffset, planOffset + planPageSize - 1);
+      if (plans.error) throw new Error(`Không lọc được cam kết khách hàng: ${plans.error.message}`);
+      for (const plan of plans.data ?? []) {
+        if (typeof plan.misa_customer_id !== 'number' || !Number.isSafeInteger(plan.misa_customer_id)) throw new Error('Mã khách cam kết không hợp lệ.');
+        committedIds.push(plan.misa_customer_id);
+      }
+      planOffset += planPageSize;
+      if (planOffset >= (plans.count ?? 0)) break;
+    }
+    if (params.commitment === 'committed') query = committedIds.length ? query.in('misa_customer_id', committedIds) : query.eq('misa_customer_id', -1);
+    else if (committedIds.length) query = query.not('misa_customer_id', 'in', `(${committedIds.join(',')})`);
+  }
   if (params.alert && params.alertCutoff) {
     query = query.or(customerAlertCondition(params.alert, params.alertCutoff));
   }

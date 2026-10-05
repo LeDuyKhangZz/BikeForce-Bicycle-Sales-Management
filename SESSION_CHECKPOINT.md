@@ -2775,4 +2775,6 @@ Người dùng xác nhận giao diện; hai cảnh báo nay min-height 44px, b�
 
 Toolbar mobile ngoài popup hiện đồng đều 44px với cảnh báo, nút Tìm pastel xanh. Typecheck/lint exit 0. Next Exact Steps: tải lại LAN kiểm tra chiều cao các hàng search/tháng/Xem/export; popup và desktop không đổi.
 
+Hai mục tiến độ cam kết Sales đã bấm được mở popup committed/uncommitted. Lọc server-side trước phân trang, 0 là đã cam kết; search/đổi tháng/page giữ trạng thái. Không thay schema/RLS. Typecheck/lint/build exit 0, 16 unit liên quan pass. Next Exact Steps: tải lại LAN và mở cả hai mục; kiểm số khách tương ứng, tìm mã trong popup và xem details cam kết. DB/RLS/E2E thật chưa chạy.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.

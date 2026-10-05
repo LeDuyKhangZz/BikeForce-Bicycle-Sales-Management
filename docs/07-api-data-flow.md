@@ -1,5 +1,7 @@
 # 07 — API & Data Flow
 
+> 2026-10-05 — Lọc cam kết Sales: parse `commitment=committed|uncommitted`; service đọc ID plan có committed_sales non-null theo employee/tháng với range 500/count exact, rồi áp in/not.in vào query khách trước count/sort/range. Không tải toàn bộ khách để lọc JS, không thay schema/RLS. PK plans `(period_month,misa_employee_id,misa_customer_id)` phục vụ truy vấn. Popup phân trang 100 khách/lần, giữ commitment trong search/chọn tháng/page.
+
 > 2026-10-05 — Report 44: bộ chọn doanh số Sales sinh dải tháng từ 08/2025 (hoặc kỳ lưu cũ hơn) đến tháng hiện tại theo Asia/Ho_Chi_Minh, không phụ thuộc kỳ đã đồng bộ; mặc định tháng hiện tại. Query ghép theo mã khách và tháng vẫn giữ RLS. Chưa có bản ghi → `—`, bản ghi 0 → `0 ₫`. Đã đồng bộ kỳ 10/2025–10/2026 với 950 mã/12.350 dòng; kỳ 08–09/2025 đã lưu trước đó không bị xóa.
 
 > Cập nhật 2026-10-01: dữ liệu SaleWork ngày chỉ được ghép vào ảnh chia sẻ khi `salework_reports.updated_at` quy đổi sang `Asia/Ho_Chi_Minh` trùng ngày nghiệp vụ hiện tại. Snapshot cũ phải hiển thị `—`, không fallback sang ngày trước (ISSUE-056).
