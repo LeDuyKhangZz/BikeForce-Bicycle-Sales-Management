@@ -21,6 +21,7 @@ import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftV
 import { createClient } from '@/lib/supabase/server';
 import { getCachedMisaCustomerCommitmentStats, getCachedMisaCustomerGroupCounts, getCachedMisaEmployeeByName, getCachedMisaEmployeeCustomers, type MisaCustomerCommitmentStats, type MisaCustomerGroupCounts } from '@/services/misa-report119-cache';
 import { listMisaReport44Months } from '@/services/misa-report44';
+import { availableReport44Months } from '@/lib/amis/report44-months';
 import type { MisaCustomerPage } from '@/services/misa-report119';
 
 export const metadata: Metadata = { title: 'Khách hàng của tôi · BikeForce' };
@@ -60,7 +61,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   } else {
     try {
       const supabase = await createClient();
-      salesMonths = await listMisaReport44Months(supabase);
+      salesMonths = availableReport44Months(await listMisaReport44Months(supabase));
       selectedSalesMonth = requestedSalesMonth && salesMonths.includes(requestedSalesMonth) ? requestedSalesMonth : salesMonths[0];
       const employee = await getCachedMisaEmployeeByName(supabase, month, profile.amis_employee_name);
       if (employee === null) {

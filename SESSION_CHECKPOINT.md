@@ -2765,4 +2765,6 @@ Toolbar đã sửa calendar/select thành flex để tránh chồng chữ; nút 
 
 Danh sách ngoài popup dùng toolbar/card mới dưới 768px, desktop giữ nguyên; popup không đổi. Typecheck/lint exit 0 và 25 unit pass. Next Exact Steps: tải lại LAN, đóng popup, kiểm tra search/Xem tháng và card khách ở 375px; kiểm tra desktop giữ UI cũ.
 
+Report 44 hiện chọn được từ 08/2025 tới tháng hiện tại (10/2026), mặc định hiện tại. Kỳ chưa đồng bộ vẫn chọn được; thiếu số → `—`, 0 thật → `0 ₫`. Đã đồng bộ 950 mã/12.350 dòng kỳ 10/2025–10/2026; AMIS tháng 9 có 220 mã có số khác 0, tháng 10 có 5. Build/typecheck/lint exit 0, 4 unit pass. Next Exact Steps: trên LAN tải lại và chọn tháng 09/2026 để kiểm tra doanh số khách theo mã; tháng hiện tại tự tăng theo lịch nhưng số liệu cần tiếp tục đồng bộ theo kỳ.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.

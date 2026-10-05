@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+> 2026-10-05 — `lib/amis/report44-months.test.ts` khóa việc chọn tháng hiện tại dù snapshot chỉ tới tháng 8, không có dữ liệu vẫn chọn được tháng, không có tương lai, giữ kỳ cũ và chuyển năm. Đã chạy 4/4; build/typecheck/lint exit 0. Đồng bộ report 44 thực tế trả 12.350 dòng; kiểm tra AMIS tháng 9 có 220 mã khác 0, tháng 10 có 5 mã khác 0. Không nới quyền service role để đọc bảng: phép đọc kiểm chứng bằng service role trả 403 như thiết kế; xác minh nguồn AMIS và kết quả RPC ghi thay thế.
+
 > Hồi quy ISSUE-056: phải khóa biên ngày Việt Nam của timestamp SaleWork tại `16:59:59Z` và `17:00:00Z`; snapshot ngày trước không được xuất hiện trên ảnh ngày hiện tại.
 
 **DEC-092:** DB test phải khóa Sales khỏi hai bảng snapshot, cho Admin đọc, chặn service role DML trực tiếp và xác nhận RPC thay nguyên tử. Test script phải chứng minh thiếu trang/sai tổng khách không gọi RPC và không làm mất snapshot cũ.

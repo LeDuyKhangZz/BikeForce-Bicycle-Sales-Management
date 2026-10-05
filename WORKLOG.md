@@ -3873,4 +3873,6 @@ Sửa toolbar theo ảnh điện thoại: thay icon lịch absolute bằng flex 
 
 Thêm CustomerMobileToolbar và CustomerMobileCard cho danh sách Sales ngoài popup dưới 768px theo ảnh: bố cục search/Tìm, tháng doanh số/Xem, tháng danh sách/export; card metric 4 cột và thông tin 2×2. Giữ nguyên UI desktop/Admin/popup và query/RLS. Typecheck/lint exit 0, 25 unit liên quan pass; chưa kiểm tra phiên Sales thật trên thiết bị.
 
+Report 44: thêm helper sinh tháng tới hiện tại, mặc định hiện tại và cho chọn kỳ chưa có số. Chạy fetch_report44.py 2026 10 --write thành công: 950 mã, 12.350 dòng kỳ 10/2025–10/2026, giữ kỳ cũ ngoài range. Nguồn AMIS xác minh tháng 9 có 220 mã khác 0 và tháng 10 có 5 mã khác 0. Không nới RLS/GRANT; đọc bảng bằng service role bị 403 nên không dùng đường đó để xác minh. Build/typecheck/lint exit 0 và 4 unit helper pass.
+
 Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.168.1.7` khiến CSS/JS trả 403 khi có Origin từ điện thoại. Bổ sung IP và khởi động lại dev server trên `0.0.0.0:3000`; kiểm tra thực tế 4 asset CSS/JS với Origin LAN đều trả 200.
