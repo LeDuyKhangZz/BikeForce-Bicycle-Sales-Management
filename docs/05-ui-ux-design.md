@@ -1433,6 +1433,8 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 ### 2026-10-05 — Thu gọn nút tóm tắt trên mobile
 
+Yêu cầu cuối: hai cảnh báo mobile tăng từ 30px lên min-height 44px và rounded-lg, bằng chiều cao/bo góc nút nhóm A/B/C/D; vẫn hai cột và nhãn gọn. Thay thế ngoại lệ 30px cũ.
+
 Bốn nút nhóm A/B/C/D trên điện thoại dùng lưới 4 cột cùng một hàng, cao tối thiểu 44px, khoảng cách 8px và min-w-0 để không tràn ngang. Kích thước và breakpoint desktop hiện có giữ nguyên.
 
 Breakpoint lưu ý: `sm` của dự án là 375px. Hai summary cảnh báo/nhóm chỉ tăng kích thước từ `md` (768px), không dùng `sm` cho kiểu desktop. Cảnh báo mobile cao 30px với nhãn ngắn, số đếm không xuống dòng; desktop bỏ chiều cao cố định của span để chữ không tràn.

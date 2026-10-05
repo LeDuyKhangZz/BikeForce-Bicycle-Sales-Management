@@ -19,8 +19,8 @@ export function CustomerAlertSummary({ counts, path, month, active }: Props) {
         {items.map(({ key, label, count, icon: Icon }) => (
           <Link key={key} href={`${path}?${misaCustomerQuery(month, {}, 1, undefined, key)}`}
             aria-current={active === key ? 'true' : undefined} aria-label={`${count} khách: ${label}`}
-            className="flex h-[30px] min-w-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-auto md:min-h-24">
-            <span className={`flex h-[30px] w-full min-w-0 items-center gap-1.5 rounded-md border border-input-border px-1.5 md:h-auto md:min-h-24 md:gap-3 md:rounded-xl md:p-4 ${active === key ? 'ring-2 ring-destructive' : ''} ${count > 0 ? 'bg-status-missed-bg text-status-missed-fg' : 'bg-primary/5 text-heading'}`}>
+            className="flex min-h-11 min-w-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:min-h-24">
+            <span className={`flex min-h-11 w-full min-w-0 items-center gap-1.5 rounded-lg border border-input-border px-1.5 md:min-h-24 md:gap-3 md:rounded-xl md:p-4 ${active === key ? 'ring-2 ring-destructive' : ''} ${count > 0 ? 'bg-status-missed-bg text-status-missed-fg' : 'bg-primary/5 text-heading'}`}>
               <span className="grid size-5 shrink-0 place-items-center rounded bg-card/60 md:contents"><Icon aria-hidden="true" className="size-3 md:size-6" /></span>
               <span className="min-w-0 flex-1 text-left"><span className="block whitespace-nowrap text-[10px] font-bold leading-[12px] tabular-nums md:whitespace-normal md:text-2xl md:leading-tight">{count} khách</span><span className="block whitespace-nowrap text-[8px] leading-[10px] md:hidden">{key === 'purchase' ? '30 ngày chưa mua hàng' : '30 ngày chưa chăm sóc'}</span><span className="mt-0.5 hidden text-sm leading-tight md:block">{label}</span><span className="mt-1 hidden text-xs underline md:block">Xem danh sách</span></span>
             </span>

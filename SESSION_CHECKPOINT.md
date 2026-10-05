@@ -2771,4 +2771,6 @@ Nhóm doanh số mobile A/B/C/D đã xếp 4 cột trên một hàng, desktop gi
 
 Đã sửa nguyên nhân responsive: sm dự án là 375px nên trước đó điện thoại vẫn nhận kiểu lớn/2×2. Summary chuyển sang md=768px, nhóm 4 cột và hai cảnh báo có nhãn gọn/căn trái, số khách một dòng. Typecheck/lint exit 0. Next Exact Steps: tải lại LAN kiểm tra đúng một hàng A/B/C/D ở 375–430px.
 
+Người dùng xác nhận giao diện; hai cảnh báo nay min-height 44px, bằng chiều cao nút nhóm A/B/C/D. Typecheck/lint exit 0. Next Exact Steps: tải lại LAN để xem hai cảnh báo cao bằng nhóm; desktop giữ nguyên.
+
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.
