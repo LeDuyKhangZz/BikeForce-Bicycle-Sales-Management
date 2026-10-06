@@ -3886,3 +3886,8 @@ Toolbar mobile ngoài popup: khung search/select và nút Tìm/Xem/tháng/Xuất
 Thêm popup cam kết Sales: link hai số đếm, parser commitment, service đọc IDs plan non-null theo kỳ/employee có range/count rồi lọc khách in/not.in trước phân trang. 0 tính đã cam kết; null/không plan chưa cam kết. Giữ query tìm/chọn tháng/page; không đổi schema/RLS hoặc ghi dữ liệu. Typecheck/lint/build exit 0 và 16 unit liên quan pass; chưa chạy DB/RLS và E2E phiên thật.
 
 Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.168.1.7` khiến CSS/JS trả 403 khi có Origin từ điện thoại. Bổ sung IP và khởi động lại dev server trên `0.0.0.0:3000`; kiểm tra thực tế 4 asset CSS/JS với Origin LAN đều trả 200.
+## 2026-10-06 — So sánh doanh số khách hàng theo tháng
+
+Theo yêu cầu người dùng, doanh số Report 44 trên `/sales/customers` hiển thị tỷ lệ tăng/giảm của từng khách so với tháng liền trước. Service đọc hai kỳ trong cùng truy vấn và ghép theo mã khách; UI mobile, popup, tablet và bảng desktop dùng chung helper. Tháng trước bằng 0 được xử lý thành “Mới phát sinh” hoặc “Không đổi”; thiếu kỳ hiển thị “Chưa có dữ liệu tháng trước”, không sinh `NaN`/`Infinity`. Không đổi schema hoặc RLS.
+
+Kiểm chứng: typecheck, lint và production build exit 0; unit helper 3/3 pass. Server production local đã khởi động lại và `/login` trả 200. Next Exact Steps: kiểm tra trực quan bằng dữ liệu tháng 09/2026 trên điện thoại.

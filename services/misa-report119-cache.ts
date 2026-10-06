@@ -4,6 +4,7 @@ import { customerRevenueGroupCondition, type CustomerRevenueGroup } from '@/lib/
 import { customerAlertCondition, type CustomerAlert } from '@/lib/amis/customer-alerts';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { shiftVietnamMonth } from '@/lib/date';
 
 import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/amis/customer-filters';
 import { misaRelativeDateRange } from '@/lib/amis/customer-filter-date-range';
@@ -250,11 +251,16 @@ export async function getCachedMisaEmployeeCustomers(
     planByCustomer.set(plan.misa_customer_id, { monthlyFrequency: plan.monthly_frequency, committedSales });
   }
   const report44SalesByCustomerCode = new Map<string, number>();
+  const previousReport44SalesByCustomerCode = new Map<string, number>();
   const customerCodes = validRows.map((row) => row.code.trim().toUpperCase()).filter((code) => code !== '');
   if (params.report44Month !== undefined && customerCodes.length > 0) {
+    const previousReport44Month = shiftVietnamMonth(params.report44Month, -1);
+    const report44Periods = previousReport44Month === null
+      ? [`${params.report44Month}-01`]
+      : [`${params.report44Month}-01`, `${previousReport44Month}-01`];
     const salesResult = await supabase.from('misa_report44_customer_monthly_sales')
-      .select('customer_code,order_sales')
-      .eq('period_month', `${params.report44Month}-01`)
+      .select('period_month,customer_code,order_sales')
+      .in('period_month', report44Periods)
       .in('customer_code', customerCodes);
     if (salesResult.error) throw new Error(`Không đọc được doanh số report 44: ${salesResult.error.message}`);
     for (const sale of salesResult.data ?? []) {
@@ -262,13 +268,20 @@ export async function getCachedMisaEmployeeCustomers(
           !('order_sales' in sale) || typeof sale.order_sales !== 'number' || !Number.isFinite(sale.order_sales)) {
         throw new Error('Dữ liệu doanh số report 44 không hợp lệ.');
       }
-      report44SalesByCustomerCode.set(sale.customer_code, sale.order_sales);
+      if (!('period_month' in sale) || typeof sale.period_month !== 'string') {
+        throw new Error('Kỳ dữ liệu doanh số report 44 không hợp lệ.');
+      }
+      const target = sale.period_month.startsWith(params.report44Month)
+        ? report44SalesByCustomerCode
+        : previousReport44SalesByCustomerCode;
+      target.set(sale.customer_code.trim().toUpperCase(), sale.order_sales);
     }
   }
   return {
     employee: { id: employeeValue.misa_employee_id, name: employeeValue.employee_name, customerCount: employeeValue.customer_count },
     rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id),
-      report44OrderSales: params.report44Month === undefined ? undefined : report44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null })),
+      report44OrderSales: params.report44Month === undefined ? undefined : report44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null,
+      previousReport44OrderSales: params.report44Month === undefined ? undefined : previousReport44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null })),
     page: params.page,
     pageSize,
     total,

@@ -1367,3 +1367,4 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Đồng nhất toolbar mobile ngoài popup 44px và đổi nút Tìm sang pastel.
 - [x] Bấm Chưa/Đã cam kết mở popup danh sách Sales, giữ trạng thái khi tìm/chọn tháng/phân trang.
 - [x] Sửa allowedDevOrigins cho IP LAN 192.168.1.7; xác minh CSS/JS trả 200 và khởi động lại server.
+- [x] Doanh số Report 44 theo khách hiển thị % tăng/giảm so với tháng liền trước; xử lý tháng trước bằng 0 và thiếu dữ liệu không sinh `NaN`/`Infinity` (2026-10-06)

@@ -2778,3 +2778,6 @@ Toolbar mobile ngoài popup hiện đồng đều 44px với cảnh báo, nút T
 Hai mục tiến độ cam kết Sales đã bấm được mở popup committed/uncommitted. Lọc server-side trước phân trang, 0 là đã cam kết; search/đổi tháng/page giữ trạng thái. Không thay schema/RLS. Typecheck/lint/build exit 0, 16 unit liên quan pass. Next Exact Steps: tải lại LAN và mở cả hai mục; kiểm số khách tương ứng, tìm mã trong popup và xem details cam kết. DB/RLS/E2E thật chưa chạy.
 
 LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi động lại dev server; 4 asset CSS/JS với Origin LAN trả 200 thay cho 403. Next Exact Steps: tải lại tab điện thoại để nhận CSS/JS mới.
+## 2026-10-06 — Tỷ lệ doanh số tháng
+
+`/sales/customers` đã so sánh doanh số Report 44 của tháng chọn với tháng liền trước theo từng mã khách. Có trạng thái tăng, giảm, không đổi, mới phát sinh và thiếu dữ liệu; dùng chung helper `lib/amis/monthly-sales-change.ts`. Typecheck/lint/build và 3 unit test đã pass; production server local đã restart. Next Exact Steps: smoke test tháng 09/2026 trên mobile.

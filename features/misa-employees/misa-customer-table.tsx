@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { CustomerPopupCard } from '@/features/misa-employees/customer-popup-card';
 import { CustomerMobileCard } from '@/features/misa-employees/customer-mobile-card';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
+import { MonthlySalesChange } from '@/features/misa-employees/monthly-sales-change';
 import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
 import { CUSTOMER_REVENUE_GROUP_RULE_TEXT, customerRevenueGroupLabel, defaultMonthlyFrequency, getCustomerRevenueGroup, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
@@ -99,7 +100,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
               <td className="break-words px-2 py-2 align-top">{customer.billingProvince || '—'}</td>
               <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.debt)}</td>
               <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.orderSales)}</td>
-              <td className="break-words px-2 py-2 text-right align-top font-semibold tabular-nums">{formatMisaAmount(customer.report44OrderSales ?? null)}</td>
+              <td className="break-words px-2 py-2 text-right align-top font-semibold tabular-nums">{formatMisaAmount(customer.report44OrderSales ?? null)}{report44Month && <span className="mt-1 block text-[10px]"><MonthlySalesChange current={customer.report44OrderSales ?? null} previous={customer.previousReport44OrderSales} /></span>}</td>
               <td className="px-2 py-2 text-center align-top"><Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge></td>
               <td className="px-2 py-2 text-center align-top tabular-nums">{frequency} lần</td><td className="px-2 py-2 text-right align-top tabular-nums">{customer.committedSales === undefined || customer.committedSales === null ? 'Chưa cam kết' : formatMisaAmount(customer.committedSales)}</td>
               <td className="whitespace-nowrap px-2 py-2 align-top tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</td>
@@ -137,7 +138,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
                   <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div className="min-w-0 rounded-xl bg-status-exceeded-bg p-2.5 text-status-exceeded-fg"><dt className="flex items-center gap-1 text-[11px]"><Coins aria-hidden="true" className="size-4 shrink-0" />Công nợ</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.debt)}</dd></div>
                     <div className="min-w-0 rounded-xl bg-status-info-bg p-2.5 text-status-info-fg"><dt className="flex items-center gap-1 text-[11px]"><BarChart3 aria-hidden="true" className="size-4 shrink-0" />Doanh số</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.orderSales)}</dd></div>
-                    <div className="min-w-0 rounded-xl bg-primary/10 p-2.5 text-primary"><dt className="flex items-center gap-1 text-[11px]"><BarChart3 aria-hidden="true" className="size-4 shrink-0" />{report44Month ? `Tháng ${report44Month.slice(5, 7)}` : 'Theo tháng'}</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.report44OrderSales ?? null)}</dd></div>
+                    <div className="min-w-0 rounded-xl bg-primary/10 p-2.5 text-primary"><dt className="flex items-center gap-1 text-[11px]"><BarChart3 aria-hidden="true" className="size-4 shrink-0" />{report44Month ? `Tháng ${report44Month.slice(5, 7)}` : 'Theo tháng'}</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaAmount(customer.report44OrderSales ?? null)}</dd>{report44Month && <dd className="mt-1 text-[10px] font-semibold"><MonthlySalesChange current={customer.report44OrderSales ?? null} previous={customer.previousReport44OrderSales} /></dd>}</div>
                     <div className="min-w-0 rounded-xl bg-primary/5 p-2.5 text-heading"><dt className="flex items-center gap-1 text-[11px] text-muted-foreground"><ShoppingCart aria-hidden="true" className="size-4 shrink-0 text-primary" />Mua gần nhất</dt><dd className="mt-1 break-words text-sm font-bold tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div>
                   </dl>
 

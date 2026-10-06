@@ -1370,6 +1370,8 @@ Khối “Doanh số đơn hàng theo khách hàng” trên `/admin/misa-employe
 
 Trên `/sales/customers`, bộ chọn “Doanh số theo tháng” dùng tham số `salesMonth` độc lập với tháng danh bạ. Mỗi card/bảng khách hàng hiển thị thêm doanh số report 44 đã ghép theo mã; thiếu dữ liệu hiển thị `—`, không ép thành 0 ₫.
 
+Doanh số tháng trên mỗi khách hàng hiển thị thêm mức tăng/giảm so với tháng liền trước. Tỷ lệ dùng `(tháng chọn - tháng trước) / tháng trước × 100`, làm tròn một chữ số; tháng trước bằng 0 và tháng chọn có doanh số hiển thị “Mới phát sinh”, cả hai bằng 0 hiển thị “Không đổi”, thiếu một trong hai kỳ hiển thị “Chưa có dữ liệu tháng trước”. Trạng thái luôn có icon và chữ, không truyền đạt chỉ bằng màu.
+
 ### Sales nhập chỉ tiêu khách hàng trực tiếp (2026-09-25)
 
 **Cập nhật 2026-09-25 (DEC-099):** `/sales/customers` chỉ còn danh sách card; tab `Nhập chỉ tiêu` và mọi CTA dẫn tới bảng nhập đã được gỡ theo yêu cầu người dùng. Card vẫn hiển thị tần suất và doanh số cam kết hiện có dưới dạng chỉ đọc.
