@@ -47,7 +47,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 
 const DAILY_TARGET_ACCOUNT_NAMES = [
   'Abraham Kế Toán Bánhàng',
-  'Giao - Kế Toán bán hàng',
+  'Hải TeleSale',
   ...SALES_SALEWORK_ACCOUNT_NAMES,
 ];
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
@@ -57,7 +57,7 @@ const requestedMonth = process.env.SALEWORK_SYNC_MONTH?.trim() ?? '';
 const targetAccountNames = syncMode === 'MONTH_ONLY'
   ? [
       'Abraham Kế Toán Bánhàng',
-      'Giao - Kế Toán bán hàng',
+      'Hải TeleSale',
       ...MONTHLY_SALEWORK_ACCOUNT_NAMES,
     ]
   : DAILY_TARGET_ACCOUNT_NAMES;

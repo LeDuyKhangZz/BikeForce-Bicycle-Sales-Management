@@ -726,3 +726,10 @@ Layout Sales không còn header danh tính/đăng xuất. Guard `requireRole('SA
 ## Bổ sung 07/10/2026 — Ánh xạ Võ Thanh Nhâm
 
 Nguồn chuẩn `lib/salework/sales-account-map.ts` ánh xạ `Võ Thanh Nhâm → Abraham Nhâm Miền Trung` và cấp cùng danh sách cho script đồng bộ ngày/tháng. `services/salework.ts` ánh xạ ngược tài khoản SaleWork sang tên AMIS để ghép KPI; không nhân bản công thức hay truy vấn trong component.
+
+## Bổ sung 07/10/2026 — Thay vị trí telesale Giao bằng Hải
+
+Tập chọn cứng của worker ngày/tháng dùng `Hải TeleSale` thay cho `Giao - Kế Toán bán hàng`.
+`services/salework.ts` ghép tài khoản mới với AMIS `Đặng Thanh Hải`; `lib/salework/crm-employee-map.ts`
+ghép riêng với CRM `VP-TLS-004`. Không chuẩn hóa tên mới về khóa cũ vì đây là thay nhân sự, không phải
+đổi nhãn của cùng một người; snapshot lịch sử của Giao tiếp tục tồn tại dưới khóa cũ (DEC-104).

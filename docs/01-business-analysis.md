@@ -927,6 +927,10 @@ Tên nhân viên/CRM và tài khoản SaleWork được nối bằng ánh xạ t
 `Nguyễn Minh Khải` dùng tài khoản SaleWork `Abraham Khải Hcm`; tài khoản này phải được chọn trong mỗi
 lượt đồng bộ cùng các tài khoản hiện tại.
 
+Từ 07/10/2026, vị trí telesale cũ của Trần Thị Quỳnh Giao được thay bởi `Đặng Thanh Hải`: tài khoản
+SaleWork `Hải TeleSale`, mã CRM `VP-TLS-004`. Tên và mã cũ không còn tham gia tập đồng bộ hiện tại;
+snapshot lịch sử vẫn được giữ nguyên, không đổi tên hoặc xóa khỏi database (DEC-104).
+
 ## BỔ SUNG 2026-09-10 — Tổng kết tháng
 
 **BR-031 (APPROVED):** Admin có màn hình Tổng kết tháng liệt kê toàn bộ Sales, ưu tiên hồ sơ đang làm việc trước. Mỗi nhân viên có nút xem trước ảnh tổng hợp từ ngày đầu đến ngày cuối của tháng được chọn. Ảnh không chứa tuyến, cam kết, thực đạt, ghi chú hay bất kỳ dữ liệu nào Sales tự nhập trong báo cáo ngày. SaleWork và AMIS đều phải lọc đúng tháng; công tác phí và lương lấy đúng kỳ tháng đó, dữ liệu thiếu hiển thị `-`.

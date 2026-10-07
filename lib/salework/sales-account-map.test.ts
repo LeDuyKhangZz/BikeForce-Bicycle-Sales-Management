@@ -51,8 +51,8 @@ describe('getSaleWorkAccountName', () => {
 
 describe('normalizeSaleWorkAccountName', () => {
   it.each([
-    ['Giao - Kế Toán bán hàng', 'Giao - Kế Toán bán hàng'],
-    ['(OFF)Giao - Kế Toán bán hàng', 'Giao - Kế Toán bán hàng'],
+    ['Hải TeleSale', 'Hải TeleSale'],
+    ['(OFF)Hải TeleSale', 'Hải TeleSale'],
     ['(off) Abraham San Miền Trung ', 'Abraham San Miền Trung'],
     ['  (OFF)   Abraham Khải Hcm  ', 'Abraham Khải Hcm'],
     ['Abraham Khải Miền Trung', 'Abraham Khải Khánh Hoà'],
@@ -84,6 +84,11 @@ describe('getSaleWorkDisplayName', () => {
 });
 
 describe('AMIS_EMPLOYEE_MAP', () => {
+  it('ghép Hải TeleSale với đúng nhân viên AMIS mới và bỏ nhân viên đã nghỉ', () => {
+    expect(AMIS_EMPLOYEE_MAP['Hải TeleSale']).toBe('Đặng Thanh Hải');
+    expect(AMIS_EMPLOYEE_MAP['Giao - Kế Toán bán hàng']).toBeUndefined();
+  });
+
   it('ghép tài khoản SaleWork của Võ Thanh Nhâm với đúng tên AMIS', () => {
     expect(AMIS_EMPLOYEE_MAP['Abraham Nhâm Miền Trung']).toBe('Võ Thanh Nhâm');
   });

@@ -2797,3 +2797,11 @@ LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi độn
 - Đã thêm migration `20261007094000_map_vo_thanh_nham_amis_profile.sql` để nối đúng một hồ sơ Sales `Võ Thanh Nhâm` với AMIS cùng tên, có guard chống thiếu/trùng/ghi đè mapping khác.
 - SaleWork đã ánh xạ `Abraham Nhâm Miền Trung`. Next Exact Steps: push migration production, restart ứng dụng và mở preview báo cáo đúng ngày Việt Nam hiện tại để xác nhận hai khối.
 - Người dùng đã chạy SQL production trực tiếp do CLI bị HTTP 403. Server local đã restart và `/login` trả 200. Next Exact Step còn lại: tải lại preview báo cáo ngày 07/10/2026 của Võ Thanh Nhâm, xác nhận cả MISA và SaleWork xuất hiện.
+
+### 2026-10-07 — Telesale Đặng Thanh Hải
+
+- Mapping hiện hành: `Hải TeleSale → Đặng Thanh Hải → VP-TLS-004`.
+- Đã bỏ tài khoản Giao khỏi tập chọn worker ngày/tháng, AMIS map, CRM map và mã ảnh; dữ liệu lịch sử không bị xóa.
+- Đồng bộ thật exit 0: SaleWork ghi 9 tài khoản; CRM HTTP 200 trả `VP-TLS-004 · Đặng Thanh Hải · 4/4`.
+- Service đọc lại: 5 hội thoại, 1 tin gửi, 1 tin nhận, 4 gọi đi, 0 gọi đến, 3,23 phút; AMIS tháng 10 ghép đúng tên với doanh số hiện tại 0.
+- Unit mục tiêu, typecheck, lint và production build pass. Next Exact Step: deploy/reload rồi kiểm tra `/admin/report-previews?salework=Hải%20TeleSale#report-preview`.

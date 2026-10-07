@@ -2866,3 +2866,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Lọc trên 10 dòng hiện tại bị loại vì không khớp số đếm; modal riêng bị loại vì không tái sử dụng tìm kiếm/phân trang.
 - **Impact:** Dùng một điều kiện chung cho count và rows. D gồm null/<=0 đúng helper phân nhóm hiện có. Index prefix tháng/nhân viên hiện hữu phục vụ truy vấn; không đổi schema/quyền/ngưỡng nhóm.
 - **Status:** APPROVED — yêu cầu trực tiếp của người dùng.
+
+## DEC-104 — Thay nhân sự telesale Giao bằng Hải
+
+- **Date:** 2026-10-07
+- **Decision:** Thay ánh xạ vận hành `Giao - Kế Toán bán hàng → Trần Thị Quỳnh Giao → VP-TLS-003` bằng `Hải TeleSale → Đặng Thanh Hải → VP-TLS-004` trong tập đồng bộ SaleWork ngày/tháng, ghép KPI AMIS, ghép CRM Report 70 và mã trên ảnh telesale.
+- **Reason:** Người dùng xác nhận Trần Thị Quỳnh Giao đã nghỉ việc và vị trí hiện tại do Đặng Thanh Hải tiếp quản với tài khoản/mã nguồn mới.
+- **Alternatives:** Chuẩn hóa `Hải TeleSale` về khóa snapshot cũ của Giao bị loại vì đây là hai nhân sự khác nhau và sẽ làm sai lịch sử; giữ đồng thời hai người trong tập hiện tại bị loại vì job sẽ tiếp tục yêu cầu tài khoản đã nghỉ.
+- **Impact:** Lượt đồng bộ mới chỉ yêu cầu và ghi `Hải TeleSale`; số tháng lấy từ dòng AMIS `Đặng Thanh Hải`; số cuộc gọi CRM lấy mã `VP-TLS-004`. Snapshot cũ của Giao không bị sửa hoặc xóa nhưng không tham gia báo cáo hiện tại.
+- **Status:** APPROVED — yêu cầu và thông tin nguồn do người dùng xác nhận trực tiếp.

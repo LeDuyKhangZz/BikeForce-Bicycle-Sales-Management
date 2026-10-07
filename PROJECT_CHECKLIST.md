@@ -1378,3 +1378,13 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Thêm migration fail-safe nối hồ sơ Sales Võ Thanh Nhâm với AMIS cùng tên; không đổi schema/RLS.
 - [x] Áp câu SQL fail-safe production qua SQL Editor để nối hồ sơ Võ Thanh Nhâm; Supabase CLI hiện bị HTTP 403.
 - [ ] Tải lại và xác nhận ảnh cuối ngày hiện tại có cả MISA lẫn SaleWork.
+
+## 2026-10-07 — Thay nhân sự telesale Giao bằng Hải
+
+- [x] Tập đồng bộ ngày/tháng dùng `Hải TeleSale`, không còn yêu cầu tài khoản Giao đã nghỉ.
+- [x] Ghép `Hải TeleSale → Đặng Thanh Hải → VP-TLS-004` cho MISA, CRM và ảnh telesale.
+- [x] Giữ snapshot lịch sử của Giao nguyên trạng, không nhập chung khóa với Hải.
+- [x] Thêm unit test khóa mapping mới và việc mapping Giao không còn hiệu lực.
+- [x] Chạy đồng bộ thật: SaleWork ghi đủ 9 tài khoản; CRM trả `VP-TLS-004 · Đặng Thanh Hải · 4/4 cuộc gọi`.
+- [x] Đọc lại qua service: Hải có 5 hội thoại, 1 tin gửi, 1 tin nhận, 4 cuộc gọi đi, 3,23 phút; MISA tháng 10 ghép đúng tên.
+- [ ] Tải lại preview production và xác nhận ảnh hiển thị đúng số vừa đồng bộ.

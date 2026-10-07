@@ -7,8 +7,9 @@ describe('getCrmCallEmployeeCode', () => {
     expect(getCrmCallEmployeeCode('Abraham Kế Toán Bánhàng')).toBe('VP-SA-001');
   });
 
-  it('giữ Giao ở đúng mã nhân viên riêng, không nhập nhằng với kế toán tổng', () => {
-    expect(getCrmCallEmployeeCode('Giao - Kế Toán bán hàng')).toBe('VP-TLS-003');
+  it('nối Hải TeleSale với đúng mã nhân viên mới, không nhập nhằng với kế toán tổng', () => {
+    expect(getCrmCallEmployeeCode('Hải TeleSale')).toBe('VP-TLS-004');
+    expect(getCrmCallEmployeeCode('Giao - Kế Toán bán hàng')).toBeNull();
   });
 
   it('không đoán gần đúng tài khoản chưa khai báo', () => {

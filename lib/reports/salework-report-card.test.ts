@@ -38,8 +38,9 @@ function recordingContext(): { context: Canvas2DLike; texts: TextCall[] } {
 }
 
 describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => {
-  it('hiển thị đúng mã telesale của tài khoản Giao', () => {
-    expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('VP-TLS-003');
+  it('hiển thị mã mới của Hải và không tái dùng mã nhân viên đã nghỉ', () => {
+    expect(getTelesaleCode('Hải TeleSale')).toBe('VP-TLS-004');
+    expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('—');
   });
 
   it('tách tên nội dung khỏi cột chỉ tiêu và vẽ targetAmount ở đúng cột', () => {

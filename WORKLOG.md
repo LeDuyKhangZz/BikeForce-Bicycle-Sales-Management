@@ -3910,3 +3910,14 @@ Kiểm chứng: typecheck, lint và production build exit 0; unit helper 3/3 pas
 - Thêm migration dữ liệu fail-safe để đặt `profiles.amis_employee_name = Võ Thanh Nhâm` cho đúng một hồ sơ Sales cùng tên; không dùng service role DML và không nới RLS.
 - Ánh xạ SaleWork đã có từ commit `e242c36`: `Võ Thanh Nhâm → Abraham Nhâm Miền Trung`.
 - Supabase CLI bị từ chối quyền project (HTTP 403), nên người dùng đã chạy trực tiếp cùng câu SQL fail-safe trong SQL Editor và xác nhận hoàn tất. Server local được restart sau đó, `/login` trả HTTP 200.
+
+## 2026-10-07 — Thay vị trí telesale Giao bằng Hải
+
+Người dùng xác nhận Trần Thị Quỳnh Giao đã nghỉ và thay toàn bộ mapping vận hành bằng
+`Hải TeleSale → Đặng Thanh Hải → VP-TLS-004`. Worker SaleWork ngày/tháng không còn tìm tài khoản Giao;
+service ghép số tháng từ đúng dòng AMIS Đặng Thanh Hải; CRM Report 70 và ảnh dùng mã mới. Không đổi/xóa
+snapshot lịch sử. Đồng bộ thật exit 0: SaleWork ghi đủ 9 tài khoản; CRM Report 70 HTTP 200 trả đúng
+`VP-TLS-004 · Đặng Thanh Hải · tổng 4 · đã gọi 4`. Đọc lại qua `getSaleWorkReport()` trả Hải với
+5 hội thoại, 1 tin gửi, 1 tin nhận, 4 cuộc gọi đi và 3,23 phút; AMIS tháng 10 ghép đúng nhưng hiện
+doanh số 0, chưa có chỉ tiêu và `receiveAmount`. Unit mục tiêu, typecheck, lint và production build pass;
+chưa kiểm tra trực quan preview production sau lần đồng bộ.
