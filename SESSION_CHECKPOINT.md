@@ -2781,3 +2781,9 @@ LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi độn
 ## 2026-10-06 — Tỷ lệ doanh số tháng
 
 `/sales/customers` đã so sánh doanh số Report 44 của tháng chọn với tháng liền trước theo từng mã khách. Có trạng thái tăng, giảm, không đổi, mới phát sinh và thiếu dữ liệu; dùng chung helper `lib/amis/monthly-sales-change.ts`. Typecheck/lint/build và 3 unit test đã pass; production server local đã restart. Next Exact Steps: smoke test tháng 09/2026 trên mobile.
+### 2026-10-07 — Đồng bộ nhân viên Võ Thanh Nhâm
+
+- API thật Report 119 tháng 10/2026 xác nhận `Võ Thanh Nhâm` có trong Phòng kinh doanh.
+- `npm run reports:sync` exit 0: KPI AMIS ghi 13 dòng hợp nhất; snapshot Report 119 thay nguyên tử 12 nhân viên/2.693 khách hàng và có Võ Thanh Nhâm (56 khách phụ trách, 1 khách tương tác).
+- Luồng SaleWork ngày ghi 8 tài khoản và CRM cuộc gọi ghi 1 dòng theo dữ liệu nguồn; chưa có ánh xạ SaleWork/mã CRM cho Võ Thanh Nhâm nên không tạo số liệu giả.
+- Không thay đổi code/schema/RLS. Next Exact Steps: nếu Võ Thanh Nhâm có tài khoản SaleWork hoặc mã nhân viên CRM riêng, bổ sung ánh xạ chính xác sau khi tên/mã được xác nhận từ chính hệ nguồn.

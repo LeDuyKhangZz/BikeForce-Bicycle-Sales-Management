@@ -3891,3 +3891,10 @@ Khắc phục truy cập LAN: `allowedDevOrigins` thiếu IP hiện tại `192.1
 Theo yêu cầu người dùng, doanh số Report 44 trên `/sales/customers` hiển thị tỷ lệ tăng/giảm của từng khách so với tháng liền trước. Service đọc hai kỳ trong cùng truy vấn và ghép theo mã khách; UI mobile, popup, tablet và bảng desktop dùng chung helper. Tháng trước bằng 0 được xử lý thành “Mới phát sinh” hoặc “Không đổi”; thiếu kỳ hiển thị “Chưa có dữ liệu tháng trước”, không sinh `NaN`/`Infinity`. Không đổi schema hoặc RLS.
 
 Kiểm chứng: typecheck, lint và production build exit 0; unit helper 3/3 pass. Server production local đã khởi động lại và `/login` trả 200. Next Exact Steps: kiểm tra trực quan bằng dữ liệu tháng 09/2026 trên điện thoại.
+## 2026-10-07 — Đồng bộ Võ Thanh Nhâm từ AMIS
+
+- Xác minh API Report 119 tháng 10/2026 có đúng nhân viên `Võ Thanh Nhâm`.
+- Chạy `npm run reports:sync` thành công; pipeline động đã đưa Võ Thanh Nhâm vào `amis_employee_metrics` cùng các nguồn dashboard/công nợ có dữ liệu.
+- Snapshot Report 119 được thay nguyên tử với 12 nhân viên và 2.693 khách hàng; riêng Võ Thanh Nhâm có 56 khách hàng phụ trách, 1 khách tương tác và chưa phát sinh doanh số/đơn trong kỳ tại thời điểm đồng bộ.
+- SaleWork ngày đồng bộ 8 tài khoản và CRM cuộc gọi đồng bộ 1 mã nhân viên; không suy diễn dữ liệu cho Võ Thanh Nhâm khi các nguồn này chưa trả tài khoản/mã tương ứng.
+- Không sửa source code, schema hay RLS; hai file `tmp/salework-manual-recording*.ts.txt` có sẵn được giữ nguyên.
