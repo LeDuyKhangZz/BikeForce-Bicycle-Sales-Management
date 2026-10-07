@@ -4,10 +4,14 @@ import {
   getSaleWorkAccountName,
   getSaleWorkAccountSelectionName,
   getSaleWorkDisplayName,
+  isSaleWorkOnlyReportAccount,
+  MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES,
   MONTHLY_SALEWORK_ACCOUNT_NAMES,
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
+  TELESALE_SALEWORK_ACCOUNT_NAMES,
 } from '@/lib/salework/sales-account-map';
+import { getCrmCallEmployeeCode } from '@/lib/salework/crm-employee-map';
 import { AMIS_EMPLOYEE_MAP } from '@/services/salework';
 
 describe('getSaleWorkAccountName', () => {
@@ -80,6 +84,35 @@ describe('getSaleWorkDisplayName', () => {
   it('đổi nhãn kế toán nhưng giữ nguyên tài khoản khác', () => {
     expect(getSaleWorkDisplayName('Abraham Kế Toán Bánhàng')).toBe('Nguyễn Thị Như Quỳnh');
     expect(getSaleWorkDisplayName('Abraham Khải Hcm')).toBe('Abraham Khải Hcm');
+  });
+});
+
+describe('tài khoản báo cáo TeleSale', () => {
+  it('đồng bộ Cô Thy cùng Hải và Nguyễn Thị Như Quỳnh', () => {
+    expect(TELESALE_SALEWORK_ACCOUNT_NAMES).toEqual([
+      'Abraham Kế Toán Bánhàng',
+      'Hải TeleSale',
+      'Cô Thy',
+    ]);
+  });
+
+  it('chỉ đánh dấu Cô Thy là báo cáo SaleWork-only', () => {
+    expect(isSaleWorkOnlyReportAccount('Cô Thy')).toBe(true);
+    expect(isSaleWorkOnlyReportAccount('Hải TeleSale')).toBe(false);
+    expect(isSaleWorkOnlyReportAccount('Abraham Kế Toán Bánhàng')).toBe(false);
+  });
+
+  it('không đưa Cô Thy vào snapshot tháng', () => {
+    expect(MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES).toEqual([
+      'Abraham Kế Toán Bánhàng',
+      'Hải TeleSale',
+    ]);
+    expect(MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES).not.toContain('Cô Thy');
+  });
+
+  it('không ánh xạ Cô Thy sang dữ liệu AMIS hoặc CRM', () => {
+    expect(AMIS_EMPLOYEE_MAP['Cô Thy']).toBeUndefined();
+    expect(getCrmCallEmployeeCode('Cô Thy')).toBeNull();
   });
 });
 

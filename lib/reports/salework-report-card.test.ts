@@ -121,4 +121,29 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
     expect(texts.some((call) => call.text === '721.709.926')).toBe(true);
     expect(texts.some((call) => call.text === '0')).toBe(false);
   });
+
+  it('Cô Thy chỉ hiển thị số liệu SaleWork, không dựng các khối MISA AMIS', () => {
+    const { context, texts } = recordingContext();
+
+    drawReportCard(context, {
+      accountName: 'Cô Thy',
+      conversations: 10,
+      sentMessages: 10,
+      receivedMessages: 75,
+      incomingCalls: 1,
+      outgoingCalls: 4,
+      missedCalls: 0,
+      callDuration: '1.38 phút',
+      amis: null,
+    });
+
+    const renderedTexts = texts.map((call) => call.text);
+    expect(renderedTexts).toContain('Cô Thy');
+    expect(renderedTexts).toContain('Tình trạng thực hiện trong ngày');
+    expect(renderedTexts).toContain('75');
+    expect(renderedTexts).toContain('1.38 phút');
+    expect(renderedTexts).not.toContain('Tình trạng thực hiện trong tháng');
+    expect(renderedTexts).not.toContain('Số liệu MISA tính đến —');
+    expect(renderedTexts).not.toContain('SL ĐH đã ghi  —');
+  });
 });

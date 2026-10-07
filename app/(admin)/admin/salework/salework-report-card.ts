@@ -1,5 +1,8 @@
 import type { SaleWorkReport } from '@/services/salework';
-import { getSaleWorkDisplayName } from '@/lib/salework/sales-account-map';
+import {
+  getSaleWorkDisplayName,
+  isSaleWorkOnlyReportAccount,
+} from '@/lib/salework/sales-account-map';
 
 export const CARD_WIDTH = 540;
 export const CARD_HEIGHT = 960;
@@ -136,6 +139,7 @@ export function drawReportCard(
   const h = CARD_HEIGHT;
   const amis = report.amis;
   const displayName = getSaleWorkDisplayName(report.accountName);
+  const isSaleWorkOnly = isSaleWorkOnlyReportAccount(report.accountName);
 
   if (backgroundImage) {
     ctx.drawImage(backgroundImage, 0, 0, w, h);
@@ -194,6 +198,7 @@ export function drawReportCard(
   const headerH = 38;
   const tableH = headerH + rowH * 2;
 
+  if (!isSaleWorkOnly) {
   fillRoundedBox(ctx, 20, 205, 500, 200, 16, COLORS.cream, COLORS.border);
   fillRoundedBox(ctx, 34, 190, 330, 36, 18, COLORS.orangeBoxBg);
   ctx.fillStyle = COLORS.orangeBoxText;
@@ -278,11 +283,12 @@ export function drawReportCard(
     ctx.fillText(row.percent, percentRightX, textY);
   });
   ctx.textAlign = 'left';
+  }
 
   // --- Tình trạng thực hiện trong ngày ---
   const boxX = 20;
   const boxW = 500;
-  const boxTop = 435;
+  const boxTop = isSaleWorkOnly ? 315 : 435;
   const lineItems: Array<{ label: string; value: string }> = [
     { label: 'Số lượng hội thoại tương tác', value: String(report.conversations) },
     { label: 'Số lượng tin nhắn đã gửi', value: String(report.sentMessages) },
@@ -291,10 +297,10 @@ export function drawReportCard(
     { label: 'Số lượng cuộc gọi đến đã nghe', value: String(report.incomingCalls) },
     { label: 'Tổng thời gian đã nghe máy', value: report.callDuration },
   ];
-  const lineH = 34;
+  const lineH = isSaleWorkOnly ? 47 : 34;
   const bottomBoxH = 82;
 
-  fillRoundedBox(ctx, boxX, boxTop, boxW, 344, 16, COLORS.cream, COLORS.border);
+  fillRoundedBox(ctx, boxX, boxTop, boxW, isSaleWorkOnly ? 350 : 344, 16, COLORS.cream, COLORS.border);
   fillRoundedBox(ctx, 58, boxTop - 18, 350, 40, 20, COLORS.orangeBoxBg);
   ctx.fillStyle = COLORS.orangeBoxText;
   ctx.font = '700 17px ReportFont-Bold';
@@ -320,6 +326,7 @@ export function drawReportCard(
     itemY += lineH;
   });
 
+  if (!isSaleWorkOnly) {
   const innerBoxY = itemY + 2;
   const innerBoxX = boxX + 24;
   const innerBoxW = boxW - 48;
@@ -347,6 +354,7 @@ export function drawReportCard(
     ctx.fillText(`${row.label}  ${row.value}`, innerBoxX + innerBoxW / 2, rowY);
   });
   ctx.textAlign = 'left';
+  }
 
   ctx.textAlign = 'center';
   ctx.fillStyle = COLORS.accentStrong;

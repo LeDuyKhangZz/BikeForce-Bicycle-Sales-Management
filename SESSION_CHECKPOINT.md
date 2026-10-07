@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## 2026-10-07 — DEC-105 báo cáo Cô Thy
+
+Đã thêm `Cô Thy` vào tập đồng bộ SaleWork ngày. Báo cáo ảnh chỉ lấy sáu chỉ số SaleWork, không có mapping AMIS/CRM, không hiện khối tháng/đơn hàng và không tham gia snapshot tháng. Test liên quan 33/33, typecheck/lint/build exit 0. Full unit 911 pass/1 fail cũ tại giới hạn nhãn `Khách hàng`; không phải hồi quy DEC-105.
+
+**Next Exact Steps:** cần chạy một lượt SaleWork-only để ghi dòng `Cô Thy` vào Supabase rồi mở `/admin/salework` hoặc API ảnh để kiểm tra PNG thật. Không dùng `npm run salework:sync` cho yêu cầu này khi command còn nối thêm `fetch_call_statistics.py` AMIS nếu chưa có xác nhận rõ của người dùng.
+
 
 ## 2026-10-01 — Hoàn tác doanh số tháng trước
 

@@ -20,6 +20,22 @@ const SALEWORK_DISPLAY_NAME_MAP: Readonly<Record<string, string>> = {
   'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
 };
 
+/** Các tài khoản TeleSale cần xuất báo cáo cuối ngày từ SaleWork. */
+export const TELESALE_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
+  'Abraham Kế Toán Bánhàng',
+  'Hải TeleSale',
+  'Cô Thy',
+];
+
+/** Tập TeleSale cần snapshot tháng; Cô Thy chỉ có báo cáo cuối ngày. */
+export const MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
+  'Abraham Kế Toán Bánhàng',
+  'Hải TeleSale',
+];
+
+/** Tài khoản chỉ dùng số liệu SaleWork, không ghép CRM MISA AMIS. */
+const SALEWORK_ONLY_REPORT_ACCOUNT_NAMES: ReadonlySet<string> = new Set(['Cô Thy']);
+
 const SALEWORK_ACCOUNT_SELECTION_NAME_MAP: Readonly<Record<string, string>> = {
   // SaleWork đã đổi nhãn tài khoản; giữ khóa snapshot cũ để không tách lịch sử.
   'Abraham Khải Khánh Hoà': 'Abraham Khải Miền Trung',
@@ -68,4 +84,8 @@ export function getSaleWorkAccountName(salesFullName: string): string | null {
 /** Đổi nhãn giao diện nhưng giữ nguyên account name làm khóa truy vấn SaleWork. */
 export function getSaleWorkDisplayName(accountName: string): string {
   return SALEWORK_DISPLAY_NAME_MAP[accountName] ?? accountName;
+}
+
+export function isSaleWorkOnlyReportAccount(accountName: string): boolean {
+  return SALEWORK_ONLY_REPORT_ACCOUNT_NAMES.has(accountName);
 }

@@ -19,9 +19,11 @@ import {
 } from '../lib/salework/monthly-snapshot';
 import {
   getSaleWorkAccountSelectionName,
+  MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES,
   MONTHLY_SALEWORK_ACCOUNT_NAMES,
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
+  TELESALE_SALEWORK_ACCOUNT_NAMES,
 } from '../lib/salework/sales-account-map';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
@@ -46,8 +48,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 });
 
 const DAILY_TARGET_ACCOUNT_NAMES = [
-  'Abraham Kế Toán Bánhàng',
-  'Hải TeleSale',
+  ...TELESALE_SALEWORK_ACCOUNT_NAMES,
   ...SALES_SALEWORK_ACCOUNT_NAMES,
 ];
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
@@ -56,8 +57,7 @@ const syncMode = process.env.SALEWORK_SYNC_MODE?.trim();
 const requestedMonth = process.env.SALEWORK_SYNC_MONTH?.trim() ?? '';
 const targetAccountNames = syncMode === 'MONTH_ONLY'
   ? [
-      'Abraham Kế Toán Bánhàng',
-      'Hải TeleSale',
+      ...MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES,
       ...MONTHLY_SALEWORK_ACCOUNT_NAMES,
     ]
   : DAILY_TARGET_ACCOUNT_NAMES;

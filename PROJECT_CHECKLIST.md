@@ -1,5 +1,13 @@
 # BikeForce Project Checklist
 
+## DEC-105 — 07/10/2026
+
+- [x] Thêm Cô Thy vào đồng bộ SaleWork ngày; không thêm snapshot tháng.
+- [x] Thẻ Cô Thy chỉ có sáu chỉ số SaleWork, không có khối MISA AMIS/CRM.
+- [x] Test liên quan 33/33, typecheck/lint/build exit 0.
+- [ ] Đồng bộ dữ liệu thật chưa chạy: script npm hiện ghép bước AMIS; cần một lượt SaleWork-only được người dùng cho phép hoặc tách command trong task sau.
+- [ ] Full unit còn 1 lỗi cũ ngoài phạm vi: giới hạn nhãn `Khách hàng` trong `nav-items.test.ts`.
+
 - [x] ISSUE-054: không đảo checkbox Chọn tất cả AMIS đang bật; chờ số lượng cảhai bộlọc >0 sau tải.
 - [x] Hồi quy fail trướcfix/pass3/3 saufix; fullunit826/826, typecheck/lint/build exit0.
 - [x] Wrapper sau sửa exit 0 lúc 13:06:28, stderr rỗng; harvest AMIS lượt mở lại tiếp theo exit 0, đúng tháng 09 và 9 dòng tổng công nợ; ISSUE-054 CLOSED.

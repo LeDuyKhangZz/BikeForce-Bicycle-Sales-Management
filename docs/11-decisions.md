@@ -2875,3 +2875,11 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Chuẩn hóa `Hải TeleSale` về khóa snapshot cũ của Giao bị loại vì đây là hai nhân sự khác nhau và sẽ làm sai lịch sử; giữ đồng thời hai người trong tập hiện tại bị loại vì job sẽ tiếp tục yêu cầu tài khoản đã nghỉ.
 - **Impact:** Lượt đồng bộ mới chỉ yêu cầu và ghi `Hải TeleSale`; số tháng lấy từ dòng AMIS `Đặng Thanh Hải`; số cuộc gọi CRM lấy mã `VP-TLS-004`. Snapshot cũ của Giao không bị sửa hoặc xóa nhưng không tham gia báo cáo hiện tại.
 - **Status:** APPROVED — yêu cầu và thông tin nguồn do người dùng xác nhận trực tiếp.
+## DEC-105 — Báo cáo Cô Thy chỉ dùng dữ liệu SaleWork
+
+- **Date:** 2026-10-07
+- **Decision:** Thêm tài khoản `Cô Thy` vào tập đồng bộ SaleWork hằng ngày và xuất ảnh cuối ngày cùng Hải TeleSale, Nguyễn Thị Như Quỳnh. Báo cáo Cô Thy chỉ hiển thị sáu chỉ số SaleWork; không ánh xạ nhân viên AMIS, không cộng snapshot cuộc gọi CRM và không dựng các khối doanh số/doanh thu/đơn hàng MISA. Không thêm Cô Thy vào snapshot SaleWork tháng.
+- **Reason:** Người dùng yêu cầu báo cáo cuối ngày cho Cô Thy nhưng dữ liệu nghiệp vụ của nhân sự này chỉ đến từ SaleWork.
+- **Alternatives:** Ghép AMIS như Hải/Quỳnh bị loại vì sai nguồn; hiển thị các ô AMIS bằng dấu gạch bị loại vì tạo nội dung không cần thiết trên ảnh.
+- **Impact:** Tập đồng bộ ngày tăng từ 9 lên 10 tài khoản; API và trang Admin tự nhận thêm báo cáo sau lượt sync SaleWork thành công. Không đổi schema, RLS hay API contract.
+- **Status:** APPROVED

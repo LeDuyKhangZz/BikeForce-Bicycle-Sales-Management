@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## 2026-10-07 — DEC-105 báo cáo SaleWork-only cho Cô Thy
+
+Thêm `Cô Thy` vào tập sync ngày cùng Hải TeleSale và tài khoản của Nguyễn Thị Như Quỳnh; không thêm vào snapshot tháng. Thẻ ảnh Cô Thy chỉ dựng sáu chỉ số SaleWork, bỏ khối tháng/đơn hàng MISA. Test khóa việc Cô Thy không có mapping AMIS hoặc CRM.
+
+Kiểm chứng thật: test liên quan 33/33, typecheck/lint exit 0, production build 30 route exit 0. Full unit đạt 912 lượt nhưng còn 1 fail cũ ngoài phạm vi ở `nav-items.test.ts` (`Khách hàng` dài 10 > giới hạn cũ 9), đúng lỗi đã ghi ở checkpoint DEC-097; không ghi PASS toàn bộ. Chưa chạy sync thật vì lệnh npm hiện ghép thêm `fetch_call_statistics.py` của AMIS và yêu cầu hiện tại cấm dùng AMIS cho Cô Thy.
+
 ## 2026-09-14 — ISSUE-054 AMIS Chọn tất cả
 
 **Kiểm chứng cuối:** Wrapper -NoTelegram 13:05:55–13:06:28 exit 0, stderr rỗng. Harvest AMIS lượt mở lại tiếp theo exit 0, đúng tháng 09, lấy 9 dòng tổng công nợ. Unit 826/826, typecheck/lint/build exit 0; ISSUE-054 CLOSED. Lịch 10 phút và đóng tab được giữ nguyên; không cần deploy website. Chỉ commit source/docs local, không push remote từng bị chặn.
