@@ -902,3 +902,4 @@ Sales chỉ được `SELECT` kế hoạch có `sales_id = auth.uid()`. Admin đ
 ### Quyền xem doanh số khách hàng report 44 (2026-10-03 — DEC-102)
 
 Admin active được xem toàn bộ `misa_report44_customer_monthly_sales` qua policy dùng `(select public.is_admin())`. Sales active chỉ được xem dòng có `customer_code` thuộc danh sách report 119 của chính mình; policy ánh xạ qua `profiles.amis_employee_name` và khóa mã khách hàng. `anon` không có quyền. `service_role` không có DML trực tiếp; worker chỉ ghi qua RPC security-definer `replace_misa_report44_customer_sales`, function chỉ cấp EXECUTE cho `service_role`.
+> **2026-10-07 — Võ Thanh Nhâm:** chỉ bổ sung dữ liệu cầu nối `profiles.amis_employee_name` bằng migration có kiểm tra duy nhất. Quyền đọc MISA/SaleWork trên ảnh vẫn đi qua auth Admin/Sales và các policy hiện hữu; không cấp thêm quyền hoặc dùng service role để sửa hồ sơ.

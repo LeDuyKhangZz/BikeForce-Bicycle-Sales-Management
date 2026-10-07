@@ -2792,3 +2792,8 @@ LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi độn
 - Mapping chuẩn: `Võ Thanh Nhâm → Abraham Nhâm Miền Trung`; có trong cả tập ngày và tháng, đồng thời ghép ngược sang AMIS đúng tên.
 - Sync ngày exit 0, ghi 9 tài khoản. Sync tháng lần đầu fail do bảng cuộn ảo chưa ổn định; lần hai exit 0, ghi 11 tài khoản, Nhâm = 12 hội thoại/31 tin gửi/77 tin nhận.
 - Unit mục tiêu 23/23, typecheck/lint/build 30 trang pass. Không đổi schema/RLS.
+### 2026-10-07 — Hồ sơ Võ Thanh Nhâm
+
+- Đã thêm migration `20261007094000_map_vo_thanh_nham_amis_profile.sql` để nối đúng một hồ sơ Sales `Võ Thanh Nhâm` với AMIS cùng tên, có guard chống thiếu/trùng/ghi đè mapping khác.
+- SaleWork đã ánh xạ `Abraham Nhâm Miền Trung`. Next Exact Steps: push migration production, restart ứng dụng và mở preview báo cáo đúng ngày Việt Nam hiện tại để xác nhận hai khối.
+- Người dùng đã chạy SQL production trực tiếp do CLI bị HTTP 403. Server local đã restart và `/login` trả 200. Next Exact Step còn lại: tải lại preview báo cáo ngày 07/10/2026 của Võ Thanh Nhâm, xác nhận cả MISA và SaleWork xuất hiện.

@@ -1375,3 +1375,6 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Giữ nguyên cơ chế lấy nhân viên động; không thêm danh sách hardcode hoặc số liệu giả cho nguồn SaleWork/CRM cuộc gọi chưa có ánh xạ.
 - [x] Ánh xạ `Võ Thanh Nhâm → Abraham Nhâm Miền Trung` cho SaleWork ngày, tháng và ghép KPI AMIS (2026-10-07).
 - [x] Đồng bộ thật: ngày 9 tài khoản; tháng 10/2026 có Nhâm 12 hội thoại/31 tin gửi/77 tin nhận.
+- [x] Thêm migration fail-safe nối hồ sơ Sales Võ Thanh Nhâm với AMIS cùng tên; không đổi schema/RLS.
+- [x] Áp câu SQL fail-safe production qua SQL Editor để nối hồ sơ Võ Thanh Nhâm; Supabase CLI hiện bị HTTP 403.
+- [ ] Tải lại và xác nhận ảnh cuối ngày hiện tại có cả MISA lẫn SaleWork.

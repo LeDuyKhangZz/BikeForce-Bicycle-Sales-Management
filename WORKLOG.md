@@ -3904,3 +3904,9 @@ Kiểm chứng: typecheck, lint và production build exit 0; unit helper 3/3 pas
 - Đã thêm vào nguồn ánh xạ chuẩn, tập đồng bộ ngày/tháng và ánh xạ SaleWork → AMIS.
 - Đồng bộ ngày thật ghi 9 tài khoản. Đồng bộ tháng lần đầu không ổn định sau 5 lượt; lần chạy lại exit 0, ghi 11 tài khoản và đọc riêng Nhâm là 12 hội thoại/31 tin gửi/77 tin nhận.
 - Unit mục tiêu 23/23, typecheck, lint và build 30 trang đều pass.
+## 2026-10-07 — Nối hồ sơ Võ Thanh Nhâm với AMIS
+
+- Người dùng cho phép hồ sơ Võ Thanh Nhâm hoạt động tương tự các Sales khác.
+- Thêm migration dữ liệu fail-safe để đặt `profiles.amis_employee_name = Võ Thanh Nhâm` cho đúng một hồ sơ Sales cùng tên; không dùng service role DML và không nới RLS.
+- Ánh xạ SaleWork đã có từ commit `e242c36`: `Võ Thanh Nhâm → Abraham Nhâm Miền Trung`.
+- Supabase CLI bị từ chối quyền project (HTTP 403), nên người dùng đã chạy trực tiếp cùng câu SQL fail-safe trong SQL Editor và xác nhận hoàn tất. Server local được restart sau đó, `/login` trả HTTP 200.
