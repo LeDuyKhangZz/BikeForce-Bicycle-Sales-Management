@@ -2787,3 +2787,8 @@ LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi độn
 - `npm run reports:sync` exit 0: KPI AMIS ghi 13 dòng hợp nhất; snapshot Report 119 thay nguyên tử 12 nhân viên/2.693 khách hàng và có Võ Thanh Nhâm (56 khách phụ trách, 1 khách tương tác).
 - Luồng SaleWork ngày ghi 8 tài khoản và CRM cuộc gọi ghi 1 dòng theo dữ liệu nguồn; chưa có ánh xạ SaleWork/mã CRM cho Võ Thanh Nhâm nên không tạo số liệu giả.
 - Không thay đổi code/schema/RLS. Next Exact Steps: nếu Võ Thanh Nhâm có tài khoản SaleWork hoặc mã nhân viên CRM riêng, bổ sung ánh xạ chính xác sau khi tên/mã được xác nhận từ chính hệ nguồn.
+### 2026-10-07 — SaleWork Võ Thanh Nhâm
+
+- Mapping chuẩn: `Võ Thanh Nhâm → Abraham Nhâm Miền Trung`; có trong cả tập ngày và tháng, đồng thời ghép ngược sang AMIS đúng tên.
+- Sync ngày exit 0, ghi 9 tài khoản. Sync tháng lần đầu fail do bảng cuộn ảo chưa ổn định; lần hai exit 0, ghi 11 tài khoản, Nhâm = 12 hội thoại/31 tin gửi/77 tin nhận.
+- Unit mục tiêu 23/23, typecheck/lint/build 30 trang pass. Không đổi schema/RLS.

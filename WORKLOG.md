@@ -3898,3 +3898,9 @@ Kiểm chứng: typecheck, lint và production build exit 0; unit helper 3/3 pas
 - Snapshot Report 119 được thay nguyên tử với 12 nhân viên và 2.693 khách hàng; riêng Võ Thanh Nhâm có 56 khách hàng phụ trách, 1 khách tương tác và chưa phát sinh doanh số/đơn trong kỳ tại thời điểm đồng bộ.
 - SaleWork ngày đồng bộ 8 tài khoản và CRM cuộc gọi đồng bộ 1 mã nhân viên; không suy diễn dữ liệu cho Võ Thanh Nhâm khi các nguồn này chưa trả tài khoản/mã tương ứng.
 - Không sửa source code, schema hay RLS; hai file `tmp/salework-manual-recording*.ts.txt` có sẵn được giữ nguyên.
+## 2026-10-07 — Ánh xạ SaleWork Võ Thanh Nhâm
+
+- Người dùng xác nhận tài khoản SaleWork của Võ Thanh Nhâm là `Abraham Nhâm Miền Trung`.
+- Đã thêm vào nguồn ánh xạ chuẩn, tập đồng bộ ngày/tháng và ánh xạ SaleWork → AMIS.
+- Đồng bộ ngày thật ghi 9 tài khoản. Đồng bộ tháng lần đầu không ổn định sau 5 lượt; lần chạy lại exit 0, ghi 11 tài khoản và đọc riêng Nhâm là 12 hội thoại/31 tin gửi/77 tin nhận.
+- Unit mục tiêu 23/23, typecheck, lint và build 30 trang đều pass.

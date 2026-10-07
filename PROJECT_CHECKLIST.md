@@ -1373,3 +1373,5 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Xác minh Võ Thanh Nhâm có trên API AMIS Report 119 tháng 10/2026.
 - [x] Chạy luồng đồng bộ tổng và ghi KPI AMIS cùng snapshot 12 nhân viên/2.693 khách hàng lên Supabase.
 - [x] Giữ nguyên cơ chế lấy nhân viên động; không thêm danh sách hardcode hoặc số liệu giả cho nguồn SaleWork/CRM cuộc gọi chưa có ánh xạ.
+- [x] Ánh xạ `Võ Thanh Nhâm → Abraham Nhâm Miền Trung` cho SaleWork ngày, tháng và ghép KPI AMIS (2026-10-07).
+- [x] Đồng bộ thật: ngày 9 tài khoản; tháng 10/2026 có Nhâm 12 hội thoại/31 tin gửi/77 tin nhận.

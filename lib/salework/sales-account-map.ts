@@ -11,6 +11,7 @@ const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Nguyễn Trần Hoàn Thiện': 'Abraham Nguyễn Thiện',
   'Phan Thành Khải': 'Abraham Khải Khánh Hoà',
   'Tô Kim Sang': 'Abraham Sang Miền Tây',
+  'Võ Thanh Nhâm': 'Abraham Nhâm Miền Trung',
   'Võ Trí Tính': 'Abraham Bà Rịa - Vũng Tàu',
   'Dương Văn Thịnh': 'Abraham Thịnh Miền Trung',
 };
@@ -51,6 +52,7 @@ export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
   'Abraham Nguyễn Thiện',
   'Abraham Khải Khánh Hoà',
   'Abraham Sang Miền Tây',
+  'Abraham Nhâm Miền Trung',
   'Abraham Bà Rịa - Vũng Tàu',
 ];
 

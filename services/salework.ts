@@ -67,6 +67,7 @@ type AmisEmployeeMetricRow = {
 export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
   'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
   'Giao - Kế Toán bán hàng': 'Trần Thị Quỳnh Giao',
+  'Abraham Nhâm Miền Trung': 'Võ Thanh Nhâm',
 };
 
 const CRM_CALL_ROW_PREFIX = '__CRM70__:';

@@ -8,6 +8,7 @@ import {
   normalizeSaleWorkAccountName,
   SALES_SALEWORK_ACCOUNT_NAMES,
 } from '@/lib/salework/sales-account-map';
+import { AMIS_EMPLOYEE_MAP } from '@/services/salework';
 
 describe('getSaleWorkAccountName', () => {
   it.each([
@@ -17,6 +18,7 @@ describe('getSaleWorkAccountName', () => {
     ['Nguyễn Trần Hoàn Thiện', 'Abraham Nguyễn Thiện'],
     ['Phan Thành Khải', 'Abraham Khải Khánh Hoà'],
     ['Tô Kim Sang', 'Abraham Sang Miền Tây'],
+    ['Võ Thanh Nhâm', 'Abraham Nhâm Miền Trung'],
     ['Võ Trí Tính', 'Abraham Bà Rịa - Vũng Tàu'],
     ['Dương Văn Thịnh', 'Abraham Thịnh Miền Trung'],
   ])('ánh xạ %s sang %s', (salesName, accountName) => {
@@ -31,17 +33,19 @@ describe('getSaleWorkAccountName', () => {
     expect(getSaleWorkAccountName('Nhân viên chưa ánh xạ')).toBeNull();
   });
 
-  it('đưa Abraham Khải Hcm vào danh sách tài khoản cần đồng bộ', () => {
-    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(6);
+  it('đưa tài khoản của Nguyễn Minh Khải và Võ Thanh Nhâm vào tập đồng bộ ngày', () => {
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(7);
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhâm Miền Trung');
   });
 
   it('chỉ thêm Dương Văn Thịnh và Nguyễn Trần Đăng Khoa vào tập tháng, không đổi tập ngày', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Abraham Thịnh Miền Trung');
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Tàu - MT');
-    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(8);
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(9);
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Thịnh Miền Trung');
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Tàu - MT');
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhâm Miền Trung');
   });
 });
 
@@ -76,5 +80,11 @@ describe('getSaleWorkDisplayName', () => {
   it('đổi nhãn kế toán nhưng giữ nguyên tài khoản khác', () => {
     expect(getSaleWorkDisplayName('Abraham Kế Toán Bánhàng')).toBe('Nguyễn Thị Như Quỳnh');
     expect(getSaleWorkDisplayName('Abraham Khải Hcm')).toBe('Abraham Khải Hcm');
+  });
+});
+
+describe('AMIS_EMPLOYEE_MAP', () => {
+  it('ghép tài khoản SaleWork của Võ Thanh Nhâm với đúng tên AMIS', () => {
+    expect(AMIS_EMPLOYEE_MAP['Abraham Nhâm Miền Trung']).toBe('Võ Thanh Nhâm');
   });
 });

@@ -723,3 +723,6 @@ Vercel không giữ profile trình duyệt SaleWork/AMIS nên chỉ ghi yêu c�
 Trang `/sales/customers` cũng đọc report 44 bằng session client chịu RLS. Service chỉ lấy doanh số của các `customer_code` trên trang hiện tại và ghép vào view model; không truyền Supabase client xuống component.
 
 Layout Sales không còn header danh tính/đăng xuất. Guard `requireRole('SALES')` vẫn chạy server-side; đăng xuất được thực hiện tại `/sales/account` từ tab Tài khoản.
+## Bổ sung 07/10/2026 — Ánh xạ Võ Thanh Nhâm
+
+Nguồn chuẩn `lib/salework/sales-account-map.ts` ánh xạ `Võ Thanh Nhâm → Abraham Nhâm Miền Trung` và cấp cùng danh sách cho script đồng bộ ngày/tháng. `services/salework.ts` ánh xạ ngược tài khoản SaleWork sang tên AMIS để ghép KPI; không nhân bản công thức hay truy vấn trong component.

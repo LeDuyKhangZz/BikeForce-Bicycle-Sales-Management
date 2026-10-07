@@ -857,3 +857,6 @@ Theo yêu cầu người dùng, bốn ô nhóm doanh số trở thành liên k�
 Kiểm chứng: build/lint/typecheck đạt; 32/32 unit liên quan pass; headless fixture Admin/Sales tại 375px/1440px đạt, các nhóm hiện, link đúng, target >=44px, không cuộn ngang. Chưa E2E phiên đăng nhập thật. Test RLS bổ sung nhóm D nhưng chưa chạy được do Docker/local test env chưa sẵn sàng như phiên trước.
 
 Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng Xem tất cả; khi môi trường local sẵn sàng chạy `npm run test:db -- tests/rls/misa-customer-alerts.rls.test.ts`. Chưa push/deploy.
+## Bổ sung 07/10/2026 — SaleWork Võ Thanh Nhâm
+
+Luồng ngày chọn và lưu `Abraham Nhâm Miền Trung`; luồng tháng lưu khóa `__SALEWORK_MONTH__:YYYY-MM-01:Abraham Nhâm Miền Trung`. Khi dựng báo cáo, tên tài khoản này ghép chính xác với `amis_employee_metrics.employee_name = Võ Thanh Nhâm`. API thật tháng 10/2026 đã trả 12 hội thoại, 31 tin gửi và 77 tin nhận.
