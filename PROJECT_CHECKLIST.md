@@ -1388,3 +1388,5 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Chạy đồng bộ thật: SaleWork ghi đủ 9 tài khoản; CRM trả `VP-TLS-004 · Đặng Thanh Hải · 4/4 cuộc gọi`.
 - [x] Đọc lại qua service: Hải có 5 hội thoại, 1 tin gửi, 1 tin nhận, 4 cuộc gọi đi, 3,23 phút; MISA tháng 10 ghép đúng tên.
 - [ ] Tải lại preview production và xác nhận ảnh hiển thị đúng số vừa đồng bộ.
+- [x] Bỏ giao diện Trung Thu khỏi ảnh SaleWork và chuyển toàn bộ sang nền/palette 20/10.
+- [x] Render ảnh thật Hải TeleSale và Nguyễn Thị Như Quỳnh, sửa nhãn MISA chạm thanh tiêu đề.

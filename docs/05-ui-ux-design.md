@@ -1460,3 +1460,6 @@ Thẻ cảnh báo và thẻ nhóm A/B/C/D trên `/sales/customers` dùng padding
 Khi chọn cảnh báo hoặc nhóm A/B/C/D, kết quả hiển thị trong bottom sheet trên mobile và dialog giữa màn hình trên desktop. Trên mobile sheet cao `calc(100dvh - 8px)`, cách mép trên viewport 8px để tối đa diện tích xem danh sách; sheet nằm trên bottom nav và nội dung cuộn độc lập. Desktop giữ chiều cao tự nhiên, tối đa `90dvh`. Popup khóa cuộn trang nền, hỗ trợ phím Escape và có nút đóng 44px.
 
 Popup cảnh báo/nhóm phân trang 100 khách mỗi lần để các danh sách phổ biến có thể cuộn xem hết trong một sheet. Header Sales có tên tài khoản và nút Đăng xuất được bỏ; tab Tài khoản là đường duy nhất để đăng xuất.
+## Bổ sung 07/10/2026 — Mẫu ảnh SaleWork 20/10
+
+Ảnh báo cáo SaleWork bỏ hoàn toàn giao diện Trung Thu và dùng nền `public/images/background2010.png`. Bảng chuyển sang nền trắng hồng, tiêu đề hồng đậm và footer “Chúc mừng ngày Phụ nữ Việt Nam 20/10” theo mẫu người dùng cung cấp. Hải TeleSale và Nguyễn Thị Như Quỳnh dùng cùng renderer/số liệu thật; các tài khoản khác không còn nhận nền Trung Thu.

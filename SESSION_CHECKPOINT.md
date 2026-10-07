@@ -2805,3 +2805,7 @@ LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi độn
 - Đồng bộ thật exit 0: SaleWork ghi 9 tài khoản; CRM HTTP 200 trả `VP-TLS-004 · Đặng Thanh Hải · 4/4`.
 - Service đọc lại: 5 hội thoại, 1 tin gửi, 1 tin nhận, 4 gọi đi, 0 gọi đến, 3,23 phút; AMIS tháng 10 ghép đúng tên với doanh số hiện tại 0.
 - Unit mục tiêu, typecheck, lint và production build pass. Next Exact Step: deploy/reload rồi kiểm tra `/admin/report-previews?salework=Hải%20TeleSale#report-preview`.
+### 2026-10-07 — Ảnh SaleWork 20/10
+
+- `REPORT_BACKGROUND_PATH` nay là `/images/background2010.png`; palette trắng/hồng và footer 20/10 thay hoàn toàn mẫu Trung Thu cho mọi tài khoản.
+- Đã render ảnh thật Hải TeleSale và Nguyễn Thị Như Quỳnh; dời nhãn thời điểm MISA xuống dưới pill tiêu đề sau kiểm tra trực quan. Nguồn số liệu/xác thực/no-store không đổi.

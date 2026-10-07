@@ -3921,3 +3921,8 @@ snapshot lịch sử. Đồng bộ thật exit 0: SaleWork ghi đủ 9 tài kho�
 5 hội thoại, 1 tin gửi, 1 tin nhận, 4 cuộc gọi đi và 3,23 phút; AMIS tháng 10 ghép đúng nhưng hiện
 doanh số 0, chưa có chỉ tiêu và `receiveAmount`. Unit mục tiêu, typecheck, lint và production build pass;
 chưa kiểm tra trực quan preview production sau lần đồng bộ.
+## 2026-10-07 — Bỏ mẫu Trung Thu, chuyển ảnh SaleWork sang 20/10
+
+- Theo yêu cầu người dùng, toàn bộ renderer ảnh SaleWork chuyển từ `salework-mid-autumn-background.png` sang `background2010.png`; không còn tài khoản nào dùng giao diện Trung Thu.
+- Đổi palette sang trắng/hồng, footer chúc mừng 20/10, giữ nguyên dữ liệu và xác thực route.
+- Render thật Hải TeleSale và Nguyễn Thị Như Quỳnh; sau lần nhìn đầu đã dời nhãn thời điểm MISA xuống dưới thanh tiêu đề để tránh chạm chữ.

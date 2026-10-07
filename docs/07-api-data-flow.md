@@ -861,3 +861,4 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 Luồng ngày chọn và lưu `Abraham Nhâm Miền Trung`; luồng tháng lưu khóa `__SALEWORK_MONTH__:YYYY-MM-01:Abraham Nhâm Miền Trung`. Khi dựng báo cáo, tên tài khoản này ghép chính xác với `amis_employee_metrics.employee_name = Võ Thanh Nhâm`. API thật tháng 10/2026 đã trả 12 hội thoại, 31 tin gửi và 77 tin nhận.
 Hồ sơ BikeForce `Võ Thanh Nhâm` được nối tường minh với AMIS cùng tên qua `profiles.amis_employee_name`. Route ảnh ngày vì vậy đọc KPI AMIS theo đúng kỳ; ánh xạ SaleWork tiếp tục dùng `Abraham Nhâm Miền Trung` và chỉ lấy snapshot ngày khi `report_date` là ngày Việt Nam hiện tại.
+Route `/api/salework/report-image` tiếp tục đọc đúng dữ liệu SaleWork/AMIS hiện hữu nhưng tải nền `background2010.png` cho toàn bộ ảnh. Việc đổi theme không đổi endpoint, xác thực API key/Admin, cache `no-store`, công thức hay nguồn số liệu.

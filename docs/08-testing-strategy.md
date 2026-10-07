@@ -1581,3 +1581,4 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 
 Unit khóa ánh xạ hai chiều giữa `Võ Thanh Nhâm` và `Abraham Nhâm Miền Trung`, đồng thời khóa tài khoản trong tập đồng bộ ngày/tháng. Đồng bộ thật ngày ghi 9 tài khoản; snapshot tháng 10/2026 chạy lại thành công, ghi 11 tài khoản có dữ liệu và đọc Võ Thanh Nhâm là 12/31/77. Typecheck, lint và production build 30 trang đều exit 0.
 Migration nối hồ sơ Võ Thanh Nhâm phải fail khi hồ sơ thiếu/trùng, khi tên AMIS đã thuộc hồ sơ khác hoặc khi hồ sơ đang map sang tên khác. Sau deploy cần mở lại preview cuối ngày hiện tại và xác nhận cả khối MISA lẫn SaleWork; không dùng dữ liệu tháng để khẳng định snapshot ngày.
+Mẫu SaleWork 20/10 có unit khóa đường dẫn nền mới và cấm chuỗi `mid-autumn`; render PNG thật cho Hải TeleSale và Nguyễn Thị Như Quỳnh để kiểm tra tên dài, mã telesale, hai bảng và footer không chồng/cắt. Không ghi UI/browser PASS chỉ từ unit.

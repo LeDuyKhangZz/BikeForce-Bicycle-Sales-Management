@@ -4,26 +4,26 @@ import { getSaleWorkDisplayName } from '@/lib/salework/sales-account-map';
 export const CARD_WIDTH = 540;
 export const CARD_HEIGHT = 960;
 export const PAD = 30;
-export const REPORT_BACKGROUND_PATH = '/images/salework-mid-autumn-background.png';
+export const REPORT_BACKGROUND_PATH = '/images/background2010.png';
 
 export const COLORS = {
-  background: '#0b315b',
-  cream: 'rgba(255, 249, 235, 0.97)',
-  creamStrong: '#fff7e3',
-  border: '#efbd68',
-  brand: '#ffffff',
-  accent: '#ffc75a',
-  accentStrong: '#d74324',
-  rule: '#9ee6b4',
-  textDark: '#3b1b16',
-  textMuted: '#657080',
-  tableHeaderBg: '#f9ead9',
-  tableBorder: '#ead7c6',
-  orangeBoxBg: '#f15a35',
+  background: '#fff6f7',
+  cream: 'rgba(255, 252, 251, 0.94)',
+  creamStrong: 'rgba(255, 250, 249, 0.96)',
+  border: '#f3bdc9',
+  brand: '#171d2a',
+  accent: '#e61d5d',
+  accentStrong: '#dc1554',
+  rule: '#efb5c3',
+  textDark: '#30343f',
+  textMuted: '#636976',
+  tableHeaderBg: '#fff1f4',
+  tableBorder: '#f3d5dc',
+  orangeBoxBg: '#e92f67',
   orangeBoxText: '#ffffff',
-  bottomBoxBg: '#fff9ec',
-  bottomBoxText: '#3b1b16',
-  placeholder: '#8a8178',
+  bottomBoxBg: 'rgba(255, 250, 249, 0.9)',
+  bottomBoxText: '#30343f',
+  placeholder: '#9a7480',
 } as const;
 
 export const PLACEHOLDER = '—';
@@ -189,12 +189,12 @@ export function drawReportCard(
   // --- Tình trạng thực hiện trong tháng ---
   const tableX = 20;
   const tableW = 500;
-  const tableTop = 235;
+  const tableTop = 250;
   const rowH = 44;
   const headerH = 38;
   const tableH = headerH + rowH * 2;
 
-  fillRoundedBox(ctx, 20, 205, 500, 190, 16, COLORS.cream, COLORS.border);
+  fillRoundedBox(ctx, 20, 205, 500, 200, 16, COLORS.cream, COLORS.border);
   fillRoundedBox(ctx, 34, 190, 330, 36, 18, COLORS.orangeBoxBg);
   ctx.fillStyle = COLORS.orangeBoxText;
   ctx.font = '700 16px ReportFont-Bold';
@@ -212,7 +212,7 @@ export function drawReportCard(
         minute: '2-digit',
       })
     : PLACEHOLDER;
-  ctx.fillText(`Số liệu MISA tính đến ${syncedLabel}`, tableX + 28, tableTop - 8);
+  ctx.fillText(`Số liệu MISA tính đến ${syncedLabel}`, tableX + 28, tableTop - 10);
 
   const contentX = tableX + 28;
   const targetRightX = tableX + tableW * 0.56;
@@ -303,7 +303,7 @@ export function drawReportCard(
   let itemY = boxTop + 48;
   lineItems.forEach((item, index) => {
     if (index % 2 === 0) {
-      ctx.fillStyle = 'rgba(249, 234, 217, 0.78)';
+      ctx.fillStyle = 'rgba(255, 238, 243, 0.72)';
       ctx.fillRect(boxX + 18, itemY - 22, boxW - 36, lineH);
     }
     ctx.fillStyle = COLORS.accentStrong;
@@ -348,10 +348,24 @@ export function drawReportCard(
   });
   ctx.textAlign = 'left';
 
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = '700 20px ReportFont-Bold';
-  ctx.fillText('Kết nối hôm nay · Tăng trưởng ngày mai', PAD, 835);
-  ctx.fillStyle = COLORS.brand;
-  ctx.font = '600 12px ReportFont-Bold';
-  ctx.fillText('BIKEFORCE · BÁO CÁO HOẠT ĐỘNG TELESALE', PAD, 866);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLORS.accentStrong;
+  ctx.font = '400 18px ReportFont';
+  ctx.fillText('Chúc mừng ngày', w / 2, 825);
+  ctx.font = '700 29px ReportFont-Bold';
+  ctx.fillText('PHỤ NỮ VIỆT NAM', w / 2, 858);
+  ctx.font = '700 18px ReportFont-Bold';
+  ctx.fillText('20/10', w / 2, 885);
+
+  ctx.strokeStyle = COLORS.rule;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(184, 900);
+  ctx.lineTo(356, 900);
+  ctx.stroke();
+
+  ctx.fillStyle = COLORS.textMuted;
+  ctx.font = '600 11px ReportFont-Bold';
+  ctx.fillText('BIKEFORCE · BÁO CÁO HOẠT ĐỘNG TELESALE', w / 2, 930);
+  ctx.textAlign = 'left';
 }

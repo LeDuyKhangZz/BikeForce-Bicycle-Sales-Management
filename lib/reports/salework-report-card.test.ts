@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   drawReportCard,
   getTelesaleCode,
+  REPORT_BACKGROUND_PATH,
   type Canvas2DLike,
 } from '../../app/(admin)/admin/salework/salework-report-card';
 
@@ -38,6 +39,11 @@ function recordingContext(): { context: Canvas2DLike; texts: TextCall[] } {
 }
 
 describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => {
+  it('dùng nền 20/10 và không còn nền Trung Thu', () => {
+    expect(REPORT_BACKGROUND_PATH).toBe('/images/background2010.png');
+    expect(REPORT_BACKGROUND_PATH).not.toContain('mid-autumn');
+  });
+
   it('hiển thị mã mới của Hải và không tái dùng mã nhân viên đã nghỉ', () => {
     expect(getTelesaleCode('Hải TeleSale')).toBe('VP-TLS-004');
     expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('—');
