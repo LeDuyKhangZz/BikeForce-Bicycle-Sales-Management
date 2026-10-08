@@ -107,3 +107,9 @@ receivable_raw.json
 cong_no.csv
 thong_ke_kh.csv
 *_raw.json
+
+# Pancake report — output thật và file key cục bộ không được commit ------------
+artifacts/pancake-report-*.csv
+pancake-report-*.csv
+*pancake*key*
+*.secrets.json

@@ -1,0 +1,90 @@
+name: Pancake Daily Report
+
+on:
+  schedule:
+    # 23:50 giờ Việt Nam: báo cáo ngày hiện tại.
+    - cron: '50 16 * * *'
+    # 08:00 giờ Việt Nam: chạy lại ngày hôm qua để cập nhật hoàn/hủy muộn.
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    inputs:
+      ngay:
+        description: 'Ngày báo cáo (yyyy-MM-dd); bỏ trống để dùng hôm nay theo giờ Việt Nam'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      PANCAKE_API_KEY: ${{ secrets.PANCAKE_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Chọn ngày báo cáo theo giờ Việt Nam
+        id: report-date
+        shell: pwsh
+        env:
+          MANUAL_DATE: ${{ inputs.ngay }}
+          SCHEDULE_EXPRESSION: ${{ github.event.schedule }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vietnamNow = [DateTimeOffset]::UtcNow.ToOffset([TimeSpan]::FromHours(7))
+          if (-not [string]::IsNullOrWhiteSpace($env:MANUAL_DATE)) {
+            $reportDate = $env:MANUAL_DATE
+          }
+          elseif ($env:SCHEDULE_EXPRESSION -eq '0 1 * * *') {
+            $reportDate = $vietnamNow.AddDays(-1).ToString('yyyy-MM-dd')
+          }
+          else {
+            $reportDate = $vietnamNow.ToString('yyyy-MM-dd')
+          }
+          "date=$reportDate" >> $env:GITHUB_OUTPUT
+          "csv=artifacts/pancake-report-$reportDate.csv" >> $env:GITHUB_OUTPUT
+          "summary=artifacts/pancake-summary-$reportDate.txt" >> $env:GITHUB_OUTPUT
+          Write-Host "Ngày báo cáo: $reportDate (UTC+7)"
+
+      - name: Lấy báo cáo Pancake
+        shell: pwsh
+        run: |
+          ./Get-PancakeReport.ps1 `
+            -Ngay '${{ steps.report-date.outputs.date }}' `
+            -OutCsv '${{ steps.report-date.outputs.csv }}' `
+            -OutSummary '${{ steps.report-date.outputs.summary }}'
+
+      - name: Gửi tóm tắt qua Telegram nếu đã cấu hình
+        if: ${{ success() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $summary = Get-Content -Raw -Encoding utf8 '${{ steps.report-date.outputs.summary }}'
+          $telegramUri = "https://api.telegram.org/bot$($env:TELEGRAM_BOT_TOKEN)/sendMessage"
+          try {
+            $response = Invoke-RestMethod -Method Post -Uri $telegramUri -Body @{
+              chat_id = $env:TELEGRAM_CHAT_ID
+              text = $summary
+            }
+            if (-not $response.ok) {
+              Write-Warning 'Telegram không chấp nhận tin nhắn; báo cáo CSV vẫn hợp lệ.'
+            }
+          }
+          catch {
+            Write-Warning 'Không gửi được Telegram; báo cáo CSV vẫn hợp lệ. Kiểm tra TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID.'
+          }
+
+      - name: Tải CSV lên artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pancake-report-${{ steps.report-date.outputs.date }}-${{ github.run_id }}
+          path: |
+            ${{ steps.report-date.outputs.csv }}
+            artifacts/pancake-report-${{ steps.report-date.outputs.date }}-by-source.csv
+          if-no-files-found: error
+          retention-days: 30
