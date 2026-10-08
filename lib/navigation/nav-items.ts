@@ -29,6 +29,7 @@ export type NavKey =
   | 'ADMIN_SALARIES'
   | 'ADMIN_MONTHLY_SUMMARIES'
   | 'ADMIN_SALEWORK'
+  | 'ADMIN_ECOMMERCE'
   | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_ACCOUNT';
 
@@ -161,6 +162,12 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
     label: 'SaleWork',
     href: '/admin/salework',
     matchPrefixes: ['/admin/salework'],
+  },
+  {
+    key: 'ADMIN_ECOMMERCE',
+    label: 'Sàn TMĐT',
+    href: '/admin/ecommerce',
+    matchPrefixes: ['/admin/ecommerce'],
   },
 ];
 

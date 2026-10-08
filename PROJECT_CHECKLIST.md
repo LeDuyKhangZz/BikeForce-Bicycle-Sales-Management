@@ -1,5 +1,37 @@
 # BikeForce Project Checklist
 
+## 08/10/2026 — Nối Pancake vào Sàn TMĐT
+
+- [x] Thêm hai bảng force-RLS và RPC upsert nguyên tử chỉ dành cho worker.
+- [x] Workflow đồng bộ CSV vào Supabase mà không log secret/request.
+- [x] Trang Sàn TMĐT đọc snapshot mới nhất qua service typed và hiển thị Trần Minh Triết/Shopee/Tiktok.
+- [x] Regenerate `types/database.types.ts` từ Supabase local.
+- [x] RLS Pancake 4/4, typecheck và lint pass.
+- [x] Production build 31 route pass, gồm `/admin/ecommerce`.
+- [ ] CLI production dry-run bị HTTP 403 do tài khoản Supabase không có quyền project; cần chạy migration trong SQL Editor.
+- [ ] Áp migration production, push code và chạy lại workflow để seed dữ liệu thật.
+- [ ] Smoke test `/admin/ecommerce` bằng phiên Admin production.
+
+## 08/10/2026 — Automation báo cáo Pancake
+
+- [x] Thêm script PowerShell hỗ trợ ngày, nhiều ngày, khoảng ngày, retry, UTC+7 và CSV BOM.
+- [x] Thêm workflow hai lịch, manual input, artifact 30 ngày và Telegram tùy chọn.
+- [x] API key chỉ đọc từ `PANCAKE_API_KEY`; không log URL chứa key.
+- [x] Bổ sung hướng dẫn secrets, chạy thử, Task Scheduler và `.gitignore`.
+- [x] PowerShell 5.1 parse sạch; smoke test thiếu key/ngày sai/khoảng đảo exit 1 và không rò secret giả.
+- [x] YAML parse sạch; typecheck, lint và production build exit 0.
+- [ ] Chưa chạy runtime PowerShell 7 tại local vì máy kiểm tra không cài `pwsh`; GitHub `ubuntu-latest` sẽ là lượt xác minh đầu tiên.
+- [ ] Chạy API thật và kiểm tra trường timestamp sau khi repository có secret Pancake.
+
+## 08/10/2026 — Khung Sàn TMĐT
+
+- [x] Thêm nút Sàn TMĐT và route Admin riêng.
+- [x] Tạo khung báo cáo Trần Minh Triết với trạng thái chờ kết nối Pancake.
+- [x] Không tạo dữ liệu giả hoặc tự giả định API Pancake.
+- [x] Typecheck, lint và production build exit 0; build nhận route `/admin/ecommerce`.
+- [ ] Unit điều hướng: 40/41 pass; case cũ về nhãn Sales `Khách hàng` (10 ký tự) đang vi phạm ngưỡng test 9 ký tự, không phát sinh từ module này.
+- [ ] Nhận hướng dẫn nguồn/API Pancake để triển khai truy vấn thật.
+
 ## DEC-105 — 07/10/2026
 
 - [x] Thêm Cô Thy vào đồng bộ SaleWork ngày; không thêm snapshot tháng.

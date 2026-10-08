@@ -1582,3 +1582,10 @@ Next Exact Steps: tải lại trang khách hàng, chọn nhóm A/B/C/D và dùng
 Unit khóa ánh xạ hai chiều giữa `Võ Thanh Nhâm` và `Abraham Nhâm Miền Trung`, đồng thời khóa tài khoản trong tập đồng bộ ngày/tháng. Đồng bộ thật ngày ghi 9 tài khoản; snapshot tháng 10/2026 chạy lại thành công, ghi 11 tài khoản có dữ liệu và đọc Võ Thanh Nhâm là 12/31/77. Typecheck, lint và production build 30 trang đều exit 0.
 Migration nối hồ sơ Võ Thanh Nhâm phải fail khi hồ sơ thiếu/trùng, khi tên AMIS đã thuộc hồ sơ khác hoặc khi hồ sơ đang map sang tên khác. Sau deploy cần mở lại preview cuối ngày hiện tại và xác nhận cả khối MISA lẫn SaleWork; không dùng dữ liệu tháng để khẳng định snapshot ngày.
 Mẫu SaleWork 20/10 có unit khóa đường dẫn nền mới và cấm chuỗi `mid-autumn`; render PNG thật cho Hải TeleSale và Nguyễn Thị Như Quỳnh để kiểm tra tên dài, mã telesale, hai bảng và footer không chồng/cắt. Không ghi UI/browser PASS chỉ từ unit.
+## 08/10/2026 — Kiểm chứng báo cáo Pancake
+
+Script phải được parse trên Windows PowerShell 5.1 và PowerShell 7 khi môi trường có sẵn. Smoke test không key phải exit khác 0 mà không in secret/URL. Kiểm thử bằng API thật chỉ chạy sau khi `PANCAKE_API_KEY` được cấu hình; không ghi PASS cho dữ liệu thật nếu chưa chạy.
+
+Kết quả local: Windows PowerShell 5.1 parse 0 lỗi; thiếu key, ngày sai và khoảng đảo đều exit 1; secret giả không xuất hiện trong output; workflow YAML parse được. Máy không cài `pwsh`, chưa kiểm chứng runtime Linux/PowerShell 7 hoặc API thật. Typecheck, lint và production build exit 0.
+
+Sau workflow thật ngày 08/10/2026: PowerShell 7/Linux exit 0, artifact có 10 đơn và 1.662.750đ; Shopee 5/1.144.875đ, Tiktok 5/517.875đ. RLS Pancake local 4/4 PASS: Admin đọc, Sales/anon rỗng, service role chỉ execute RPC, payload lệch tổng bị từ chối. Migration local cần repair riêng migration dữ liệu Võ Thanh Nhâm vì fresh reset không có hồ sơ đó; không sửa migration cũ.

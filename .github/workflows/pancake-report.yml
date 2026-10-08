@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PANCAKE_API_KEY: ${{ secrets.PANCAKE_API_KEY }}
+      BIKEFORCE_SUPABASE_URL: ${{ secrets.BIKEFORCE_SUPABASE_URL }}
+      BIKEFORCE_SERVICE_ROLE_KEY: ${{ secrets.BIKEFORCE_SERVICE_ROLE_KEY }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
@@ -58,6 +60,58 @@ jobs:
             -Ngay '${{ steps.report-date.outputs.date }}' `
             -OutCsv '${{ steps.report-date.outputs.csv }}' `
             -OutSummary '${{ steps.report-date.outputs.summary }}'
+
+      - name: Đồng bộ báo cáo vào Supabase
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:BIKEFORCE_SUPABASE_URL) -or
+              [string]::IsNullOrWhiteSpace($env:BIKEFORCE_SERVICE_ROLE_KEY)) {
+            throw 'Thiếu BIKEFORCE_SUPABASE_URL hoặc BIKEFORCE_SERVICE_ROLE_KEY.'
+          }
+
+          $dailyRows = @(Import-Csv '${{ steps.report-date.outputs.csv }}')
+          $sourceRows = @(Import-Csv 'artifacts/pancake-report-${{ steps.report-date.outputs.date }}-by-source.csv')
+          $headers = @{
+            apikey = $env:BIKEFORCE_SERVICE_ROLE_KEY
+            Authorization = "Bearer $($env:BIKEFORCE_SERVICE_ROLE_KEY)"
+            'Content-Type' = 'application/json'
+          }
+          $rpcUri = "$($env:BIKEFORCE_SUPABASE_URL.TrimEnd('/'))/rest/v1/rpc/upsert_pancake_daily_report"
+
+          foreach ($row in $dailyRows) {
+            $sources = @(
+              $sourceRows |
+                Where-Object { $_.Ngay -eq $row.Ngay } |
+                ForEach-Object {
+                  [ordered]@{
+                    source_name = $_.NguonDon
+                    order_count = [int]$_.SoDon
+                    revenue = [long]$_.DoanhThu
+                  }
+                }
+            )
+            $body = [ordered]@{
+              p_report_date = $row.Ngay
+              p_shop_id = [long]$row.ShopId
+              p_order_count = [int]$row.SoDon
+              p_revenue = [long]$row.DoanhThu
+              p_cancelled_count = [int]$row.DonHuy
+              p_returned_count = [int]$row.DonHoan
+              p_late_count = [int]$row.DonTre
+              p_ads_order_count = [int]$row.DonTuAds
+              p_ads_gmv = [long]$row.GMV_Ads
+              p_sources = $sources
+            } | ConvertTo-Json -Depth 5 -Compress
+
+            try {
+              Invoke-RestMethod -Method Post -Uri $rpcUri -Headers $headers -Body $body | Out-Null
+            }
+            catch {
+              throw "Không đồng bộ được báo cáo Pancake ngày $($row.Ngay) vào Supabase."
+            }
+            Write-Host "Đã đồng bộ báo cáo Pancake ngày $($row.Ngay) vào Supabase."
+          }
 
       - name: Gửi tóm tắt qua Telegram nếu đã cấu hình
         if: ${{ success() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}

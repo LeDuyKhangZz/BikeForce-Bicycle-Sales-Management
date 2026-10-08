@@ -160,6 +160,12 @@ describe('activeNavKey — Admin: tiền tố dài nhất thắng', () => {
 });
 
 describe('activeNavKey — module bổ sung trên sidebar Admin', () => {
+  it('làm sáng đúng mục Sàn TMĐT và không đưa vào bottom nav', () => {
+    const allItems = [...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS];
+    expect(activeNavKey(allItems, '/admin/ecommerce')).toBe('ADMIN_ECOMMERCE');
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_ECOMMERCE')).toBe(false);
+  });
+
   it('làm sáng đúng mục SaleWork khi mở module', () => {
     expect(activeNavKey([...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS], '/admin/salework')).toBe(
       'ADMIN_SALEWORK',

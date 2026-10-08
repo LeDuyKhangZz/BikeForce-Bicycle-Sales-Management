@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
+import { ShoppingBag } from 'lucide-react';
 
+import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MissingReportAlerts } from '@/features/admin-dashboard/missing-report-alerts';
@@ -42,10 +45,19 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-heading">Tổng quan</h1>
-        {/* BR-005 — ngày nghiệp vụ theo Asia/Ho_Chi_Minh, do server tính. */}
-        <p className="tabular text-sm text-muted-foreground">{formatVietnamDate(today)}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-heading">Tổng quan</h1>
+          {/* BR-005 — ngày nghiệp vụ theo Asia/Ho_Chi_Minh, do server tính. */}
+          <p className="tabular text-sm text-muted-foreground">{formatVietnamDate(today)}</p>
+        </div>
+        <Link
+          href="/admin/ecommerce"
+          className={buttonClassName({ variant: 'secondary', className: 'w-full sm:w-auto' })}
+        >
+          <ShoppingBag aria-hidden="true" className="size-4" />
+          <span>Sàn TMĐT</span>
+        </Link>
       </div>
 
       {/*

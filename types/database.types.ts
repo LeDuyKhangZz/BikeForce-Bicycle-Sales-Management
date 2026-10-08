@@ -7,36 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       amis_employee_metrics: {
@@ -176,6 +146,148 @@ export type Database = {
           },
         ]
       }
+      misa_customer_monthly_plans: {
+        Row: {
+          committed_sales: number | null
+          misa_customer_id: number
+          misa_employee_id: number
+          monthly_frequency: number
+          period_month: string
+          sales_id: string
+          updated_at: string
+        }
+        Insert: {
+          committed_sales?: number | null
+          misa_customer_id: number
+          misa_employee_id: number
+          monthly_frequency: number
+          period_month: string
+          sales_id: string
+          updated_at?: string
+        }
+        Update: {
+          committed_sales?: number | null
+          misa_customer_id?: number
+          misa_employee_id?: number
+          monthly_frequency?: number
+          period_month?: string
+          sales_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "misa_customer_monthly_plans_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      misa_report119_customers: {
+        Row: {
+          billing_province: string
+          customer_code: string
+          customer_name: string
+          days_without_purchase: number | null
+          debt: number | null
+          last_visit_date: string | null
+          misa_customer_id: number
+          misa_employee_id: number
+          order_sales: number | null
+          owner_name: string
+          period_month: string
+          recent_purchase_date: string | null
+          synced_at: string
+        }
+        Insert: {
+          billing_province?: string
+          customer_code?: string
+          customer_name?: string
+          days_without_purchase?: number | null
+          debt?: number | null
+          last_visit_date?: string | null
+          misa_customer_id: number
+          misa_employee_id: number
+          order_sales?: number | null
+          owner_name?: string
+          period_month: string
+          recent_purchase_date?: string | null
+          synced_at?: string
+        }
+        Update: {
+          billing_province?: string
+          customer_code?: string
+          customer_name?: string
+          days_without_purchase?: number | null
+          debt?: number | null
+          last_visit_date?: string | null
+          misa_customer_id?: number
+          misa_employee_id?: number
+          order_sales?: number | null
+          owner_name?: string
+          period_month?: string
+          recent_purchase_date?: string | null
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "misa_report119_customers_period_month_misa_employee_id_fkey"
+            columns: ["period_month", "misa_employee_id"]
+            isOneToOne: false
+            referencedRelation: "misa_report119_employees"
+            referencedColumns: ["period_month", "misa_employee_id"]
+          },
+        ]
+      }
+      misa_report119_employees: {
+        Row: {
+          customer_count: number
+          employee_name: string
+          misa_employee_id: number
+          period_month: string
+          synced_at: string
+        }
+        Insert: {
+          customer_count: number
+          employee_name: string
+          misa_employee_id: number
+          period_month: string
+          synced_at?: string
+        }
+        Update: {
+          customer_count?: number
+          employee_name?: string
+          misa_employee_id?: number
+          period_month?: string
+          synced_at?: string
+        }
+        Relationships: []
+      }
+      misa_report44_customer_monthly_sales: {
+        Row: {
+          customer_code: string
+          customer_name: string
+          order_sales: number
+          period_month: string
+          synced_at: string
+        }
+        Insert: {
+          customer_code: string
+          customer_name?: string
+          order_sales: number
+          period_month: string
+          synced_at?: string
+        }
+        Update: {
+          customer_code?: string
+          customer_name?: string
+          order_sales?: number
+          period_month?: string
+          synced_at?: string
+        }
+        Relationships: []
+      }
       monthly_participant_salaries: {
         Row: {
           amount: number | null
@@ -281,6 +393,83 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      pancake_daily_reports: {
+        Row: {
+          ads_gmv: number
+          ads_order_count: number
+          cancelled_count: number
+          employee_name: string
+          late_count: number
+          order_count: number
+          report_date: string
+          returned_count: number
+          revenue: number
+          shop_id: number
+          synced_at: string
+        }
+        Insert: {
+          ads_gmv: number
+          ads_order_count: number
+          cancelled_count: number
+          employee_name?: string
+          late_count: number
+          order_count: number
+          report_date: string
+          returned_count: number
+          revenue: number
+          shop_id: number
+          synced_at?: string
+        }
+        Update: {
+          ads_gmv?: number
+          ads_order_count?: number
+          cancelled_count?: number
+          employee_name?: string
+          late_count?: number
+          order_count?: number
+          report_date?: string
+          returned_count?: number
+          revenue?: number
+          shop_id?: number
+          synced_at?: string
+        }
+        Relationships: []
+      }
+      pancake_daily_source_reports: {
+        Row: {
+          order_count: number
+          report_date: string
+          revenue: number
+          shop_id: number
+          source_name: string
+          synced_at: string
+        }
+        Insert: {
+          order_count: number
+          report_date: string
+          revenue: number
+          shop_id: number
+          source_name: string
+          synced_at?: string
+        }
+        Update: {
+          order_count?: number
+          report_date?: string
+          revenue?: number
+          shop_id?: number
+          source_name?: string
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pancake_daily_source_reports_report_date_shop_id_fkey"
+            columns: ["report_date", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "pancake_daily_reports"
+            referencedColumns: ["report_date", "shop_id"]
           },
         ]
       }
@@ -443,42 +632,6 @@ export type Database = {
           },
         ]
       }
-      salework_reports: {
-        Row: {
-          account_name: string
-          call_duration: string
-          conversations: number
-          incoming_calls: number
-          missed_calls: number
-          outgoing_calls: number
-          received_messages: number
-          sent_messages: number
-          updated_at: string
-        }
-        Insert: {
-          account_name: string
-          call_duration?: string
-          conversations?: number
-          incoming_calls?: number
-          missed_calls?: number
-          outgoing_calls?: number
-          received_messages?: number
-          sent_messages?: number
-          updated_at?: string
-        }
-        Update: {
-          account_name?: string
-          call_duration?: string
-          conversations?: number
-          incoming_calls?: number
-          missed_calls?: number
-          outgoing_calls?: number
-          received_messages?: number
-          sent_messages?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       amis_reconciliation: {
@@ -593,12 +746,35 @@ export type Database = {
       }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      replace_misa_report119_snapshot: {
+        Args: { p_customers: Json; p_employees: Json; p_period_month: string }
+        Returns: number
+      }
+      replace_misa_report44_customer_sales: {
+        Args: { p_from_month: string; p_rows: Json; p_to_month: string }
+        Returns: number
+      }
       save_monthly_salary_entries: {
         Args: { p_entries: Json; p_period_month: string }
         Returns: number
       }
       save_monthly_travel_expense_entries: {
         Args: { p_entries: Json; p_period_month: string }
+        Returns: number
+      }
+      upsert_pancake_daily_report: {
+        Args: {
+          p_ads_gmv: number
+          p_ads_order_count: number
+          p_cancelled_count: number
+          p_late_count: number
+          p_order_count: number
+          p_report_date: string
+          p_returned_count: number
+          p_revenue: number
+          p_shop_id: number
+          p_sources: Json
+        }
         Returns: number
       }
       vn_today: { Args: never; Returns: string }
@@ -621,12 +797,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -650,11 +826,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -675,11 +851,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -700,11 +876,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -717,11 +893,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -731,9 +907,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       report_status: ["MORNING_SUBMITTED", "COMPLETED"],
@@ -741,3 +914,4 @@ export const Constants = {
     },
   },
 } as const
+

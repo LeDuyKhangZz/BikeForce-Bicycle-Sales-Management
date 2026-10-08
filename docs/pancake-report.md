@@ -5,6 +5,7 @@
 - CSV tổng hợp: số đơn, doanh thu không gồm đơn hủy, hủy, hoàn, trễ, đơn Ads và GMV Ads;
 - CSV phụ cùng tên với hậu tố `-by-source.csv`: số đơn và doanh thu không hủy theo nguồn Shopee/Tiktok/nguồn khác;
 - bảng console và dòng `SUMMARY:` để dùng cho Telegram.
+- snapshot Supabase qua RPC sau khi migration Pancake đã được áp dụng.
 
 Đơn hoàn có thể được sàn cập nhật trễ vài ngày. Workflow vì vậy chạy lại ngày hôm qua lúc 08:00 giờ Việt Nam; số liệu ngày cũ có thể thay đổi giữa các lượt chạy.
 
@@ -39,7 +40,7 @@ Nếu bỏ cả `-Ngay` lẫn khoảng ngày, script dùng hôm nay theo UTC+7. 
 ## Cấu hình GitHub Actions
 
 1. Vào repository trên GitHub → **Settings** → **Secrets and variables** → **Actions**.
-2. Chọn **New repository secret**, tạo `PANCAKE_API_KEY`.
+2. Chọn **New repository secret**, tạo `PANCAKE_API_KEY`; bảo đảm `BIKEFORCE_SUPABASE_URL` và `BIKEFORCE_SERVICE_ROLE_KEY` cũng đã tồn tại.
 3. Nếu muốn Telegram, tạo thêm `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID`. Thiếu một trong hai thì bước Telegram tự bỏ qua và workflow vẫn thành công.
 4. Push `.github/workflows/pancake-report.yml` lên nhánh mặc định.
 5. Vào **Actions** → **Pancake Daily Report** → **Run workflow**. Nhập ngày `yyyy-MM-dd` hoặc để trống để dùng hôm nay theo UTC+7.

@@ -867,3 +867,8 @@ Route `/api/salework/report-image` tiếp tục đọc đúng dữ liệu SaleWo
 `Cô Thy` nằm trong tập tài khoản đồng bộ **ngày** của `scripts/salework-sync.ts`, nhưng không nằm trong tập snapshot tháng. Dòng `salework_reports.account_name = 'Cô Thy'` được đọc như các tài khoản TeleSale khác.
 
 Khi `getSaleWorkReport()` dựng dữ liệu, Cô Thy không có khóa trong `AMIS_EMPLOYEE_MAP` và `CRM_CALL_EMPLOYEE_CODE_BY_ACCOUNT`; vì vậy sáu số hoạt động giữ nguyên từ SaleWork, không truy vấn/ghép nhân viên AMIS và không cộng Report 70 CRM. `drawReportCard()` nhận diện tài khoản SaleWork-only để bỏ toàn bộ khối tháng và đơn hàng MISA, chỉ dựng khối hoạt động trong ngày. Endpoint `/api/salework/report-image?account=C%C3%B4%20Thy` và cơ chế xác thực API key/Admin, `Cache-Control: no-store` giữ nguyên.
+## 08/10/2026 — Báo cáo Pancake POS
+
+`Get-PancakeReport.ps1` gọi `GET /api/v1/shops/1022081353/orders` bằng key từ môi trường, phân trang qua `response.data`, chuẩn hóa mốc ngày theo UTC+7 và tính báo cáo tại runner. Dữ liệu chỉ được ghi vào CSV artifact; chưa ghi Supabase và chưa nối vào UI Sàn TMĐT. Workflow không log URL chứa `api_key`.
+
+Cập nhật sau kiểm chứng API thật: workflow đọc hai CSV vừa sinh và POST một payload/ngày tới RPC Supabase `upsert_pancake_daily_report`. RPC thay tổng ngày và chi tiết nguồn trong cùng transaction. `/admin/ecommerce` dùng server client chịu RLS → `services/pancake-reports.ts` → view model format tại `features/admin-ecommerce/queries.ts`; component không truy vấn hay tự format tiền/ngày.

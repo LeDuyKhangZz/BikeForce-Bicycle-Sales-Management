@@ -2815,3 +2815,18 @@ LAN `192.168.1.7:3000`: đã thêm IP vào `allowedDevOrigins` và khởi độn
 
 - `REPORT_BACKGROUND_PATH` nay là `/images/background2010.png`; palette trắng/hồng và footer 20/10 thay hoàn toàn mẫu Trung Thu cho mọi tài khoản.
 - Đã render ảnh thật Hải TeleSale và Nguyễn Thị Như Quỳnh; dời nhãn thời điểm MISA xuống dưới pill tiêu đề sau kiểm tra trực quan. Nguồn số liệu/xác thực/no-store không đổi.
+# 2026-10-08 — Sàn TMĐT
+
+Đã dựng khung `/admin/ecommerce` cho Trần Minh Triết và thêm lối điều hướng Admin. Chưa tích hợp dữ liệu. Next Exact Steps: nhận từ người dùng cách xác thực, endpoint và mapping trường Pancake; sau đó bổ sung service/query typed, xử lý lỗi và test mà không đưa secret ra client.
+
+Verification: typecheck/lint/build exit 0. Unit nav 40/41; lỗi tồn tại ở giới hạn độ dài nhãn `Khách hàng`, test mới Sàn TMĐT pass.
+# 2026-10-08 — Pancake report automation
+
+Đã thêm script/report workflow và tài liệu vận hành. Next Exact Steps: cấu hình `PANCAKE_API_KEY` trong GitHub Actions, chạy workflow_dispatch cho một ngày đã biết, đối chiếu timestamp/đơn/tiền với Pancake và sau đó mới nối output vào module `/admin/ecommerce`.
+
+Verification: PS5.1 parse pass; ba nhánh lỗi local trả exit 1 và không rò secret; YAML/typecheck/lint/build pass. Chưa có runtime `pwsh` local và chưa chạy API thật.
+# 2026-10-08 — Pancake → Supabase → Sàn TMĐT
+
+Local đã hoàn tất schema/RPC/RLS/service/query/UI/workflow. RLS 4/4, typecheck/lint pass. Next Exact Steps: `supabase db push` production; commit/push; workflow_dispatch lại 2026-10-08; đăng nhập Admin mở `/admin/ecommerce` và đối chiếu 10 đơn/1.662.750đ, Shopee 5/1.144.875đ, Tiktok 5/517.875đ.
+
+CLI production dry-run HTTP 403 nên bước kế tiếp đã đổi thành: chủ project mở Supabase SQL Editor, chạy toàn bộ `supabase/migrations/20261008150000_pancake_daily_reports.sql`, báo hoàn tất; sau đó commit/push và rerun workflow. Build 31 route pass.

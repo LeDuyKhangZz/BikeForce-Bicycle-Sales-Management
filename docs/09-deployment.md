@@ -1275,3 +1275,8 @@ lỗi không retry được; khi phục hồi và toàn bộ chuỗi thành côn
 Route `/admin/misa-employees` cần hai biến môi trường server-only `AMIS_BEARER_TOKEN` và `AMIS_COMPANY_CODE`. Token CRM là phiên có hạn; triển khai cloud cần cơ chế cấp lại phiên trước khi trang dùng ổn định. Không đưa hai biến vào `NEXT_PUBLIC_`.
 
 **2026-10-03 — DEC-102:** áp migration `20261003090000_misa_report44_customer_monthly_sales.sql` trước khi chạy `python scripts/amis-sync/fetch_report44.py 2026 8 --write`. Script dùng lại `AMIS_BEARER_TOKEN`, `AMIS_COMPANY_CODE`, `BIKEFORCE_SUPABASE_URL` và `BIKEFORCE_SERVICE_ROLE_KEY`; không thêm biến môi trường. Token/key chỉ nằm trong file gitignored. Lệnh trên thay nguyên tử đúng kỳ `08/2025–08/2026`; không tạo tháng 09–10/2026.
+## 08/10/2026 — GitHub Actions cho Pancake
+
+Workflow `.github/workflows/pancake-report.yml` chạy lúc 16:50 UTC cho ngày hiện tại ở Việt Nam và 01:00 UTC cho ngày hôm qua. Secret bắt buộc là `PANCAKE_API_KEY`; Telegram dùng hai secret tùy chọn. Artifact CSV giữ 30 ngày. Hướng dẫn vận hành chi tiết ở `docs/pancake-report.md`.
+
+Trước khi bật bước đồng bộ Supabase, phải áp migration `20261008150000_pancake_daily_reports.sql`. Workflow cần thêm hai secret đã dùng trong repo: `BIKEFORCE_SUPABASE_URL`, `BIKEFORCE_SERVICE_ROLE_KEY`. Áp migration trước, push workflow sau; nếu đảo thứ tự, job sẽ đỏ ở RPC thay vì âm thầm bỏ qua dữ liệu.

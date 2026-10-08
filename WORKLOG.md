@@ -3932,3 +3932,20 @@ chưa kiểm tra trực quan preview production sau lần đồng bộ.
 - Theo yêu cầu người dùng, toàn bộ renderer ảnh SaleWork chuyển từ `salework-mid-autumn-background.png` sang `background2010.png`; không còn tài khoản nào dùng giao diện Trung Thu.
 - Đổi palette sang trắng/hồng, footer chúc mừng 20/10, giữ nguyên dữ liệu và xác thực route.
 - Render thật Hải TeleSale và Nguyễn Thị Như Quỳnh; sau lần nhìn đầu đã dời nhãn thời điểm MISA xuống dưới thanh tiêu đề để tránh chạm chữ.
+# 2026-10-08 — Khung báo cáo Sàn TMĐT
+
+Thêm module Admin `/admin/ecommerce`, lối vào sidebar desktop và nút Sàn TMĐT trên Tổng quan để dùng được ở mobile. Trang mới hiển thị nhân viên Trần Minh Triết, bốn vị trí chỉ số chưa có dữ liệu và trạng thái chờ kết nối Pancake. Chưa thêm API, secret, service hay số liệu giả.
+
+Kiểm chứng: typecheck, lint và production build exit 0; Next build nhận 31 trang, gồm `/admin/ecommerce`. Unit điều hướng đạt 40/41; một case có sẵn thất bại vì nhãn Sales `Khách hàng` dài 10 ký tự so với giới hạn 9 của test, không liên quan mục Sàn TMĐT mới.
+# 2026-10-08 — Script và GitHub Actions báo cáo Pancake
+
+Thêm `Get-PancakeReport.ps1` đa nền tảng để lấy đơn theo ngày UTC+7, phân trang `response.data`, retry an toàn, tính tám chỉ số, bảng phụ nguồn và CSV UTF-8 BOM. Thêm workflow chạy 23:50 hôm nay/08:00 hôm qua, artifact 30 ngày và Telegram tùy chọn. Chưa gọi API thật hoặc xác nhận dữ liệu production vì chưa dùng secret.
+
+Kiểm chứng: Windows PowerShell 5.1 parse sạch; smoke test thiếu key, ngày sai và khoảng đảo đều exit 1, không in secret giả; YAML parse sạch; typecheck/lint/build exit 0. Máy local không có `pwsh`, nên chưa chạy runtime PowerShell 7/Linux và chưa gọi Pancake API thật.
+# 2026-10-08 — Nối báo cáo Pancake vào Supabase và UI
+
+Thêm snapshot tổng ngày/nguồn, force RLS Admin-only và RPC worker-only; workflow đẩy kết quả sau mỗi lần lấy API. Trang `/admin/ecommerce` đọc snapshot mới nhất qua server client và hiển thị bảy chỉ số cùng Shopee/Tiktok cho Trần Minh Triết. Dữ liệu thật xác nhận 10 đơn/1.662.750đ, chia Shopee 5/1.144.875đ và Tiktok 5/517.875đ.
+
+Kiểm chứng local: migration Pancake áp dụng, generated types cập nhật, RLS 4/4 pass, typecheck/lint exit 0. Fresh reset bị migration dữ liệu Võ Thanh Nhâm cũ chặn do seed thiếu hồ sơ; chỉ repair lịch sử local, không sửa migration cũ. Chưa áp production/push/smoke UI.
+
+Production build 31 route exit 0. `supabase db push --linked --dry-run` bị project trả HTTP 403 vì tài khoản CLI thiếu quyền; dừng trước mọi thay đổi production. Cần chủ project chạy migration Pancake trong SQL Editor rồi mới push workflow có bước RPC.

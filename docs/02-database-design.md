@@ -1349,3 +1349,9 @@ Không thêm bảng public mới. Bảng tích hợp `salework_reports` lưu sna
 
 Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái đi theo `PENDING → RUNNING → COMPLETED|FAILED`; partial unique index trên `period_month` chặn hai job đang hoạt động cùng kỳ. Admin active chỉ được `SELECT/INSERT` qua RLS và phải ghi `requested_by = auth.uid()`. `service_role` chỉ được `SELECT/UPDATE` bảng vận hành này để worker nhận job và trả trạng thái; không có quyền `INSERT/DELETE`. Bảng force RLS và không chứa số liệu báo cáo.
 > **2026-10-07 — Võ Thanh Nhâm:** migration `20261007094000_map_vo_thanh_nham_amis_profile.sql` nối duy nhất hồ sơ Sales cùng tên với `amis_employee_name = Võ Thanh Nhâm`. Migration fail an toàn nếu thiếu/trùng hồ sơ, tên AMIS đã thuộc hồ sơ khác hoặc hồ sơ đã map sang người khác; không đổi schema, GRANT hay RLS.
+## 08/10/2026 — Báo cáo Pancake theo ngày
+
+- `pancake_daily_reports`: khóa `(report_date, shop_id)`, lưu tổng đơn, doanh thu không hủy, hủy, hoàn, trễ, Ads và thời điểm đồng bộ cho shop `1022081353`/Trần Minh Triết.
+- `pancake_daily_source_reports`: khóa `(report_date, shop_id, source_name)`, FK cascade tới báo cáo ngày, lưu số đơn không hủy và doanh thu theo nguồn.
+- Hai bảng bật và force RLS; `authenticated` chỉ có SELECT qua policy Admin. `service_role` không có DML/SELECT trực tiếp.
+- RPC `upsert_pancake_daily_report` là `security definer set search_path = public, pg_temp`, chỉ cấp EXECUTE cho `service_role`; kiểm tra số không âm và tổng nguồn phải bằng tổng ngày trước khi upsert nguyên tử.

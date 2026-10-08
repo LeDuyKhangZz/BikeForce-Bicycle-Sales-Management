@@ -2883,3 +2883,11 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Ghép AMIS như Hải/Quỳnh bị loại vì sai nguồn; hiển thị các ô AMIS bằng dấu gạch bị loại vì tạo nội dung không cần thiết trên ảnh.
 - **Impact:** Tập đồng bộ ngày tăng từ 9 lên 10 tài khoản; API và trang Admin tự nhận thêm báo cáo sau lượt sync SaleWork thành công. Không đổi schema, RLS hay API contract.
 - **Status:** APPROVED
+## DEC-106 — Snapshot Pancake chỉ ghi qua RPC worker và chỉ Admin đọc
+
+- **Date:** 2026-10-08
+- **Decision:** Lưu tổng ngày và chi tiết nguồn Pancake trong hai bảng force-RLS. Admin đọc bằng server client chịu RLS. GitHub Actions service role không có quyền bảng trực tiếp, chỉ execute RPC `upsert_pancake_daily_report` kiểm tra tổng nguồn và thay snapshot nguyên tử.
+- **Reason:** Website cần nguồn bền vững thay cho artifact GitHub; đồng thời API key Pancake và service-role key không được đi vào client hoặc trở thành đường đọc dữ liệu bỏ qua RLS.
+- **Alternatives:** Đọc artifact GitHub từ website bị loại vì không phải datastore và cần thêm GitHub credential; cấp DML bảng cho service role bị loại vì mở quyền rộng; gọi Pancake trực tiếp khi render bị loại vì chậm, lộ bề mặt secret và không giữ lịch sử.
+- **Impact:** Thêm migration, RPC, workflow sync, service/query/UI và RLS test. Đơn hoàn ngày cũ được cập nhật khi lịch 08:00 chạy lại hôm qua.
+- **Status:** APPROVED — người dùng yêu cầu nối dữ liệu Pancake thật vào module Sàn TMĐT.
