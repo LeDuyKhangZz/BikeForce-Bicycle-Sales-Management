@@ -76,6 +76,8 @@ jobs:
             apikey = $env:BIKEFORCE_SERVICE_ROLE_KEY
             Authorization = "Bearer $($env:BIKEFORCE_SERVICE_ROLE_KEY)"
             'Content-Type' = 'application/json'
+            # Supabase secret key mới từ chối User-Agent mặc định giống browser của PowerShell.
+            'User-Agent' = 'BikeForce-Pancake-Worker/1.0'
           }
           $rpcUri = "$($env:BIKEFORCE_SUPABASE_URL.TrimEnd('/'))/rest/v1/rpc/upsert_pancake_daily_report"
 
