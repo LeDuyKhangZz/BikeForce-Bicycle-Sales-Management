@@ -25,7 +25,7 @@ export function EcommerceReportShell({ report }: Props) {
               <CircleUserRound aria-hidden="true" className="size-5" />
             </span>
             <div className="min-w-0">
-              <CardTitle>{report?.employeeName ?? 'Trần Minh Triết'}</CardTitle>
+              <CardTitle>{report?.employeeName ?? 'Nguyễn Ngọc Triết'}</CardTitle>
               <p className="text-sm text-muted-foreground">Nhân viên Sàn TMĐT</p>
             </div>
           </div>

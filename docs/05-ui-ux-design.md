@@ -1466,6 +1466,6 @@ Popup cảnh báo/nhóm phân trang 100 khách mỗi lần để các danh sách
 # Bổ sung 08/10/2026 — Module Sàn TMĐT
 
 - Admin có lối vào **Sàn TMĐT** tại sidebar desktop và nút trên trang Tổng quan cho màn hình nhỏ.
-- Route `/admin/ecommerce` hiển thị khung báo cáo của **Trần Minh Triết** với trạng thái **Chờ kết nối Pancake**.
+- Route `/admin/ecommerce` hiển thị khung báo cáo của **Nguyễn Ngọc Triết** với trạng thái **Chờ kết nối Pancake**.
 - Khi chưa có tích hợp, mọi chỉ số hiển thị `—`; không tạo dữ liệu mẫu có thể bị hiểu nhầm là dữ liệu thật.
 - Sau khi có snapshot, trang hiển thị bảy chỉ số thật, ngày báo cáo, thời điểm đồng bộ và card Shopee/Tiktok theo nguồn; trạng thái đổi thành **Đã đồng bộ Pancake** bằng icon và chữ, không chỉ bằng màu.

@@ -3959,3 +3959,7 @@ Thêm Trần Minh Triết vào response accounts của route ảnh SaleWork. Nh�
 Kiểm chứng đã chạy: unit mới 2/2, RLS Pancake 5/5, typecheck, lint và production build 31 trang exit 0. Migration local áp dụng và database types đã generate lại. Chưa smoke Vercel; production cần áp migration `20261008180000_pancake_report_image_rpc.sql` trước khi URL Triết hoạt động.
 
 Full unit chạy 916 test: 915 pass, 1 lỗi có sẵn tại `nav-items.test.ts` vì nhãn `Khách hàng` dài 10 ký tự so với giới hạn 9; cùng lỗi đã được ghi trước task, không liên quan route ảnh.
+
+# 2026-10-08 — Sửa tên nhân viên Sàn TMĐT
+
+Người dùng xác nhận tên đúng là `Nguyễn Ngọc Triết`, thay cho `Trần Minh Triết`. Đã đổi account n8n, fallback UI, test và tài liệu hiện hành; thêm migration tiến tới cập nhật dữ liệu hiện có, default, CHECK constraint và literal trong RPC upsert. Không sửa migration đã áp.

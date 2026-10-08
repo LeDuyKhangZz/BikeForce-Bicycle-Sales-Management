@@ -1,8 +1,8 @@
 # BikeForce Project Checklist
 
-## 08/10/2026 — Đưa Trần Minh Triết vào luồng ảnh n8n
+## 08/10/2026 — Đưa Nguyễn Ngọc Triết vào luồng ảnh n8n
 
-- [x] Danh sách `/api/salework/report-image` có Trần Minh Triết và tái sử dụng helper URL/key.
+- [x] Danh sách `/api/salework/report-image` có Nguyễn Ngọc Triết và tái sử dụng helper URL/key.
 - [x] Nhánh Triết không gọi SaleWork; dùng snapshot Pancake và view model chung với trang Sàn TMĐT.
 - [x] Renderer PNG giữ kích thước 1080×1920, content type và no-store như ảnh hiện có.
 - [x] RPC ảnh chỉ cho service role execute; không cấp SELECT bảng hoặc mở RLS cho anon/Sales.

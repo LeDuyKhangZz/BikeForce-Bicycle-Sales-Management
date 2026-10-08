@@ -25,10 +25,10 @@ function recordingContext(): { context: EcommerceCanvas2DLike; texts: string[] }
 }
 
 describe('ảnh báo cáo Sàn TMĐT', () => {
-  it('sinh URL n8n cho Trần Minh Triết bằng cùng API key', () => {
-    expect(ECOMMERCE_REPORT_ACCOUNT).toBe('Trần Minh Triết');
+  it('sinh URL n8n cho Nguyễn Ngọc Triết bằng cùng API key', () => {
+    expect(ECOMMERCE_REPORT_ACCOUNT).toBe('Nguyễn Ngọc Triết');
     expect(buildSaleWorkReportImageUrl(ECOMMERCE_REPORT_ACCOUNT, 'key test')).toBe(
-      '/api/salework/report-image?account=Tr%E1%BA%A7n%20Minh%20Tri%E1%BA%BFt&key=key%20test',
+      '/api/salework/report-image?account=Nguy%E1%BB%85n%20Ng%E1%BB%8Dc%20Tri%E1%BA%BFt&key=key%20test',
     );
   });
 

@@ -2895,7 +2895,7 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 ## DEC-107 — Ảnh Sàn TMĐT dùng RPC chỉ-đọc cho automation
 
 - **Date:** 2026-10-08
-- **Decision:** Thêm `Trần Minh Triết` vào danh sách account của `/api/salework/report-image`. Sau khi route xác thực `SALEWORK_REPORT_API_KEY`, nhánh này gọi RPC security-definer `get_latest_pancake_report_image` bằng service role để đọc đúng snapshot Pancake mới nhất; RPC chỉ trả báo cáo tổng và nguồn, chỉ cấp EXECUTE cho `service_role`. Nhánh này không gọi logic SaleWork.
+- **Decision:** Thêm `Nguyễn Ngọc Triết` vào danh sách account của `/api/salework/report-image`. Sau khi route xác thực `SALEWORK_REPORT_API_KEY`, nhánh này gọi RPC security-definer `get_latest_pancake_report_image` bằng service role để đọc đúng snapshot Pancake mới nhất; RPC chỉ trả báo cáo tổng và nguồn, chỉ cấp EXECUTE cho `service_role`. Nhánh này không gọi logic SaleWork.
 - **Reason:** n8n không có cookie/JWT Admin nên server client chịu RLS không thể đọc snapshot Admin-only. Cần một đường đọc tối thiểu, được khóa bởi API key ở route và quyền EXECUTE ở database, mà không cấp SELECT bảng hay mở policy cho anon.
 - **Alternatives:** Cấp SELECT cho `service_role` hoặc anon bị loại vì mở quyền bảng; gọi Pancake trực tiếp khi render bị loại vì chậm và phụ thuộc secret nguồn; tạo luồng n8n riêng bị loại theo yêu cầu người dùng.
 - **Impact:** `lib/supabase/admin.ts` có thêm factory hẹp cho đúng route automation; hai bảng Pancake vẫn force-RLS và `service_role` vẫn không có SELECT/DML trực tiếp. Ảnh dùng cùng kích thước PNG 1080×1920, header và `Cache-Control: no-store` như ảnh SaleWork.

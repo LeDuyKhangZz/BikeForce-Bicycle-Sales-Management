@@ -914,4 +914,4 @@ Admin active được xem toàn bộ `misa_report44_customer_monthly_sales` qua 
 
 Workflow chỉ được gọi `upsert_pancake_daily_report`; key không được chuyển vào web client. RPC kiểm tra payload và chạy nguyên tử, còn UI đọc bằng anon server client chịu RLS.
 
-Route `/api/salework/report-image` tiếp tục xác thực `SALEWORK_REPORT_API_KEY` hoặc phiên Admin trước khi xử lý. Riêng account `Trần Minh Triết`, server gọi `get_latest_pancake_report_image()` bằng service role. RPC này chỉ được cấp cho `service_role`; `anon` và `authenticated` không được execute, còn service role vẫn không có SELECT/DML trực tiếp trên hai bảng Pancake (DEC-107).
+Route `/api/salework/report-image` tiếp tục xác thực `SALEWORK_REPORT_API_KEY` hoặc phiên Admin trước khi xử lý. Riêng account `Nguyễn Ngọc Triết`, server gọi `get_latest_pancake_report_image()` bằng service role. RPC này chỉ được cấp cho `service_role`; `anon` và `authenticated` không được execute, còn service role vẫn không có SELECT/DML trực tiếp trên hai bảng Pancake (DEC-107).

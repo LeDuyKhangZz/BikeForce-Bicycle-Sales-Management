@@ -47,7 +47,7 @@ describe('RLS báo cáo Pancake', () => {
     const report = await getLatestPancakeDailyReport(fixture.clients.admin);
 
     expect(report?.daily.report_date).toBe(REPORT_DATE);
-    expect(report?.daily.employee_name).toBe('Trần Minh Triết');
+    expect(report?.daily.employee_name).toBe('Nguyễn Ngọc Triết');
     expect(report?.daily.order_count).toBe(10);
     expect(report?.daily.revenue).toBe(1_662_750);
     expect(report?.sources).toEqual(
@@ -100,7 +100,7 @@ describe('RLS báo cáo Pancake', () => {
     const report = await getLatestPancakeReportForImage(authAdmin);
 
     expect(report?.daily.report_date).toBe(REPORT_DATE);
-    expect(report?.daily.employee_name).toBe('Trần Minh Triết');
+    expect(report?.daily.employee_name).toBe('Nguyễn Ngọc Triết');
     expect(report?.sources).toHaveLength(2);
 
     const privileges = await sql<{

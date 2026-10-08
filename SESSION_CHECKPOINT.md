@@ -2840,3 +2840,5 @@ Route `/api/salework/report-image` đã đưa Trần Minh Triết vào chung dan
 Production build 31 trang exit 0. Next Exact Steps: áp `supabase/migrations/20261008180000_pancake_report_image_rpc.sql` trên production; deploy Vercel rồi smoke URL Triết với key hiện hữu và kiểm tra `200`, `image/png`, kích thước 1080×1920. Không thử URL production trước migration vì RPC chưa tồn tại.
 
 Full unit: 915/916; lỗi duy nhất là case có sẵn `Khách hàng` 10 ký tự vượt ngưỡng 9 trong `nav-items.test.ts`. Không ghi full unit PASS.
+
+Tên nhân viên Sàn TMĐT đúng được người dùng xác nhận là `Nguyễn Ngọc Triết`. Migration `20261008190000_correct_pancake_employee_name.sql` đổi dữ liệu/default/constraint và RPC upsert theo hướng tiến tới; cần áp production rồi deploy commit mới. URL account mới phải dùng tên Nguyễn Ngọc Triết.
