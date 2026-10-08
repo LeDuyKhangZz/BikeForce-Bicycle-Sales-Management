@@ -108,7 +108,12 @@ jobs:
               Invoke-RestMethod -Method Post -Uri $rpcUri -Headers $headers -Body $body | Out-Null
             }
             catch {
-              throw "Không đồng bộ được báo cáo Pancake ngày $($row.Ngay) vào Supabase."
+              # Chỉ log JSON lỗi PostgREST; không log URI/header vì chúng chứa secret.
+              $safeDetail = $_.ErrorDetails.Message
+              if ([string]::IsNullOrWhiteSpace($safeDetail)) {
+                $safeDetail = 'Supabase không trả nội dung lỗi.'
+              }
+              throw "Không đồng bộ được báo cáo Pancake ngày $($row.Ngay) vào Supabase: $safeDetail"
             }
             Write-Host "Đã đồng bộ báo cáo Pancake ngày $($row.Ngay) vào Supabase."
           }
