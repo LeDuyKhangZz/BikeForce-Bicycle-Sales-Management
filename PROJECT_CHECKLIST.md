@@ -1,5 +1,17 @@
 # BikeForce Project Checklist
 
+## 08/10/2026 — Đưa Trần Minh Triết vào luồng ảnh n8n
+
+- [x] Danh sách `/api/salework/report-image` có Trần Minh Triết và tái sử dụng helper URL/key.
+- [x] Nhánh Triết không gọi SaleWork; dùng snapshot Pancake và view model chung với trang Sàn TMĐT.
+- [x] Renderer PNG giữ kích thước 1080×1920, content type và no-store như ảnh hiện có.
+- [x] RPC ảnh chỉ cho service role execute; không cấp SELECT bảng hoặc mở RLS cho anon/Sales.
+- [x] Unit 2/2, RLS Pancake 5/5, typecheck và lint pass.
+- [ ] Full unit 915/916: còn đúng lỗi có sẵn `Khách hàng` dài 10 ký tự so với giới hạn 9; không phát sinh từ thay đổi này.
+- [ ] Áp migration `20261008180000_pancake_report_image_rpc.sql` lên production trước khi thử URL Vercel.
+- [x] Production build 31 static pages/route exit 0; route ảnh được build thành dynamic route.
+- [ ] Smoke URL Vercel chưa chạy vì production cần migration RPC trước.
+
 ## 08/10/2026 — Nối Pancake vào Sàn TMĐT
 
 - [x] Thêm hai bảng force-RLS và RPC upsert nguyên tử chỉ dành cho worker.
@@ -9,8 +21,10 @@
 - [x] RLS Pancake 4/4, typecheck và lint pass.
 - [x] Production build 31 route pass, gồm `/admin/ecommerce`.
 - [ ] CLI production dry-run bị HTTP 403 do tài khoản Supabase không có quyền project; cần chạy migration trong SQL Editor.
-- [ ] Áp migration production, push code và chạy lại workflow để seed dữ liệu thật.
-- [ ] Smoke test `/admin/ecommerce` bằng phiên Admin production.
+- [x] Áp migration production qua SQL Editor, push code và chạy lại workflow để seed dữ liệu thật.
+- [x] Workflow run `37751078189` success sau khi nhận diện PowerShell request là worker; RPC production upsert hai nguồn.
+- [x] Khởi động web local và xác nhận `GET /admin/ecommerce` trả 200.
+- [ ] Người dùng xác nhận trực quan số liệu trên trang bằng phiên Admin.
 
 ## 08/10/2026 — Automation báo cáo Pancake
 

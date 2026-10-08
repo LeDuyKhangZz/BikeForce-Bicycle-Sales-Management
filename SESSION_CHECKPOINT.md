@@ -2830,3 +2830,13 @@ Verification: PS5.1 parse pass; ba nhánh lỗi local trả exit 1 và không r�
 Local đã hoàn tất schema/RPC/RLS/service/query/UI/workflow. RLS 4/4, typecheck/lint pass. Next Exact Steps: `supabase db push` production; commit/push; workflow_dispatch lại 2026-10-08; đăng nhập Admin mở `/admin/ecommerce` và đối chiếu 10 đơn/1.662.750đ, Shopee 5/1.144.875đ, Tiktok 5/517.875đ.
 
 CLI production dry-run HTTP 403 nên bước kế tiếp đã đổi thành: chủ project mở Supabase SQL Editor, chạy toàn bộ `supabase/migrations/20261008150000_pancake_daily_reports.sql`, báo hoàn tất; sau đó commit/push và rerun workflow. Build 31 route pass.
+
+Migration production đã áp. Commit chính `ed38471`, hai fix workflow `dfb9ca7` và `f43c710` đã push. Run cuối `37751078189` success; dữ liệu 08/10 upsert 2 nguồn. Web local đang chạy PID 8412, route `/admin/ecommerce` HTTP 200 và đã mở cho người dùng. Next Exact Step: người dùng xác nhận trực quan 10 đơn/1.662.750đ, Shopee 5/1.144.875đ, Tiktok 5/517.875đ.
+
+# 2026-10-08 — Ảnh n8n cho Trần Minh Triết
+
+Route `/api/salework/report-image` đã đưa Trần Minh Triết vào chung danh sách accounts. Nhánh Triết bỏ qua SaleWork, dùng snapshot Pancake qua RPC service-role-only và renderer PNG 1080×1920; account cũ không đổi. Unit 2/2, RLS 5/5, typecheck/lint pass; migration local và generated types đã cập nhật.
+
+Production build 31 trang exit 0. Next Exact Steps: áp `supabase/migrations/20261008180000_pancake_report_image_rpc.sql` trên production; deploy Vercel rồi smoke URL Triết với key hiện hữu và kiểm tra `200`, `image/png`, kích thước 1080×1920. Không thử URL production trước migration vì RPC chưa tồn tại.
+
+Full unit: 915/916; lỗi duy nhất là case có sẵn `Khách hàng` 10 ký tự vượt ngưỡng 9 trong `nav-items.test.ts`. Không ghi full unit PASS.

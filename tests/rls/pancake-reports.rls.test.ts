@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { getLatestPancakeDailyReport } from '@/services/pancake-reports';
+import {
+  getLatestPancakeDailyReport,
+  getLatestPancakeReportForImage,
+} from '@/services/pancake-reports';
 
 import { authAdmin, closePool, sql } from '../integration/setup';
 import { setUpRlsFixture, tearDownRlsFixture, type RlsFixture } from './setup';
@@ -90,6 +93,31 @@ describe('RLS báo cáo Pancake', () => {
       service_insert: false,
       service_update: false,
       service_execute: true,
+    });
+  });
+
+  it('RPC ảnh chỉ cho service role đọc snapshot mới nhất', async () => {
+    const report = await getLatestPancakeReportForImage(authAdmin);
+
+    expect(report?.daily.report_date).toBe(REPORT_DATE);
+    expect(report?.daily.employee_name).toBe('Trần Minh Triết');
+    expect(report?.sources).toHaveLength(2);
+
+    const privileges = await sql<{
+      service_execute: boolean;
+      anon_execute: boolean;
+      authenticated_execute: boolean;
+    }>(
+      `select
+        has_function_privilege('service_role', 'public.get_latest_pancake_report_image()', 'EXECUTE') as service_execute,
+        has_function_privilege('anon', 'public.get_latest_pancake_report_image()', 'EXECUTE') as anon_execute,
+        has_function_privilege('authenticated', 'public.get_latest_pancake_report_image()', 'EXECUTE') as authenticated_execute`,
+    );
+
+    expect(privileges.rows[0]).toEqual({
+      service_execute: true,
+      anon_execute: false,
+      authenticated_execute: false,
     });
   });
 

@@ -1355,3 +1355,4 @@ Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái 
 - `pancake_daily_source_reports`: khóa `(report_date, shop_id, source_name)`, FK cascade tới báo cáo ngày, lưu số đơn không hủy và doanh thu theo nguồn.
 - Hai bảng bật và force RLS; `authenticated` chỉ có SELECT qua policy Admin. `service_role` không có DML/SELECT trực tiếp.
 - RPC `upsert_pancake_daily_report` là `security definer set search_path = public, pg_temp`, chỉ cấp EXECUTE cho `service_role`; kiểm tra số không âm và tổng nguồn phải bằng tổng ngày trước khi upsert nguyên tử.
+- RPC chỉ-đọc `get_latest_pancake_report_image()` cũng là security-definer với `search_path` cố định, chỉ `service_role` được EXECUTE. Hàm trả đúng snapshot mới nhất dưới dạng JSON cho route ảnh n8n; không cấp SELECT bảng cho service role, anon hay Sales (DEC-107).

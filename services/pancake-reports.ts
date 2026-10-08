@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
+import { pancakeReportImageSchema } from '@/lib/validation/pancake-report';
 
 type PancakeDailyReportRow = Database['public']['Tables']['pancake_daily_reports']['Row'];
 type PancakeSourceReportRow =
@@ -45,4 +46,23 @@ export async function getLatestPancakeDailyReport(
   }
 
   return { daily, sources: sources ?? [] };
+}
+
+export async function getLatestPancakeReportForImage(
+  supabase: SupabaseClient<Database>,
+): Promise<PancakeDailyReport | null> {
+  const { data, error } = await supabase.rpc('get_latest_pancake_report_image');
+  if (error) {
+    console.error('[getLatestPancakeReportForImage]', error.code, error.message);
+    return null;
+  }
+  if (data === null) return null;
+
+  const parsed = pancakeReportImageSchema.safeParse(data);
+  if (!parsed.success) {
+    console.error('[getLatestPancakeReportForImage] Invalid RPC response');
+    return null;
+  }
+
+  return parsed.data;
 }

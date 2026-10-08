@@ -3,6 +3,17 @@ import path from 'node:path';
 import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createReportAutomationClient } from '@/lib/supabase/admin';
+import { buildEcommerceReportViewModel } from '@/lib/reports/ecommerce-report';
+import {
+  drawEcommerceReportCard,
+  type EcommerceCanvas2DLike,
+} from '@/lib/reports/ecommerce-report-card';
+import {
+  buildSaleWorkReportImageUrl,
+  ECOMMERCE_REPORT_ACCOUNT,
+} from '@/lib/reports/salework-image-accounts';
+import { getLatestPancakeReportForImage } from '@/services/pancake-reports';
 import { getSessionProfile } from '@/services/profiles';
 import { getSaleWorkReport } from '@/services/salework';
 import {
@@ -62,25 +73,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const reports = await getSaleWorkReport();
   const url = new URL(request.url);
   const accountName = url.searchParams.get('account');
 
   // Không truyền ?account= → trả về danh sách tài khoản hiện có để n8n biết cần gọi những gì
   if (!accountName) {
+    const reports = await getSaleWorkReport();
     return NextResponse.json({
-      accounts: reports.map((r) => ({
-        accountName: r.accountName,
-        imageUrl: authorizedByKey
-          ? `/api/salework/report-image?account=${encodeURIComponent(r.accountName)}&key=${API_KEY}`
-          : `/api/salework/report-image?account=${encodeURIComponent(r.accountName)}`,
-      })),
+      accounts: [...reports.map((report) => report.accountName), ECOMMERCE_REPORT_ACCOUNT].map(
+        (name) => ({
+          accountName: name,
+          imageUrl: buildSaleWorkReportImageUrl(
+            name,
+            authorizedByKey ? API_KEY : undefined,
+          ),
+        }),
+      ),
     });
-  }
-
-  const report = reports.find((r) => r.accountName === accountName);
-  if (!report) {
-    return NextResponse.json({ error: `Không tìm thấy tài khoản: ${accountName}` }, { status: 404 });
   }
 
   ensureFontsRegistered();
@@ -92,11 +101,29 @@ export async function GET(request: Request) {
   const canvas = createCanvas(CARD_WIDTH * scale, CARD_HEIGHT * scale);
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  drawReportCard(
-    ctx as unknown as Canvas2DLike,
-    report,
-    background as unknown as CanvasImageSource,
-  );
+
+  if (accountName === ECOMMERCE_REPORT_ACCOUNT) {
+    const report = await getLatestPancakeReportForImage(createReportAutomationClient());
+    if (report === null) {
+      return NextResponse.json({ error: 'Chưa có dữ liệu Pancake' }, { status: 404 });
+    }
+    drawEcommerceReportCard(
+      ctx as unknown as EcommerceCanvas2DLike,
+      buildEcommerceReportViewModel(report),
+      background as unknown as CanvasImageSource,
+    );
+  } else {
+    const reports = await getSaleWorkReport();
+    const report = reports.find((item) => item.accountName === accountName);
+    if (!report) {
+      return NextResponse.json({ error: `Không tìm thấy tài khoản: ${accountName}` }, { status: 404 });
+    }
+    drawReportCard(
+      ctx as unknown as Canvas2DLike,
+      report,
+      background as unknown as CanvasImageSource,
+    );
+  }
 
   const buffer = canvas.toBuffer('image/png');
 

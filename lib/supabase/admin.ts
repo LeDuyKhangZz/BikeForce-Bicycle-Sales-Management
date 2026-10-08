@@ -11,9 +11,10 @@ import type { Database } from '@/types/database.types';
  * ─────────────────────────────────────────────────────────────────────────
  *  ĐỌC KỸ TRƯỚC KHI DÙNG — DEC-005, docs/04 §4.1
  * ─────────────────────────────────────────────────────────────────────────
- * Client này CHỈ để gọi `auth.admin.*`:
+ * Client này CHỈ để gọi `auth.admin.*`, ngoài ngoại lệ RPC hẹp ở DEC-107:
  *   • `auth.admin.createUser`       — UC-17 tạo tài khoản Sales (FR-030)
  *   • `auth.admin.updateUserById`   — UC-18 đổi email / reset mật khẩu
+ *   • `get_latest_pancake_report_image` — snapshot chỉ-đọc cho route n8n có API key
  *
  * Nó **KHÔNG BAO GIỜ** chạm vào `daily_reports` — không đọc, không ghi, không
  * đếm, không aggregate, không export, không render ảnh. Không có ngoại lệ ở v1.
@@ -34,9 +35,9 @@ import type { Database } from '@/types/database.types';
  * client bundle — chốt chặn compile-time của NFR-005, không phải chờ runtime.
  *
  * Code review phải FAIL nếu thấy import file này ngoài
- * `features/admin-sales-management/`.
+ * `features/admin-sales-management/` và route ảnh Pancake được DEC-107 cho phép.
  */
-export function createAdminClient() {
+function createServiceRoleClient() {
   return createSupabaseClient<Database>(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
     auth: {
       // Client này không có người dùng và không có cookie — không tự refresh,
@@ -45,4 +46,13 @@ export function createAdminClient() {
       persistSession: false,
     },
   });
+}
+
+export function createAdminClient() {
+  return createServiceRoleClient();
+}
+
+/** DEC-107: chỉ dùng để gọi RPC get_latest_pancake_report_image trong route n8n. */
+export function createReportAutomationClient() {
+  return createServiceRoleClient();
 }

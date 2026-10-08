@@ -1589,3 +1589,5 @@ Script phải được parse trên Windows PowerShell 5.1 và PowerShell 7 khi m
 Kết quả local: Windows PowerShell 5.1 parse 0 lỗi; thiếu key, ngày sai và khoảng đảo đều exit 1; secret giả không xuất hiện trong output; workflow YAML parse được. Máy không cài `pwsh`, chưa kiểm chứng runtime Linux/PowerShell 7 hoặc API thật. Typecheck, lint và production build exit 0.
 
 Sau workflow thật ngày 08/10/2026: PowerShell 7/Linux exit 0, artifact có 10 đơn và 1.662.750đ; Shopee 5/1.144.875đ, Tiktok 5/517.875đ. RLS Pancake local 4/4 PASS: Admin đọc, Sales/anon rỗng, service role chỉ execute RPC, payload lệch tổng bị từ chối. Migration local cần repair riêng migration dữ liệu Võ Thanh Nhâm vì fresh reset không có hồ sơ đó; không sửa migration cũ.
+
+Ảnh automation Sàn TMĐT có unit khóa URL encode/key và nội dung bảy chỉ số cùng Shopee/Tiktok. RLS Pancake mở rộng thành 5/5: RPC ảnh trả snapshot cho service role, đồng thời `anon`/`authenticated` không có EXECUTE và service role vẫn không có SELECT bảng. Unit mới 2/2, typecheck/lint và production build 31 trang đều exit 0.

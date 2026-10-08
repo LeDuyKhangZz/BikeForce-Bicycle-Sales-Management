@@ -3949,3 +3949,13 @@ Thêm snapshot tổng ngày/nguồn, force RLS Admin-only và RPC worker-only; w
 Kiểm chứng local: migration Pancake áp dụng, generated types cập nhật, RLS 4/4 pass, typecheck/lint exit 0. Fresh reset bị migration dữ liệu Võ Thanh Nhâm cũ chặn do seed thiếu hồ sơ; chỉ repair lịch sử local, không sửa migration cũ. Chưa áp production/push/smoke UI.
 
 Production build 31 route exit 0. `supabase db push --linked --dry-run` bị project trả HTTP 403 vì tài khoản CLI thiếu quyền; dừng trước mọi thay đổi production. Cần chủ project chạy migration Pancake trong SQL Editor rồi mới push workflow có bước RPC.
+
+Người dùng đã áp migration qua SQL Editor. RPC production gọi từ local trả HTTP 200/kết quả 2 và upsert ngày 08/10. Workflow hai lượt đầu lộ việc Supabase secret key mới từ chối User-Agent mặc định giống browser của PowerShell; thêm User-Agent worker rõ ràng, run `37751078189` success. Dev server PID 8412 chạy `0.0.0.0:3000`; `/admin/ecommerce` trả 200 và đã mở trên trình duyệt Windows cho người dùng kiểm tra.
+
+# 2026-10-08 — Trần Minh Triết dùng chung luồng ảnh n8n
+
+Thêm Trần Minh Triết vào response accounts của route ảnh SaleWork. Nhánh account này không gọi SaleWork mà đọc snapshot Pancake mới nhất qua RPC chỉ-đọc service-role-only, dựng view model dùng chung với trang `/admin/ecommerce` và render PNG 1080×1920 chứa bảy chỉ số cùng nguồn Shopee/Tiktok. Các account cũ, xác thực API key/Admin, content type và no-store giữ nguyên. Không cấp SELECT bảng hoặc nới RLS.
+
+Kiểm chứng đã chạy: unit mới 2/2, RLS Pancake 5/5, typecheck, lint và production build 31 trang exit 0. Migration local áp dụng và database types đã generate lại. Chưa smoke Vercel; production cần áp migration `20261008180000_pancake_report_image_rpc.sql` trước khi URL Triết hoạt động.
+
+Full unit chạy 916 test: 915 pass, 1 lỗi có sẵn tại `nav-items.test.ts` vì nhãn `Khách hàng` dài 10 ký tự so với giới hạn 9; cùng lỗi đã được ghi trước task, không liên quan route ảnh.
