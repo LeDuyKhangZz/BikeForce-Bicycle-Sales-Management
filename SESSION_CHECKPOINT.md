@@ -2856,3 +2856,5 @@ Verification: RLS 5/5, typecheck/lint/build exit 0. Next Exact Steps: deploy com
 Header Admin nay có chuông thông báo kèm badge số phiếu `PENDING`; bấm mở `/admin/customer-care`. Badge được render server-side và thay đổi sau khi Server Action review revalidate layout.
 
 Verification mới: targeted RLS 5/5, typecheck/lint/build exit 0. Test fixture dọn phiếu chăm sóc trước khi xóa user để không vướng khóa ngoại giữ audit.
+
+Copy form Sales đã đổi sang **Gửi ảnh đã chăm sóc**; kết quả thành công hiển thị bằng status box có icon và `aria-live` thay cho một dòng chữ nhỏ.

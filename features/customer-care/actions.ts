@@ -85,7 +85,7 @@ export async function submitCustomerCare(
     })));
     revalidatePath('/sales/customers');
     revalidatePath('/admin/customer-care');
-    return { ok: true, data: { notice: 'Đã gửi minh chứng và đang chờ Admin phê duyệt.' } };
+    return { ok: true, data: { notice: 'Gửi ảnh đã chăm sóc thành công. Yêu cầu đang chờ Admin phê duyệt.' } };
   } catch (error) {
     console.error('[submitCustomerCare]', error);
     return { ok: false, code: 'UNKNOWN', message: 'Không gửi được minh chứng. Vui lòng thử lại.' };

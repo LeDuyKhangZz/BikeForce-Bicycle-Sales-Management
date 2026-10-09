@@ -3979,3 +3979,7 @@ Kiểm chứng thật: targeted RLS 5/5, `npm run typecheck`, `npm run lint`, `n
 Thêm nút chuông trên header Admin, badge đếm chính xác phiếu chăm sóc `PENDING` và liên kết thẳng tới trang phê duyệt. Count chạy server-side qua session client chịu RLS; không lộ dữ liệu phiếu ra layout.
 
 Kiểm chứng: targeted RLS 5/5 (bao gồm badge 1 → 0 sau duyệt), typecheck, lint và production build 33 route đều exit 0.
+
+## 2026-10-09 — Phản hồi gửi ảnh chăm sóc
+
+Đổi tiêu đề, mô tả và CTA thành **Gửi ảnh đã chăm sóc**. Sau khi Server Action thành công, Sales nhận hộp thông báo success nổi bật và biết yêu cầu đang chờ Admin duyệt.

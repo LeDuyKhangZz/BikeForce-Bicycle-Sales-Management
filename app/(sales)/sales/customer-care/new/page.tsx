@@ -9,7 +9,7 @@ import { getVietnamToday } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { getOwnedCareCustomer } from '@/services/customer-care';
 
-export const metadata: Metadata = { title: 'Gửi minh chứng chăm sóc · BikeForce' };
+export const metadata: Metadata = { title: 'Gửi ảnh đã chăm sóc · BikeForce' };
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -26,7 +26,7 @@ export default async function NewCustomerCarePage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
-      <div><h1 className="text-2xl font-bold text-heading">Gửi minh chứng chăm sóc</h1><p className="mt-1 text-sm text-muted-foreground">Ảnh được lưu riêng tư trên Cloudinary và chờ Admin phê duyệt.</p></div>
+      <div><h1 className="text-2xl font-bold text-heading">Gửi ảnh đã chăm sóc</h1><p className="mt-1 text-sm text-muted-foreground">Gửi ảnh đã chăm sóc.</p></div>
       <Card className="p-5">
         {customer ? <CustomerCareForm periodMonth={customer.period_month} employeeId={customer.misa_employee_id} customerId={customer.misa_customer_id} customerName={customer.customer_name} today={getVietnamToday()} /> : <p role="alert" className="text-sm text-destructive">Không tìm thấy khách hàng thuộc phạm vi của bạn.</p>}
       </Card>
