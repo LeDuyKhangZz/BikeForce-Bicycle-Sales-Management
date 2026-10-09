@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
       {/* Header dính trên + kính mờ — xem giải thích ở `app/(sales)/layout.tsx`. */}
       <header className="sticky top-0 z-30 border-b border-border/70 bg-card/85 shadow-xs supports-backdrop-filter:backdrop-blur-lg">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-2.5">
+        <div className="mx-auto grid w-full max-w-5xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex sm:gap-3">
           {/* Xem ghi chú ở `app/(sales)/layout.tsx` — ẩn từ 1024px vì sidebar
               đã mang logo đầy đủ, và ô bo góc nền cam nhạt là PHASE 13b
               (DEC-054). Hai group phải giống hệt nhau ở khoản này. */}
@@ -48,7 +48,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           >
             <BrandMark decorative className="w-7 text-accent" />
           </span>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 sm:flex-1">
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               BikeForce · Quản trị
             </p>
@@ -56,6 +56,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               {profile.full_name}
             </p>
           </div>
+          <div className="col-span-3 flex items-center justify-end gap-2 sm:contents">
           <Link
             href="/admin/report-previews"
             aria-label="Xem trước báo cáo nhân viên"
@@ -67,6 +68,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           </Link>
           <CustomerCareNotificationButton pendingCount={pendingCareCount} notifications={pendingCareNotifications} />
           <HeaderSignOut />
+          </div>
         </div>
       </header>
 

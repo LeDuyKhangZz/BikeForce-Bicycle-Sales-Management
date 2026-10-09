@@ -1476,3 +1476,9 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Sales thấy nhãn/lý do thu hồi; phiếu không còn hiệu lực approved.
 - [x] RLS test: Sales không thu hồi, Admin thu hồi một lần, không khôi phục phiếu đã thu hồi.
 - [ ] Chạy hai migration trên production theo thứ tự và smoke trên Vercel.
+## 2026-10-09 — Admin mobile (DEC-110)
+
+- [x] Header Admin không chen tên với ba thao tác ở điện thoại.
+- [x] Bottom nav Admin còn tối đa năm mục, Chỉ tiêu vẫn trực tiếp, các mục khác mở trong Thêm.
+- [x] Typecheck, lint và production build pass.
+- [ ] Smoke giao diện và thao tác ở 375px trên điện thoại thật sau deploy.

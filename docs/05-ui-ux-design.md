@@ -1487,3 +1487,6 @@ Danh sách khách không thêm cột. Ngay dưới tên khách hiển thị mộ
 Trên card điện thoại, nhãn nằm ở một hàng riêng dưới phần tên/tỉnh và rộng hết card. Trạng thái **Đã chăm sóc** dùng cặp màu vàng warning và ngày ngắn `dd/mm/yyyy`, giữ toàn bộ chữ trên một dòng.
 
 DEC-109: trang Admin có mục **Đã phê duyệt · có thể thu hồi**, phân trang 20 phiếu. Mỗi phiếu có ô lý do bắt buộc và nút thu hồi; Sales thấy nhãn **Đã thu hồi phê duyệt** cùng lý do bên dưới.
+# Cập nhật 2026-10-09 — Admin mobile (DEC-110)
+
+Ở màn hình dưới 640px, header Admin có hai hàng: logo/tên ở trên, các thao tác ở dưới. Bottom nav có tối đa năm mục: Tổng quan, Báo cáo, Sales, Chỉ tiêu và Thêm. Đối chiếu, Tài khoản và các module phụ nằm trong panel Thêm; sidebar desktop không đổi. Panel thông báo trên mobile neo theo chiều ngang màn hình để không tràn mép.

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import {
   Banknote,
   CalendarRange,
@@ -10,6 +11,7 @@ import {
   Home,
   LayoutDashboard,
   MessagesSquare,
+  Menu,
   ShieldCheck,
   ShoppingBag,
   ReceiptText,
@@ -82,6 +84,13 @@ type Props = {
 export function MainNav({ items, sidebarItems = [], label }: Props) {
   const pathname = usePathname();
   const activeKey = activeNavKey([...items, ...sidebarItems], pathname);
+  const isAdmin = items.some((item) => item.key === 'ADMIN_OVERVIEW');
+  const mobileItems = isAdmin
+    ? items.filter((item) => item.key !== 'ADMIN_RECONCILIATION' && item.key !== 'ADMIN_ACCOUNT')
+    : items;
+  const moreItems = isAdmin
+    ? [...items.filter((item) => item.key === 'ADMIN_RECONCILIATION'), ...sidebarItems, ...items.filter((item) => item.key === 'ADMIN_ACCOUNT')]
+    : [];
 
   return (
     <>
@@ -101,11 +110,12 @@ export function MainNav({ items, sidebarItems = [], label }: Props) {
         )}
       >
         <ul className="mx-auto flex w-full max-w-3xl">
-          {items.map((item) => (
+          {mobileItems.map((item) => (
             <li key={item.key} className="flex-1">
               <NavLink item={item} isActive={item.key === activeKey} layout="tab" />
             </li>
           ))}
+          {moreItems.length > 0 && <li className="flex-1"><AdminMoreMenu items={moreItems} activeKey={activeKey} /></li>}
         </ul>
       </nav>
 
@@ -133,6 +143,68 @@ export function MainNav({ items, sidebarItems = [], label }: Props) {
         )}
       </nav>
     </>
+  );
+}
+
+function AdminMoreMenu({ items, activeKey }: { items: readonly NavItem[]; activeKey: NavKey | null }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const active = items.some((item) => item.key === activeKey);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-expanded={open}
+        aria-controls="admin-more-navigation"
+        aria-label="Thêm mục quản trị"
+        onClick={() => setOpen((value) => !value)}
+        className={cn('relative flex min-h-14 w-full touch-manipulation flex-col items-center justify-center gap-1 rounded-md px-2 py-2 text-xs font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring', active && 'font-semibold text-primary')}
+      >
+        {active && <span aria-hidden="true" className="absolute inset-x-4 top-0 h-1 rounded-b-pill bg-primary" />}
+        <Menu aria-hidden="true" className="size-5" />
+        <span>Thêm</span>
+      </button>
+      {open && (
+        <div id="admin-more-navigation" className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 max-h-[60dvh] overflow-y-auto rounded-xl border border-input-border bg-card p-2 shadow-lg" role="group" aria-label="Các mục quản trị khác">
+          <p className="px-3 py-2 text-sm font-semibold text-heading">Các mục quản trị</p>
+          <ul className="grid grid-cols-2 gap-1">
+            {items.map((item) => {
+              const Icon = NAV_ICON[item.key];
+              return (
+                <li key={item.key}>
+                  <Link href={item.href} onClick={() => setOpen(false)} aria-current={item.key === activeKey ? 'page' : undefined} className={cn('flex min-h-12 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring', item.key === activeKey ? 'bg-status-info-bg text-status-info-fg' : 'text-foreground hover:bg-background')}>
+                    <Icon aria-hidden="true" className="size-4 shrink-0" />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -2918,3 +2918,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Xóa phiếu bị loại vì mất lịch sử/ảnh; chuyển về `PENDING` bị loại vì che giấu lần duyệt và khiến Admin phải xử lý lại cùng minh chứng.
 - **Impact:** Hai migration tiến tới, ràng buộc chuyển trạng thái tại DB, Server Action/Admin UI và RLS test. Phải áp migration trước khi deploy code.
 - **Status:** APPROVED — người dùng yêu cầu trực tiếp.
+
+## DEC-110 — Điều hướng Admin gọn trên điện thoại
+
+- **Date:** 2026-10-09
+- **Decision:** Header Admin tách tên người dùng và nhóm thao tác thành hai hàng dưới 640px. Bottom nav Admin chỉ hiển thị bốn mục chính (Tổng quan, Báo cáo, Sales, Chỉ tiêu) và nút Thêm; Đối chiếu, Tài khoản cùng các module phụ nằm trong panel Thêm. Sidebar desktop giữ nguyên.
+- **Reason:** Sáu tab và ba nút header chen chúc ở màn hình điện thoại, khiến tên bị che và tab khó chạm.
+- **Alternatives:** Giảm cỡ chữ hoặc để sáu tab bị loại vì vùng chạm quá hẹp; ẩn module Chỉ tiêu bị loại vì yêu cầu trước đó phải có lối vào trực tiếp.
+- **Impact:** Chỉ thay đổi layout/navigation, không đổi quyền hay dữ liệu. Panel thông báo dùng chiều ngang màn hình nhỏ để không tràn mép.
+- **Status:** APPROVED — đáp ứng phản hồi trực tiếp kèm ảnh chụp của người dùng.

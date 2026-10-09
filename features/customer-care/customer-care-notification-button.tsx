@@ -70,7 +70,7 @@ export function CustomerCareNotificationButton({ pendingCount, notifications }: 
           id="customer-care-notifications"
           role="dialog"
           aria-label="Danh sách thông báo"
-          className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-input-border/40 bg-card p-3 text-left shadow-lg"
+          className="fixed inset-x-4 top-28 z-50 rounded-xl border border-input-border/40 bg-card p-3 text-left shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.75rem)] sm:w-[min(22rem,calc(100vw-2rem))]"
         >
           <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
             <h2 className="text-sm font-bold text-heading">Thông báo</h2>

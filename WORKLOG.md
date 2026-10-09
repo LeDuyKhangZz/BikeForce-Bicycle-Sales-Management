@@ -4007,3 +4007,6 @@ Chuông mở panel danh sách tối đa 5 phiếu chăm sóc chờ duyệt mới
 ## 2026-10-09 — Admin thu hồi phê duyệt chăm sóc (DEC-109)
 
 Thêm hai migration `20261009110000`/`20261009110100` cho `REVOKED`, lý do/người/thời điểm thu hồi, CHECK và trigger chuyển trạng thái. Trang Admin có danh sách approved phân trang và form thu hồi. Sales thấy nhãn/lý do thu hồi, phiếu không còn tính như approved; ảnh và dấu vết lần duyệt được giữ. Migration local đã áp, database types tạo lại, RLS targeted 5/5 pass.
+## 2026-10-09 — Tối ưu Admin trên điện thoại (DEC-110)
+
+Header Admin hai hàng trên mobile, không còn chen tên với nút. Bottom nav rút từ sáu xuống năm mục với panel Thêm cho các module phụ; Chỉ tiêu vẫn trực tiếp. Panel chuông không tràn ngang. Typecheck, lint và production build 33 route đều exit 0. Browser kiểm tra trực quan chưa kết nối được, cần smoke trên điện thoại thật sau deploy.
