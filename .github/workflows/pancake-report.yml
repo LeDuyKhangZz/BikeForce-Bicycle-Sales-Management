@@ -2,10 +2,10 @@ name: Pancake Daily Report
 
 on:
   schedule:
-    # 23:50 giờ Việt Nam: báo cáo ngày hiện tại.
-    - cron: '50 16 * * *'
-    # 08:00 giờ Việt Nam: chạy lại ngày hôm qua để cập nhật hoàn/hủy muộn.
-    - cron: '0 1 * * *'
+    # 09:00 giờ Việt Nam: báo cáo ngày hiện tại.
+    - cron: '0 2 * * *'
+    # 17:00 giờ Việt Nam: cập nhật lại báo cáo ngày hiện tại.
+    - cron: '0 10 * * *'
   workflow_dispatch:
     inputs:
       ngay:
@@ -35,15 +35,11 @@ jobs:
         shell: pwsh
         env:
           MANUAL_DATE: ${{ inputs.ngay }}
-          SCHEDULE_EXPRESSION: ${{ github.event.schedule }}
         run: |
           $ErrorActionPreference = 'Stop'
           $vietnamNow = [DateTimeOffset]::UtcNow.ToOffset([TimeSpan]::FromHours(7))
           if (-not [string]::IsNullOrWhiteSpace($env:MANUAL_DATE)) {
             $reportDate = $env:MANUAL_DATE
-          }
-          elseif ($env:SCHEDULE_EXPRESSION -eq '0 1 * * *') {
-            $reportDate = $vietnamNow.AddDays(-1).ToString('yyyy-MM-dd')
           }
           else {
             $reportDate = $vietnamNow.ToString('yyyy-MM-dd')

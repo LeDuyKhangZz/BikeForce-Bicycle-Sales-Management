@@ -1600,3 +1600,6 @@ DEC-109: RLS test xác nhận Sales không thu hồi, Admin thu hồi một lầ
 ## Regression — xem trước Pancake
 
 E2E mobile-375 mở `/admin/report-previews`, chọn Nguyễn Ngọc Triết và xác nhận ảnh dùng đúng endpoint không có API key; kiểm tra không cuộn ngang. Bài test xem ảnh toàn màn hình cũ tiếp tục chạy cùng trang.
+## Regression lịch Pancake (DEC-111)
+
+Unit `lib/process/pancake-schedule.test.ts` khóa đúng hai cron UTC tương ứng 09:00/17:00 Việt Nam và kiểm tra lịch tự động không trừ một ngày; input ngày chạy tay vẫn được giữ. Sau deploy kiểm tra hai run GitHub Actions và `synced_at` trên trang Sàn TMĐT.

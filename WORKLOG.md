@@ -4013,3 +4013,6 @@ Header Admin hai hàng trên mobile, không còn chen tên với nút. Bottom na
 ## 2026-10-09 — Xem trước Pancake của Nguyễn Ngọc Triết
 
 Thêm nhóm Sàn TMĐT trên trang Xem trước Admin, dùng lại endpoint ảnh theo DEC-107 với session Admin. E2E mobile-375 phát hiện header tràn 32px; đã cho nhóm nút wrap và rút nhãn Xem trước ở màn hình nhỏ. E2E trang xem trước 2/2 pass ở 375px.
+## 2026-10-09 — Đổi lịch Pancake 09:00/17:00 (DEC-111)
+
+Bỏ lịch 23:50 cùng lượt 08:00 lấy hôm qua. GitHub Actions nay chạy 09:00 và 17:00 giờ Việt Nam, đều upsert dữ liệu ngày hiện tại. Unit lịch 2/2 pass. Cần kiểm tra run thực tế và thời điểm đồng bộ sau khi push; ngày cũ muốn đối soát phải chạy lại thủ công.

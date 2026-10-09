@@ -7,7 +7,7 @@
 - bảng console và dòng `SUMMARY:` để dùng cho Telegram.
 - snapshot Supabase qua RPC sau khi migration Pancake đã được áp dụng.
 
-Đơn hoàn có thể được sàn cập nhật trễ vài ngày. Workflow vì vậy chạy lại ngày hôm qua lúc 08:00 giờ Việt Nam; số liệu ngày cũ có thể thay đổi giữa các lượt chạy.
+Workflow tự đồng bộ dữ liệu ngày hiện tại lúc 09:00 và cập nhật lại lúc 17:00 giờ Việt Nam. Đây là số liệu trong ngày, có thể chưa phải tổng kết cuối ngày. Đơn hoàn/hủy cập nhật muộn cho ngày cũ không tự được làm mới theo lịch này; khi cần đối soát ngày cũ, chạy workflow thủ công với ngày cần cập nhật.
 
 ## Chạy bằng PowerShell 5.1 hoặc 7
 
@@ -48,8 +48,8 @@ Nếu bỏ cả `-Ngay` lẫn khoảng ngày, script dùng hôm nay theo UTC+7. 
 
 Hai lịch UTC trong workflow:
 
-- `50 16 * * *` = 23:50 giờ Việt Nam, báo cáo ngày hiện tại;
-- `0 1 * * *` = 08:00 giờ Việt Nam, chạy lại ngày hôm qua.
+- `0 2 * * *` = 09:00 giờ Việt Nam, báo cáo ngày hiện tại;
+- `0 10 * * *` = 17:00 giờ Việt Nam, cập nhật lại ngày hiện tại.
 
 GitHub có thể bắt đầu scheduled workflow trễ hơn vài phút khi hệ thống đông; ngày báo cáo vẫn được tính tường minh từ UTC sang UTC+7 lúc job chạy.
 

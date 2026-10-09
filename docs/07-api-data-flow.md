@@ -889,3 +889,6 @@ DEC-109: `revokeCustomerCare` parse Zod lý do 1–1000 ký tự trước khi x�
 ## Xem trước ảnh Sàn TMĐT trong Admin
 
 `/admin/report-previews?ecommerce=1` hiển thị ảnh qua `/api/salework/report-image?account=<Nguyễn Ngọc Triết>`. Route ảnh xác thực session Admin khi không có `key`, sau đó đọc snapshot Pancake bằng RPC đã giới hạn quyền theo DEC-107. Cùng endpoint này vẫn chấp nhận API key phía n8n; trang Admin không nhúng key vào HTML.
+## Lịch Pancake 09:00/17:00 (DEC-111)
+
+Hai cron UTC `0 2 * * *` và `0 10 * * *` đều truyền ngày hiện tại UTC+7 vào `Get-PancakeReport.ps1`, sau đó POST RPC `upsert_pancake_daily_report`. Lượt 17:00 cập nhật cùng khóa `(report_date, shop_id)` của lượt 09:00. Chỉ `workflow_dispatch` với input `ngay` mới dùng ngày khác.

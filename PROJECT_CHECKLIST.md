@@ -1488,3 +1488,8 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Ảnh dùng lại endpoint đã có, không đưa API key vào client.
 - [x] E2E mobile-375 2/2 pass, không cuộn ngang.
 - [ ] Smoke ảnh thật trên Vercel sau deploy.
+## 2026-10-09 — Lịch Pancake trong ngày (DEC-111)
+
+- [x] Workflow chạy 09:00 và 17:00 giờ Việt Nam, đều lấy ngày hiện tại.
+- [x] Unit khóa cron và chọn ngày: 2/2 pass.
+- [ ] Xác nhận GitHub Actions chạy lịch mới và số liệu ngày hiện tại xuất hiện trên Admin.

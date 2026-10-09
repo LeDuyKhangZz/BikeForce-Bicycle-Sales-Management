@@ -2878,3 +2878,6 @@ DEC-109: Admin có form thu hồi phiếu APPROVED, phải ghi lý do. Migration
 ## 2026-10-09 — Preview Nguyễn Ngọc Triết
 
 Đã thêm mục Sàn TMĐT · Pancake tại `/admin/report-previews`, dùng lại ảnh `/api/salework/report-image` qua session Admin. E2E mobile-375 2/2 pass sau khi sửa header tràn ngang. Next Exact Steps: chạy typecheck/lint/build, commit và push; smoke ảnh thật trên Vercel sau deploy.
+## 2026-10-09 — DEC-111 lịch Pancake
+
+Workflow đổi cron sang `0 2 * * *` và `0 10 * * *` UTC; cả hai dùng ngày hiện tại UTC+7. Unit 2/2 pass. Next Exact Steps: chạy lint/typecheck/build, commit/push, xác nhận GitHub Actions nhận lịch mới; sau lượt chạy kiểm tra `synced_at` và ngày trên Admin Sàn TMĐT. Không SQL.

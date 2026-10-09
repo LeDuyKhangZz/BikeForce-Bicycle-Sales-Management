@@ -2927,3 +2927,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Giảm cỡ chữ hoặc để sáu tab bị loại vì vùng chạm quá hẹp; ẩn module Chỉ tiêu bị loại vì yêu cầu trước đó phải có lối vào trực tiếp.
 - **Impact:** Chỉ thay đổi layout/navigation, không đổi quyền hay dữ liệu. Panel thông báo dùng chiều ngang màn hình nhỏ để không tràn mép.
 - **Status:** APPROVED — đáp ứng phản hồi trực tiếp kèm ảnh chụp của người dùng.
+
+## DEC-111 — Đồng bộ Pancake trong giờ làm việc
+
+- **Date:** 2026-10-09
+- **Decision:** Chạy workflow Pancake lúc 09:00 và 17:00 giờ Việt Nam; cả hai lượt lấy ngày hiện tại theo UTC+7. Bỏ lịch 23:50 và lượt 08:00 chạy lại hôm qua.
+- **Reason:** Admin cần xem số liệu trong giờ làm việc, không phải chờ tới gần nửa đêm.
+- **Alternatives:** Giữ lượt 08:00 cập nhật ngày hôm qua bị loại vì không đáp ứng nhu cầu xem ngày hiện tại; thêm lượt thứ ba bị loại vì người dùng yêu cầu đúng hai mốc 09:00 và 17:00.
+- **Impact:** Số liệu 09:00/17:00 là snapshot trong ngày, chưa phải chốt cuối ngày. Hoàn/hủy muộn của ngày cũ cần chạy lại thủ công theo ngày khi đối soát. Không đổi schema, API hay quyền.
+- **Status:** APPROVED — người dùng yêu cầu trực tiếp.
