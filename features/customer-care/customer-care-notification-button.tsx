@@ -20,11 +20,10 @@ export function CustomerCareNotificationButton({ pendingCount }: Props) {
       title={label}
       className={buttonClassName({
         variant: 'secondary',
-        className: 'relative shrink-0 px-3',
+        className: 'relative size-11 shrink-0 p-0',
       })}
     >
       <Bell aria-hidden="true" className="size-4" />
-      <span className="hidden sm:inline">Thông báo</span>
       {pendingCount > 0 && (
         <span
           aria-hidden="true"

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { CheckCircle2, Clock3, ImageIcon } from 'lucide-react';
+import { CheckCircle2, Clock3 } from 'lucide-react';
 
 import { Card, CardTitle } from '@/components/ui/card';
 import { requireRole } from '@/features/auth/queries';
+import { EvidenceImageViewer } from '@/features/customer-care/evidence-image-viewer';
 import { ReviewCareForm } from '@/features/customer-care/review-form';
 import { cloudinaryEvidenceUrl } from '@/lib/cloudinary';
 import { formatVietnamDate, formatVietnamDateTime } from '@/lib/date';
@@ -24,7 +25,13 @@ export default async function AdminCustomerCarePage() {
               <div><CardTitle>{submission.customer_name}</CardTitle><p className="text-sm text-muted-foreground">{submission.customer_code || 'Không có mã'} · chăm sóc {formatVietnamDate(submission.care_date)}</p></div>
               {submission.note && <p className="rounded-lg bg-background p-3 text-sm">{submission.note}</p>}
               <div className="grid grid-cols-2 gap-2">
-                {submission.evidence.map((item) => <a key={item.id} href={cloudinaryEvidenceUrl(item.cloudinary_public_id)} target="_blank" rel="noreferrer" className="flex min-h-24 items-center justify-center rounded-lg border border-input-border/60 bg-background"><ImageIcon aria-hidden="true" className="size-6" /><span className="sr-only">Mở ảnh minh chứng</span></a>)}
+                {submission.evidence.map((item, index) => (
+                  <EvidenceImageViewer
+                    key={item.id}
+                    src={cloudinaryEvidenceUrl(item.cloudinary_public_id)}
+                    alt={`Ảnh chăm sóc ${index + 1} của ${submission.customer_name}`}
+                  />
+                ))}
               </div>
               <p className="flex items-center gap-2 text-xs text-muted-foreground"><Clock3 aria-hidden="true" className="size-4" />Gửi lúc {formatVietnamDateTime(submission.created_at)}</p>
               <ReviewCareForm submissionId={submission.id} />

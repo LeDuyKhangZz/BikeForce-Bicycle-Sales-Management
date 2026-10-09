@@ -1464,3 +1464,4 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [ ] Smoke thật trên Vercel: Sales upload → Admin duyệt → count giảm.
 - [x] Header Admin có nút chuông và badge số phiếu chăm sóc đang chờ duyệt.
 - [x] Form Sales dùng copy “Gửi ảnh đã chăm sóc” và hiển thị status box sau khi gửi thành công.
+- [x] Admin xem thumbnail và phóng lớn ảnh trong lightbox; chuông header không còn nhãn chữ.

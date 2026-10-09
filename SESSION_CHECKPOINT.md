@@ -2858,3 +2858,7 @@ Header Admin nay có chuông thông báo kèm badge số phiếu `PENDING`; bấ
 Verification mới: targeted RLS 5/5, typecheck/lint/build exit 0. Test fixture dọn phiếu chăm sóc trước khi xóa user để không vướng khóa ngoại giữ audit.
 
 Copy form Sales đã đổi sang **Gửi ảnh đã chăm sóc**; kết quả thành công hiển thị bằng status box có icon và `aria-live` thay cho một dòng chữ nhỏ.
+
+Trang Admin customer-care nay hiển thị thumbnail thật và lightbox ảnh lớn; không còn anchor mở URL Cloudinary. Nút thông báo chỉ còn chuông + badge, accessible label giữ nguyên.
+
+Verification: typecheck/lint/build exit 0; build giữ 33 route.

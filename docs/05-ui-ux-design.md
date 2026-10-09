@@ -1476,4 +1476,6 @@ Danh sách khách có CTA **Gửi minh chứng** trên mobile, tablet và deskto
 
 Header Admin có nút chuông **Thông báo**. Badge hiển thị số phiếu `PENDING` (giới hạn nhãn `99+`), ẩn badge khi bằng 0; nút dẫn thẳng tới `/admin/customer-care`. Trên mobile chỉ hiển icon và accessible label để không làm tràn header.
 
+Cập nhật: nút thông báo chỉ hiển thị icon chuông ở mọi breakpoint; tên và số pending vẫn có trong `aria-label`/tooltip. Trang duyệt hiển thị thumbnail ảnh thật thay cho placeholder; bấm thumbnail mở lightbox toàn viewport, Escape/nút Đóng/backdrop đều đóng và focus quay lại thumbnail.
+
 Màn hình Sales dùng nhãn thân thiện **Gửi ảnh đã chăm sóc**. Sau khi upload thành công, form hiển thị hộp trạng thái có icon, nền success, chữ xác nhận và `aria-live="polite"`; lỗi dùng hộp destructive với `role="alert"`.

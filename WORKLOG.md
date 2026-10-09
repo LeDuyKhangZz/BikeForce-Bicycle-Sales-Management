@@ -3983,3 +3983,9 @@ Kiểm chứng: targeted RLS 5/5 (bao gồm badge 1 → 0 sau duyệt), typechec
 ## 2026-10-09 — Phản hồi gửi ảnh chăm sóc
 
 Đổi tiêu đề, mô tả và CTA thành **Gửi ảnh đã chăm sóc**. Sau khi Server Action thành công, Sales nhận hộp thông báo success nổi bật và biết yêu cầu đang chờ Admin duyệt.
+
+## 2026-10-09 — Xem trước ảnh chăm sóc
+
+Rút nút header còn icon chuông và badge. Trang phê duyệt render thumbnail từ signed Cloudinary URL; click mở lightbox nội bộ thay vì điều hướng sang Cloudinary.
+
+Kiểm chứng: typecheck, lint và production build 33 route đều exit 0.
