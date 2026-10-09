@@ -2842,3 +2842,7 @@ Production build 31 trang exit 0. Next Exact Steps: áp `supabase/migrations/202
 Full unit: 915/916; lỗi duy nhất là case có sẵn `Khách hàng` 10 ký tự vượt ngưỡng 9 trong `nav-items.test.ts`. Không ghi full unit PASS.
 
 Tên nhân viên Sàn TMĐT đúng được người dùng xác nhận là `Nguyễn Ngọc Triết`. Migration `20261008190000_correct_pancake_employee_name.sql` đổi dữ liệu/default/constraint và RPC upsert theo hướng tiến tới; cần áp production rồi deploy commit mới. URL account mới phải dùng tên Nguyễn Ngọc Triết.
+
+# 2026-10-09 — Nguyễn Thị Kim Hương
+
+Mapping đã xác nhận: MISA `Nguyễn Thị Kim Hương`, CRM Report 70 `CT-QL-003`, không có SaleWork. Migration `20261009090000_map_nguyen_thi_kim_huong_sources.sql` gán `profiles.amis_employee_name` và `profiles.employee_code` với guard chống thiếu/trùng/ghi đè. Next Exact Step: áp migration production rồi chạy lại `fetch_call_statistics.py` cho ngày cần đồng bộ.

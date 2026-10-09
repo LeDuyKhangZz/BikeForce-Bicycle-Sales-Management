@@ -3963,3 +3963,7 @@ Full unit chạy 916 test: 915 pass, 1 lỗi có sẵn tại `nav-items.test.ts`
 # 2026-10-08 — Sửa tên nhân viên Sàn TMĐT
 
 Người dùng xác nhận tên đúng là `Nguyễn Ngọc Triết`, thay cho `Trần Minh Triết`. Đã đổi account n8n, fallback UI, test và tài liệu hiện hành; thêm migration tiến tới cập nhật dữ liệu hiện có, default, CHECK constraint và literal trong RPC upsert. Không sửa migration đã áp.
+
+# 2026-10-09 — Nối hồ sơ Nguyễn Thị Kim Hương với MISA và CRM
+
+Người dùng xác nhận hồ sơ Sales mới `Nguyễn Thị Kim Hương` tương ứng đúng tên MISA và mã CRM Report 70 `CT-QL-003`; nhân viên không tham gia SaleWork. Thêm migration fail-safe chỉ cập nhật đúng một hồ sơ cùng tên, chặn trùng mapping MISA/mã CRM và không tạo mapping SaleWork.

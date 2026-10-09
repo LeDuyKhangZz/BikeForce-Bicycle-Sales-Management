@@ -1,5 +1,12 @@
 # BikeForce Project Checklist
 
+## 09/10/2026 — Nối Nguyễn Thị Kim Hương với MISA/CRM
+
+- [x] Xác nhận tên MISA `Nguyễn Thị Kim Hương` và mã CRM Report 70 `CT-QL-003`.
+- [x] Thêm migration fail-safe gán `amis_employee_name` và `employee_code` cho đúng một hồ sơ Sales cùng tên.
+- [x] Không thêm ánh xạ hoặc dữ liệu SaleWork.
+- [ ] Áp migration production và chạy lại worker CRM để có snapshot ngày hiện tại.
+
 ## 08/10/2026 — Đưa Nguyễn Ngọc Triết vào luồng ảnh n8n
 
 - [x] Danh sách `/api/salework/report-image` có Nguyễn Ngọc Triết và tái sử dụng helper URL/key.
