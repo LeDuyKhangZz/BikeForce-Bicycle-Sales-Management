@@ -2868,3 +2868,5 @@ Danh sách khách đã có `careReview` từ phiếu mới nhất và render nh�
 Verification: targeted RLS 5/5, typecheck/lint/build exit 0.
 
 Chuông Admin mở panel liệt kê 5 phiếu pending mới nhất, có liên kết tới đúng `#care-<id>` trên trang phê duyệt và mục xem tất cả. Cần kiểm tra tương tác sau deploy.
+
+Nhãn approved trên card mobile nay là hàng ngang riêng màu vàng, ngày ngắn `dd/mm/yyyy` và không xuống dòng.

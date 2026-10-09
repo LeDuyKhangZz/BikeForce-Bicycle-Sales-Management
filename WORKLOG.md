@@ -3999,3 +3999,7 @@ Kiểm chứng: targeted RLS 5/5 khóa chuyển nhãn pending → approved; type
 ## 2026-10-09 — Danh sách thông báo ở chuông Admin
 
 Chuông mở panel danh sách tối đa 5 phiếu chăm sóc chờ duyệt mới nhất, thay vì chuyển trang ngay. Mỗi mục dẫn đến đúng thẻ phê duyệt; có tổng số, liên kết xem tất cả, trạng thái trống và đóng bằng Escape/bấm ngoài.
+
+## 2026-10-09 — Nhãn chăm sóc vàng, rộng một hàng
+
+Đổi nhãn approved sang vàng warning, rút ngày còn `dd/mm/yyyy`. Trên card mobile, đưa nhãn ra một hàng riêng rộng hết card để không bị bó bởi tên khách và badge nhóm.

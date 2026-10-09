@@ -1467,3 +1467,4 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Admin xem thumbnail và phóng lớn ảnh trong lightbox; chuông header không còn nhãn chữ.
 - [x] Hiển thị nhãn phiếu chăm sóc mới nhất ngay dưới tên khách, không thêm cột.
 - [x] Chuông Admin mở danh sách phiếu pending mới nhất tại header; chọn mục đi tới đúng thẻ phê duyệt.
+- [x] Nhãn approved trên card mobile rộng hết hàng, màu vàng và ngày ngắn một dòng.
