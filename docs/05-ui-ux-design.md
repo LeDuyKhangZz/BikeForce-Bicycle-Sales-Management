@@ -1473,3 +1473,5 @@ Popup cảnh báo/nhóm phân trang 100 khách mỗi lần để các danh sách
 ### Minh chứng chăm sóc (DEC-108)
 
 Danh sách khách có CTA **Gửi minh chứng** trên mobile, tablet và desktop. Form Sales hiển thị tên khách, ngày chăm sóc, input 1–5 ảnh và ghi chú. Trang Admin hiển thị pending count, liên kết ảnh signed và form duyệt/từ chối. Control giữ touch target tối thiểu 44px và input tối thiểu 48px.
+
+Header Admin có nút chuông **Thông báo**. Badge hiển thị số phiếu `PENDING` (giới hạn nhãn `99+`), ẩn badge khi bằng 0; nút dẫn thẳng tới `/admin/customer-care`. Trên mobile chỉ hiển icon và accessible label để không làm tràn header.

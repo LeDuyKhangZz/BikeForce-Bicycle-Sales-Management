@@ -1462,3 +1462,4 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Test chứng minh MISA sync không reset phiếu đã duyệt.
 - [x] Targeted RLS 5/5, typecheck, lint và production build pass.
 - [ ] Smoke thật trên Vercel: Sales upload → Admin duyệt → count giảm.
+- [x] Header Admin có nút chuông và badge số phiếu chăm sóc đang chờ duyệt.

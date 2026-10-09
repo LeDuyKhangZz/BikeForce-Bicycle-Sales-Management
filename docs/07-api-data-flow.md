@@ -878,3 +878,5 @@ Cập nhật sau kiểm chứng API thật: workflow đọc hai CSV vừa sinh v
 ### Server Actions chăm sóc (DEC-108)
 
 `submitCustomerCare`: Zod + kiểm file/ngày → auth/role → ownership snapshot → Cloudinary authenticated → insert phiếu/evidence → revalidate. `reviewCustomerCare`: Zod → auth/Admin → update chỉ phiếu `PENDING` → revalidate. Danh sách cảnh báo lọc server-side các `misa_customer_id` có phiếu APPROVED từ cutoff 30 ngày.
+
+Admin layout gọi `countPendingCareSubmissions()` bằng session client chịu RLS và truy vấn `head: true, count: exact`; chỉ số đếm được truyền vào nút chuông, không tải danh sách phiếu trong layout.

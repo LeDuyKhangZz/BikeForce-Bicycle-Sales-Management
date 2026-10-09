@@ -56,6 +56,17 @@ export async function listCareSubmissions(
   return data ?? [];
 }
 
+export async function countPendingCareSubmissions(
+  supabase: SupabaseClient<Database>,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('customer_care_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'PENDING');
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function listRecentlyApprovedCustomerIds(
   supabase: SupabaseClient<Database>,
   cutoff: string,

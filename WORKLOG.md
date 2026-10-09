@@ -3973,3 +3973,9 @@ Người dùng xác nhận hồ sơ Sales mới `Nguyễn Thị Kim Hương` tư
 Triển khai DEC-108: Sales gửi 1–5 ảnh Cloudinary authenticated cho khách MISA thuộc mình; Admin duyệt/từ chối tại `/admin/customer-care`. Phiếu APPROVED được loại server-side khỏi count và danh sách cần chăm sóc trong 30 ngày. Phiếu tách khỏi snapshot nên sync MISA không reset. Migration, generated types, env example và tài liệu đã cập nhật.
 
 Kiểm chứng thật: targeted RLS 5/5, `npm run typecheck`, `npm run lint`, `npm run build` đều exit 0. Build sinh 33 trang, gồm hai route mới.
+
+## 2026-10-09 — Nút thông báo phê duyệt
+
+Thêm nút chuông trên header Admin, badge đếm chính xác phiếu chăm sóc `PENDING` và liên kết thẳng tới trang phê duyệt. Count chạy server-side qua session client chịu RLS; không lộ dữ liệu phiếu ra layout.
+
+Kiểm chứng: targeted RLS 5/5 (bao gồm badge 1 → 0 sau duyệt), typecheck, lint và production build 33 route đều exit 0.

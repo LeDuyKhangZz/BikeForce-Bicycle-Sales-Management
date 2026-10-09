@@ -2852,3 +2852,7 @@ Mapping đã xác nhận: MISA `Nguyễn Thị Kim Hương`, CRM Report 70 `CT-Q
 Code hoàn tất luồng Sales gửi ảnh Cloudinary và Admin phê duyệt. Trạng thái lưu trong `customer_care_submissions`, không nằm trong snapshot MISA; targeted RLS đã chứng minh xóa/ghi lại snapshot không làm mất phiếu APPROVED. Count và danh sách cảnh báo cùng loại khách trong cửa sổ 30 ngày.
 
 Verification: RLS 5/5, typecheck/lint/build exit 0. Next Exact Steps: deploy commit; đăng nhập Sales gửi một ảnh thật, đăng nhập Admin duyệt, quay lại danh sách để xác nhận count giảm một.
+
+Header Admin nay có chuông thông báo kèm badge số phiếu `PENDING`; bấm mở `/admin/customer-care`. Badge được render server-side và thay đổi sau khi Server Action review revalidate layout.
+
+Verification mới: targeted RLS 5/5, typecheck/lint/build exit 0. Test fixture dọn phiếu chăm sóc trước khi xóa user để không vướng khóa ngoại giữ audit.

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { getMisaCustomerAlertCounts } from '@/services/misa-customer-alerts';
 import { getCachedMisaEmployeeCustomers, getCachedMisaCustomerGroupCounts } from '@/services/misa-report119-cache';
+import { countPendingCareSubmissions } from '@/services/customer-care';
 import { closePool, sql } from '../integration/setup';
 import { setUpRlsFixture, tearDownRlsFixture, type RlsFixture } from './setup';
 
@@ -27,6 +28,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await sql(`delete from public.customer_care_submissions
+    where submitted_by in ($1,$2)`, [fixture.ids.salesA, fixture.ids.salesB]);
   await sql("delete from public.misa_report119_employees where period_month = '2033-04-01' and misa_employee_id in ($1,$2)", [EMPLOYEE_A, EMPLOYEE_B]);
   await tearDownRlsFixture();
   await closePool();
@@ -78,6 +81,7 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
     expect(inserted.error).toBeNull();
     expect(inserted.data).not.toBeNull();
     if (inserted.data === null) return;
+    expect(await countPendingCareSubmissions(fixture.clients.admin)).toBe(1);
 
     const reviewed = await fixture.clients.admin.from('customer_care_submissions').update({
       status: 'APPROVED',
@@ -85,6 +89,7 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
       reviewed_at: '2033-04-10T03:00:00.000Z',
     }).eq('id', inserted.data.id).select('id').single();
     expect(reviewed.error).toBeNull();
+    expect(await countPendingCareSubmissions(fixture.clients.admin)).toBe(0);
 
     expect(await getMisaCustomerAlertCounts(fixture.clients.salesA, MONTH, EMPLOYEE_A, CUTOFF)).toEqual({ purchase: 12, care: 11 });
     const page = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {
