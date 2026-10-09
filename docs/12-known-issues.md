@@ -2324,3 +2324,22 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 **Fix:** tách `MisaEmployeeMonthNavigation` thành khối cấp trang, render trước mọi trạng thái loading/error/empty/data; danh sách client chỉ còn tìm kiếm và hiển thị nhân viên.
 
 **Verification:** unit render 2/2 xác nhận tháng hiện tại rỗng vẫn có link tháng trước, tháng lịch sử có đủ hai chiều và tháng tương lai bị khóa; typecheck, lint và production build 30 trang thành công.
+
+### ISSUE-060
+
+**Severity:** P1
+
+**Status:** FIXED — chờ xác nhận lịch production
+**Module:** GitHub Actions / đồng bộ Pancake
+
+**Description:** lượt cron Pancake 17:00 ngày 09/10/2026 không được GitHub Actions tạo; `synced_at` vẫn dừng ở lượt chạy tay 13:48.
+
+**Expected:** workflow tự động cập nhật snapshot ngày hiện tại tại hai khung 09:00 và 17:00, đồng thời báo lỗi nếu xử lý thất bại.
+
+**Actual:** workflow active trên nhánh `main`, nhưng API Actions không có run `schedule` tại hoặc sau 17:00; vì event không được enqueue nên các step và cảnh báo bên trong workflow không có cơ hội chạy.
+
+**Root Cause:** GitHub scheduled workflow là cơ chế best-effort và cron đặt đúng phút đầu giờ dễ bị trì hoãn hoặc bỏ; thiết kế chỉ có một event mỗi khung và chưa có lượt dự phòng. Việc triển khai trước đó cũng chưa được theo dõi đến lượt thực tế kế tiếp.
+
+**Fix:** giữ lượt chính 09:00/17:00, thêm lượt dự phòng 09:10/17:10 và nhánh Telegram `failure()` kèm URL run. Bốn lượt dùng cùng RPC UPSERT snapshot nên không cộng trùng.
+
+**Verification:** API GitHub xác nhận workflow active nhưng không có run 17:00 ngày 09/10; unit lịch sau sửa 3/3 pass. Chưa đóng issue cho tới khi quan sát lượt scheduled production sau khi push.

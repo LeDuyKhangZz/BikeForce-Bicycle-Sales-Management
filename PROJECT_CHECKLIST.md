@@ -1493,3 +1493,11 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Workflow chạy 09:00 và 17:00 giờ Việt Nam, đều lấy ngày hiện tại.
 - [x] Unit khóa cron và chọn ngày: 2/2 pass.
 - [ ] Xác nhận GitHub Actions chạy lịch mới và số liệu ngày hiện tại xuất hiện trên Admin.
+
+## 2026-10-09 — Dự phòng lịch Pancake (DEC-112, ISSUE-060)
+
+- [x] Thêm lượt dự phòng 09:10 và 17:10, dùng cùng ngày hiện tại và UPSERT không cộng trùng.
+- [x] Thêm cảnh báo Telegram khi workflow đã bắt đầu nhưng thất bại.
+- [x] Unit khóa đủ bốn cron, chọn ngày và cảnh báo lỗi: 3/3 pass.
+- [x] Typecheck, lint và production build 33 route exit 0.
+- [ ] Commit/push lên `main`, sau đó quan sát ít nhất một khung lịch chính+dự phòng thực tế và kiểm tra `synced_at`.

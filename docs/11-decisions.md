@@ -2936,3 +2936,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Giữ lượt 08:00 cập nhật ngày hôm qua bị loại vì không đáp ứng nhu cầu xem ngày hiện tại; thêm lượt thứ ba bị loại vì người dùng yêu cầu đúng hai mốc 09:00 và 17:00.
 - **Impact:** Số liệu 09:00/17:00 là snapshot trong ngày, chưa phải chốt cuối ngày. Hoàn/hủy muộn của ngày cũ cần chạy lại thủ công theo ngày khi đối soát. Không đổi schema, API hay quyền.
 - **Status:** APPROVED — người dùng yêu cầu trực tiếp.
+
+## DEC-112 — Lượt dự phòng và cảnh báo lỗi cho lịch Pancake
+
+- **Date:** 2026-10-09
+- **Decision:** Giữ hai mốc chính 09:00 và 17:00, thêm lượt dự phòng 09:10 và 17:10. Bốn lượt đều lấy ngày hiện tại theo UTC+7 và UPSERT cùng khóa `(report_date, shop_id)`. Khi một workflow đã được tạo nhưng thất bại, gửi cảnh báo Telegram kèm liên kết run nếu hai secret Telegram đã được cấu hình.
+- **Reason:** Lượt 17:00 ngày 09/10/2026 không được GitHub Actions enqueue dù workflow active trên nhánh mặc định; chỉ đặt cron chính không đủ khả năng tự phục hồi hoặc báo động.
+- **Alternatives:** Tiếp tục chỉ hai cron bị loại vì không có dự phòng; Windows Task Scheduler bị loại làm cơ chế chính vì phụ thuộc máy người dùng luôn bật; cron/server chuyên dụng được hoãn vì cần thêm hạ tầng và chi phí vận hành.
+- **Impact:** Có thể đồng bộ hai lần trong mỗi khung giờ, nhưng RPC hiện hữu là UPSERT snapshot nên không cộng trùng. GitHub Actions vẫn là best-effort; lượt dự phòng giảm rủi ro chứ không tạo bảo đảm tuyệt đối. Không đổi schema, RLS, API hay dữ liệu nghiệp vụ.
+- **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp sau khi xác nhận lượt 17:00 bị bỏ.

@@ -4,8 +4,12 @@ on:
   schedule:
     # 09:00 giờ Việt Nam: báo cáo ngày hiện tại.
     - cron: '0 2 * * *'
+    # 09:10 giờ Việt Nam: lượt dự phòng nếu GitHub bỏ hoặc trì hoãn lượt 09:00.
+    - cron: '10 2 * * *'
     # 17:00 giờ Việt Nam: cập nhật lại báo cáo ngày hiện tại.
     - cron: '0 10 * * *'
+    # 17:10 giờ Việt Nam: lượt dự phòng nếu GitHub bỏ hoặc trì hoãn lượt 17:00.
+    - cron: '10 10 * * *'
   workflow_dispatch:
     inputs:
       ngay:
@@ -145,3 +149,27 @@ jobs:
             artifacts/pancake-report-${{ steps.report-date.outputs.date }}-by-source.csv
           if-no-files-found: error
           retention-days: 30
+
+      - name: Cảnh báo Telegram khi đồng bộ thất bại
+        if: ${{ failure() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $vietnamNow = [DateTimeOffset]::UtcNow.ToOffset([TimeSpan]::FromHours(7))
+          $runUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $message = @(
+            "⚠️ Đồng bộ Pancake thất bại"
+            "Thời điểm: $($vietnamNow.ToString('dd/MM/yyyy HH:mm')) (giờ Việt Nam)"
+            "Nguồn chạy: ${{ github.event_name }}"
+            "Chi tiết: $runUrl"
+          ) -join "`n"
+          $telegramUri = "https://api.telegram.org/bot$($env:TELEGRAM_BOT_TOKEN)/sendMessage"
+          try {
+            Invoke-RestMethod -Method Post -Uri $telegramUri -Body @{
+              chat_id = $env:TELEGRAM_CHAT_ID
+              text = $message
+            } | Out-Null
+          }
+          catch {
+            Write-Warning 'Không gửi được cảnh báo Telegram về lần đồng bộ Pancake thất bại.'
+          }

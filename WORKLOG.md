@@ -4016,3 +4016,7 @@ Thêm nhóm Sàn TMĐT trên trang Xem trước Admin, dùng lại endpoint ản
 ## 2026-10-09 — Đổi lịch Pancake 09:00/17:00 (DEC-111)
 
 Bỏ lịch 23:50 cùng lượt 08:00 lấy hôm qua. GitHub Actions nay chạy 09:00 và 17:00 giờ Việt Nam, đều upsert dữ liệu ngày hiện tại. Unit lịch 2/2 pass. Cần kiểm tra run thực tế và thời điểm đồng bộ sau khi push; ngày cũ muốn đối soát phải chạy lại thủ công.
+
+## 2026-10-09 — Gia cố lịch Pancake (DEC-112, ISSUE-060)
+
+Kiểm tra GitHub API sau 18:00 xác nhận workflow active trên `main` nhưng không có scheduled run 17:00; mốc 13:48 là run tay thành công. Đã thêm hai lượt dự phòng 09:10/17:10, vẫn giữ hai lượt chính 09:00/17:00 và cùng UPSERT snapshot ngày/cửa hàng nên không cộng trùng. Thêm cảnh báo Telegram ở nhánh `failure()` với giờ Việt Nam và URL run. Unit lịch 3/3, typecheck, lint và production build 33 route đều exit 0; build lần đầu bị sandbox chặn Google Fonts, chạy lại có quyền mạng thành công. Còn phải quan sát lịch production sau commit/push trước khi đóng ISSUE-060.
