@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { buttonClassName } from '@/components/ui/button';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
+import { CustomerCareReviewBadge } from '@/features/misa-employees/customer-care-review-badge';
 import { MonthlySalesChange } from '@/features/misa-employees/monthly-sales-change';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
 import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
@@ -26,7 +27,7 @@ export function CustomerMobileCard({ customer, index, report44Month, alertCutoff
     <article className="rounded-2xl border border-border bg-card p-3 shadow-brand-sm">
       <div className="flex items-start gap-2">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-base font-bold tabular-nums text-primary">{index}</span>
-        <div className="min-w-0 flex-1"><p className="text-xs font-bold text-primary">{customer.code || '—'}</p><h2 className="break-words text-base font-bold leading-tight text-heading">{customer.name || '—'}</h2><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />{customer.billingProvince || '—'}</p></div>
+        <div className="min-w-0 flex-1"><p className="text-xs font-bold text-primary">{customer.code || '—'}</p><h2 className="break-words text-base font-bold leading-tight text-heading">{customer.name || '—'}</h2><div className="mt-1"><CustomerCareReviewBadge review={customer.careReview} /></div><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />{customer.billingProvince || '—'}</p></div>
         <Badge tone={GROUP_TONES[group]} className="grid size-8 shrink-0 place-items-center rounded-full p-0 text-sm" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge>
       </div>
       <dl className="mt-3 grid grid-cols-4 gap-1.5">

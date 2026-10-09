@@ -10,7 +10,7 @@ import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/ami
 import { misaRelativeDateRange } from '@/lib/amis/customer-filter-date-range';
 import type { MisaCustomer } from '@/types/misa-customer';
 import type { MisaCustomerPage, MisaEmployee } from '@/services/misa-report119';
-import { listRecentlyApprovedCustomerIds } from '@/services/customer-care';
+import { getLatestCareReviewByCustomerIds, listRecentlyApprovedCustomerIds } from '@/services/customer-care';
 
 const PAGE_SIZE = 10;
 
@@ -237,6 +237,11 @@ export async function getCachedMisaEmployeeCustomers(
   if (rows.some((row) => row === null)) throw new Error('Snapshot khách hàng MISA không hợp lệ.');
   const validRows = rows.filter((row) => row !== null);
   const customerIds = validRows.map((row) => row.id);
+  const latestCareReviewByCustomer = await getLatestCareReviewByCustomerIds(supabase, {
+    periodMonth,
+    employeeId: params.employeeId,
+    customerIds,
+  });
   let plans: unknown[] = [];
   if (customerIds.length > 0) {
     const planResult = await supabase
@@ -286,7 +291,7 @@ export async function getCachedMisaEmployeeCustomers(
   }
   return {
     employee: { id: employeeValue.misa_employee_id, name: employeeValue.employee_name, customerCount: employeeValue.customer_count },
-    rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id),
+    rows: validRows.map((row) => ({ ...row, ...planByCustomer.get(row.id), careReview: latestCareReviewByCustomer.get(row.id),
       report44OrderSales: params.report44Month === undefined ? undefined : report44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null,
       previousReport44OrderSales: params.report44Month === undefined ? undefined : previousReport44SalesByCustomerCode.get(row.code.trim().toUpperCase()) ?? null })),
     page: params.page,

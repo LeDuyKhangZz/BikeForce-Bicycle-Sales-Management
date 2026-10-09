@@ -82,6 +82,12 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
     expect(inserted.data).not.toBeNull();
     if (inserted.data === null) return;
     expect(await countPendingCareSubmissions(fixture.clients.admin)).toBe(1);
+    const pendingPage = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {
+      month: MONTH, employeeId: EMPLOYEE_A, page: 1, filters: {}, searchQuery: '',
+    });
+    expect(pendingPage?.rows.find((customer) => customer.id === 1)?.careReview).toEqual({
+      status: 'PENDING', careDate: '2033-04-10',
+    });
 
     const reviewed = await fixture.clients.admin.from('customer_care_submissions').update({
       status: 'APPROVED',
@@ -90,6 +96,12 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
     }).eq('id', inserted.data.id).select('id').single();
     expect(reviewed.error).toBeNull();
     expect(await countPendingCareSubmissions(fixture.clients.admin)).toBe(0);
+    const approvedPage = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {
+      month: MONTH, employeeId: EMPLOYEE_A, page: 1, filters: {}, searchQuery: '',
+    });
+    expect(approvedPage?.rows.find((customer) => customer.id === 1)?.careReview).toEqual({
+      status: 'APPROVED', careDate: '2033-04-10',
+    });
 
     expect(await getMisaCustomerAlertCounts(fixture.clients.salesA, MONTH, EMPLOYEE_A, CUTOFF)).toEqual({ purchase: 12, care: 11 });
     const page = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {

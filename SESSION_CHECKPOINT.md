@@ -2862,3 +2862,7 @@ Copy form Sales đã đổi sang **Gửi ảnh đã chăm sóc**; kết quả th
 Trang Admin customer-care nay hiển thị thumbnail thật và lightbox ảnh lớn; không còn anchor mở URL Cloudinary. Nút thông báo chỉ còn chuông + badge, accessible label giữ nguyên.
 
 Verification: typecheck/lint/build exit 0; build giữ 33 route.
+
+Danh sách khách đã có `careReview` từ phiếu mới nhất và render nhãn ngay dưới tên, không thêm cột. Nguồn `last_visit_date` MISA không bị thay đổi.
+
+Verification: targeted RLS 5/5, typecheck/lint/build exit 0.

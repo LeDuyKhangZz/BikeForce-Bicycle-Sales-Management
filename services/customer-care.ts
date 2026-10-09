@@ -4,6 +4,10 @@ import type { Database } from '@/types/database.types';
 
 export type CareSubmission = Database['public']['Tables']['customer_care_submissions']['Row'];
 export type CareEvidence = Database['public']['Tables']['customer_care_evidence']['Row'];
+export type CustomerCareReviewSummary = {
+  status: Database['public']['Enums']['customer_care_status'];
+  careDate: string;
+};
 
 export async function getOwnedCareCustomer(
   supabase: SupabaseClient<Database>,
@@ -65,6 +69,37 @@ export async function countPendingCareSubmissions(
     .eq('status', 'PENDING');
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function getLatestCareReviewByCustomerIds(
+  supabase: SupabaseClient<Database>,
+  input: { periodMonth: string; employeeId: number; customerIds: number[] },
+): Promise<Map<number, CustomerCareReviewSummary>> {
+  if (input.customerIds.length === 0) return new Map();
+  const latestByCustomer = new Map<number, CustomerCareReviewSummary>();
+  const pageSize = 500;
+  let offset = 0;
+
+  while (true) {
+    const { data, count, error } = await supabase
+      .from('customer_care_submissions')
+      .select('misa_customer_id,status,care_date,created_at', { count: 'exact' })
+      .eq('period_month', input.periodMonth)
+      .eq('misa_employee_id', input.employeeId)
+      .in('misa_customer_id', input.customerIds)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+
+    for (const row of data ?? []) {
+      if (!latestByCustomer.has(row.misa_customer_id)) {
+        latestByCustomer.set(row.misa_customer_id, { status: row.status, careDate: row.care_date });
+      }
+    }
+    offset += pageSize;
+    if (offset >= (count ?? 0)) break;
+  }
+  return latestByCustomer;
 }
 
 export async function listRecentlyApprovedCustomerIds(

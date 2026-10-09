@@ -6,6 +6,7 @@ import { buttonClassName } from '@/components/ui/button';
 import { CustomerPopupCard } from '@/features/misa-employees/customer-popup-card';
 import { CustomerMobileCard } from '@/features/misa-employees/customer-mobile-card';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
+import { CustomerCareReviewBadge } from '@/features/misa-employees/customer-care-review-badge';
 import { MonthlySalesChange } from '@/features/misa-employees/monthly-sales-change';
 import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
@@ -99,7 +100,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
             <tr key={customer.id} className={index % 2 === 1 ? 'bg-primary/[0.035]' : 'bg-card'}>
               <td className="px-2 py-2 align-top tabular-nums">{startIndex + index + 1}</td>
               <th scope="row" className="break-words px-2 py-2 align-top font-semibold text-primary">{customer.code || '—'}</th>
-              <td className="break-words px-2 py-2 align-top">{customer.name || '—'}</td>
+              <td className="break-words px-2 py-2 align-top">{customer.name || '—'}<div className="mt-1"><CustomerCareReviewBadge review={customer.careReview} /></div></td>
               <td className="break-words px-2 py-2 align-top">{customer.billingProvince || '—'}</td>
               <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.debt)}</td>
               <td className="break-words px-2 py-2 text-right align-top tabular-nums">{formatMisaAmount(customer.orderSales)}</td>
@@ -130,6 +131,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
                     <div className="min-w-0">
                       <p className="break-words text-sm font-bold text-primary">{customer.code || '—'}</p>
                       <h2 className="break-words text-xl font-bold leading-tight text-heading">{customer.name || '—'}</h2>
+                      <div className="mt-1"><CustomerCareReviewBadge review={customer.careReview} /></div>
                       <p className="mt-2 flex items-center gap-1.5 text-muted-foreground"><MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />{customer.billingProvince || '—'}</p>
                     </div>
                     <div className="flex flex-col items-center gap-2">
@@ -165,6 +167,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
               <Badge tone={groupTone[group]} className="min-w-8 justify-center whitespace-nowrap px-2 py-0.5 text-xs" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge>
             </div>
             <h2 className="mt-2 break-words text-xl font-bold leading-tight text-heading">{customer.name || '—'}</h2>
+            <div className="mt-1"><CustomerCareReviewBadge review={customer.careReview} /></div>
             <p className="mt-2 flex items-center gap-2 text-muted-foreground"><MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />{customer.billingProvince || '—'}</p>
             <dl className="mt-4 grid grid-cols-2 gap-2">
               <div className="flex min-h-20 items-center gap-3 rounded-xl bg-status-exceeded-bg p-3 text-status-exceeded-fg"><Coins aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Công nợ</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaAmount(customer.debt)}</dd></div></div>

@@ -3989,3 +3989,9 @@ Kiểm chứng: targeted RLS 5/5 (bao gồm badge 1 → 0 sau duyệt), typechec
 Rút nút header còn icon chuông và badge. Trang phê duyệt render thumbnail từ signed Cloudinary URL; click mở lightbox nội bộ thay vì điều hướng sang Cloudinary.
 
 Kiểm chứng: typecheck, lint và production build 33 route đều exit 0.
+
+## 2026-10-09 — Nhãn trạng thái chăm sóc trên khách
+
+Không thêm cột theo yêu cầu. Service ghép phiếu mới nhất vào từng khách trong trang; table/card/popup hiển thị nhãn pending, approved kèm ngày, hoặc rejected ngay dưới tên khách.
+
+Kiểm chứng: targeted RLS 5/5 khóa chuyển nhãn pending → approved; typecheck, lint và production build 33 route exit 0.
