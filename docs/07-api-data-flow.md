@@ -881,4 +881,6 @@ Cập nhật sau kiểm chứng API thật: workflow đọc hai CSV vừa sinh v
 
 Admin layout gọi `countPendingCareSubmissions()` bằng session client chịu RLS và truy vấn `head: true, count: exact`; chỉ số đếm được truyền vào nút chuông, không tải danh sách phiếu trong layout.
 
+Admin layout cũng lấy tối đa 5 phiếu `PENDING` mới nhất bằng session client chịu RLS để hiển thị trong panel chuông. Mỗi mục dẫn tới `/admin/customer-care#care-<id>`; thẻ phê duyệt có anchor tương ứng.
+
 Sau khi truy vấn trang khách, service lấy phiếu mới nhất cho các `misa_customer_id` của đúng nhân viên/kỳ, qua session client chịu RLS, rồi ghép `careReview` vào row. UI chỉ render nhãn cạnh tên; không thêm cột và không sửa `last_visit_date` của MISA.

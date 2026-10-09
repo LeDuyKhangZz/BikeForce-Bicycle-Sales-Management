@@ -21,7 +21,7 @@ export default async function AdminCustomerCarePage() {
       {submissions.length === 0 ? <Card className="flex flex-col items-center gap-3 p-8 text-center"><CheckCircle2 aria-hidden="true" className="size-10 text-success" /><CardTitle>Không có yêu cầu chờ duyệt</CardTitle></Card> : (
         <div className="grid gap-4 lg:grid-cols-2">
           {submissions.map((submission) => (
-            <Card key={submission.id} className="flex flex-col gap-4 p-4">
+            <Card key={submission.id} id={`care-${submission.id}`} className="flex scroll-mt-24 flex-col gap-4 p-4">
               <div><CardTitle>{submission.customer_name}</CardTitle><p className="text-sm text-muted-foreground">{submission.customer_code || 'Không có mã'} · chăm sóc {formatVietnamDate(submission.care_date)}</p></div>
               {submission.note && <p className="rounded-lg bg-background p-3 text-sm">{submission.note}</p>}
               <div className="grid grid-cols-2 gap-2">

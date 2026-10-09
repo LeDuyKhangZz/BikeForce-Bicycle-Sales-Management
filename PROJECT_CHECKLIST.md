@@ -1466,3 +1466,4 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Form Sales dùng copy “Gửi ảnh đã chăm sóc” và hiển thị status box sau khi gửi thành công.
 - [x] Admin xem thumbnail và phóng lớn ảnh trong lightbox; chuông header không còn nhãn chữ.
 - [x] Hiển thị nhãn phiếu chăm sóc mới nhất ngay dưới tên khách, không thêm cột.
+- [x] Chuông Admin mở danh sách phiếu pending mới nhất tại header; chọn mục đi tới đúng thẻ phê duyệt.

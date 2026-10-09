@@ -1478,6 +1478,8 @@ Header Admin có nút chuông **Thông báo**. Badge hiển thị số phiếu `
 
 Cập nhật: nút thông báo chỉ hiển thị icon chuông ở mọi breakpoint; tên và số pending vẫn có trong `aria-label`/tooltip. Trang duyệt hiển thị thumbnail ảnh thật thay cho placeholder; bấm thumbnail mở lightbox toàn viewport, Escape/nút Đóng/backdrop đều đóng và focus quay lại thumbnail.
 
+Chuông Admin mở danh sách thông báo ngay dưới header. Panel hiển thị tối đa 5 phiếu chăm sóc chờ duyệt mới nhất, tổng số đang chờ và liên kết “Xem tất cả yêu cầu”. Chọn một phiếu mở đúng thẻ phê duyệt; Escape hoặc bấm bên ngoài đóng panel.
+
 Màn hình Sales dùng nhãn thân thiện **Gửi ảnh đã chăm sóc**. Sau khi upload thành công, form hiển thị hộp trạng thái có icon, nền success, chữ xác nhận và `aria-live="polite"`; lỗi dùng hộp destructive với `role="alert"`.
 
 Danh sách khách không thêm cột. Ngay dưới tên khách hiển thị một nhãn theo phiếu mới nhất: **Đang chờ duyệt**, **Đã chăm sóc dd/mm/yyyy** hoặc **Bị từ chối**. Nhãn có icon + text, xuất hiện nhất quán trong table desktop, card tablet/mobile và popup danh sách lọc.

@@ -10,7 +10,7 @@ import { requireRole } from '@/features/auth/queries';
 import { CustomerCareNotificationButton } from '@/features/customer-care/customer-care-notification-button';
 import { ADMIN_NAV_ITEMS, ADMIN_SIDEBAR_ITEMS } from '@/lib/navigation/nav-items';
 import { createClient } from '@/lib/supabase/server';
-import { countPendingCareSubmissions } from '@/services/customer-care';
+import { countPendingCareSubmissions, listPendingCareNotifications } from '@/services/customer-care';
 
 /**
  * LỚP 2 — guard server-side cho toàn bộ route group `(admin)` (FR-004, DEC-004).
@@ -28,7 +28,11 @@ import { countPendingCareSubmissions } from '@/services/customer-care';
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole('ADMIN');
-  const pendingCareCount = await countPendingCareSubmissions(await createClient());
+  const supabase = await createClient();
+  const [pendingCareCount, pendingCareNotifications] = await Promise.all([
+    countPendingCareSubmissions(supabase),
+    listPendingCareNotifications(supabase),
+  ]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
@@ -61,7 +65,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <Eye aria-hidden="true" className="size-4" />
             <span>Xem trước</span>
           </Link>
-          <CustomerCareNotificationButton pendingCount={pendingCareCount} />
+          <CustomerCareNotificationButton pendingCount={pendingCareCount} notifications={pendingCareNotifications} />
           <HeaderSignOut />
         </div>
       </header>

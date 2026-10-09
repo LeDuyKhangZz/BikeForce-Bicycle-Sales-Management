@@ -8,6 +8,7 @@ export type CustomerCareReviewSummary = {
   status: Database['public']['Enums']['customer_care_status'];
   careDate: string;
 };
+export type PendingCareNotification = Pick<CareSubmission, 'id' | 'customer_name' | 'customer_code' | 'created_at'>;
 
 export async function getOwnedCareCustomer(
   supabase: SupabaseClient<Database>,
@@ -69,6 +70,19 @@ export async function countPendingCareSubmissions(
     .eq('status', 'PENDING');
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function listPendingCareNotifications(
+  supabase: SupabaseClient<Database>,
+): Promise<PendingCareNotification[]> {
+  const { data, error } = await supabase
+    .from('customer_care_submissions')
+    .select('id,customer_name,customer_code,created_at')
+    .eq('status', 'PENDING')
+    .order('created_at', { ascending: false })
+    .range(0, 4);
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getLatestCareReviewByCustomerIds(

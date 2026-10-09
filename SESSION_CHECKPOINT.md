@@ -2866,3 +2866,5 @@ Verification: typecheck/lint/build exit 0; build giữ 33 route.
 Danh sách khách đã có `careReview` từ phiếu mới nhất và render nhãn ngay dưới tên, không thêm cột. Nguồn `last_visit_date` MISA không bị thay đổi.
 
 Verification: targeted RLS 5/5, typecheck/lint/build exit 0.
+
+Chuông Admin mở panel liệt kê 5 phiếu pending mới nhất, có liên kết tới đúng `#care-<id>` trên trang phê duyệt và mục xem tất cả. Cần kiểm tra tương tác sau deploy.

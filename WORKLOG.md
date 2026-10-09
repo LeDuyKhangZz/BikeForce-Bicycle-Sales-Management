@@ -3995,3 +3995,7 @@ Kiểm chứng: typecheck, lint và production build 33 route đều exit 0.
 Không thêm cột theo yêu cầu. Service ghép phiếu mới nhất vào từng khách trong trang; table/card/popup hiển thị nhãn pending, approved kèm ngày, hoặc rejected ngay dưới tên khách.
 
 Kiểm chứng: targeted RLS 5/5 khóa chuyển nhãn pending → approved; typecheck, lint và production build 33 route exit 0.
+
+## 2026-10-09 — Danh sách thông báo ở chuông Admin
+
+Chuông mở panel danh sách tối đa 5 phiếu chăm sóc chờ duyệt mới nhất, thay vì chuyển trang ngay. Mỗi mục dẫn đến đúng thẻ phê duyệt; có tổng số, liên kết xem tất cả, trạng thái trống và đóng bằng Escape/bấm ngoài.
