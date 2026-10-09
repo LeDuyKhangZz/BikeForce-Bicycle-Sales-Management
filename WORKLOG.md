@@ -4010,3 +4010,6 @@ Thêm hai migration `20261009110000`/`20261009110100` cho `REVOKED`, lý do/ngư
 ## 2026-10-09 — Tối ưu Admin trên điện thoại (DEC-110)
 
 Header Admin hai hàng trên mobile, không còn chen tên với nút. Bottom nav rút từ sáu xuống năm mục với panel Thêm cho các module phụ; Chỉ tiêu vẫn trực tiếp. Panel chuông không tràn ngang. Typecheck, lint và production build 33 route đều exit 0. Browser kiểm tra trực quan chưa kết nối được, cần smoke trên điện thoại thật sau deploy.
+## 2026-10-09 — Xem trước Pancake của Nguyễn Ngọc Triết
+
+Thêm nhóm Sàn TMĐT trên trang Xem trước Admin, dùng lại endpoint ảnh theo DEC-107 với session Admin. E2E mobile-375 phát hiện header tràn 32px; đã cho nhóm nút wrap và rút nhãn Xem trước ở màn hình nhỏ. E2E trang xem trước 2/2 pass ở 375px.

@@ -5,6 +5,7 @@ import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { LinkSpinner } from '@/components/ui/link-spinner';
 import { shareImageViewPath, type ShareCardVariant } from '@/lib/reports/share-card';
+import { buildSaleWorkReportImageUrl, ECOMMERCE_REPORT_ACCOUNT } from '@/lib/reports/salework-image-accounts';
 import { getSaleWorkDisplayName } from '@/lib/salework/sales-account-map';
 import type { SalesDailyPreviewOption } from '@/services/profiles';
 import type { SaleWorkReport } from '@/services/salework';
@@ -19,6 +20,7 @@ type Props = {
   selectedDailyReportId: string | null;
   selectedDailyVariant: ShareCardVariant;
   selectedSaleWorkAccount: string | null;
+  selectedEcommerce: boolean;
 };
 
 export function EmployeePreviewList({
@@ -28,6 +30,7 @@ export function EmployeePreviewList({
   selectedDailyReportId,
   selectedDailyVariant,
   selectedSaleWorkAccount,
+  selectedEcommerce,
 }: Props) {
   const selectedDaily = [...reportedToday, ...otherSales]
     .flatMap((employee) => employee.daily_reports)
@@ -93,6 +96,27 @@ export function EmployeePreviewList({
         </Card>
       </section>
 
+      <section aria-labelledby="ecommerce-preview-list-title">
+        <Card className="flex flex-col gap-3">
+          <CardTitle id="ecommerce-preview-list-title" className="text-base">Sàn TMĐT · Pancake</CardTitle>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-heading">{ECOMMERCE_REPORT_ACCOUNT}</p>
+              <p className="text-sm text-muted-foreground">Đơn hàng, doanh thu, Ads và nguồn Shopee/Tiktok</p>
+            </div>
+            <Link
+              href="/admin/report-previews?ecommerce=1#report-preview"
+              className={buttonClassName({ variant: 'secondary', className: 'shrink-0' })}
+              aria-label={`Xem trước báo cáo Sàn TMĐT của ${ECOMMERCE_REPORT_ACCOUNT}`}
+            >
+              <Eye aria-hidden="true" className="size-4" />
+              Xem preview
+              <LinkSpinner label="Đang mở bản xem trước Sàn TMĐT…" />
+            </Link>
+          </div>
+        </Card>
+      </section>
+
       <SalesPreviewSection
         employees={otherSales}
         title="Sales chưa báo cáo hôm nay"
@@ -101,7 +125,7 @@ export function EmployeePreviewList({
         sectionId="other-sales-preview-list-title"
       />
 
-      {(selectedDaily || selectedSaleWork) && (
+      {(selectedDaily || selectedSaleWork || selectedEcommerce) && (
         <section id="report-preview" aria-labelledby="report-preview-title" className="scroll-mt-24">
           <Card className="flex flex-col gap-3">
             <CardTitle id="report-preview-title" className="text-base">
@@ -114,18 +138,22 @@ export function EmployeePreviewList({
                   : selectedDaily.status === 'COMPLETED'
                     ? 'Báo cáo cuối ngày đã hoàn tất.'
                     : 'Bản cuối ngày xem trước; số liệu chưa nhập sẽ hiển thị “—” hoặc trạng thái chờ.'
-                : `Báo cáo SaleWork của ${selectedSaleWork ? getSaleWorkDisplayName(selectedSaleWork.accountName) : 'nhân viên telesale'}.`}
+                : selectedEcommerce
+                  ? `Báo cáo Sàn TMĐT từ Pancake của ${ECOMMERCE_REPORT_ACCOUNT}.`
+                  : `Báo cáo SaleWork của ${selectedSaleWork ? getSaleWorkDisplayName(selectedSaleWork.accountName) : 'nhân viên telesale'}.`}
             </p>
             <PreviewImageViewer
               src={
                 selectedDaily
                   ? shareImageViewPath(selectedDaily.id, selectedDailyVariant)
-                  : `/api/salework/report-image?account=${encodeURIComponent(selectedSaleWork?.accountName ?? '')}`
+                  : buildSaleWorkReportImageUrl(selectedEcommerce ? ECOMMERCE_REPORT_ACCOUNT : selectedSaleWork?.accountName ?? '')
               }
               alt={
                 selectedDaily
                   ? 'Bản xem trước báo cáo ngày của nhân viên'
-                  : `Bản xem trước báo cáo SaleWork của ${selectedSaleWork ? getSaleWorkDisplayName(selectedSaleWork.accountName) : 'nhân viên telesale'}`
+                  : selectedEcommerce
+                    ? `Bản xem trước báo cáo Sàn TMĐT của ${ECOMMERCE_REPORT_ACCOUNT}`
+                    : `Bản xem trước báo cáo SaleWork của ${selectedSaleWork ? getSaleWorkDisplayName(selectedSaleWork.accountName) : 'nhân viên telesale'}`
               }
               width={selectedDaily ? 1080 : 960}
               height={selectedDaily ? 1920 : 1560}

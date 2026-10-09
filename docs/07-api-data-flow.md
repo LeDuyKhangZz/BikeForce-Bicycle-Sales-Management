@@ -886,3 +886,6 @@ Admin layout cũng lấy tối đa 5 phiếu `PENDING` mới nhất bằng sessi
 Sau khi truy vấn trang khách, service lấy phiếu mới nhất cho các `misa_customer_id` của đúng nhân viên/kỳ, qua session client chịu RLS, rồi ghép `careReview` vào row. UI chỉ render nhãn cạnh tên; không thêm cột và không sửa `last_visit_date` của MISA.
 
 DEC-109: `revokeCustomerCare` parse Zod lý do 1–1000 ký tự trước khi xác thực; kiểm tra role Admin; service UPDATE phiếu `APPROVED` thành `REVOKED`, ghi người/thời điểm/lý do; revalidate trang Admin và Sales. Mục approved phân trang server-side 20 phiếu.
+## Xem trước ảnh Sàn TMĐT trong Admin
+
+`/admin/report-previews?ecommerce=1` hiển thị ảnh qua `/api/salework/report-image?account=<Nguyễn Ngọc Triết>`. Route ảnh xác thực session Admin khi không có `key`, sau đó đọc snapshot Pancake bằng RPC đã giới hạn quyền theo DEC-107. Cùng endpoint này vẫn chấp nhận API key phía n8n; trang Admin không nhúng key vào HTML.

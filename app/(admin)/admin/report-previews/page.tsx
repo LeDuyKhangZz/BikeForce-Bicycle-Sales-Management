@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ daily?: string; salework?: string; variant?: string }>;
+  searchParams: Promise<{ daily?: string; salework?: string; ecommerce?: string; variant?: string }>;
 };
 
 export default async function AdminReportPreviewsPage({ searchParams }: Props) {
@@ -34,7 +34,7 @@ export default async function AdminReportPreviewsPage({ searchParams }: Props) {
         <h1 className="text-2xl font-bold tracking-tight text-heading">Xem trước theo nhân viên</h1>
         <p className="max-w-prose text-sm text-muted-foreground">
           Xem riêng báo cáo đầu ngày và cuối ngày của Sales; mẫu cuối ngày vẫn xem được khi còn thiếu
-          số liệu. Báo cáo SaleWork của telesale được giữ nguyên.
+          số liệu. Báo cáo SaleWork của telesale và Sàn TMĐT từ Pancake cũng có thể xem trước tại đây.
         </p>
       </div>
 
@@ -45,6 +45,7 @@ export default async function AdminReportPreviewsPage({ searchParams }: Props) {
         selectedDailyReportId={params.daily ?? null}
         selectedDailyVariant={params.variant === 'MORNING' ? 'MORNING' : 'EVENING'}
         selectedSaleWorkAccount={params.salework ?? null}
+        selectedEcommerce={params.ecommerce === '1'}
       />
     </div>
   );

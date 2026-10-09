@@ -1482,3 +1482,9 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Bottom nav Admin còn tối đa năm mục, Chỉ tiêu vẫn trực tiếp, các mục khác mở trong Thêm.
 - [x] Typecheck, lint và production build pass.
 - [ ] Smoke giao diện và thao tác ở 375px trên điện thoại thật sau deploy.
+## 2026-10-09 — Preview Nguyễn Ngọc Triết
+
+- [x] Trang Xem trước Admin có mục Sàn TMĐT · Pancake và nút riêng cho Nguyễn Ngọc Triết.
+- [x] Ảnh dùng lại endpoint đã có, không đưa API key vào client.
+- [x] E2E mobile-375 2/2 pass, không cuộn ngang.
+- [ ] Smoke ảnh thật trên Vercel sau deploy.

@@ -111,11 +111,11 @@ export function MainNav({ items, sidebarItems = [], label }: Props) {
       >
         <ul className="mx-auto flex w-full max-w-3xl">
           {mobileItems.map((item) => (
-            <li key={item.key} className="flex-1">
+            <li key={item.key} className="min-w-0 flex-1">
               <NavLink item={item} isActive={item.key === activeKey} layout="tab" />
             </li>
           ))}
-          {moreItems.length > 0 && <li className="flex-1"><AdminMoreMenu items={moreItems} activeKey={activeKey} /></li>}
+          {moreItems.length > 0 && <li className="min-w-0 flex-1"><AdminMoreMenu items={moreItems} activeKey={activeKey} /></li>}
         </ul>
       </nav>
 
@@ -236,7 +236,7 @@ function NavLink({ item, isActive, layout }: NavLinkProps) {
         'active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none',
         // 44px là sàn tuyệt đối của vùng chạm (rule touch-target-size).
         layout === 'tab'
-          ? 'min-h-14 flex-col justify-center gap-1 px-2 py-2 text-xs'
+          ? 'min-h-14 w-full flex-col justify-center gap-1 px-1 py-2 text-center text-xs'
           : 'min-h-11 px-3 py-2 text-sm',
         /*
          * ⚠ Mục đang sáng ở SIDEBAR phải dùng ĐÚNG CẶP `status-info-bg` +

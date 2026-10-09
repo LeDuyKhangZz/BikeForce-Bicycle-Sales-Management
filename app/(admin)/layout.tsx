@@ -56,7 +56,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               {profile.full_name}
             </p>
           </div>
-          <div className="col-span-3 flex items-center justify-end gap-2 sm:contents">
+          <div className="col-span-3 flex min-w-0 flex-wrap items-center justify-end gap-2 sm:contents">
           <Link
             href="/admin/report-previews"
             aria-label="Xem trước báo cáo nhân viên"
@@ -64,7 +64,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             className={buttonClassName({ variant: 'secondary', className: 'shrink-0 px-3 sm:px-4' })}
           >
             <Eye aria-hidden="true" className="size-4" />
-            <span>Xem trước</span>
+            <span className="hidden md:inline">Xem trước</span>
           </Link>
           <CustomerCareNotificationButton pendingCount={pendingCareCount} notifications={pendingCareNotifications} />
           <HeaderSignOut />

@@ -1490,3 +1490,6 @@ DEC-109: trang Admin có mục **Đã phê duyệt · có thể thu hồi**, ph�
 # Cập nhật 2026-10-09 — Admin mobile (DEC-110)
 
 Ở màn hình dưới 640px, header Admin có hai hàng: logo/tên ở trên, các thao tác ở dưới. Bottom nav có tối đa năm mục: Tổng quan, Báo cáo, Sales, Chỉ tiêu và Thêm. Đối chiếu, Tài khoản và các module phụ nằm trong panel Thêm; sidebar desktop không đổi. Panel thông báo trên mobile neo theo chiều ngang màn hình để không tràn mép.
+## 2026-10-09 — Xem trước nhân viên Sàn TMĐT
+
+Trang `/admin/report-previews` có nhóm **Sàn TMĐT · Pancake** riêng cho Nguyễn Ngọc Triết. Nút Xem preview hiển thị cùng ảnh báo cáo 9:16 đang dùng trong luồng n8n; Admin mở bằng session, không đưa API key ra client. Trên điện thoại, nút Xem trước ở header chỉ hiện icon để tránh tràn ngang; tên đầy đủ vẫn có trong accessible label.

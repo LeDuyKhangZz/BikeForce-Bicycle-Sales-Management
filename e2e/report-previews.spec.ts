@@ -3,6 +3,20 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN_EMAIL } from './accounts';
 import { expectNoHorizontalScroll, signIn } from './helpers';
 
+test('Admin xem trước ảnh Sàn TMĐT của Nguyễn Ngọc Triết', async ({ page }) => {
+  await signIn(page, E2E_ADMIN_EMAIL);
+  await page.goto('/admin/report-previews');
+
+  await page.getByRole('link', { name: 'Xem trước báo cáo Sàn TMĐT của Nguyễn Ngọc Triết' }).click();
+
+  await expect(page.getByText('Báo cáo Sàn TMĐT từ Pancake của Nguyễn Ngọc Triết.')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Bản xem trước báo cáo Sàn TMĐT của Nguyễn Ngọc Triết' })).toHaveAttribute(
+    'src',
+    '/api/salework/report-image?account=Nguy%E1%BB%85n%20Ng%E1%BB%8Dc%20Tri%E1%BA%BFt',
+  );
+  await expectNoHorizontalScroll(page);
+});
+
 test('Admin mở và đóng ảnh báo cáo toàn màn hình', async ({ page }) => {
   await signIn(page, E2E_ADMIN_EMAIL);
   await page.goto('/admin/report-previews');

@@ -2875,3 +2875,6 @@ DEC-109: Admin có form thu hồi phiếu APPROVED, phải ghi lý do. Migration
 ## 2026-10-09 — Admin mobile (DEC-110)
 
 Đã chỉnh header thành hai hàng dưới 640px, bottom nav tối đa năm mục với panel Thêm, và panel thông báo vừa chiều ngang điện thoại. Typecheck/lint/build pass. Next Exact Steps: kiểm tra thực tế ở 375px sau deploy, đặc biệt menu Thêm và chuông; browser in-app không kết nối được trong phiên này.
+## 2026-10-09 — Preview Nguyễn Ngọc Triết
+
+Đã thêm mục Sàn TMĐT · Pancake tại `/admin/report-previews`, dùng lại ảnh `/api/salework/report-image` qua session Admin. E2E mobile-375 2/2 pass sau khi sửa header tràn ngang. Next Exact Steps: chạy typecheck/lint/build, commit và push; smoke ảnh thật trên Vercel sau deploy.
