@@ -1595,3 +1595,5 @@ Sau workflow thật ngày 08/10/2026: PowerShell 7/Linux exit 0, artifact có 10
 ### Kiểm thử minh chứng chăm sóc (DEC-108)
 
 RLS test dùng JWT thật kiểm tra Sales tạo phiếu sở hữu, Admin duyệt, count/danh sách giảm đúng và phiếu vẫn tồn tại sau khi xóa/ghi lại snapshot. Lần chạy 2026-10-09: targeted RLS 5/5, typecheck/lint/build exit 0.
+
+DEC-109: RLS test xác nhận Sales không thu hồi, Admin thu hồi một lần, lần hai không cập nhật, `reviewed_*` còn nguyên, `revoked_*`/lý do được ghi, và phiếu không còn được tính là APPROVED.

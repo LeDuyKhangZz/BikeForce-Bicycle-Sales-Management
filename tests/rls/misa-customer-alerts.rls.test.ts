@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { getMisaCustomerAlertCounts } from '@/services/misa-customer-alerts';
 import { getCachedMisaEmployeeCustomers, getCachedMisaCustomerGroupCounts } from '@/services/misa-report119-cache';
-import { countPendingCareSubmissions } from '@/services/customer-care';
+import { countPendingCareSubmissions, revokeCareSubmission } from '@/services/customer-care';
 import { closePool, sql } from '../integration/setup';
 import { setUpRlsFixture, tearDownRlsFixture, type RlsFixture } from './setup';
 
@@ -86,7 +86,7 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
       month: MONTH, employeeId: EMPLOYEE_A, page: 1, filters: {}, searchQuery: '',
     });
     expect(pendingPage?.rows.find((customer) => customer.id === 1)?.careReview).toEqual({
-      status: 'PENDING', careDate: '2033-04-10',
+      status: 'PENDING', careDate: '2033-04-10', revocationReason: null,
     });
 
     const reviewed = await fixture.clients.admin.from('customer_care_submissions').update({
@@ -100,7 +100,7 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
       month: MONTH, employeeId: EMPLOYEE_A, page: 1, filters: {}, searchQuery: '',
     });
     expect(approvedPage?.rows.find((customer) => customer.id === 1)?.careReview).toEqual({
-      status: 'APPROVED', careDate: '2033-04-10',
+      status: 'APPROVED', careDate: '2033-04-10', revocationReason: null,
     });
 
     expect(await getMisaCustomerAlertCounts(fixture.clients.salesA, MONTH, EMPLOYEE_A, CUTOFF)).toEqual({ purchase: 12, care: 11 });
@@ -119,5 +119,39 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
       .select('id,status').eq('id', inserted.data.id).single();
     expect(persisted.error).toBeNull();
     expect(persisted.data?.status).toBe('APPROVED');
+
+    const salesRevocation = await fixture.clients.salesA.from('customer_care_submissions').update({
+      status: 'REVOKED', revoked_by: fixture.ids.salesA, revoked_at: '2033-04-11T03:00:00.000Z',
+      revocation_reason: 'Không có quyền',
+    }).eq('id', inserted.data.id).select('id');
+    expect(salesRevocation.error).toBeNull();
+    expect(salesRevocation.data).toEqual([]);
+
+    expect(await revokeCareSubmission(fixture.clients.admin, {
+      id: inserted.data.id, adminId: fixture.ids.admin, reason: 'Duyệt nhầm minh chứng',
+    })).toBe(true);
+    expect(await revokeCareSubmission(fixture.clients.admin, {
+      id: inserted.data.id, adminId: fixture.ids.admin, reason: 'Không thể thu hồi hai lần',
+    })).toBe(false);
+    const revoked = await fixture.clients.salesA.from('customer_care_submissions')
+      .select('status,reviewed_by,reviewed_at,revoked_by,revoked_at,revocation_reason')
+      .eq('id', inserted.data.id).single();
+    expect(revoked.data).toMatchObject({
+      status: 'REVOKED', reviewed_by: fixture.ids.admin, revoked_by: fixture.ids.admin,
+      revocation_reason: 'Duyệt nhầm minh chứng',
+    });
+    expect(revoked.data?.reviewed_at).not.toBeNull();
+    expect(revoked.data?.revoked_at).not.toBeNull();
+    const restore = await fixture.clients.admin.from('customer_care_submissions').update({
+      status: 'APPROVED',
+    }).eq('id', inserted.data.id).select('id');
+    expect(restore.data).toEqual([]);
+    expect(await getMisaCustomerAlertCounts(fixture.clients.salesA, MONTH, EMPLOYEE_A, CUTOFF)).toEqual({ purchase: 12, care: 12 });
+    const revokedPage = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {
+      month: MONTH, employeeId: EMPLOYEE_A, page: 1, filters: {}, searchQuery: '',
+    });
+    expect(revokedPage?.rows.find((customer) => customer.id === 1)?.careReview).toEqual({
+      status: 'REVOKED', careDate: '2033-04-10', revocationReason: 'Duyệt nhầm minh chứng',
+    });
   });
 });

@@ -16,6 +16,8 @@
 
 > **2026-10-09 — DEC-108:** `customer_care_submissions` lưu phiếu và trạng thái duyệt; `customer_care_evidence` lưu metadata Cloudinary authenticated. Cả hai force RLS. Sales chỉ SELECT/INSERT phiếu của mình sau khi policy đối chiếu quyền sở hữu snapshot; Admin SELECT và UPDATE trạng thái. Không có policy DELETE.
 
+> **2026-10-09 — DEC-109:** Hai migration `20261009110000` và `20261009110100` thêm enum `REVOKED` cùng cột `revoked_by`, `revoked_at`, `revocation_reason`. CHECK bắt buộc lý do, người và thời gian; trigger chỉ cho `PENDING → APPROVED/REJECTED` hoặc `APPROVED → REVOKED`. Admin được UPDATE qua RLS; Sales vẫn chỉ SELECT phiếu của mình. Bản ghi duyệt và ảnh giữ nguyên.
+
 > **2026-09-23 — DEC-096:** migration `20260923180000_admin_manage_misa_customer_plans.sql` gỡ policy ghi của Sales và cấp INSERT/UPDATE duy nhất cho Admin. Policy SELECT vẫn cho Sales xem dòng của chính mình.
 
 ## Bổ sung 12/09/2026 — DEC-089

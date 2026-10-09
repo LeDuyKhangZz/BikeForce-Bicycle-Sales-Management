@@ -1284,3 +1284,5 @@ Trước khi bật bước đồng bộ Supabase, phải áp migration `20261008
 ### Cloudinary minh chứng chăm sóc (DEC-108)
 
 Áp migration `20261009100000_customer_care_approvals.sql` trước deploy. Vercel và `.env.local` cần `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`; không biến nào có prefix `NEXT_PUBLIC_`. Sau deploy, Sales gửi một ảnh thử, Admin duyệt và xác nhận count cảnh báo giảm một.
+
+DEC-109: chạy lần lượt `20261009110000_customer_care_revocation.sql` rồi `20261009110100_customer_care_revocation_fields.sql` trong Supabase SQL Editor trước khi deploy UI thu hồi. PostgreSQL cần commit giá trị enum mới trước khi dùng trong CHECK/policy. Kiểm tra Admin thu hồi phiếu đã duyệt, nhãn Sales chuyển `Đã thu hồi phê duyệt` và lý do/ảnh vẫn còn.

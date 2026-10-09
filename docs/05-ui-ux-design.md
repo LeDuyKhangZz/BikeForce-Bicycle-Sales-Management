@@ -1485,3 +1485,5 @@ Màn hình Sales dùng nhãn thân thiện **Gửi ảnh đã chăm sóc**. Sau 
 Danh sách khách không thêm cột. Ngay dưới tên khách hiển thị một nhãn theo phiếu mới nhất: **Đang chờ duyệt**, **Đã chăm sóc dd/mm/yyyy** hoặc **Bị từ chối**. Nhãn có icon + text, xuất hiện nhất quán trong table desktop, card tablet/mobile và popup danh sách lọc.
 
 Trên card điện thoại, nhãn nằm ở một hàng riêng dưới phần tên/tỉnh và rộng hết card. Trạng thái **Đã chăm sóc** dùng cặp màu vàng warning và ngày ngắn `dd/mm/yyyy`, giữ toàn bộ chữ trên một dòng.
+
+DEC-109: trang Admin có mục **Đã phê duyệt · có thể thu hồi**, phân trang 20 phiếu. Mỗi phiếu có ô lý do bắt buộc và nút thu hồi; Sales thấy nhãn **Đã thu hồi phê duyệt** cùng lý do bên dưới.

@@ -4,9 +4,11 @@ import type { Database } from '@/types/database.types';
 
 export type CareSubmission = Database['public']['Tables']['customer_care_submissions']['Row'];
 export type CareEvidence = Database['public']['Tables']['customer_care_evidence']['Row'];
+export type CareSubmissionWithEvidence = CareSubmission & { evidence: CareEvidence[] };
 export type CustomerCareReviewSummary = {
   status: Database['public']['Enums']['customer_care_status'];
   careDate: string;
+  revocationReason: string | null;
 };
 export type PendingCareNotification = Pick<CareSubmission, 'id' | 'customer_name' | 'customer_code' | 'created_at'>;
 
@@ -32,7 +34,7 @@ export async function createCareSubmission(
   const { data, error } = await supabase
     .from('customer_care_submissions')
     .insert(input)
-    .select('id,misa_customer_id,period_month,misa_employee_id,customer_code,customer_name,submitted_by,care_date,note,status,reviewed_by,reviewed_at,rejection_reason,created_at,updated_at')
+    .select('id,misa_customer_id,period_month,misa_employee_id,customer_code,customer_name,submitted_by,care_date,note,status,reviewed_by,reviewed_at,rejection_reason,revoked_by,revoked_at,revocation_reason,created_at,updated_at')
     .single();
   if (error) throw error;
   return data;
@@ -49,16 +51,32 @@ export async function addCareEvidence(
 export async function listCareSubmissions(
   supabase: SupabaseClient<Database>,
   status?: Database['public']['Enums']['customer_care_status'],
-): Promise<Array<CareSubmission & { evidence: CareEvidence[] }>> {
+): Promise<CareSubmissionWithEvidence[]> {
   let query = supabase
     .from('customer_care_submissions')
-    .select('id,misa_customer_id,period_month,misa_employee_id,customer_code,customer_name,submitted_by,care_date,note,status,reviewed_by,reviewed_at,rejection_reason,created_at,updated_at,evidence:customer_care_evidence(id,submission_id,cloudinary_asset_id,cloudinary_public_id,secure_url,resource_type,delivery_type,format,bytes,width,height,created_at)')
+    .select('id,misa_customer_id,period_month,misa_employee_id,customer_code,customer_name,submitted_by,care_date,note,status,reviewed_by,reviewed_at,rejection_reason,revoked_by,revoked_at,revocation_reason,created_at,updated_at,evidence:customer_care_evidence(id,submission_id,cloudinary_asset_id,cloudinary_public_id,secure_url,resource_type,delivery_type,format,bytes,width,height,created_at)')
     .order('created_at', { ascending: false })
     .range(0, 99);
   if (status) query = query.eq('status', status);
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
+}
+
+export async function listApprovedCareSubmissions(
+  supabase: SupabaseClient<Database>,
+  page: number,
+): Promise<{ rows: CareSubmissionWithEvidence[]; total: number }> {
+  const pageSize = 20;
+  const from = (page - 1) * pageSize;
+  const { data, count, error } = await supabase
+    .from('customer_care_submissions')
+    .select('id,misa_customer_id,period_month,misa_employee_id,customer_code,customer_name,submitted_by,care_date,note,status,reviewed_by,reviewed_at,rejection_reason,revoked_by,revoked_at,revocation_reason,created_at,updated_at,evidence:customer_care_evidence(id,submission_id,cloudinary_asset_id,cloudinary_public_id,secure_url,resource_type,delivery_type,format,bytes,width,height,created_at)', { count: 'exact' })
+    .eq('status', 'APPROVED')
+    .order('reviewed_at', { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error) throw error;
+  return { rows: data ?? [], total: count ?? 0 };
 }
 
 export async function countPendingCareSubmissions(
@@ -97,7 +115,7 @@ export async function getLatestCareReviewByCustomerIds(
   while (true) {
     const { data, count, error } = await supabase
       .from('customer_care_submissions')
-      .select('misa_customer_id,status,care_date,created_at', { count: 'exact' })
+      .select('misa_customer_id,status,care_date,created_at,revocation_reason', { count: 'exact' })
       .eq('period_month', input.periodMonth)
       .eq('misa_employee_id', input.employeeId)
       .in('misa_customer_id', input.customerIds)
@@ -107,7 +125,7 @@ export async function getLatestCareReviewByCustomerIds(
 
     for (const row of data ?? []) {
       if (!latestByCustomer.has(row.misa_customer_id)) {
-        latestByCustomer.set(row.misa_customer_id, { status: row.status, careDate: row.care_date });
+        latestByCustomer.set(row.misa_customer_id, { status: row.status, careDate: row.care_date, revocationReason: row.revocation_reason });
       }
     }
     offset += pageSize;
@@ -157,6 +175,26 @@ export async function reviewCareSubmission(
     .update({ status: input.status, reviewed_by: input.adminId, reviewed_at: new Date().toISOString(), rejection_reason: input.rejectionReason })
     .eq('id', input.id)
     .eq('status', 'PENDING')
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  return data !== null;
+}
+
+export async function revokeCareSubmission(
+  supabase: SupabaseClient<Database>,
+  input: { id: string; adminId: string; reason: string },
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('customer_care_submissions')
+    .update({
+      status: 'REVOKED',
+      revoked_by: input.adminId,
+      revoked_at: new Date().toISOString(),
+      revocation_reason: input.reason,
+    })
+    .eq('id', input.id)
+    .eq('status', 'APPROVED')
     .select('id')
     .maybeSingle();
   if (error) throw error;

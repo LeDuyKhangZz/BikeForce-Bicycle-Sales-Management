@@ -2909,3 +2909,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Sửa `last_visit_date` trong snapshot bị loại vì làm sai dữ liệu MISA và bị sync ghi đè; chỉ ẩn trên client bị loại vì count/phân trang sai; lưu ảnh base64 trong Postgres bị loại vì phình database.
 - **Impact:** Thêm migration, generated types, Cloudinary server-only, Server Actions, hai route Sales/Admin, menu Admin, CTA trên danh sách khách và RLS test. Ba biến Cloudinary không mang prefix `NEXT_PUBLIC_`.
 - **Status:** APPROVED — người dùng yêu cầu triển khai trong phiên.
+
+## DEC-109 — Admin thu hồi phê duyệt chăm sóc
+
+- **Date:** 2026-10-09
+- **Decision:** Cho Admin chuyển phiếu `APPROVED → REVOKED` khi nhập lý do. Giữ `reviewed_by`/`reviewed_at` và ảnh, ghi thêm `revoked_by`/`revoked_at`/`revocation_reason`. Không cho thu hồi lần hai hoặc khôi phục phiếu đã thu hồi.
+- **Reason:** Có thể duyệt nhầm minh chứng; xóa hoặc ghi đè lần duyệt làm mất dấu vết xử lý. Trạng thái `REVOKED` loại phiếu khỏi tập đã duyệt và hiển thị rõ cho Sales.
+- **Alternatives:** Xóa phiếu bị loại vì mất lịch sử/ảnh; chuyển về `PENDING` bị loại vì che giấu lần duyệt và khiến Admin phải xử lý lại cùng minh chứng.
+- **Impact:** Hai migration tiến tới, ràng buộc chuyển trạng thái tại DB, Server Action/Admin UI và RLS test. Phải áp migration trước khi deploy code.
+- **Status:** APPROVED — người dùng yêu cầu trực tiếp.

@@ -16,3 +16,8 @@ export const customerCareReviewSchema = z.object({
   (value) => value.decision === 'APPROVED' || Boolean(value.rejectionReason),
   { path: ['rejectionReason'], message: 'Vui lòng nhập lý do từ chối.' },
 );
+
+export const customerCareRevocationSchema = z.object({
+  submissionId: z.uuid(),
+  reason: z.string().trim().min(1, 'Vui lòng nhập lý do thu hồi.').max(1000),
+});

@@ -130,6 +130,9 @@ export type Database = {
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          revocation_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
           status: Database["public"]["Enums"]["customer_care_status"]
           submitted_by: string
           updated_at: string
@@ -147,6 +150,9 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           status?: Database["public"]["Enums"]["customer_care_status"]
           submitted_by: string
           updated_at?: string
@@ -164,6 +170,9 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           status?: Database["public"]["Enums"]["customer_care_status"]
           submitted_by?: string
           updated_at?: string
@@ -172,6 +181,13 @@ export type Database = {
           {
             foreignKeyName: "customer_care_submissions_reviewed_by_fkey"
             columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_care_submissions_revoked_by_fkey"
+            columns: ["revoked_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -946,7 +962,7 @@ export type Database = {
       vn_today: { Args: never; Returns: string }
     }
     Enums: {
-      customer_care_status: "PENDING" | "APPROVED" | "REJECTED"
+      customer_care_status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED"
       report_status: "MORNING_SUBMITTED" | "COMPLETED"
       user_role: "ADMIN" | "SALES"
     }
@@ -1076,7 +1092,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      customer_care_status: ["PENDING", "APPROVED", "REJECTED"],
+      customer_care_status: ["PENDING", "APPROVED", "REJECTED", "REVOKED"],
       report_status: ["MORNING_SUBMITTED", "COMPLETED"],
       user_role: ["ADMIN", "SALES"],
     },

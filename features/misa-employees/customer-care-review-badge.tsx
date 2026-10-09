@@ -19,5 +19,8 @@ export function CustomerCareReviewBadge({ review, fullWidth = false }: Props) {
   if (review.status === 'REJECTED') {
     return <Badge tone="danger" className={className} icon={<CircleX aria-hidden="true" className="size-3.5 shrink-0" />}>Bị từ chối</Badge>;
   }
+  if (review.status === 'REVOKED') {
+    return <span className="block"><Badge tone="danger" className={className} icon={<CircleX aria-hidden="true" className="size-3.5 shrink-0" />}>Đã thu hồi phê duyệt</Badge><span className="mt-1 block break-words text-xs text-status-missed-fg">Lý do: {review.revocationReason || 'Không có thông tin'}</span></span>;
+  }
   return <Badge tone="neutral" className={className} icon={<Clock3 aria-hidden="true" className="size-3.5 shrink-0" />}>Đang chờ duyệt</Badge>;
 }

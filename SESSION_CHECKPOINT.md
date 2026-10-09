@@ -2870,3 +2870,5 @@ Verification: targeted RLS 5/5, typecheck/lint/build exit 0.
 Chuông Admin mở panel liệt kê 5 phiếu pending mới nhất, có liên kết tới đúng `#care-<id>` trên trang phê duyệt và mục xem tất cả. Cần kiểm tra tương tác sau deploy.
 
 Nhãn approved trên card mobile nay là hàng ngang riêng màu vàng, ngày ngắn `dd/mm/yyyy` và không xuống dòng.
+
+DEC-109: Admin có form thu hồi phiếu APPROVED, phải ghi lý do. Migration local đã áp và types đã generate. Production cần chạy **hai migration theo thứ tự** trước khi deploy code: `20261009110000_customer_care_revocation.sql`, sau đó `20261009110100_customer_care_revocation_fields.sql`. RLS targeted 5/5 pass; còn smoke production sau deploy.

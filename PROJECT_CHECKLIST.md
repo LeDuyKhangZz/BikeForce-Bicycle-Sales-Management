@@ -1468,3 +1468,11 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Hiển thị nhãn phiếu chăm sóc mới nhất ngay dưới tên khách, không thêm cột.
 - [x] Chuông Admin mở danh sách phiếu pending mới nhất tại header; chọn mục đi tới đúng thẻ phê duyệt.
 - [x] Nhãn approved trên card mobile rộng hết hàng, màu vàng và ngày ngắn một dòng.
+
+## 2026-10-09 — Thu hồi phê duyệt (DEC-109)
+
+- [x] Enum `REVOKED`, lý do/người/thời điểm thu hồi, RLS và trigger chuyển trạng thái.
+- [x] Admin thấy phiếu đã duyệt phân trang và thu hồi với lý do bắt buộc.
+- [x] Sales thấy nhãn/lý do thu hồi; phiếu không còn hiệu lực approved.
+- [x] RLS test: Sales không thu hồi, Admin thu hồi một lần, không khôi phục phiếu đã thu hồi.
+- [ ] Chạy hai migration trên production theo thứ tự và smoke trên Vercel.

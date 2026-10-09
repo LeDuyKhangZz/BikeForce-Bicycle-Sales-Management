@@ -4003,3 +4003,7 @@ Chuông mở panel danh sách tối đa 5 phiếu chăm sóc chờ duyệt mới
 ## 2026-10-09 — Nhãn chăm sóc vàng, rộng một hàng
 
 Đổi nhãn approved sang vàng warning, rút ngày còn `dd/mm/yyyy`. Trên card mobile, đưa nhãn ra một hàng riêng rộng hết card để không bị bó bởi tên khách và badge nhóm.
+
+## 2026-10-09 — Admin thu hồi phê duyệt chăm sóc (DEC-109)
+
+Thêm hai migration `20261009110000`/`20261009110100` cho `REVOKED`, lý do/người/thời điểm thu hồi, CHECK và trigger chuyển trạng thái. Trang Admin có danh sách approved phân trang và form thu hồi. Sales thấy nhãn/lý do thu hồi, phiếu không còn tính như approved; ảnh và dấu vết lần duyệt được giữ. Migration local đã áp, database types tạo lại, RLS targeted 5/5 pass.

@@ -7,9 +7,9 @@ import { authorizeSalesWrite } from '@/features/auth/queries';
 import { getCloudinary } from '@/lib/cloudinary';
 import { getVietnamToday } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
-import { customerCareReviewSchema, customerCareSubmissionSchema } from '@/lib/validation/customer-care';
+import { customerCareReviewSchema, customerCareRevocationSchema, customerCareSubmissionSchema } from '@/lib/validation/customer-care';
 import { getSessionProfile } from '@/services/profiles';
-import { addCareEvidence, createCareSubmission, getOwnedCareCustomer, reviewCareSubmission } from '@/services/customer-care';
+import { addCareEvidence, createCareSubmission, getOwnedCareCustomer, reviewCareSubmission, revokeCareSubmission } from '@/services/customer-care';
 import type { ActionResult } from '@/types/action-result';
 
 const MAX_FILES = 5;
@@ -123,5 +123,41 @@ export async function reviewCustomerCare(
   } catch (error) {
     console.error('[reviewCustomerCare]', error);
     return { ok: false, code: 'UNKNOWN', message: 'Không cập nhật được yêu cầu.' };
+  }
+}
+
+export async function revokeCustomerCare(
+  _previous: CareActionState,
+  formData: FormData,
+): Promise<CareActionState> {
+  const parsed = customerCareRevocationSchema.safeParse({
+    submissionId: formData.get('submission_id'),
+    reason: formData.get('reason'),
+  });
+  if (!parsed.success) {
+    return { ok: false, code: 'VALIDATION', message: parsed.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ.' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, code: 'UNAUTHORIZED', message: 'Phiên đăng nhập đã hết hạn.' };
+  const profile = await getSessionProfile(supabase, user.id);
+  if (!profile || !profile.is_active || profile.role !== 'ADMIN') {
+    return { ok: false, code: 'FORBIDDEN', message: 'Bạn không có quyền thu hồi phê duyệt.' };
+  }
+
+  try {
+    const updated = await revokeCareSubmission(supabase, {
+      id: parsed.data.submissionId,
+      adminId: profile.id,
+      reason: parsed.data.reason,
+    });
+    if (!updated) return { ok: false, code: 'CONFLICT', message: 'Phiếu không còn ở trạng thái đã duyệt.' };
+    revalidatePath('/admin/customer-care');
+    revalidatePath('/sales/customers');
+    return { ok: true, data: { notice: 'Đã thu hồi phê duyệt. Nhân viên có thể gửi lại minh chứng.' } };
+  } catch (error) {
+    console.error('[revokeCustomerCare]', error);
+    return { ok: false, code: 'UNKNOWN', message: 'Không thu hồi được phê duyệt. Vui lòng thử lại.' };
   }
 }

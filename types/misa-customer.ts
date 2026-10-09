@@ -14,7 +14,8 @@ export type MisaCustomer = {
   monthlyFrequency?: number;
   committedSales?: number | null;
   careReview?: {
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVOKED';
     careDate: string;
+    revocationReason: string | null;
   };
 };

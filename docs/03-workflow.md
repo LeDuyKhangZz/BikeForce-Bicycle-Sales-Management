@@ -1135,3 +1135,5 @@ Admin chọn tháng tại `/admin/monthly-summaries` → bấm **Đồng bộ d�
 ## Luồng phê duyệt chăm sóc (DEC-108)
 
 Sales mở danh sách khách → chọn **Gửi minh chứng** → Server Action validate ngày và 1–5 ảnh → kiểm tra phiên, role và quyền sở hữu khách → tải ảnh authenticated lên Cloudinary → tạo phiếu `PENDING`. Admin mở `/admin/customer-care`, xem minh chứng và duyệt/từ chối. Khi duyệt, truy vấn cảnh báo loại khách trong 30 ngày; sync MISA tiếp theo chỉ thay snapshot, không xóa phiếu.
+
+Nếu Admin duyệt nhầm, mở mục phiếu đã duyệt, nhập lý do và bấm **Thu hồi phê duyệt**. Server chỉ chuyển `APPROVED → REVOKED`; phiếu/ảnh và thông tin duyệt vẫn còn. Sales thấy nhãn thu hồi và có thể gửi lại minh chứng.

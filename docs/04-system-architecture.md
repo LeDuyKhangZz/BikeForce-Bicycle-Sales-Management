@@ -737,3 +737,5 @@ ghép riêng với CRM `VP-TLS-004`. Không chuẩn hóa tên mới về khóa c
 ### Customer care approval (DEC-108)
 
 UI chỉ gọi Server Actions trong `features/customer-care`; truy vấn nằm ở `services/customer-care.ts`. Cloudinary SDK chỉ khởi tạo trong `lib/cloudinary.ts` có `server-only`. Postgres giữ trạng thái nghiệp vụ và metadata, Cloudinary giữ binary ảnh authenticated; không secret nào đi vào client bundle.
+
+DEC-109: thao tác thu hồi đi qua Server Action validate → xác thực Admin → service UPDATE theo `id` và `status = APPROVED`. CHECK, RLS và transition trigger trong Postgres là hàng rào cuối; Cloudinary không bị xóa khi thu hồi.

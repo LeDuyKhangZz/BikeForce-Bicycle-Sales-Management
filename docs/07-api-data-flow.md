@@ -884,3 +884,5 @@ Admin layout gọi `countPendingCareSubmissions()` bằng session client chịu 
 Admin layout cũng lấy tối đa 5 phiếu `PENDING` mới nhất bằng session client chịu RLS để hiển thị trong panel chuông. Mỗi mục dẫn tới `/admin/customer-care#care-<id>`; thẻ phê duyệt có anchor tương ứng.
 
 Sau khi truy vấn trang khách, service lấy phiếu mới nhất cho các `misa_customer_id` của đúng nhân viên/kỳ, qua session client chịu RLS, rồi ghép `careReview` vào row. UI chỉ render nhãn cạnh tên; không thêm cột và không sửa `last_visit_date` của MISA.
+
+DEC-109: `revokeCustomerCare` parse Zod lý do 1–1000 ký tự trước khi xác thực; kiểm tra role Admin; service UPDATE phiếu `APPROVED` thành `REVOKED`, ghi người/thời điểm/lý do; revalidate trang Admin và Sales. Mục approved phân trang server-side 20 phiếu.
