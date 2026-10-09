@@ -2900,3 +2900,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Cấp SELECT cho `service_role` hoặc anon bị loại vì mở quyền bảng; gọi Pancake trực tiếp khi render bị loại vì chậm và phụ thuộc secret nguồn; tạo luồng n8n riêng bị loại theo yêu cầu người dùng.
 - **Impact:** `lib/supabase/admin.ts` có thêm factory hẹp cho đúng route automation; hai bảng Pancake vẫn force-RLS và `service_role` vẫn không có SELECT/DML trực tiếp. Ảnh dùng cùng kích thước PNG 1080×1920, header và `Cache-Control: no-store` như ảnh SaleWork.
 - **Status:** APPROVED — yêu cầu trực tiếp của người dùng trong phiên.
+
+## DEC-108 — Phiếu minh chứng chăm sóc tách khỏi snapshot MISA
+
+- **Date:** 2026-10-09
+- **Decision:** Lưu phiếu chăm sóc và metadata ảnh trong hai bảng force-RLS riêng; ảnh private lưu Cloudinary. Sales chỉ tạo phiếu cho khách MISA thuộc mình, Admin duyệt hoặc từ chối. Phiếu APPROVED có `care_date` trong cửa sổ 30 ngày sẽ loại khách khỏi cảnh báo cần chăm sóc.
+- **Reason:** Snapshot report 119 bị thay thế mỗi lần đồng bộ; ghi trạng thái duyệt vào snapshot sẽ làm mất kết quả. Bảng nghiệp vụ riêng giữ lịch sử qua các lần sync.
+- **Alternatives:** Sửa `last_visit_date` trong snapshot bị loại vì làm sai dữ liệu MISA và bị sync ghi đè; chỉ ẩn trên client bị loại vì count/phân trang sai; lưu ảnh base64 trong Postgres bị loại vì phình database.
+- **Impact:** Thêm migration, generated types, Cloudinary server-only, Server Actions, hai route Sales/Admin, menu Admin, CTA trên danh sách khách và RLS test. Ba biến Cloudinary không mang prefix `NEXT_PUBLIC_`.
+- **Status:** APPROVED — người dùng yêu cầu triển khai trong phiên.

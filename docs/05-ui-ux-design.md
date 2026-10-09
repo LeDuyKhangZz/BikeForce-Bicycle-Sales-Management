@@ -1469,3 +1469,7 @@ Popup cảnh báo/nhóm phân trang 100 khách mỗi lần để các danh sách
 - Route `/admin/ecommerce` hiển thị khung báo cáo của **Nguyễn Ngọc Triết** với trạng thái **Chờ kết nối Pancake**.
 - Khi chưa có tích hợp, mọi chỉ số hiển thị `—`; không tạo dữ liệu mẫu có thể bị hiểu nhầm là dữ liệu thật.
 - Sau khi có snapshot, trang hiển thị bảy chỉ số thật, ngày báo cáo, thời điểm đồng bộ và card Shopee/Tiktok theo nguồn; trạng thái đổi thành **Đã đồng bộ Pancake** bằng icon và chữ, không chỉ bằng màu.
+
+### Minh chứng chăm sóc (DEC-108)
+
+Danh sách khách có CTA **Gửi minh chứng** trên mobile, tablet và desktop. Form Sales hiển thị tên khách, ngày chăm sóc, input 1–5 ảnh và ghi chú. Trang Admin hiển thị pending count, liên kết ảnh signed và form duyệt/từ chối. Control giữ touch target tối thiểu 44px và input tối thiểu 48px.

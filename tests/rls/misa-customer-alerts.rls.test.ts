@@ -64,4 +64,43 @@ describe('cảnh báo khách hàng chịu RLS với JWT thật', () => {
     expect(result?.total).toBe(12);
     expect(result?.rows).toHaveLength(2);
   });
+
+  it('phiếu được duyệt loại khách khỏi cảnh báo và không bị mất khi snapshot đồng bộ lại', async () => {
+    const inserted = await fixture.clients.salesA.from('customer_care_submissions').insert({
+      misa_customer_id: 1,
+      period_month: `${MONTH}-01`,
+      misa_employee_id: EMPLOYEE_A,
+      customer_code: '',
+      customer_name: 'Alert Customer 1',
+      submitted_by: fixture.ids.salesA,
+      care_date: '2033-04-10',
+    }).select('id').single();
+    expect(inserted.error).toBeNull();
+    expect(inserted.data).not.toBeNull();
+    if (inserted.data === null) return;
+
+    const reviewed = await fixture.clients.admin.from('customer_care_submissions').update({
+      status: 'APPROVED',
+      reviewed_by: fixture.ids.admin,
+      reviewed_at: '2033-04-10T03:00:00.000Z',
+    }).eq('id', inserted.data.id).select('id').single();
+    expect(reviewed.error).toBeNull();
+
+    expect(await getMisaCustomerAlertCounts(fixture.clients.salesA, MONTH, EMPLOYEE_A, CUTOFF)).toEqual({ purchase: 12, care: 11 });
+    const page = await getCachedMisaEmployeeCustomers(fixture.clients.salesA, {
+      month: MONTH, employeeId: EMPLOYEE_A, page: 1, filters: {}, searchQuery: '', alert: 'care', alertCutoff: CUTOFF,
+    });
+    expect(page?.total).toBe(11);
+    expect(page?.rows.some((customer) => customer.id === 1)).toBe(false);
+
+    await sql("delete from public.misa_report119_customers where period_month = '2033-04-01' and misa_employee_id = $1 and misa_customer_id = 1", [EMPLOYEE_A]);
+    await sql(`insert into public.misa_report119_customers
+      (period_month,misa_employee_id,misa_customer_id,customer_name,days_without_purchase,last_visit_date)
+      values ('2033-04-01',$1,1,'Alert Customer 1',30,null)`, [EMPLOYEE_A]);
+
+    const persisted = await fixture.clients.salesA.from('customer_care_submissions')
+      .select('id,status').eq('id', inserted.data.id).single();
+    expect(persisted.error).toBeNull();
+    expect(persisted.data?.status).toBe('APPROVED');
+  });
 });

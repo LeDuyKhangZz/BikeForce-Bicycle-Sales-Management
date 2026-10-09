@@ -1280,3 +1280,7 @@ Route `/admin/misa-employees` cần hai biến môi trường server-only `AMIS_
 Workflow `.github/workflows/pancake-report.yml` chạy lúc 16:50 UTC cho ngày hiện tại ở Việt Nam và 01:00 UTC cho ngày hôm qua. Secret bắt buộc là `PANCAKE_API_KEY`; Telegram dùng hai secret tùy chọn. Artifact CSV giữ 30 ngày. Hướng dẫn vận hành chi tiết ở `docs/pancake-report.md`.
 
 Trước khi bật bước đồng bộ Supabase, phải áp migration `20261008150000_pancake_daily_reports.sql`. Workflow cần thêm hai secret đã dùng trong repo: `BIKEFORCE_SUPABASE_URL`, `BIKEFORCE_SERVICE_ROLE_KEY`. Áp migration trước, push workflow sau; nếu đảo thứ tự, job sẽ đỏ ở RPC thay vì âm thầm bỏ qua dữ liệu.
+
+### Cloudinary minh chứng chăm sóc (DEC-108)
+
+Áp migration `20261009100000_customer_care_approvals.sql` trước deploy. Vercel và `.env.local` cần `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`; không biến nào có prefix `NEXT_PUBLIC_`. Sau deploy, Sales gửi một ảnh thử, Admin duyệt và xác nhận count cảnh báo giảm một.

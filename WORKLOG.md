@@ -3967,3 +3967,9 @@ Người dùng xác nhận tên đúng là `Nguyễn Ngọc Triết`, thay cho `
 # 2026-10-09 — Nối hồ sơ Nguyễn Thị Kim Hương với MISA và CRM
 
 Người dùng xác nhận hồ sơ Sales mới `Nguyễn Thị Kim Hương` tương ứng đúng tên MISA và mã CRM Report 70 `CT-QL-003`; nhân viên không tham gia SaleWork. Thêm migration fail-safe chỉ cập nhật đúng một hồ sơ cùng tên, chặn trùng mapping MISA/mã CRM và không tạo mapping SaleWork.
+
+# 2026-10-09 — Minh chứng và phê duyệt chăm sóc khách hàng
+
+Triển khai DEC-108: Sales gửi 1–5 ảnh Cloudinary authenticated cho khách MISA thuộc mình; Admin duyệt/từ chối tại `/admin/customer-care`. Phiếu APPROVED được loại server-side khỏi count và danh sách cần chăm sóc trong 30 ngày. Phiếu tách khỏi snapshot nên sync MISA không reset. Migration, generated types, env example và tài liệu đã cập nhật.
+
+Kiểm chứng thật: targeted RLS 5/5, `npm run typecheck`, `npm run lint`, `npm run build` đều exit 0. Build sinh 33 trang, gồm hai route mới.

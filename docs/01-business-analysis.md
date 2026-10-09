@@ -952,6 +952,10 @@ Mỗi khách hàng theo từng tháng có thêm **Tần suất/tháng** và **Do
 ### Cảnh báo khách hàng — 2026-10-01 (DEC-102)
 
 Hai nhóm độc lập: từ 30 ngày chưa mua theo số ngày trong snapshot MISA; từ 30 ngày chưa ghé thăm hoặc chưa ghi nhận ngày ghé thăm. Một khách có thể thuộc cả hai nhóm. Ô đếm phía trên tính toàn bộ khách của nhân viên/tháng, bấm mở danh sách tương ứng. Ngày chăm sóc đối chiếu hôm nay Việt Nam hoặc cuối tháng lịch sử. Cảnh báo cam kết/doanh số dưới 40% được người dùng yêu cầu hoãn.
+
+### Minh chứng chăm sóc — 2026-10-09 (DEC-108)
+
+Sales chọn khách thuộc phạm vi MISA của mình, gửi 1–5 ảnh và ngày chăm sóc. Admin duyệt/từ chối. Phiếu APPROVED tính như một lần chăm sóc trong 30 ngày; dữ liệu phiếu không bị thay thế khi đồng bộ snapshot MISA.
 ## Bổ sung 07/10/2026 — Võ Thanh Nhâm
 
 Võ Thanh Nhâm dùng tài khoản SaleWork `Abraham Nhâm Miền Trung`. Tài khoản này tham gia cả đồng bộ ngày và snapshot tháng; dữ liệu AMIS tiếp tục ghép bằng đúng tên `Võ Thanh Nhâm`, không tìm gần đúng và không suy diễn số liệu khi nguồn thiếu.

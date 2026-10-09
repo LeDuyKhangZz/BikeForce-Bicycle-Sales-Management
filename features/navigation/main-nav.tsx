@@ -10,6 +10,7 @@ import {
   Home,
   LayoutDashboard,
   MessagesSquare,
+  ShieldCheck,
   ShoppingBag,
   ReceiptText,
   Scale,
@@ -66,6 +67,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_SALEWORK: MessagesSquare,
   ADMIN_ECOMMERCE: ShoppingBag,
   ADMIN_MISA_EMPLOYEES: Users,
+  ADMIN_CUSTOMER_CARE: ShieldCheck,
   ADMIN_ACCOUNT: User,
 };
 

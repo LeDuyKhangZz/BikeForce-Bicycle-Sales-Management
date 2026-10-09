@@ -733,3 +733,7 @@ Tập chọn cứng của worker ngày/tháng dùng `Hải TeleSale` thay cho `G
 `services/salework.ts` ghép tài khoản mới với AMIS `Đặng Thanh Hải`; `lib/salework/crm-employee-map.ts`
 ghép riêng với CRM `VP-TLS-004`. Không chuẩn hóa tên mới về khóa cũ vì đây là thay nhân sự, không phải
 đổi nhãn của cùng một người; snapshot lịch sử của Giao tiếp tục tồn tại dưới khóa cũ (DEC-104).
+
+### Customer care approval (DEC-108)
+
+UI chỉ gọi Server Actions trong `features/customer-care`; truy vấn nằm ở `services/customer-care.ts`. Cloudinary SDK chỉ khởi tạo trong `lib/cloudinary.ts` có `server-only`. Postgres giữ trạng thái nghiệp vụ và metadata, Cloudinary giữ binary ảnh authenticated; không secret nào đi vào client bundle.

@@ -1,5 +1,7 @@
 import { BarChart3, CalendarDays, Clock, Coins, FileText, MapPin, RefreshCw, ShoppingCart } from 'lucide-react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { buttonClassName } from '@/components/ui/button';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
 import { MonthlySalesChange } from '@/features/misa-employees/monthly-sales-change';
 import { formatMisaAmount, formatMisaDate } from '@/lib/amis/customer-display';
@@ -7,11 +9,11 @@ import { getCustomerDormancyLevel } from '@/lib/amis/customer-dormancy';
 import { customerRevenueGroupLabel, defaultMonthlyFrequency, getCustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
 import type { MisaCustomer } from '@/types/misa-customer';
 
-type Props = { customer: MisaCustomer; index: number; report44Month?: string; alertCutoff: string };
+type Props = { customer: MisaCustomer; index: number; report44Month?: string; alertCutoff: string; careHref?: string };
 const GROUP_TONES = { A: 'success', B: 'info', C: 'warning', D: 'neutral' } as const;
 const DORMANCY_TONES = { UNKNOWN: 'neutral', DANGER: 'danger', WARNING: 'warning', NORMAL: 'neutral' } as const;
 
-export function CustomerMobileCard({ customer, index, report44Month, alertCutoff }: Props) {
+export function CustomerMobileCard({ customer, index, report44Month, alertCutoff, careHref }: Props) {
   const group = getCustomerRevenueGroup(customer.orderSales);
   const level = getCustomerDormancyLevel(customer.daysWithoutPurchase);
   const metrics = [
@@ -36,6 +38,7 @@ export function CustomerMobileCard({ customer, index, report44Month, alertCutoff
         <div className="min-w-0 border-t border-border pt-2"><dt className="flex items-center gap-1 text-[10px] text-muted-foreground"><RefreshCw aria-hidden="true" className="size-4 shrink-0" />Tần suất/tháng</dt><dd className="mt-1 font-semibold text-primary">{customer.monthlyFrequency ?? defaultMonthlyFrequency(group)} lần</dd></div>
         <div className="min-w-0 border-t border-border pt-2"><dt className="flex items-center gap-1 text-[10px] text-muted-foreground"><FileText aria-hidden="true" className="size-4 shrink-0" />Doanh số cam kết</dt><dd className="mt-1 break-words font-semibold text-primary">{customer.committedSales == null ? 'Chưa nhập' : formatMisaAmount(customer.committedSales)}</dd></div>
       </dl>
+      {careHref && <Link href={careHref} className={buttonClassName({ className: 'mt-3 w-full' })}>Gửi minh chứng chăm sóc</Link>}
     </article>
   );
 }

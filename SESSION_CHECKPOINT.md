@@ -2846,3 +2846,9 @@ Tên nhân viên Sàn TMĐT đúng được người dùng xác nhận là `Nguy
 # 2026-10-09 — Nguyễn Thị Kim Hương
 
 Mapping đã xác nhận: MISA `Nguyễn Thị Kim Hương`, CRM Report 70 `CT-QL-003`, không có SaleWork. Migration `20261009090000_map_nguyen_thi_kim_huong_sources.sql` gán `profiles.amis_employee_name` và `profiles.employee_code` với guard chống thiếu/trùng/ghi đè. Next Exact Step: áp migration production rồi chạy lại `fetch_call_statistics.py` cho ngày cần đồng bộ.
+
+# 2026-10-09 — Customer care approval (DEC-108)
+
+Code hoàn tất luồng Sales gửi ảnh Cloudinary và Admin phê duyệt. Trạng thái lưu trong `customer_care_submissions`, không nằm trong snapshot MISA; targeted RLS đã chứng minh xóa/ghi lại snapshot không làm mất phiếu APPROVED. Count và danh sách cảnh báo cùng loại khách trong cửa sổ 30 ngày.
+
+Verification: RLS 5/5, typecheck/lint/build exit 0. Next Exact Steps: deploy commit; đăng nhập Sales gửi một ảnh thật, đăng nhập Admin duyệt, quay lại danh sách để xác nhận count giảm một.

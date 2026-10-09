@@ -874,3 +874,7 @@ Khi `getSaleWorkReport()` dựng dữ liệu, Cô Thy không có khóa trong `AM
 Cập nhật sau kiểm chứng API thật: workflow đọc hai CSV vừa sinh và POST một payload/ngày tới RPC Supabase `upsert_pancake_daily_report`. RPC thay tổng ngày và chi tiết nguồn trong cùng transaction. `/admin/ecommerce` dùng server client chịu RLS → `services/pancake-reports.ts` → view model format tại `features/admin-ecommerce/queries.ts`; component không truy vấn hay tự format tiền/ngày.
 
 `GET /api/salework/report-image` không có `account` trả thêm `Nguyễn Ngọc Triết` trong cùng mảng accounts và dùng cùng helper sinh URL/key. Khi account là Triết, route không gọi `getSaleWorkReport()` mà đi qua RPC chỉ-đọc `get_latest_pancake_report_image` → service typed → view model dùng chung với `/admin/ecommerce` → renderer canvas Sàn TMĐT. Các account khác giữ nguyên luồng SaleWork. Cả hai nhánh trả PNG 1080×1920, `image/png` và `Cache-Control: no-store` (DEC-107).
+
+### Server Actions chăm sóc (DEC-108)
+
+`submitCustomerCare`: Zod + kiểm file/ngày → auth/role → ownership snapshot → Cloudinary authenticated → insert phiếu/evidence → revalidate. `reviewCustomerCare`: Zod → auth/Admin → update chỉ phiếu `PENDING` → revalidate. Danh sách cảnh báo lọc server-side các `misa_customer_id` có phiếu APPROVED từ cutoff 30 ngày.

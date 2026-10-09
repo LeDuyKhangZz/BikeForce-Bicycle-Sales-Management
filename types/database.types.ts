@@ -63,6 +63,128 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_care_evidence: {
+        Row: {
+          bytes: number
+          cloudinary_asset_id: string
+          cloudinary_public_id: string
+          created_at: string
+          delivery_type: string
+          format: string
+          height: number | null
+          id: string
+          resource_type: string
+          secure_url: string
+          submission_id: string
+          width: number | null
+        }
+        Insert: {
+          bytes: number
+          cloudinary_asset_id: string
+          cloudinary_public_id: string
+          created_at?: string
+          delivery_type?: string
+          format: string
+          height?: number | null
+          id?: string
+          resource_type?: string
+          secure_url: string
+          submission_id: string
+          width?: number | null
+        }
+        Update: {
+          bytes?: number
+          cloudinary_asset_id?: string
+          cloudinary_public_id?: string
+          created_at?: string
+          delivery_type?: string
+          format?: string
+          height?: number | null
+          id?: string
+          resource_type?: string
+          secure_url?: string
+          submission_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_care_evidence_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "customer_care_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_care_submissions: {
+        Row: {
+          care_date: string
+          created_at: string
+          customer_code: string
+          customer_name: string
+          id: string
+          misa_customer_id: number
+          misa_employee_id: number
+          note: string | null
+          period_month: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["customer_care_status"]
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          care_date: string
+          created_at?: string
+          customer_code: string
+          customer_name: string
+          id?: string
+          misa_customer_id: number
+          misa_employee_id: number
+          note?: string | null
+          period_month: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["customer_care_status"]
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          care_date?: string
+          created_at?: string
+          customer_code?: string
+          customer_name?: string
+          id?: string
+          misa_customer_id?: number
+          misa_employee_id?: number
+          note?: string | null
+          period_month?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["customer_care_status"]
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_care_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_care_submissions_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_reports: {
         Row: {
           actual_customer_visits: number | null
@@ -667,6 +789,27 @@ export type Database = {
           },
         ]
       }
+      customer_effective_care_dates: {
+        Row: {
+          customer_code: string | null
+          customer_name: string | null
+          effective_last_care_date: string | null
+          last_visit_date: string | null
+          latest_approved_care_date: string | null
+          misa_customer_id: number | null
+          misa_employee_id: number | null
+          period_month: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "misa_report119_customers_period_month_misa_employee_id_fkey"
+            columns: ["period_month", "misa_employee_id"]
+            isOneToOne: false
+            referencedRelation: "misa_report119_employees"
+            referencedColumns: ["period_month", "misa_employee_id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_daily_trend: {
@@ -803,6 +946,7 @@ export type Database = {
       vn_today: { Args: never; Returns: string }
     }
     Enums: {
+      customer_care_status: "PENDING" | "APPROVED" | "REJECTED"
       report_status: "MORNING_SUBMITTED" | "COMPLETED"
       user_role: "ADMIN" | "SALES"
     }
@@ -932,6 +1076,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      customer_care_status: ["PENDING", "APPROVED", "REJECTED"],
       report_status: ["MORNING_SUBMITTED", "COMPLETED"],
       user_role: ["ADMIN", "SALES"],
     },

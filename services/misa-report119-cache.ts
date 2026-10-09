@@ -10,6 +10,7 @@ import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/ami
 import { misaRelativeDateRange } from '@/lib/amis/customer-filter-date-range';
 import type { MisaCustomer } from '@/types/misa-customer';
 import type { MisaCustomerPage, MisaEmployee } from '@/services/misa-report119';
+import { listRecentlyApprovedCustomerIds } from '@/services/customer-care';
 
 const PAGE_SIZE = 10;
 
@@ -176,6 +177,12 @@ export async function getCachedMisaEmployeeCustomers(
   }
   if (params.alert && params.alertCutoff) {
     query = query.or(customerAlertCondition(params.alert, params.alertCutoff));
+    if (params.alert === 'care') {
+      const recentlyApprovedCustomerIds = await listRecentlyApprovedCustomerIds(supabase, params.alertCutoff);
+      if (recentlyApprovedCustomerIds.length > 0) {
+        query = query.not('misa_customer_id', 'in', `(${recentlyApprovedCustomerIds.join(',')})`);
+      }
+    }
   }
   if (params.searchQuery) {
     const safe = params.searchQuery.replace(/[,%()]/g, ' ');

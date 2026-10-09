@@ -1591,3 +1591,7 @@ Kết quả local: Windows PowerShell 5.1 parse 0 lỗi; thiếu key, ngày sai 
 Sau workflow thật ngày 08/10/2026: PowerShell 7/Linux exit 0, artifact có 10 đơn và 1.662.750đ; Shopee 5/1.144.875đ, Tiktok 5/517.875đ. RLS Pancake local 4/4 PASS: Admin đọc, Sales/anon rỗng, service role chỉ execute RPC, payload lệch tổng bị từ chối. Migration local cần repair riêng migration dữ liệu Võ Thanh Nhâm vì fresh reset không có hồ sơ đó; không sửa migration cũ.
 
 Ảnh automation Sàn TMĐT có unit khóa URL encode/key và nội dung bảy chỉ số cùng Shopee/Tiktok. RLS Pancake mở rộng thành 5/5: RPC ảnh trả snapshot cho service role, đồng thời `anon`/`authenticated` không có EXECUTE và service role vẫn không có SELECT bảng. Unit mới 2/2, typecheck/lint và production build 31 trang đều exit 0.
+
+### Kiểm thử minh chứng chăm sóc (DEC-108)
+
+RLS test dùng JWT thật kiểm tra Sales tạo phiếu sở hữu, Admin duyệt, count/danh sách giảm đúng và phiếu vẫn tồn tại sau khi xóa/ghi lại snapshot. Lần chạy 2026-10-09: targeted RLS 5/5, typecheck/lint/build exit 0.

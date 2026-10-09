@@ -31,6 +31,7 @@ export type NavKey =
   | 'ADMIN_SALEWORK'
   | 'ADMIN_ECOMMERCE'
   | 'ADMIN_MISA_EMPLOYEES'
+  | 'ADMIN_CUSTOMER_CARE'
   | 'ADMIN_ACCOUNT';
 
 export type NavItem = {
@@ -133,6 +134,12 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
 
 /** Module bổ sung chỉ hiện trong sidebar desktop, không chen vào bottom nav. */
 export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
+  {
+    key: 'ADMIN_CUSTOMER_CARE',
+    label: 'Duyệt chăm sóc',
+    href: '/admin/customer-care',
+    matchPrefixes: ['/admin/customer-care'],
+  },
   {
     key: 'ADMIN_MISA_EMPLOYEES',
     label: 'Nhân viên',

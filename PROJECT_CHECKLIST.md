@@ -1451,3 +1451,14 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [ ] Tải lại preview production và xác nhận ảnh hiển thị đúng số vừa đồng bộ.
 - [x] Bỏ giao diện Trung Thu khỏi ảnh SaleWork và chuyển toàn bộ sang nền/palette 20/10.
 - [x] Render ảnh thật Hải TeleSale và Nguyễn Thị Như Quỳnh, sửa nhãn MISA chạm thanh tiêu đề.
+
+## 2026-10-09 — Minh chứng chăm sóc (DEC-108)
+
+- [x] Tạo schema phiếu/evidence, force RLS và generated types.
+- [x] Sales chỉ gửi cho khách MISA thuộc mình; file giới hạn 1–5 ảnh, 10 MB/ảnh.
+- [x] Cloudinary chỉ dùng server-side và delivery type authenticated.
+- [x] Admin có trang duyệt/từ chối và lối vào sidebar.
+- [x] Phiếu APPROVED loại khỏi count và danh sách cần chăm sóc trong 30 ngày.
+- [x] Test chứng minh MISA sync không reset phiếu đã duyệt.
+- [x] Targeted RLS 5/5, typecheck, lint và production build pass.
+- [ ] Smoke thật trên Vercel: Sales upload → Admin duyệt → count giảm.

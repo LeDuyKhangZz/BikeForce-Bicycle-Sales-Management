@@ -1,6 +1,8 @@
 import { AlertTriangle, BarChart3, CalendarDays, ChevronRight, CircleAlert, Coins, MapPin, ShoppingCart, Store } from 'lucide-react';
+import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
+import { buttonClassName } from '@/components/ui/button';
 import { CustomerPopupCard } from '@/features/misa-employees/customer-popup-card';
 import { CustomerMobileCard } from '@/features/misa-employees/customer-mobile-card';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
@@ -42,7 +44,8 @@ function CustomerDormancyBadge({ days }: { days: number | null }) {
   return <span className="inline-flex min-w-8 items-center justify-center whitespace-nowrap rounded-pill border border-border bg-card px-2 py-0.5 tabular-nums text-heading">{days}<span className="sr-only"> ngày</span></span>;
 }
 
-export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileCards = false, alertCutoff, report44Month, compact = false }: Props) {
+export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, month, salesMobileCards = false, alertCutoff, report44Month, compact = false }: Props) {
+  const careHref = (customerId: number) => `/sales/customer-care/new?month=${encodeURIComponent(month)}&employee=${employeeId}&customer=${customerId}`;
   const groupTone: Record<CustomerRevenueGroup, 'success' | 'info' | 'warning' | 'neutral'> = {
     A: 'success', B: 'info', C: 'warning', D: 'neutral',
   };
@@ -53,7 +56,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
         <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{CUSTOMER_REVENUE_GROUP_RULE_TEXT}</p>
       </div>
       <ol className="space-y-2.5" aria-label={`Khách hàng của ${employeeName}`}>
-        {rows.map((customer, index) => <li key={customer.id}><CustomerPopupCard customer={customer} index={startIndex + index + 1} report44Month={report44Month} alertCutoff={alertCutoff} /></li>)}
+        {rows.map((customer, index) => <li key={customer.id} className="space-y-2"><CustomerPopupCard customer={customer} index={startIndex + index + 1} report44Month={report44Month} alertCutoff={alertCutoff} />{salesMobileCards && <Link href={careHref(customer.id)} className={buttonClassName({ className: 'w-full' })}>Gửi minh chứng chăm sóc</Link>}</li>)}
       </ol>
     </div>
   );
@@ -107,7 +110,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
               <td className="px-2 py-2 text-center align-top tabular-nums">
                 <CustomerDormancyBadge days={customer.daysWithoutPurchase} />
               </td>
-              <td className="px-2 py-2 align-top tabular-nums"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} cutoff={alertCutoff} /></td>
+              <td className="px-2 py-2 align-top tabular-nums"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} cutoff={alertCutoff} />{salesMobileCards && <Link href={careHref(customer.id)} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Gửi minh chứng</Link>}</td>
             </tr>
             );
           })}
@@ -120,7 +123,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
           if (salesMobileCards) {
             return (
               <li key={customer.id} className="min-w-0 bg-primary/[0.025] px-3 py-2 text-sm">
-                <div className="md:hidden"><CustomerMobileCard customer={customer} index={startIndex + index + 1} report44Month={report44Month} alertCutoff={alertCutoff} /></div>
+                <div className="md:hidden"><CustomerMobileCard customer={customer} index={startIndex + index + 1} report44Month={report44Month} alertCutoff={alertCutoff} careHref={careHref(customer.id)} /></div>
                 <article className="hidden rounded-2xl border border-border bg-card p-4 shadow-brand-sm md:block">
                   <div className="grid grid-cols-[3rem_minmax(0,1fr)_2.75rem] items-start gap-3">
                     <span className="grid size-11 place-items-center rounded-full bg-primary/10 text-base font-bold tabular-nums text-primary">{startIndex + index + 1}</span>
@@ -150,6 +153,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, salesMobileC
                     <div><p className="text-xs text-muted-foreground">Tần suất/tháng</p><p className="mt-1 flex min-h-12 items-center rounded-xl border border-border bg-primary/[0.025] px-3 font-semibold text-heading">{frequency} lần</p></div>
                     <div><p className="text-xs text-muted-foreground">Doanh số cam kết</p><p className="mt-1 flex min-h-12 items-center rounded-xl border border-border bg-primary/[0.025] px-3 font-semibold tabular-nums text-heading"><span className="break-all">{customer.committedSales === undefined || customer.committedSales === null ? 'Chưa nhập' : formatMisaAmount(customer.committedSales)}</span></p></div>
                   </div>
+                  <Link href={careHref(customer.id)} className={buttonClassName({ className: 'mt-4 w-full' })}>Gửi minh chứng chăm sóc</Link>
                 </article>
               </li>
             );

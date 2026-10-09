@@ -1131,3 +1131,7 @@ kết tháng vẫn đọc đúng tháng Admin chọn; dữ liệu lương không
 ## Luồng đồng bộ Tổng kết tháng (BR-032, DEC-082)
 
 Admin chọn tháng tại `/admin/monthly-summaries` → bấm **Đồng bộ dữ liệu tháng** → Server Action kiểm tra tháng, phiên, trạng thái active và vai Admin → tạo job `PENDING`. Windows Task Scheduler chạy worker mỗi phút → nhận một job → mở bộ lọc MISA Kế toán bằng đúng profile bền vững, gõ ngày đầu/cuối, chọn toàn bộ nhân viên và khách hàng rồi chờ popup tham số đóng. Playwright đặt 100 dòng/trang, đọc riêng `tr-level-1`, chuyển trang tới khi nút next disabled và khử trùng dòng nhóm nằm ở biên trang. Mảng tổng được ghi vào file trung gian gắn đúng `YYYY-MM`; `push_amis.py` chỉ nhận file trùng kỳ rồi dùng logic UPSERT tháng cũ → chạy SaleWork `MONTH_ONLY` → ghi khóa `__SALEWORK_MONTH__:YYYY-MM-01:*` → cập nhật `COMPLETED` hoặc `FAILED`. Trang tự làm mới trạng thái mỗi 5 giây khi job đang chờ/chạy. Luồng này không gọi script CRM ngày và không ghi khóa SaleWork ngày.
+
+## Luồng phê duyệt chăm sóc (DEC-108)
+
+Sales mở danh sách khách → chọn **Gửi minh chứng** → Server Action validate ngày và 1–5 ảnh → kiểm tra phiên, role và quyền sở hữu khách → tải ảnh authenticated lên Cloudinary → tạo phiếu `PENDING`. Admin mở `/admin/customer-care`, xem minh chứng và duyệt/từ chối. Khi duyệt, truy vấn cảnh báo loại khách trong 30 ngày; sync MISA tiếp theo chỉ thay snapshot, không xóa phiếu.
