@@ -889,6 +889,6 @@ DEC-109: `revokeCustomerCare` parse Zod lý do 1–1000 ký tự trước khi x�
 ## Xem trước ảnh Sàn TMĐT trong Admin
 
 `/admin/report-previews?ecommerce=1` hiển thị ảnh qua `/api/salework/report-image?account=<Nguyễn Ngọc Triết>`. Route ảnh xác thực session Admin khi không có `key`, sau đó đọc snapshot Pancake bằng RPC đã giới hạn quyền theo DEC-107. Cùng endpoint này vẫn chấp nhận API key phía n8n; trang Admin không nhúng key vào HTML.
-## Lịch Pancake 09:00/17:00 và dự phòng (DEC-111, DEC-112)
+## Lịch Pancake 09:00/17:00 trên Supabase (DEC-111–DEC-113)
 
-Bốn cron UTC `0 2 * * *`, `10 2 * * *`, `0 10 * * *`, `10 10 * * *` tương ứng lượt chính/dự phòng 09:00/09:10 và 17:00/17:10. Tất cả truyền ngày hiện tại UTC+7 vào `Get-PancakeReport.ps1`, sau đó POST RPC `upsert_pancake_daily_report`; cùng khóa `(report_date, shop_id)` nên lượt lặp thay snapshot thay vì cộng trùng. Chỉ `workflow_dispatch` với input `ngay` mới dùng ngày khác. Nhánh `failure()` gửi Telegram kèm URL run và không log secret.
+Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`; URL và `apikey` được đọc từ Vault. Edge Function đọc `PANCAKE_API_KEY` từ Secrets, phân trang API, lọc ngày UTC+7, tổng hợp và POST RPC `upsert_pancake_daily_report`. Cùng khóa `(report_date, shop_id)` nên lượt lặp thay snapshot thay vì cộng trùng. GitHub `workflow_dispatch` vẫn phục vụ ngày đối soát thủ công.

@@ -2885,3 +2885,7 @@ Workflow đổi cron sang `0 2 * * *` và `0 10 * * *` UTC; cả hai dùng ngày
 ## 2026-10-09 — DEC-112 dự phòng lịch Pancake
 
 GitHub API xác nhận không có run 17:00 dù workflow active; số 13:48 là lần chạy tay. Đã thêm cron dự phòng `10 2 * * *` và `10 10 * * *`, giữ cron chính, cùng UPSERT nên không cộng trùng; run thất bại gửi Telegram kèm URL nếu đã cấu hình secret. Unit lịch 3/3, typecheck, lint và production build 33 route đều exit 0. **Next Exact Steps:** commit và push `main`; quan sát khung scheduled chính+dự phòng kế tiếp rồi kiểm tra `synced_at`. Chỉ khi có run production thực tế mới đóng ISSUE-060.
+
+## 2026-10-10 — DEC-113 Supabase Cron Pancake
+
+Edge Function `pancake-sync` đã deploy production; hai cron `pancake-sync-09-vn`/`pancake-sync-17-vn` active tại 02:00/10:00 UTC. Vault giữ URL và service credential; source/migration không chứa secret. Chạy bù và kiểm tra qua `pg_net` đều HTTP 200, snapshot 10/10 có 14 đơn. GitHub bỏ schedule, giữ chạy tay. Unit 9/9, typecheck, lint và build 33 route exit 0. **Next Exact Steps:** xoay API key Pancake do CLI cũ đã in secret, cập nhật `PANCAKE_API_KEY` trong Edge Function Secrets; commit/push và quan sát cron 17:00 production trong History.

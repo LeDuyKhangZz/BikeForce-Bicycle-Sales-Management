@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 const workflow = readFileSync('.github/workflows/pancake-report.yml', 'utf8');
 
-describe('lịch đồng bộ Pancake', () => {
-  it('có lượt chính 09:00/17:00 và lượt dự phòng sau 10 phút', () => {
+describe('workflow chạy tay Pancake', () => {
+  it('không còn dùng scheduler GitHub không ổn định', () => {
     const scheduledCrons = [...workflow.matchAll(/^    - cron: '([^']+)'$/gm)].map((match) => match[1]);
-    expect(scheduledCrons).toEqual(['0 2 * * *', '10 2 * * *', '0 10 * * *', '10 10 * * *']);
+    expect(scheduledCrons).toEqual([]);
+    expect(workflow).toContain('workflow_dispatch:');
   });
 
   it('cả hai lượt dùng ngày hiện tại; chỉ lần chạy tay mới được chọn ngày khác', () => {

@@ -4020,3 +4020,7 @@ Bỏ lịch 23:50 cùng lượt 08:00 lấy hôm qua. GitHub Actions nay chạy 
 ## 2026-10-09 — Gia cố lịch Pancake (DEC-112, ISSUE-060)
 
 Kiểm tra GitHub API sau 18:00 xác nhận workflow active trên `main` nhưng không có scheduled run 17:00; mốc 13:48 là run tay thành công. Đã thêm hai lượt dự phòng 09:10/17:10, vẫn giữ hai lượt chính 09:00/17:00 và cùng UPSERT snapshot ngày/cửa hàng nên không cộng trùng. Thêm cảnh báo Telegram ở nhánh `failure()` với giờ Việt Nam và URL run. Unit lịch 3/3, typecheck, lint và production build 33 route đều exit 0; build lần đầu bị sandbox chặn Google Fonts, chạy lại có quyền mạng thành công. Còn phải quan sát lịch production sau commit/push trước khi đóng ISSUE-060.
+
+## 2026-10-10 — Chuyển Pancake sang Supabase Cron (DEC-113)
+
+GitHub tiếp tục bỏ 09:00/09:10; run dự phòng hôm trước chỉ xuất hiện lúc 23:38. Đã deploy Edge Function `pancake-sync`, lưu credential Cron trong Vault và áp riêng migration `20261010031500` vì migration history production còn nhiều mốc cũ chưa ghi nhận. Hai job 09:00/17:00 active. Chạy bù trực tiếp và gọi thử qua chính `pg_net` đều HTTP 200, ghi snapshot 10/10 với 14 đơn. GitHub schedule được gỡ, còn nút chạy tay. Unit liên quan 9/9, typecheck, lint và production build 33 route đều exit 0. Cần xoay API key Pancake vì CLI 2.115 đã trả giá trị secret trong output kiểm tra.

@@ -7,7 +7,7 @@
 - bảng console và dòng `SUMMARY:` để dùng cho Telegram.
 - snapshot Supabase qua RPC sau khi migration Pancake đã được áp dụng.
 
-Workflow tự đồng bộ dữ liệu ngày hiện tại lúc 09:00 và cập nhật lại lúc 17:00 giờ Việt Nam. Mỗi mốc có một lượt dự phòng sau 10 phút vì GitHub Actions có thể trì hoãn hoặc bỏ scheduled event. Các lượt dùng cùng khóa ngày/cửa hàng và UPSERT nên không cộng trùng. Đây là số liệu trong ngày, có thể chưa phải tổng kết cuối ngày. Đơn hoàn/hủy cập nhật muộn cho ngày cũ không tự được làm mới theo lịch này; khi cần đối soát ngày cũ, chạy workflow thủ công với ngày cần cập nhật.
+Supabase Cron gọi Edge Function `pancake-sync` lúc 09:00 và 17:00 giờ Việt Nam. Function lấy ngày hiện tại UTC+7, gọi Pancake và UPSERT cùng khóa ngày/cửa hàng. GitHub Actions chỉ còn dùng để chạy tay theo ngày khi đối soát. Đây là số liệu trong ngày, có thể chưa phải tổng kết cuối ngày.
 
 ## Chạy bằng PowerShell 5.1 hoặc 7
 
@@ -46,14 +46,12 @@ Nếu bỏ cả `-Ngay` lẫn khoảng ngày, script dùng hôm nay theo UTC+7. 
 5. Vào **Actions** → **Pancake Daily Report** → **Run workflow**. Nhập ngày `yyyy-MM-dd` hoặc để trống để dùng hôm nay theo UTC+7.
 6. Mở run vừa tạo: kiểm tra bước chọn ngày, dòng `SUMMARY:` trong bước lấy báo cáo và tải artifact ở cuối trang run. Artifact được giữ 30 ngày.
 
-Hai lịch UTC trong workflow:
+Hai lịch UTC trong Supabase Cron:
 
 - `0 2 * * *` = 09:00 giờ Việt Nam, báo cáo ngày hiện tại;
-- `10 2 * * *` = 09:10 giờ Việt Nam, lượt dự phòng buổi sáng;
 - `0 10 * * *` = 17:00 giờ Việt Nam, cập nhật lại ngày hiện tại.
-- `10 10 * * *` = 17:10 giờ Việt Nam, lượt dự phòng buổi chiều.
 
-GitHub có thể bắt đầu scheduled workflow trễ hoặc bỏ một scheduled event khi hệ thống đông; hai lượt dự phòng giảm rủi ro này. Ngày báo cáo vẫn được tính tường minh từ UTC sang UTC+7 lúc job chạy. Nếu workflow đã bắt đầu nhưng thất bại và hai secret Telegram đã được cấu hình, bước cuối gửi cảnh báo kèm liên kết tới run lỗi.
+Job được theo dõi tại Supabase Dashboard → Integrations → Cron → History. `PANCAKE_API_KEY` nằm trong Edge Function Secrets; URL project và service credential của lời gọi cron nằm trong Vault. Không đưa các giá trị này vào source hoặc migration.
 
 ## Task Scheduler trên Windows (tùy chọn)
 

@@ -1137,6 +1137,6 @@ Admin chọn tháng tại `/admin/monthly-summaries` → bấm **Đồng bộ d�
 Sales mở danh sách khách → chọn **Gửi minh chứng** → Server Action validate ngày và 1–5 ảnh → kiểm tra phiên, role và quyền sở hữu khách → tải ảnh authenticated lên Cloudinary → tạo phiếu `PENDING`. Admin mở `/admin/customer-care`, xem minh chứng và duyệt/từ chối. Khi duyệt, truy vấn cảnh báo loại khách trong 30 ngày; sync MISA tiếp theo chỉ thay snapshot, không xóa phiếu.
 
 Nếu Admin duyệt nhầm, mở mục phiếu đã duyệt, nhập lý do và bấm **Thu hồi phê duyệt**. Server chỉ chuyển `APPROVED → REVOKED`; phiếu/ảnh và thông tin duyệt vẫn còn. Sales thấy nhãn thu hồi và có thể gửi lại minh chứng.
-## Đồng bộ báo cáo Pancake trong ngày (DEC-111, DEC-112)
+## Đồng bộ báo cáo Pancake trong ngày (DEC-111–DEC-113)
 
-GitHub Actions có lượt chính lúc 09:00 và 17:00, kèm lượt dự phòng lúc 09:10 và 17:10 giờ Việt Nam. Mỗi lượt lấy đơn của ngày hiện tại từ Pancake, tính báo cáo rồi upsert cùng khóa ngày vào Supabase; chạy lặp không cộng trùng. Admin và ảnh báo cáo Triết đọc snapshot mới nhất. Lượt đồng bộ tự động không chạy lại ngày hôm qua; đối soát ngày cũ dùng `workflow_dispatch` với ngày cụ thể. Run đã được tạo nhưng thất bại sẽ gửi cảnh báo Telegram nếu đã cấu hình đủ secret.
+Supabase Cron gọi Edge Function `pancake-sync` lúc 09:00 và 17:00 giờ Việt Nam. Function lấy đơn ngày hiện tại, tính báo cáo rồi gọi RPC UPSERT cùng khóa ngày; chạy lặp không cộng trùng. Admin và ảnh báo cáo Triết đọc snapshot mới nhất. GitHub Actions chỉ giữ `workflow_dispatch` để đối soát ngày cụ thể.

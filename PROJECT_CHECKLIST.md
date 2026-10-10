@@ -1501,3 +1501,13 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Unit khóa đủ bốn cron, chọn ngày và cảnh báo lỗi: 3/3 pass.
 - [x] Typecheck, lint và production build 33 route exit 0.
 - [ ] Commit/push lên `main`, sau đó quan sát ít nhất một khung lịch chính+dự phòng thực tế và kiểm tra `synced_at`.
+
+## 2026-10-10 — Supabase Cron Pancake (DEC-113)
+
+- [x] Deploy `pancake-sync` Edge Function và giữ `PANCAKE_API_KEY` trong Supabase Secrets.
+- [x] Lưu URL/service credential trong Vault, không hardcode secret vào source hoặc migration.
+- [x] Cài hai cron production 09:00/17:00 và xác nhận đều active.
+- [x] Gọi thử qua `pg_net` + Vault trả HTTP 200; snapshot ngày 10/10 có 14 đơn.
+- [x] Gỡ GitHub schedule, giữ `workflow_dispatch` chạy tay.
+- [x] Unit liên quan 9/9, typecheck, lint và production build 33 route exit 0.
+- [ ] Xoay Pancake API key vì CLI cũ đã in giá trị khi kiểm tra secret; cập nhật lại Supabase secret sau khi xoay.

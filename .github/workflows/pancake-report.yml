@@ -1,15 +1,6 @@
 name: Pancake Daily Report
 
 on:
-  schedule:
-    # 09:00 giờ Việt Nam: báo cáo ngày hiện tại.
-    - cron: '0 2 * * *'
-    # 09:10 giờ Việt Nam: lượt dự phòng nếu GitHub bỏ hoặc trì hoãn lượt 09:00.
-    - cron: '10 2 * * *'
-    # 17:00 giờ Việt Nam: cập nhật lại báo cáo ngày hiện tại.
-    - cron: '0 10 * * *'
-    # 17:10 giờ Việt Nam: lượt dự phòng nếu GitHub bỏ hoặc trì hoãn lượt 17:00.
-    - cron: '10 10 * * *'
   workflow_dispatch:
     inputs:
       ngay:

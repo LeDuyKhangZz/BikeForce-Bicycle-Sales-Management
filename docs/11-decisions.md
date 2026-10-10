@@ -2945,3 +2945,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Tiếp tục chỉ hai cron bị loại vì không có dự phòng; Windows Task Scheduler bị loại làm cơ chế chính vì phụ thuộc máy người dùng luôn bật; cron/server chuyên dụng được hoãn vì cần thêm hạ tầng và chi phí vận hành.
 - **Impact:** Có thể đồng bộ hai lần trong mỗi khung giờ, nhưng RPC hiện hữu là UPSERT snapshot nên không cộng trùng. GitHub Actions vẫn là best-effort; lượt dự phòng giảm rủi ro chứ không tạo bảo đảm tuyệt đối. Không đổi schema, RLS, API hay dữ liệu nghiệp vụ.
 - **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp sau khi xác nhận lượt 17:00 bị bỏ.
+
+## DEC-113 — Supabase Cron là scheduler chính cho Pancake
+
+- **Date:** 2026-10-10
+- **Decision:** Chuyển lịch 09:00/17:00 Việt Nam sang Supabase Cron (`0 2 * * *`, `0 10 * * *`) gọi Edge Function `pancake-sync`. API key nằm trong Edge Function Secrets; URL và service credential của lời gọi Cron nằm trong Supabase Vault. GitHub Actions chỉ giữ `workflow_dispatch` để chạy tay, không còn `schedule`.
+- **Reason:** GitHub đã bỏ cả lượt 09:00/09:10 ngày 10/10 và trì hoãn lượt 17:10 ngày trước tới 23:38. Thêm cron dự phòng trên cùng scheduler không tạo độc lập lỗi. Supabase Cron có lịch sử job trong database và chạy hoàn toàn trên cloud.
+- **Alternatives:** Windows Task Scheduler bị loại vì phụ thuộc máy cá nhân; tiếp tục GitHub cron bị loại sau bằng chứng production; Vercel Hobby bị loại vì chỉ chạy một lần/ngày và có thể chạy bất kỳ lúc nào trong giờ.
+- **Impact:** Thêm Edge Function TypeScript, `pg_cron`, `pg_net`, hai Vault secret và hai cron job. Function chỉ nhận service key, gọi RPC UPSERT hiện hữu và không cấp DML bảng cho service role. GitHub workflow vẫn dùng được khi cần đối soát thủ công.
+- **Status:** APPROVED — người dùng yêu cầu giải pháp cloud không phụ thuộc máy cá nhân.

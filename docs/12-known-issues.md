@@ -2329,7 +2329,7 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 
 **Severity:** P1
 
-**Status:** FIXED — chờ xác nhận lịch production
+**Status:** CLOSED — 2026-10-10
 **Module:** GitHub Actions / đồng bộ Pancake
 
 **Description:** lượt cron Pancake 17:00 ngày 09/10/2026 không được GitHub Actions tạo; `synced_at` vẫn dừng ở lượt chạy tay 13:48.
@@ -2340,6 +2340,6 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 
 **Root Cause:** GitHub scheduled workflow là cơ chế best-effort và cron đặt đúng phút đầu giờ dễ bị trì hoãn hoặc bỏ; thiết kế chỉ có một event mỗi khung và chưa có lượt dự phòng. Việc triển khai trước đó cũng chưa được theo dõi đến lượt thực tế kế tiếp.
 
-**Fix:** giữ lượt chính 09:00/17:00, thêm lượt dự phòng 09:10/17:10 và nhánh Telegram `failure()` kèm URL run. Bốn lượt dùng cùng RPC UPSERT snapshot nên không cộng trùng.
+**Fix:** thay GitHub schedule bằng Supabase Cron độc lập ở 09:00/17:00, gọi Edge Function qua credential trong Vault. GitHub chỉ giữ chạy tay. Edge Function luôn UPSERT snapshot kể cả 0 đơn nên không còn trạng thái xanh giả do CSV không có dòng.
 
-**Verification:** API GitHub xác nhận workflow active nhưng không có run 17:00 ngày 09/10; unit lịch sau sửa 3/3 pass. Chưa đóng issue cho tới khi quan sát lượt scheduled production sau khi push.
+**Verification:** Edge Function production chạy thật ngày 10/10 trả 14 đơn. Hai cron production active đúng `0 2 * * *`/`0 10 * * *`; gọi thử qua chính đường `pg_net` + Vault trả HTTP 200 với `reportDate=2026-10-10`, `orderCount=14`. Unit Edge/Cron/GitHub 9/9 pass trước kiểm tra cuối.
