@@ -47,6 +47,67 @@ function fitText(ctx: SKRSContext2D, text: string, maxWidth: number, initialSize
   return size;
 }
 
+function drawTrendArrow(ctx: SKRSContext2D, x: number, y: number, direction: 'UP' | 'DOWN' | 'UNCHANGED') {
+  ctx.save();
+  ctx.strokeStyle = direction === 'UP' ? COLORS.darkGreen : direction === 'DOWN' ? COLORS.red : COLORS.deepInk;
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  if (direction === 'UNCHANGED') {
+    ctx.moveTo(x - 8, y);
+    ctx.lineTo(x + 8, y);
+  } else {
+    const tipY = direction === 'UP' ? y - 10 : y + 10;
+    const tailY = direction === 'UP' ? y + 10 : y - 10;
+    ctx.moveTo(x, tailY);
+    ctx.lineTo(x, tipY);
+    ctx.moveTo(x - 7, direction === 'UP' ? y - 3 : y + 3);
+    ctx.lineTo(x, tipY);
+    ctx.lineTo(x + 7, direction === 'UP' ? y - 3 : y + 3);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMoneyIcon(ctx: SKRSContext2D, x: number, y: number) {
+  ctx.save();
+  ctx.fillStyle = '#15803d';
+  for (let index = 0; index < 3; index += 1) {
+    const offset = index * 4;
+    roundedRect(ctx, x + offset, y - offset, 29, 17, 3);
+    ctx.fill();
+  }
+  ctx.strokeStyle = COLORS.white;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x + 22, y + 4, 4, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCartIcon(ctx: SKRSContext2D, x: number, y: number) {
+  ctx.save();
+  ctx.strokeStyle = COLORS.deepInk;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + 7, y);
+  ctx.lineTo(x + 12, y + 24);
+  ctx.lineTo(x + 35, y + 24);
+  ctx.lineTo(x + 40, y + 7);
+  ctx.lineTo(x + 9, y + 7);
+  ctx.stroke();
+  ctx.fillStyle = COLORS.deepInk;
+  ctx.beginPath();
+  ctx.arc(x + 16, y + 33, 4, 0, Math.PI * 2);
+  ctx.arc(x + 34, y + 33, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawComparison(ctx: SKRSContext2D, x: number, y: number, width: number, branch: HatdeBranchViewModel, key: 'vsYesterday' | 'vsLastWeek', label: string) {
   const comparison = branch[key];
   const isUp = comparison.direction === 'UP';
@@ -62,9 +123,9 @@ function drawComparison(ctx: SKRSContext2D, x: number, y: number, width: number,
   ctx.font = '700 16px HatdeFont';
   ctx.textAlign = 'center';
   ctx.fillText(label, x + width / 2, y + 25);
+  drawTrendArrow(ctx, x + 42, y + 49, comparison.direction);
   ctx.font = '700 24px HatdeFont';
-  const arrow = isUp ? '↑' : isDown ? '↓' : '—';
-  ctx.fillText(`${arrow} ${comparison.display}`, x + width / 2, y + 54);
+  ctx.fillText(comparison.display, x + width / 2 + 10, y + 54);
 }
 
 function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: number) {
@@ -102,10 +163,12 @@ function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: num
   ctx.fillText(branch.name.toUpperCase(), 155, y + 40);
   ctx.fillStyle = COLORS.darkGreen;
   ctx.font = '700 29px HatdeFont';
-  ctx.fillText(branch.revenueDisplay, 155, y + 85);
+  drawMoneyIcon(ctx, 155, y + 70);
+  ctx.fillText(branch.revenueDisplay, 198, y + 85);
 
   ctx.fillStyle = COLORS.deepInk;
   ctx.font = '700 25px HatdeFont';
+  drawCartIcon(ctx, 472, y + 43);
   ctx.fillText(branch.transactionsDisplay, 520, y + 69);
   ctx.font = '400 15px HatdeFont';
   ctx.fillText('giao dịch', 550, y + 69);
