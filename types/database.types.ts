@@ -284,6 +284,71 @@ export type Database = {
           },
         ]
       }
+      hatde_branch_snapshots: {
+        Row: {
+          branch_code: string
+          id: string
+          revenue: number
+          snapshot_id: string
+          transactions: number
+          vs_last_week: number
+          vs_yesterday: number
+        }
+        Insert: {
+          branch_code: string
+          id?: string
+          revenue: number
+          snapshot_id: string
+          transactions: number
+          vs_last_week: number
+          vs_yesterday: number
+        }
+        Update: {
+          branch_code?: string
+          id?: string
+          revenue?: number
+          snapshot_id?: string
+          transactions?: number
+          vs_last_week?: number
+          vs_yesterday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hatde_branch_snapshots_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "hatde_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hatde_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          report_date: string
+          report_time: string
+          total_revenue: number
+          total_transactions: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_date: string
+          report_time: string
+          total_revenue: number
+          total_transactions: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_date?: string
+          report_time?: string
+          total_revenue?: number
+          total_transactions?: number
+        }
+        Relationships: []
+      }
       misa_customer_monthly_plans: {
         Row: {
           committed_sales: number | null
@@ -943,6 +1008,16 @@ export type Database = {
       save_monthly_travel_expense_entries: {
         Args: { p_entries: Json; p_period_month: string }
         Returns: number
+      }
+      upsert_hatde_snapshot: {
+        Args: {
+          p_branches: Json
+          p_report_date: string
+          p_report_time: string
+          p_total_revenue: number
+          p_total_transactions: number
+        }
+        Returns: Json
       }
       upsert_pancake_daily_report: {
         Args: {

@@ -2954,3 +2954,21 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Windows Task Scheduler bị loại vì phụ thuộc máy cá nhân; tiếp tục GitHub cron bị loại sau bằng chứng production; Vercel Hobby bị loại vì chỉ chạy một lần/ngày và có thể chạy bất kỳ lúc nào trong giờ.
 - **Impact:** Thêm Edge Function TypeScript, `pg_cron`, `pg_net`, hai Vault secret và hai cron job. Function chỉ nhận service key, gọi RPC UPSERT hiện hữu và không cấp DML bảng cho service role. GitHub workflow vẫn dùng được khi cần đối soát thủ công.
 - **Status:** APPROVED — người dùng yêu cầu giải pháp cloud không phụ thuộc máy cá nhân.
+
+## DEC-114 — Hạt Dẻ nhận snapshot CUKCUK qua webhook n8n
+
+- **Date:** 2026-10-11
+- **Decision:** Lưu snapshot thương hiệu Hạt Dẻ Ông Lý trong hai bảng `hatde_snapshots` và `hatde_branch_snapshots`. n8n gọi `POST /api/n8n/hatde-snapshot` bằng header `x-gustino-token`; route so sánh timing-safe với `N8N_REPORT_WEBHOOK_TOKEN`, validate Zod, tự tính tổng và gọi duy nhất RPC `upsert_hatde_snapshot`. Chỉ Admin đọc dữ liệu qua session client chịu RLS tại `/admin/hatde`.
+- **Reason:** Workflow ngoài không có session trình duyệt nhưng vẫn cần ghi idempotent; quyền RPC hẹp giữ service role không có DML trực tiếp trên bảng. Dữ liệu Hạt Dẻ độc lập với báo cáo BikeForce hiện hữu.
+- **Alternatives:** Cấp INSERT/UPDATE trực tiếp cho service role bị loại vì mở quyền quá rộng; cho n8n dùng tài khoản Admin bị loại vì khó vận hành và trộn session người dùng với machine-to-machine; tạo thư viện mới bị loại vì stack hiện tại đã đủ.
+- **Impact:** Thêm một migration, một biến môi trường server-only, route n8n, service/query, trang Admin và mục sidebar/menu Thêm. Migration phải được người dùng tự chạy trước; sau đó regenerate `types/database.types.ts`. Không có chức năng tạo ảnh/poster.
+- **Status:** APPROVED — người dùng yêu cầu trực tiếp.
+
+## DEC-115 — Hạt Dẻ giữ đủ chi nhánh có doanh thu và giao dịch bằng 0
+
+- **Date:** 2026-10-11
+- **Decision:** `upsert_hatde_snapshot` chấp nhận 1–6 chi nhánh có `revenue >= 0` và `transactions >= 0`, bao gồm trường hợp cả hai bằng 0. Webhook giữ nguyên các dòng này khi tự tính tổng và lưu; trang Admin hiển thị `0 VND` và `0 giao dịch`.
+- **Reason:** Snapshot phải phản ánh đủ sáu chi nhánh, kể cả chi nhánh chưa phát sinh. Điều kiện RPC cũ loại 0/0 làm `branch_count` lệch độ dài JSON và gây lỗi dù tổng đúng.
+- **Alternatives:** Tiếp tục bỏ dòng 0/0 bị loại vì làm mất chi nhánh; lưu giá trị giả bị loại vì sai dữ liệu nguồn; sửa migration cũ bị loại vì migration đã áp dụng.
+- **Impact:** Thêm migration tiến tới `20261011130000_allow_zero_hatde_branches.sql` dùng `CREATE OR REPLACE FUNCTION`; không đổi bảng, CHECK, RLS hay quyền. Giữ allowlist, chống trùng, biên 1–6, số không âm và tổng khớp.
+- **Status:** APPROVED — người dùng yêu cầu trực tiếp.

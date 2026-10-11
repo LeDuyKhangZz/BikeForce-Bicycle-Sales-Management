@@ -892,3 +892,11 @@ DEC-109: `revokeCustomerCare` parse Zod lý do 1–1000 ký tự trước khi x�
 ## Lịch Pancake 09:00/17:00 trên Supabase (DEC-111–DEC-113)
 
 Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`; URL và `apikey` được đọc từ Vault. Edge Function đọc `PANCAKE_API_KEY` từ Secrets, phân trang API, lọc ngày UTC+7, tổng hợp và POST RPC `upsert_pancake_daily_report`. Cùng khóa `(report_date, shop_id)` nên lượt lặp thay snapshot thay vì cộng trùng. GitHub `workflow_dispatch` vẫn phục vụ ngày đối soát thủ công.
+
+## `POST /api/n8n/hatde-snapshot`
+
+- Auth: `x-gustino-token` so timing-safe với `N8N_REPORT_WEBHOOK_TOKEN`.
+- Validate: ngày `YYYY-MM-DD`, giờ `HH:mm`, 1–6 mã chi nhánh allowlist, không trùng, số nguyên/finite phù hợp.
+- Giữ nguyên cả chi nhánh có doanh thu và giao dịch bằng 0; server tự cộng tổng từ toàn bộ 1–6 chi nhánh. RPC kiểm tra allowlist, không trùng, số không âm và tổng khớp (DEC-115).
+- RPC upsert theo `(report_date, report_time)`, thay toàn bộ chi tiết của snapshot trong cùng transaction.
+- Response thành công: `{ "id": "<uuid>", "created": true|false }`; auth sai `401`, payload sai `400`, lỗi lưu `500`.

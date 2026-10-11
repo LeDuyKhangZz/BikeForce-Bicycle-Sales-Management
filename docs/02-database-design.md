@@ -1360,3 +1360,11 @@ Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái 
 - Hai bảng bật và force RLS; `authenticated` chỉ có SELECT qua policy Admin. `service_role` không có DML/SELECT trực tiếp.
 - RPC `upsert_pancake_daily_report` là `security definer set search_path = public, pg_temp`, chỉ cấp EXECUTE cho `service_role`; kiểm tra số không âm và tổng nguồn phải bằng tổng ngày trước khi upsert nguyên tử.
 - RPC chỉ-đọc `get_latest_pancake_report_image()` cũng là security-definer với `search_path` cố định, chỉ `service_role` được EXECUTE. Hàm trả đúng snapshot mới nhất dưới dạng JSON cho route ảnh n8n; không cấp SELECT bảng cho service role, anon hay Sales (DEC-107).
+
+## Hạt Dẻ Ông Lý — snapshot chi nhánh (DEC-114)
+
+- `hatde_snapshots`: khóa UUID, `report_date`, `report_time` dạng `HH:mm`, tổng doanh thu/giao dịch và `created_at`; unique `(report_date, report_time)`.
+- `hatde_branch_snapshots`: chi tiết tối đa sáu mã chi nhánh, FK cascade tới snapshot, unique `(snapshot_id, branch_code)`.
+- Cả hai bảng bật và force RLS. `authenticated` chỉ được SELECT khi `(select public.is_admin())`; `anon`, Sales và service role không có DML bảng.
+- RPC security-definer `upsert_hatde_snapshot` kiểm tra lại mã, số không âm, trùng mã và tổng; chỉ `service_role` được execute. Index mới phục vụ snapshot mới nhất và xếp doanh thu theo chi nhánh.
+- DEC-115 giữ các dòng chi nhánh có `revenue = 0` và `transactions = 0`; CHECK hiện hữu dùng `>= 0` nên không đổi bảng. Migration tiến tới `20261011130000_allow_zero_hatde_branches.sql` chỉ thay thân RPC và khóa số phần tử ở 1–6.

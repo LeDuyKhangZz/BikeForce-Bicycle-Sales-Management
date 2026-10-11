@@ -30,6 +30,7 @@ export type NavKey =
   | 'ADMIN_MONTHLY_SUMMARIES'
   | 'ADMIN_SALEWORK'
   | 'ADMIN_ECOMMERCE'
+  | 'ADMIN_HATDE'
   | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_CUSTOMER_CARE'
   | 'ADMIN_ACCOUNT';
@@ -175,6 +176,12 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
     label: 'Sàn TMĐT',
     href: '/admin/ecommerce',
     matchPrefixes: ['/admin/ecommerce'],
+  },
+  {
+    key: 'ADMIN_HATDE',
+    label: 'Hạt Dẻ',
+    href: '/admin/hatde',
+    matchPrefixes: ['/admin/hatde'],
   },
 ];
 

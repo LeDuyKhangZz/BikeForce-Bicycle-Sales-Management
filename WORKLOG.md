@@ -4024,3 +4024,27 @@ Kiểm tra GitHub API sau 18:00 xác nhận workflow active trên `main` nhưng 
 ## 2026-10-10 — Chuyển Pancake sang Supabase Cron (DEC-113)
 
 GitHub tiếp tục bỏ 09:00/09:10; run dự phòng hôm trước chỉ xuất hiện lúc 23:38. Đã deploy Edge Function `pancake-sync`, lưu credential Cron trong Vault và áp riêng migration `20261010031500` vì migration history production còn nhiều mốc cũ chưa ghi nhận. Hai job 09:00/17:00 active. Chạy bù trực tiếp và gọi thử qua chính `pg_net` đều HTTP 200, ghi snapshot 10/10 với 14 đơn. GitHub schedule được gỡ, còn nút chạy tay. Unit liên quan 9/9, typecheck, lint và production build 33 route đều exit 0. Cần xoay API key Pancake vì CLI 2.115 đã trả giá trị secret trong output kiểm tra.
+
+# 2026-10-11 — Module Hạt Dẻ Ông Lý (DEC-114)
+
+Đã thêm migration hai bảng `hatde_*`, RLS Admin-only và RPC service-role-only; webhook n8n timing-safe, validation Zod, tổng server-side và upsert idempotent; trang `/admin/hatde` cùng menu Admin, lọc ngày/giờ và các trạng thái UI. Không chạy migration, không kết nối/ghi database thật, không commit/deploy theo yêu cầu.
+
+Kiểm chứng: typecheck, lint và production build 35 route exit 0; 24/24 test mới pass. Full unit 946/949: lỗi có sẵn ở giới hạn 9 ký tự của nhãn `Khách hàng` và hai test AMIS timeout 5 giây khi chạy toàn bộ; không ghi full unit PASS. Next Exact Steps: người dùng tự chạy migration, regenerate database types, đặt `N8N_REPORT_WEBHOOK_TOKEN`, sau đó chạy RLS local và smoke webhook/UI.
+
+Người dùng đã chạy migration cloud. Lần generate đầu làm rỗng file vì command thất bại; đã phục hồi an toàn qua file tạm, xác nhận generated types có `hatde_snapshots`, `hatde_branch_snapshots` và `upsert_hatde_snapshot`, rồi chuyển service sang dùng trực tiếp `Database` types. Typecheck và 24/24 test Hạt Dẻ tiếp tục pass.
+
+### 2026-10-11 — Giao diện bảng thi đua Hạt Dẻ
+
+Đã chuyển `/admin/hatde` sang bảng thi đua dạng poster theo ảnh tham chiếu: nền xanh, thứ hạng 1–6, doanh thu, giao dịch, so sánh hôm qua/tuần trước và tổng toàn chuỗi. Toàn bộ số liệu tiếp tục lấy từ snapshot hệ thống; không thêm dữ liệu giả và không suy diễn tỷ lệ tổng khi database chưa lưu. Bổ sung semantic token riêng cho nhận diện Hạt Dẻ và test render cho chi nhánh 0 đồng. Typecheck, lint và 7/7 test liên quan pass; không kết nối database, không commit.
+
+Production build pass đủ 35 route. Full unit: 951/954 pass; ba lỗi tồn tại ngoài phạm vi Hạt Dẻ gồm giới hạn nhãn `Khách hàng` 10 ký tự và hai test AMIS timeout 5 giây. Không ghi nhận lỗi Hạt Dẻ trong full suite.
+
+Theo phản hồi người dùng, đã khôi phục nguyên dashboard gọn tại `/admin/hatde` và chuyển poster sang route riêng `/admin/hatde/board`. Typecheck và 6/6 test component dashboard/poster pass.
+
+Đã thay nền poster tự dựng bằng ảnh thương hiệu `public/images/nenhatde.png` do người dùng cung cấp. Sáu hàng thứ hạng, doanh thu, giao dịch và hai tỷ lệ vẫn render động từ snapshot; nền chứa nguyên logo, tiêu đề, slogan và ảnh hạt dẻ. Typecheck, lint và targeted test Hạt Dẻ 8/8 pass; không kết nối database, không commit.
+
+# 2026-10-11 — Cho phép chi nhánh Hạt Dẻ 0 đồng (DEC-115)
+
+Root cause: CHECK bảng và Zod đều cho phép 0; RPC cũ có điều kiện loại `(revenue = 0 AND transactions = 0)` khiến count lệch, còn webhook chủ động filter dòng đó. Đã bỏ filter, thêm migration tiến tới thay RPC và bổ sung test API/schema/view model/UI/static SQL. Không kết nối database, không sửa migration cũ, không commit.
+
+Kiểm chứng: typecheck và lint exit 0; 26/26 test liên quan pass. Test webhook truyền đủ sáu chi nhánh gồm nhiều dòng 0/0; UI SSR giữ đủ sáu và hiển thị `0 VND`, `0 giao dịch`.

@@ -2889,3 +2889,23 @@ GitHub API xác nhận không có run 17:00 dù workflow active; số 13:48 là 
 ## 2026-10-10 — DEC-113 Supabase Cron Pancake
 
 Edge Function `pancake-sync` đã deploy production; hai cron `pancake-sync-09-vn`/`pancake-sync-17-vn` active tại 02:00/10:00 UTC. Vault giữ URL và service credential; source/migration không chứa secret. Chạy bù và kiểm tra qua `pg_net` đều HTTP 200, snapshot 10/10 có 14 đơn. GitHub bỏ schedule, giữ chạy tay. Unit 9/9, typecheck, lint và build 33 route exit 0. **Next Exact Steps:** xoay API key Pancake do CLI cũ đã in secret, cập nhật `PANCAKE_API_KEY` trong Edge Function Secrets; commit/push và quan sát cron 17:00 production trong History.
+
+## 2026-10-11 — Hạt Dẻ Ông Lý (DEC-114)
+
+Code local đã có schema/RPC, webhook `/api/n8n/hatde-snapshot`, service/query, trang `/admin/hatde`, navigation và test. Không chạy SQL thật, không commit/deploy. Typecheck/lint/build 35 route exit 0; targeted test 24/24 pass. Full unit 946/949: lỗi cũ `Khách hàng` dài 10 ký tự so với ngưỡng test 9 và hai test AMIS timeout 5 giây khi chạy toàn bộ.
+
+**Next Exact Steps:** (1) người dùng tự chạy `supabase/migrations/20261011120000_hatde_branch_snapshots.sql`; (2) chạy `npm run db:types` với môi trường local/linked phù hợp để cập nhật generated types; (3) đặt `N8N_REPORT_WEBHOOK_TOKEN` cho web và n8n; (4) chạy RLS local và curl smoke; (5) kiểm tra `/admin/hatde` ở 375px và 1440px. Không tạo ảnh/poster cho module này.
+
+Migration cloud và bước regenerate types đã hoàn tất; file generated đã được xác nhận có đủ hai bảng/RPC. Next Exact Steps còn lại: đặt token webhook cùng service-role key hợp lệ, chạy curl smoke, kiểm tra trang Admin và bổ sung RLS test local.
+
+DEC-115 local đã sửa để giữ chi nhánh 0 đồng: migration mới `20261011130000_allow_zero_hatde_branches.sql`, webhook không còn filter, UI có test `0 VND`/`0 giao dịch`. Chưa chạy SQL thật. Next Exact Step: người dùng tự áp migration mới rồi mới thử payload đủ sáu chi nhánh.
+
+Giao diện `/admin/hatde` đã đổi sang bảng thi đua dạng poster xanh theo ảnh tham chiếu. Component mới `features/admin-hatde/hatde-ranking-board.tsx` chỉ nhận `HatdeSnapshotViewModel`; không hardcode số liệu. Sáu chi nhánh, kể cả `0 VND`/`0 giao dịch`, tiếp tục được render. Typecheck, lint và targeted test 7/7 pass. Next Exact Step: chạy app với dữ liệu thật sau khi người dùng áp migration, rồi kiểm tra trực quan ở 375px và 1440px.
+
+Production build pass 35 route. Full unit 951/954; ba lỗi ngoài phạm vi vẫn là `Khách hàng` dài 10 ký tự so với ngưỡng 9 và hai test AMIS timeout 5 giây.
+
+Điều chỉnh theo phản hồi: `/admin/hatde` đã trở lại giao diện dashboard cũ; poster nằm riêng tại `/admin/hatde/board`. Targeted component test 6/6 pass sau khi tách route.
+
+Poster `/admin/hatde/board` hiện dùng `public/images/nenhatde.png` làm nền toàn khung, dữ liệu động phủ lên vùng giữa. Typecheck, lint và targeted test Hạt Dẻ 8/8 pass. Không kết nối database và chưa commit.
+
+Verification DEC-115: typecheck/lint exit 0, targeted unit 26/26 pass; không kết nối database thật và không commit.

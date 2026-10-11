@@ -1493,3 +1493,11 @@ DEC-109: trang Admin có mục **Đã phê duyệt · có thể thu hồi**, ph�
 ## 2026-10-09 — Xem trước nhân viên Sàn TMĐT
 
 Trang `/admin/report-previews` có nhóm **Sàn TMĐT · Pancake** riêng cho Nguyễn Ngọc Triết. Nút Xem preview hiển thị cùng ảnh báo cáo 9:16 đang dùng trong luồng n8n; Admin mở bằng session, không đưa API key ra client. Trên điện thoại, nút Xem trước ở header chỉ hiện icon để tránh tràn ngang; tên đầy đủ vẫn có trong accessible label.
+
+## Trang Admin Hạt Dẻ
+
+Route `/admin/hatde` nằm trong sidebar desktop và menu “Thêm” trên mobile. Trang hiển thị tổng doanh thu/giao dịch, danh sách card chi nhánh xếp giảm dần theo doanh thu, badge có icon + chữ cho so sánh hôm qua/tuần trước, bộ chọn ngày và các mốc giờ. Số lớn được phép xuống dòng; không dùng bảng ngang trên mobile. Có loading skeleton, empty state và error state với nút thử lại.
+
+Trang riêng `/admin/hatde/board` dùng bố cục poster xanh lá theo nhận diện Hạt Dẻ; `/admin/hatde` giữ nguyên dashboard quản trị gọn ban đầu. Bảng poster có tiêu đề và giờ snapshot ở đầu, sáu hàng xếp hạng theo doanh thu, huy hiệu thứ hạng, doanh thu, giao dịch và hai mức so sánh trên từng hàng; cuối bảng là tổng toàn chuỗi. Tất cả con số lấy từ `HatdeSnapshotViewModel`, không đặt số mẫu trong component. Ở mobile, phần minh hoạ chi nhánh được ẩn để tránh cuộn ngang nhưng toàn bộ số liệu vẫn hiển thị.
+
+Poster dùng trực tiếp tài sản thương hiệu `public/images/nenhatde.png` làm nền toàn khung; component chỉ phủ thời điểm snapshot và sáu hàng dữ liệu lên vùng trống ở giữa. Không chép lại logo, tiêu đề, slogan hoặc ảnh sản phẩm bằng HTML để tránh sai lệch với thiết kế gốc.

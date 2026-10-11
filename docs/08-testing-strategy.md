@@ -1603,3 +1603,11 @@ E2E mobile-375 mở `/admin/report-previews`, chọn Nguyễn Ngọc Triết và
 ## Regression lịch Pancake (DEC-111–DEC-113)
 
 Unit khóa hai cron Supabase 09:00/17:00, Vault không hardcode secret, logic ngày Việt Nam/biên timestamp, tổng hợp đơn và snapshot 0. GitHub regression xác nhận không còn `schedule` nhưng vẫn giữ chạy tay. Sau deploy phải gọi thử qua `pg_net`, thấy HTTP 200 và snapshot đúng ngày; tiếp tục quan sát Cron History ở mốc thật.
+
+## Hạt Dẻ (DEC-114)
+
+- Unit validation: ngày/giờ, allowlist mã, mảng rỗng, trùng mã, số âm.
+- Route mock, không chạm database thật: token đúng/sai/thiếu/env trống; tự tính tổng; giữ dòng 0/0; phản hồi `created` khi upsert lặp.
+- UI SSR: 1/4/6 chi nhánh, VND 10 chữ số, phần trăm âm/dương có dấu và tone tương ứng.
+- DEC-115: static migration test khóa điều kiện 1–6, allowlist, số `>= 0`, tổng khớp, chống trùng và bảo đảm không tái xuất hiện điều kiện loại dòng 0/0; UI phải render `0 VND` và `0 giao dịch`.
+- Sau khi migration được áp trên Supabase local, bổ sung/chạy RLS bằng JWT thật để chứng minh Admin đọc, Sales/anon không đọc và chỉ service role gọi được RPC.

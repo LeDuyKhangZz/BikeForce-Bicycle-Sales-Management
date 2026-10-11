@@ -33,6 +33,14 @@ describe('lương chỉ dành cho Admin', () => {
   });
 });
 
+describe('Hạt Dẻ admin navigation', () => {
+  it('làm sáng mục riêng và không đưa vào bottom nav', () => {
+    const allItems = [...ADMIN_NAV_ITEMS, ...ADMIN_SIDEBAR_ITEMS];
+    expect(activeNavKey(allItems, '/admin/hatde')).toBe('ADMIN_HATDE');
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_HATDE')).toBe(false);
+  });
+});
+
 describe('cấu hình nav — ràng buộc DEC-018 (nới bởi DEC-072)', () => {
   it.each([
     ['Sales', SALES_NAV_ITEMS, 4],

@@ -921,3 +921,13 @@ Route `/api/salework/report-image` tiếp tục xác thực `SALEWORK_REPORT_API
 Sales active chỉ tạo/nhìn phiếu do chính mình gửi và chỉ khi khách được RLS snapshot xác nhận thuộc nhân viên đó. Sales không được review. Admin active xem tất cả và chỉ có thể chuyển phiếu pending sang APPROVED/REJECTED. Không role nào có DELETE qua API.
 
 DEC-109: Admin active được thu hồi duy nhất phiếu APPROVED với lý do bắt buộc. RLS vẫn chặn Sales UPDATE; trigger DB chặn chuyển trạng thái ngoài hai hướng hợp lệ. `reviewed_by`/`reviewed_at` không bị thay khi thu hồi.
+
+## Quyền module Hạt Dẻ (DEC-114)
+
+| Chủ thể | Xem trang/dữ liệu | Ghi snapshot |
+|---|---|---|
+| Admin active | Có, qua session + RLS | Không ghi trực tiếp |
+| Sales / inactive / anon | Không | Không |
+| n8n có token hợp lệ | Không có quyền SELECT bảng | Chỉ gọi RPC `upsert_hatde_snapshot` |
+
+Route `/admin/hatde` được bảo vệ bởi middleware, Admin layout, `requireRole('ADMIN')` và RLS. Webhook fail-closed khi thiếu/sai token hoặc env chưa cấu hình.

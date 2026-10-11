@@ -1511,3 +1511,23 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Gỡ GitHub schedule, giữ `workflow_dispatch` chạy tay.
 - [x] Unit liên quan 9/9, typecheck, lint và production build 33 route exit 0.
 - [ ] Xoay Pancake API key vì CLI cũ đã in giá trị khi kiểm tra secret; cập nhật lại Supabase secret sau khi xoay.
+
+## 2026-10-11 — Hạt Dẻ Ông Lý (DEC-114)
+
+- [x] Migration hai bảng, CHECK/unique/index, force RLS và RPC upsert quyền hẹp.
+- [x] Webhook n8n timing-safe, validation, lọc 0/0, tổng server-side và phản hồi `created`.
+- [x] Trang Admin, menu riêng, snapshot mới nhất, lọc ngày/giờ, responsive/loading/empty/error.
+- [x] Typecheck, lint, production build 35 route và 24/24 test mới pass bằng mock, không chạm database thật.
+- [x] Người dùng chạy migration cloud; `types/database.types.ts` đã regenerate và chứa hai bảng/RPC Hạt Dẻ.
+- [ ] Chạy RLS test trên Supabase local sau khi migration tồn tại; smoke n8n và UI Admin.
+
+## 2026-10-11 — Giữ chi nhánh Hạt Dẻ 0 đồng (DEC-115)
+
+- [x] Xác định RPC cũ và filter webhook là hai chỗ loại dòng 0/0; CHECK và Zod đã cho phép số 0.
+- [x] Tạo migration tiến tới mới bằng `CREATE OR REPLACE FUNCTION`, không sửa migration cũ.
+- [x] Giữ kiểm tra 1–6 chi nhánh, allowlist, chống trùng, số không âm và tổng khớp.
+- [x] Thêm test validation, webhook, migration tĩnh, view model và UI cho `0 VND`/`0 giao dịch`.
+- [x] Typecheck/lint exit 0; targeted test 26/26 pass với payload và UI đủ sáu chi nhánh.
+- [ ] Người dùng tự chạy migration `20261011130000_allow_zero_hatde_branches.sql` trên Supabase.
+- [x] Giữ dashboard `/admin/hatde`; thêm bảng thi đua poster riêng tại `/admin/hatde/board`, dùng số liệu động và vẫn hiển thị chi nhánh 0 đồng.
+- [x] Dùng `public/images/nenhatde.png` làm nền thương hiệu cho poster và phủ sáu hàng số liệu động lên vùng giữa.

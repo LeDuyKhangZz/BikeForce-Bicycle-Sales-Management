@@ -1286,3 +1286,10 @@ Trước khi bật bước đồng bộ Supabase, phải áp migration `20261008
 Áp migration `20261009100000_customer_care_approvals.sql` trước deploy. Vercel và `.env.local` cần `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`; không biến nào có prefix `NEXT_PUBLIC_`. Sau deploy, Sales gửi một ảnh thử, Admin duyệt và xác nhận count cảnh báo giảm một.
 
 DEC-109: chạy lần lượt `20261009110000_customer_care_revocation.sql` rồi `20261009110100_customer_care_revocation_fields.sql` trong Supabase SQL Editor trước khi deploy UI thu hồi. PostgreSQL cần commit giá trị enum mới trước khi dùng trong CHECK/policy. Kiểm tra Admin thu hồi phiếu đã duyệt, nhãn Sales chuyển `Đã thu hồi phê duyệt` và lý do/ảnh vẫn còn.
+
+## Cấu hình Hạt Dẻ (DEC-114)
+
+1. Chạy migration `supabase/migrations/20261011120000_hatde_branch_snapshots.sql` trên đúng project Supabase.
+2. Regenerate `types/database.types.ts` sau khi schema đã tồn tại.
+3. Tạo token ngẫu nhiên mạnh và đặt `N8N_REPORT_WEBHOOK_TOKEN` ở Vercel cùng n8n; không dùng prefix `NEXT_PUBLIC_`.
+4. Deploy ứng dụng rồi smoke webhook bằng dữ liệu giả ở một timestamp riêng; xác nhận Admin xem được `/admin/hatde`.

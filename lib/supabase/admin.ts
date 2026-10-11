@@ -15,6 +15,7 @@ import type { Database } from '@/types/database.types';
  *   • `auth.admin.createUser`       — UC-17 tạo tài khoản Sales (FR-030)
  *   • `auth.admin.updateUserById`   — UC-18 đổi email / reset mật khẩu
  *   • `get_latest_pancake_report_image` — snapshot chỉ-đọc cho route n8n có API key
+ *   • `upsert_hatde_snapshot` — RPC ghi nguyên tử, quyền hẹp cho webhook n8n Hạt Dẻ
  *
  * Nó **KHÔNG BAO GIỜ** chạm vào `daily_reports` — không đọc, không ghi, không
  * đếm, không aggregate, không export, không render ảnh. Không có ngoại lệ ở v1.
@@ -52,7 +53,7 @@ export function createAdminClient() {
   return createServiceRoleClient();
 }
 
-/** DEC-107: chỉ dùng để gọi RPC get_latest_pancake_report_image trong route n8n. */
+/** DEC-107/DEC-114: chỉ dùng cho các RPC automation được cấp quyền tường minh. */
 export function createReportAutomationClient() {
   return createServiceRoleClient();
 }
