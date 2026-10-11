@@ -1613,4 +1613,7 @@ Unit khóa hai cron Supabase 09:00/17:00, Vault không hardcode secret, logic ng
 - Sau khi migration được áp trên Supabase local, bổ sung/chạy RLS bằng JWT thật để chứng minh Admin đọc, Sales/anon không đọc và chỉ service role gọi được RPC.
 ### Ảnh Hạt Dẻ
 
+- Render fixture PNG thật ở 1080×1320 và kiểm tra trực quan logo nền, dấu tiếng Việt cùng các SVG icon tiền, giao dịch, tăng/giảm, vương miện và huy chương; không chấp nhận ô vuông thay glyph.
+- Unit test khóa renderer dùng `Path2D` và không đưa ký tự mũi tên Unicode trở lại mã nguồn ảnh.
+
 Unit test route khóa các trường hợp env thiếu, API key thiếu/sai, không có snapshot và response PNG. Test canvas thật đọc `nenhatde.png`, render fixture sáu chi nhánh và kiểm tra PNG có kích thước 1080×1320.

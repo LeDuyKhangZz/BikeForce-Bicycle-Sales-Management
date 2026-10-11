@@ -4057,3 +4057,5 @@ Kiểm chứng: typecheck/lint pass, targeted test 24/24 pass, production build 
 Commit `7fcd477` đã push `main`; Vercel Git integration báo Production deployment thành công. Smoke deployment URL tại `/api/hatde/board/image` không kèm key trả `401 {"error":"Unauthorized"}` và `X-Matched-Path` đúng route mới. Chưa dùng/hiển thị secret thật và chưa gọi endpoint với key trong phiên này.
 
 Sau phản hồi ảnh PNG thiếu biểu tượng, xác nhận logo thương hiệu vẫn có trong nền nhưng glyph mũi tên không được font canvas hỗ trợ và renderer chưa vẽ icon tiền/giỏ hàng. Đã thay toàn bộ bằng vector canvas để hiển thị ổn định trên Vercel, không phụ thuộc emoji hoặc glyph hệ điều hành.
+
+Theo yêu cầu đồng bộ với giao diện web, renderer PNG đã chuyển các biểu tượng sang SVG path được `@napi-rs/canvas` vẽ bằng `Path2D`: ví doanh thu, biên nhận giao dịch, mũi tên tăng/giảm, vương miện và huy chương. Route kiểm tra bắt buộc Noto Sans Regular/Bold đăng ký thành công. Đã render và xem trực tiếp fixture 1080×1320: logo nền, icon và các tên `VŨNG TÀU`, `ĐỒNG ĐEN`, `PHỔ QUANG` đều đúng, không có ô vuông.

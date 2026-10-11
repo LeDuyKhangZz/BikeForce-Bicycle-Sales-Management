@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@napi-rs/canvas', () => ({
   createCanvas: mocks.createCanvas,
-  GlobalFonts: { registerFromPath: vi.fn() },
+  GlobalFonts: { registerFromPath: vi.fn(() => true) },
   loadImage: mocks.loadImage,
 }));
 vi.mock('@/lib/hatde/board-image', () => ({

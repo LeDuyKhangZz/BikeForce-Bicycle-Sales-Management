@@ -15,8 +15,17 @@ let fontsRegistered = false;
 
 function ensureFontsRegistered() {
   if (fontsRegistered) return;
-  GlobalFonts.registerFromPath(path.join(process.cwd(), 'public/fonts/NotoSans-Regular.ttf'), 'HatdeFont');
-  GlobalFonts.registerFromPath(path.join(process.cwd(), 'public/fonts/NotoSans-Bold.ttf'), 'HatdeFont');
+  const regularRegistered = GlobalFonts.registerFromPath(
+    path.join(process.cwd(), 'public/fonts/NotoSans-Regular.ttf'),
+    'HatdeFont',
+  );
+  const boldRegistered = GlobalFonts.registerFromPath(
+    path.join(process.cwd(), 'public/fonts/NotoSans-Bold.ttf'),
+    'HatdeFont',
+  );
+  if (!regularRegistered || !boldRegistered) {
+    throw new Error('Không thể đăng ký font tiếng Việt cho ảnh Hạt Dẻ.');
+  }
   fontsRegistered = true;
 }
 

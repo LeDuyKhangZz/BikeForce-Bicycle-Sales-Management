@@ -1,4 +1,5 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -7,6 +8,8 @@ import type { HatdeSnapshotViewModel } from '@/lib/hatde/view-model';
 
 describe('drawHatdeBoardImage', () => {
   it('render PNG đúng 1080x1320 với đủ sáu chi nhánh', async () => {
+    GlobalFonts.registerFromPath(path.join(process.cwd(), 'public/fonts/NotoSans-Regular.ttf'), 'HatdeFont');
+    GlobalFonts.registerFromPath(path.join(process.cwd(), 'public/fonts/NotoSans-Bold.ttf'), 'HatdeFont');
     const report: HatdeSnapshotViewModel = {
       id: '17abcf76-a9e4-42e4-8b99-e785b0e39fb3',
       reportDate: '2026-10-11',
@@ -32,5 +35,12 @@ describe('drawHatdeBoardImage', () => {
     expect(png.subarray(1, 4).toString()).toBe('PNG');
     expect(png.readUInt32BE(16)).toBe(1080);
     expect(png.readUInt32BE(20)).toBe(1320);
+  });
+
+  it('dùng SVG Path2D thay vì glyph Unicode cho icon', () => {
+    const source = readFileSync(path.join(process.cwd(), 'lib/hatde/board-image.ts'), 'utf8');
+    expect(source).toContain('new Path2D(pathData)');
+    expect(source).not.toContain("'↑'");
+    expect(source).not.toContain("'↓'");
   });
 });

@@ -1523,6 +1523,8 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 
 ## 2026-10-11 — Giữ chi nhánh Hạt Dẻ 0 đồng (DEC-115)
 
+- [x] Ảnh PNG Hạt Dẻ dùng SVG `Path2D` cho toàn bộ icon động và font Noto Sans đóng gói; fixture thực tế không còn ô vuông.
+
 - [x] Xác định RPC cũ và filter webhook là hai chỗ loại dòng 0/0; CHECK và Zod đã cho phép số 0.
 - [x] Tạo migration tiến tới mới bằng `CREATE OR REPLACE FUNCTION`, không sửa migration cũ.
 - [x] Giữ kiểm tra 1–6 chi nhánh, allowlist, chống trùng, số không âm và tổng khớp.

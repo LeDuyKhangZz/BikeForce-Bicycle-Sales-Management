@@ -2918,3 +2918,5 @@ Verification mới nhất: typecheck/lint pass, targeted test 24/24, build 36 ro
 Commit `7fcd477` đã lên `origin/main`; Vercel Production deployment success. Production smoke thiếu key trả đúng `401 {"error":"Unauthorized"}` từ `/api/hatde/board/image`, xác nhận không còn bị middleware trả `UNAUTHENTICATED`. Còn cần người dùng dùng secret riêng để smoke response PNG và bảo đảm migration `20261011140000_hatde_image_automation_read.sql` đã áp dụng.
 
 Renderer PNG đã đổi icon tiền, giỏ hàng và mũi tên sang vector canvas sau khi ảnh production xuất hiện ô vuông do thiếu glyph. Logo Hạt Dẻ ở góc trái vẫn lấy nguyên từ `nenhatde.png`.
+
+Renderer đã được chuẩn hóa tiếp sang SVG path qua `Path2D` cho ví doanh thu, biên nhận giao dịch, mũi tên, vương miện và huy chương. Route bắt buộc đăng ký đủ Noto Sans Regular/Bold. Fixture PNG 1080×1320 đã được xem trực tiếp và xác nhận icon cùng tiếng Việt không còn lỗi glyph. Next Exact Step: deploy commit qua GitHub/Vercel Production và gọi lại endpoint từ n8n.

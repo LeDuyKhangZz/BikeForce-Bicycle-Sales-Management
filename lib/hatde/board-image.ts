@@ -1,4 +1,4 @@
-import type { Image, SKRSContext2D } from '@napi-rs/canvas';
+import { Path2D, type Image, type SKRSContext2D } from '@napi-rs/canvas';
 
 import type { HatdeBranchViewModel, HatdeSnapshotViewModel } from '@/lib/hatde/view-model';
 
@@ -31,6 +31,16 @@ const COLORS: Palette = {
   white: '#ffffff',
 };
 
+const SVG_PATHS = {
+  arrowDown: 'M5 12L12 19L19 12M12 5V19',
+  arrowUp: 'M5 12L12 5L19 12M12 19V5',
+  crown: 'M2 6L6 9L10 3L14 9L18 3L22 6L19 17H5ZM5 21H19',
+  medal: 'M8 2H16L18 8L12 12L6 8ZM12 12A5 5 0 1 0 12 22A5 5 0 1 0 12 12',
+  minus: 'M5 12H19',
+  receipt: 'M4 2V22L6 20L8 22L10 20L12 22L14 20L16 22L18 20L20 22V2L18 4L16 2L14 4L12 2L10 4L8 2L6 4ZM8 8H16M8 12H16M8 16H13',
+  wallet: 'M5 4H19A2 2 0 0 1 21 6V18A2 2 0 0 1 19 20H5A2 2 0 0 1 3 18V6A2 2 0 0 1 5 4ZM3 9H21M16 15H18',
+} as const;
+
 function roundedRect(ctx: SKRSContext2D, x: number, y: number, width: number, height: number, radius: number) {
   ctx.beginPath();
   ctx.roundRect(x, y, width, height, radius);
@@ -47,65 +57,26 @@ function fitText(ctx: SKRSContext2D, text: string, maxWidth: number, initialSize
   return size;
 }
 
+function drawSvgIcon(ctx: SKRSContext2D, pathData: string, x: number, y: number, size: number, color: string, fill = false) {
+  ctx.save();
+  ctx.translate(x, y);
+  const scale = size / 24;
+  ctx.scale(scale, scale);
+  const path = new Path2D(pathData);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2.25;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (fill) ctx.fill(path);
+  ctx.stroke(path);
+  ctx.restore();
+}
+
 function drawTrendArrow(ctx: SKRSContext2D, x: number, y: number, direction: 'UP' | 'DOWN' | 'UNCHANGED') {
-  ctx.save();
-  ctx.strokeStyle = direction === 'UP' ? COLORS.darkGreen : direction === 'DOWN' ? COLORS.red : COLORS.deepInk;
-  ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  if (direction === 'UNCHANGED') {
-    ctx.moveTo(x - 8, y);
-    ctx.lineTo(x + 8, y);
-  } else {
-    const tipY = direction === 'UP' ? y - 10 : y + 10;
-    const tailY = direction === 'UP' ? y + 10 : y - 10;
-    ctx.moveTo(x, tailY);
-    ctx.lineTo(x, tipY);
-    ctx.moveTo(x - 7, direction === 'UP' ? y - 3 : y + 3);
-    ctx.lineTo(x, tipY);
-    ctx.lineTo(x + 7, direction === 'UP' ? y - 3 : y + 3);
-  }
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMoneyIcon(ctx: SKRSContext2D, x: number, y: number) {
-  ctx.save();
-  ctx.fillStyle = '#15803d';
-  for (let index = 0; index < 3; index += 1) {
-    const offset = index * 4;
-    roundedRect(ctx, x + offset, y - offset, 29, 17, 3);
-    ctx.fill();
-  }
-  ctx.strokeStyle = COLORS.white;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(x + 22, y + 4, 4, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawCartIcon(ctx: SKRSContext2D, x: number, y: number) {
-  ctx.save();
-  ctx.strokeStyle = COLORS.deepInk;
-  ctx.lineWidth = 3;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + 7, y);
-  ctx.lineTo(x + 12, y + 24);
-  ctx.lineTo(x + 35, y + 24);
-  ctx.lineTo(x + 40, y + 7);
-  ctx.lineTo(x + 9, y + 7);
-  ctx.stroke();
-  ctx.fillStyle = COLORS.deepInk;
-  ctx.beginPath();
-  ctx.arc(x + 16, y + 33, 4, 0, Math.PI * 2);
-  ctx.arc(x + 34, y + 33, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  const path = direction === 'UP' ? SVG_PATHS.arrowUp : direction === 'DOWN' ? SVG_PATHS.arrowDown : SVG_PATHS.minus;
+  const color = direction === 'UP' ? COLORS.darkGreen : direction === 'DOWN' ? COLORS.red : COLORS.deepInk;
+  drawSvgIcon(ctx, path, x, y, 28, color);
 }
 
 function drawComparison(ctx: SKRSContext2D, x: number, y: number, width: number, branch: HatdeBranchViewModel, key: 'vsYesterday' | 'vsLastWeek', label: string) {
@@ -123,7 +94,7 @@ function drawComparison(ctx: SKRSContext2D, x: number, y: number, width: number,
   ctx.font = '700 16px HatdeFont';
   ctx.textAlign = 'center';
   ctx.fillText(label, x + width / 2, y + 25);
-  drawTrendArrow(ctx, x + 42, y + 49, comparison.direction);
+  drawTrendArrow(ctx, x + 28, y + 35, comparison.direction);
   ctx.font = '700 24px HatdeFont';
   ctx.fillText(comparison.display, x + width / 2 + 10, y + 54);
 }
@@ -149,6 +120,10 @@ function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: num
   ctx.beginPath();
   ctx.arc(92, y + height / 2, 42, 0, Math.PI * 2);
   ctx.fill();
+  if (branch.rank === 1) drawSvgIcon(ctx, SVG_PATHS.crown, 72, y + 2, 40, COLORS.gold, true);
+  if (branch.rank === 2 || branch.rank === 3) {
+    drawSvgIcon(ctx, SVG_PATHS.medal, 77, y + 4, 30, branch.rank === 2 ? '#7c8794' : '#8b4513');
+  }
   ctx.fillStyle = branch.rank === 2 || branch.rank >= 4 ? COLORS.darkGreen : COLORS.white;
   ctx.font = '700 42px HatdeFont';
   ctx.textAlign = 'center';
@@ -163,12 +138,12 @@ function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: num
   ctx.fillText(branch.name.toUpperCase(), 155, y + 40);
   ctx.fillStyle = COLORS.darkGreen;
   ctx.font = '700 29px HatdeFont';
-  drawMoneyIcon(ctx, 155, y + 70);
+  drawSvgIcon(ctx, SVG_PATHS.wallet, 155, y + 60, 31, '#15803d');
   ctx.fillText(branch.revenueDisplay, 198, y + 85);
 
   ctx.fillStyle = COLORS.deepInk;
   ctx.font = '700 25px HatdeFont';
-  drawCartIcon(ctx, 472, y + 43);
+  drawSvgIcon(ctx, SVG_PATHS.receipt, 474, y + 43, 32, COLORS.deepInk);
   ctx.fillText(branch.transactionsDisplay, 520, y + 69);
   ctx.font = '400 15px HatdeFont';
   ctx.fillText('giao dịch', 550, y + 69);
