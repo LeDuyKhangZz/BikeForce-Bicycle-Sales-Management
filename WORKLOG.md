@@ -4053,3 +4053,5 @@ Kiểm chứng: typecheck và lint exit 0; 26/26 test liên quan pass. Test webh
 Đã thêm route `GET /api/hatde/board/image`, renderer canvas 1080×1320 dùng nền `nenhatde.png`, API key riêng qua `x-api-key`, response PNG/no-store và xử lý 503/401/404. Đã xác nhận `/api/admin/*` bị middleware session chặn trước route, nên chuyển endpoint ra namespace tự xác thực và chỉ whitelist đúng pathname mới; API Admin khác không đổi. Migration mới chỉ cấp SELECT hai bảng Hạt Dẻ cho automation client.
 
 Kiểm chứng: typecheck/lint pass, targeted test 24/24 pass, production build 36 route pass. Smoke bản production build không gửi key trả `401 {"error":"Unauthorized"}` từ route mới, không còn payload `UNAUTHENTICATED` của middleware.
+
+Commit `7fcd477` đã push `main`; Vercel Git integration báo Production deployment thành công. Smoke deployment URL tại `/api/hatde/board/image` không kèm key trả `401 {"error":"Unauthorized"}` và `X-Matched-Path` đúng route mới. Chưa dùng/hiển thị secret thật và chưa gọi endpoint với key trong phiên này.

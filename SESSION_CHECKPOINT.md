@@ -2914,3 +2914,5 @@ Verification DEC-115: typecheck/lint exit 0, targeted unit 26/26 pass; không k�
 Route ảnh chính thức là `/api/hatde/board/image`; middleware bỏ qua session chỉ cho đúng pathname này, sau đó route tự xác thực `x-api-key`. Renderer canvas 1080×1320 giữ nền/logo từ `nenhatde.png`, đọc snapshot mới nhất và đủ tối đa sáu chi nhánh. Next Exact Steps: áp migration `20261011140000_hatde_image_automation_read.sql`, đặt secret trên Vercel, redeploy và smoke binary PNG production.
 
 Verification mới nhất: typecheck/lint pass, targeted test 24/24, build 36 route pass; local production smoke thiếu key trả đúng `401 {"error":"Unauthorized"}` từ route. Chưa gọi database thật trong smoke.
+
+Commit `7fcd477` đã lên `origin/main`; Vercel Production deployment success. Production smoke thiếu key trả đúng `401 {"error":"Unauthorized"}` từ `/api/hatde/board/image`, xác nhận không còn bị middleware trả `UNAUTHENTICATED`. Còn cần người dùng dùng secret riêng để smoke response PNG và bảo đảm migration `20261011140000_hatde_image_automation_read.sql` đã áp dụng.
