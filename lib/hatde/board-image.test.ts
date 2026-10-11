@@ -40,6 +40,8 @@ describe('drawHatdeBoardImage', () => {
   it('dùng SVG Path2D thay vì glyph Unicode cho icon', () => {
     const source = readFileSync(path.join(process.cwd(), 'lib/hatde/board-image.ts'), 'utf8');
     expect(source).toContain('new Path2D(pathData)');
+    expect(source).toContain('report.totalRevenueDisplay');
+    expect(source).toContain('report.totalTransactionsDisplay');
     expect(source).not.toContain("'↑'");
     expect(source).not.toContain("'↓'");
   });

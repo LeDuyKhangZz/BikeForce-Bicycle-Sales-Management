@@ -29,6 +29,9 @@ describe('HatdeRankingBoard', () => {
     expect(html).toContain('0 VND');
     expect(html).toContain('aria-label="0 giao dịch"');
     expect(html).toContain('125.430.000 VND');
+    expect(html).toContain('Tổng doanh thu');
+    expect(html).toContain('Tổng giao dịch');
+    expect(html).toContain('85 giao dịch');
     expect(html).toContain('hatde-poster-background');
   });
 });

@@ -4059,3 +4059,5 @@ Commit `7fcd477` đã push `main`; Vercel Git integration báo Production deploy
 Sau phản hồi ảnh PNG thiếu biểu tượng, xác nhận logo thương hiệu vẫn có trong nền nhưng glyph mũi tên không được font canvas hỗ trợ và renderer chưa vẽ icon tiền/giỏ hàng. Đã thay toàn bộ bằng vector canvas để hiển thị ổn định trên Vercel, không phụ thuộc emoji hoặc glyph hệ điều hành.
 
 Theo yêu cầu đồng bộ với giao diện web, renderer PNG đã chuyển các biểu tượng sang SVG path được `@napi-rs/canvas` vẽ bằng `Path2D`: ví doanh thu, biên nhận giao dịch, mũi tên tăng/giảm, vương miện và huy chương. Route kiểm tra bắt buộc Noto Sans Regular/Bold đăng ký thành công. Đã render và xem trực tiếp fixture 1080×1320: logo nền, icon và các tên `VŨNG TÀU`, `ĐỒNG ĐEN`, `PHỔ QUANG` đều đúng, không có ô vuông.
+
+Theo yêu cầu mới, đã đưa **Tổng doanh thu** và **Tổng giao dịch** từ view model ra thanh tổng nhìn thấy được ở cuối poster web và ảnh PNG 1080×1320. Không cộng lại trong component/renderer và không thay đổi schema. Targeted unit 3/3, typecheck, lint các file liên quan và production build 36 route đều pass.

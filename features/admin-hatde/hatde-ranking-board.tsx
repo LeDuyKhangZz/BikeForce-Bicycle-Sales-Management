@@ -79,7 +79,33 @@ export function HatdeRankingBoard({ report }: Props) {
       <ol className="mt-3 space-y-3 px-[2.5%]">
         {report.branches.map((branch) => <BranchRow key={branch.code} branch={branch} />)}
       </ol>
-      <p className="sr-only">Tổng doanh thu {report.totalRevenueDisplay}, tổng {report.totalTransactionsDisplay} giao dịch.</p>
+      <div
+        aria-label={`Tổng doanh thu ${report.totalRevenueDisplay}, tổng ${report.totalTransactionsDisplay} giao dịch`}
+        className="mx-[2.5%] mt-3 grid gap-3 rounded-2xl border-2 border-hatde-gold bg-card/95 p-4 shadow-lg backdrop-blur-[2px] sm:grid-cols-2 sm:px-6"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-hatde-rank-soft text-hatde-green-deep">
+            <WalletCards aria-hidden="true" className="size-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-hatde-ink">Tổng doanh thu</p>
+            <p className="break-words text-xl font-black tracking-tight text-hatde-green-deep tabular-nums sm:text-2xl">
+              {report.totalRevenueDisplay}
+            </p>
+          </div>
+        </div>
+        <div className="flex min-w-0 items-center gap-3 sm:justify-end">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-hatde-rank-soft text-hatde-green-deep">
+            <ReceiptText aria-hidden="true" className="size-6" />
+          </span>
+          <div className="min-w-0 sm:text-right">
+            <p className="text-sm font-bold text-hatde-ink">Tổng giao dịch</p>
+            <p className="text-xl font-black text-hatde-green-deep tabular-nums sm:text-2xl">
+              {report.totalTransactionsDisplay} giao dịch
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

@@ -2920,3 +2920,5 @@ Commit `7fcd477` đã lên `origin/main`; Vercel Production deployment success. 
 Renderer PNG đã đổi icon tiền, giỏ hàng và mũi tên sang vector canvas sau khi ảnh production xuất hiện ô vuông do thiếu glyph. Logo Hạt Dẻ ở góc trái vẫn lấy nguyên từ `nenhatde.png`.
 
 Renderer đã được chuẩn hóa tiếp sang SVG path qua `Path2D` cho ví doanh thu, biên nhận giao dịch, mũi tên, vương miện và huy chương. Route bắt buộc đăng ký đủ Noto Sans Regular/Bold. Fixture PNG 1080×1320 đã được xem trực tiếp và xác nhận icon cùng tiếng Việt không còn lỗi glyph. Next Exact Step: deploy commit qua GitHub/Vercel Production và gọi lại endpoint từ n8n.
+
+Poster web và renderer PNG nay hiển thị thêm thanh **Tổng doanh thu / Tổng giao dịch** sau sáu chi nhánh, đọc trực tiếp `totalRevenueDisplay` và `totalTransactionsDisplay` đã có. Targeted unit 3/3, typecheck, lint và production build 36 route pass. Next Exact Step: xem ảnh PNG mới sau deploy để xác nhận thanh tổng không che phần nhận diện ở chân nền.

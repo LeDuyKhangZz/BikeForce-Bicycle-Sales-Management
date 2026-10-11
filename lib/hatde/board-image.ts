@@ -152,6 +152,42 @@ function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: num
   drawComparison(ctx, 846, y + 24, 178, branch, 'vsLastWeek', 'Tuần trước');
 }
 
+function drawTotals(ctx: SKRSContext2D, report: HatdeSnapshotViewModel) {
+  const x = 120;
+  const y = 1100;
+  const width = 840;
+  const height = 82;
+
+  ctx.shadowColor = 'rgba(7,85,47,0.18)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 4;
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.strokeStyle = COLORS.gold;
+  ctx.lineWidth = 3;
+  roundedRect(ctx, x, y, width, height, 24);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowColor = 'transparent';
+
+  drawSvgIcon(ctx, SVG_PATHS.wallet, x + 30, y + 25, 34, COLORS.darkGreen);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = COLORS.deepInk;
+  ctx.font = '700 15px HatdeFont';
+  ctx.fillText('TỔNG DOANH THU', x + 78, y + 28);
+  ctx.fillStyle = COLORS.darkGreen;
+  ctx.font = '700 27px HatdeFont';
+  ctx.fillText(report.totalRevenueDisplay, x + 78, y + 60);
+
+  drawSvgIcon(ctx, SVG_PATHS.receipt, x + 540, y + 25, 34, COLORS.darkGreen);
+  ctx.fillStyle = COLORS.deepInk;
+  ctx.font = '700 15px HatdeFont';
+  ctx.fillText('TỔNG GIAO DỊCH', x + 588, y + 28);
+  ctx.fillStyle = COLORS.darkGreen;
+  ctx.font = '700 27px HatdeFont';
+  ctx.fillText(`${report.totalTransactionsDisplay} giao dịch`, x + 588, y + 60);
+}
+
 export function drawHatdeBoardImage(ctx: SKRSContext2D, report: HatdeSnapshotViewModel, background: Image) {
   ctx.drawImage(background, 0, 0, HATDE_BOARD_IMAGE_WIDTH, HATDE_BOARD_IMAGE_HEIGHT);
 
@@ -168,4 +204,5 @@ export function drawHatdeBoardImage(ctx: SKRSContext2D, report: HatdeSnapshotVie
   ctx.fillText(`Cập nhật ${report.reportTime} · ${report.reportDateDisplay}`, 540, 301);
 
   report.branches.slice(0, 6).forEach((branch, index) => drawBranch(ctx, branch, index));
+  drawTotals(ctx, report);
 }
