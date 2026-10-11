@@ -2909,3 +2909,8 @@ Production build pass 35 route. Full unit 951/954; ba lỗi ngoài phạm vi v�
 Poster `/admin/hatde/board` hiện dùng `public/images/nenhatde.png` làm nền toàn khung, dữ liệu động phủ lên vùng giữa. Typecheck, lint và targeted test Hạt Dẻ 8/8 pass. Không kết nối database và chưa commit.
 
 Verification DEC-115: typecheck/lint exit 0, targeted unit 26/26 pass; không kết nối database thật và không commit.
+## 2026-10-11 — DEC-116 ảnh Hạt Dẻ cho n8n
+
+Route ảnh chính thức là `/api/hatde/board/image`; middleware bỏ qua session chỉ cho đúng pathname này, sau đó route tự xác thực `x-api-key`. Renderer canvas 1080×1320 giữ nền/logo từ `nenhatde.png`, đọc snapshot mới nhất và đủ tối đa sáu chi nhánh. Next Exact Steps: áp migration `20261011140000_hatde_image_automation_read.sql`, đặt secret trên Vercel, redeploy và smoke binary PNG production.
+
+Verification mới nhất: typecheck/lint pass, targeted test 24/24, build 36 route pass; local production smoke thiếu key trả đúng `401 {"error":"Unauthorized"}` từ route. Chưa gọi database thật trong smoke.

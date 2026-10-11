@@ -931,3 +931,6 @@ DEC-109: Admin active được thu hồi duy nhất phiếu APPROVED với lý d
 | n8n có token hợp lệ | Không có quyền SELECT bảng | Chỉ gọi RPC `upsert_hatde_snapshot` |
 
 Route `/admin/hatde` được bảo vệ bởi middleware, Admin layout, `requireRole('ADMIN')` và RLS. Webhook fail-closed khi thiếu/sai token hoặc env chưa cấu hình.
+### API ảnh Hạt Dẻ cho n8n
+
+Route `GET /api/hatde/board/image` không dùng cookie Admin. Middleware chỉ miễn session đúng pathname này qua `isSelfAuthenticatedApiPath`; các `/api/admin/*` khác không thay đổi. Caller phải gửi `x-api-key` khớp `HATDE_BOARD_IMAGE_API_KEY`; so sánh constant-time. Key không được nhận qua query string. Sau khi xác thực, route dùng service-role server-only với quyền `SELECT` hẹp do migration DEC-116 cấp.

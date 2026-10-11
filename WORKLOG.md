@@ -4048,3 +4048,8 @@ Theo phản hồi người dùng, đã khôi phục nguyên dashboard gọn tạ
 Root cause: CHECK bảng và Zod đều cho phép 0; RPC cũ có điều kiện loại `(revenue = 0 AND transactions = 0)` khiến count lệch, còn webhook chủ động filter dòng đó. Đã bỏ filter, thêm migration tiến tới thay RPC và bổ sung test API/schema/view model/UI/static SQL. Không kết nối database, không sửa migration cũ, không commit.
 
 Kiểm chứng: typecheck và lint exit 0; 26/26 test liên quan pass. Test webhook truyền đủ sáu chi nhánh gồm nhiều dòng 0/0; UI SSR giữ đủ sáu và hiển thị `0 VND`, `0 giao dịch`.
+## 2026-10-11 — API PNG bảng thi đua Hạt Dẻ (DEC-116)
+
+Đã thêm route `GET /api/hatde/board/image`, renderer canvas 1080×1320 dùng nền `nenhatde.png`, API key riêng qua `x-api-key`, response PNG/no-store và xử lý 503/401/404. Đã xác nhận `/api/admin/*` bị middleware session chặn trước route, nên chuyển endpoint ra namespace tự xác thực và chỉ whitelist đúng pathname mới; API Admin khác không đổi. Migration mới chỉ cấp SELECT hai bảng Hạt Dẻ cho automation client.
+
+Kiểm chứng: typecheck/lint pass, targeted test 24/24 pass, production build 36 route pass. Smoke bản production build không gửi key trả `401 {"error":"Unauthorized"}` từ route mới, không còn payload `UNAUTHENTICATED` của middleware.

@@ -53,7 +53,7 @@ export function createAdminClient() {
   return createServiceRoleClient();
 }
 
-/** DEC-107/DEC-114: chỉ dùng cho các RPC automation được cấp quyền tường minh. */
+/** DEC-107/DEC-114/DEC-116: chỉ dùng cho RPC hoặc SELECT automation được cấp quyền tường minh. */
 export function createReportAutomationClient() {
   return createServiceRoleClient();
 }

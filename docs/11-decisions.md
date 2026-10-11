@@ -2765,7 +2765,6 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Tính riêng trong từng component; bị loại vì nhân bản business logic.
 - **Impact:** Bảng, thẻ mobile và CSV đều hiển thị cùng nhóm; có unit test cho các biên.
 - **Status:** APPROVED
-
 ## DEC-094 — Mốc màu số ngày chưa mua hàng
 
 - **Date:** 2026-09-23
@@ -2972,3 +2971,11 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Tiếp tục bỏ dòng 0/0 bị loại vì làm mất chi nhánh; lưu giá trị giả bị loại vì sai dữ liệu nguồn; sửa migration cũ bị loại vì migration đã áp dụng.
 - **Impact:** Thêm migration tiến tới `20261011130000_allow_zero_hatde_branches.sql` dùng `CREATE OR REPLACE FUNCTION`; không đổi bảng, CHECK, RLS hay quyền. Giữ allowlist, chống trùng, biên 1–6, số không âm và tổng khớp.
 - **Status:** APPROVED — người dùng yêu cầu trực tiếp.
+## DEC-116 — Xuất PNG bảng thi đua Hạt Dẻ bằng canvas server-side
+
+- **Date:** 2026-10-11
+- **Decision:** Thêm `GET /api/hatde/board/image`, render trực tiếp ảnh 1080×1320 bằng `@napi-rs/canvas` và nền `nenhatde.png`; middleware miễn session đúng pathname này, route tự xác thực header `x-api-key` với secret `HATDE_BOARD_IMAGE_API_KEY`. Cấp `SELECT` hẹp cho `service_role` trên hai bảng Hạt Dẻ để route automation đọc snapshot mới nhất.
+- **Reason:** n8n cần binary PNG hoàn chỉnh, không phụ thuộc viewport, cookie Admin hoặc browser screenshot.
+- **Alternatives:** Chụp trang bằng Playwright bị loại vì nặng và dễ dính navigation; `next/og` bị loại vì khó tái sử dụng ảnh nền và bố cục canvas hiện có.
+- **Impact:** Cần áp migration `20261011140000_hatde_image_automation_read.sql`, đặt secret mới và redeploy Vercel.
+- **Status:** APPROVED

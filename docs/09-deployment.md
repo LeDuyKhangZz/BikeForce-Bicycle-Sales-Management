@@ -1293,3 +1293,6 @@ DEC-109: chạy lần lượt `20261009110000_customer_care_revocation.sql` rồ
 2. Regenerate `types/database.types.ts` sau khi schema đã tồn tại.
 3. Tạo token ngẫu nhiên mạnh và đặt `N8N_REPORT_WEBHOOK_TOKEN` ở Vercel cùng n8n; không dùng prefix `NEXT_PUBLIC_`.
 4. Deploy ứng dụng rồi smoke webhook bằng dữ liệu giả ở một timestamp riêng; xác nhận Admin xem được `/admin/hatde`.
+### Biến môi trường ảnh Hạt Dẻ
+
+Đặt `HATDE_BOARD_IMAGE_API_KEY` ở môi trường server Production/Preview cần thiết rồi redeploy. n8n gửi key qua header `x-api-key`; không đưa key vào URL, log hoặc biến `NEXT_PUBLIC_*`. Route dùng Node.js runtime vì `@napi-rs/canvas` là native module.

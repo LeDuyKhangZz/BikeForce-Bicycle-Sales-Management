@@ -900,3 +900,10 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 - Giữ nguyên cả chi nhánh có doanh thu và giao dịch bằng 0; server tự cộng tổng từ toàn bộ 1–6 chi nhánh. RPC kiểm tra allowlist, không trùng, số không âm và tổng khớp (DEC-115).
 - RPC upsert theo `(report_date, report_time)`, thay toàn bộ chi tiết của snapshot trong cùng transaction.
 - Response thành công: `{ "id": "<uuid>", "created": true|false }`; auth sai `401`, payload sai `400`, lỗi lưu `500`.
+## `GET /api/hatde/board/image`
+
+- Auth: header `x-api-key: <HATDE_BOARD_IMAGE_API_KEY>`.
+- Dữ liệu: snapshot Hạt Dẻ mới nhất và tối đa sáu chi nhánh xếp theo doanh thu.
+- Thành công: `200`, `Content-Type: image/png`, ảnh 1080×1320, `Cache-Control: private, no-store`.
+- Chưa cấu hình key: `503`; key sai/thiếu: `401`; chưa có snapshot: `404` JSON an toàn.
+- Không nhận service-role key hoặc API key qua URL.

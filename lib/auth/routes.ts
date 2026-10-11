@@ -47,7 +47,10 @@ const API_PREFIX = '/api';
 export function isApiPath(pathname: string): boolean {
   return pathname === API_PREFIX || pathname.startsWith(`${API_PREFIX}/`);
 }
-const SELF_AUTHENTICATED_API_PATHS: readonly string[] = ['/api/salework/report-image'];
+const SELF_AUTHENTICATED_API_PATHS: readonly string[] = [
+  '/api/salework/report-image',
+  '/api/hatde/board/image',
+];
 
 export function isSelfAuthenticatedApiPath(pathname: string): boolean {
   return SELF_AUTHENTICATED_API_PATHS.includes(pathname);

@@ -1368,3 +1368,6 @@ Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái 
 - Cả hai bảng bật và force RLS. `authenticated` chỉ được SELECT khi `(select public.is_admin())`; `anon`, Sales và service role không có DML bảng.
 - RPC security-definer `upsert_hatde_snapshot` kiểm tra lại mã, số không âm, trùng mã và tổng; chỉ `service_role` được execute. Index mới phục vụ snapshot mới nhất và xếp doanh thu theo chi nhánh.
 - DEC-115 giữ các dòng chi nhánh có `revenue = 0` và `transactions = 0`; CHECK hiện hữu dùng `>= 0` nên không đổi bảng. Migration tiến tới `20261011130000_allow_zero_hatde_branches.sql` chỉ thay thân RPC và khóa số phần tử ở 1–6.
+## Automation ảnh bảng thi đua Hạt Dẻ
+
+Migration `20261011140000_hatde_image_automation_read.sql` chỉ cấp `SELECT` trên `hatde_snapshots` và `hatde_branch_snapshots` cho `service_role`. Quyền này phục vụ route server-side xuất PNG; `anon` không được cấp và `authenticated` vẫn chịu policy Admin. Không cấp `INSERT`, `UPDATE` hoặc `DELETE` trực tiếp cho automation.

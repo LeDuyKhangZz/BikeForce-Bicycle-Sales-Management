@@ -1611,3 +1611,6 @@ Unit khóa hai cron Supabase 09:00/17:00, Vault không hardcode secret, logic ng
 - UI SSR: 1/4/6 chi nhánh, VND 10 chữ số, phần trăm âm/dương có dấu và tone tương ứng.
 - DEC-115: static migration test khóa điều kiện 1–6, allowlist, số `>= 0`, tổng khớp, chống trùng và bảo đảm không tái xuất hiện điều kiện loại dòng 0/0; UI phải render `0 VND` và `0 giao dịch`.
 - Sau khi migration được áp trên Supabase local, bổ sung/chạy RLS bằng JWT thật để chứng minh Admin đọc, Sales/anon không đọc và chỉ service role gọi được RPC.
+### Ảnh Hạt Dẻ
+
+Unit test route khóa các trường hợp env thiếu, API key thiếu/sai, không có snapshot và response PNG. Test canvas thật đọc `nenhatde.png`, render fixture sáu chi nhánh và kiểm tra PNG có kích thước 1080×1320.

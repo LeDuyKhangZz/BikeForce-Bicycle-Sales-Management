@@ -1531,3 +1531,5 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [ ] Người dùng tự chạy migration `20261011130000_allow_zero_hatde_branches.sql` trên Supabase.
 - [x] Giữ dashboard `/admin/hatde`; thêm bảng thi đua poster riêng tại `/admin/hatde/board`, dùng số liệu động và vẫn hiển thị chi nhánh 0 đồng.
 - [x] Dùng `public/images/nenhatde.png` làm nền thương hiệu cho poster và phủ sáu hàng số liệu động lên vùng giữa.
+- [x] Thêm `GET /api/hatde/board/image` trả PNG 1080×1320 cho n8n, tự xác thực bằng API key riêng và không bị middleware Admin chặn.
+- [ ] Áp migration `20261011140000_hatde_image_automation_read.sql` và đặt `HATDE_BOARD_IMAGE_API_KEY` trên Vercel trước khi smoke production.

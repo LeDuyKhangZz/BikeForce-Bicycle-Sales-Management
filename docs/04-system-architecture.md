@@ -743,3 +743,6 @@ DEC-109: thao tác thu hồi đi qua Server Action validate → xác thực Admi
 ## Module Hạt Dẻ (DEC-114)
 
 Luồng ghi: CUKCUK → n8n → `POST /api/n8n/hatde-snapshot` → Zod + timing-safe token → service → RPC nguyên tử. Luồng đọc: Admin Server Component → feature query → service → Supabase server client chịu RLS. Client không nhận secret và component không truy cập dữ liệu trực tiếp.
+### Ảnh bảng thi đua Hạt Dẻ
+
+`GET /api/hatde/board/image` chạy Node.js runtime trên Vercel, đọc snapshot mới nhất bằng automation client phía server rồi render canvas 1080×1320 với nền `public/images/nenhatde.png`. Đây là self-authenticated API path: middleware cho request đi qua, còn route bắt buộc tự kiểm tra `x-api-key`. Route không mở trình duyệt và không chụp dashboard, vì vậy ảnh không chứa navigation và luôn có toàn bộ danh sách.

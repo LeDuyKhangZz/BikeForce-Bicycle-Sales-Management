@@ -7,6 +7,7 @@ import {
   dashboardPathFor,
   isApiPath,
   isPublicPath,
+  isSelfAuthenticatedApiPath,
   requiredRoleForPath,
   sanitizeNextPath,
 } from './routes';
@@ -26,6 +27,15 @@ describe('dashboardPathFor', () => {
   it('mỗi role về đúng dashboard của mình', () => {
     expect(dashboardPathFor('ADMIN')).toBe(ADMIN_HOME);
     expect(dashboardPathFor('SALES')).toBe(SALES_HOME);
+  });
+});
+
+describe('isSelfAuthenticatedApiPath', () => {
+  it('bỏ qua session middleware chỉ cho API tự xác thực bằng key', () => {
+    expect(isSelfAuthenticatedApiPath('/api/hatde/board/image')).toBe(true);
+    expect(isSelfAuthenticatedApiPath('/api/salework/report-image')).toBe(true);
+    expect(isSelfAuthenticatedApiPath('/api/admin/reports/export')).toBe(false);
+    expect(isSelfAuthenticatedApiPath('/api/hatde/board/image/extra')).toBe(false);
   });
 });
 
