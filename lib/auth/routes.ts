@@ -50,6 +50,7 @@ export function isApiPath(pathname: string): boolean {
 const SELF_AUTHENTICATED_API_PATHS: readonly string[] = [
   '/api/salework/report-image',
   '/api/hatde/board/image',
+  '/api/n8n/hatde-snapshot',
 ];
 
 export function isSelfAuthenticatedApiPath(pathname: string): boolean {

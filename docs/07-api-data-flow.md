@@ -895,6 +895,7 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 
 ## `POST /api/n8n/hatde-snapshot`
 
+- Middleware miễn kiểm tra cookie đúng pathname này để request máy-máy đi tới Route Handler; không miễn cả prefix `/api/n8n`. Route Handler vẫn fail-closed bằng token riêng (ISSUE-061).
 - Auth: `x-gustino-token` so timing-safe với `N8N_REPORT_WEBHOOK_TOKEN`.
 - Validate: ngày `YYYY-MM-DD`, giờ `HH:mm`, 1–6 mã chi nhánh allowlist, không trùng, số nguyên/finite phù hợp.
 - Giữ nguyên cả chi nhánh có doanh thu và giao dịch bằng 0; server tự cộng tổng từ toàn bộ 1–6 chi nhánh. RPC kiểm tra allowlist, không trùng, số không âm và tổng khớp (DEC-115).

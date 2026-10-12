@@ -4029,6 +4029,10 @@ GitHub tiếp tục bỏ 09:00/09:10; run dự phòng hôm trước chỉ xuất
 
 Đã thêm migration hai bảng `hatde_*`, RLS Admin-only và RPC service-role-only; webhook n8n timing-safe, validation Zod, tổng server-side và upsert idempotent; trang `/admin/hatde` cùng menu Admin, lọc ngày/giờ và các trạng thái UI. Không chạy migration, không kết nối/ghi database thật, không commit/deploy theo yêu cầu.
 
+### 2026-10-12 — ISSUE-061: webhook Hạt Dẻ bị middleware chặn
+
+Xác định n8n nhận `401 UNAUTHENTICATED` trước Route Handler vì `/api/n8n/hatde-snapshot` thiếu trong allowlist API tự xác thực. Đã allowlist đúng một pathname, vẫn bắt buộc token timing-safe và chỉ ghi qua RPC service-role-only. Targeted test 26/26, typecheck, lint và production build 36 route pass. Chưa deploy và chưa chạy execution n8n production.
+
 Kiểm chứng: typecheck, lint và production build 35 route exit 0; 24/24 test mới pass. Full unit 946/949: lỗi có sẵn ở giới hạn 9 ký tự của nhãn `Khách hàng` và hai test AMIS timeout 5 giây khi chạy toàn bộ; không ghi full unit PASS. Next Exact Steps: người dùng tự chạy migration, regenerate database types, đặt `N8N_REPORT_WEBHOOK_TOKEN`, sau đó chạy RLS local và smoke webhook/UI.
 
 Người dùng đã chạy migration cloud. Lần generate đầu làm rỗng file vì command thất bại; đã phục hồi an toàn qua file tạm, xác nhận generated types có `hatde_snapshots`, `hatde_branch_snapshots` và `upsert_hatde_snapshot`, rồi chuyển service sang dùng trực tiếp `Database` types. Typecheck và 24/24 test Hạt Dẻ tiếp tục pass.

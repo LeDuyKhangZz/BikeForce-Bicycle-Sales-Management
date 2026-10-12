@@ -2325,6 +2325,25 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 
 **Verification:** unit render 2/2 xác nhận tháng hiện tại rỗng vẫn có link tháng trước, tháng lịch sử có đủ hai chiều và tháng tương lai bị khóa; typecheck, lint và production build 30 trang thành công.
 
+### ISSUE-061
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-12
+**Module:** Webhook n8n / Hạt Dẻ
+
+**Description:** n8n gửi snapshot Hạt Dẻ với token hợp lệ nhưng dữ liệu không được cập nhật vào Supabase.
+
+**Expected:** middleware cho đúng route webhook đi tới Route Handler; Route Handler tự xác thực `x-gustino-token`, validate payload và gọi RPC quyền hẹp.
+
+**Actual:** middleware yêu cầu cookie đăng nhập cho `/api/n8n/hatde-snapshot` và trả `401 UNAUTHENTICATED` trước khi Route Handler kiểm tra token.
+
+**Root Cause:** khi thêm webhook đã thiếu pathname này trong allowlist API tự xác thực `SELF_AUTHENTICATED_API_PATHS`.
+
+**Fix:** allowlist chính xác `/api/n8n/hatde-snapshot`; không mở cả prefix `/api/n8n`; giữ nguyên xác thực timing-safe và RPC service-role-only.
+
+**Verification:** unit khóa pathname chính xác và từ chối pathname con; test route xác nhận token/payload/upsert. Targeted test 26/26, typecheck và lint pass.
+
 ### ISSUE-060
 
 **Severity:** P1

@@ -2894,6 +2894,10 @@ Edge Function `pancake-sync` đã deploy production; hai cron `pancake-sync-09-v
 
 Code local đã có schema/RPC, webhook `/api/n8n/hatde-snapshot`, service/query, trang `/admin/hatde`, navigation và test. Không chạy SQL thật, không commit/deploy. Typecheck/lint/build 35 route exit 0; targeted test 24/24 pass. Full unit 946/949: lỗi cũ `Khách hàng` dài 10 ký tự so với ngưỡng test 9 và hai test AMIS timeout 5 giây khi chạy toàn bộ.
 
+## 2026-10-12 — ISSUE-061 webhook n8n Hạt Dẻ
+
+Đã sửa nguyên nhân production không cập nhật: middleware từng trả `401 UNAUTHENTICATED` cho `/api/n8n/hatde-snapshot` trước khi Route Handler kiểm tra token. Pathname này nay được miễn session chính xác; token `x-gustino-token`, Zod và RPC quyền hẹp vẫn giữ nguyên. Targeted test 26/26, typecheck, lint và production build 36 route pass. Next Exact Steps: deploy, chạy execution n8n thật và xác nhận response `200` cùng snapshot mới trên `/admin/hatde`.
+
 **Next Exact Steps:** (1) người dùng tự chạy `supabase/migrations/20261011120000_hatde_branch_snapshots.sql`; (2) chạy `npm run db:types` với môi trường local/linked phù hợp để cập nhật generated types; (3) đặt `N8N_REPORT_WEBHOOK_TOKEN` cho web và n8n; (4) chạy RLS local và curl smoke; (5) kiểm tra `/admin/hatde` ở 375px và 1440px. Không tạo ảnh/poster cho module này.
 
 Migration cloud và bước regenerate types đã hoàn tất; file generated đã được xác nhận có đủ hai bảng/RPC. Next Exact Steps còn lại: đặt token webhook cùng service-role key hợp lệ, chạy curl smoke, kiểm tra trang Admin và bổ sung RLS test local.
