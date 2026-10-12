@@ -1519,7 +1519,8 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Allowlist chính xác `/api/n8n/hatde-snapshot`, không mở toàn bộ `/api/n8n/*`.
 - [x] Giữ xác thực timing-safe bằng `x-gustino-token` và quyền ghi chỉ qua RPC service-role-only.
 - [x] Targeted test 26/26, typecheck, lint và production build 36 route pass.
-- [ ] Deploy bản sửa và chạy một execution n8n thật; response phải là `200` với `created: true|false`, sau đó xác nhận `/admin/hatde` có mốc mới.
+- [x] Commit `292a667` đã push lên `origin/main`; production trả lỗi token của đúng webhook thay vì `UNAUTHENTICATED`, xác nhận middleware mới đã deploy.
+- [ ] Chạy một execution n8n thật; response phải là `200` với `created: true|false`, sau đó xác nhận `/admin/hatde` có mốc mới.
 
 - [x] Migration hai bảng, CHECK/unique/index, force RLS và RPC upsert quyền hẹp.
 - [x] Webhook n8n timing-safe, validation, lọc 0/0, tổng server-side và phản hồi `created`.

@@ -4031,7 +4031,7 @@ GitHub tiếp tục bỏ 09:00/09:10; run dự phòng hôm trước chỉ xuất
 
 ### 2026-10-12 — ISSUE-061: webhook Hạt Dẻ bị middleware chặn
 
-Xác định n8n nhận `401 UNAUTHENTICATED` trước Route Handler vì `/api/n8n/hatde-snapshot` thiếu trong allowlist API tự xác thực. Đã allowlist đúng một pathname, vẫn bắt buộc token timing-safe và chỉ ghi qua RPC service-role-only. Targeted test 26/26, typecheck, lint và production build 36 route pass. Chưa deploy và chưa chạy execution n8n production.
+Xác định n8n nhận `401 UNAUTHENTICATED` trước Route Handler vì `/api/n8n/hatde-snapshot` thiếu trong allowlist API tự xác thực. Đã allowlist đúng một pathname, vẫn bắt buộc token timing-safe và chỉ ghi qua RPC service-role-only. Targeted test 26/26, typecheck, lint và production build 36 route pass. Commit `292a667` đã push `origin/main`; production smoke bằng token giả trả `401 {"error":"Không được phép."}` từ đúng Route Handler thay cho payload middleware. Chưa chạy execution n8n bằng token thật.
 
 Kiểm chứng: typecheck, lint và production build 35 route exit 0; 24/24 test mới pass. Full unit 946/949: lỗi có sẵn ở giới hạn 9 ký tự của nhãn `Khách hàng` và hai test AMIS timeout 5 giây khi chạy toàn bộ; không ghi full unit PASS. Next Exact Steps: người dùng tự chạy migration, regenerate database types, đặt `N8N_REPORT_WEBHOOK_TOKEN`, sau đó chạy RLS local và smoke webhook/UI.
 
