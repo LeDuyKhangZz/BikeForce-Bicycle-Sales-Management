@@ -2898,6 +2898,10 @@ Code local đã có schema/RPC, webhook `/api/n8n/hatde-snapshot`, service/query
 
 Đã sửa nguyên nhân production không cập nhật: middleware từng trả `401 UNAUTHENTICATED` cho `/api/n8n/hatde-snapshot` trước khi Route Handler kiểm tra token. Pathname này nay được miễn session chính xác; token `x-gustino-token`, Zod và RPC quyền hẹp vẫn giữ nguyên. Targeted test 26/26, typecheck, lint và production build 36 route pass. Commit `292a667` đã lên `origin/main`; production smoke token giả đã tới đúng webhook và trả `401 {"error":"Không được phép."}`. Next Exact Steps: chạy execution n8n thật và xác nhận response `200` cùng snapshot mới trên `/admin/hatde`.
 
+## 2026-10-12 — ISSUE-062 thứ tự snapshot Hạt Dẻ
+
+Production đã có bản `11:08` tạo sau bản `22:33`, chứng minh n8n ghi thành công. UI chọn sai vì `getLatestHatdeSnapshot()` sort `report_date/report_time`, không phải thời điểm nhận. Đã chuyển sang `created_at desc` và thêm test hồi quy. Targeted test 27/27, typecheck, lint và production build 36 route pass. Next Exact Steps: deploy rồi tải lại `/admin/hatde/board` để xác nhận mốc mới nhất.
+
 **Next Exact Steps:** (1) người dùng tự chạy `supabase/migrations/20261011120000_hatde_branch_snapshots.sql`; (2) chạy `npm run db:types` với môi trường local/linked phù hợp để cập nhật generated types; (3) đặt `N8N_REPORT_WEBHOOK_TOKEN` cho web và n8n; (4) chạy RLS local và curl smoke; (5) kiểm tra `/admin/hatde` ở 375px và 1440px. Không tạo ảnh/poster cho module này.
 
 Migration cloud và bước regenerate types đã hoàn tất; file generated đã được xác nhận có đủ hai bảng/RPC. Next Exact Steps còn lại: đặt token webhook cùng service-role key hợp lệ, chạy curl smoke, kiểm tra trang Admin và bổ sung RLS test local.

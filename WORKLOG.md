@@ -4033,6 +4033,10 @@ GitHub tiếp tục bỏ 09:00/09:10; run dự phòng hôm trước chỉ xuất
 
 Xác định n8n nhận `401 UNAUTHENTICATED` trước Route Handler vì `/api/n8n/hatde-snapshot` thiếu trong allowlist API tự xác thực. Đã allowlist đúng một pathname, vẫn bắt buộc token timing-safe và chỉ ghi qua RPC service-role-only. Targeted test 26/26, typecheck, lint và production build 36 route pass. Commit `292a667` đã push `origin/main`; production smoke bằng token giả trả `401 {"error":"Không được phép."}` từ đúng Route Handler thay cho payload middleware. Chưa chạy execution n8n bằng token thật.
 
+### 2026-10-12 — ISSUE-062: dashboard chọn snapshot cũ theo giờ
+
+SQL production do người dùng cung cấp xác nhận webhook đã ghi các snapshot `10:40`, `10:52`, `11:08`; bản `11:08` có `created_at` mới nhất nhưng truy vấn vẫn chọn `22:33` do sort theo `report_time desc`. Đã đổi `getLatestHatdeSnapshot()` sang `created_at desc` và thêm test hồi quy. Targeted test 27/27, typecheck, lint và production build 36 route pass; chưa deploy tại thời điểm ghi nhận này.
+
 Kiểm chứng: typecheck, lint và production build 35 route exit 0; 24/24 test mới pass. Full unit 946/949: lỗi có sẵn ở giới hạn 9 ký tự của nhãn `Khách hàng` và hai test AMIS timeout 5 giây khi chạy toàn bộ; không ghi full unit PASS. Next Exact Steps: người dùng tự chạy migration, regenerate database types, đặt `N8N_REPORT_WEBHOOK_TOKEN`, sau đó chạy RLS local và smoke webhook/UI.
 
 Người dùng đã chạy migration cloud. Lần generate đầu làm rỗng file vì command thất bại; đã phục hồi an toàn qua file tạm, xác nhận generated types có `hatde_snapshots`, `hatde_branch_snapshots` và `upsert_hatde_snapshot`, rồi chuyển service sang dùng trực tiếp `Database` types. Typecheck và 24/24 test Hạt Dẻ tiếp tục pass.

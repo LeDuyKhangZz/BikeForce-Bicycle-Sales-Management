@@ -2344,6 +2344,25 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 
 **Verification:** unit khóa pathname chính xác và từ chối pathname con; test route xác nhận token/payload/upsert. Targeted test 26/26, typecheck và lint pass.
 
+### ISSUE-062
+
+**Severity:** P1
+
+**Status:** CLOSED — 2026-10-12
+**Module:** Dashboard Hạt Dẻ / chọn snapshot mới nhất
+
+**Description:** Supabase đã nhận snapshot buổi sáng mới nhưng dashboard vẫn hiển thị snapshot `22:33` cũ.
+
+**Expected:** trang không có bộ lọc hiển thị lượt đồng bộ được hệ thống nhận gần nhất.
+
+**Actual:** truy vấn sắp giảm dần theo `report_date`, rồi `report_time`; trong cùng ngày, `22:33` luôn đứng trước `11:08` dù bản `11:08` có `created_at` mới hơn.
+
+**Root Cause:** dùng giờ nghiệp vụ làm thứ tự nhận dữ liệu. Dữ liệu nguồn có thể bắt đầu chu kỳ buổi sáng sau một snapshot tối nhưng cùng `report_date`.
+
+**Fix:** `getLatestHatdeSnapshot()` sắp theo `created_at desc`; bộ lọc ngày/giờ vẫn được áp dụng trước khi lấy một dòng.
+
+**Verification:** test hồi quy khóa truy vấn theo `created_at` và cấm quay lại `report_time` trong hàm lấy snapshot mới nhất.
+
 ### ISSUE-060
 
 **Severity:** P1

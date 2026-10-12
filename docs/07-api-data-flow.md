@@ -900,6 +900,7 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 - Validate: ngày `YYYY-MM-DD`, giờ `HH:mm`, 1–6 mã chi nhánh allowlist, không trùng, số nguyên/finite phù hợp.
 - Giữ nguyên cả chi nhánh có doanh thu và giao dịch bằng 0; server tự cộng tổng từ toàn bộ 1–6 chi nhánh. RPC kiểm tra allowlist, không trùng, số không âm và tổng khớp (DEC-115).
 - RPC upsert theo `(report_date, report_time)`, thay toàn bộ chi tiết của snapshot trong cùng transaction.
+- Dashboard và ảnh tự động chọn snapshot có `created_at` mới nhất trong phạm vi ngày/giờ được lọc. Không dùng riêng `report_time` để suy ra lượt nhận mới nhất vì lượt buổi sáng có thể được đồng bộ sau snapshot tối hôm trước (ISSUE-062).
 - Response thành công: `{ "id": "<uuid>", "created": true|false }`; auth sai `401`, payload sai `400`, lỗi lưu `500`.
 ## `GET /api/hatde/board/image`
 

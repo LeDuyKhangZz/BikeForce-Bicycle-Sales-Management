@@ -1522,6 +1522,14 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Commit `292a667` đã push lên `origin/main`; production trả lỗi token của đúng webhook thay vì `UNAUTHENTICATED`, xác nhận middleware mới đã deploy.
 - [ ] Chạy một execution n8n thật; response phải là `200` với `created: true|false`, sau đó xác nhận `/admin/hatde` có mốc mới.
 
+### 2026-10-12 — Chọn đúng snapshot Hạt Dẻ mới nhận (ISSUE-062)
+
+- [x] SQL production xác nhận snapshot `11:08` có `created_at` mới hơn snapshot `22:33` nhưng UI chọn sai do sort theo `report_time`.
+- [x] Đổi truy vấn snapshot mới nhất sang `created_at desc`; giữ nguyên filter ngày/giờ.
+- [x] Thêm test hồi quy cho thứ tự truy vấn.
+- [x] Targeted test 27/27, typecheck, lint và production build 36 route pass.
+- [ ] Deploy và xác nhận dashboard hiển thị `11:08` hoặc lượt mới hơn.
+
 - [x] Migration hai bảng, CHECK/unique/index, force RLS và RPC upsert quyền hẹp.
 - [x] Webhook n8n timing-safe, validation, lọc 0/0, tổng server-side và phản hồi `created`.
 - [x] Trang Admin, menu riêng, snapshot mới nhất, lọc ngày/giờ, responsive/loading/empty/error.

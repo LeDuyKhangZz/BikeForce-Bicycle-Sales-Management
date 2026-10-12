@@ -67,8 +67,7 @@ export async function getLatestHatdeSnapshot(
   let query = supabase
     .from('hatde_snapshots')
     .select('id,report_date,report_time,total_revenue,total_transactions,created_at')
-    .order('report_date', { ascending: false })
-    .order('report_time', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1);
 
   if (filters.reportDate !== undefined) query = query.eq('report_date', filters.reportDate);
