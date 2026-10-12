@@ -1503,3 +1503,7 @@ Trang riêng `/admin/hatde/board` dùng bố cục poster xanh lá theo nhận d
 Ảnh PNG cho n8n giữ cùng nền và bố cục poster. Sau sáu hàng xếp hạng có một thanh tổng gồm **Tổng doanh thu** và **Tổng giao dịch**, dùng trực tiếp hai giá trị tổng trong cùng `HatdeSnapshotViewModel` với giao diện web. Các biểu tượng tiền, giao dịch, tăng/giảm, vương miện và huy chương được vẽ từ SVG path bằng `Path2D`, không dùng emoji hay glyph phụ thuộc hệ điều hành. Chữ dữ liệu động dùng Noto Sans Regular/Bold đóng gói trong `public/fonts`; route phải dừng với lỗi an toàn nếu font không đăng ký được, tránh xuất ảnh lỗi dấu tiếng Việt.
 
 Poster dùng trực tiếp tài sản thương hiệu `public/images/nenhatde.png` làm nền toàn khung; component chỉ phủ thời điểm snapshot và sáu hàng dữ liệu lên vùng trống ở giữa. Không chép lại logo, tiêu đề, slogan hoặc ảnh sản phẩm bằng HTML để tránh sai lệch với thiết kế gốc.
+
+## Dashboard công tác phí (2026-10-12)
+
+Mục sidebar **Công tác phí** mở dashboard theo tháng. CTA cùng tên đặt ở đầu trang, đủ 44px và giữ tháng khi đi vào màn nhập. Dashboard dùng lưới 2 cột trên mobile, 4 cột trên desktop; số liệu tiền được phép xuống dòng và danh sách thiếu dùng card dọc nên không phát sinh cuộn ngang. Màn nhập cũ chuyển nguyên vẹn sang `/admin/travel-expenses/entries` và có nút quay lại dashboard.

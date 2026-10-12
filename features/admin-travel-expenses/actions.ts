@@ -79,6 +79,7 @@ export async function saveTravelExpensesAction(
   }
 
   revalidatePath('/admin/travel-expenses');
+  revalidatePath('/admin/travel-expenses/entries');
   revalidatePath('/admin/monthly-summaries');
   return { ok: true, data: { notice: TRAVEL_EXPENSE_MESSAGES.SAVED } };
 }

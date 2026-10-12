@@ -1617,3 +1617,10 @@ Unit khóa hai cron Supabase 09:00/17:00, Vault không hardcode secret, logic ng
 - Unit test khóa renderer dùng `Path2D` và không đưa ký tự mũi tên Unicode trở lại mã nguồn ảnh.
 
 Unit test route khóa các trường hợp env thiếu, API key thiếu/sai, không có snapshot và response PNG. Test canvas thật đọc `nenhatde.png`, render fixture sáu chi nhánh và kiểm tra PNG có kích thước 1080×1320.
+
+## Dashboard công tác phí (2026-10-12)
+
+- Unit khóa tổng người, đã nhập/chưa nhập, số tiền 0 vẫn là đã nhập, tổng VND và empty state.
+- E2E mở dashboard, bấm CTA **Công tác phí**, giữ nguyên tháng và thấy lại form nhập.
+- Typecheck, lint, targeted unit 5/5 và production build 37 route đã chạy pass. Bài unit navigation hiện hữu vẫn có một lỗi ngoài phạm vi: nhãn `Khách hàng` dài 10 ký tự so với ngưỡng cũ 9.
+- Targeted E2E mobile/desktop đã được gọi nhưng chưa chạy test case vì Supabase local tại `127.0.0.1:54322` không hoạt động; không ghi PASS.

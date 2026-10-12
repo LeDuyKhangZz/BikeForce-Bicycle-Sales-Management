@@ -20,7 +20,7 @@ test('HTTP-only: lưu form công tác phí thật, mở lại và lấy ảnh c�
   const token = data.session?.access_token;
   if (!token) throw new Error('Không có phiên Admin test local.');
   const cookieHeader = [...cookies].map(([name, value]) => `${name}=${value}`).join('; ');
-  const path = '/admin/travel-expenses?month=2043-06';
+  const path = '/admin/travel-expenses/entries?month=2043-06';
   const response = await request.get(path, { headers: { Cookie: cookieHeader } });
   expect(response.ok()).toBe(true);
   const html = await response.text();

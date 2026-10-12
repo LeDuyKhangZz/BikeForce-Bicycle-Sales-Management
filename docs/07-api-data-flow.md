@@ -909,3 +909,7 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 - Thành công: `200`, `Content-Type: image/png`, ảnh 1080×1320, `Cache-Control: private, no-store`.
 - Chưa cấu hình key: `503`; key sai/thiếu: `401`; chưa có snapshot: `404` JSON an toàn.
 - Không nhận service-role key hoặc API key qua URL.
+
+## Đọc dashboard công tác phí (2026-10-12)
+
+`/admin/travel-expenses?month=YYYY-MM` → auth Admin → `getTravelExpensePageData` → hai service query hiện hữu chạy song song → `buildTravelExpenseDashboard` dựng các tổng và danh sách thiếu. Nút **Công tác phí** chuyển sang `/admin/travel-expenses/entries?month=YYYY-MM`; Server Action và RPC lưu hiện hữu không đổi.

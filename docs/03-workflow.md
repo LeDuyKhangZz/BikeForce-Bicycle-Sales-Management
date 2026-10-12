@@ -1140,3 +1140,7 @@ Nếu Admin duyệt nhầm, mở mục phiếu đã duyệt, nhập lý do và b
 ## Đồng bộ báo cáo Pancake trong ngày (DEC-111–DEC-113)
 
 Supabase Cron gọi Edge Function `pancake-sync` lúc 09:00 và 17:00 giờ Việt Nam. Function lấy đơn ngày hiện tại, tính báo cáo rồi gọi RPC UPSERT cùng khóa ngày; chạy lặp không cộng trùng. Admin và ảnh báo cáo Triết đọc snapshot mới nhất. GitHub Actions chỉ giữ `workflow_dispatch` để đối soát ngày cụ thể.
+
+## Luồng dashboard công tác phí (2026-10-12)
+
+Admin mở `/admin/travel-expenses` để xem tổng quan theo tháng: tổng nhân viên, số đã nhập/chưa nhập, tỷ lệ hoàn tất, tổng tiền và danh sách còn thiếu. Nút **Công tác phí** giữ tháng đang chọn và mở `/admin/travel-expenses/entries`, là màn nhập liệu trước đây. Sau khi lưu, cả dashboard và màn nhập được revalidate.

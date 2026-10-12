@@ -1,43 +1,54 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ReceiptText, UsersRound } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ReceiptText } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
-import {
-  MonthlyTravelExpensesForm,
-} from '@/features/admin-travel-expenses/monthly-travel-expenses-form';
+import { getTravelExpensePageData } from '@/features/admin-travel-expenses/queries';
+import { TravelExpenseDashboard } from '@/features/admin-travel-expenses/travel-expense-dashboard';
 import { requireRole } from '@/features/auth/queries';
+import { buildTravelExpenseDashboard } from '@/lib/admin/travel-expense-dashboard';
 import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
-import { getTravelExpensePageData } from '@/features/admin-travel-expenses/queries';
 
-export const metadata: Metadata = { title: 'Công tác phí · BikeForce' };
+export const metadata: Metadata = { title: 'Dashboard công tác phí · BikeForce' };
 const PAGE_PATH = '/admin/travel-expenses';
 
 type Props = { searchParams: Promise<{ month?: string }> };
 
-export default async function AdminTravelExpensesPage({ searchParams }: Props) {
+export default async function AdminTravelExpensesDashboardPage({ searchParams }: Props) {
   await requireRole('ADMIN');
   const { month } = resolveVietnamMonth((await searchParams).month);
   const previousMonth = shiftVietnamMonth(month, -1);
   const nextMonth = shiftVietnamMonth(month, 1);
   const supabase = await createClient();
-  const { salesRows, currentAmounts } = await getTravelExpensePageData(supabase, periodMonthOf(month));
+  const data = await getTravelExpensePageData(supabase, periodMonthOf(month));
+  const dashboard = buildTravelExpenseDashboard(data.salesRows, data.currentAmounts);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-heading">
-          <ReceiptText aria-hidden="true" className="size-6" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-heading">
+            <ReceiptText aria-hidden="true" className="size-6" />
+            Dashboard công tác phí
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Theo dõi tình hình nhập công tác phí theo từng tháng.
+          </p>
+        </div>
+        <Link
+          href={`${PAGE_PATH}/entries?month=${month}`}
+          className={buttonClassName({ className: 'w-full sm:w-auto' })}
+        >
+          <LinkPendingIcon label="Đang mở trang công tác phí…">
+            <ReceiptText aria-hidden="true" className="size-4" />
+          </LinkPendingIcon>
           Công tác phí
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Nhập số tiền công tác phí theo từng nhân viên và từng tháng.
-        </p>
+        </Link>
       </div>
 
       <Card className="flex items-center justify-between gap-2 py-2">
@@ -56,21 +67,7 @@ export default async function AdminTravelExpensesPage({ searchParams }: Props) {
         />
       </Card>
 
-      {salesRows.length === 0 ? (
-        <Card className="flex flex-col items-center gap-3 py-8 text-center">
-          <UsersRound aria-hidden="true" className="size-12 text-muted-foreground" />
-          <p className="font-medium text-foreground">Chưa có nhân viên Sales</p>
-          <Link href="/admin/sales/new" className={buttonClassName()}>Tạo tài khoản Sales</Link>
-        </Card>
-      ) : (
-        <MonthlyTravelExpensesForm
-          key={month}
-          month={month}
-          monthLabel={formatVietnamMonth(month)}
-          salesList={salesRows}
-          currentAmounts={currentAmounts}
-        />
-      )}
+      <TravelExpenseDashboard dashboard={dashboard} />
     </div>
   );
 }

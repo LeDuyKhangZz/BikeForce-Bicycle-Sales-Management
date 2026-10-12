@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN_EMAIL, E2E_DONE_SALES_EMAIL } from './accounts';
 import { expectNoHorizontalScroll, signIn } from './helpers';
 
-const PAGE_PATH = '/admin/travel-expenses?month=2032-05';
+const DASHBOARD_PATH = '/admin/travel-expenses?month=2032-05';
+const PAGE_PATH = '/admin/travel-expenses/entries?month=2032-05';
 
 test.describe('Admin nhập công tác phí theo tháng', () => {
   test('nút Công tác phí nằm trong sidebar trái desktop và không chen vào bottom nav mobile', async ({
@@ -22,6 +23,16 @@ test.describe('Admin nhập công tác phí theo tháng', () => {
     } else {
       await expect(link).toBeHidden();
     }
+  });
+
+  test('dashboard mở trang nhập công tác phí và giữ nguyên tháng đang xem', async ({ page }) => {
+    await signIn(page, E2E_ADMIN_EMAIL);
+    await page.goto(DASHBOARD_PATH);
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard công tác phí' })).toBeVisible();
+    await page.locator('main').getByRole('link', { name: 'Công tác phí', exact: true }).click();
+    await expect(page).toHaveURL(PAGE_PATH);
+    await expect(page.getByRole('heading', { level: 1, name: 'Công tác phí' })).toBeVisible();
   });
 
   test('lưu rồi tải lại vẫn giữ đúng số tiền', async ({ page }) => {

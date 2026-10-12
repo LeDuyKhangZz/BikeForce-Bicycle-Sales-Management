@@ -2930,3 +2930,9 @@ Renderer PNG đã đổi icon tiền, giỏ hàng và mũi tên sang vector canv
 Renderer đã được chuẩn hóa tiếp sang SVG path qua `Path2D` cho ví doanh thu, biên nhận giao dịch, mũi tên, vương miện và huy chương. Route bắt buộc đăng ký đủ Noto Sans Regular/Bold. Fixture PNG 1080×1320 đã được xem trực tiếp và xác nhận icon cùng tiếng Việt không còn lỗi glyph. Next Exact Step: deploy commit qua GitHub/Vercel Production và gọi lại endpoint từ n8n.
 
 Poster web và renderer PNG nay hiển thị thêm thanh **Tổng doanh thu / Tổng giao dịch** sau sáu chi nhánh, đọc trực tiếp `totalRevenueDisplay` và `totalTransactionsDisplay` đã có. Targeted unit 3/3, typecheck, lint và production build 36 route pass. Next Exact Step: xem ảnh PNG mới sau deploy để xác nhận thanh tổng không che phần nhận diện ở chân nền.
+
+## 2026-10-12 — Dashboard công tác phí
+
+`/admin/travel-expenses` đã đổi thành dashboard tháng; form nhập cũ nằm tại `/admin/travel-expenses/entries`. CTA **Công tác phí** và nút quay lại đều giữ query tháng. Dashboard dùng view model trong `lib/admin/travel-expense-dashboard.ts`, không tính nghiệp vụ trong component. Typecheck/lint/targeted unit 5/5/build 37 route pass. Next Exact Step: kiểm tra trực quan 375px và 1440px; sau đó commit/push nếu không có lỗi giao diện.
+
+Targeted E2E chưa chạy được vì Supabase local cổng 54322 không hoạt động; trình duyệt tích hợp của phiên cũng không khả dụng. Không ghi hai kiểm tra này là PASS.

@@ -1552,3 +1552,11 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Dùng `public/images/nenhatde.png` làm nền thương hiệu cho poster và phủ sáu hàng số liệu động lên vùng giữa.
 - [x] Thêm `GET /api/hatde/board/image` trả PNG 1080×1320 cho n8n, tự xác thực bằng API key riêng và không bị middleware Admin chặn.
 - [ ] Áp migration `20261011140000_hatde_image_automation_read.sql` và đặt `HATDE_BOARD_IMAGE_API_KEY` trên Vercel trước khi smoke production.
+
+## 2026-10-12 — Dashboard công tác phí
+
+- [x] `/admin/travel-expenses` hiển thị dashboard theo tháng với số đã nhập/chưa nhập, tỷ lệ, tổng tiền và danh sách thiếu.
+- [x] Thêm CTA **Công tác phí** mở `/admin/travel-expenses/entries` và giữ nguyên tháng đang xem.
+- [x] Màn nhập liệu cũ được giữ nguyên tại route con; action revalidate cả hai trang.
+- [x] Typecheck, lint, targeted unit 5/5 và production build 37 route pass.
+- [ ] Kiểm tra trực quan dashboard và màn nhập ở 375px/1440px trên trình duyệt local.

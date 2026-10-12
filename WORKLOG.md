@@ -4069,3 +4069,11 @@ Sau phản hồi ảnh PNG thiếu biểu tượng, xác nhận logo thương hi
 Theo yêu cầu đồng bộ với giao diện web, renderer PNG đã chuyển các biểu tượng sang SVG path được `@napi-rs/canvas` vẽ bằng `Path2D`: ví doanh thu, biên nhận giao dịch, mũi tên tăng/giảm, vương miện và huy chương. Route kiểm tra bắt buộc Noto Sans Regular/Bold đăng ký thành công. Đã render và xem trực tiếp fixture 1080×1320: logo nền, icon và các tên `VŨNG TÀU`, `ĐỒNG ĐEN`, `PHỔ QUANG` đều đúng, không có ô vuông.
 
 Theo yêu cầu mới, đã đưa **Tổng doanh thu** và **Tổng giao dịch** từ view model ra thanh tổng nhìn thấy được ở cuối poster web và ảnh PNG 1080×1320. Không cộng lại trong component/renderer và không thay đổi schema. Targeted unit 3/3, typecheck, lint các file liên quan và production build 36 route đều pass.
+
+## 2026-10-12 — Tách dashboard công tác phí và màn nhập
+
+Theo yêu cầu người dùng, `/admin/travel-expenses` nay là dashboard theo tháng. Dashboard có CTA **Công tác phí** mở `/admin/travel-expenses/entries`, nơi giữ nguyên form nhập cũ và có nút quay lại. Thêm view model thuần cùng unit test; cập nhật E2E/HTTP E2E/share-image sang route nhập mới. Không đổi database, RLS hay business rule.
+
+Verification: typecheck exit 0, lint exit 0, targeted unit 5/5 pass, production build 37 route pass. Khi chạy kèm `lib/navigation/nav-items.test.ts`, có một lỗi tồn tại ngoài phạm vi do nhãn Sales `Khách hàng` dài 10 ký tự so với ngưỡng test 9.
+
+Targeted E2E mobile/desktop đã thử chạy nhưng global setup dừng tại `ECONNREFUSED 127.0.0.1:54322` vì Supabase local không chạy. Trình duyệt tích hợp cũng không khả dụng trong phiên, nên chưa ghi kiểm tra trực quan PASS.

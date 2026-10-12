@@ -281,7 +281,7 @@ test.describe('UC-08 / FR-020 — nút xuất ảnh phải THỰC SỰ làm đư
     test.skip(testInfo.project.name !== 'desktop-1440', 'Một ảnh PNG là đủ cho visual QA.');
 
     await signIn(page, E2E_ADMIN_EMAIL);
-    await page.goto('/admin/travel-expenses?month=2026-08');
+    await page.goto('/admin/travel-expenses/entries?month=2026-08');
     const salesRow = page.locator('form > ul > li').filter({ hasText: E2E_DONE_SALES_NAME });
     await salesRow.locator('input[name^="amount__"]').fill('3500000');
     await page.getByRole('button', { name: /Lưu công tác phí/ }).click();
