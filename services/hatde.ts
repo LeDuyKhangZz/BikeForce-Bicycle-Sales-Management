@@ -14,7 +14,7 @@ export type HatdeSnapshot = {
 type StoredBranch = HatdeSnapshotInput['branches'][number];
 
 const SNAPSHOT_PAGE_SIZE = 50;
-const BRANCH_PAGE_SIZE = 6;
+const BRANCH_PAGE_SIZE = 20;
 
 export async function upsertHatdeSnapshot(
   supabase: SupabaseClient<Database>,

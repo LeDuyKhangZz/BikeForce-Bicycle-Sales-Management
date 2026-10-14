@@ -22,7 +22,10 @@ export const hatdeSnapshotSchema = z
       .regex(DATE_PATTERN, 'report_date phải có dạng YYYY-MM-DD')
       .refine(isValidVietnamDate, 'report_date không phải ngày hợp lệ'),
     report_time: z.string().regex(TIME_PATTERN, 'report_time phải có dạng HH:mm'),
-    branches: z.array(branchSchema).min(1, 'Cần ít nhất 1 chi nhánh').max(6),
+    branches: z
+      .array(branchSchema)
+      .min(1, 'Cần ít nhất 1 chi nhánh')
+      .max(HATDE_BRANCH_CODES.length),
   })
   .superRefine((value, context) => {
     const seen = new Set<string>();

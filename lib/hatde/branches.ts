@@ -5,6 +5,7 @@ export const HATDE_BRANCHES = {
   lotte_vung_tau: 'LOTTE VŨNG TÀU',
   passio_pho_quang: 'PASSIO PHỔ QUANG',
   passio_dong_den: 'PASSIO ĐỒNG ĐEN',
+  bep_trung_tam: 'BẾP TRUNG TÂM',
 } as const;
 
 export type HatdeBranchCode = keyof typeof HATDE_BRANCHES;
