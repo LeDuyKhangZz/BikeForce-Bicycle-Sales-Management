@@ -4,6 +4,14 @@ import type { HatdeBranchViewModel, HatdeSnapshotViewModel } from '@/lib/hatde/v
 
 export const HATDE_BOARD_IMAGE_WIDTH = 1080;
 export const HATDE_BOARD_IMAGE_HEIGHT = 1320;
+export const BASE_ROWS = 6;
+export const ROWS_TOP = 320;
+export const ROW_STEP = 130;
+export const TOTALS_BASE_Y = 1100;
+
+export function getHatdeBoardImageHeight(rowCount: number): number {
+  return HATDE_BOARD_IMAGE_HEIGHT + Math.max(0, rowCount - BASE_ROWS) * ROW_STEP;
+}
 
 type Palette = {
   background: string;
@@ -101,7 +109,7 @@ function drawComparison(ctx: SKRSContext2D, x: number, y: number, width: number,
 
 function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: number) {
   const x = 28;
-  const y = 320 + index * 130;
+  const y = ROWS_TOP + index * ROW_STEP;
   const width = 1024;
   const height = 118;
 
@@ -152,9 +160,8 @@ function drawBranch(ctx: SKRSContext2D, branch: HatdeBranchViewModel, index: num
   drawComparison(ctx, 846, y + 24, 178, branch, 'vsLastWeek', 'Tuần trước');
 }
 
-function drawTotals(ctx: SKRSContext2D, report: HatdeSnapshotViewModel) {
+function drawTotals(ctx: SKRSContext2D, report: HatdeSnapshotViewModel, y: number = TOTALS_BASE_Y) {
   const x = 120;
-  const y = 1100;
   const width = 840;
   const height = 82;
 
@@ -189,7 +196,45 @@ function drawTotals(ctx: SKRSContext2D, report: HatdeSnapshotViewModel) {
 }
 
 export function drawHatdeBoardImage(ctx: SKRSContext2D, report: HatdeSnapshotViewModel, background: Image) {
-  ctx.drawImage(background, 0, 0, HATDE_BOARD_IMAGE_WIDTH, HATDE_BOARD_IMAGE_HEIGHT);
+  const extra = Math.max(0, report.branches.length - BASE_ROWS) * ROW_STEP;
+  if (extra > 0) {
+    const scaleY = background.height / HATDE_BOARD_IMAGE_HEIGHT;
+    ctx.drawImage(
+      background,
+      0,
+      0,
+      background.width,
+      1090 * scaleY,
+      0,
+      0,
+      HATDE_BOARD_IMAGE_WIDTH,
+      1090,
+    );
+    ctx.drawImage(
+      background,
+      0,
+      1050 * scaleY,
+      background.width,
+      40 * scaleY,
+      0,
+      1090,
+      HATDE_BOARD_IMAGE_WIDTH,
+      extra,
+    );
+    ctx.drawImage(
+      background,
+      0,
+      1090 * scaleY,
+      background.width,
+      background.height - 1090 * scaleY,
+      0,
+      1090 + extra,
+      HATDE_BOARD_IMAGE_WIDTH,
+      HATDE_BOARD_IMAGE_HEIGHT - 1090,
+    );
+  } else {
+    ctx.drawImage(background, 0, 0, HATDE_BOARD_IMAGE_WIDTH, HATDE_BOARD_IMAGE_HEIGHT);
+  }
 
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.strokeStyle = COLORS.border;
@@ -203,6 +248,6 @@ export function drawHatdeBoardImage(ctx: SKRSContext2D, report: HatdeSnapshotVie
   ctx.textBaseline = 'middle';
   ctx.fillText(`Cập nhật ${report.reportTime} · ${report.reportDateDisplay}`, 540, 301);
 
-  report.branches.slice(0, 6).forEach((branch, index) => drawBranch(ctx, branch, index));
-  drawTotals(ctx, report);
+  report.branches.forEach((branch, index) => drawBranch(ctx, branch, index));
+  drawTotals(ctx, report, TOTALS_BASE_Y + extra);
 }

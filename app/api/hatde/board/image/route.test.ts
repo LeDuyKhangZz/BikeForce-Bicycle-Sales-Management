@@ -16,6 +16,7 @@ vi.mock('@napi-rs/canvas', () => ({
 }));
 vi.mock('@/lib/hatde/board-image', () => ({
   drawHatdeBoardImage: mocks.draw,
+  getHatdeBoardImageHeight: (count: number) => 1320 + Math.max(0, count - 6) * 130,
   HATDE_BOARD_IMAGE_HEIGHT: 1320,
   HATDE_BOARD_IMAGE_WIDTH: 1080,
 }));
@@ -83,5 +84,35 @@ describe('GET /api/hatde/board/image', () => {
     expect(mocks.createCanvas).toHaveBeenCalledWith(1080, 1320);
     expect(mocks.draw).toHaveBeenCalledOnce();
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([137, 80, 78, 71]));
+  });
+
+  it('tạo canvas với chiều cao 1450px khi có 7 chi nhánh', async () => {
+    const validCodes = [
+      'cn_15h',
+      'lotte_gold_coast',
+      'lotte_2310',
+      'lotte_vung_tau',
+      'passio_pho_quang',
+      'passio_dong_den',
+      'bep_trung_tam',
+    ];
+    const reportWith7 = {
+      ...report,
+      branches: validCodes.map((branch_code, index) => ({
+        branch_code,
+        rank: index + 1,
+        revenue: 1_000_000,
+        transactions: 10,
+        diff_yesterday_revenue: 0,
+        diff_yesterday_percent: 0,
+        diff_last_week_revenue: 0,
+        diff_last_week_percent: 0,
+      })),
+    };
+    mocks.getLatest.mockResolvedValue(reportWith7);
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    expect(mocks.createCanvas).toHaveBeenCalledWith(1080, 1450);
+    expect(mocks.draw).toHaveBeenCalledOnce();
   });
 });

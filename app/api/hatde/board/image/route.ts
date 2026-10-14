@@ -2,7 +2,7 @@ import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 
-import { drawHatdeBoardImage, HATDE_BOARD_IMAGE_HEIGHT, HATDE_BOARD_IMAGE_WIDTH } from '@/lib/hatde/board-image';
+import { drawHatdeBoardImage, getHatdeBoardImageHeight, HATDE_BOARD_IMAGE_WIDTH } from '@/lib/hatde/board-image';
 import { buildHatdeSnapshotViewModel } from '@/lib/hatde/view-model';
 import { hasValidWebhookToken } from '@/lib/security/webhook-token';
 import { createReportAutomationClient } from '@/lib/supabase/admin';
@@ -46,9 +46,10 @@ export async function GET(request: Request) {
 
   ensureFontsRegistered();
   const background = await loadImage(path.join(process.cwd(), 'public/images/nenhatde.png'));
-  const canvas = createCanvas(HATDE_BOARD_IMAGE_WIDTH, HATDE_BOARD_IMAGE_HEIGHT);
+  const viewModel = buildHatdeSnapshotViewModel(report);
+  const canvas = createCanvas(HATDE_BOARD_IMAGE_WIDTH, getHatdeBoardImageHeight(viewModel.branches.length));
   const context = canvas.getContext('2d');
-  drawHatdeBoardImage(context, buildHatdeSnapshotViewModel(report), background);
+  drawHatdeBoardImage(context, viewModel, background);
   const buffer = canvas.toBuffer('image/png');
 
   return new NextResponse(new Uint8Array(buffer), {
