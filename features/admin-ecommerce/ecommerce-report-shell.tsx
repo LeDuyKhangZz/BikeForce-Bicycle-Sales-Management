@@ -71,14 +71,26 @@ export function EcommerceReportShell({ report }: Props) {
             <h2 id="ecommerce-source-title" className="text-lg font-semibold text-heading">Theo nguồn đơn</h2>
             <p className="text-sm text-muted-foreground">Ngày {report.reportDate} · đồng bộ {report.syncedAt}</p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {report.sources.map((source) => (
-              <Card key={source.name} className="flex items-center justify-between gap-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            {report.sourceGroups.map((group) => (
+              <Card key={group.label} className="flex flex-col gap-3">
                 <div>
-                  <CardTitle>{source.name}</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">{source.orderCount} đơn không hủy</p>
+                  <CardTitle>{group.label}</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ngày {group.reportDate} · đồng bộ {group.syncedAt}
+                  </p>
                 </div>
-                <p className="text-lg font-bold tabular-nums text-heading">{source.revenueDisplay}</p>
+                <div className="grid gap-3">
+                  {group.sources.map((source) => (
+                    <div key={source.name} className="flex min-h-16 items-center justify-between gap-4 rounded-md border border-border p-3">
+                      <div>
+                        <p className="font-semibold text-heading">{source.name}</p>
+                        <p className="text-sm text-muted-foreground">{source.orderCount} đơn không hủy</p>
+                      </div>
+                      <p className="text-lg font-bold tabular-nums text-heading">{source.revenueDisplay}</p>
+                    </div>
+                  ))}
+                </div>
               </Card>
             ))}
           </div>

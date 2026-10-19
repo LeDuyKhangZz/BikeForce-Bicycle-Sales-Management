@@ -107,9 +107,13 @@ export async function GET(request: Request) {
     if (report === null) {
       return NextResponse.json({ error: 'Chưa có dữ liệu Pancake' }, { status: 404 });
     }
+    const viewModel = buildEcommerceReportViewModel(report);
+    if (viewModel === null) {
+      return NextResponse.json({ error: 'Chưa có dữ liệu Pancake Việt Nam' }, { status: 404 });
+    }
     drawEcommerceReportCard(
       ctx as unknown as EcommerceCanvas2DLike,
-      buildEcommerceReportViewModel(report),
+      viewModel,
       background as unknown as CanvasImageSource,
     );
   } else {

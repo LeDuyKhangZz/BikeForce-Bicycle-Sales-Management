@@ -104,27 +104,35 @@ export function drawEcommerceReportCard(
     ctx.fillText(metric.display, x + 14, y + 52);
   });
 
-  box(ctx, 20, 650, 500, 190);
+  box(ctx, 20, 625, 500, 255);
   ctx.fillStyle = '#e92f67';
-  roundedRect(ctx, 48, 632, 250, 40, 20);
+  roundedRect(ctx, 48, 607, 250, 40, 20);
   ctx.fill();
   ctx.fillStyle = '#ffffff';
   ctx.font = '700 17px ReportFont-Bold';
-  ctx.fillText('Theo nguồn đơn', 74, 658);
+  ctx.fillText('Theo nguồn đơn', 74, 633);
 
-  report.sources.forEach((source, index) => {
-    const y = 710 + index * 55;
-    ctx.fillStyle = '#30343f';
-    ctx.font = '700 15px ReportFont-Bold';
-    ctx.fillText(source.name, 48, y);
+  let sourceY = 674;
+  report.sourceGroups.forEach((group) => {
     ctx.fillStyle = '#636976';
-    ctx.font = '400 12px ReportFont';
-    ctx.fillText(`${source.orderCount} đơn không hủy`, 48, y + 22);
-    ctx.fillStyle = '#dc1554';
-    ctx.font = '700 15px ReportFont-Bold';
-    ctx.textAlign = 'right';
-    ctx.fillText(source.revenueDisplay, 492, y + 10);
-    ctx.textAlign = 'left';
+    ctx.font = '700 12px ReportFont-Bold';
+    ctx.fillText(group.label, 48, sourceY);
+    sourceY += 24;
+    group.sources.forEach((source) => {
+      ctx.fillStyle = '#30343f';
+      ctx.font = '700 14px ReportFont-Bold';
+      ctx.fillText(source.name, 58, sourceY);
+      ctx.fillStyle = '#636976';
+      ctx.font = '400 11px ReportFont';
+      ctx.fillText(`${source.orderCount} đơn không hủy`, 58, sourceY + 18);
+      ctx.fillStyle = '#dc1554';
+      ctx.font = '700 14px ReportFont-Bold';
+      ctx.textAlign = 'right';
+      ctx.fillText(source.revenueDisplay, 492, sourceY + 8);
+      ctx.textAlign = 'left';
+      sourceY += 42;
+    });
+    sourceY += 7;
   });
 
   ctx.textAlign = 'center';

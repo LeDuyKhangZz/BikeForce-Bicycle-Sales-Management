@@ -62,3 +62,9 @@ Máy chạy task phải có `PANCAKE_API_KEY` ở môi trường của đúng t�
 - Start in: thư mục repository.
 
 Không đặt API key trực tiếp trong Arguments vì nó sẽ hiện trong Task Scheduler và danh sách process.
+
+## TikTok Shop Singapore — 19/10/2026
+
+Edge Function đồng bộ độc lập hai shop: Việt Nam `1022081353` dùng UTC+7 và Singapore `1943148428` dùng UTC+8. Shop Singapore chỉ giữ đơn có nguồn TikTok; doanh thu Pancake dạng cent được hiển thị bằng SGD (`349` → `S$3.49`) và không cộng vào tổng VND. Ảnh báo cáo giữ tổng quan Việt Nam, đồng thời tách hai nhóm **Nguồn Việt Nam** và **Nguồn Singapore**.
+
+Production cần hai Edge Function Secrets riêng: `PANCAKE_API_KEY` và `PANCAKE_SG_API_KEY`. Không ghi giá trị thật vào source, migration hay tài liệu.

@@ -40,6 +40,17 @@ export function formatCurrencyVND(value: number): string {
   return currencyFormatter.format(value);
 }
 
+const singaporeCurrencyFormatter = new Intl.NumberFormat('en-SG', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Pancake Singapore lưu tiền theo cent: `349` → `S$3.49`. */
+export function formatCurrencySGDFromCents(value: number): string {
+  if (!Number.isFinite(value)) return EMPTY_DISPLAY;
+  return `S$${singaporeCurrencyFormatter.format(value / 100)}`;
+}
+
 const groupFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 
 /**

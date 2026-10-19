@@ -1,5 +1,8 @@
 # BikeForce Worklog
 
+## 2026-10-19 — TikTok Shop Singapore trong báo cáo Sàn TMĐT
+
+Đã mở rộng snapshot Pancake cho shop Singapore `1943148428`, chỉ lấy nguồn TikTok theo UTC+8 và giữ tiền SGD dạng cent. Tổng quan báo cáo vẫn là Việt Nam; phần nguồn tách **Nguồn Việt Nam** và **Nguồn Singapore**, không cộng chéo tiền tệ. Migration cloud do người dùng áp dụng; generated database types đã cập nhật; Edge Function mới đã deploy và secret Singapore đã cấu hình sau xác nhận của người dùng. Sync production thành công: Việt Nam 233 đơn, Singapore 0 đơn ngày 19/10/2026; ảnh thật hiển thị `Tiktok · 0 đơn không hủy · S$0.00`. Unit 65/65, RLS 5/5, typecheck, lint và production build 37 route đều pass.
 ## 2026-10-19 — Bàn giao luồng SaleWork kế toán cho Nguyễn Thị Kim Hương
 
 Giữ nguyên account và luồng đồng bộ SaleWork `Abraham Kế Toán Bánhàng`. Đổi nhãn báo cáo sang Nguyễn Thị Kim Hương, mã telesale/CRM Report 70 sang `CT-QL-003`, và nguồn số liệu tháng AMIS sang dòng `Nguyễn Thị Kim Hương`; không còn lấy dữ liệu AMIS/CRM của Nguyễn Thị Như Quỳnh cho ảnh ngày này. Không đổi DB/RLS hoặc tập đồng bộ SaleWork.

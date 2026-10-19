@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
 import { pancakeReportImageSchema } from '@/lib/validation/pancake-report';
+import { PANCAKE_REPORT_SHOP_IDS } from '@/lib/pancake/shops';
 
 type PancakeDailyReportRow = Database['public']['Tables']['pancake_daily_reports']['Row'];
 type PancakeSourceReportRow =
@@ -12,16 +13,22 @@ export type PancakeDailyReport = {
   sources: PancakeSourceReportRow[];
 };
 
+export type PancakeReportCollection = {
+  reports: PancakeDailyReport[];
+};
+
 const SOURCE_PAGE_SIZE = 50;
 
-export async function getLatestPancakeDailyReport(
+async function getLatestPancakeDailyReportByShop(
   supabase: SupabaseClient<Database>,
+  shopId: number,
 ): Promise<PancakeDailyReport | null> {
   const { data: daily, error: dailyError } = await supabase
     .from('pancake_daily_reports')
     .select(
-      'report_date,shop_id,employee_name,order_count,revenue,cancelled_count,returned_count,late_count,ads_order_count,ads_gmv,synced_at',
+      'report_date,shop_id,employee_name,market_code,currency_code,order_count,revenue,cancelled_count,returned_count,late_count,ads_order_count,ads_gmv,synced_at',
     )
+    .eq('shop_id', shopId)
     .order('report_date', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -48,9 +55,19 @@ export async function getLatestPancakeDailyReport(
   return { daily, sources: sources ?? [] };
 }
 
+export async function getLatestPancakeDailyReports(
+  supabase: SupabaseClient<Database>,
+): Promise<PancakeReportCollection | null> {
+  const reports = await Promise.all(
+    PANCAKE_REPORT_SHOP_IDS.map((shopId) => getLatestPancakeDailyReportByShop(supabase, shopId)),
+  );
+  const available = reports.filter((report): report is PancakeDailyReport => report !== null);
+  return available.length === 0 ? null : { reports: available };
+}
+
 export async function getLatestPancakeReportForImage(
   supabase: SupabaseClient<Database>,
-): Promise<PancakeDailyReport | null> {
+): Promise<PancakeReportCollection | null> {
   const { data, error } = await supabase.rpc('get_latest_pancake_report_image');
   if (error) {
     console.error('[getLatestPancakeReportForImage]', error.code, error.message);

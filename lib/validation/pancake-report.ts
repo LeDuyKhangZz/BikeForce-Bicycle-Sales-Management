@@ -4,6 +4,8 @@ const pancakeDailyReportSchema = z.object({
   report_date: z.string(),
   shop_id: z.number(),
   employee_name: z.string(),
+  market_code: z.enum(['VN', 'SG']),
+  currency_code: z.enum(['VND', 'SGD']),
   order_count: z.number().int().nonnegative(),
   revenue: z.number().int().nonnegative(),
   cancelled_count: z.number().int().nonnegative(),
@@ -24,6 +26,8 @@ const pancakeSourceReportSchema = z.object({
 });
 
 export const pancakeReportImageSchema = z.object({
-  daily: pancakeDailyReportSchema,
-  sources: z.array(pancakeSourceReportSchema),
+  reports: z.array(z.object({
+    daily: pancakeDailyReportSchema,
+    sources: z.array(pancakeSourceReportSchema),
+  })),
 });

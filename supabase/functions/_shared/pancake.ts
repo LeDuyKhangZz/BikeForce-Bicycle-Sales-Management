@@ -18,7 +18,7 @@ export type PancakeDailySnapshot = {
   sources: PancakeSource[];
 };
 
-const VIETNAM_OFFSET_MILLISECONDS = 7 * 60 * 60 * 1000;
+const HOUR_MILLISECONDS = 60 * 60 * 1000;
 
 function recordValue(value: unknown, field: string): unknown {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -43,11 +43,15 @@ function statusNumber(order: PancakeOrder): number {
   return parsed;
 }
 
-export function getVietnamDayUnixRange(reportDate: string): { start: number; end: number } {
+export function getDayUnixRange(
+  reportDate: string,
+  utcOffsetHours: 7 | 8,
+): { start: number; end: number } {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) {
     throw new Error('Ngày báo cáo phải có định dạng YYYY-MM-DD.');
   }
-  const startMilliseconds = Date.parse(`${reportDate}T00:00:00+07:00`);
+  const offset = String(utcOffsetHours).padStart(2, '0');
+  const startMilliseconds = Date.parse(`${reportDate}T00:00:00+${offset}:00`);
   if (!Number.isFinite(startMilliseconds)) {
     throw new Error('Ngày báo cáo không hợp lệ.');
   }
@@ -57,7 +61,11 @@ export function getVietnamDayUnixRange(reportDate: string): { start: number; end
   };
 }
 
-export function isOrderOnVietnamDate(order: PancakeOrder, reportDate: string): boolean {
+export function isOrderOnDate(
+  order: PancakeOrder,
+  reportDate: string,
+  utcOffsetHours: 7 | 8,
+): boolean {
   const raw = recordValue(order, 'inserted_at');
   if (raw === undefined || raw === null || raw === '') {
     return false;
@@ -69,8 +77,20 @@ export function isOrderOnVietnamDate(order: PancakeOrder, reportDate: string): b
   if (!Number.isFinite(milliseconds)) {
     throw new Error('Pancake trả inserted_at không hợp lệ.');
   }
-  const vietnamIso = new Date(milliseconds + VIETNAM_OFFSET_MILLISECONDS).toISOString();
-  return vietnamIso.slice(0, 10) === reportDate;
+  const localIso = new Date(milliseconds + utcOffsetHours * HOUR_MILLISECONDS).toISOString();
+  return localIso.slice(0, 10) === reportDate;
+}
+
+export function getVietnamDayUnixRange(reportDate: string): { start: number; end: number } {
+  return getDayUnixRange(reportDate, 7);
+}
+
+export function isOrderOnVietnamDate(order: PancakeOrder, reportDate: string): boolean {
+  return isOrderOnDate(order, reportDate, 7);
+}
+
+export function isTikTokOrder(order: PancakeOrder): boolean {
+  return String(recordValue(order, 'order_sources_name') ?? '').trim().toLowerCase() === 'tiktok';
 }
 
 function isLate(order: PancakeOrder, now: Date): boolean {

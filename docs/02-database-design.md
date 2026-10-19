@@ -1361,6 +1361,10 @@ Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái 
 - RPC `upsert_pancake_daily_report` là `security definer set search_path = public, pg_temp`, chỉ cấp EXECUTE cho `service_role`; kiểm tra số không âm và tổng nguồn phải bằng tổng ngày trước khi upsert nguyên tử.
 - RPC chỉ-đọc `get_latest_pancake_report_image()` cũng là security-definer với `search_path` cố định, chỉ `service_role` được EXECUTE. Hàm trả đúng snapshot mới nhất dưới dạng JSON cho route ảnh n8n; không cấp SELECT bảng cho service role, anon hay Sales (DEC-107).
 
+### 19/10/2026 — TikTok Shop Singapore
+
+`pancake_daily_reports` có thêm `market_code` và `currency_code`, ràng buộc ánh xạ shop Việt Nam sang `VN/VND`, shop `1943148428` sang `SG/SGD`. RPC ảnh trả snapshot mới nhất của từng shop trong mảng `reports`; các RPC tổng hợp tháng tiếp tục lọc shop Việt Nam để không cộng chéo tiền tệ. RLS và GRANT hiện hữu không được nới lỏng.
+
 ## Hạt Dẻ Ông Lý — snapshot chi nhánh (DEC-114)
 
 - `hatde_snapshots`: khóa UUID, `report_date`, `report_time` dạng `HH:mm`, tổng doanh thu/giao dịch và `created_at`; unique `(report_date, report_time)`.

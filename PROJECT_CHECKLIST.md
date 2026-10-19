@@ -1,5 +1,13 @@
 # BikeForce Project Checklist
 
+## 2026-10-19 — TikTok Shop Singapore
+
+- [x] Migration tách `VN/VND` và `SG/SGD`, giữ nguyên RLS/GRANT.
+- [x] Worker hai shop độc lập; Singapore chỉ lấy TikTok theo UTC+8.
+- [x] Báo cáo tách Nguồn Việt Nam/Nguồn Singapore, SGD không quy đổi.
+- [x] Unit liên quan 65/65 pass và Edge Function đã deploy.
+- [x] Đặt `PANCAKE_SG_API_KEY` trong Edge Function Secrets và chạy sync production thật.
+- [x] RLS local 5/5, production build 37 route và smoke ảnh snapshot thật đạt.
 ## 19/10/2026 — Bàn giao SaleWork kế toán cho Nguyễn Thị Kim Hương
 
 - [x] Giữ nguyên account `Abraham Kế Toán Bánhàng` và tập đồng bộ SaleWork.

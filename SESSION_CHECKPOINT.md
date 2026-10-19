@@ -1,5 +1,10 @@
 # BikeForce Session Checkpoint
 
+## 2026-10-19 — TikTok Shop Singapore
+
+Code, migration, generated types và Edge Function hỗ trợ hai shop đã hoàn tất. Secret Singapore đã đặt sau xác nhận explicit; sync production và RPC xác nhận snapshot `shop_id=1943148428`, `market_code=SG`, `currency_code=SGD`. Ảnh thật luôn hiện dòng TikTok Singapore kể cả khi 0 đơn. Unit 65/65, RLS 5/5, typecheck, lint và build 37 route pass.
+
+**Next Exact Steps:** commit/push khi người dùng yêu cầu; sau ngày Singapore phát sinh đơn, kiểm tra ảnh hiển thị doanh thu `S$` thực tế và quan sát cron 09:00/17:00.
 ## 2026-10-19 — Bàn giao SaleWork kế toán cho Nguyễn Thị Kim Hương
 
 Account `Abraham Kế Toán Bánhàng` và luồng SaleWork được giữ nguyên. Ảnh báo cáo nay hiển thị Nguyễn Thị Kim Hương / `CT-QL-003`, lấy số tháng từ AMIS employee Nguyễn Thị Kim Hương và cuộc gọi CRM theo `CT-QL-003`. Hai file unit liên quan 34/34 pass; typecheck, lint và production build exit 0, build sinh đủ 37/37 trang. Chưa chạy sync nguồn thật hoặc smoke PNG production.

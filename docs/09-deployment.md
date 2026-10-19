@@ -1279,6 +1279,8 @@ Route `/admin/misa-employees` cần hai biến môi trường server-only `AMIS_
 
 Supabase Cron gọi Edge Function `pancake-sync` lúc 02:00 và 10:00 UTC (09:00 và 17:00 Việt Nam). `PANCAKE_API_KEY` nằm trong Edge Function Secrets; URL/service credential nằm trong Vault. GitHub Actions không còn schedule, chỉ chạy tay và giữ artifact CSV 30 ngày. Hướng dẫn vận hành ở `docs/pancake-report.md`.
 
+Từ 19/10/2026, cùng Edge Function cần thêm `PANCAKE_SG_API_KEY` cho shop Singapore `1943148428`. Secret phải được đặt trong Supabase Edge Function Secrets; không dùng key Việt Nam và không đưa key vào biến `NEXT_PUBLIC_*`.
+
 Trước khi bật bước đồng bộ Supabase, phải áp migration `20261008150000_pancake_daily_reports.sql`. Workflow cần thêm hai secret đã dùng trong repo: `BIKEFORCE_SUPABASE_URL`, `BIKEFORCE_SERVICE_ROLE_KEY`. Áp migration trước, push workflow sau; nếu đảo thứ tự, job sẽ đỏ ở RPC thay vì âm thầm bỏ qua dữ liệu.
 
 ### Cloudinary minh chứng chăm sóc (DEC-108)

@@ -47,15 +47,25 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
         { label: 'Đơn từ Ads', display: '2' },
         { label: 'GMV Ads', display: '300.000 ₫' },
       ],
-      sources: [
-        { name: 'Shopee', orderCount: 5, revenueDisplay: '1.144.875 ₫' },
-        { name: 'Tiktok', orderCount: 5, revenueDisplay: '517.875 ₫' },
+      sourceGroups: [
+        {
+          label: 'Nguồn Việt Nam', reportDate: '08/10/2026', syncedAt: '08/10/2026 23:50',
+          sources: [
+            { name: 'Shopee', orderCount: 5, revenueDisplay: '1.144.875 ₫' },
+            { name: 'Tiktok', orderCount: 5, revenueDisplay: '517.875 ₫' },
+          ],
+        },
+        {
+          label: 'Nguồn Singapore', reportDate: '08/10/2026', syncedAt: '08/10/2026 23:50',
+          sources: [{ name: 'Tiktok', orderCount: 1, revenueDisplay: 'S$3.49' }],
+        },
       ],
     });
 
     expect(texts).toEqual(expect.arrayContaining([
       'Báo cáo Sàn TMĐT', ECOMMERCE_REPORT_ACCOUNT, 'Đơn hàng', 'Doanh thu',
-      'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Đơn từ Ads', 'GMV Ads', 'Shopee', 'Tiktok',
+      'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Đơn từ Ads', 'GMV Ads', 'Nguồn Việt Nam',
+      'Nguồn Singapore', 'Shopee', 'Tiktok', 'S$3.49',
     ]));
   });
 });

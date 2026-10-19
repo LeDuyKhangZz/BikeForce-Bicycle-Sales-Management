@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
-  getLatestPancakeDailyReport,
+  getLatestPancakeDailyReports,
   getLatestPancakeReportForImage,
 } from '@/services/pancake-reports';
 
@@ -10,6 +10,7 @@ import { setUpRlsFixture, tearDownRlsFixture, type RlsFixture } from './setup';
 
 const REPORT_DATE = '2035-10-08';
 const SHOP_ID = 1022081353;
+const SINGAPORE_SHOP_ID = 1943148428;
 
 let fixture: RlsFixture;
 
@@ -31,36 +32,61 @@ beforeAll(async () => {
     ],
   });
   if (error) throw error;
+
+  const { error: singaporeError } = await authAdmin.rpc('upsert_pancake_daily_report', {
+    p_report_date: REPORT_DATE,
+    p_shop_id: SINGAPORE_SHOP_ID,
+    p_order_count: 1,
+    p_revenue: 349,
+    p_cancelled_count: 0,
+    p_returned_count: 0,
+    p_late_count: 0,
+    p_ads_order_count: 0,
+    p_ads_gmv: 0,
+    p_sources: [{ source_name: 'Tiktok', order_count: 1, revenue: 349 }],
+  });
+  if (singaporeError) throw singaporeError;
 });
 
 afterAll(async () => {
-  await sql('delete from public.pancake_daily_reports where report_date = $1 and shop_id = $2', [
-    REPORT_DATE,
-    SHOP_ID,
-  ]);
+  await sql(
+    'delete from public.pancake_daily_reports where report_date = $1 and shop_id = any($2)',
+    [REPORT_DATE, [SHOP_ID, SINGAPORE_SHOP_ID]],
+  );
   await tearDownRlsFixture();
   await closePool();
 });
 
 describe('RLS báo cáo Pancake', () => {
   it('Admin đọc được báo cáo và chi tiết nguồn', async () => {
-    const report = await getLatestPancakeDailyReport(fixture.clients.admin);
+    const collection = await getLatestPancakeDailyReports(fixture.clients.admin);
+    const report = collection?.reports.find((item) => item.daily.shop_id === SHOP_ID);
+    const singapore = collection?.reports.find(
+      (item) => item.daily.shop_id === SINGAPORE_SHOP_ID,
+    );
 
     expect(report?.daily.report_date).toBe(REPORT_DATE);
     expect(report?.daily.employee_name).toBe('Nguyễn Ngọc Triết');
     expect(report?.daily.order_count).toBe(10);
     expect(report?.daily.revenue).toBe(1_662_750);
+    expect(report?.daily.market_code).toBe('VN');
+    expect(report?.daily.currency_code).toBe('VND');
     expect(report?.sources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source_name: 'Shopee', order_count: 5, revenue: 1_144_875 }),
         expect.objectContaining({ source_name: 'Tiktok', order_count: 5, revenue: 517_875 }),
       ]),
     );
+    expect(singapore?.daily.market_code).toBe('SG');
+    expect(singapore?.daily.currency_code).toBe('SGD');
+    expect(singapore?.sources).toEqual([
+      expect.objectContaining({ source_name: 'Tiktok', order_count: 1, revenue: 349 }),
+    ]);
   });
 
   it('Sales và anon không đọc được báo cáo', async () => {
-    expect(await getLatestPancakeDailyReport(fixture.clients.salesA)).toBeNull();
-    expect(await getLatestPancakeDailyReport(fixture.anon)).toBeNull();
+    expect(await getLatestPancakeDailyReports(fixture.clients.salesA)).toBeNull();
+    expect(await getLatestPancakeDailyReports(fixture.anon)).toBeNull();
   });
 
   it('service role không đọc bảng trực tiếp nhưng được gọi RPC', async () => {
@@ -99,9 +125,10 @@ describe('RLS báo cáo Pancake', () => {
   it('RPC ảnh chỉ cho service role đọc snapshot mới nhất', async () => {
     const report = await getLatestPancakeReportForImage(authAdmin);
 
-    expect(report?.daily.report_date).toBe(REPORT_DATE);
-    expect(report?.daily.employee_name).toBe('Nguyễn Ngọc Triết');
-    expect(report?.sources).toHaveLength(2);
+    expect(report?.reports).toHaveLength(2);
+    expect(report?.reports[0]?.daily.report_date).toBe(REPORT_DATE);
+    expect(report?.reports[0]?.daily.employee_name).toBe('Nguyễn Ngọc Triết');
+    expect(report?.reports[1]?.daily.market_code).toBe('SG');
 
     const privileges = await sql<{
       service_execute: boolean;

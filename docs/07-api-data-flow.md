@@ -1,5 +1,8 @@
 # 07 — API & Data Flow
 
+## 19/10/2026 — Luồng Pancake Việt Nam và Singapore
+
+Supabase Cron gọi `pancake-sync`; worker chạy hai shop độc lập bằng `Promise.allSettled`. Shop Việt Nam đọc mọi nguồn theo ngày UTC+7, shop Singapore đọc ngày UTC+8 và chỉ nhận TikTok. Mỗi shop gọi cùng RPC upsert theo khóa `(report_date, shop_id)`. UI/route ảnh đọc collection hai snapshot; tổng quan lấy Việt Nam, phần nguồn hiển thị riêng Singapore bằng SGD.
 > 2026-10-19 — Bàn giao tài khoản telesale kế toán: báo cáo ngày tiếp tục đọc snapshot SaleWork bằng khóa `Abraham Kế Toán Bánhàng`, nhưng tên hiển thị đổi thành `Nguyễn Thị Kim Hương`, mã hiển thị và khóa ghép CRM Report 70 đổi thành `CT-QL-003`, còn số liệu tháng ghép từ `amis_employee_metrics.employee_name = Nguyễn Thị Kim Hương`. Không đổi tập tài khoản hoặc luồng đồng bộ SaleWork, không sửa schema/RLS.
 
 > 2026-10-05 — Lọc cam kết Sales: parse `commitment=committed|uncommitted`; service đọc ID plan có committed_sales non-null theo employee/tháng với range 500/count exact, rồi áp in/not.in vào query khách trước count/sort/range. Không tải toàn bộ khách để lọc JS, không thay schema/RLS. PK plans `(period_month,misa_employee_id,misa_customer_id)` phục vụ truy vấn. Popup phân trang 100 khách/lần, giữ commitment trong search/chọn tháng/page.

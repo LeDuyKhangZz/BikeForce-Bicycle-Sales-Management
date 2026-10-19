@@ -1,5 +1,8 @@
 # 08 — Testing Strategy
 
+## 19/10/2026 — Pancake Singapore
+
+Unit test khóa biên ngày UTC+8, lọc nguồn TikTok, định dạng cent SGD và view model không trộn VND/SGD. RLS test phải xác nhận Admin đọc được hai shop, Sales/anon không đọc được, và RPC ảnh trả hai snapshot trong khi quyền service role không đổi.
 > 2026-10-19 — Hồi quy bàn giao telesale kế toán khóa ba ánh xạ của cùng account SaleWork: nhãn `Nguyễn Thị Kim Hương`, AMIS employee cùng tên và CRM/mã hiển thị `CT-QL-003`; danh sách sync vẫn chứa nguyên `Abraham Kế Toán Bánhàng`. Hai file test liên quan đã chạy 34/34 pass; typecheck, lint và production build exit 0. Build trong sandbox lỗi tải Google Font, chạy lại ngoài sandbox thành công 37/37 trang. Không chạy DB/RLS vì không đổi schema hoặc policy; chưa chạy sync nguồn thật hay kiểm tra PNG với snapshot production.
 
 > Lọc cam kết: `customer-commitment-filter.test.tsx` kiểm parser, hai link tiến độ, giữ query và server-side in/not.in trước phân trang, xác định cam kết bằng non-null (kể cả 0). 16 test liên quan pass; build/typecheck/lint exit 0. DB/RLS và phiên Sales E2E thật chưa chạy cho tính năng này; không thay policy.

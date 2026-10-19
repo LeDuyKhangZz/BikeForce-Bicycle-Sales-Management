@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPancakeSnapshot,
+  getDayUnixRange,
   getVietnamDayUnixRange,
   isOrderOnVietnamDate,
+  isOrderOnDate,
+  isTikTokOrder,
 } from '../../supabase/functions/_shared/pancake';
 
 describe('Pancake Edge Function', () => {
@@ -13,6 +16,17 @@ describe('Pancake Edge Function', () => {
   it('lọc timestamp theo ngày Việt Nam', () => {
     expect(isOrderOnVietnamDate({ inserted_at: '2026-10-09T17:00:00Z' }, '2026-10-10')).toBe(true);
     expect(isOrderOnVietnamDate({ inserted_at: '2026-10-09T16:59:59Z' }, '2026-10-10')).toBe(false);
+  });
+
+  it('tính và lọc đúng ngày Singapore UTC+8', () => {
+    expect(getDayUnixRange('2026-10-10', 8)).toEqual({ start: 1791561600, end: 1791647999 });
+    expect(isOrderOnDate({ inserted_at: '2026-10-09T16:00:00Z' }, '2026-10-10', 8)).toBe(true);
+    expect(isOrderOnDate({ inserted_at: '2026-10-09T15:59:59Z' }, '2026-10-10', 8)).toBe(false);
+  });
+
+  it('Singapore chỉ nhận nguồn TikTok', () => {
+    expect(isTikTokOrder({ order_sources_name: 'Tiktok' })).toBe(true);
+    expect(isTikTokOrder({ order_sources_name: 'Shopee' })).toBe(false);
   });
 
   it('tổng hợp đơn, nguồn, hủy, hoàn, trễ và Ads', () => {

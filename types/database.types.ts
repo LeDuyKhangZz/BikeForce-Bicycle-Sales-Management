@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -609,8 +609,10 @@ export type Database = {
           ads_gmv: number
           ads_order_count: number
           cancelled_count: number
+          currency_code: string
           employee_name: string
           late_count: number
+          market_code: string
           order_count: number
           report_date: string
           returned_count: number
@@ -622,8 +624,10 @@ export type Database = {
           ads_gmv: number
           ads_order_count: number
           cancelled_count: number
+          currency_code?: string
           employee_name?: string
           late_count: number
+          market_code?: string
           order_count: number
           report_date: string
           returned_count: number
@@ -635,8 +639,10 @@ export type Database = {
           ads_gmv?: number
           ads_order_count?: number
           cancelled_count?: number
+          currency_code?: string
           employee_name?: string
           late_count?: number
+          market_code?: string
           order_count?: number
           report_date?: string
           returned_count?: number
@@ -1010,6 +1016,28 @@ export type Database = {
         }[]
       }
       get_latest_pancake_report_image: { Args: never; Returns: Json }
+      get_pancake_month_sources: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          order_count: number
+          revenue: number
+          source_name: string
+        }[]
+      }
+      get_pancake_month_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          ads_gmv: number
+          ads_order_count: number
+          cancelled_count: number
+          day_count: number
+          late_count: number
+          latest_synced_at: string
+          order_count: number
+          returned_count: number
+          revenue: number
+        }[]
+      }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       replace_misa_report119_snapshot: {

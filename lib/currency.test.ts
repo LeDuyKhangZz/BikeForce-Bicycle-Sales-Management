@@ -9,10 +9,26 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatCompactVND,
+  formatCurrencySGDFromCents,
   formatCurrencyVND,
   formatThousands,
   parseCurrencyInput,
 } from './currency';
+
+describe('formatCurrencySGDFromCents', () => {
+  it.each([
+    [0, 'S$0.00'],
+    [349, 'S$3.49'],
+    [123456, 'S$1,234.56'],
+  ])('%s cent → %s', (input, expected) => {
+    expect(formatCurrencySGDFromCents(input)).toBe(expected);
+  });
+
+  it('không để NaN hoặc Infinity lọt ra UI', () => {
+    expect(formatCurrencySGDFromCents(Number.NaN)).toBe('—');
+    expect(formatCurrencySGDFromCents(Number.POSITIVE_INFINITY)).toBe('—');
+  });
+});
 
 /** Đổi NBSP thành space thường để assertion đọc được bằng mắt. */
 const nbsp = (value: string): string => value.replace(/ /g, ' ');
