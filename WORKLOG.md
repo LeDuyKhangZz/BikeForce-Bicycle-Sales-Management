@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## 2026-10-19 — Bàn giao luồng SaleWork kế toán cho Nguyễn Thị Kim Hương
+
+Giữ nguyên account và luồng đồng bộ SaleWork `Abraham Kế Toán Bánhàng`. Đổi nhãn báo cáo sang Nguyễn Thị Kim Hương, mã telesale/CRM Report 70 sang `CT-QL-003`, và nguồn số liệu tháng AMIS sang dòng `Nguyễn Thị Kim Hương`; không còn lấy dữ liệu AMIS/CRM của Nguyễn Thị Như Quỳnh cho ảnh ngày này. Không đổi DB/RLS hoặc tập đồng bộ SaleWork.
+
+Kiểm chứng thật: hai file unit liên quan 34/34 pass; typecheck, lint và production build exit 0. Build đầu tiên trong sandbox không tải được Inter từ Google Fonts; chạy lại ngoài sandbox compile thành công và sinh đủ 37/37 trang. Chưa chạy đồng bộ nguồn thật hoặc smoke PNG với dữ liệu production.
+
 ## 2026-10-07 — DEC-105 báo cáo SaleWork-only cho Cô Thy
 
 Thêm `Cô Thy` vào tập sync ngày cùng Hải TeleSale và tài khoản của Nguyễn Thị Như Quỳnh; không thêm vào snapshot tháng. Thẻ ảnh Cô Thy chỉ dựng sáu chỉ số SaleWork, bỏ khối tháng/đơn hàng MISA. Test khóa việc Cô Thy không có mapping AMIS hoặc CRM.

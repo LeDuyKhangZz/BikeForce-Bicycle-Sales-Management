@@ -45,6 +45,7 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
   });
 
   it('hiển thị mã mới của Hải và không tái dùng mã nhân viên đã nghỉ', () => {
+    expect(getTelesaleCode('Abraham Kế Toán Bánhàng')).toBe('CT-QL-003');
     expect(getTelesaleCode('Hải TeleSale')).toBe('VP-TLS-004');
     expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('—');
   });

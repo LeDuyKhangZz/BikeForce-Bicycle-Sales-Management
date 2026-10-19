@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## 2026-10-19 — Bàn giao SaleWork kế toán cho Nguyễn Thị Kim Hương
+
+Account `Abraham Kế Toán Bánhàng` và luồng SaleWork được giữ nguyên. Ảnh báo cáo nay hiển thị Nguyễn Thị Kim Hương / `CT-QL-003`, lấy số tháng từ AMIS employee Nguyễn Thị Kim Hương và cuộc gọi CRM theo `CT-QL-003`. Hai file unit liên quan 34/34 pass; typecheck, lint và production build exit 0, build sinh đủ 37/37 trang. Chưa chạy sync nguồn thật hoặc smoke PNG production.
+
+**Next Exact Steps:** sau deploy hoặc tại môi trường có phiên nguồn hợp lệ, chạy một lượt sync và mở ảnh account `Abraham Kế Toán Bánhàng` để xác nhận tên, mã, số AMIS/CRM mới trong khi chỉ số SaleWork vẫn giữ luồng cũ.
+
 ## 2026-10-07 — DEC-105 báo cáo Cô Thy
 
 Đã thêm `Cô Thy` vào tập đồng bộ SaleWork ngày. Báo cáo ảnh chỉ lấy sáu chỉ số SaleWork, không có mapping AMIS/CRM, không hiện khối tháng/đơn hàng và không tham gia snapshot tháng. Test liên quan 33/33, typecheck/lint/build exit 0. Full unit 911 pass/1 fail cũ tại giới hạn nhãn `Khách hàng`; không phải hồi quy DEC-105.

@@ -1,5 +1,7 @@
 # 07 — API & Data Flow
 
+> 2026-10-19 — Bàn giao tài khoản telesale kế toán: báo cáo ngày tiếp tục đọc snapshot SaleWork bằng khóa `Abraham Kế Toán Bánhàng`, nhưng tên hiển thị đổi thành `Nguyễn Thị Kim Hương`, mã hiển thị và khóa ghép CRM Report 70 đổi thành `CT-QL-003`, còn số liệu tháng ghép từ `amis_employee_metrics.employee_name = Nguyễn Thị Kim Hương`. Không đổi tập tài khoản hoặc luồng đồng bộ SaleWork, không sửa schema/RLS.
+
 > 2026-10-05 — Lọc cam kết Sales: parse `commitment=committed|uncommitted`; service đọc ID plan có committed_sales non-null theo employee/tháng với range 500/count exact, rồi áp in/not.in vào query khách trước count/sort/range. Không tải toàn bộ khách để lọc JS, không thay schema/RLS. PK plans `(period_month,misa_employee_id,misa_customer_id)` phục vụ truy vấn. Popup phân trang 100 khách/lần, giữ commitment trong search/chọn tháng/page.
 
 > 2026-10-05 — Report 44: bộ chọn doanh số Sales sinh dải tháng từ 08/2025 (hoặc kỳ lưu cũ hơn) đến tháng hiện tại theo Asia/Ho_Chi_Minh, không phụ thuộc kỳ đã đồng bộ; mặc định tháng hiện tại. Query ghép theo mã khách và tháng vẫn giữ RLS. Chưa có bản ghi → `—`, bản ghi 0 → `0 ₫`. Đã đồng bộ kỳ 10/2025–10/2026 với 950 mã/12.350 dòng; kỳ 08–09/2025 đã lưu trước đó không bị xóa.

@@ -1,5 +1,7 @@
 # 08 — Testing Strategy
 
+> 2026-10-19 — Hồi quy bàn giao telesale kế toán khóa ba ánh xạ của cùng account SaleWork: nhãn `Nguyễn Thị Kim Hương`, AMIS employee cùng tên và CRM/mã hiển thị `CT-QL-003`; danh sách sync vẫn chứa nguyên `Abraham Kế Toán Bánhàng`. Hai file test liên quan đã chạy 34/34 pass; typecheck, lint và production build exit 0. Build trong sandbox lỗi tải Google Font, chạy lại ngoài sandbox thành công 37/37 trang. Không chạy DB/RLS vì không đổi schema hoặc policy; chưa chạy sync nguồn thật hay kiểm tra PNG với snapshot production.
+
 > Lọc cam kết: `customer-commitment-filter.test.tsx` kiểm parser, hai link tiến độ, giữ query và server-side in/not.in trước phân trang, xác định cam kết bằng non-null (kể cả 0). 16 test liên quan pass; build/typecheck/lint exit 0. DB/RLS và phiên Sales E2E thật chưa chạy cho tính năng này; không thay policy.
 
 > 2026-10-05 — `lib/amis/report44-months.test.ts` khóa việc chọn tháng hiện tại dù snapshot chỉ tới tháng 8, không có dữ liệu vẫn chọn được tháng, không có tương lai, giữ kỳ cũ và chuyển năm. Đã chạy 4/4; build/typecheck/lint exit 0. Đồng bộ report 44 thực tế trả 12.350 dòng; kiểm tra AMIS tháng 9 có 220 mã khác 0, tháng 10 có 5 mã khác 0. Không nới quyền service role để đọc bảng: phép đọc kiểm chứng bằng service role trả 403 như thiết kế; xác minh nguồn AMIS và kết quả RPC ghi thay thế.

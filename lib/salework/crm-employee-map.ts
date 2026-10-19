@@ -1,5 +1,5 @@
 const CRM_CALL_EMPLOYEE_CODE_BY_ACCOUNT: Readonly<Record<string, string>> = {
-  'Abraham Kế Toán Bánhàng': 'VP-SA-001',
+  'Abraham Kế Toán Bánhàng': 'CT-QL-003',
   'Hải TeleSale': 'VP-TLS-004',
 };
 

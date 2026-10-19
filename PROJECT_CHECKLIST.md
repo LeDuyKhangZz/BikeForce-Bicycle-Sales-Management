@@ -1,5 +1,14 @@
 # BikeForce Project Checklist
 
+## 19/10/2026 — Bàn giao SaleWork kế toán cho Nguyễn Thị Kim Hương
+
+- [x] Giữ nguyên account `Abraham Kế Toán Bánhàng` và tập đồng bộ SaleWork.
+- [x] Đổi tên hiển thị thành Nguyễn Thị Kim Hương và mã hiển thị thành `CT-QL-003`.
+- [x] Đổi nguồn tháng AMIS sang Nguyễn Thị Kim Hương và CRM Report 70 sang `CT-QL-003`.
+- [x] Unit liên quan 34/34 pass.
+- [x] Typecheck, lint và production build exit 0; build sinh đủ 37/37 trang.
+- [ ] Chạy lượt sync thật rồi kiểm tra PNG với snapshot ngày hiện tại.
+
 ## 09/10/2026 — Nối Nguyễn Thị Kim Hương với MISA/CRM
 
 - [x] Xác nhận tên MISA `Nguyễn Thị Kim Hương` và mã CRM Report 70 `CT-QL-003`.

@@ -34,7 +34,7 @@ export const PLACEHOLDER = '—';
 // Dữ liệu SaleWork chưa có trường "mã telesale" nên khai báo thủ công tại đây.
 // Thêm dòng mới khi có tài khoản mới cần gán mã.
 export const TELESALE_CODES: Record<string, string> = {
-  'Abraham Kế Toán Bánhàng': 'VP-KTBH-001',
+  'Abraham Kế Toán Bánhàng': 'CT-QL-003',
   'Hải TeleSale': 'VP-TLS-004',
 };
 

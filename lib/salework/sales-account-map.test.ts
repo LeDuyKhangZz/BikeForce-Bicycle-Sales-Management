@@ -81,14 +81,14 @@ describe('getSaleWorkAccountSelectionName', () => {
 });
 
 describe('getSaleWorkDisplayName', () => {
-  it('đổi nhãn kế toán nhưng giữ nguyên tài khoản khác', () => {
-    expect(getSaleWorkDisplayName('Abraham Kế Toán Bánhàng')).toBe('Nguyễn Thị Như Quỳnh');
+  it('đổi nhãn tài khoản kế toán sang Kim Hương nhưng giữ nguyên khóa SaleWork', () => {
+    expect(getSaleWorkDisplayName('Abraham Kế Toán Bánhàng')).toBe('Nguyễn Thị Kim Hương');
     expect(getSaleWorkDisplayName('Abraham Khải Hcm')).toBe('Abraham Khải Hcm');
   });
 });
 
 describe('tài khoản báo cáo TeleSale', () => {
-  it('đồng bộ Cô Thy cùng Hải và Nguyễn Thị Như Quỳnh', () => {
+  it('giữ nguyên tài khoản SaleWork kế toán trong tập đồng bộ', () => {
     expect(TELESALE_SALEWORK_ACCOUNT_NAMES).toEqual([
       'Abraham Kế Toán Bánhàng',
       'Hải TeleSale',
@@ -117,6 +117,11 @@ describe('tài khoản báo cáo TeleSale', () => {
 });
 
 describe('AMIS_EMPLOYEE_MAP', () => {
+  it('giữ luồng SaleWork kế toán nhưng lấy số liệu AMIS và CRM của Kim Hương', () => {
+    expect(AMIS_EMPLOYEE_MAP['Abraham Kế Toán Bánhàng']).toBe('Nguyễn Thị Kim Hương');
+    expect(getCrmCallEmployeeCode('Abraham Kế Toán Bánhàng')).toBe('CT-QL-003');
+  });
+
   it('ghép Hải TeleSale với đúng nhân viên AMIS mới và bỏ nhân viên đã nghỉ', () => {
     expect(AMIS_EMPLOYEE_MAP['Hải TeleSale']).toBe('Đặng Thanh Hải');
     expect(AMIS_EMPLOYEE_MAP['Giao - Kế Toán bán hàng']).toBeUndefined();

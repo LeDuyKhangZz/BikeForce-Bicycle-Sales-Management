@@ -17,7 +17,8 @@ const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
 };
 
 const SALEWORK_DISPLAY_NAME_MAP: Readonly<Record<string, string>> = {
-  'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Như Quỳnh',
+  // Giữ nguyên tài khoản SaleWork lịch sử; chỉ đổi người đang sử dụng luồng này.
+  'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Kim Hương',
 };
 
 /** Các tài khoản TeleSale cần xuất báo cáo cuối ngày từ SaleWork. */
