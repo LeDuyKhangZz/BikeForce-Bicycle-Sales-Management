@@ -39,13 +39,19 @@ function buildSourceRows(
   currencyCode: string,
   sources: PancakeSourceReportRow[],
 ): readonly { name: string; orderCount: number; revenueDisplay: string }[] {
-  const visibleSources = sources.filter(
-    (source) => marketCode !== 'SG' || source.source_name.toLowerCase() === 'tiktok',
-  );
-  if (marketCode === 'SG' && visibleSources.length === 0) {
-    return [{ name: 'Tiktok', orderCount: 0, revenueDisplay: formatCurrencySGDFromCents(0) }];
+  if (marketCode === 'SG') {
+    return ['Shopee', 'Tiktok'].map((name) => {
+      const source = sources.find(
+        (candidate) => candidate.source_name.toLowerCase() === name.toLowerCase(),
+      );
+      return {
+        name,
+        orderCount: source?.order_count ?? 0,
+        revenueDisplay: formatCurrencySGDFromCents(source?.revenue ?? 0),
+      };
+    });
   }
-  return visibleSources.map((source) => ({
+  return sources.map((source) => ({
     name: source.source_name,
     orderCount: source.order_count,
     revenueDisplay: formatSourceRevenue(source.revenue, currencyCode),

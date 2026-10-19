@@ -5,7 +5,7 @@ import {
   getVietnamDayUnixRange,
   isOrderOnVietnamDate,
   isOrderOnDate,
-  isTikTokOrder,
+  isSingaporeMarketplaceOrder,
 } from '../../supabase/functions/_shared/pancake';
 
 describe('Pancake Edge Function', () => {
@@ -25,8 +25,9 @@ describe('Pancake Edge Function', () => {
   });
 
   it('Singapore chỉ nhận nguồn TikTok', () => {
-    expect(isTikTokOrder({ order_sources_name: 'Tiktok' })).toBe(true);
-    expect(isTikTokOrder({ order_sources_name: 'Shopee' })).toBe(false);
+    expect(isSingaporeMarketplaceOrder({ order_sources_name: 'Tiktok' })).toBe(true);
+    expect(isSingaporeMarketplaceOrder({ order_sources_name: 'Shopee' })).toBe(true);
+    expect(isSingaporeMarketplaceOrder({ order_sources_name: 'Website' })).toBe(false);
   });
 
   it('tổng hợp đơn, nguồn, hủy, hoàn, trễ và Ads', () => {

@@ -2,7 +2,7 @@
 
 ## 2026-10-19 — TikTok Shop Singapore
 
-Code, migration, generated types và Edge Function hỗ trợ hai shop đã hoàn tất. Secret Singapore đã đặt sau xác nhận explicit; sync production và RPC xác nhận snapshot `shop_id=1943148428`, `market_code=SG`, `currency_code=SGD`. Ảnh thật luôn hiện dòng TikTok Singapore kể cả khi 0 đơn. Unit 65/65, RLS 5/5, typecheck, lint và build 37 route pass.
+Code, migration, generated types và Edge Function hỗ trợ hai shop đã hoàn tất. Secret Singapore đã đặt sau xác nhận explicit; sync production và RPC xác nhận snapshot `shop_id=1943148428`, `market_code=SG`, `currency_code=SGD`. Worker và ảnh thật luôn giữ hai dòng Shopee/TikTok Singapore kể cả khi 0 đơn; tiền vẫn là SGD. Test liên quan 11/11, typecheck và lint pass.
 
 **Next Exact Steps:** commit/push khi người dùng yêu cầu; sau ngày Singapore phát sinh đơn, kiểm tra ảnh hiển thị doanh thu `S$` thực tế và quan sát cron 09:00/17:00.
 ## 2026-10-19 — Bàn giao SaleWork kế toán cho Nguyễn Thị Kim Hương

@@ -77,6 +77,7 @@ describe('buildEcommerceReportViewModel', () => {
     expect(result?.sourceGroups).toHaveLength(2);
     expect(result?.sourceGroups[1]?.label).toBe('Nguồn Singapore');
     expect(result?.sourceGroups[1]?.sources).toEqual([
+      { name: 'Shopee', orderCount: 1, revenueDisplay: 'S$1.00' },
       { name: 'Tiktok', orderCount: 1, revenueDisplay: 'S$3.49' },
     ]);
   });
@@ -86,13 +87,14 @@ describe('buildEcommerceReportViewModel', () => {
     expect(buildEcommerceReportViewModel({ reports: singaporeOnly })).toBeNull();
   });
 
-  it('vẫn hiện TikTok Singapore bằng S$0.00 khi ngày đó chưa có đơn', () => {
+  it('vẫn hiện Shopee và TikTok Singapore bằng S$0.00 khi ngày đó chưa có đơn', () => {
     const reports = REPORT.reports.map((item) =>
       item.daily.market_code === 'SG' ? { ...item, sources: [] } : item,
     );
     const result = buildEcommerceReportViewModel({ reports });
 
     expect(result?.sourceGroups[1]?.sources).toEqual([
+      { name: 'Shopee', orderCount: 0, revenueDisplay: 'S$0.00' },
       { name: 'Tiktok', orderCount: 0, revenueDisplay: 'S$0.00' },
     ]);
   });

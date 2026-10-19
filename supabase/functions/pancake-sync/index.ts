@@ -6,7 +6,7 @@ import {
   buildPancakeSnapshot,
   getDayUnixRange,
   isOrderOnDate,
-  isTikTokOrder,
+  isSingaporeMarketplaceOrder,
   readOrderPage,
   type PancakeOrder,
 } from '../_shared/pancake.ts';
@@ -36,7 +36,7 @@ const SHOP_CONFIGS: readonly ShopConfig[] = [
     apiKeySecret: 'PANCAKE_SG_API_KEY',
     timeZone: 'Asia/Singapore',
     utcOffsetHours: 8,
-    sourceFilter: isTikTokOrder,
+    sourceFilter: isSingaporeMarketplaceOrder,
   },
 ];
 

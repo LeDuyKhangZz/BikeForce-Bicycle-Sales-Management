@@ -89,8 +89,9 @@ export function isOrderOnVietnamDate(order: PancakeOrder, reportDate: string): b
   return isOrderOnDate(order, reportDate, 7);
 }
 
-export function isTikTokOrder(order: PancakeOrder): boolean {
-  return String(recordValue(order, 'order_sources_name') ?? '').trim().toLowerCase() === 'tiktok';
+export function isSingaporeMarketplaceOrder(order: PancakeOrder): boolean {
+  const sourceName = String(recordValue(order, 'order_sources_name') ?? '').trim().toLowerCase();
+  return sourceName === 'shopee' || sourceName === 'tiktok';
 }
 
 function isLate(order: PancakeOrder, now: Date): boolean {
