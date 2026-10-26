@@ -3,12 +3,12 @@
 import { Download, ImageIcon } from 'lucide-react';
 
 import type { SaleWorkReport } from '@/services/salework';
+import { getSaleWorkReportBackgroundPath } from '@/lib/reports/salework-image-accounts';
 
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
   drawReportCard,
-  REPORT_BACKGROUND_PATH,
   slugifyFilename,
 } from './salework-report-card';
 
@@ -25,7 +25,7 @@ async function buildReportCanvas(report: SaleWorkReport): Promise<HTMLCanvasElem
   if (!ctx) throw new Error('Không thể khởi tạo canvas 2D context.');
   ctx.scale(scale, scale);
   const background = new window.Image();
-  background.src = REPORT_BACKGROUND_PATH;
+  background.src = getSaleWorkReportBackgroundPath(report.accountName);
   await background.decode();
   drawReportCard(ctx, report, background);
   return canvas;

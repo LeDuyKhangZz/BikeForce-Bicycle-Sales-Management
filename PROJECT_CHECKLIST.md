@@ -1588,3 +1588,9 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Ảnh 9:16 có khối Doanh số thành công, Tổng phí sàn, Tiền sàn trả và Tiền nạp quảng cáo; bỏ hai ô Ads cũ.
 - [x] RPC ảnh trả financials; unit/RLS liên quan pass và fixture PNG 1080×1920 đã được kiểm tra trực quan.
 - [ ] Áp migration `20261026100000_pancake_image_financials.sql` trên production trước khi kiểm tra ảnh mới.
+
+## 26/10/2026 — Nền Halloween cho ba báo cáo (DEC-118)
+
+- [x] Dùng ảnh mới nhất trong Downloads làm asset 9:16.
+- [x] Áp nền cho Nguyễn Ngọc Triết, Hải TeleSale và Nguyễn Thị Kim Hương.
+- [x] Giữ nền cũ cho các tài khoản khác; unit 12/12, typecheck, lint và build 37/37 route pass.

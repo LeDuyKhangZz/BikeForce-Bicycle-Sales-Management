@@ -12,6 +12,7 @@ import {
 import {
   buildSaleWorkReportImageUrl,
   ECOMMERCE_REPORT_ACCOUNT,
+  getSaleWorkReportBackgroundPath,
 } from '@/lib/reports/salework-image-accounts';
 import { getLatestPancakeReportForImage } from '@/services/pancake-reports';
 import { getSessionProfile } from '@/services/profiles';
@@ -20,7 +21,6 @@ import {
   CARD_HEIGHT,
   CARD_WIDTH,
   drawReportCard,
-  REPORT_BACKGROUND_PATH,
   slugifyFilename,
   type Canvas2DLike,
 } from '../../../(admin)/admin/salework/salework-report-card';
@@ -93,8 +93,9 @@ export async function GET(request: Request) {
   }
 
   ensureFontsRegistered();
+  const backgroundPath = getSaleWorkReportBackgroundPath(accountName);
   const background = await loadImage(
-    path.join(process.cwd(), 'public', REPORT_BACKGROUND_PATH.slice(1)),
+    path.join(process.cwd(), 'public', backgroundPath.slice(1)),
   );
 
   const scale = 2;

@@ -2989,3 +2989,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Impact:** Thêm bảng force-RLS, RPC upsert service-role-only, mở rộng Edge Function 09:00/17:00, service/view model/UI Admin và test. `ads_top_up` hiển thị đúng là “Tiền nạp quảng cáo”, không khẳng định là chi phí quảng cáo thực tiêu. Không cấp SELECT/DML bảng cho service role; Sales/anon không đọc được.
 - **Image impact:** RPC ảnh trả thêm `financials`; ảnh 9:16 thêm khối bốn chỉ số tài chính và bỏ hai ô Ads cũ để nhãn trên ảnh khớp nguồn dữ liệu đã xác minh.
 - **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp.
+
+## DEC-118 — Nền Halloween cho ba báo cáo được chọn
+
+- **Date:** 2026-10-26
+- **Decision:** Dùng `halloween-report-background.png` cho Nguyễn Ngọc Triết, Hải TeleSale và Nguyễn Thị Kim Hương; giữ nền hiện tại cho mọi tài khoản khác. Ánh xạ theo khóa account phía server/client để ảnh xem trước, n8n và nút xuất trực tiếp luôn giống nhau.
+- **Reason:** Người dùng cung cấp ảnh nền mới và chỉ định đúng ba người cần thay.
+- **Alternatives:** Thay nền toàn bộ báo cáo bị loại vì vượt phạm vi; so khớp tên hiển thị trong component bị loại vì dễ lệch khóa SaleWork.
+- **Impact:** Thêm một asset 9:16 và helper chọn nền có unit test; không đổi dữ liệu, quyền hay API.
+- **Status:** APPROVED — yêu cầu trực tiếp ngày 26/10/2026.
