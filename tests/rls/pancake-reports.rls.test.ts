@@ -187,7 +187,11 @@ describe('RLS báo cáo Pancake', () => {
     expect(report?.reports).toHaveLength(2);
     expect(report?.reports[0]?.daily.report_date).toBe(REPORT_DATE);
     expect(report?.reports[0]?.daily.employee_name).toBe('Nguyễn Ngọc Triết');
+    expect(report?.reports[0]?.financials).toEqual([
+      expect.objectContaining({ marketplace_code: 'SHOPEE', platform_receivable: 1_300_000 }),
+    ]);
     expect(report?.reports[1]?.daily.market_code).toBe('SG');
+    expect(report?.reports[1]?.financials).toEqual([]);
 
     const privileges = await sql<{
       service_execute: boolean;

@@ -80,59 +80,83 @@ export function drawEcommerceReportCard(
   ctx.font = '400 13px ReportFont';
   ctx.fillText(`Dữ liệu ngày ${report.reportDate} · đồng bộ ${report.syncedAt}`, PAD, 150);
 
-  box(ctx, 20, 185, 500, 425);
+  box(ctx, 20, 175, 500, 240);
   ctx.fillStyle = '#e92f67';
-  roundedRect(ctx, 48, 167, 285, 40, 20);
+  roundedRect(ctx, 48, 157, 285, 40, 20);
   ctx.fill();
   ctx.fillStyle = '#ffffff';
   ctx.font = '700 17px ReportFont-Bold';
-  ctx.fillText('Tổng quan báo cáo', 74, 193);
+  ctx.fillText('Tổng quan báo cáo', 74, 183);
 
-  report.metrics.forEach((metric, index) => {
+  report.metrics.slice(0, 5).forEach((metric, index) => {
     const column = index % 2;
     const row = Math.floor(index / 2);
     const x = 42 + column * 242;
-    const y = 225 + row * 88;
+    const y = 205 + row * 64;
     ctx.fillStyle = 'rgba(255, 238, 243, 0.72)';
-    roundedRect(ctx, x, y, 214, 70, 10);
+    roundedRect(ctx, x, y, 214, 54, 10);
     ctx.fill();
     ctx.fillStyle = '#636976';
     ctx.font = '400 12px ReportFont';
-    ctx.fillText(metric.label, x + 14, y + 23);
+    ctx.fillText(metric.label, x + 14, y + 20);
     ctx.fillStyle = '#dc1554';
     ctx.font = '700 18px ReportFont-Bold';
-    ctx.fillText(metric.display, x + 14, y + 52);
+    ctx.fillText(metric.display, x + 14, y + 43);
   });
 
-  box(ctx, 20, 625, 500, 255);
+  box(ctx, 20, 440, 500, 185);
   ctx.fillStyle = '#e92f67';
-  roundedRect(ctx, 48, 607, 250, 40, 20);
+  roundedRect(ctx, 48, 422, 270, 40, 20);
   ctx.fill();
   ctx.fillStyle = '#ffffff';
   ctx.font = '700 17px ReportFont-Bold';
-  ctx.fillText('Theo nguồn đơn', 74, 633);
+  ctx.fillText('Tài chính theo sàn', 74, 448);
 
-  let sourceY = 674;
+  report.financialSummary.forEach((metric, index) => {
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const x = 42 + column * 242;
+    const y = 470 + row * 66;
+    ctx.fillStyle = 'rgba(255, 238, 243, 0.72)';
+    roundedRect(ctx, x, y, 214, 56, 10);
+    ctx.fill();
+    ctx.fillStyle = '#636976';
+    ctx.font = '400 12px ReportFont';
+    ctx.fillText(metric.label, x + 14, y + 20);
+    ctx.fillStyle = '#dc1554';
+    ctx.font = '700 16px ReportFont-Bold';
+    ctx.fillText(metric.display, x + 14, y + 44);
+  });
+
+  box(ctx, 20, 650, 500, 245);
+  ctx.fillStyle = '#e92f67';
+  roundedRect(ctx, 48, 632, 250, 40, 20);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 17px ReportFont-Bold';
+  ctx.fillText('Theo nguồn đơn', 74, 658);
+
+  let sourceY = 694;
   report.sourceGroups.forEach((group) => {
     ctx.fillStyle = '#636976';
     ctx.font = '700 12px ReportFont-Bold';
     ctx.fillText(group.label, 48, sourceY);
-    sourceY += 24;
+    sourceY += 20;
     group.sources.forEach((source) => {
       ctx.fillStyle = '#30343f';
       ctx.font = '700 14px ReportFont-Bold';
       ctx.fillText(source.name, 58, sourceY);
       ctx.fillStyle = '#636976';
       ctx.font = '400 11px ReportFont';
-      ctx.fillText(`${source.orderCount} đơn không hủy`, 58, sourceY + 18);
+      ctx.fillText(`${source.orderCount} đơn không hủy`, 58, sourceY + 15);
       ctx.fillStyle = '#dc1554';
       ctx.font = '700 14px ReportFont-Bold';
       ctx.textAlign = 'right';
-      ctx.fillText(source.revenueDisplay, 492, sourceY + 8);
+      ctx.fillText(source.revenueDisplay, 492, sourceY + 7);
       ctx.textAlign = 'left';
-      sourceY += 42;
+      sourceY += 32;
     });
-    sourceY += 7;
+    sourceY += 4;
   });
 
   ctx.textAlign = 'center';

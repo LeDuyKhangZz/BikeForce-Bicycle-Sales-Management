@@ -1510,3 +1510,5 @@ Mục sidebar **Công tác phí** mở dashboard theo tháng. CTA cùng tên đ�
 ## 26/10/2026 — Tài chính theo sàn
 
 `/admin/ecommerce` có thêm bốn thẻ tổng hợp: Doanh số thành công, Tổng phí sàn, Tiền sàn trả và Tiền nạp quảng cáo; bên dưới là card Shopee/TikTok với sáu dòng chi tiết. Mobile dùng card, không dùng bảng ngang; số liệu tabular, nhãn và giá trị cùng hiển thị. `ads_top_up` không được gọi là chi phí quảng cáo thực tiêu.
+
+Ảnh xem trước Sàn TMĐT 9:16 chia ba khối: tổng quan vận hành, tài chính theo sàn và nguồn đơn. Khối tài chính dùng đúng bốn nhãn trên; ảnh bỏ **Đơn từ Ads** và **GMV Ads** để không trùng hoặc diễn giải sai số quảng cáo.

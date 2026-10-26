@@ -921,3 +921,5 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 ## 26/10/2026 — Luồng Pancake analytics/sale
 
 Edge Function gọi `POST https://pos.pages.fm/api/v1/shops/1022081353/analytics/sale?api_key=...` với body chọn các trường tài chính, filter trạng thái `3/16`, split theo `Order.marketplace_id` và biên ngày UTC+7. Parser chỉ nhận `-3` (Shopee), `-9` (TikTok), kiểm tra số nguyên an toàn và tính `platform_receivable = price - discount + marketplace_voucher - fee_marketplace`. Worker POST mảng typed tới RPC; UI đọc bảng bằng session Admin chịu RLS.
+
+RPC ảnh `get_latest_pancake_report_image` trả thêm mảng `financials` cùng snapshot đơn hàng mới nhất. Service parse bằng Zod, view model tổng hợp bốn chỉ số tài chính và renderer dùng chung dữ liệu đó; route ảnh không tự truy vấn bảng hoặc tự tính tiền.

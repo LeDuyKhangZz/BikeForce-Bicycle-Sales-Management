@@ -2950,3 +2950,5 @@ Targeted E2E chưa chạy được vì Supabase local cổng 54322 không hoạt
 ## 2026-10-26 — DEC-117 tài chính Pancake
 
 Đã triển khai bảng `pancake_marketplace_financial_reports`, RPC `upsert_pancake_marketplace_financials`, gọi `analytics/sale` bằng API key trong Edge Function và UI tài chính Shopee/TikTok. Migration production do người dùng áp dụng; function đã deploy. Local: migration/types, unit 13/13, RLS 6/6, typecheck/lint/build 37 route đều pass. **Next Exact Steps:** chạy hoặc chờ cron `pancake-sync`, kiểm tra hai dòng ngày hiện tại; sau đó deploy web để `/admin/ecommerce` hiển thị phần mới. Không dùng lại cookie/JWT Pancake đã gửi trong hội thoại; người dùng phải thu hồi phiên đó.
+
+Ảnh Sàn TMĐT đã thêm bốn chỉ số tài chính và bỏ hai ô Ads cũ. Migration local `20261026100000_pancake_image_financials.sql` đã áp; unit renderer 2/2, RLS Pancake 6/6, typecheck/lint pass; fixture PNG 1080×1920 đã xem trực tiếp và bố cục đạt. **Next Exact Step:** áp migration này trên production, deploy web, rồi mở `/admin/report-previews?ecommerce=1#report-preview` để smoke ảnh thật.

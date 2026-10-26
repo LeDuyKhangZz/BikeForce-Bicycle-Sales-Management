@@ -2987,4 +2987,5 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Reason:** API đơn hàng chỉ có `total_price`, không đủ phí sàn/thực nhận/quảng cáo; endpoint analytics đã được kiểm chứng HTTP 200 bằng chính API key hiện hữu và trả đủ hai sàn.
 - **Alternatives:** Dùng cookie `pos_jwt` bị loại vì ngắn hạn và đã lộ trong hội thoại; lấy trực tiếp API Shopee/TikTok bị hoãn vì Pancake đã tổng hợp đủ; suy ra phí từ đơn hàng bị loại vì sai quyết toán.
 - **Impact:** Thêm bảng force-RLS, RPC upsert service-role-only, mở rộng Edge Function 09:00/17:00, service/view model/UI Admin và test. `ads_top_up` hiển thị đúng là “Tiền nạp quảng cáo”, không khẳng định là chi phí quảng cáo thực tiêu. Không cấp SELECT/DML bảng cho service role; Sales/anon không đọc được.
+- **Image impact:** RPC ảnh trả thêm `financials`; ảnh 9:16 thêm khối bốn chỉ số tài chính và bỏ hai ô Ads cũ để nhãn trên ảnh khớp nguồn dữ liệu đã xác minh.
 - **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp.

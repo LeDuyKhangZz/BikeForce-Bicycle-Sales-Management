@@ -60,14 +60,22 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
           sources: [{ name: 'Tiktok', orderCount: 1, revenueDisplay: 'S$3.49' }],
         },
       ],
-      financialSummary: [],
+      financialSummary: [
+        { label: 'Doanh số thành công', display: '1.900.000 ₫' },
+        { label: 'Tổng phí sàn', display: '300.000 ₫' },
+        { label: 'Tiền sàn trả', display: '1.600.000 ₫' },
+        { label: 'Tiền nạp quảng cáo', display: '50.000 ₫' },
+      ],
       marketplaceFinancials: [],
     });
 
     expect(texts).toEqual(expect.arrayContaining([
       'Báo cáo Sàn TMĐT', ECOMMERCE_REPORT_ACCOUNT, 'Đơn hàng', 'Doanh thu',
-      'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Đơn từ Ads', 'GMV Ads', 'Nguồn Việt Nam',
-      'Nguồn Singapore', 'Shopee', 'Tiktok', 'S$3.49',
+      'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Tài chính theo sàn',
+      'Doanh số thành công', 'Tổng phí sàn', 'Tiền sàn trả', 'Tiền nạp quảng cáo',
+      'Nguồn Việt Nam', 'Nguồn Singapore', 'Shopee', 'Tiktok', 'S$3.49',
     ]));
+    expect(texts).not.toContain('Đơn từ Ads');
+    expect(texts).not.toContain('GMV Ads');
   });
 });

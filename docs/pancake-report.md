@@ -71,3 +71,5 @@ Production cần hai Edge Function Secrets riêng: `PANCAKE_API_KEY` và `PANCAK
 ## Tài chính Shopee/TikTok
 
 Từ 26/10/2026, Edge Function gọi thêm Pancake `analytics/sale` cho shop Việt Nam để lưu doanh số thành công, giảm giá, voucher, phí sàn, tiền sàn trả và tiền nạp quảng cáo theo Shopee/TikTok. Endpoint dùng cùng `PANCAKE_API_KEY`; không dùng cookie đăng nhập. Tiền sàn trả khớp giao diện: `price - discount + marketplace_voucher - fee_marketplace`. `ads_top_up` là tiền nạp, không phải chi phí quảng cáo thực tiêu.
+
+Ảnh báo cáo 9:16 dùng RPC `get_latest_pancake_report_image` để đọc cả snapshot đơn hàng và tài chính. Khối **Tài chính theo sàn** hiển thị Doanh số thành công, Tổng phí sàn, Tiền sàn trả và Tiền nạp quảng cáo. Hai chỉ số cũ **Đơn từ Ads** và **GMV Ads** không còn nằm trên ảnh để tránh hiểu nhầm với số tiền quảng cáo thực tế.

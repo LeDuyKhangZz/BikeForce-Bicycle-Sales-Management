@@ -1632,3 +1632,5 @@ Unit test route khóa các trường hợp env thiếu, API key thiếu/sai, kh�
 ## 26/10/2026 — Kiểm chứng tài chính Pancake
 
 Unit khóa mapping `-3/-9`, công thức tiền sàn trả, `prepaid` âm hợp lệ, tiền âm bất hợp lệ, nhãn “Tiền nạp quảng cáo” và marketplace lạ bị bỏ. RLS khóa Admin đọc, Sales/anon không đọc, service role chỉ execute RPC. Kiểm chứng thực tế endpoint bằng API key trả HTTP 200, `success=true`, hai marketplace. Không log URL chứa key.
+
+Regression ảnh Sàn TMĐT khóa đủ bốn nhãn tài chính và xác nhận **Đơn từ Ads/GMV Ads** không còn được render. RLS kiểm tra RPC ảnh trả đúng `financials` cho Việt Nam và mảng rỗng cho Singapore. Fixture PNG 1080×1920 phải được xem trực tiếp để xác nhận ba khối không chồng lấn.
