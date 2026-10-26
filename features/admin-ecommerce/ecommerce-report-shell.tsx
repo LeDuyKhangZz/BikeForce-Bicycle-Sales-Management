@@ -94,7 +94,7 @@ export function EcommerceReportShell({ report }: Props) {
                     ['Voucher từ sàn', marketplace.marketplaceVoucherDisplay],
                     ['Tổng phí sàn', marketplace.marketplaceFeeDisplay],
                     ['Tiền sàn trả', marketplace.platformReceivableDisplay],
-                    ['Chi phí quảng cáo', marketplace.adsSpendDisplay],
+                    ['Tiền nạp quảng cáo', marketplace.adsSpendDisplay],
                   ].map(([label, value]) => (
                     <div key={label} className="flex min-h-11 items-center justify-between gap-4 border-b border-border py-2 last:border-b-0">
                       <dt className="text-muted-foreground">{label}</dt>

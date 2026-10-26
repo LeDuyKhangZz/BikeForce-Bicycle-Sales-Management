@@ -105,7 +105,7 @@ export function buildEcommerceReportViewModel(
       { label: 'Doanh số thành công', display: formatCurrencyVND(total('gross_sales')) },
       { label: 'Tổng phí sàn', display: formatCurrencyVND(total('marketplace_fee')) },
       { label: 'Tiền sàn trả', display: formatCurrencyVND(total('platform_receivable')) },
-      { label: 'Chi phí quảng cáo', display: formatCurrencyVND(total('ads_top_up')) },
+      { label: 'Tiền nạp quảng cáo', display: formatCurrencyVND(total('ads_top_up')) },
     ],
     marketplaceFinancials: financials.map((row) => ({
       name: row.marketplace_code === 'SHOPEE' ? 'Shopee' : 'TikTok',

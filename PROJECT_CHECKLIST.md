@@ -1582,6 +1582,6 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Xác minh `analytics/sale` bằng API key trên `pos.pages.fm`: HTTP 200, đủ Shopee/TikTok.
 - [x] Thêm bảng force-RLS và RPC upsert chỉ cho service role execute; migration production do người dùng áp dụng.
 - [x] Edge Function đồng bộ tài chính ngày UTC+7 và đã deploy production.
-- [x] Trang Admin hiển thị doanh số, phí sàn, tiền sàn trả, quảng cáo và chi tiết từng sàn.
+- [x] Trang Admin hiển thị doanh số, phí sàn, tiền sàn trả, tiền nạp quảng cáo và chi tiết từng sàn.
 - [x] Unit 13/13, RLS 6/6, typecheck, lint và build 37/37 route pass.
 - [ ] Xác nhận snapshot production sau lượt cron hoặc lượt gọi bù đầu tiên.

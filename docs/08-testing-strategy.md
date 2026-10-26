@@ -1631,4 +1631,4 @@ Unit test route khóa các trường hợp env thiếu, API key thiếu/sai, kh�
 - Targeted E2E mobile/desktop đã được gọi nhưng chưa chạy test case vì Supabase local tại `127.0.0.1:54322` không hoạt động; không ghi PASS.
 ## 26/10/2026 — Kiểm chứng tài chính Pancake
 
-Unit khóa mapping `-3/-9`, công thức tiền sàn trả, `prepaid` âm hợp lệ, tiền âm bất hợp lệ và marketplace lạ bị bỏ. RLS khóa Admin đọc, Sales/anon không đọc, service role chỉ execute RPC. Kiểm chứng thực tế endpoint bằng API key trả HTTP 200, `success=true`, hai marketplace. Không log URL chứa key.
+Unit khóa mapping `-3/-9`, công thức tiền sàn trả, `prepaid` âm hợp lệ, tiền âm bất hợp lệ, nhãn “Tiền nạp quảng cáo” và marketplace lạ bị bỏ. RLS khóa Admin đọc, Sales/anon không đọc, service role chỉ execute RPC. Kiểm chứng thực tế endpoint bằng API key trả HTTP 200, `success=true`, hai marketplace. Không log URL chứa key.

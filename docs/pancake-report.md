@@ -70,4 +70,4 @@ Edge Function đồng bộ độc lập hai shop: Việt Nam `1022081353` dùng 
 Production cần hai Edge Function Secrets riêng: `PANCAKE_API_KEY` và `PANCAKE_SG_API_KEY`. Không ghi giá trị thật vào source, migration hay tài liệu.
 ## Tài chính Shopee/TikTok
 
-Từ 26/10/2026, Edge Function gọi thêm Pancake `analytics/sale` cho shop Việt Nam để lưu doanh số thành công, giảm giá, voucher, phí sàn, tiền sàn trả và tiền quảng cáo theo Shopee/TikTok. Endpoint dùng cùng `PANCAKE_API_KEY`; không dùng cookie đăng nhập. Tiền sàn trả khớp giao diện: `price - discount + marketplace_voucher - fee_marketplace`.
+Từ 26/10/2026, Edge Function gọi thêm Pancake `analytics/sale` cho shop Việt Nam để lưu doanh số thành công, giảm giá, voucher, phí sàn, tiền sàn trả và tiền nạp quảng cáo theo Shopee/TikTok. Endpoint dùng cùng `PANCAKE_API_KEY`; không dùng cookie đăng nhập. Tiền sàn trả khớp giao diện: `price - discount + marketplace_voucher - fee_marketplace`. `ads_top_up` là tiền nạp, không phải chi phí quảng cáo thực tiêu.

@@ -98,7 +98,7 @@ describe('buildEcommerceReportViewModel', () => {
       { label: 'Doanh số thành công', display: '20.439.825 ₫' },
       { label: 'Tổng phí sàn', display: '3.927.338 ₫' },
       { label: 'Tiền sàn trả', display: '9.427.037 ₫' },
-      { label: 'Chi phí quảng cáo', display: '144.219 ₫' },
+      { label: 'Tiền nạp quảng cáo', display: '144.219 ₫' },
     ]);
     expect(result?.marketplaceFinancials[0]).toMatchObject({
       name: 'Shopee', deliveredCount: 133, platformReceivableDisplay: '9.427.037 ₫',
