@@ -68,3 +68,6 @@ Không đặt API key trực tiếp trong Arguments vì nó sẽ hiện trong Ta
 Edge Function đồng bộ độc lập hai shop: Việt Nam `1022081353` dùng UTC+7 và Singapore `1943148428` dùng UTC+8. Shop Singapore giữ hai nguồn Shopee/TikTok; doanh thu Pancake dạng cent được hiển thị bằng SGD (`349` → `S$3.49`) và không cộng vào tổng VND. Ảnh báo cáo giữ tổng quan Việt Nam, đồng thời tách hai nhóm **Nguồn Việt Nam** và **Nguồn Singapore**.
 
 Production cần hai Edge Function Secrets riêng: `PANCAKE_API_KEY` và `PANCAKE_SG_API_KEY`. Không ghi giá trị thật vào source, migration hay tài liệu.
+## Tài chính Shopee/TikTok
+
+Từ 26/10/2026, Edge Function gọi thêm Pancake `analytics/sale` cho shop Việt Nam để lưu doanh số thành công, giảm giá, voucher, phí sàn, tiền sàn trả và tiền quảng cáo theo Shopee/TikTok. Endpoint dùng cùng `PANCAKE_API_KEY`; không dùng cookie đăng nhập. Tiền sàn trả khớp giao diện: `price - discount + marketplace_voucher - fee_marketplace`.

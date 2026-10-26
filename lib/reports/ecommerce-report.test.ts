@@ -30,6 +30,19 @@ const REPORT: EcommerceReportData = {
           synced_at: '2026-10-19T02:00:00Z',
         },
       ],
+      financials: [
+        {
+          report_date: '2026-10-19', shop_id: 1022081353, marketplace_code: 'SHOPEE',
+          currency_code: 'VND', delivered_count: 133, gross_sales: 20_439_825,
+          shop_discount: 7_085_450, marketplace_voucher: 0, marketplace_fee: 3_927_338,
+          platform_receivable: 9_427_037, cod: 9_427_037, prepaid: 0, capital: 0,
+          payment_fee: 1_985_551, seller_transaction_fee: 813_010,
+          service_fee: 1_128_777, sfp_service_fee: 0, affiliate_commission: 0,
+          platform_commission: 0, platform_shipping_fee: 0, diff_shipping_fee: 0,
+          marketplace_tax: 0, marketing_fee: 0, ads_top_up: 144_219,
+          synced_at: '2026-10-19T02:00:00Z',
+        },
+      ],
     },
     {
       daily: {
@@ -65,6 +78,7 @@ const REPORT: EcommerceReportData = {
           synced_at: '2026-10-19T02:00:00Z',
         },
       ],
+      financials: [],
     },
   ],
 };
@@ -80,6 +94,15 @@ describe('buildEcommerceReportViewModel', () => {
       { name: 'Shopee', orderCount: 1, revenueDisplay: 'S$1.00' },
       { name: 'Tiktok', orderCount: 1, revenueDisplay: 'S$3.49' },
     ]);
+    expect(result?.financialSummary).toEqual([
+      { label: 'Doanh số thành công', display: '20.439.825 ₫' },
+      { label: 'Tổng phí sàn', display: '3.927.338 ₫' },
+      { label: 'Tiền sàn trả', display: '9.427.037 ₫' },
+      { label: 'Chi phí quảng cáo', display: '144.219 ₫' },
+    ]);
+    expect(result?.marketplaceFinancials[0]).toMatchObject({
+      name: 'Shopee', deliveredCount: 133, platformReceivableDisplay: '9.427.037 ₫',
+    });
   });
 
   it('không tạo báo cáo tổng quan khi chưa có snapshot Việt Nam', () => {

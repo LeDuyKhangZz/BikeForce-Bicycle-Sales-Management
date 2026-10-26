@@ -60,6 +60,8 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
           sources: [{ name: 'Tiktok', orderCount: 1, revenueDisplay: 'S$3.49' }],
         },
       ],
+      financialSummary: [],
+      marketplaceFinancials: [],
     });
 
     expect(texts).toEqual(expect.arrayContaining([

@@ -2947,3 +2947,6 @@ Poster web và renderer PNG nay hiển thị thêm thanh **Tổng doanh thu / T�
 `/admin/travel-expenses` đã đổi thành dashboard tháng; form nhập cũ nằm tại `/admin/travel-expenses/entries`. CTA **Công tác phí** và nút quay lại đều giữ query tháng. Dashboard dùng view model trong `lib/admin/travel-expense-dashboard.ts`, không tính nghiệp vụ trong component. Typecheck/lint/targeted unit 5/5/build 37 route pass. Next Exact Step: kiểm tra trực quan 375px và 1440px; sau đó commit/push nếu không có lỗi giao diện.
 
 Targeted E2E chưa chạy được vì Supabase local cổng 54322 không hoạt động; trình duyệt tích hợp của phiên cũng không khả dụng. Không ghi hai kiểm tra này là PASS.
+## 2026-10-26 — DEC-117 tài chính Pancake
+
+Đã triển khai bảng `pancake_marketplace_financial_reports`, RPC `upsert_pancake_marketplace_financials`, gọi `analytics/sale` bằng API key trong Edge Function và UI tài chính Shopee/TikTok. Migration production do người dùng áp dụng; function đã deploy. Local: migration/types, unit 13/13, RLS 6/6, typecheck/lint/build 37 route đều pass. **Next Exact Steps:** chạy hoặc chờ cron `pancake-sync`, kiểm tra hai dòng ngày hiện tại; sau đó deploy web để `/admin/ecommerce` hiển thị phần mới. Không dùng lại cookie/JWT Pancake đã gửi trong hội thoại; người dùng phải thu hồi phiên đó.

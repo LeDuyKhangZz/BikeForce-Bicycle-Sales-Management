@@ -66,6 +66,46 @@ export function EcommerceReportShell({ report }: Props) {
           </p>
         </Card>
       ) : (
+        <div className="flex flex-col gap-6">
+        <section aria-labelledby="ecommerce-financial-title" className="flex flex-col gap-3">
+          <div>
+            <h2 id="ecommerce-financial-title" className="text-lg font-semibold text-heading">Tài chính theo sàn</h2>
+            <p className="text-sm text-muted-foreground">Đơn thành công theo báo cáo Pancake trong ngày.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {report.financialSummary.map((metric) => (
+              <Card key={metric.label} className="flex min-h-28 flex-col justify-between gap-3">
+                <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
+                <p className="text-xl font-bold tabular-nums text-heading">{metric.display}</p>
+              </Card>
+            ))}
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {report.marketplaceFinancials.map((marketplace) => (
+              <Card key={marketplace.name} className="flex flex-col gap-3">
+                <div>
+                  <CardTitle>{marketplace.name}</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">{marketplace.deliveredCount} đơn thành công</p>
+                </div>
+                <dl className="grid gap-2 text-sm">
+                  {[
+                    ['Doanh số', marketplace.grossSalesDisplay],
+                    ['Giảm giá cửa hàng', marketplace.shopDiscountDisplay],
+                    ['Voucher từ sàn', marketplace.marketplaceVoucherDisplay],
+                    ['Tổng phí sàn', marketplace.marketplaceFeeDisplay],
+                    ['Tiền sàn trả', marketplace.platformReceivableDisplay],
+                    ['Chi phí quảng cáo', marketplace.adsSpendDisplay],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex min-h-11 items-center justify-between gap-4 border-b border-border py-2 last:border-b-0">
+                      <dt className="text-muted-foreground">{label}</dt>
+                      <dd className="font-semibold tabular-nums text-heading">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Card>
+            ))}
+          </div>
+        </section>
         <section aria-labelledby="ecommerce-source-title" className="flex flex-col gap-3">
           <div>
             <h2 id="ecommerce-source-title" className="text-lg font-semibold text-heading">Theo nguồn đơn</h2>
@@ -95,6 +135,7 @@ export function EcommerceReportShell({ report }: Props) {
             ))}
           </div>
         </section>
+        </div>
       )}
     </div>
   );

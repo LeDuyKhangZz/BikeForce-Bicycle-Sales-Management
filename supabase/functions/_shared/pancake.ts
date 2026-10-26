@@ -18,6 +18,30 @@ export type PancakeDailySnapshot = {
   sources: PancakeSource[];
 };
 
+export type PancakeMarketplaceFinancial = {
+  marketplace_code: 'SHOPEE' | 'TIKTOK';
+  delivered_count: number;
+  gross_sales: number;
+  shop_discount: number;
+  marketplace_voucher: number;
+  marketplace_fee: number;
+  platform_receivable: number;
+  cod: number;
+  prepaid: number;
+  capital: number;
+  payment_fee: number;
+  seller_transaction_fee: number;
+  service_fee: number;
+  sfp_service_fee: number;
+  affiliate_commission: number;
+  platform_commission: number;
+  platform_shipping_fee: number;
+  diff_shipping_fee: number;
+  marketplace_tax: number;
+  marketing_fee: number;
+  ads_top_up: number;
+};
+
 const HOUR_MILLISECONDS = 60 * 60 * 1000;
 
 function recordValue(value: unknown, field: string): unknown {
@@ -33,6 +57,83 @@ function integerMoney(value: unknown): number {
     throw new Error('Pancake trả total_price không hợp lệ.');
   }
   return parsed;
+}
+
+function signedInteger(value: unknown, field: string): number {
+  const parsed = typeof value === 'number' ? value : Number(value ?? 0);
+  if (!Number.isSafeInteger(parsed)) throw new Error(`Pancake trả ${field} không hợp lệ.`);
+  return parsed;
+}
+
+function nonnegativeInteger(value: unknown, field: string): number {
+  const parsed = signedInteger(value, field);
+  if (parsed < 0) throw new Error(`Pancake trả ${field} âm.`);
+  return parsed;
+}
+
+function marketplaceCode(value: unknown): 'SHOPEE' | 'TIKTOK' | null {
+  if (value === '-3') return 'SHOPEE';
+  if (value === '-9') return 'TIKTOK';
+  return null;
+}
+
+export function readMarketplaceFinancials(payload: unknown): PancakeMarketplaceFinancial[] {
+  const data = recordValue(payload, 'data');
+  if (!Array.isArray(data)) throw new Error('Pancake analytics không trả mảng data hợp lệ.');
+
+  return data.flatMap((item) => {
+    const code = marketplaceCode(recordValue(item, 'Order.marketplace_id'));
+    if (code === null) return [];
+    const result = recordValue(item, 'result');
+    const grossSales = nonnegativeInteger(recordValue(result, 'price'), 'price');
+    const shopDiscount = nonnegativeInteger(recordValue(result, 'discount'), 'discount');
+    const marketplaceVoucher = nonnegativeInteger(
+      recordValue(result, 'marketplace_voucher'),
+      'marketplace_voucher',
+    );
+    const marketplaceFee = nonnegativeInteger(
+      recordValue(result, 'fee_marketplace'),
+      'fee_marketplace',
+    );
+    const platformReceivable = grossSales - shopDiscount + marketplaceVoucher - marketplaceFee;
+    if (platformReceivable < 0) throw new Error('Pancake trả tiền sàn trả âm.');
+
+    return [{
+      marketplace_code: code,
+      delivered_count: nonnegativeInteger(recordValue(result, 'delivered_count'), 'delivered_count'),
+      gross_sales: grossSales,
+      shop_discount: shopDiscount,
+      marketplace_voucher: marketplaceVoucher,
+      marketplace_fee: marketplaceFee,
+      platform_receivable: platformReceivable,
+      cod: nonnegativeInteger(recordValue(result, 'cod'), 'cod'),
+      prepaid: signedInteger(recordValue(result, 'prepaid'), 'prepaid'),
+      capital: nonnegativeInteger(recordValue(result, 'capital'), 'capital'),
+      payment_fee: nonnegativeInteger(recordValue(result, 'payment_fee'), 'payment_fee'),
+      seller_transaction_fee: nonnegativeInteger(
+        recordValue(result, 'seller_transaction_fee'),
+        'seller_transaction_fee',
+      ),
+      service_fee: nonnegativeInteger(recordValue(result, 'service_fee'), 'service_fee'),
+      sfp_service_fee: nonnegativeInteger(recordValue(result, 'sfp_service_fee'), 'sfp_service_fee'),
+      affiliate_commission: nonnegativeInteger(
+        recordValue(result, 'affiliate_commission'),
+        'affiliate_commission',
+      ),
+      platform_commission: nonnegativeInteger(
+        recordValue(result, 'platform_commission'),
+        'platform_commission',
+      ),
+      platform_shipping_fee: nonnegativeInteger(
+        recordValue(result, 'platform_shipping_fee'),
+        'platform_shipping_fee',
+      ),
+      diff_shipping_fee: signedInteger(recordValue(result, 'diff_shipping_fee'), 'diff_shipping_fee'),
+      marketplace_tax: nonnegativeInteger(recordValue(result, 'marketplace_tax'), 'marketplace_tax'),
+      marketing_fee: nonnegativeInteger(recordValue(result, 'marketing_fee'), 'marketing_fee'),
+      ads_top_up: nonnegativeInteger(recordValue(result, 'ads_top_up'), 'ads_top_up'),
+    }];
+  });
 }
 
 function statusNumber(order: PancakeOrder): number {

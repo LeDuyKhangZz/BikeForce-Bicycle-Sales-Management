@@ -918,3 +918,6 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 ## Đọc dashboard công tác phí (2026-10-12)
 
 `/admin/travel-expenses?month=YYYY-MM` → auth Admin → `getTravelExpensePageData` → hai service query hiện hữu chạy song song → `buildTravelExpenseDashboard` dựng các tổng và danh sách thiếu. Nút **Công tác phí** chuyển sang `/admin/travel-expenses/entries?month=YYYY-MM`; Server Action và RPC lưu hiện hữu không đổi.
+## 26/10/2026 — Luồng Pancake analytics/sale
+
+Edge Function gọi `POST https://pos.pages.fm/api/v1/shops/1022081353/analytics/sale?api_key=...` với body chọn các trường tài chính, filter trạng thái `3/16`, split theo `Order.marketplace_id` và biên ngày UTC+7. Parser chỉ nhận `-3` (Shopee), `-9` (TikTok), kiểm tra số nguyên an toàn và tính `platform_receivable = price - discount + marketplace_voucher - fee_marketplace`. Worker POST mảng typed tới RPC; UI đọc bảng bằng session Admin chịu RLS.

@@ -1298,3 +1298,6 @@ DEC-109: chạy lần lượt `20261009110000_customer_care_revocation.sql` rồ
 ### Biến môi trường ảnh Hạt Dẻ
 
 Đặt `HATDE_BOARD_IMAGE_API_KEY` ở môi trường server Production/Preview cần thiết rồi redeploy. n8n gửi key qua header `x-api-key`; không đưa key vào URL, log hoặc biến `NEXT_PUBLIC_*`. Route dùng Node.js runtime vì `@napi-rs/canvas` là native module.
+## 26/10/2026 — Triển khai tài chính Pancake
+
+Áp migration `20261026090000_pancake_marketplace_financials.sql` trước khi deploy lại Edge Function `pancake-sync`. Không cần secret mới: function dùng `PANCAKE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` hiện hữu. Sau deploy, gọi một lượt sync hoặc chờ cron 09:00/17:00 và xác nhận bảng có hai dòng Shopee/TikTok cho ngày hiện tại.

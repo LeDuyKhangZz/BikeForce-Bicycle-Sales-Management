@@ -936,3 +936,6 @@ Route `/admin/hatde` được bảo vệ bởi middleware, Admin layout, `requir
 ### API ảnh Hạt Dẻ cho n8n
 
 Route `GET /api/hatde/board/image` không dùng cookie Admin. Middleware chỉ miễn session đúng pathname này qua `isSelfAuthenticatedApiPath`; các `/api/admin/*` khác không thay đổi. Caller phải gửi `x-api-key` khớp `HATDE_BOARD_IMAGE_API_KEY`; so sánh constant-time. Key không được nhận qua query string. Sau khi xác thực, route dùng service-role server-only với quyền `SELECT` hẹp do migration DEC-116 cấp.
+## 26/10/2026 — Quyền tài chính Pancake
+
+`pancake_marketplace_financial_reports` chỉ cấp SELECT cho `authenticated` và policy yêu cầu `(select public.is_admin())`. `service_role` bị revoke mọi quyền bảng, chỉ được EXECUTE `upsert_pancake_marketplace_financials`; anon và Sales không đọc được. API key Pancake chỉ tồn tại trong Edge Function Secrets.

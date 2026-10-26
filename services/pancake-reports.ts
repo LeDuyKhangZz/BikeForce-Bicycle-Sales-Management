@@ -7,10 +7,13 @@ import { PANCAKE_REPORT_SHOP_IDS } from '@/lib/pancake/shops';
 type PancakeDailyReportRow = Database['public']['Tables']['pancake_daily_reports']['Row'];
 type PancakeSourceReportRow =
   Database['public']['Tables']['pancake_daily_source_reports']['Row'];
+type PancakeMarketplaceFinancialRow =
+  Database['public']['Tables']['pancake_marketplace_financial_reports']['Row'];
 
 export type PancakeDailyReport = {
   daily: PancakeDailyReportRow;
   sources: PancakeSourceReportRow[];
+  financials?: PancakeMarketplaceFinancialRow[];
 };
 
 export type PancakeReportCollection = {
@@ -52,7 +55,23 @@ async function getLatestPancakeDailyReportByShop(
     return null;
   }
 
-  return { daily, sources: sources ?? [] };
+  const { data: financials, error: financialsError } = await supabase
+    .from('pancake_marketplace_financial_reports')
+    .select(
+      'report_date,shop_id,marketplace_code,currency_code,delivered_count,gross_sales,shop_discount,marketplace_voucher,marketplace_fee,platform_receivable,cod,prepaid,capital,payment_fee,seller_transaction_fee,service_fee,sfp_service_fee,affiliate_commission,platform_commission,platform_shipping_fee,diff_shipping_fee,marketplace_tax,marketing_fee,ads_top_up,synced_at',
+      { count: 'exact' },
+    )
+    .eq('report_date', daily.report_date)
+    .eq('shop_id', daily.shop_id)
+    .order('marketplace_code', { ascending: true })
+    .range(0, SOURCE_PAGE_SIZE - 1);
+
+  if (financialsError) {
+    console.error('[getLatestPancakeDailyReport:financials]', financialsError.code, financialsError.message);
+    return null;
+  }
+
+  return { daily, sources: sources ?? [], financials: financials ?? [] };
 }
 
 export async function getLatestPancakeDailyReports(

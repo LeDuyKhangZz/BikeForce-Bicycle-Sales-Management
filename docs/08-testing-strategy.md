@@ -1629,3 +1629,6 @@ Unit test route khóa các trường hợp env thiếu, API key thiếu/sai, kh�
 - E2E mở dashboard, bấm CTA **Công tác phí**, giữ nguyên tháng và thấy lại form nhập.
 - Typecheck, lint, targeted unit 5/5 và production build 37 route đã chạy pass. Bài unit navigation hiện hữu vẫn có một lỗi ngoài phạm vi: nhãn `Khách hàng` dài 10 ký tự so với ngưỡng cũ 9.
 - Targeted E2E mobile/desktop đã được gọi nhưng chưa chạy test case vì Supabase local tại `127.0.0.1:54322` không hoạt động; không ghi PASS.
+## 26/10/2026 — Kiểm chứng tài chính Pancake
+
+Unit khóa mapping `-3/-9`, công thức tiền sàn trả, `prepaid` âm hợp lệ, tiền âm bất hợp lệ và marketplace lạ bị bỏ. RLS khóa Admin đọc, Sales/anon không đọc, service role chỉ execute RPC. Kiểm chứng thực tế endpoint bằng API key trả HTTP 200, `success=true`, hai marketplace. Không log URL chứa key.

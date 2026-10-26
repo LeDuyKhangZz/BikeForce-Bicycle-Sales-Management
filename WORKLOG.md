@@ -4086,3 +4086,6 @@ Theo yêu cầu người dùng, `/admin/travel-expenses` nay là dashboard theo 
 Verification: typecheck exit 0, lint exit 0, targeted unit 5/5 pass, production build 37 route pass. Khi chạy kèm `lib/navigation/nav-items.test.ts`, có một lỗi tồn tại ngoài phạm vi do nhãn Sales `Khách hàng` dài 10 ký tự so với ngưỡng test 9.
 
 Targeted E2E mobile/desktop đã thử chạy nhưng global setup dừng tại `ECONNREFUSED 127.0.0.1:54322` vì Supabase local không chạy. Trình duyệt tích hợp cũng không khả dụng trong phiên, nên chưa ghi kiểm tra trực quan PASS.
+## 2026-10-26 — Tích hợp tài chính Shopee/TikTok từ Pancake (DEC-117)
+
+Xác minh endpoint `analytics/sale` trên host Open API bằng `PANCAKE_POS_API_KEY` trả HTTP 200 với hai marketplace. Thêm snapshot tài chính Admin-only, RPC worker-only, parser typed và công thức tiền sàn trả khớp giao diện; giữ COD/prepaid riêng để đối soát. Mở rộng `pancake-sync`, service, view model và `/admin/ecommerce`; không dùng cookie/JWT đã lộ. Người dùng đã áp migration production; Edge Function đã deploy. Kiểm chứng: unit liên quan 13/13, RLS 6/6, typecheck/lint sạch, build production 37/37 route. Còn chờ một lượt sync production để xác nhận hai dòng ngày hiện tại.

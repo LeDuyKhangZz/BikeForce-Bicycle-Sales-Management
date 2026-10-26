@@ -1144,3 +1144,6 @@ Supabase Cron gọi Edge Function `pancake-sync` lúc 09:00 và 17:00 giờ Vi�
 ## Luồng dashboard công tác phí (2026-10-12)
 
 Admin mở `/admin/travel-expenses` để xem tổng quan theo tháng: tổng nhân viên, số đã nhập/chưa nhập, tỷ lệ hoàn tất, tổng tiền và danh sách còn thiếu. Nút **Công tác phí** giữ tháng đang chọn và mở `/admin/travel-expenses/entries`, là màn nhập liệu trước đây. Sau khi lưu, cả dashboard và màn nhập được revalidate.
+## Đồng bộ tài chính Pancake (DEC-117)
+
+Trong lượt 09:00/17:00, worker Việt Nam gọi thêm `analytics/sale` với cùng API key và khoảng ngày UTC+7. Kết quả tách Shopee/TikTok, tính tiền sàn trả theo công thức của giao diện rồi gọi RPC thay snapshot. Lỗi analytics làm lượt shop Việt Nam báo lỗi thay vì ghi trạng thái thành công giả; snapshot đơn hàng đã ghi trước đó vẫn giữ để không mất dữ liệu vận hành.

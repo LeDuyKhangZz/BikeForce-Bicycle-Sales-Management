@@ -6,6 +6,7 @@ import {
   isOrderOnVietnamDate,
   isOrderOnDate,
   isSingaporeMarketplaceOrder,
+  readMarketplaceFinancials,
 } from '../../supabase/functions/_shared/pancake';
 
 describe('Pancake Edge Function', () => {
@@ -63,5 +64,51 @@ describe('Pancake Edge Function', () => {
 
   it('ghi snapshot 0 thay vì thành công giả khi ngày chưa có đơn', () => {
     expect(buildPancakeSnapshot('2026-10-10', [])).toMatchObject({ orderCount: 0, revenue: 0, sources: [] });
+  });
+
+  it('đọc tài chính Shopee/TikTok và tính tiền sàn trả giống giao diện Pancake', () => {
+    const rows = readMarketplaceFinancials({ data: [
+      {
+        'Order.marketplace_id': '-3',
+        result: {
+          delivered_count: 133, price: 20_439_825, discount: 7_085_450,
+          marketplace_voucher: 0, fee_marketplace: 3_927_338, cod: 9_427_037,
+          prepaid: 0, capital: 0, payment_fee: 1_985_551,
+          seller_transaction_fee: 813_010, service_fee: 1_128_777,
+          sfp_service_fee: 0, affiliate_commission: 0, platform_commission: 0,
+          platform_shipping_fee: 0, diff_shipping_fee: 0, marketplace_tax: 0,
+          marketing_fee: 0, ads_top_up: 144_219,
+        },
+      },
+      {
+        'Order.marketplace_id': '-9',
+        result: {
+          delivered_count: 1257, price: 165_174_750, discount: 89_342_330,
+          marketplace_voucher: 5_909_442, fee_marketplace: 5_455_293,
+          cod: 76_288_259, prepaid: -1690, capital: 0, payment_fee: 0,
+          seller_transaction_fee: 0, service_fee: 1_101_597,
+          sfp_service_fee: 0, affiliate_commission: 62_957,
+          platform_commission: 817_340, platform_shipping_fee: 0,
+          diff_shipping_fee: 0, marketplace_tax: 0, marketing_fee: 0, ads_top_up: 0,
+        },
+      },
+    ] });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      marketplace_code: 'SHOPEE', platform_receivable: 9_427_037, ads_top_up: 144_219,
+    });
+    expect(rows[1]).toMatchObject({
+      marketplace_code: 'TIKTOK', platform_receivable: 76_286_569, cod: 76_288_259,
+      prepaid: -1690,
+    });
+  });
+
+  it('bỏ marketplace không hỗ trợ và từ chối số tiền sai', () => {
+    expect(readMarketplaceFinancials({ data: [{ 'Order.marketplace_id': '-1', result: {} }] }))
+      .toEqual([]);
+    expect(() => readMarketplaceFinancials({
+      data: [{ 'Order.marketplace_id': '-3', result: { price: -1 } }],
+    })).toThrow('price âm');
   });
 });

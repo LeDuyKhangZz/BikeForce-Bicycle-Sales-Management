@@ -1507,3 +1507,6 @@ Poster dùng trực tiếp tài sản thương hiệu `public/images/nenhatde.pn
 ## Dashboard công tác phí (2026-10-12)
 
 Mục sidebar **Công tác phí** mở dashboard theo tháng. CTA cùng tên đặt ở đầu trang, đủ 44px và giữ tháng khi đi vào màn nhập. Dashboard dùng lưới 2 cột trên mobile, 4 cột trên desktop; số liệu tiền được phép xuống dòng và danh sách thiếu dùng card dọc nên không phát sinh cuộn ngang. Màn nhập cũ chuyển nguyên vẹn sang `/admin/travel-expenses/entries` và có nút quay lại dashboard.
+## 26/10/2026 — Tài chính theo sàn
+
+`/admin/ecommerce` có thêm bốn thẻ tổng hợp: Doanh số thành công, Tổng phí sàn, Tiền sàn trả và Chi phí quảng cáo; bên dưới là card Shopee/TikTok với sáu dòng chi tiết. Mobile dùng card, không dùng bảng ngang; số liệu tabular, nhãn và giá trị cùng hiển thị.

@@ -33,6 +33,22 @@ beforeAll(async () => {
   });
   if (error) throw error;
 
+  const { error: financialError } = await authAdmin.rpc('upsert_pancake_marketplace_financials', {
+    p_report_date: REPORT_DATE,
+    p_shop_id: SHOP_ID,
+    p_currency_code: 'VND',
+    p_marketplaces: [{
+      marketplace_code: 'SHOPEE', delivered_count: 5, gross_sales: 2_000_000,
+      shop_discount: 500_000, marketplace_voucher: 100_000, marketplace_fee: 300_000,
+      platform_receivable: 1_300_000, cod: 1_300_000, prepaid: 0, capital: 0,
+      payment_fee: 100_000, seller_transaction_fee: 100_000, service_fee: 100_000,
+      sfp_service_fee: 0, affiliate_commission: 0, platform_commission: 0,
+      platform_shipping_fee: 0, diff_shipping_fee: 0, marketplace_tax: 0,
+      marketing_fee: 0, ads_top_up: 50_000,
+    }],
+  });
+  if (financialError) throw financialError;
+
   const { error: singaporeError } = await authAdmin.rpc('upsert_pancake_daily_report', {
     p_report_date: REPORT_DATE,
     p_shop_id: SINGAPORE_SHOP_ID,
@@ -49,6 +65,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await sql(
+    'delete from public.pancake_marketplace_financial_reports where report_date = $1 and shop_id = $2',
+    [REPORT_DATE, SHOP_ID],
+  );
   await sql(
     'delete from public.pancake_daily_reports where report_date = $1 and shop_id = any($2)',
     [REPORT_DATE, [SHOP_ID, SINGAPORE_SHOP_ID]],
@@ -77,6 +97,11 @@ describe('RLS báo cáo Pancake', () => {
         expect.objectContaining({ source_name: 'Tiktok', order_count: 5, revenue: 517_875 }),
       ]),
     );
+    expect(report?.financials).toEqual([
+      expect.objectContaining({
+        marketplace_code: 'SHOPEE', platform_receivable: 1_300_000, ads_top_up: 50_000,
+      }),
+    ]);
     expect(singapore?.daily.market_code).toBe('SG');
     expect(singapore?.daily.currency_code).toBe('SGD');
     expect(singapore?.sources).toEqual([
@@ -120,6 +145,40 @@ describe('RLS báo cáo Pancake', () => {
       service_update: false,
       service_execute: true,
     });
+
+    const financialPrivileges = await sql<{
+      service_select: boolean;
+      service_insert: boolean;
+      service_execute: boolean;
+    }>(
+      `select
+        has_table_privilege('service_role', 'public.pancake_marketplace_financial_reports', 'SELECT') as service_select,
+        has_table_privilege('service_role', 'public.pancake_marketplace_financial_reports', 'INSERT') as service_insert,
+        has_function_privilege(
+          'service_role',
+          'public.upsert_pancake_marketplace_financials(date,bigint,text,jsonb)',
+          'EXECUTE'
+        ) as service_execute`,
+    );
+
+    expect(financialPrivileges.rows[0]).toEqual({
+      service_select: false,
+      service_insert: false,
+      service_execute: true,
+    });
+  });
+
+  it('Sales và anon không đọc được tài chính theo sàn', async () => {
+    const salesResult = await fixture.clients.salesA
+      .from('pancake_marketplace_financial_reports')
+      .select('report_date');
+    const anonResult = await fixture.anon
+      .from('pancake_marketplace_financial_reports')
+      .select('report_date');
+
+    expect(salesResult.error).toBeNull();
+    expect(salesResult.data).toEqual([]);
+    expect(anonResult.error).not.toBeNull();
   });
 
   it('RPC ảnh chỉ cho service role đọc snapshot mới nhất', async () => {

@@ -1375,3 +1375,6 @@ Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái 
 ## Automation ảnh bảng thi đua Hạt Dẻ
 
 Migration `20261011140000_hatde_image_automation_read.sql` chỉ cấp `SELECT` trên `hatde_snapshots` và `hatde_branch_snapshots` cho `service_role`. Quyền này phục vụ route server-side xuất PNG; `anon` không được cấp và `authenticated` vẫn chịu policy Admin. Không cấp `INSERT`, `UPDATE` hoặc `DELETE` trực tiếp cho automation.
+## 26/10/2026 — Snapshot tài chính Pancake theo sàn
+
+`pancake_marketplace_financial_reports` có khóa `(report_date, shop_id, marketplace_code)`, force RLS và chỉ Admin được SELECT. Bảng lưu số đơn thành công, giá trị hàng, giảm giá cửa hàng, voucher sàn, tổng phí sàn, tiền sàn trả, COD, trả trước, phí thành phần và tiền quảng cáo. RPC `upsert_pancake_marketplace_financials` thay snapshot một ngày, chỉ `service_role` được EXECUTE; role này không có SELECT/DML trực tiếp trên bảng (DEC-117).

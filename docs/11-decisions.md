@@ -2979,3 +2979,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Chụp trang bằng Playwright bị loại vì nặng và dễ dính navigation; `next/og` bị loại vì khó tái sử dụng ảnh nền và bố cục canvas hiện có.
 - **Impact:** Cần áp migration `20261011140000_hatde_image_automation_read.sql`, đặt secret mới và redeploy Vercel.
 - **Status:** APPROVED
+
+## DEC-117 — Tài chính sàn lấy từ Pancake analytics bằng API key
+
+- **Date:** 2026-10-26
+- **Decision:** Gọi `POST /api/v1/shops/{shop_id}/analytics/sale` trên `pos.pages.fm` bằng API key server-only, theo ngày Việt Nam và tách `Order.marketplace_id` thành Shopee/TikTok. Lưu snapshot tài chính riêng theo `(report_date, shop_id, marketplace_code)`. “Tiền sàn trả” dùng công thức khớp giao diện Pancake: `price - discount + marketplace_voucher - fee_marketplace`; giữ `cod` và `prepaid` riêng để đối soát.
+- **Reason:** API đơn hàng chỉ có `total_price`, không đủ phí sàn/thực nhận/quảng cáo; endpoint analytics đã được kiểm chứng HTTP 200 bằng chính API key hiện hữu và trả đủ hai sàn.
+- **Alternatives:** Dùng cookie `pos_jwt` bị loại vì ngắn hạn và đã lộ trong hội thoại; lấy trực tiếp API Shopee/TikTok bị hoãn vì Pancake đã tổng hợp đủ; suy ra phí từ đơn hàng bị loại vì sai quyết toán.
+- **Impact:** Thêm bảng force-RLS, RPC upsert service-role-only, mở rộng Edge Function 09:00/17:00, service/view model/UI Admin và test. Không cấp SELECT/DML bảng cho service role; Sales/anon không đọc được.
+- **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp.

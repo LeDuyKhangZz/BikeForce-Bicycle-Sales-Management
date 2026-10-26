@@ -7,6 +7,7 @@ import {
   getDayUnixRange,
   isOrderOnDate,
   isSingaporeMarketplaceOrder,
+  readMarketplaceFinancials,
   readOrderPage,
   type PancakeOrder,
 } from '../_shared/pancake.ts';
@@ -14,6 +15,12 @@ import {
 const PAGE_SIZE = 100;
 const MAX_PAGES = 100;
 const MAX_RETRIES = 3;
+const FINANCIAL_FIELDS = [
+  'delivered_count', 'price', 'discount', 'capital', 'fee_marketplace', 'surcharge',
+  'affiliate_commission', 'platform_shipping_fee', 'sfp_service_fee', 'payment_fee',
+  'seller_transaction_fee', 'service_fee', 'marketplace_voucher', 'diff_shipping_fee',
+  'marketing_fee', 'platform_commission', 'marketplace_tax', 'ads_top_up',
+] as const;
 
 type ShopConfig = {
   readonly shopId: number;
@@ -100,9 +107,52 @@ async function fetchOrders(
   throw new Error(`Pancake vượt giới hạn an toàn ${MAX_PAGES} trang.`);
 }
 
+async function fetchMarketplaceFinancials(
+  config: ShopConfig,
+  apiKey: string,
+  reportDate: string,
+) {
+  const range = getDayUnixRange(reportDate, config.utcOffsetHours);
+  const url = new URL(`https://pos.pages.fm/api/v1/shops/${config.shopId}/analytics/sale`);
+  url.searchParams.set('api_key', apiKey);
+  const body = JSON.stringify({
+    params: {
+      success_status: 0,
+      success_record: 'inserted_at',
+      returned_record: 'inserted_at',
+      split_by: ['Order.marketplace_id'],
+      select_fields: FINANCIAL_FIELDS,
+      filter: { 'Order.status': ['3', '16'] },
+      since: new Date(range.start * 1000).toISOString(),
+      until: new Date(range.end * 1000 + 999).toISOString(),
+    },
+  });
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Pancake từ chối API key cho analytics.');
+      }
+      if (!response.ok) throw new Error(`Pancake analytics HTTP ${response.status}.`);
+      return readMarketplaceFinancials(await response.json());
+    } catch (error) {
+      if (attempt === MAX_RETRIES) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
+    }
+  }
+  throw new Error('Không lấy được tài chính Pancake.');
+}
+
 async function syncShop(config: ShopConfig, serviceRoleKey: string): Promise<number> {
   const reportDate = todayInTimeZone(config.timeZone);
-  const orders = await fetchOrders(config, requiredSecret(config.apiKeySecret), reportDate);
+  const apiKey = requiredSecret(config.apiKeySecret);
+  const orders = await fetchOrders(config, apiKey, reportDate);
   const snapshot = buildPancakeSnapshot(reportDate, orders);
   const response = await fetch(`${requiredSecret('SUPABASE_URL')}/rest/v1/rpc/upsert_pancake_daily_report`, {
     method: 'POST',
@@ -121,6 +171,30 @@ async function syncShop(config: ShopConfig, serviceRoleKey: string): Promise<num
     }),
   });
   if (!response.ok) throw new Error(`RPC shop ${config.shopId} thất bại (HTTP ${response.status}).`);
+
+  if (config.shopId === PANCAKE_VIETNAM_SHOP_ID) {
+    const marketplaces = await fetchMarketplaceFinancials(config, apiKey, reportDate);
+    const financialResponse = await fetch(
+      `${requiredSecret('SUPABASE_URL')}/rest/v1/rpc/upsert_pancake_marketplace_financials`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          p_report_date: reportDate,
+          p_shop_id: config.shopId,
+          p_currency_code: 'VND',
+          p_marketplaces: marketplaces,
+        }),
+      },
+    );
+    if (!financialResponse.ok) {
+      throw new Error(`RPC tài chính shop ${config.shopId} thất bại (HTTP ${financialResponse.status}).`);
+    }
+  }
   console.log(JSON.stringify({ event: 'pancake_sync_completed', shopId: config.shopId, reportDate, orderCount: snapshot.orderCount }));
   return snapshot.orderCount;
 }
