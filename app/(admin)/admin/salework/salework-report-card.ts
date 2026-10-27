@@ -3,6 +3,7 @@ import {
   getSaleWorkDisplayName,
   isSaleWorkOnlyReportAccount,
 } from '@/lib/salework/sales-account-map';
+import { isHalloweenReportAccount } from '@/lib/reports/salework-image-accounts';
 
 export const CARD_WIDTH = 540;
 export const CARD_HEIGHT = 960;
@@ -358,12 +359,19 @@ export function drawReportCard(
 
   ctx.textAlign = 'center';
   ctx.fillStyle = COLORS.accentStrong;
-  ctx.font = '400 18px ReportFont';
-  ctx.fillText('Chúc mừng ngày', w / 2, 825);
-  ctx.font = '700 29px ReportFont-Bold';
-  ctx.fillText('PHỤ NỮ VIỆT NAM', w / 2, 858);
-  ctx.font = '700 18px ReportFont-Bold';
-  ctx.fillText('20/10', w / 2, 885);
+  if (isHalloweenReportAccount(report.accountName)) {
+    ctx.font = '700 31px ReportFont-Bold';
+    ctx.fillText('HAPPY HALLOWEEN', w / 2, 858);
+    ctx.font = '700 18px ReportFont-Bold';
+    ctx.fillText('31/10', w / 2, 885);
+  } else {
+    ctx.font = '400 18px ReportFont';
+    ctx.fillText('Chúc mừng ngày', w / 2, 825);
+    ctx.font = '700 29px ReportFont-Bold';
+    ctx.fillText('PHỤ NỮ VIỆT NAM', w / 2, 858);
+    ctx.font = '700 18px ReportFont-Bold';
+    ctx.fillText('20/10', w / 2, 885);
+  }
 
   ctx.strokeStyle = COLORS.rule;
   ctx.lineWidth = 1;

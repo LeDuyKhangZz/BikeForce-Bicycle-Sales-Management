@@ -1516,3 +1516,5 @@ Mục sidebar **Công tác phí** mở dashboard theo tháng. CTA cùng tên đ�
 ## 26/10/2026 — Nền Halloween theo tài khoản
 
 Ảnh báo cáo của **Nguyễn Ngọc Triết**, **Hải TeleSale** và **Nguyễn Thị Kim Hương** dùng nền Halloween 9:16 mới nhất. Tài khoản Nguyễn Thị Kim Hương vẫn được nhận diện bằng khóa SaleWork `Abraham Kế Toán Bánhàng`. Các báo cáo còn lại tiếp tục dùng nền `background2010.png`.
+
+Footer phải đi cùng chủ đề: ba tài khoản dùng nền Halloween hiển thị “HAPPY HALLOWEEN · 31/10” và tuyệt đối không vẽ lời chúc Phụ nữ Việt Nam 20/10; các tài khoản dùng `background2010.png` giữ footer 20/10.

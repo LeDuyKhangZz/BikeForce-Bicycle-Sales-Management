@@ -77,5 +77,7 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
     ]));
     expect(texts).not.toContain('Đơn từ Ads');
     expect(texts).not.toContain('GMV Ads');
+    expect(texts).toContain('HAPPY HALLOWEEN · 31/10');
+    expect(texts).not.toContain('PHỤ NỮ VIỆT NAM');
   });
 });

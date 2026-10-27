@@ -1594,3 +1594,4 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Dùng ảnh mới nhất trong Downloads làm asset 9:16.
 - [x] Áp nền cho Nguyễn Ngọc Triết, Hải TeleSale và Nguyễn Thị Kim Hương.
 - [x] Giữ nền cũ cho các tài khoản khác; unit 12/12, typecheck, lint và build 37/37 route pass.
+- [x] ISSUE-063: đồng bộ footer Halloween cho cả ba tài khoản, không còn lời chúc Phụ nữ Việt Nam 20/10; targeted unit 14/14, typecheck, lint và build 37/37 route pass.

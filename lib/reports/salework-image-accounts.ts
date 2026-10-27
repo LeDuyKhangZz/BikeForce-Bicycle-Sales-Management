@@ -9,8 +9,12 @@ const HALLOWEEN_REPORT_ACCOUNTS: ReadonlySet<string> = new Set([
   'Abraham Kế Toán Bánhàng',
 ]);
 
+export function isHalloweenReportAccount(accountName: string): boolean {
+  return HALLOWEEN_REPORT_ACCOUNTS.has(accountName);
+}
+
 export function getSaleWorkReportBackgroundPath(accountName: string): string {
-  return HALLOWEEN_REPORT_ACCOUNTS.has(accountName)
+  return isHalloweenReportAccount(accountName)
     ? HALLOWEEN_REPORT_BACKGROUND_PATH
     : DEFAULT_REPORT_BACKGROUND_PATH;
 }

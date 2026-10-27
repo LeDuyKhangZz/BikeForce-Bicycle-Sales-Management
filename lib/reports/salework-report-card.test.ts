@@ -50,6 +50,31 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
     expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('—');
   });
 
+  it.each(['Hải TeleSale', 'Abraham Kế Toán Bánhàng'])(
+    'hiển thị lời chúc Halloween thay cho 20/10 với %s',
+    (accountName) => {
+      const { context, texts } = recordingContext();
+
+      drawReportCard(context, {
+        accountName,
+        conversations: 1,
+        sentMessages: 2,
+        receivedMessages: 3,
+        incomingCalls: 4,
+        outgoingCalls: 5,
+        missedCalls: 0,
+        callDuration: '7 phút',
+        amis: null,
+      });
+
+      const renderedTexts = texts.map((call) => call.text);
+      expect(renderedTexts).toContain('HAPPY HALLOWEEN');
+      expect(renderedTexts).toContain('31/10');
+      expect(renderedTexts).not.toContain('PHỤ NỮ VIỆT NAM');
+      expect(renderedTexts).not.toContain('20/10');
+    },
+  );
+
   it('tách tên nội dung khỏi cột chỉ tiêu và vẽ targetAmount ở đúng cột', () => {
     const { context, texts } = recordingContext();
 

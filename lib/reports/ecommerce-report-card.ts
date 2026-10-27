@@ -1,4 +1,5 @@
 import type { EcommerceReportViewModel } from '@/lib/reports/ecommerce-report';
+import { isHalloweenReportAccount } from '@/lib/reports/salework-image-accounts';
 
 export interface EcommerceCanvas2DLike {
   fillStyle: string | CanvasGradient | CanvasPattern;
@@ -160,8 +161,14 @@ export function drawEcommerceReportCard(
   });
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#636976';
-  ctx.font = '600 11px ReportFont-Bold';
-  ctx.fillText('BIKEFORCE · BÁO CÁO SÀN THƯƠNG MẠI ĐIỆN TỬ', WIDTH / 2, 920);
+  if (isHalloweenReportAccount(report.employeeName)) {
+    ctx.fillStyle = '#dc1554';
+    ctx.font = '700 18px ReportFont-Bold';
+    ctx.fillText('HAPPY HALLOWEEN · 31/10', WIDTH / 2, 920);
+  } else {
+    ctx.fillStyle = '#636976';
+    ctx.font = '600 11px ReportFont-Bold';
+    ctx.fillText('BIKEFORCE · BÁO CÁO SÀN THƯƠNG MẠI ĐIỆN TỬ', WIDTH / 2, 920);
+  }
   ctx.textAlign = 'left';
 }

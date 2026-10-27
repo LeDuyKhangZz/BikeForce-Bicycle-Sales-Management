@@ -2381,3 +2381,22 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 **Fix:** thay GitHub schedule bằng Supabase Cron độc lập ở 09:00/17:00, gọi Edge Function qua credential trong Vault. GitHub chỉ giữ chạy tay. Edge Function luôn UPSERT snapshot kể cả 0 đơn nên không còn trạng thái xanh giả do CSV không có dòng.
 
 **Verification:** Edge Function production chạy thật ngày 10/10 trả 14 đơn. Hai cron production active đúng `0 2 * * *`/`0 10 * * *`; gọi thử qua chính đường `pg_net` + Vault trả HTTP 200 với `reportDate=2026-10-10`, `orderCount=14`. Unit Edge/Cron/GitHub 9/9 pass trước kiểm tra cuối.
+
+### ISSUE-063
+
+**Severity:** P2
+
+**Status:** CLOSED — 2026-10-27
+**Module:** Ảnh báo cáo SaleWork / Halloween
+
+**Description:** báo cáo của tài khoản dùng nền Halloween vẫn hiển thị lời chúc ngày Phụ nữ Việt Nam 20/10.
+
+**Expected:** mọi tài khoản dùng nền Halloween hiển thị nội dung “Happy Halloween” và ngày 31/10; tài khoản dùng nền 20/10 giữ nguyên lời chúc cũ.
+
+**Actual:** renderer chọn nền theo tài khoản nhưng luôn vẽ footer “PHỤ NỮ VIỆT NAM” và “20/10”.
+
+**Root Cause:** logic chọn asset đã được tách theo tài khoản ở DEC-118, còn nội dung footer trong canvas vẫn là chuỗi cố định của mẫu 20/10.
+
+**Fix:** dùng chung `isHalloweenReportAccount()` cho nền và nội dung; renderer SaleWork và Sàn TMĐT đổi footer theo đúng chủ đề tài khoản.
+
+**Verification:** unit hồi quy xác nhận Hải TeleSale, Nguyễn Thị Kim Hương và Nguyễn Ngọc Triết có nội dung Halloween, không còn chuỗi 20/10; targeted unit 14/14, typecheck, lint và production build 37/37 route pass.

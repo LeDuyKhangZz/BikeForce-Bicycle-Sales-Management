@@ -4093,3 +4093,7 @@ Xác minh endpoint `analytics/sale` trên host Open API bằng `PANCAKE_POS_API_
 Ảnh Sàn TMĐT 9:16 đã được mở rộng bằng khối **Tài chính theo sàn** gồm bốn số liệu mới; hai ô **Đơn từ Ads/GMV Ads** được bỏ khỏi ảnh. RPC ảnh nay trả mảng `financials` qua migration tiến tới `20261026100000_pancake_image_financials.sql`. Unit renderer và RLS liên quan pass; fixture PNG 1080×1920 đã được render/xem trực tiếp, không chồng lấn. Production còn cần áp migration mới trước khi ảnh deploy hoạt động.
 
 Theo yêu cầu DEC-118, đã đưa ảnh Halloween mới nhất từ Downloads vào `public/images` và ánh xạ riêng cho Nguyễn Ngọc Triết, Hải TeleSale, Nguyễn Thị Kim Hương. Cả route ảnh server và nút xuất ảnh client dùng chung helper; các tài khoản khác giữ nền cũ. Unit liên quan 12/12, typecheck, lint và build production 37/37 route pass.
+
+## 2026-10-27 — Sửa footer ảnh Halloween (ISSUE-063)
+
+Đã sửa renderer SaleWork và Sàn TMĐT để ba tài khoản dùng nền Halloween hiển thị “HAPPY HALLOWEEN”/“31/10”, không còn chữ “PHỤ NỮ VIỆT NAM”/“20/10”. Logic nền và footer dùng chung `isHalloweenReportAccount()` để không lệch chủ đề. Targeted unit 14/14, typecheck, lint và production build 37/37 route pass.

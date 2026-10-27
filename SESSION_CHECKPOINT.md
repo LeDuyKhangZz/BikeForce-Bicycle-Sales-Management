@@ -2954,3 +2954,5 @@ Targeted E2E chưa chạy được vì Supabase local cổng 54322 không hoạt
 Ảnh Sàn TMĐT đã thêm bốn chỉ số tài chính và bỏ hai ô Ads cũ. Migration local `20261026100000_pancake_image_financials.sql` đã áp; unit renderer 2/2, RLS Pancake 6/6, typecheck/lint pass; fixture PNG 1080×1920 đã xem trực tiếp và bố cục đạt. **Next Exact Step:** áp migration này trên production, deploy web, rồi mở `/admin/report-previews?ecommerce=1#report-preview` để smoke ảnh thật.
 
 DEC-118: nền Halloween mới đã được gán riêng cho Nguyễn Ngọc Triết, Hải TeleSale và Nguyễn Thị Kim Hương ở cả server route lẫn xuất ảnh client. Unit 12/12, typecheck/lint và build production 37/37 route pass. **Next Exact Step:** commit/push và kiểm tra ba preview sau deploy.
+
+ISSUE-063 đã đóng: footer của ba báo cáo nền Halloween nay dùng “HAPPY HALLOWEEN · 31/10”; Hải TeleSale, Nguyễn Thị Kim Hương và Nguyễn Ngọc Triết không còn nhận nội dung 20/10. Targeted unit 14/14, typecheck, lint và production build 37/37 route pass. **Next Exact Step:** kiểm tra trực quan ba preview rồi deploy.
