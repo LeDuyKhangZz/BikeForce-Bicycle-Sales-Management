@@ -4097,3 +4097,7 @@ Theo yêu cầu DEC-118, đã đưa ảnh Halloween mới nhất từ Downloads 
 ## 2026-10-27 — Sửa footer ảnh Halloween (ISSUE-063)
 
 Đã sửa renderer SaleWork và Sàn TMĐT để ba tài khoản dùng nền Halloween hiển thị “HAPPY HALLOWEEN”/“31/10”, không còn chữ “PHỤ NỮ VIỆT NAM”/“20/10”. Logic nền và footer dùng chung `isHalloweenReportAccount()` để không lệch chủ đề. Targeted unit 14/14, typecheck, lint và production build 37/37 route pass.
+
+## 2026-10-27 — Chỉnh bảng thi đua Hạt Dẻ theo mẫu tham chiếu
+
+Đã đồng bộ web/PNG sang bố cục bảng xếp hạng có header cột, hàng chi nhánh gọn, cột giao dịch riêng, pill so sánh ngang và thanh tổng toàn chiều rộng. Ảnh cơ sở đổi sang 1080×1450 cho tối đa bảy chi nhánh; số hàng lớn hơn tiếp tục tăng chiều cao động. Fixture 7 chi nhánh đã được render và xem trực tiếp; targeted unit 5/5, typecheck, lint và production build 37/37 route pass.

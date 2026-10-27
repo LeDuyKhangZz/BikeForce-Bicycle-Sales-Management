@@ -1595,3 +1595,10 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Áp nền cho Nguyễn Ngọc Triết, Hải TeleSale và Nguyễn Thị Kim Hương.
 - [x] Giữ nền cũ cho các tài khoản khác; unit 12/12, typecheck, lint và build 37/37 route pass.
 - [x] ISSUE-063: đồng bộ footer Halloween cho cả ba tài khoản, không còn lời chúc Phụ nữ Việt Nam 20/10; targeted unit 14/14, typecheck, lint và build 37/37 route pass.
+
+## 27/10/2026 — Bố cục bảng thi đua Hạt Dẻ
+
+- [x] Thêm header cột và căn thẳng dữ liệu bảy chi nhánh theo mẫu tham chiếu.
+- [x] Thu gọn pill so sánh còn icon + phần trăm; đưa nhãn lên header.
+- [x] Mở rộng thanh tổng toàn chiều ngang và giữ layout mobile không cuộn ngang.
+- [x] Render fixture 1080×1450 và kiểm tra trực quan; targeted unit 5/5, typecheck, lint và production build 37/37 route pass.

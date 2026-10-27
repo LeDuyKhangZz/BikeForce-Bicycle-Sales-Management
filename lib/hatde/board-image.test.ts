@@ -16,7 +16,7 @@ import {
 import type { HatdeSnapshotViewModel } from '@/lib/hatde/view-model';
 
 describe('drawHatdeBoardImage', () => {
-  it('render PNG đúng 1080x1320 với đủ sáu chi nhánh', async () => {
+  it('render PNG đúng 1080x1450 với đủ sáu chi nhánh', async () => {
     GlobalFonts.registerFromPath(path.join(process.cwd(), 'public/fonts/NotoSans-Regular.ttf'), 'HatdeFont');
     GlobalFonts.registerFromPath(path.join(process.cwd(), 'public/fonts/NotoSans-Bold.ttf'), 'HatdeFont');
     const report: HatdeSnapshotViewModel = {
@@ -43,15 +43,14 @@ describe('drawHatdeBoardImage', () => {
 
     expect(png.subarray(1, 4).toString()).toBe('PNG');
     expect(png.readUInt32BE(16)).toBe(1080);
-    expect(png.readUInt32BE(20)).toBe(1320);
+    expect(png.readUInt32BE(20)).toBe(1450);
   });
 
   it('tính chiều cao canvas động với getHatdeBoardImageHeight', () => {
-    expect(getHatdeBoardImageHeight(0)).toBe(1320);
-    expect(getHatdeBoardImageHeight(5)).toBe(1320);
-    expect(getHatdeBoardImageHeight(6)).toBe(1320);
+    expect(getHatdeBoardImageHeight(0)).toBe(1450);
+    expect(getHatdeBoardImageHeight(6)).toBe(1450);
     expect(getHatdeBoardImageHeight(7)).toBe(1450);
-    expect(getHatdeBoardImageHeight(8)).toBe(1580);
+    expect(getHatdeBoardImageHeight(8)).toBe(1570);
   });
 
   it('render PNG 1080x1450 với đủ 7 chi nhánh và khung tổng nằm dưới hàng 7', async () => {
@@ -95,17 +94,17 @@ describe('drawHatdeBoardImage', () => {
 
     // Vị trí y của hàng thứ 7 (index 6): ROWS_TOP + 6 * ROW_STEP = 320 + 6 * 130 = 1100, chiều cao card = 118
     const branch7Y = ROWS_TOP + 6 * ROW_STEP;
-    expect(branch7Y).toBe(1100);
-    const branch7Bottom = branch7Y + 118; // 1218
+    expect(branch7Y).toBe(1115);
+    const branch7Bottom = branch7Y + 108;
 
-    // Khung tổng doanh thu: TOTALS_BASE_Y + extra = 1100 + 130 = 1230
+    // Khung tổng doanh thu nằm dưới hàng thứ bảy.
     const extra = Math.max(0, report.branches.length - BASE_ROWS) * ROW_STEP;
     const totalsY = TOTALS_BASE_Y + extra;
-    expect(totalsY).toBe(1230);
+    expect(totalsY).toBe(1245);
     expect(totalsY).toBeGreaterThan(branch7Bottom);
 
     // Kiểm tra roundRect được gọi để vẽ khung tổng tại đúng vị trí totalsY = 1230
-    expect(roundRectSpy).toHaveBeenCalledWith(120, totalsY, 840, 82, 24);
+    expect(roundRectSpy).toHaveBeenCalledWith(26, totalsY, 1028, 98, 22);
   });
 
   it('dùng SVG Path2D thay vì glyph Unicode cho icon', () => {

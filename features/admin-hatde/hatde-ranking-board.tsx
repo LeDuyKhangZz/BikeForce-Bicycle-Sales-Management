@@ -15,10 +15,8 @@ function Comparison({ value, label }: { value: HatdeComparisonViewModel; label: 
       value.direction === 'UNCHANGED' && 'border-input-border bg-status-pending-bg text-status-pending-fg',
     )}>
       <Icon aria-hidden="true" className="size-5 shrink-0 sm:size-7" strokeWidth={3} />
-      <div className="min-w-0">
-        <p className="text-xs font-semibold sm:text-sm">{label}:</p>
-        <p className="text-base font-black tabular-nums sm:text-xl">{value.display}</p>
-      </div>
+      <span className="sr-only">{label}: </span>
+      <p className="text-base font-black tabular-nums sm:text-xl">{value.display}</p>
     </div>
   );
 }
@@ -44,23 +42,25 @@ function Rank({ rank }: { rank: number }) {
 function BranchRow({ branch }: { branch: HatdeBranchViewModel }) {
   return (
     <li className={cn(
-      'grid min-h-32 grid-cols-[auto_1fr] items-center gap-2 rounded-2xl border bg-card/90 p-3 shadow-md backdrop-blur-[2px] sm:min-h-36 sm:grid-cols-[auto_1.15fr_1fr] sm:gap-4 sm:px-5',
+      'grid min-h-28 grid-cols-[auto_1fr] items-center gap-2 rounded-2xl border bg-card/90 p-3 shadow-sm backdrop-blur-[2px] sm:grid-cols-[auto_1.5fr_.55fr_1fr] sm:gap-4 sm:px-5',
       branch.rank === 1 ? 'border-2 border-hatde-gold shadow-lg' : 'border-hatde-row-border',
     )}>
       <Rank rank={branch.rank} />
       <div className="min-w-0">
         <h3 className="text-base font-black tracking-tight break-words text-hatde-green-deep uppercase sm:text-xl">{branch.name}</h3>
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="mt-1">
           <p className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-hatde-green-deep tabular-nums sm:text-2xl">
             <WalletCards aria-hidden="true" className="size-5 shrink-0 text-success sm:size-7" />
             {branch.revenueDisplay}
           </p>
-          <p aria-label={`${branch.transactionsDisplay} giao dịch`} className="inline-flex items-center gap-1.5 text-sm text-hatde-ink sm:text-base">
-            <ReceiptText aria-hidden="true" className="size-5" />
-            <strong className="text-lg tabular-nums">{branch.transactionsDisplay}</strong> giao dịch
+          <p aria-label={`${branch.transactionsDisplay} giao dịch`} className="mt-1 text-sm text-hatde-ink sm:hidden">
+            <strong className="text-base tabular-nums">{branch.transactionsDisplay}</strong> giao dịch
           </p>
         </div>
       </div>
+      <p aria-label={`${branch.transactionsDisplay} giao dịch`} className="hidden text-center text-sm text-hatde-ink sm:block">
+        <strong className="block text-2xl tabular-nums">{branch.transactionsDisplay}</strong> giao dịch
+      </p>
       <div className="col-span-2 flex min-w-0 gap-2 sm:col-span-1">
         <Comparison value={branch.vsYesterday} label="Hôm qua" />
         <Comparison value={branch.vsLastWeek} label="Tuần trước" />
@@ -76,19 +76,22 @@ export function HatdeRankingBoard({ report }: Props) {
       <p className="mx-auto w-fit rounded-full border border-hatde-row-border bg-card/90 px-5 py-1.5 text-center text-sm font-bold tabular-nums text-hatde-green-deep shadow-sm">
         Cập nhật {report.reportTime} · {report.reportDateDisplay}
       </p>
-      <ol className="mt-3 space-y-3 px-[2.5%]">
+      <div className="mx-[2.5%] mt-3 hidden grid-cols-[4rem_1.5fr_.55fr_.5fr_.5fr] items-center rounded-2xl bg-hatde-rank-soft/70 px-5 py-3 text-center text-sm font-black text-hatde-green-deep sm:grid">
+        <span>#</span><span className="text-left">Chi nhánh / Doanh thu</span><span>Số giao dịch</span><span>So với hôm qua</span><span>So với tuần trước</span>
+      </div>
+      <ol className="mt-3 space-y-3 px-[2.5%] sm:mt-2">
         {report.branches.map((branch) => <BranchRow key={branch.code} branch={branch} />)}
       </ol>
       <div
         aria-label={`Tổng doanh thu ${report.totalRevenueDisplay}, tổng ${report.totalTransactionsDisplay} giao dịch`}
-        className="mx-[2.5%] mt-3 grid gap-3 rounded-2xl border-2 border-hatde-gold bg-card/95 p-4 shadow-lg backdrop-blur-[2px] sm:grid-cols-2 sm:px-6"
+        className="mx-[2.5%] mt-3 grid gap-3 rounded-2xl border-2 border-hatde-lime bg-card/95 p-4 shadow-lg backdrop-blur-[2px] sm:grid-cols-2 sm:px-10"
       >
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-hatde-rank-soft text-hatde-green-deep">
             <WalletCards aria-hidden="true" className="size-6" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-hatde-ink">Tổng doanh thu</p>
+            <p className="text-sm font-bold text-hatde-ink">Tổng doanh thu chuỗi</p>
             <p className="break-words text-xl font-black tracking-tight text-hatde-green-deep tabular-nums sm:text-2xl">
               {report.totalRevenueDisplay}
             </p>

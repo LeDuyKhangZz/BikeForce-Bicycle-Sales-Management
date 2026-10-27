@@ -2956,3 +2956,5 @@ Targeted E2E chưa chạy được vì Supabase local cổng 54322 không hoạt
 DEC-118: nền Halloween mới đã được gán riêng cho Nguyễn Ngọc Triết, Hải TeleSale và Nguyễn Thị Kim Hương ở cả server route lẫn xuất ảnh client. Unit 12/12, typecheck/lint và build production 37/37 route pass. **Next Exact Step:** commit/push và kiểm tra ba preview sau deploy.
 
 ISSUE-063 đã đóng: footer của ba báo cáo nền Halloween nay dùng “HAPPY HALLOWEEN · 31/10”; Hải TeleSale, Nguyễn Thị Kim Hương và Nguyễn Ngọc Triết không còn nhận nội dung 20/10. Targeted unit 14/14, typecheck, lint và production build 37/37 route pass. **Next Exact Step:** kiểm tra trực quan ba preview rồi deploy.
+
+Bảng thi đua Hạt Dẻ đã được chỉnh theo ảnh tham chiếu: web và PNG có header cột, bảy hàng gọn, pill phần trăm ngang và thanh tổng toàn chiều rộng. Fixture 1080×1450 đã xem trực tiếp; targeted unit 5/5, typecheck, lint và production build 37/37 route pass. **Next Exact Step:** kiểm tra route `/admin/hatde/board` ở 375px và desktop trước deploy.
