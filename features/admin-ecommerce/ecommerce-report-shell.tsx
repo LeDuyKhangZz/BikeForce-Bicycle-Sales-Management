@@ -47,12 +47,21 @@ export function EcommerceReportShell({ report }: Props) {
           {(report?.metrics ?? []).map((metric) => (
             <Card key={metric.label} className="flex min-h-28 flex-col justify-between gap-3">
               <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
-              <p className="text-2xl font-bold tabular-nums text-heading">
+              <p
+                className={`break-words font-bold tabular-nums text-heading ${
+                  metric.display.length > 14 ? 'text-base sm:text-lg' : 'text-2xl'
+                }`}
+              >
                 {metric.display}
               </p>
             </Card>
           ))}
         </div>
+        {report?.cancelledNote ? (
+          <p className="rounded-md border border-border bg-status-info-bg px-4 py-3 text-sm font-semibold text-status-info-fg">
+            {report.cancelledNote}
+          </p>
+        ) : null}
       </section>
 
       {report === null ? (

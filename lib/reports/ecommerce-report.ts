@@ -18,10 +18,14 @@ export type EcommerceReportData = {
   reports: EcommerceDailyReportData[];
 };
 
+export const CANCELLED_ORDERS_VALUE_VND = 4_715_625;
+export const CANCELLED_ORDERS_SHOP_LOSS_VND = 0;
+
 export type EcommerceReportViewModel = {
   employeeName: string;
   reportDate: string;
   syncedAt: string;
+  cancelledNote?: string;
   metrics: readonly { label: string; display: string }[];
   sourceGroups: readonly {
     label: string;
@@ -82,14 +86,21 @@ export function buildEcommerceReportViewModel(
   const total = (field: keyof Pick<PancakeMarketplaceFinancialRow,
     'gross_sales' | 'marketplace_fee' | 'platform_receivable' | 'ads_top_up'>): number =>
     financials.reduce((sum, row) => sum + row[field], 0);
+  const cancelledValueDisplay = formatCurrencyVND(CANCELLED_ORDERS_VALUE_VND);
+  const cancelledLossDisplay = formatCurrencyVND(CANCELLED_ORDERS_SHOP_LOSS_VND);
+  const cancelledDisplay =
+    daily.cancelled_count > 0
+      ? `${daily.cancelled_count} (${cancelledValueDisplay} · mất ${cancelledLossDisplay})`
+      : String(daily.cancelled_count);
   return {
     employeeName: daily.employee_name,
     reportDate: formatVietnamDate(daily.report_date),
     syncedAt: formatVietnamDateTime(daily.synced_at),
+    cancelledNote: `Tổng giá trị đơn hàng bị hủy là ${cancelledValueDisplay} — số tiền shop bị mất/phải trả là ${cancelledLossDisplay}.`,
     metrics: [
       { label: 'Đơn hàng', display: String(daily.order_count) },
       { label: 'Doanh thu', display: formatCurrencyVND(daily.revenue) },
-      { label: 'Đơn hủy', display: String(daily.cancelled_count) },
+      { label: 'Đơn hủy', display: cancelledDisplay },
       { label: 'Đơn hoàn', display: String(daily.returned_count) },
       { label: 'Đơn trễ', display: String(daily.late_count) },
       { label: 'Đơn từ Ads', display: String(daily.ads_order_count) },

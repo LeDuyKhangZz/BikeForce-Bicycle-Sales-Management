@@ -1,4 +1,9 @@
-import type { EcommerceReportViewModel } from '@/lib/reports/ecommerce-report';
+import { formatCurrencyVND } from '@/lib/currency';
+import {
+  CANCELLED_ORDERS_SHOP_LOSS_VND,
+  CANCELLED_ORDERS_VALUE_VND,
+  type EcommerceReportViewModel,
+} from '@/lib/reports/ecommerce-report';
 import { isHalloweenReportAccount } from '@/lib/reports/salework-image-accounts';
 
 export interface EcommerceCanvas2DLike {
@@ -93,17 +98,24 @@ export function drawEcommerceReportCard(
     const column = index % 2;
     const row = Math.floor(index / 2);
     const x = 42 + column * 242;
-    const y = 205 + row * 64;
+    const y = 202 + row * 60;
     ctx.fillStyle = 'rgba(255, 238, 243, 0.72)';
-    roundedRect(ctx, x, y, 214, 54, 10);
+    roundedRect(ctx, x, y, 214, 52, 10);
     ctx.fill();
     ctx.fillStyle = '#636976';
     ctx.font = '400 12px ReportFont';
-    ctx.fillText(metric.label, x + 14, y + 20);
+    ctx.fillText(metric.label, x + 14, y + 19);
     ctx.fillStyle = '#dc1554';
-    ctx.font = '700 18px ReportFont-Bold';
-    ctx.fillText(metric.display, x + 14, y + 43);
+    ctx.font = metric.display.length > 14 ? '700 13px ReportFont-Bold' : '700 18px ReportFont-Bold';
+    ctx.fillText(metric.display, x + 14, y + 41);
   });
+
+  const cancelledNote =
+    report.cancelledNote ??
+    `Tổng giá trị đơn hàng bị hủy là ${formatCurrencyVND(CANCELLED_ORDERS_VALUE_VND)} — số tiền shop bị mất/phải trả là ${formatCurrencyVND(CANCELLED_ORDERS_SHOP_LOSS_VND)}.`;
+  ctx.fillStyle = '#30343f';
+  ctx.font = '700 11px ReportFont-Bold';
+  ctx.fillText(cancelledNote, 42, 398);
 
   box(ctx, 20, 440, 500, 185);
   ctx.fillStyle = '#e92f67';

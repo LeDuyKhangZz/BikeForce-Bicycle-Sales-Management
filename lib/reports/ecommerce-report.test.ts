@@ -121,4 +121,21 @@ describe('buildEcommerceReportViewModel', () => {
       { name: 'Tiktok', orderCount: 0, revenueDisplay: 'S$0.00' },
     ]);
   });
+
+  it('hiển thị tổng giá trị đơn hàng bị hủy 4.715.625 ₫ và số tiền shop bị mất/phải trả 0 ₫ khi có đơn hủy', () => {
+    const reports = REPORT.reports.map((item) =>
+      item.daily.market_code === 'VN'
+        ? { ...item, daily: { ...item.daily, report_date: '2026-10-27', cancelled_count: 16 } }
+        : item,
+    );
+    const result = buildEcommerceReportViewModel({ reports });
+
+    expect(result?.metrics[2]).toEqual({
+      label: 'Đơn hủy',
+      display: '16 (4.715.625\u00a0₫ · mất 0\u00a0₫)',
+    });
+    expect(result?.cancelledNote).toBe(
+      'Tổng giá trị đơn hàng bị hủy là 4.715.625\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
+    );
+  });
 });

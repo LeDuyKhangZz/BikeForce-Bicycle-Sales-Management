@@ -74,6 +74,7 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
       'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Tài chính theo sàn',
       'Doanh số thành công', 'Tổng phí sàn', 'Tiền sàn trả', 'Tiền nạp quảng cáo',
       'Nguồn Việt Nam', 'Nguồn Singapore', 'Shopee', 'Tiktok', 'S$3.49',
+      'Tổng giá trị đơn hàng bị hủy là 4.715.625\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
     ]));
     expect(texts).not.toContain('Đơn từ Ads');
     expect(texts).not.toContain('GMV Ads');
