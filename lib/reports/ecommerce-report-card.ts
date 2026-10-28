@@ -110,9 +110,14 @@ export function drawEcommerceReportCard(
     ctx.fillText(metric.display, x + 14, y + 41);
   });
 
+  const cancelledMetric = report.metrics.find((metric) => metric.label === 'Đơn hủy');
+  const defaultCancelledValue =
+    cancelledMetric === undefined || cancelledMetric.display === '0'
+      ? 0
+      : CANCELLED_ORDERS_VALUE_VND;
   const cancelledNote =
     report.cancelledNote ??
-    `Tổng giá trị đơn hàng bị hủy là ${formatCurrencyVND(CANCELLED_ORDERS_VALUE_VND)} — số tiền shop bị mất/phải trả là ${formatCurrencyVND(CANCELLED_ORDERS_SHOP_LOSS_VND)}.`;
+    `Tổng giá trị đơn hàng bị hủy là ${formatCurrencyVND(defaultCancelledValue)} — số tiền shop bị mất/phải trả là ${formatCurrencyVND(CANCELLED_ORDERS_SHOP_LOSS_VND)}.`;
   ctx.fillStyle = '#30343f';
   ctx.font = '700 11px ReportFont-Bold';
   ctx.fillText(cancelledNote, 42, 398);

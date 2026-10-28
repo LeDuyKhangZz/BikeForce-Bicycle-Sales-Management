@@ -134,7 +134,7 @@ describe('RLS báo cáo Pancake', () => {
         has_table_privilege('service_role', 'public.pancake_daily_reports', 'UPDATE') as service_update,
         has_function_privilege(
           'service_role',
-          'public.upsert_pancake_daily_report(date,bigint,integer,bigint,integer,integer,integer,integer,bigint,jsonb)',
+          'public.upsert_pancake_daily_report(date,bigint,integer,bigint,integer,integer,integer,integer,bigint,jsonb,bigint)',
           'EXECUTE'
         ) as service_execute`,
     );

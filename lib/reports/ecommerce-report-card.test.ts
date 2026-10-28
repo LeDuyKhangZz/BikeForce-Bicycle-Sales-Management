@@ -74,11 +74,37 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
       'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Tài chính theo sàn',
       'Doanh số thành công', 'Tổng phí sàn', 'Tiền sàn trả', 'Tiền nạp quảng cáo',
       'Nguồn Việt Nam', 'Nguồn Singapore', 'Shopee', 'Tiktok', 'S$3.49',
-      'Tổng giá trị đơn hàng bị hủy là 4.715.625\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
+      'Tổng giá trị đơn hàng bị hủy là 0\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
     ]));
     expect(texts).not.toContain('Đơn từ Ads');
     expect(texts).not.toContain('GMV Ads');
     expect(texts).toContain('HAPPY HALLOWEEN · 31/10');
     expect(texts).not.toContain('PHỤ NỮ VIỆT NAM');
+  });
+
+  it('hiển thị đúng ghi chú 4.715.625 ₫ khi báo cáo có đơn hủy', () => {
+    const { context, texts } = recordingContext();
+    drawEcommerceReportCard(context, {
+      employeeName: ECOMMERCE_REPORT_ACCOUNT,
+      reportDate: '27/10/2026',
+      syncedAt: '27/10/2026, 17:00',
+      cancelledNote:
+        'Tổng giá trị đơn hàng bị hủy là 4.715.625\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
+      metrics: [
+        { label: 'Đơn hàng', display: '93' },
+        { label: 'Doanh thu', display: '15.952.400 ₫' },
+        { label: 'Đơn hủy', display: '16 (4.715.625\u00a0₫ · mất 0\u00a0₫)' },
+        { label: 'Đơn hoàn', display: '0' },
+        { label: 'Đơn trễ', display: '0' },
+      ],
+      sourceGroups: [],
+      financialSummary: [],
+      marketplaceFinancials: [],
+    });
+
+    expect(texts).toContain('16 (4.715.625\u00a0₫ · mất 0\u00a0₫)');
+    expect(texts).toContain(
+      'Tổng giá trị đơn hàng bị hủy là 4.715.625\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
+    );
   });
 });

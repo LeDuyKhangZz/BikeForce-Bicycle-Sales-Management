@@ -604,6 +604,7 @@ export type Database = {
           ads_gmv: number
           ads_order_count: number
           cancelled_count: number
+          cancelled_revenue: number
           currency_code: string
           employee_name: string
           late_count: number
@@ -619,6 +620,7 @@ export type Database = {
           ads_gmv: number
           ads_order_count: number
           cancelled_count: number
+          cancelled_revenue?: number
           currency_code?: string
           employee_name?: string
           late_count: number
@@ -634,6 +636,7 @@ export type Database = {
           ads_gmv?: number
           ads_order_count?: number
           cancelled_count?: number
+          cancelled_revenue?: number
           currency_code?: string
           employee_name?: string
           late_count?: number
@@ -1114,6 +1117,7 @@ export type Database = {
           p_ads_gmv: number
           p_ads_order_count: number
           p_cancelled_count: number
+          p_cancelled_revenue?: number
           p_late_count: number
           p_order_count: number
           p_report_date: string

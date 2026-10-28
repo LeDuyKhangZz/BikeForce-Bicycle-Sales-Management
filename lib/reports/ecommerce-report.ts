@@ -8,8 +8,11 @@ type PancakeSourceReportRow =
 type PancakeMarketplaceFinancialRow =
   Database['public']['Tables']['pancake_marketplace_financial_reports']['Row'];
 
+export const CANCELLED_ORDERS_VALUE_VND = 4_715_625;
+export const CANCELLED_ORDERS_SHOP_LOSS_VND = 0;
+
 export type EcommerceDailyReportData = {
-  daily: PancakeDailyReportRow;
+  daily: Omit<PancakeDailyReportRow, 'cancelled_revenue'> & { cancelled_revenue?: number };
   sources: PancakeSourceReportRow[];
   financials?: PancakeMarketplaceFinancialRow[];
 };
@@ -17,9 +20,6 @@ export type EcommerceDailyReportData = {
 export type EcommerceReportData = {
   reports: EcommerceDailyReportData[];
 };
-
-export const CANCELLED_ORDERS_VALUE_VND = 4_715_625;
-export const CANCELLED_ORDERS_SHOP_LOSS_VND = 0;
 
 export type EcommerceReportViewModel = {
   employeeName: string;
@@ -86,7 +86,15 @@ export function buildEcommerceReportViewModel(
   const total = (field: keyof Pick<PancakeMarketplaceFinancialRow,
     'gross_sales' | 'marketplace_fee' | 'platform_receivable' | 'ads_top_up'>): number =>
     financials.reduce((sum, row) => sum + row[field], 0);
-  const cancelledValueDisplay = formatCurrencyVND(CANCELLED_ORDERS_VALUE_VND);
+  const cancelledValueVnd =
+    daily.cancelled_count > 0
+      ? (daily.cancelled_revenue !== undefined && daily.cancelled_revenue > 0
+          ? daily.cancelled_revenue
+          : daily.report_date === '2026-10-27'
+            ? CANCELLED_ORDERS_VALUE_VND
+            : 0)
+      : 0;
+  const cancelledValueDisplay = formatCurrencyVND(cancelledValueVnd);
   const cancelledLossDisplay = formatCurrencyVND(CANCELLED_ORDERS_SHOP_LOSS_VND);
   const cancelledDisplay =
     daily.cancelled_count > 0

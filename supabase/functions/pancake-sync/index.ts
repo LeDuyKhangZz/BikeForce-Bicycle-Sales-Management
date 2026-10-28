@@ -163,6 +163,7 @@ async function syncShop(config: ShopConfig, serviceRoleKey: string): Promise<num
       p_order_count: snapshot.orderCount,
       p_revenue: snapshot.revenue,
       p_cancelled_count: snapshot.cancelledCount,
+      p_cancelled_revenue: snapshot.cancelledRevenue,
       p_returned_count: snapshot.returnedCount,
       p_late_count: snapshot.lateCount,
       p_ads_order_count: snapshot.adsOrderCount,

@@ -88,6 +88,10 @@ describe('buildEcommerceReportViewModel', () => {
     const result = buildEcommerceReportViewModel(REPORT);
 
     expect(result?.metrics[1]?.display).toBe('1.834.650 ₫');
+    expect(result?.metrics[2]).toEqual({ label: 'Đơn hủy', display: '0' });
+    expect(result?.cancelledNote).toBe(
+      'Tổng giá trị đơn hàng bị hủy là 0\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
+    );
     expect(result?.sourceGroups).toHaveLength(2);
     expect(result?.sourceGroups[1]?.label).toBe('Nguồn Singapore');
     expect(result?.sourceGroups[1]?.sources).toEqual([
@@ -122,20 +126,43 @@ describe('buildEcommerceReportViewModel', () => {
     ]);
   });
 
-  it('hiển thị tổng giá trị đơn hàng bị hủy 4.715.625 ₫ và số tiền shop bị mất/phải trả 0 ₫ khi có đơn hủy', () => {
-    const reports = REPORT.reports.map((item) =>
+  it('hiển thị tổng giá trị đơn hàng bị hủy theo đúng số tiền của từng ngày', () => {
+    const reports2710 = REPORT.reports.map((item) =>
       item.daily.market_code === 'VN'
         ? { ...item, daily: { ...item.daily, report_date: '2026-10-27', cancelled_count: 16 } }
         : item,
     );
-    const result = buildEcommerceReportViewModel({ reports });
+    const result2710 = buildEcommerceReportViewModel({ reports: reports2710 });
 
-    expect(result?.metrics[2]).toEqual({
+    expect(result2710?.metrics[2]).toEqual({
       label: 'Đơn hủy',
       display: '16 (4.715.625\u00a0₫ · mất 0\u00a0₫)',
     });
-    expect(result?.cancelledNote).toBe(
+    expect(result2710?.cancelledNote).toBe(
       'Tổng giá trị đơn hàng bị hủy là 4.715.625\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
+    );
+
+    const reports2810 = REPORT.reports.map((item) =>
+      item.daily.market_code === 'VN'
+        ? {
+            ...item,
+            daily: {
+              ...item.daily,
+              report_date: '2026-10-28',
+              cancelled_count: 3,
+              cancelled_revenue: 980_000,
+            },
+          }
+        : item,
+    );
+    const result2810 = buildEcommerceReportViewModel({ reports: reports2810 });
+
+    expect(result2810?.metrics[2]).toEqual({
+      label: 'Đơn hủy',
+      display: '3 (980.000\u00a0₫ · mất 0\u00a0₫)',
+    });
+    expect(result2810?.cancelledNote).toBe(
+      'Tổng giá trị đơn hàng bị hủy là 980.000\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
     );
   });
 });

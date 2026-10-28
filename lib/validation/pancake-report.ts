@@ -9,6 +9,7 @@ const pancakeDailyReportSchema = z.object({
   order_count: z.number().int().nonnegative(),
   revenue: z.number().int().nonnegative(),
   cancelled_count: z.number().int().nonnegative(),
+  cancelled_revenue: z.number().int().nonnegative().default(0),
   returned_count: z.number().int().nonnegative(),
   late_count: z.number().int().nonnegative(),
   ads_order_count: z.number().int().nonnegative(),

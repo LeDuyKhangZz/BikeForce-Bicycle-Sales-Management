@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Lấy báo cáo đơn hàng theo ngày từ Pancake POS API.
 
@@ -320,6 +320,7 @@ function Get-PancakeDailyReport {
     )
 
     [int]$cancelled = 0
+    [decimal]$cancelledRevenue = 0
     [int]$returned = 0
     [int]$late = 0
     [int]$adsOrders = 0
@@ -333,6 +334,7 @@ function Get-PancakeDailyReport {
 
         if ($status -eq 6) {
             $cancelled++
+            $cancelledRevenue += $price
             continue
         }
 
@@ -374,6 +376,7 @@ function Get-PancakeDailyReport {
         SoDon = $Orders.Count
         DoanhThu = $revenue
         DonHuy = $cancelled
+        DoanhThuHuy = $cancelledRevenue
         DonHoan = $returned
         DonTre = $late
         DonTuAds = $adsOrders
@@ -503,7 +506,7 @@ try {
     }
 
     Write-Reports -DailyReports @($dailyReports) -SourceReports @($sourceReports)
-    $dailyPath = Write-Utf8BomCsv -Data @($dailyReports) -Path $OutCsv -Headers @('Ngay', 'ShopId', 'TenShop', 'SoDon', 'DoanhThu', 'DonHuy', 'DonHoan', 'DonTre', 'DonTuAds', 'GMV_Ads')
+    $dailyPath = Write-Utf8BomCsv -Data @($dailyReports) -Path $OutCsv -Headers @('Ngay', 'ShopId', 'TenShop', 'SoDon', 'DoanhThu', 'DonHuy', 'DoanhThuHuy', 'DonHoan', 'DonTre', 'DonTuAds', 'GMV_Ads')
     $sourcePath = Write-Utf8BomCsv -Data @($sourceReports) -Path (Get-BySourceCsvPath $OutCsv) -Headers @('Ngay', 'NguonDon', 'SoDon', 'DoanhThu')
     Write-Host "Đã ghi CSV tổng hợp: $dailyPath"
     Write-Host "Đã ghi CSV theo nguồn: $sourcePath"

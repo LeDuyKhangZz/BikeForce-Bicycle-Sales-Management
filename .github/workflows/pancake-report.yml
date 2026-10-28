@@ -90,6 +90,7 @@ jobs:
               p_order_count = [int]$row.SoDon
               p_revenue = [long]$row.DoanhThu
               p_cancelled_count = [int]$row.DonHuy
+              p_cancelled_revenue = [long]($row.DoanhThuHuy ?? 0)
               p_returned_count = [int]$row.DonHoan
               p_late_count = [int]$row.DonTre
               p_ads_order_count = [int]$row.DonTuAds

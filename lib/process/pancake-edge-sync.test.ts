@@ -51,6 +51,7 @@ describe('Pancake Edge Function', () => {
       orderCount: 3,
       revenue: 500,
       cancelledCount: 1,
+      cancelledRevenue: 100,
       returnedCount: 1,
       lateCount: 1,
       adsOrderCount: 1,

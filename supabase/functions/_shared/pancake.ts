@@ -11,6 +11,7 @@ export type PancakeDailySnapshot = {
   orderCount: number;
   revenue: number;
   cancelledCount: number;
+  cancelledRevenue: number;
   returnedCount: number;
   lateCount: number;
   adsOrderCount: number;
@@ -222,6 +223,7 @@ export function buildPancakeSnapshot(
 ): PancakeDailySnapshot {
   let revenue = 0;
   let cancelledCount = 0;
+  let cancelledRevenue = 0;
   let returnedCount = 0;
   let lateCount = 0;
   let adsOrderCount = 0;
@@ -233,6 +235,7 @@ export function buildPancakeSnapshot(
     const price = integerMoney(recordValue(order, 'total_price'));
     if (status === 6) {
       cancelledCount += 1;
+      cancelledRevenue += price;
       continue;
     }
     revenue += price;
@@ -256,6 +259,7 @@ export function buildPancakeSnapshot(
     orderCount: orders.length,
     revenue,
     cancelledCount,
+    cancelledRevenue,
     returnedCount,
     lateCount,
     adsOrderCount,
