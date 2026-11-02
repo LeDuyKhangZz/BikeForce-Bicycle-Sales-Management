@@ -154,23 +154,41 @@ async function syncShop(config: ShopConfig, serviceRoleKey: string): Promise<num
   const apiKey = requiredSecret(config.apiKeySecret);
   const orders = await fetchOrders(config, apiKey, reportDate);
   const snapshot = buildPancakeSnapshot(reportDate, orders);
-  const response = await fetch(`${requiredSecret('SUPABASE_URL')}/rest/v1/rpc/upsert_pancake_daily_report`, {
+  const rpcUrl = `${requiredSecret('SUPABASE_URL')}/rest/v1/rpc/upsert_pancake_daily_report`;
+  const rpcHeaders = {
+    apikey: serviceRoleKey,
+    Authorization: `Bearer ${serviceRoleKey}`,
+    'Content-Type': 'application/json',
+  };
+  const payload = {
+    p_report_date: snapshot.reportDate,
+    p_shop_id: config.shopId,
+    p_order_count: snapshot.orderCount,
+    p_revenue: snapshot.revenue,
+    p_cancelled_count: snapshot.cancelledCount,
+    p_cancelled_revenue: snapshot.cancelledRevenue,
+    p_returned_count: snapshot.returnedCount,
+    p_late_count: snapshot.lateCount,
+    p_ads_order_count: snapshot.adsOrderCount,
+    p_ads_gmv: snapshot.adsGmv,
+    p_sources: snapshot.sources,
+  };
+  let response = await fetch(rpcUrl, {
     method: 'POST',
-    headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      p_report_date: snapshot.reportDate,
-      p_shop_id: config.shopId,
-      p_order_count: snapshot.orderCount,
-      p_revenue: snapshot.revenue,
-      p_cancelled_count: snapshot.cancelledCount,
-      p_cancelled_revenue: snapshot.cancelledRevenue,
-      p_returned_count: snapshot.returnedCount,
-      p_late_count: snapshot.lateCount,
-      p_ads_order_count: snapshot.adsOrderCount,
-      p_ads_gmv: snapshot.adsGmv,
-      p_sources: snapshot.sources,
-    }),
+    headers: rpcHeaders,
+    body: JSON.stringify(payload),
   });
+  // Production may temporarily expose the pre-20261028104000 RPC signature.
+  // Retry only when PostgREST cannot resolve the new signature; other errors
+  // must remain visible instead of being masked by the compatibility path.
+  if (response.status === 404) {
+    const { p_cancelled_revenue: _cancelledRevenue, ...legacyPayload } = payload;
+    response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: rpcHeaders,
+      body: JSON.stringify(legacyPayload),
+    });
+  }
   if (!response.ok) throw new Error(`RPC shop ${config.shopId} thất bại (HTTP ${response.status}).`);
 
   if (config.shopId === PANCAKE_VIETNAM_SHOP_ID) {
