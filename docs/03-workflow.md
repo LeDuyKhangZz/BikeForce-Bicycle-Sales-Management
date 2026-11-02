@@ -1144,6 +1144,10 @@ Supabase Cron gọi Edge Function `pancake-sync` lúc 09:00 và 17:00 giờ Vi�
 ## Luồng dashboard công tác phí (2026-10-12)
 
 Admin mở `/admin/travel-expenses` để xem tổng quan theo tháng: tổng nhân viên, số đã nhập/chưa nhập, tỷ lệ hoàn tất, tổng tiền và danh sách còn thiếu. Nút **Công tác phí** giữ tháng đang chọn và mở `/admin/travel-expenses/entries`, là màn nhập liệu trước đây. Sau khi lưu, cả dashboard và màn nhập được revalidate.
+<!-- 2026-10-21: Polymind SaleWork -->
+Đồng bộ Polymind: sau khi sync ngày lưu Supabase và đóng trình duyệt, gửi riêng snapshot Cô Lê/co-le và Cô Thy/co-thy tới POST https://www.polymind.vn/api/integrations/bikeforce/salework. Dùng BIKEFORCE_API_KEY trong .env.local của máy chạy sync (cùng key phía Polymind), header x-api-key; không log key. Thiếu key thì log bỏ qua. Không gửi luồng MONTH_ONLY. Payload gồm person, date Việt Nam, snapshot conversations/sentMessages/receivedMessages/incomingCalls/outgoingCalls/missedCalls/callDurationSeconds/syncedAt UTC. Không có mã Telesale, không ghép AMIS/CRM. Gửi lại mỗi lượt theo person+date để thay snapshot; timeout 15s/request, tối đa 3 lần khi lỗi mạng/timeout/5xx, không retry 4xx. HTTP 200 phải có ok=true. Thử cả hai người trước khi báo lỗi; Supabase đã lưu vẫn giữ nguyên. Lượt sync ngày kế tiếp gửi lại, chưa có hàng đợi lưu lịch sử qua ngày.
+
+Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa xác nhận production. Next Exact Steps: đặt BIKEFORCE_API_KEY thật vào .env.local bằng kênh bí mật, triển khai API Polymind, chạy npm run salework:sync và xác nhận hai log HTTP 200 cùng dữ liệu phía nhận. Không gửi key trong chat.
 ## Đồng bộ tài chính Pancake (DEC-117)
 
 Trong lượt 09:00/17:00, worker Việt Nam gọi thêm `analytics/sale` với cùng API key và khoảng ngày UTC+7. Kết quả tách Shopee/TikTok, tính tiền sàn trả theo công thức của giao diện rồi gọi RPC thay snapshot. Lỗi analytics làm lượt shop Việt Nam báo lỗi thay vì ghi trạng thái thành công giả; snapshot đơn hàng đã ghi trước đó vẫn giữ để không mất dữ liệu vận hành.

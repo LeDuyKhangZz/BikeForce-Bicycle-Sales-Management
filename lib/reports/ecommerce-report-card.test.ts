@@ -16,9 +16,12 @@ function recordingContext(): { context: EcommerceCanvas2DLike; texts: string[] }
     context: {
       fillStyle: '#000000', strokeStyle: '#000000', lineWidth: 1, font: '',
       textAlign: 'left', textBaseline: 'alphabetic',
-      beginPath: () => undefined, moveTo: () => undefined, arcTo: () => undefined,
+      beginPath: () => undefined, moveTo: () => undefined, lineTo: () => undefined,
+      arc: () => undefined, arcTo: () => undefined,
       closePath: () => undefined, fill: () => undefined, stroke: () => undefined,
       fillRect: () => undefined, drawImage: () => undefined,
+      save: () => undefined, restore: () => undefined,
+      translate: () => undefined, scale: () => undefined,
       fillText: (text) => texts.push(text),
     },
   };
@@ -78,8 +81,9 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
     ]));
     expect(texts).not.toContain('Đơn từ Ads');
     expect(texts).not.toContain('GMV Ads');
-    expect(texts).toContain('HAPPY HALLOWEEN · 31/10');
-    expect(texts).not.toContain('PHỤ NỮ VIỆT NAM');
+    expect(texts).toContain('TRI ÂN THẦY CÔ');
+    expect(texts).toContain('CHÀO MỪNG NGÀY NHÀ GIÁO VIỆT NAM 20/11');
+    expect(texts).not.toContain('HAPPY HALLOWEEN · 31/10');
   });
 
   it('hiển thị đúng ghi chú 4.715.625 ₫ khi báo cáo có đơn hủy', () => {

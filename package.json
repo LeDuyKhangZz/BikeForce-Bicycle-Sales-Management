@@ -29,6 +29,7 @@
     "db:types": "supabase gen types typescript --db-url \"postgresql://postgres:postgres@127.0.0.1:54322/postgres?sslmode=disable\" --schema public > types/database.types.ts"
   },
   "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@napi-rs/canvas": "^1.0.8",
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.112.2",

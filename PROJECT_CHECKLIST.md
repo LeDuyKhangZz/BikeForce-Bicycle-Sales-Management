@@ -1577,6 +1577,12 @@ Next Exact Steps: chờ người dùng hướng dẫn lại yêu cầu doanh s�
 - [x] Màn nhập liệu cũ được giữ nguyên tại route con; action revalidate cả hai trang.
 - [x] Typecheck, lint, targeted unit 5/5 và production build 37 route pass.
 - [ ] Kiểm tra trực quan dashboard và màn nhập ở 375px/1440px trên trình duyệt local.
+<!-- 2026-10-21: Polymind SaleWork -->
+Kiểm chứng production 21/10/2026: npm run salework:sync hoàn tất exit 0, lưu 11 tài khoản ngày; Polymind xác nhận HTTP 200 và ok=true cho co-le và co-thy. Gửi lại snapshot cùng ngày cũng thành công. Script scripts/polymind-resend.ts cho phép gửi lại data/salework-report.json trong ngày Việt Nam hiện tại bằng key từ .env.local; kiểm tra schema, không lấy lại dữ liệu nguồn, không log key. Lệnh: npx tsx scripts/polymind-resend.ts. Chưa kiểm chứng giao diện/DB Polymind từ phía BikeForce.
+Kiểm chứng hoàn tất: 7/7 test HTTP giả lập, typecheck, lint toàn repo và production build đạt. BIKEFORCE_API_KEY chưa có trong .env.local nên chưa gửi request production.
+Đồng bộ Polymind: sau khi sync ngày lưu Supabase và đóng trình duyệt, gửi riêng snapshot Cô Lê/co-le và Cô Thy/co-thy tới POST https://www.polymind.vn/api/integrations/bikeforce/salework. Dùng BIKEFORCE_API_KEY trong .env.local của máy chạy sync (cùng key phía Polymind), header x-api-key; không log key. Thiếu key thì log bỏ qua. Không gửi luồng MONTH_ONLY. Payload gồm person, date Việt Nam, snapshot conversations/sentMessages/receivedMessages/incomingCalls/outgoingCalls/missedCalls/callDurationSeconds/syncedAt UTC. Không có mã Telesale, không ghép AMIS/CRM. Gửi lại mỗi lượt theo person+date để thay snapshot; timeout 15s/request, tối đa 3 lần khi lỗi mạng/timeout/5xx, không retry 4xx. HTTP 200 phải có ok=true. Thử cả hai người trước khi báo lỗi; Supabase đã lưu vẫn giữ nguyên. Lượt sync ngày kế tiếp gửi lại, chưa có hàng đợi lưu lịch sử qua ngày.
+
+Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa xác nhận production. Next Exact Steps: đặt BIKEFORCE_API_KEY thật vào .env.local bằng kênh bí mật, triển khai API Polymind, chạy npm run salework:sync và xác nhận hai log HTTP 200 cùng dữ liệu phía nhận. Không gửi key trong chat.
 ## 26/10/2026 — Tài chính Pancake theo sàn (DEC-117)
 
 - [x] Xác minh `analytics/sale` bằng API key trên `pos.pages.fm`: HTTP 200, đủ Shopee/TikTok.

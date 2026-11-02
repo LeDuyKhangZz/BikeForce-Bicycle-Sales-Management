@@ -1298,6 +1298,10 @@ DEC-109: chạy lần lượt `20261009110000_customer_care_revocation.sql` rồ
 ### Biến môi trường ảnh Hạt Dẻ
 
 Đặt `HATDE_BOARD_IMAGE_API_KEY` ở môi trường server Production/Preview cần thiết rồi redeploy. n8n gửi key qua header `x-api-key`; không đưa key vào URL, log hoặc biến `NEXT_PUBLIC_*`. Route dùng Node.js runtime vì `@napi-rs/canvas` là native module.
+<!-- 2026-10-21: Polymind SaleWork -->
+Đồng bộ Polymind: sau khi sync ngày lưu Supabase và đóng trình duyệt, gửi riêng snapshot Cô Lê/co-le và Cô Thy/co-thy tới POST https://www.polymind.vn/api/integrations/bikeforce/salework. Dùng BIKEFORCE_API_KEY trong .env.local của máy chạy sync (cùng key phía Polymind), header x-api-key; không log key. Thiếu key thì log bỏ qua. Không gửi luồng MONTH_ONLY. Payload gồm person, date Việt Nam, snapshot conversations/sentMessages/receivedMessages/incomingCalls/outgoingCalls/missedCalls/callDurationSeconds/syncedAt UTC. Không có mã Telesale, không ghép AMIS/CRM. Gửi lại mỗi lượt theo person+date để thay snapshot; timeout 15s/request, tối đa 3 lần khi lỗi mạng/timeout/5xx, không retry 4xx. HTTP 200 phải có ok=true. Thử cả hai người trước khi báo lỗi; Supabase đã lưu vẫn giữ nguyên. Lượt sync ngày kế tiếp gửi lại, chưa có hàng đợi lưu lịch sử qua ngày.
+
+Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa xác nhận production. Next Exact Steps: đặt BIKEFORCE_API_KEY thật vào .env.local bằng kênh bí mật, triển khai API Polymind, chạy npm run salework:sync và xác nhận hai log HTTP 200 cùng dữ liệu phía nhận. Không gửi key trong chat.
 ## 26/10/2026 — Triển khai tài chính Pancake
 
 Sau migration bảng tài chính, áp tiếp `20261026100000_pancake_image_financials.sql` trước khi deploy web. Migration này thay thế RPC ảnh để response có `financials`; nếu deploy web trước, Zod sẽ từ chối payload cũ và ảnh Sàn TMĐT trả lỗi an toàn thay vì hiển thị số thiếu.

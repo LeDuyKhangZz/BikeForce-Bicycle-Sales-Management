@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.15"
+  }
   public: {
     Tables: {
       amis_employee_metrics: {
@@ -62,6 +67,179 @@ export type Database = {
           target_amount?: number | null
         }
         Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: number
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: never
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: never
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_logs: {
+        Row: {
+          channel: string
+          created_at: string
+          customer_id: string
+          direction: string | null
+          id: string
+          occurred_at: string
+          outcome: string | null
+          sales_id: string | null
+          source_id: string
+          source_system: string
+          source_updated_at: string | null
+          summary: string | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          customer_id: string
+          direction?: string | null
+          id?: string
+          occurred_at: string
+          outcome?: string | null
+          sales_id?: string | null
+          source_id: string
+          source_system?: string
+          source_updated_at?: string | null
+          summary?: string | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          customer_id?: string
+          direction?: string | null
+          id?: string
+          occurred_at?: string
+          outcome?: string | null
+          sales_id?: string | null
+          source_id?: string
+          source_system?: string
+          source_updated_at?: string | null
+          summary?: string | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_logs_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkins: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          longitude: number | null
+          note: string | null
+          sales_id: string
+          source_id: string
+          source_system: string
+          source_updated_at: string | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          checked_in_at: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          sales_id: string
+          source_id: string
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          sales_id?: string
+          source_id?: string
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkins_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_care_evidence: {
         Row: {
@@ -201,6 +379,77 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          assigned_sales_id: string | null
+          created_at: string
+          customer_code: string | null
+          customer_name: string
+          dealer_tier: Database["public"]["Enums"]["dealer_tier"]
+          id: string
+          is_active: boolean
+          normalized_phone: string | null
+          phone: string | null
+          province: string | null
+          region: string | null
+          salework_account: string | null
+          source_id: string
+          source_system: string
+          source_updated_at: string | null
+          synced_at: string
+          updated_at: string
+          zalo_account: string | null
+        }
+        Insert: {
+          assigned_sales_id?: string | null
+          created_at?: string
+          customer_code?: string | null
+          customer_name: string
+          dealer_tier?: Database["public"]["Enums"]["dealer_tier"]
+          id?: string
+          is_active?: boolean
+          normalized_phone?: string | null
+          phone?: string | null
+          province?: string | null
+          region?: string | null
+          salework_account?: string | null
+          source_id: string
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          updated_at?: string
+          zalo_account?: string | null
+        }
+        Update: {
+          assigned_sales_id?: string | null
+          created_at?: string
+          customer_code?: string | null
+          customer_name?: string
+          dealer_tier?: Database["public"]["Enums"]["dealer_tier"]
+          id?: string
+          is_active?: boolean
+          normalized_phone?: string | null
+          phone?: string | null
+          province?: string | null
+          region?: string | null
+          salework_account?: string | null
+          source_id?: string
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          updated_at?: string
+          zalo_account?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_assigned_sales_id_fkey"
+            columns: ["assigned_sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_reports: {
         Row: {
           actual_customer_visits: number | null
@@ -284,6 +533,65 @@ export type Database = {
           },
         ]
       }
+      debts: {
+        Row: {
+          created_at: string
+          customer_id: string
+          document_code: string | null
+          document_date: string | null
+          due_date: string | null
+          id: string
+          original_amount: number
+          outstanding_amount: number
+          source_id: string
+          source_system: string
+          source_updated_at: string | null
+          status: string
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          document_code?: string | null
+          document_date?: string | null
+          due_date?: string | null
+          id?: string
+          original_amount?: number
+          outstanding_amount?: number
+          source_id: string
+          source_system?: string
+          source_updated_at?: string | null
+          status?: string
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          document_code?: string | null
+          document_date?: string | null
+          due_date?: string | null
+          id?: string
+          original_amount?: number
+          outstanding_amount?: number
+          source_id?: string
+          source_system?: string
+          source_updated_at?: string | null
+          status?: string
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hatde_branch_snapshots: {
         Row: {
           branch_code: string
@@ -348,6 +656,56 @@ export type Database = {
           total_transactions?: number
         }
         Relationships: []
+      }
+      inventory: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity_available: number | null
+          quantity_on_hand: number
+          quantity_reserved: number
+          source_system: string
+          source_updated_at: string | null
+          synced_at: string
+          updated_at: string
+          warehouse_code: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity_available?: number | null
+          quantity_on_hand?: number
+          quantity_reserved?: number
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          updated_at?: string
+          warehouse_code: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity_available?: number | null
+          quantity_on_hand?: number
+          quantity_reserved?: number
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          updated_at?: string
+          warehouse_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       misa_customer_monthly_plans: {
         Row: {
@@ -599,6 +957,132 @@ export type Database = {
           },
         ]
       }
+      order_lines: {
+        Row: {
+          created_at: string
+          discount_amount: number
+          id: string
+          line_total: number
+          order_id: string
+          product_id: string | null
+          quantity: number
+          source_line_id: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          line_total?: number
+          order_id: string
+          product_id?: string | null
+          quantity: number
+          source_line_id: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          line_total?: number
+          order_id?: string
+          product_id?: string | null
+          quantity?: number
+          source_line_id?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          assigned_sales_id: string | null
+          created_at: string
+          currency_code: string
+          customer_id: string | null
+          discount_amount: number
+          id: string
+          order_code: string
+          order_date: string
+          source_id: string
+          source_system: string
+          source_updated_at: string | null
+          status: string
+          subtotal: number
+          synced_at: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_sales_id?: string | null
+          created_at?: string
+          currency_code?: string
+          customer_id?: string | null
+          discount_amount?: number
+          id?: string
+          order_code: string
+          order_date: string
+          source_id: string
+          source_system?: string
+          source_updated_at?: string | null
+          status: string
+          subtotal?: number
+          synced_at?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_sales_id?: string | null
+          created_at?: string
+          currency_code?: string
+          customer_id?: string | null
+          discount_amount?: number
+          id?: string
+          order_code?: string
+          order_date?: string
+          source_id?: string
+          source_system?: string
+          source_updated_at?: string | null
+          status?: string
+          subtotal?: number
+          synced_at?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_assigned_sales_id_fkey"
+            columns: ["assigned_sales_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pancake_daily_reports: {
         Row: {
           ads_gmv: number
@@ -620,7 +1104,7 @@ export type Database = {
           ads_gmv: number
           ads_order_count: number
           cancelled_count: number
-          cancelled_revenue?: number
+          cancelled_revenue: number
           currency_code?: string
           employee_name?: string
           late_count: number
@@ -766,6 +1250,57 @@ export type Database = {
           shop_discount?: number
           shop_id?: number
           synced_at?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          product_code: string
+          product_name: string
+          size: string
+          source_id: string
+          source_system: string
+          source_updated_at: string | null
+          synced_at: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          product_code: string
+          product_name: string
+          size?: string
+          source_id: string
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          product_code?: string
+          product_name?: string
+          size?: string
+          source_id?: string
+          source_system?: string
+          source_updated_at?: string | null
+          synced_at?: string
+          unit?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -928,6 +1463,128 @@ export type Database = {
           },
         ]
       }
+      salework_reports: {
+        Row: {
+          account_name: string
+          call_duration: string
+          conversations: number
+          incoming_calls: number
+          missed_calls: number
+          outgoing_calls: number
+          received_messages: number
+          sent_messages: number
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          call_duration?: string
+          conversations?: number
+          incoming_calls?: number
+          missed_calls?: number
+          outgoing_calls?: number
+          received_messages?: number
+          sent_messages?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          call_duration?: string
+          conversations?: number
+          incoming_calls?: number
+          missed_calls?: number
+          outgoing_calls?: number
+          received_messages?: number
+          sent_messages?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          description: string | null
+          due_at: string | null
+          id: string
+          order_id: string | null
+          priority: number
+          source_id: string | null
+          source_system: string
+          status: Database["public"]["Enums"]["operational_task_status"]
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          order_id?: string | null
+          priority?: number
+          source_id?: string | null
+          source_system?: string
+          status?: Database["public"]["Enums"]["operational_task_status"]
+          task_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          order_id?: string | null
+          priority?: number
+          source_id?: string | null
+          source_system?: string
+          status?: Database["public"]["Enums"]["operational_task_status"]
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       amis_reconciliation: {
@@ -962,6 +1619,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_duplicate_candidates: {
+        Row: {
+          customer_codes: string[] | null
+          customer_count: number | null
+          customer_ids: string[] | null
+          customer_names: string[] | null
+          normalized_phone: string | null
+        }
+        Relationships: []
       }
       customer_effective_care_dates: {
         Row: {
@@ -1086,6 +1753,7 @@ export type Database = {
       }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      normalize_vn_phone: { Args: { p_phone: string }; Returns: string }
       replace_misa_report119_snapshot: {
         Args: { p_customers: Json; p_employees: Json; p_period_month: string }
         Returns: number
@@ -1102,6 +1770,13 @@ export type Database = {
         Args: { p_entries: Json; p_period_month: string }
         Returns: number
       }
+      sync_operational_customers_from_report119: {
+        Args: { p_period_month?: string }
+        Returns: {
+          inserted_or_updated: number
+          period_month: string
+        }[]
+      }
       upsert_hatde_snapshot: {
         Args: {
           p_branches: Json
@@ -1112,12 +1787,20 @@ export type Database = {
         }
         Returns: Json
       }
+      upsert_misa_sale_orders: {
+        Args: { p_orders: Json }
+        Returns: {
+          debt_count: number
+          line_count: number
+          order_count: number
+          product_count: number
+        }[]
+      }
       upsert_pancake_daily_report: {
         Args: {
           p_ads_gmv: number
           p_ads_order_count: number
           p_cancelled_count: number
-          p_cancelled_revenue?: number
           p_late_count: number
           p_order_count: number
           p_report_date: string
@@ -1141,6 +1824,8 @@ export type Database = {
     }
     Enums: {
       customer_care_status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED"
+      dealer_tier: "STANDARD" | "PARTNER" | "STRATEGIC" | "SPECIALIST"
+      operational_task_status: "OPEN" | "IN_PROGRESS" | "DONE" | "CANCELLED"
       report_status: "MORNING_SUBMITTED" | "COMPLETED"
       user_role: "ADMIN" | "SALES"
     }
@@ -1149,6 +1834,7 @@ export type Database = {
     }
   }
 }
+
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
@@ -1157,12 +1843,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1186,11 +1872,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1211,11 +1897,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1236,11 +1922,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1253,11 +1939,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1270,6 +1956,8 @@ export const Constants = {
   public: {
     Enums: {
       customer_care_status: ["PENDING", "APPROVED", "REJECTED", "REVOKED"],
+      dealer_tier: ["STANDARD", "PARTNER", "STRATEGIC", "SPECIALIST"],
+      operational_task_status: ["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"],
       report_status: ["MORNING_SUBMITTED", "COMPLETED"],
       user_role: ["ADMIN", "SALES"],
     },

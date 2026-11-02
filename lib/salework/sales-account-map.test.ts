@@ -4,6 +4,7 @@ import {
   getSaleWorkAccountName,
   getSaleWorkAccountSelectionName,
   getSaleWorkDisplayName,
+  getMergedSaleWorkAccountNames,
   isSaleWorkOnlyReportAccount,
   MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES,
   MONTHLY_SALEWORK_ACCOUNT_NAMES,
@@ -38,18 +39,30 @@ describe('getSaleWorkAccountName', () => {
   });
 
   it('đưa tài khoản của Nguyễn Minh Khải và Võ Thanh Nhâm vào tập đồng bộ ngày', () => {
-    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(7);
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(8);
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhâm Miền Trung');
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhân Đồng Nai');
   });
 
   it('chỉ thêm Dương Văn Thịnh và Nguyễn Trần Đăng Khoa vào tập tháng, không đổi tập ngày', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Abraham Thịnh Miền Trung');
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Tàu - MT');
-    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(9);
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(10);
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Thịnh Miền Trung');
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Tàu - MT');
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhâm Miền Trung');
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhân Đồng Nai');
+  });
+
+  it('gộp Khải MT với tài khoản Abraham Nhân Đồng Nai', () => {
+    expect(getMergedSaleWorkAccountNames('Abraham Khải Khánh Hoà')).toEqual([
+      'Abraham Khải Khánh Hoà',
+      'Abraham Nhân Đồng Nai',
+    ]);
+    expect(getMergedSaleWorkAccountNames('Abraham San Miền Trung')).toEqual([
+      'Abraham San Miền Trung',
+    ]);
   });
 });
 
@@ -59,17 +72,25 @@ describe('normalizeSaleWorkAccountName', () => {
     ['(OFF)Hải TeleSale', 'Hải TeleSale'],
     ['(off) Abraham San Miền Trung ', 'Abraham San Miền Trung'],
     ['  (OFF)   Abraham Khải Hcm  ', 'Abraham Khải Hcm'],
+    ['Chị Hương', 'Abraham Kế Toán Bánhàng'],
     ['Abraham Khải Miền Trung', 'Abraham Khải Khánh Hoà'],
     ['(OFF) Abraham Khải Miền Trung', 'Abraham Khải Khánh Hoà'],
+    ['Khải MT', 'Abraham Khải Khánh Hoà'],
   ])('chuẩn hoá %s thành %s', (source, expected) => {
     expect(normalizeSaleWorkAccountName(source)).toBe(expected);
   });
 });
 
 describe('getSaleWorkAccountSelectionName', () => {
+  it('chọn Chị Hương nhưng giữ khóa snapshot kế toán cũ', () => {
+    expect(getSaleWorkAccountSelectionName('Abraham Kế Toán Bánhàng')).toBe(
+      'Chị Hương',
+    );
+  });
+
   it('chọn nhãn mới của tài khoản Phan Thành Khải', () => {
     expect(getSaleWorkAccountSelectionName('Abraham Khải Khánh Hoà')).toBe(
-      'Abraham Khải Miền Trung',
+      'Khải MT',
     );
   });
 
@@ -91,26 +112,31 @@ describe('tài khoản báo cáo TeleSale', () => {
   it('giữ nguyên tài khoản SaleWork kế toán trong tập đồng bộ', () => {
     expect(TELESALE_SALEWORK_ACCOUNT_NAMES).toEqual([
       'Abraham Kế Toán Bánhàng',
-      'Hải TeleSale',
+      'Cô Lê',
       'Cô Thy',
     ]);
+    expect(TELESALE_SALEWORK_ACCOUNT_NAMES).not.toContain('Hải TeleSale');
   });
 
-  it('chỉ đánh dấu Cô Thy là báo cáo SaleWork-only', () => {
+  it('đánh dấu Cô Lê và Cô Thy là báo cáo SaleWork-only', () => {
+    expect(isSaleWorkOnlyReportAccount('Cô Lê')).toBe(true);
     expect(isSaleWorkOnlyReportAccount('Cô Thy')).toBe(true);
     expect(isSaleWorkOnlyReportAccount('Hải TeleSale')).toBe(false);
     expect(isSaleWorkOnlyReportAccount('Abraham Kế Toán Bánhàng')).toBe(false);
   });
 
-  it('không đưa Cô Thy vào snapshot tháng', () => {
+  it('không đưa Cô Lê và Cô Thy vào snapshot tháng', () => {
     expect(MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES).toEqual([
       'Abraham Kế Toán Bánhàng',
-      'Hải TeleSale',
     ]);
+    expect(MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES).not.toContain('Hải TeleSale');
+    expect(MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES).not.toContain('Cô Lê');
     expect(MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES).not.toContain('Cô Thy');
   });
 
-  it('không ánh xạ Cô Thy sang dữ liệu AMIS hoặc CRM', () => {
+  it('không ánh xạ Cô Lê và Cô Thy sang dữ liệu AMIS hoặc CRM', () => {
+    expect(AMIS_EMPLOYEE_MAP['Cô Lê']).toBeUndefined();
+    expect(getCrmCallEmployeeCode('Cô Lê')).toBeNull();
     expect(AMIS_EMPLOYEE_MAP['Cô Thy']).toBeUndefined();
     expect(getCrmCallEmployeeCode('Cô Thy')).toBeNull();
   });

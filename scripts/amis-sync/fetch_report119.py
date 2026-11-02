@@ -259,6 +259,20 @@ def replace_directory_snapshot(year, month, rows):
         sys.exit(f"Ghi snapshot Report 119 loi HTTP {response.status_code}: {response.text[:400]}")
     print(f"Da thay snapshot: {len(employees)} nhan vien, {len(customers)} khach hang.")
 
+    canonical_response = requests.post(
+        f"{SB_URL}/rest/v1/rpc/sync_operational_customers_from_report119",
+        headers={"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
+                 "Content-Type": "application/json"},
+        json={"p_period_month": f"{year:04d}-{month:02d}-01"}, timeout=120)
+    if not canonical_response.ok:
+        sys.exit(
+            "Dong bo danh muc customers loi HTTP "
+            f"{canonical_response.status_code}: {canonical_response.text[:400]}"
+        )
+    result = canonical_response.json()
+    changed = result[0].get("inserted_or_updated", 0) if result else 0
+    print(f"Da dong bo danh muc customers: {changed} dong thay doi.")
+
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]

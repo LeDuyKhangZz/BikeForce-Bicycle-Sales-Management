@@ -144,6 +144,9 @@ mà `/Stocks` và `/Stocks/product_ledger` đã cho thấy. Mỗi cái chỉ t�
 request; cái nào trả 200 là một đường đi sạch.
 """
 CANDIDATE_ENDPOINTS = [
+    # Tồn kho
+    "/Stocks",
+    "/Stocks/product_ledger",
     # Danh mục
     "/Users",
     "/Employees",

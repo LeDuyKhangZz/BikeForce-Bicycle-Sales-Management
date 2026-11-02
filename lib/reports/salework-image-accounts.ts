@@ -9,6 +9,10 @@ const NOVEMBER_REPORT_ACCOUNTS: ReadonlySet<string> = new Set([
   'Abraham Kế Toán Bánhàng',
 ]);
 
+export function isNovemberReportAccount(accountName: string): boolean {
+  return NOVEMBER_REPORT_ACCOUNTS.has(accountName);
+}
+
 const HALLOWEEN_REPORT_ACCOUNTS: ReadonlySet<string> = new Set([
   'Hải TeleSale',
 ]);
@@ -18,7 +22,7 @@ export function isHalloweenReportAccount(accountName: string): boolean {
 }
 
 export function getSaleWorkReportBackgroundPath(accountName: string): string {
-  if (NOVEMBER_REPORT_ACCOUNTS.has(accountName)) {
+  if (isNovemberReportAccount(accountName)) {
     return NOVEMBER_REPORT_BACKGROUND_PATH;
   }
   return isHalloweenReportAccount(accountName)

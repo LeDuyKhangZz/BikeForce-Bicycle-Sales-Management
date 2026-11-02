@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
 import type { SaleWorkReport } from '../services/salework';
-import { getVietnamMonthRange } from '../lib/date';
+import { getVietnamMonthRange, getVietnamToday } from '../lib/date';
+import { syncSaleWorkToPolymind } from '../lib/salework/polymind-sync';
 import { retryAsync } from '../lib/process/retry-async';
 import { openSaleWorkFilters, waitForSaleWorkIdle } from '../lib/salework/report-readiness';
 import { aggregateSaleWorkReport, watchSaleWorkSession } from './salework-session';
@@ -51,6 +52,8 @@ const DAILY_TARGET_ACCOUNT_NAMES = [
   ...TELESALE_SALEWORK_ACCOUNT_NAMES,
   ...SALES_SALEWORK_ACCOUNT_NAMES,
 ];
+const DAILY_READ_MAX_ATTEMPTS = 12;
+const DAILY_READ_RETRY_DELAY_MS = 5_000;
 const PROFILE_PATH = resolve(process.cwd(), '.salework-browser-profile');
 let activeBrowserContext: BrowserContext | null = null;
 const syncMode = process.env.SALEWORK_SYNC_MODE?.trim();
@@ -358,21 +361,34 @@ async function main(): Promise<void> {
     return;
   }
 
+  const reportDate = getVietnamToday();
   await aggregateSaleWorkReport(page);
   console.log('Đã bấm Tổng hợp; đang cuộn và đọc toàn bộ bảng SaleWork…');
   const dailyAttempts: SaleWorkReport[][] = [];
   let completeDailyReports: SaleWorkReport[] | null = null;
-  for (let attempt = 1; attempt <= 5; attempt += 1) {
+  for (let attempt = 1; attempt <= DAILY_READ_MAX_ATTEMPTS; attempt += 1) {
     const result = await readPaginatedReports(page);
     dailyAttempts.push(result.reports);
     completeDailyReports = findStableCompleteSaleWorkReports(targetAccountNames, dailyAttempts);
     if (completeDailyReports !== null) break;
-    console.log(`Bảng SaleWork ngày chưa đủ hoặc chưa ổn định (${attempt}/5); chờ rồi đọc lại…`);
-    await page.waitForTimeout(2_000);
+    console.log(
+      `Bảng SaleWork ngày chưa đủ hoặc chưa ổn định ` +
+      `(${attempt}/${DAILY_READ_MAX_ATTEMPTS}); đã đọc: ` +
+      `${result.reports.map((report) => report.accountName).join(', ') || 'không có dòng'}; ` +
+      'chờ rồi đọc lại…',
+    );
+    await page.waitForTimeout(DAILY_READ_RETRY_DELAY_MS);
   }
   if (completeDailyReports === null) {
-    throw new Error('Chưa đọc đủ dữ liệu SaleWork ngày ổn định sau năm lượt. Không ghi Supabase.');
+    throw new Error(
+      `Chưa đọc đủ dữ liệu SaleWork ngày ổn định sau ` +
+      `${DAILY_READ_MAX_ATTEMPTS} lượt. Không ghi Supabase.`,
+    );
   }
+  if (getVietnamToday() !== reportDate) {
+    throw new Error('Ngày Việt Nam đã thay đổi trong lượt lấy dữ liệu; chạy lại đồng bộ.');
+  }
+  const syncedAt = new Date().toISOString();
 
   // Vẫn giữ ghi ra file JSON cục bộ để tiện xem/debug nhanh trên máy —
   // nhưng đây không còn là nguồn dữ liệu chính mà app đọc nữa.
@@ -387,6 +403,7 @@ async function main(): Promise<void> {
   console.log(`Đã đồng bộ ${completeDailyReports.length} tài khoản SaleWork ngày lên Supabase.`);
   await context.close();
   activeBrowserContext = null;
+  await syncSaleWorkToPolymind(completeDailyReports, reportDate, syncedAt, process.env.BIKEFORCE_API_KEY);
 }
 
 async function readScrollableTablePage(

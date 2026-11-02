@@ -50,9 +50,8 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
     expect(getTelesaleCode('Giao - Kế Toán bán hàng')).toBe('—');
   });
 
-  it.each(['Hải TeleSale', 'Abraham Kế Toán Bánhàng'])(
-    'hiển thị lời chúc Halloween thay cho 20/10 với %s',
-    (accountName) => {
+  it('hiển thị lời chúc Halloween thay cho 20/10 với Hải TeleSale', () => {
+      const accountName = 'Hải TeleSale';
       const { context, texts } = recordingContext();
 
       drawReportCard(context, {
@@ -72,8 +71,22 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
       expect(renderedTexts).toContain('31/10');
       expect(renderedTexts).not.toContain('PHỤ NỮ VIỆT NAM');
       expect(renderedTexts).not.toContain('20/10');
-    },
-  );
+  });
+
+  it('hiển thị theme tri ân 20/11 cho Nguyễn Thị Kim Hương', () => {
+    const { context, texts } = recordingContext();
+    drawReportCard(context, {
+      accountName: 'Abraham Kế Toán Bánhàng', conversations: 1, sentMessages: 2,
+      receivedMessages: 3, incomingCalls: 4, outgoingCalls: 5, missedCalls: 0,
+      callDuration: '7 phút', amis: null,
+    });
+
+    const renderedTexts = texts.map((call) => call.text);
+    expect(renderedTexts).toContain('TRI ÂN THẦY CÔ');
+    expect(renderedTexts).toContain('CHÀO MỪNG NGÀY NHÀ GIÁO VIỆT NAM 20/11');
+    expect(renderedTexts).not.toContain('PHỤ NỮ VIỆT NAM');
+    expect(renderedTexts).not.toContain('HAPPY HALLOWEEN');
+  });
 
   it('tách tên nội dung khỏi cột chỉ tiêu và vẽ targetAmount ở đúng cột', () => {
     const { context, texts } = recordingContext();
@@ -148,11 +161,11 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
     expect(texts.some((call) => call.text === '0')).toBe(false);
   });
 
-  it('Cô Thy chỉ hiển thị số liệu SaleWork, không dựng các khối MISA AMIS', () => {
+  it.each(['Cô Thy', 'Cô Lê'])('%s chỉ hiển thị số liệu SaleWork và không có mã telesale', (accountName) => {
     const { context, texts } = recordingContext();
 
     drawReportCard(context, {
-      accountName: 'Cô Thy',
+      accountName,
       conversations: 10,
       sentMessages: 10,
       receivedMessages: 75,
@@ -164,12 +177,13 @@ describe('drawReportCard — bảng tình trạng tháng của SaleWork', () => 
     });
 
     const renderedTexts = texts.map((call) => call.text);
-    expect(renderedTexts).toContain('Cô Thy');
+    expect(renderedTexts).toContain(accountName);
     expect(renderedTexts).toContain('Tình trạng thực hiện trong ngày');
     expect(renderedTexts).toContain('75');
     expect(renderedTexts).toContain('1.38 phút');
     expect(renderedTexts).not.toContain('Tình trạng thực hiện trong tháng');
     expect(renderedTexts).not.toContain('Số liệu MISA tính đến —');
     expect(renderedTexts).not.toContain('SL ĐH đã ghi  —');
+    expect(renderedTexts.some((text) => text.startsWith('Mã telesale:'))).toBe(false);
   });
 });

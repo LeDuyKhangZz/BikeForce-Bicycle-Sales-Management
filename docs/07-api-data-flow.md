@@ -918,6 +918,15 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 ## Đọc dashboard công tác phí (2026-10-12)
 
 `/admin/travel-expenses?month=YYYY-MM` → auth Admin → `getTravelExpensePageData` → hai service query hiện hữu chạy song song → `buildTravelExpenseDashboard` dựng các tổng và danh sách thiếu. Nút **Công tác phí** chuyển sang `/admin/travel-expenses/entries?month=YYYY-MM`; Server Action và RPC lưu hiện hữu không đổi.
+
+## Bổ sung 21/10/2026 — Báo cáo SaleWork-only của Cô Lê
+
+`Cô Lê` và `Cô Thy` cùng nằm trong tập tài khoản đồng bộ ngày, không tham gia snapshot tháng. Hai tài khoản không có mã Telesale, chỉ lấy sáu số hoạt động trực tiếp từ SaleWork, không ghép AMIS hoặc CRM Report 70; ảnh báo cáo vì vậy không dựng dòng mã Telesale. Trang Admin và endpoint ảnh dùng chung luồng hiện hữu; ảnh của Cô Lê có URL `/api/salework/report-image?account=C%C3%B4%20L%C3%AA`.
+<!-- 2026-10-21: Polymind SaleWork -->
+Kiểm chứng production 21/10/2026: npm run salework:sync hoàn tất exit 0, lưu 11 tài khoản ngày; Polymind xác nhận HTTP 200 và ok=true cho co-le và co-thy. Gửi lại snapshot cùng ngày cũng thành công. Script scripts/polymind-resend.ts cho phép gửi lại data/salework-report.json trong ngày Việt Nam hiện tại bằng key từ .env.local; kiểm tra schema, không lấy lại dữ liệu nguồn, không log key. Lệnh: npx tsx scripts/polymind-resend.ts. Chưa kiểm chứng giao diện/DB Polymind từ phía BikeForce.
+Đồng bộ Polymind: sau khi sync ngày lưu Supabase và đóng trình duyệt, gửi riêng snapshot Cô Lê/co-le và Cô Thy/co-thy tới POST https://www.polymind.vn/api/integrations/bikeforce/salework. Dùng BIKEFORCE_API_KEY trong .env.local của máy chạy sync (cùng key phía Polymind), header x-api-key; không log key. Thiếu key thì log bỏ qua. Không gửi luồng MONTH_ONLY. Payload gồm person, date Việt Nam, snapshot conversations/sentMessages/receivedMessages/incomingCalls/outgoingCalls/missedCalls/callDurationSeconds/syncedAt UTC. Không có mã Telesale, không ghép AMIS/CRM. Gửi lại mỗi lượt theo person+date để thay snapshot; timeout 15s/request, tối đa 3 lần khi lỗi mạng/timeout/5xx, không retry 4xx. HTTP 200 phải có ok=true. Thử cả hai người trước khi báo lỗi; Supabase đã lưu vẫn giữ nguyên. Lượt sync ngày kế tiếp gửi lại, chưa có hàng đợi lưu lịch sử qua ngày.
+
+Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa xác nhận production. Next Exact Steps: đặt BIKEFORCE_API_KEY thật vào .env.local bằng kênh bí mật, triển khai API Polymind, chạy npm run salework:sync và xác nhận hai log HTTP 200 cùng dữ liệu phía nhận. Không gửi key trong chat.
 ## 26/10/2026 — Luồng Pancake analytics/sale
 
 Edge Function gọi `POST https://pos.pages.fm/api/v1/shops/1022081353/analytics/sale?api_key=...` với body chọn các trường tài chính, filter trạng thái `3/16`, split theo `Order.marketplace_id` và biên ngày UTC+7. Parser chỉ nhận `-3` (Shopee), `-9` (TikTok), kiểm tra số nguyên an toàn và tính `platform_receivable = price - discount + marketplace_voucher - fee_marketplace`. Worker POST mảng typed tới RPC; UI đọc bảng bằng session Admin chịu RLS.

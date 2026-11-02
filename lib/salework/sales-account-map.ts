@@ -24,26 +24,33 @@ const SALEWORK_DISPLAY_NAME_MAP: Readonly<Record<string, string>> = {
 /** Các tài khoản TeleSale cần xuất báo cáo cuối ngày từ SaleWork. */
 export const TELESALE_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
   'Abraham Kế Toán Bánhàng',
-  'Hải TeleSale',
+  'Cô Lê',
   'Cô Thy',
 ];
 
-/** Tập TeleSale cần snapshot tháng; Cô Thy chỉ có báo cáo cuối ngày. */
+/** Tập TeleSale cần snapshot tháng; Cô Lê và Cô Thy chỉ có báo cáo cuối ngày. */
 export const MONTHLY_TELESALE_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
   'Abraham Kế Toán Bánhàng',
-  'Hải TeleSale',
 ];
 
 /** Tài khoản chỉ dùng số liệu SaleWork, không ghép CRM MISA AMIS. */
-const SALEWORK_ONLY_REPORT_ACCOUNT_NAMES: ReadonlySet<string> = new Set(['Cô Thy']);
+const SALEWORK_ONLY_REPORT_ACCOUNT_NAMES: ReadonlySet<string> = new Set(['Cô Lê', 'Cô Thy']);
 
 const SALEWORK_ACCOUNT_SELECTION_NAME_MAP: Readonly<Record<string, string>> = {
   // SaleWork đã đổi nhãn tài khoản; giữ khóa snapshot cũ để không tách lịch sử.
-  'Abraham Khải Khánh Hoà': 'Abraham Khải Miền Trung',
+  'Abraham Kế Toán Bánhàng': 'Chị Hương',
+  'Abraham Khải Khánh Hoà': 'Khải MT',
 };
 
 const SALEWORK_ACCOUNT_CANONICAL_NAME_MAP: Readonly<Record<string, string>> = {
+  'Chị Hương': 'Abraham Kế Toán Bánhàng',
   'Abraham Khải Miền Trung': 'Abraham Khải Khánh Hoà',
+  'Khải MT': 'Abraham Khải Khánh Hoà',
+};
+
+const SALEWORK_MERGED_ACCOUNT_NAMES: Readonly<Record<string, readonly string[]>> = {
+  // Khải MT hiện phụ trách đồng thời hai tài khoản; giữ khóa lịch sử làm khóa báo cáo chính.
+  'Abraham Khải Khánh Hoà': ['Abraham Khải Khánh Hoà', 'Abraham Nhân Đồng Nai'],
 };
 
 /**
@@ -68,6 +75,7 @@ export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
   'Abraham Khải Hcm',
   'Abraham Nguyễn Thiện',
   'Abraham Khải Khánh Hoà',
+  'Abraham Nhân Đồng Nai',
   'Abraham Sang Miền Tây',
   'Abraham Nhâm Miền Trung',
   'Abraham Bà Rịa - Vũng Tàu',
@@ -76,10 +84,15 @@ export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
 /** Tập Sales cần snapshot tháng cho màn Tổng kết tháng. */
 export const MONTHLY_SALEWORK_ACCOUNT_NAMES: readonly string[] = Object.values(
   SALES_SALEWORK_ACCOUNT_MAP,
-);
+).concat('Abraham Nhân Đồng Nai');
 
 export function getSaleWorkAccountName(salesFullName: string): string | null {
   return SALES_SALEWORK_ACCOUNT_MAP[salesFullName.trim()] ?? null;
+}
+
+/** Các tài khoản nguồn được cộng vào cùng một báo cáo SaleWork. */
+export function getMergedSaleWorkAccountNames(accountName: string): readonly string[] {
+  return SALEWORK_MERGED_ACCOUNT_NAMES[accountName] ?? [accountName];
 }
 
 /** Đổi nhãn giao diện nhưng giữ nguyên account name làm khóa truy vấn SaleWork. */

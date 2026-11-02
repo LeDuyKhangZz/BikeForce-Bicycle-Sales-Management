@@ -7,8 +7,10 @@ import {
 } from '@/lib/date';
 import {
   combineCallMetrics,
+  formatCallDuration,
   parseSaleWorkDurationSeconds,
 } from '@/lib/salework/call-metrics';
+import { getMergedSaleWorkAccountNames } from '@/lib/salework/sales-account-map';
 import { getCrmCallEmployeeCode } from '@/lib/salework/crm-employee-map';
 import { monthlySaleWorkAccountKey } from '@/lib/salework/monthly-snapshot';
 
@@ -226,7 +228,44 @@ export async function getSaleWorkReportByAccountName(
   accountName: string,
 ): Promise<SaleWorkReport | null> {
   const reports = await getSaleWorkReport();
-  return reports.find((report) => report.accountName === accountName) ?? null;
+  const sourceNames = getMergedSaleWorkAccountNames(accountName);
+  const sourceReports = reports.filter((report) => sourceNames.includes(report.accountName));
+  return mergeSaleWorkReports(accountName, sourceReports);
+}
+
+export function mergeSaleWorkReports(
+  accountName: string,
+  reports: readonly SaleWorkReport[],
+): SaleWorkReport | null {
+  if (reports.length === 0) return null;
+
+  return reports.reduce<SaleWorkReport>(
+    (total, report) => ({
+      accountName,
+      conversations: total.conversations + report.conversations,
+      sentMessages: total.sentMessages + report.sentMessages,
+      receivedMessages: total.receivedMessages + report.receivedMessages,
+      incomingCalls: total.incomingCalls + report.incomingCalls,
+      outgoingCalls: total.outgoingCalls + report.outgoingCalls,
+      missedCalls: total.missedCalls + report.missedCalls,
+      callDuration: formatCallDuration(
+        parseSaleWorkDurationSeconds(total.callDuration) +
+          parseSaleWorkDurationSeconds(report.callDuration),
+      ),
+      amis: total.amis ?? report.amis,
+    }),
+    {
+      accountName,
+      conversations: 0,
+      sentMessages: 0,
+      receivedMessages: 0,
+      incomingCalls: 0,
+      outgoingCalls: 0,
+      missedCalls: 0,
+      callDuration: '0.00 giây',
+      amis: null,
+    },
+  );
 }
 
 /** Snapshot SaleWork đã lọc đúng một tháng; script sync lưu riêng theo tháng, không ghi đè ngày. */
@@ -236,22 +275,31 @@ export async function getMonthlySaleWorkReportByAccountName(
 ): Promise<SaleWorkReport | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    const monthlyKey = monthlySaleWorkAccountKey(month, accountName);
-    if (monthlyKey === null) return null;
+    const sourceNames = getMergedSaleWorkAccountNames(accountName);
+    const monthlyKeys = sourceNames
+      .map((sourceName) => monthlySaleWorkAccountKey(month, sourceName))
+      .filter((key): key is string => key !== null);
+    if (monthlyKeys.length === 0) return null;
     const { data, error } = await supabase
       .from('salework_reports')
       .select(
         'account_name,conversations,sent_messages,received_messages,incoming_calls,outgoing_calls,missed_calls,call_duration,updated_at',
       )
-      .eq('account_name', monthlyKey)
-      .maybeSingle<SaleWorkReportRow>();
+      .in('account_name', monthlyKeys)
+      .returns<SaleWorkReportRow[]>();
 
     if (error || data === null) {
       if (error) console.error('[getMonthlySaleWorkReportByAccountName]', error.message);
       return null;
     }
 
-    return { ...toSaleWorkReport({ ...data, account_name: accountName }), amis: null };
+    return mergeSaleWorkReports(
+      accountName,
+      data.map((row) => ({
+        ...toSaleWorkReport({ ...row, account_name: accountName }),
+        amis: null,
+      })),
+    );
   } catch (error) {
     console.error(
       '[getMonthlySaleWorkReportByAccountName]',

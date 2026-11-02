@@ -3,14 +3,14 @@ import {
   getSaleWorkDisplayName,
   isSaleWorkOnlyReportAccount,
 } from '@/lib/salework/sales-account-map';
-import { isHalloweenReportAccount } from '@/lib/reports/salework-image-accounts';
+import { isHalloweenReportAccount, isNovemberReportAccount } from '@/lib/reports/salework-image-accounts';
 
 export const CARD_WIDTH = 540;
 export const CARD_HEIGHT = 960;
 export const PAD = 30;
 export const REPORT_BACKGROUND_PATH = '/images/background2010.png';
 
-export const COLORS = {
+const DEFAULT_COLORS = {
   background: '#fff6f7',
   cream: 'rgba(255, 252, 251, 0.94)',
   creamStrong: 'rgba(255, 250, 249, 0.96)',
@@ -29,6 +29,28 @@ export const COLORS = {
   bottomBoxText: '#30343f',
   placeholder: '#9a7480',
 } as const;
+
+export const COLORS = DEFAULT_COLORS;
+
+const NOVEMBER_COLORS: Record<keyof typeof DEFAULT_COLORS, string> = {
+  background: '#fffaf0',
+  cream: '#ffffff',
+  creamStrong: '#ffffff',
+  border: '#d5a13b',
+  brand: '#063c35',
+  accent: '#8d5706',
+  accentStrong: '#b47a0b',
+  rule: '#d5a13b',
+  textDark: '#063c35',
+  textMuted: '#64706f',
+  tableHeaderBg: '#f1f7f1',
+  tableBorder: '#dfe9e2',
+  orangeBoxBg: '#063c35',
+  orangeBoxText: '#ffffff',
+  bottomBoxBg: '#ffffff',
+  bottomBoxText: '#063c35',
+  placeholder: '#8b9693',
+};
 
 export const PLACEHOLDER = '—';
 
@@ -141,6 +163,8 @@ export function drawReportCard(
   const amis = report.amis;
   const displayName = getSaleWorkDisplayName(report.accountName);
   const isSaleWorkOnly = isSaleWorkOnlyReportAccount(report.accountName);
+  const isNovember = isNovemberReportAccount(report.accountName);
+  const COLORS = isNovember ? NOVEMBER_COLORS : DEFAULT_COLORS;
 
   if (backgroundImage) {
     ctx.drawImage(backgroundImage, 0, 0, w, h);
@@ -168,7 +192,9 @@ export function drawReportCard(
 
   ctx.fillStyle = COLORS.brand;
   ctx.font = '400 14px ReportFont';
-  ctx.fillText(`Mã telesale: ${getTelesaleCode(report.accountName)}`, PAD, 155);
+  if (!isSaleWorkOnly) {
+    ctx.fillText(`Mã telesale: ${getTelesaleCode(report.accountName)}`, PAD, 155);
+  }
 
   ctx.strokeStyle = COLORS.rule;
   ctx.lineWidth = 2;
@@ -310,7 +336,7 @@ export function drawReportCard(
   let itemY = boxTop + 48;
   lineItems.forEach((item, index) => {
     if (index % 2 === 0) {
-      ctx.fillStyle = 'rgba(255, 238, 243, 0.72)';
+      ctx.fillStyle = isNovember ? '#f1f7f1' : 'rgba(255, 238, 243, 0.72)';
       ctx.fillRect(boxX + 18, itemY - 22, boxW - 36, lineH);
     }
     ctx.fillStyle = COLORS.accentStrong;
@@ -359,7 +385,14 @@ export function drawReportCard(
 
   ctx.textAlign = 'center';
   ctx.fillStyle = COLORS.accentStrong;
-  if (isHalloweenReportAccount(report.accountName)) {
+  if (isNovember) {
+    ctx.fillStyle = COLORS.brand;
+    ctx.font = '700 29px ReportFont-Bold';
+    ctx.fillText('TRI ÂN THẦY CÔ', w / 2, 858);
+    ctx.fillStyle = COLORS.accent;
+    ctx.font = '700 15px ReportFont-Bold';
+    ctx.fillText('CHÀO MỪNG NGÀY NHÀ GIÁO VIỆT NAM 20/11', w / 2, 885);
+  } else if (isHalloweenReportAccount(report.accountName)) {
     ctx.font = '700 31px ReportFont-Bold';
     ctx.fillText('HAPPY HALLOWEEN', w / 2, 858);
     ctx.font = '700 18px ReportFont-Bold';
