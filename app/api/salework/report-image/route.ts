@@ -15,6 +15,8 @@ import {
   getSaleWorkReportBackgroundPath,
 } from '@/lib/reports/salework-image-accounts';
 import { getLatestPancakeReportForImage } from '@/services/pancake-reports';
+import { getAdFinanceRows } from '@/services/ad-finance';
+import { buildAdFinanceViewModel } from '@/lib/reports/ad-finance';
 import { getSessionProfile } from '@/services/profiles';
 import { getSaleWorkReport } from '@/services/salework';
 import {
@@ -104,7 +106,11 @@ export async function GET(request: Request) {
   ctx.scale(scale, scale);
 
   if (accountName === ECOMMERCE_REPORT_ACCOUNT) {
-    const report = await getLatestPancakeReportForImage(createReportAutomationClient());
+    const automationClient = createReportAutomationClient();
+    const [report, adFinanceRows] = await Promise.all([
+      getLatestPancakeReportForImage(automationClient),
+      getAdFinanceRows(automationClient),
+    ]);
     if (report === null) {
       return NextResponse.json({ error: 'Chưa có dữ liệu Pancake' }, { status: 404 });
     }
@@ -116,6 +122,7 @@ export async function GET(request: Request) {
       ctx as unknown as EcommerceCanvas2DLike,
       viewModel,
       background as unknown as CanvasImageSource,
+      buildAdFinanceViewModel(adFinanceRows),
     );
   } else {
     const reports = await getSaleWorkReport();

@@ -14,6 +14,7 @@ import { Path2D } from '@napi-rs/canvas';
 
 import { formatCurrencyVND } from '@/lib/currency';
 import { CANCELLED_ORDERS_SHOP_LOSS_VND, CANCELLED_ORDERS_VALUE_VND, type EcommerceReportViewModel } from '@/lib/reports/ecommerce-report';
+import type { AdFinanceViewModel } from '@/lib/reports/ad-finance';
 
 export interface EcommerceCanvas2DLike {
   fillStyle: string | CanvasGradient | CanvasPattern; strokeStyle: string | CanvasGradient | CanvasPattern;
@@ -91,7 +92,7 @@ function sourceLogo(ctx: EcommerceCanvas2DLike, sourceName: string, x: number, y
   ctx.textAlign = 'center'; ctx.fillText(tikTok ? 'T' : 'S', x + 12, y + 17); ctx.textAlign = 'left';
 }
 
-export function drawEcommerceReportCard(ctx: EcommerceCanvas2DLike, report: EcommerceReportViewModel, backgroundImage?: CanvasImageSource): void {
+export function drawEcommerceReportCard(ctx: EcommerceCanvas2DLike, report: EcommerceReportViewModel, backgroundImage?: CanvasImageSource, adFinance?: AdFinanceViewModel): void {
   if (backgroundImage) ctx.drawImage(backgroundImage, 0, 0, WIDTH, HEIGHT);
   else { ctx.fillStyle = '#fffaf0'; ctx.fillRect(0, 0, WIDTH, HEIGHT); }
   ctx.textBaseline = 'alphabetic'; ctx.fillStyle = GREEN; ctx.font = '700 27px ReportFont-Bold'; ctx.fillText('BIKEFORCE', 38, 50);
@@ -112,8 +113,12 @@ export function drawEcommerceReportCard(ctx: EcommerceCanvas2DLike, report: Ecom
   ctx.textAlign = 'center'; ctx.fillText('i', 48, 408); ctx.textAlign = 'left'; ctx.fillStyle = GREEN; ctx.font = '400 10px ReportFont'; ctx.fillText(cancelledNote, 65, 408);
 
   panel(ctx, 17, 438, 506, 187); sectionTitle(ctx, 'Tài chính theo sàn', 460);
-  const financeIcons: readonly MetricIcon[] = ['sales', 'fees', 'payout', 'ads'];
-  report.financialSummary.forEach((metric, index) => metricCard(ctx, metric.label, metric.display, 31 + (index % 2) * 247, 475 + Math.floor(index / 2) * 66, financeIcons[index] ?? 'sales'));
+  const financeIcons: readonly MetricIcon[] = ['ads', 'fees', 'ads', 'fees'];
+  const financeMetrics = adFinance?.metrics ?? [
+    { label: 'TikTok · Tiền nạp Ads', display: '—' }, { label: 'TikTok · Số dư Ads', display: '—' },
+    { label: 'Shopee · Tiền nạp Ads', display: '—' }, { label: 'Shopee · Số dư Ads', display: '—' },
+  ];
+  financeMetrics.forEach((metric, index) => metricCard(ctx, metric.label, metric.display, 31 + (index % 2) * 247, 475 + Math.floor(index / 2) * 66, financeIcons[index] ?? 'ads'));
 
   panel(ctx, 17, 637, 506, 245); sectionTitle(ctx, 'Theo nguồn đơn', 659); let sourceY = 680;
   report.sourceGroups.forEach((group) => {

@@ -1585,6 +1585,33 @@ export type Database = {
           },
         ]
       }
+      tiktok_ad_balance_snapshots: {
+        Row: {
+          available_cash_balance: number
+          captured_at: string
+          currency_code: string
+          id: number
+          payment_portfolio_id: string
+          synced_at: string
+        }
+        Insert: {
+          available_cash_balance: number
+          captured_at: string
+          currency_code?: string
+          id?: never
+          payment_portfolio_id: string
+          synced_at?: string
+        }
+        Update: {
+          available_cash_balance?: number
+          captured_at?: string
+          currency_code?: string
+          id?: never
+          payment_portfolio_id?: string
+          synced_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       amis_reconciliation: {
@@ -1653,6 +1680,15 @@ export type Database = {
       }
     }
     Functions: {
+      get_marketplace_ad_finance_summary: {
+        Args: never
+        Returns: {
+          ads_top_up: number
+          available_balance: number | null
+          balance_captured_at: string | null
+          marketplace_code: string
+        }[]
+      }
       admin_daily_trend: {
         Args: { p_from: string; p_to: string }
         Returns: {
@@ -1750,6 +1786,19 @@ export type Database = {
           returned_count: number
           revenue: number
         }[]
+      }
+      insert_tiktok_ad_balance_snapshot: {
+        Args: {
+          p_available_cash_balance: number
+          p_captured_at: string
+          p_currency_code: string
+          p_payment_portfolio_id: string
+        }
+        Returns: number
+      }
+      set_marketplace_ad_top_up: {
+        Args: { p_amount: number; p_marketplace_code: string }
+        Returns: undefined
       }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }

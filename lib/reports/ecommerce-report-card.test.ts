@@ -75,7 +75,8 @@ describe('ảnh báo cáo Sàn TMĐT', () => {
     expect(texts).toEqual(expect.arrayContaining([
       'Báo cáo Sàn TMĐT', ECOMMERCE_REPORT_ACCOUNT, 'Đơn hàng', 'Doanh thu',
       'Đơn hủy', 'Đơn hoàn', 'Đơn trễ', 'Tài chính theo sàn',
-      'Doanh số thành công', 'Tổng phí sàn', 'Tiền sàn trả', 'Tiền nạp quảng cáo',
+      'TikTok · Tiền nạp Ads', 'TikTok · Số dư Ads',
+      'Shopee · Tiền nạp Ads', 'Shopee · Số dư Ads',
       'Nguồn Việt Nam', 'Nguồn Singapore', 'Shopee', 'Tiktok', 'S$3.49',
       'Tổng giá trị đơn hàng bị hủy là 0\u00a0₫ — số tiền shop bị mất/phải trả là 0\u00a0₫.',
     ]));

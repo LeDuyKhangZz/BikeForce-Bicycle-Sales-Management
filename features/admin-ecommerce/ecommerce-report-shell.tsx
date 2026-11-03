@@ -1,13 +1,24 @@
-import { BarChart3, CheckCircle2, CircleUserRound, DatabaseZap, ShoppingBag } from 'lucide-react';
+import {
+  BarChart3,
+  CheckCircle2,
+  CircleUserRound,
+  DatabaseZap,
+  ShoppingBag,
+} from 'lucide-react';
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import type { EcommerceReportViewModel } from '@/features/admin-ecommerce/queries';
+import type {
+  EcommerceReportViewModel,
+} from '@/features/admin-ecommerce/queries';
+import type { AdFinanceViewModel } from '@/lib/reports/ad-finance';
+import { AdTopUpForm } from '@/features/admin-ecommerce/ad-top-up-form';
 
 type Props = {
   report: EcommerceReportViewModel | null;
+  adFinance: AdFinanceViewModel;
 };
 
-export function EcommerceReportShell({ report }: Props) {
+export function EcommerceReportShell({ report, adFinance }: Props) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -35,6 +46,14 @@ export function EcommerceReportShell({ report }: Props) {
           </span>
         </CardHeader>
       </Card>
+
+      <section aria-labelledby="ad-top-up-title" className="flex flex-col gap-3">
+        <h2 id="ad-top-up-title" className="text-lg font-semibold text-heading">Cập nhật tiền nạp Ads</h2>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <AdTopUpForm marketplaceCode="TIKTOK" label="Tiền nạp Ads TikTok" amount={adFinance.tikTokTopUp} />
+          <AdTopUpForm marketplaceCode="SHOPEE" label="Tiền nạp Ads Shopee" amount={adFinance.shopeeTopUp} />
+        </div>
+      </section>
 
       <section aria-labelledby="ecommerce-overview-title" className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
@@ -82,7 +101,7 @@ export function EcommerceReportShell({ report }: Props) {
             <p className="text-sm text-muted-foreground">Đơn thành công theo báo cáo Pancake trong ngày.</p>
           </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {report.financialSummary.map((metric) => (
+            {adFinance.metrics.map((metric) => (
               <Card key={metric.label} className="flex min-h-28 flex-col justify-between gap-3">
                 <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
                 <p className="text-xl font-bold tabular-nums text-heading">{metric.display}</p>
