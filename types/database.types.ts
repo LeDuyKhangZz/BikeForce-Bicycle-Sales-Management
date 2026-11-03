@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -7,11 +7,6 @@
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.15"
-  }
   public: {
     Tables: {
       amis_employee_metrics: {
@@ -707,6 +702,35 @@ export type Database = {
           },
         ]
       }
+      marketplace_ad_top_ups: {
+        Row: {
+          amount: number
+          marketplace_code: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number
+          marketplace_code: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          marketplace_code?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_ad_top_ups_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       misa_customer_monthly_plans: {
         Row: {
           committed_sales: number | null
@@ -1104,7 +1128,7 @@ export type Database = {
           ads_gmv: number
           ads_order_count: number
           cancelled_count: number
-          cancelled_revenue: number
+          cancelled_revenue?: number
           currency_code?: string
           employee_name?: string
           late_count: number
@@ -1463,39 +1487,27 @@ export type Database = {
           },
         ]
       }
-      salework_reports: {
+      shopee_ad_balance_snapshots: {
         Row: {
-          account_name: string
-          call_duration: string
-          conversations: number
-          incoming_calls: number
-          missed_calls: number
-          outgoing_calls: number
-          received_messages: number
-          sent_messages: number
-          updated_at: string
+          available_cash_balance: number
+          captured_at: string
+          currency_code: string
+          id: number
+          synced_at: string
         }
         Insert: {
-          account_name: string
-          call_duration?: string
-          conversations?: number
-          incoming_calls?: number
-          missed_calls?: number
-          outgoing_calls?: number
-          received_messages?: number
-          sent_messages?: number
-          updated_at?: string
+          available_cash_balance: number
+          captured_at: string
+          currency_code?: string
+          id?: never
+          synced_at?: string
         }
         Update: {
-          account_name?: string
-          call_duration?: string
-          conversations?: number
-          incoming_calls?: number
-          missed_calls?: number
-          outgoing_calls?: number
-          received_messages?: number
-          sent_messages?: number
-          updated_at?: string
+          available_cash_balance?: number
+          captured_at?: string
+          currency_code?: string
+          id?: never
+          synced_at?: string
         }
         Relationships: []
       }
@@ -1680,15 +1692,6 @@ export type Database = {
       }
     }
     Functions: {
-      get_marketplace_ad_finance_summary: {
-        Args: never
-        Returns: {
-          ads_top_up: number
-          available_balance: number | null
-          balance_captured_at: string | null
-          marketplace_code: string
-        }[]
-      }
       admin_daily_trend: {
         Args: { p_from: string; p_to: string }
         Returns: {
@@ -1765,6 +1768,15 @@ export type Database = {
         }[]
       }
       get_latest_pancake_report_image: { Args: never; Returns: Json }
+      get_marketplace_ad_finance_summary: {
+        Args: never
+        Returns: {
+          ads_top_up: number
+          available_balance: number
+          balance_captured_at: string
+          marketplace_code: string
+        }[]
+      }
       get_pancake_month_sources: {
         Args: { p_from: string; p_to: string }
         Returns: {
@@ -1787,6 +1799,14 @@ export type Database = {
           revenue: number
         }[]
       }
+      insert_shopee_ad_balance_snapshot: {
+        Args: {
+          p_available_cash_balance: number
+          p_captured_at: string
+          p_currency_code: string
+        }
+        Returns: number
+      }
       insert_tiktok_ad_balance_snapshot: {
         Args: {
           p_available_cash_balance: number
@@ -1795,10 +1815,6 @@ export type Database = {
           p_payment_portfolio_id: string
         }
         Returns: number
-      }
-      set_marketplace_ad_top_up: {
-        Args: { p_amount: number; p_marketplace_code: string }
-        Returns: undefined
       }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
@@ -1819,6 +1835,10 @@ export type Database = {
         Args: { p_entries: Json; p_period_month: string }
         Returns: number
       }
+      set_marketplace_ad_top_up: {
+        Args: { p_amount: number; p_marketplace_code: string }
+        Returns: undefined
+      }
       sync_operational_customers_from_report119: {
         Args: { p_period_month?: string }
         Returns: {
@@ -1836,6 +1856,10 @@ export type Database = {
         }
         Returns: Json
       }
+      upsert_misa_inventory: {
+        Args: { p_items: Json; p_stock_code: string }
+        Returns: number
+      }
       upsert_misa_sale_orders: {
         Args: { p_orders: Json }
         Returns: {
@@ -1850,6 +1874,7 @@ export type Database = {
           p_ads_gmv: number
           p_ads_order_count: number
           p_cancelled_count: number
+          p_cancelled_revenue?: number
           p_late_count: number
           p_order_count: number
           p_report_date: string
@@ -1892,12 +1917,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1921,11 +1946,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1946,11 +1971,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1971,11 +1996,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1988,11 +2013,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2012,3 +2037,4 @@ export const Constants = {
     },
   },
 } as const
+

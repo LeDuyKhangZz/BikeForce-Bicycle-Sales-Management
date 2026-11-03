@@ -1,5 +1,17 @@
 # BikeForce Project Checklist
 
+## 03/11/2026 — Đồng bộ số dư quảng cáo Shopee
+
+- [x] Tạo bảng snapshot Shopee force-RLS và index thời điểm mới nhất.
+- [x] Tạo RPC ghi worker-only; `service_role` không có DML trực tiếp trên bảng.
+- [x] Tạo Edge Function `shopee-balance-sync` với token/header riêng.
+- [x] Nối số dư Shopee mới nhất vào RPC tổng hợp tài chính sàn.
+- [x] Generate database types; parser 7/7, RLS 3/3 và typecheck pass.
+- [x] Áp migration cloud, đặt secret và deploy Edge Function.
+- [x] Smoke production: endpoint, snapshot và báo cáo tổng hợp cùng trả `4.748.231 VND`.
+- [x] Unit 7/7, RLS 3/3, typecheck, lint và production build 37/37 trang pass.
+- [ ] Cấu hình action HTTP trong Power Automate và gọi subflow Shopee từ Main.
+
 ## 03/11/2026 — SaleWork v2
 
 - [x] Chuyển luồng sang `/v2/statistical` và tab Tin nhắn.

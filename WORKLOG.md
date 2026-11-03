@@ -1,5 +1,9 @@
 # BikeForce Worklog
 
+## 2026-11-03 — Đồng bộ số dư quảng cáo Shopee (DEC-119)
+
+Đã tách hoàn toàn luồng Shopee khỏi TikTok: thêm bảng snapshot force-RLS, RPC worker-only, Edge Function `shopee-balance-sync` với token/header riêng, nối snapshot mới nhất vào báo cáo tài chính sàn và generate lại database types. Parser nhận `ShopeeBalanceClean` dạng chuỗi số nguyên, từ chối payload không an toàn. Migration áp dụng thành công trên local sau khi xử lý riêng ba migration cũ phụ thuộc dữ liệu production; migration production đã áp riêng an toàn do lịch sử CLI cũ bị drift, secret riêng đã đặt và function đã deploy. Smoke production bằng số thật `4.748.231 ₫` trả `ok:true`, snapshot và báo cáo tổng hợp khớp. Kiểm chứng cuối: unit 7/7, RLS 3/3, typecheck, lint và production build 37/37 trang đều pass. Power Automate còn cần thêm action HTTP và gọi subflow Shopee từ Main.
+
 ## 2026-11-03 — Sửa đồng bộ SaleWork cho giao diện v2
 
 SaleWork chuyển sang `/v2/statistical` và bỏ toàn bộ selector Element UI cũ. Đã cập nhật luồng một-tab: đóng popup, vào tab Tin nhắn, scope tìm kiếm trong đúng dropdown, chọn đủ 11 tài khoản, chỉ chấp nhận request Tổng hợp có đủ 11 `accountIds`, đọc bảng HTML v2 và fail-closed nếu thiếu dòng. Chạy production thật exit 0: control `Chị Hương · Cô Lê · +9`, đọc và lưu đủ 11 tài khoản lên Supabase; Polymind `Cô Lê`/`Cô Thy` HTTP 200; AMIS trả 0 nhân viên và cập nhật 0 dòng. Typecheck và 15/15 test SaleWork liên quan pass; không đổi DB/RLS.

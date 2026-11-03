@@ -1307,3 +1307,11 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 Sau migration bảng tài chính, áp tiếp `20261026100000_pancake_image_financials.sql` trước khi deploy web. Migration này thay thế RPC ảnh để response có `financials`; nếu deploy web trước, Zod sẽ từ chối payload cũ và ảnh Sàn TMĐT trả lỗi an toàn thay vì hiển thị số thiếu.
 
 Áp migration `20261026090000_pancake_marketplace_financials.sql` trước khi deploy lại Edge Function `pancake-sync`. Không cần secret mới: function dùng `PANCAKE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` hiện hữu. Sau deploy, gọi một lượt sync hoặc chờ cron 09:00/17:00 và xác nhận bảng có hai dòng Shopee/TikTok cho ngày hiện tại.
+## 03/11/2026 — Triển khai đồng bộ số dư Shopee
+
+1. Áp migration `20261103160000_shopee_ad_balance_snapshots.sql`.
+2. Tạo chuỗi ngẫu nhiên dài và đặt Supabase Edge Function secret `SHOPEE_BALANCE_SYNC_TOKEN`; không dùng lại token TikTok.
+3. Deploy `shopee-balance-sync` với JWT verification tắt theo `supabase/config.toml`; function tự xác thực header `x-shopee-balance-token`.
+4. Trong Power Automate Desktop, gửi `POST` tới `https://<project-ref>.supabase.co/functions/v1/shopee-balance-sync?available_cash_balance=%ShopeeBalanceClean%`, thêm header token và chỉ coi HTTP 200 với body `{"ok":true,...}` là thành công.
+5. Mở `/admin/ecommerce` bằng Admin và xác nhận “Shopee · Số dư Ads” cùng thời điểm cập nhật. Không đưa token vào source, docs hoặc biến `NEXT_PUBLIC_*`.
+

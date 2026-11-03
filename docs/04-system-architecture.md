@@ -750,3 +750,7 @@ Route `/admin/travel-expenses` và route nhập `/admin/travel-expenses/entries`
 ### Ảnh bảng thi đua Hạt Dẻ
 
 `GET /api/hatde/board/image` chạy Node.js runtime trên Vercel, đọc snapshot mới nhất bằng automation client phía server rồi render canvas 1080×1320 với nền `public/images/nenhatde.png`. Đây là self-authenticated API path: middleware cho request đi qua, còn route bắt buộc tự kiểm tra `x-api-key`. Route không mở trình duyệt và không chụp dashboard, vì vậy ảnh không chứa navigation và luôn có toàn bộ danh sách.
+## 03/11/2026 — Power Automate đồng bộ số dư Shopee
+
+Power Automate Desktop chỉ đọc và làm sạch số dư Shopee thành số nguyên. Nó POST qua HTTPS tới `shopee-balance-sync` bằng token Shopee riêng; Edge Function giữ service-role key, validate payload rồi gọi RPC ghi snapshot. UI Admin tiếp tục đọc qua client người dùng chịu RLS và RPC tổng hợp, không nhận secret automation.
+

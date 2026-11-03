@@ -932,3 +932,7 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 Edge Function gọi `POST https://pos.pages.fm/api/v1/shops/1022081353/analytics/sale?api_key=...` với body chọn các trường tài chính, filter trạng thái `3/16`, split theo `Order.marketplace_id` và biên ngày UTC+7. Parser chỉ nhận `-3` (Shopee), `-9` (TikTok), kiểm tra số nguyên an toàn và tính `platform_receivable = price - discount + marketplace_voucher - fee_marketplace`. Worker POST mảng typed tới RPC; UI đọc bảng bằng session Admin chịu RLS.
 
 RPC ảnh `get_latest_pancake_report_image` trả thêm mảng `financials` cùng snapshot đơn hàng mới nhất. Service parse bằng Zod, view model tổng hợp bốn chỉ số tài chính và renderer dùng chung dữ liệu đó; route ảnh không tự truy vấn bảng hoặc tự tính tiền.
+## 03/11/2026 — Luồng số dư quảng cáo Shopee
+
+`Power Automate Desktop` → `POST /functions/v1/shopee-balance-sync` với header `x-shopee-balance-token` → validate số nguyên VND → RPC `insert_shopee_ad_balance_snapshot` → `shopee_ad_balance_snapshots`. `get_marketplace_ad_finance_summary()` chọn snapshot Shopee mới nhất để trả `available_balance` và `balance_captured_at` cho `/admin/ecommerce`. Endpoint cũng nhận query parameter `available_cash_balance` hoặc body JSON/plain text để Power Automate Desktop cấu hình ổn định.
+

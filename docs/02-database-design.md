@@ -1378,3 +1378,7 @@ Migration `20261011140000_hatde_image_automation_read.sql` chỉ cấp `SELECT` 
 ## 26/10/2026 — Snapshot tài chính Pancake theo sàn
 
 `pancake_marketplace_financial_reports` có khóa `(report_date, shop_id, marketplace_code)`, force RLS và chỉ Admin được SELECT. Bảng lưu số đơn thành công, giá trị hàng, giảm giá cửa hàng, voucher sàn, tổng phí sàn, tiền sàn trả, COD, trả trước, phí thành phần và tiền nạp quảng cáo. RPC `upsert_pancake_marketplace_financials` thay snapshot một ngày, chỉ `service_role` được EXECUTE; role này không có SELECT/DML trực tiếp trên bảng (DEC-117).
+## 03/11/2026 — Snapshot số dư quảng cáo Shopee (DEC-119)
+
+`shopee_ad_balance_snapshots` lưu số dư nguyên VND theo thời điểm Power Automate Desktop chụp. Bảng bật và ép RLS; chỉ Admin đọc qua policy `shopee_ad_balance_select_admin`. `anon`, Sales và `service_role` không có DML trực tiếp. Worker chỉ được execute RPC security-definer `insert_shopee_ad_balance_snapshot(bigint,text,timestamptz)`, có kiểm tra số không âm, VND và thời điểm trong cửa sổ 7 ngày đến 5 phút tương lai. Index `shopee_ad_balance_captured_idx` phục vụ truy vấn snapshot mới nhất. `get_marketplace_ad_finance_summary()` nối snapshot mới nhất tương ứng cho cả `TIKTOK` và `SHOPEE`.
+

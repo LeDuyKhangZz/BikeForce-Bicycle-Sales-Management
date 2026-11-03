@@ -2998,3 +2998,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Thay nền toàn bộ báo cáo bị loại vì vượt phạm vi; so khớp tên hiển thị trong component bị loại vì dễ lệch khóa SaleWork.
 - **Impact:** Thêm một asset 9:16 và helper chọn nền có unit test; không đổi dữ liệu, quyền hay API.
 - **Status:** APPROVED — yêu cầu trực tiếp ngày 26/10/2026.
+
+## DEC-119 — Số dư quảng cáo Shopee dùng snapshot và token riêng
+
+- **Date:** 2026-11-03
+- **Decision:** Power Automate Desktop đọc số dư tại Shopee Seller Center rồi gửi số nguyên VND tới Edge Function `shopee-balance-sync`. Function xác thực bằng `SHOPEE_BALANCE_SYNC_TOKEN`, ghi qua RPC `insert_shopee_ad_balance_snapshot`; báo cáo lấy snapshot Shopee mới nhất độc lập với TikTok.
+- **Reason:** Endpoint hiện hữu chỉ dành cho TikTok. Dùng lại endpoint/token/bảng TikTok sẽ gắn sai nguồn dữ liệu; Power Automate hiện chỉ quản lý một tài khoản Shopee nên không cần tạo mã tài khoản giả.
+- **Alternatives:** Gửi số Shopee vào `tiktok-balance-sync` bị loại vì sai nguồn; lưu trực tiếp từ client bằng service-role key bị loại vì làm lộ secret; ghép hai sàn vào một payload không định kiểu bị loại vì tăng nguy cơ ghi nhầm.
+- **Impact:** Thêm bảng force-RLS Admin-only, RPC chỉ `service_role` được execute, Edge Function/token riêng, cập nhật RPC tổng hợp tài chính và test parser/RLS. Không cấp DML trực tiếp trên bảng cho `service_role`.
+- **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp ngày 03/11/2026.

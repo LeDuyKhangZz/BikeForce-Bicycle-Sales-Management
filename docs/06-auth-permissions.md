@@ -939,3 +939,7 @@ Route `GET /api/hatde/board/image` không dùng cookie Admin. Middleware chỉ m
 ## 26/10/2026 — Quyền tài chính Pancake
 
 `pancake_marketplace_financial_reports` chỉ cấp SELECT cho `authenticated` và policy yêu cầu `(select public.is_admin())`. `service_role` bị revoke mọi quyền bảng, chỉ được EXECUTE `upsert_pancake_marketplace_financials`; anon và Sales không đọc được. API key Pancake chỉ tồn tại trong Edge Function Secrets.
+## 03/11/2026 — Quyền snapshot số dư Shopee
+
+`shopee_ad_balance_snapshots` chỉ cấp `SELECT` cho `authenticated`, đồng thời policy yêu cầu `(select public.is_admin())`; vì vậy Sales nhận 0 dòng và anon bị từ chối. `service_role` bị revoke mọi quyền bảng, chỉ được execute `insert_shopee_ad_balance_snapshot`. Power Automate chỉ giữ `SHOPEE_BALANCE_SYNC_TOKEN`, tuyệt đối không giữ Supabase service-role key.
+

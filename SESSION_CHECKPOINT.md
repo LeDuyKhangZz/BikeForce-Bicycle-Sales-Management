@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-03 — Backend số dư Shopee đã sẵn sàng để deploy
+
+DEC-119 thêm `shopee_ad_balance_snapshots`, RPC ghi chỉ dành cho worker, Edge Function/token Shopee riêng và cập nhật `get_marketplace_ad_finance_summary()`. Types đã regenerate. Local migration chạy thành công; parser 7/7, RLS 3/3, typecheck pass. Reset local toàn bộ bị các migration cũ phụ thuộc hồ sơ/snapshot production chặn; để kiểm thử đã repair local-only hai migration ánh xạ nhân sự và thêm fixture Report119 rồi chạy tiếp, không sửa lịch sử migration source.
+
+**Next Exact Steps:** trong Power Automate thêm action HTTP theo runbook, dán token đang nằm trong clipboard vào header và gọi subflow Shopee từ Main; chạy flow thật rồi mở `/admin/ecommerce`. Không tạo lại/đổi token trừ khi clipboard bị mất trước lúc cấu hình.
+
 ## 2026-11-03 — SaleWork v2 hoạt động
 
 `scripts/salework-sync.ts` đã hỗ trợ giao diện `/v2/statistical`: dùng tab Tin nhắn, dropdown React mới và bảng HTML mới; đóng tab restore/popup, không chờ WebSocket cũ ở bước chuẩn bị. `aggregateSaleWorkReport` khóa request theo đủ số `accountIds`. Production sync exit 0 và ghi đủ 11 tài khoản; Polymind 2/2 HTTP 200; AMIS 0 dòng.
