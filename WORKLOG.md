@@ -1,5 +1,9 @@
 # BikeForce Worklog
 
+## 2026-11-03 — Sửa đồng bộ SaleWork cho giao diện v2
+
+SaleWork chuyển sang `/v2/statistical` và bỏ toàn bộ selector Element UI cũ. Đã cập nhật luồng một-tab: đóng popup, vào tab Tin nhắn, scope tìm kiếm trong đúng dropdown, chọn đủ 11 tài khoản, chỉ chấp nhận request Tổng hợp có đủ 11 `accountIds`, đọc bảng HTML v2 và fail-closed nếu thiếu dòng. Chạy production thật exit 0: control `Chị Hương · Cô Lê · +9`, đọc và lưu đủ 11 tài khoản lên Supabase; Polymind `Cô Lê`/`Cô Thy` HTTP 200; AMIS trả 0 nhân viên và cập nhật 0 dòng. Typecheck và 15/15 test SaleWork liên quan pass; không đổi DB/RLS.
+
 ## 2026-10-19 — TikTok Shop Singapore trong báo cáo Sàn TMĐT
 
 Đã mở rộng snapshot Pancake cho shop Singapore `1943148428`, lấy Shopee/TikTok theo UTC+8 và giữ tiền SGD dạng cent. Tổng quan báo cáo vẫn là Việt Nam; phần nguồn tách **Nguồn Việt Nam** và **Nguồn Singapore**, không cộng chéo tiền tệ. Migration cloud do người dùng áp dụng; generated database types đã cập nhật; Edge Function mới đã deploy và secret Singapore đã cấu hình sau xác nhận của người dùng. Sync production thành công: Việt Nam 240 đơn, Singapore 0 đơn ngày 19/10/2026; ảnh thật hiển thị cả `Shopee` và `Tiktok` Singapore ở `S$0.00`. Test liên quan 11/11, typecheck, lint và production build 37 route đều pass.

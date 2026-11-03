@@ -143,21 +143,26 @@ async function main(): Promise<void> {
         viewport: { width: 1440, height: 900 },
       }),
     {
-      maxAttempts: 25,
+      maxAttempts: 3,
       delayMs: 5_000,
       shouldRetry: (error) =>
         error instanceof Error &&
-        /Target page, context or browser has been closed|exitCode=21|profile.*in use|ProcessSingleton/i.test(
+        /Target page, context or browser has been closed/i.test(
           error.message,
         ),
       onRetry: (attempt) => {
-        console.log(`Profile SaleWork đang được tác vụ khác sử dụng; chờ 5 giây rồi thử lại (${attempt}/24)…`);
+        console.log(`Chrome SaleWork đóng bất thường; chờ 5 giây rồi thử lại (${attempt}/2)…`);
       },
     },
   );
   activeBrowserContext = context;
 
-  const page = context.pages()[0] ?? (await context.newPage());
+  await new Promise((resolveDelay) => setTimeout(resolveDelay, 2_000));
+  const restoredPages = context.pages();
+  const page = await context.newPage();
+  for (const restoredPage of restoredPages) {
+    await restoredPage.close();
+  }
   const waitForReportSession = watchSaleWorkSession(page);
   page.on('pageerror', (error) => console.error(`[SaleWork pageerror] ${error.message}`));
   page.on('console', (message) => {
@@ -169,8 +174,21 @@ async function main(): Promise<void> {
     waitUntil: 'domcontentloaded',
     timeout: 90_000,
   });
+  await page.waitForFunction(() =>
+    window.location.pathname.startsWith('/v2') ||
+    document.querySelector('input[type="password"]') !== null,
+  undefined, { timeout: 30_000 }).catch(() => {});
 
-  const accountTab = page.locator('#pills-user-tab-2');
+  const isSaleWorkV2 = new URL(page.url()).pathname.startsWith('/v2');
+  if (isSaleWorkV2 && new URL(page.url()).pathname !== '/v2/statistical') {
+    await page.goto('https://zalo.salework.net/v2/statistical', {
+      waitUntil: 'domcontentloaded',
+      timeout: 90_000,
+    });
+  }
+  const accountTab = isSaleWorkV2
+    ? page.getByRole('button', { name: 'Tổng quan', exact: true })
+    : page.locator('#pills-user-tab-2');
   const usernameInput = page.getByRole('textbox', { name: 'Tên đăng nhập hoặc email' });
   const entryState = await Promise.race([
     accountTab.waitFor({ state: 'visible', timeout: 30_000 }).then(() => 'DASHBOARD' as const),
@@ -184,7 +202,7 @@ async function main(): Promise<void> {
     await accountTab.waitFor({ state: 'visible', timeout: 90_000 });
   }
 
-  if (!(await accountTab.isVisible())) {
+  if (!isSaleWorkV2 && !(await accountTab.isVisible())) {
     throw new Error(
       entryState === 'LOGIN'
         ? 'SaleWork yêu cầu đăng nhập nhưng môi trường không có đủ tên đăng nhập và mật khẩu.'
@@ -194,19 +212,43 @@ async function main(): Promise<void> {
 
   // Trang cần vài giây để tải dữ liệu xong rồi mới bật popup (nếu có),
   // nên chờ một chút trước khi kiểm tra.
-  const accountSelect = page.locator('.el-select').first();
-  const accountSearchInput = page.getByRole('textbox').first();
+  const accountSelect = isSaleWorkV2
+    ? page.getByText('Tìm kiếm tài khoản...', { exact: true }).first()
+    : page.locator('.el-select').first();
+  const accountSearchInput = isSaleWorkV2
+    ? page.getByPlaceholder('Tìm kiếm tài khoản...', { exact: true })
+    : page.getByRole('textbox').first();
   await openSaleWorkFilters(page, async () => {
+    if (isSaleWorkV2) {
+      console.log(`SaleWork v2: chuẩn bị thao tác tại ${page.url()}`);
+      const messageTab = page.getByText('Tin nhắn', { exact: true }).first();
+      await messageTab.waitFor({ state: 'visible', timeout: 60_000 });
+      console.log('SaleWork v2: đã thấy tab Tin nhắn; đang đóng popup…');
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const closeButton = page.getByRole('button', { name: 'Đóng', exact: true }).last();
+        if (!(await closeButton.isVisible().catch(() => false))) break;
+        await closeButton.click();
+        await page.waitForTimeout(300);
+      }
+      await messageTab.click();
+      console.log('SaleWork v2: đã mở tab Tin nhắn; đang mở bộ chọn tài khoản…');
+      await accountSelect.waitFor({ state: 'visible', timeout: 30_000 });
+      await accountSelect.click();
+      await accountSearchInput.waitFor({ state: 'visible', timeout: 30_000 });
+      console.log('SaleWork v2: bộ chọn tài khoản đã sẵn sàng.');
+      return;
+    }
     await accountTab.waitFor({ state: 'visible', timeout: 60_000 });
-    await waitForReportSession();
+    if (!isSaleWorkV2) await waitForReportSession();
     await waitForSaleWorkIdle(page);
 
     // Đóng popup "BẠN CÓ TÀI KHOẢN HẾT HẠN LIÊN KẾT VỚI ZALO" nếu xuất hiện —
     // popup này che ô chọn tài khoản và khiến các bước click phía dưới bị treo.
-    const expiredLinkCloseButton = page.getByRole('button', { name: 'Đóng' });
-    if (await expiredLinkCloseButton.count() > 0) {
-      await expiredLinkCloseButton.first().click();
-      await expiredLinkCloseButton.first().waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const closeButton = page.getByRole('button', { name: 'Đóng', exact: true }).last();
+      if (!(await closeButton.isVisible().catch(() => false))) break;
+      await closeButton.click();
+      await page.waitForTimeout(300);
     }
 
     // Đúng chuỗi thao tác đã ghi bằng Playwright Codegen trên giao diện SaleWork:
@@ -217,7 +259,9 @@ async function main(): Promise<void> {
       await waitForSaleWorkIdle(page);
     }
 
-    const messageTab = page.getByText('Tin nhắn').nth(1);
+    const messageTab = isSaleWorkV2
+      ? page.getByRole('button', { name: 'Tin nhắn', exact: true })
+      : page.getByText('Tin nhắn').nth(1);
     await messageTab.waitFor({ state: 'visible', timeout: 30_000 });
     await messageTab.click();
     await waitForSaleWorkIdle(page);
@@ -233,6 +277,20 @@ async function main(): Promise<void> {
     // SaleWork dùng danh sách dài/ảo hóa. Gõ từng tên vào ô tìm kiếm trước khi
     // click giúp kết quả luôn có trong DOM, đúng thao tác đã xác nhận thủ công.
     const selectionName = getSaleWorkAccountSelectionName(accountName);
+    if (isSaleWorkV2) {
+      if (!(await accountSearchInput.isVisible().catch(() => false))) {
+        await accountSelect.click();
+      }
+      await accountSearchInput.fill(selectionName);
+      const accountDropdown = accountSearchInput.locator(
+        'xpath=ancestor::div[contains(@class,"absolute")][1]',
+      );
+      const accountOption = accountDropdown.getByText(selectionName, { exact: true }).last();
+      await accountOption.waitFor({ state: 'visible', timeout: 10_000 });
+      await accountOption.click();
+      await page.waitForTimeout(750);
+      continue;
+    }
     await accountSearchInput.fill(selectionName);
 
     // Element UI có thể ẩn option đã chọn khỏi dropdown và chỉ giữ nó dưới
@@ -293,13 +351,25 @@ async function main(): Promise<void> {
     if (!isSelected) await accountOption.click();
   }
 
+  if (isSaleWorkV2) {
+    const selectionState = await accountSearchInput.evaluate((input) => {
+      const dropdown = input.closest('.absolute');
+      const control = dropdown?.previousElementSibling;
+      return {
+        controlText: control?.textContent ?? '',
+        checkedOptionCount: dropdown?.querySelectorAll('svg.lucide-check').length ?? 0,
+      };
+    });
+    console.log(`SaleWork v2: trạng thái chọn tài khoản ${JSON.stringify(selectionState)}.`);
+  }
+
   await page.keyboard.press('Escape');
 
   const summarizePage = async (): Promise<string> =>
     JSON.stringify({
       url: page.url(),
       title: await page.title(),
-      totalRows: await page.locator('.el-table__body tbody tr').count(),
+      totalRows: await page.locator(isSaleWorkV2 ? 'table tbody tr' : '.el-table__body tbody tr').count(),
       visibleText: (await page.locator('body').innerText()).slice(0, 300),
       tableText: (await page.locator('.el-table__body tbody tr').allTextContents()).join(' | '),
       paginationText: (await page.locator('.el-pagination').allTextContents()).join(' | '),
@@ -320,7 +390,7 @@ async function main(): Promise<void> {
       throw new Error('SALEWORK_SYNC_MONTH không hợp lệ; cần định dạng YYYY-MM.');
     }
     await selectSaleWorkMonth(page, requestedMonth);
-    await aggregateSaleWorkReport(page);
+    await aggregateSaleWorkReport(page, targetAccountNames.length);
     console.log(`Đang đọc riêng dữ liệu SaleWork tháng ${requestedMonth}…`);
     await page.waitForTimeout(1000);
     await waitForSaleWorkIdle(page);
@@ -362,7 +432,7 @@ async function main(): Promise<void> {
   }
 
   const reportDate = getVietnamToday();
-  await aggregateSaleWorkReport(page);
+  await aggregateSaleWorkReport(page, targetAccountNames.length);
   console.log('Đã bấm Tổng hợp; đang cuộn và đọc toàn bộ bảng SaleWork…');
   const dailyAttempts: SaleWorkReport[][] = [];
   let completeDailyReports: SaleWorkReport[] | null = null;
@@ -474,7 +544,7 @@ async function readPaginatedReports(page: Page): Promise<{
   reports: SaleWorkReport[];
   visitedPageCount: number;
 }> {
-  const rows = page.locator('.el-table__body tbody tr');
+  const rows = page.locator('table tbody tr, .el-table__body tbody tr');
   await rows.first().waitFor({ state: 'visible', timeout: 60_000 });
 
   const firstPage = page.locator('.el-pagination:visible .el-pager .number').first();

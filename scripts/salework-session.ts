@@ -1,12 +1,21 @@
 import type { Page, WebSocket } from '@playwright/test';
 import { isSaleWorkSessionSubscription } from '../lib/salework/session-subscription';
 
-export async function aggregateSaleWorkReport(page: Page): Promise<void> {
+export async function aggregateSaleWorkReport(page: Page, expectedAccountCount?: number): Promise<void> {
   const responsePromise = page.waitForResponse(response => {
     if (new URL(response.url()).pathname !== '/api/statistic/overview') return false;
     const body: unknown = response.request().postDataJSON();
-    return typeof body === 'object' && body !== null &&
-      'statisticType' in body && body.statisticType === 'conversation';
+    if (typeof body !== 'object' || body === null ||
+      !('statisticType' in body) || body.statisticType !== 'conversation') return false;
+    if (expectedAccountCount === undefined) return true;
+    const accountCount = 'accountIds' in body && Array.isArray(body.accountIds)
+      ? body.accountIds.length
+      : 0;
+    if (accountCount !== expectedAccountCount) {
+      console.log(`SaleWork v2: bỏ qua request Tổng hợp có ${accountCount}/${expectedAccountCount} tài khoản.`);
+      return false;
+    }
+    return true;
   }, { timeout: 60_000 });
   // Gắn handler ngay cả khi click lỗi để waiter không tạo rejection chưa xử lý.
   void responsePromise.catch(() => {});
@@ -14,7 +23,8 @@ export async function aggregateSaleWorkReport(page: Page): Promise<void> {
   const response = await responsePromise;
   if (!response.ok()) throw new Error(`SaleWork Tổng hợp trả HTTP ${response.status()}.`);
   // HTTP chỉ trả số tác vụ; bảng được dựng sau các kết quả WebSocket.
-  await page.getByText(/Đang tải dữ liệu\s/u).first().waitFor({ state: 'hidden', timeout: 180_000 });
+  await page.getByText(/Đang tải dữ liệu|Đang chuẩn bị dữ liệu/u)
+    .first().waitFor({ state: 'hidden', timeout: 180_000 });
   await page.locator('.el-loading-mask:visible').first().waitFor({ state: 'hidden', timeout: 180_000 });
 }
 

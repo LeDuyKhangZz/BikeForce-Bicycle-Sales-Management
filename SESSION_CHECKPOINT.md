@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-03 — SaleWork v2 hoạt động
+
+`scripts/salework-sync.ts` đã hỗ trợ giao diện `/v2/statistical`: dùng tab Tin nhắn, dropdown React mới và bảng HTML mới; đóng tab restore/popup, không chờ WebSocket cũ ở bước chuẩn bị. `aggregateSaleWorkReport` khóa request theo đủ số `accountIds`. Production sync exit 0 và ghi đủ 11 tài khoản; Polymind 2/2 HTTP 200; AMIS 0 dòng.
+
+**Next Exact Steps:** quan sát lượt Task Scheduler kế tiếp để xác nhận profile không bị tiến trình Chrome ngoài giữ khóa; không quay lại selector `.el-select`/`.el-table` cho v2.
+
 ## 2026-10-19 — TikTok Shop Singapore
 
 Code, migration, generated types và Edge Function hỗ trợ hai shop đã hoàn tất. Secret Singapore đã đặt sau xác nhận explicit; sync production và RPC xác nhận snapshot `shop_id=1943148428`, `market_code=SG`, `currency_code=SGD`. Worker và ảnh thật luôn giữ hai dòng Shopee/TikTok Singapore kể cả khi 0 đơn; tiền vẫn là SGD. Test liên quan 11/11, typecheck và lint pass.

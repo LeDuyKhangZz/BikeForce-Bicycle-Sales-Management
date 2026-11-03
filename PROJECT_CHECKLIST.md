@@ -1,5 +1,13 @@
 # BikeForce Project Checklist
 
+## 03/11/2026 — SaleWork v2
+
+- [x] Chuyển luồng sang `/v2/statistical` và tab Tin nhắn.
+- [x] Chọn đủ 11 tài khoản trong đúng dropdown; request Tổng hợp đủ 11 `accountIds`.
+- [x] Đọc bảng v2 và lưu đủ 11 snapshot ngày lên Supabase.
+- [x] Production pipeline exit 0; Polymind 2/2 HTTP 200; AMIS 0 dòng.
+- [x] Typecheck và 15/15 test SaleWork liên quan pass.
+
 ## 2026-10-19 — TikTok Shop Singapore
 
 - [x] Migration tách `VN/VND` và `SG/SGD`, giữ nguyên RLS/GRANT.
