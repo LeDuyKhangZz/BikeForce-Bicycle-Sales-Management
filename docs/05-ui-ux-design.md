@@ -1551,4 +1551,4 @@ Khung Admin và Sales sử dụng toàn bộ chiều rộng khả dụng bên c�
 
 ## 2026-11-05 — Dashboard Sàn TMĐT
 
-Trang `/admin/ecommerce` dùng nền xanh nhạt, thẻ tổng quan nhiều màu và ba biểu đồ: doanh thu theo ngày, tỷ trọng doanh thu Shopee/TikTok và đơn thành công theo sàn. Biểu đồ lấy dữ liệu Pancake đã lưu; hover hoặc focus điểm/cột để xem tooltip. Khi thiếu snapshot tài chính, giao diện báo chưa có dữ liệu thay vì dựng số.
+Trang `/admin/ecommerce` dùng nền xanh nhạt, thẻ tổng quan nhiều màu và ba biểu đồ: doanh thu theo ngày, tỷ trọng doanh thu Shopee/TikTok và đơn thành công theo sàn. Biểu đồ lấy dữ liệu Pancake đã lưu; hover hoặc focus điểm/cột để xem tooltip. Khi thiếu snapshot tài chính, giao diện báo chưa có dữ liệu thay vì dựng số. Logo TikTok và Shopee dùng icon thương hiệu từ `@icons-pack/react-simple-icons` trên biểu đồ, thẻ tài chính và form nạp Ads.

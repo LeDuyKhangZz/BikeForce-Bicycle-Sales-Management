@@ -4171,3 +4171,5 @@ Sửa lỗi trang trắng `/admin/salework/customers` (digest `1211933317`): ngu
 ### 2026-11-05 — Làm mới dashboard Sàn TMĐT
 
 Làm lại `/admin/ecommerce` theo ảnh tham chiếu với tổng quan nhiều thẻ màu, ba biểu đồ có tooltip (doanh thu theo bảy snapshot gần nhất, cơ cấu doanh số theo Shopee/TikTok và số đơn thành công theo sàn), tài chính quảng cáo và chi tiết nguồn Việt Nam/Singapore. Chuỗi biểu đồ truy vấn snapshot Pancake thật; trạng thái rỗng không dựng số. `npx.cmd tsc --noEmit --pretty false` và `git diff --check` thành công. Chưa xác nhận bằng phiên đăng nhập trình duyệt.
+
+Thêm package `@icons-pack/react-simple-icons` theo yêu cầu và thay các icon chung bằng logo TikTok/Shopee tại biểu đồ, thẻ tài chính và form tiền nạp Ads. Typecheck thành công.

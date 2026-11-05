@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SiShopee, SiTiktok } from '@icons-pack/react-simple-icons';
 import { Card, CardTitle } from '@/components/ui/card';
 import { formatCurrencyVND } from '@/lib/currency';
 import type { EcommerceDashboardTrend } from '@/lib/reports/ecommerce-dashboard';
@@ -83,7 +84,7 @@ function DonutChart({ trend }: Props) {
             <p className="text-center text-xl font-bold tabular-nums text-heading">{formatCurrencyVND(total)}<span className="mt-1 block text-xs font-normal text-muted-foreground">Tổng doanh số</span></p>
             {trend.platformMix.map((row) => (
               <button type="button" key={row.name} onMouseEnter={() => setActiveIndex(rows.findIndex((item) => item.name === row.name))} onMouseLeave={() => setActiveIndex(null)} className="flex items-start gap-2 text-left text-sm">
-                <span aria-hidden="true" className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ backgroundColor: row.color }} />
+                {row.name === 'Shopee' ? <SiShopee aria-hidden="true" size={16} color="#ee4d2d" className="mt-0.5 shrink-0" /> : <SiTiktok aria-hidden="true" size={16} color="#111827" className="mt-0.5 shrink-0" />}
                 <span className="min-w-0 flex-1"><span className="block text-muted-foreground">{row.name}</span><span className="font-semibold text-heading">{row.display}</span></span>
                 <span className="font-semibold text-heading">{row.percentage.toFixed(1)}%</span>
               </button>
@@ -111,7 +112,7 @@ function OrderSourceChart({ trend }: Props) {
         <div className="flex flex-1 flex-col justify-center gap-5 py-3">
           {trend.latestOrderSources.map((source, index) => (
             <div key={source.name} className="grid grid-cols-[5rem_1fr_2rem] items-center gap-3 text-sm" onMouseEnter={() => setActiveIndex(index)} onMouseLeave={() => setActiveIndex(null)} onFocus={() => setActiveIndex(index)} onBlur={() => setActiveIndex(null)} tabIndex={0} aria-label={`${source.name}: ${source.count} đơn`}>
-              <span className="truncate text-right text-xs text-muted-foreground">{source.name}</span>
+              <span className="flex min-w-0 items-center justify-end gap-1.5 text-right text-xs text-muted-foreground">{source.name.startsWith('TikTok') ? <SiTiktok aria-hidden="true" size={14} color="#111827" className="shrink-0" /> : source.name === 'Shopee' ? <SiShopee aria-hidden="true" size={14} color="#ee4d2d" className="shrink-0" /> : null}<span className="truncate">{source.name}</span></span>
               <span className="h-6 overflow-hidden rounded-md bg-slate-100"><span className="block h-full rounded-md transition-[width]" style={{ width: `${Math.max(source.count > 0 ? 3 : 0, (source.count / maxValue) * 100)}%`, backgroundColor: source.color }} /></span>
               <span className="text-right font-semibold tabular-nums text-heading">{source.count}</span>
             </div>

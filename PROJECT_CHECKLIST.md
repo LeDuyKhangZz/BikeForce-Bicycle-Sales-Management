@@ -1675,3 +1675,4 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] Thêm biểu đồ doanh thu 7 ngày, tỷ trọng doanh thu Shopee/TikTok và số đơn thành công theo sàn.
 - [x] Biểu đồ có tooltip; thiếu dữ liệu thì hiển thị trạng thái rỗng, không bịa số.
 - [x] TypeScript kiểm tra thành công.
+- [x] Cài `@icons-pack/react-simple-icons`; gắn logo TikTok/Shopee vào biểu đồ, tài chính và form tiền Ads.

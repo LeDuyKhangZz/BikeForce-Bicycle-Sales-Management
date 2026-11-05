@@ -3022,3 +3022,5 @@ Bốn thẻ số liệu có thể bấm để mở popup danh sách đã lọc t
 Trang `/admin/salework/customers` lỗi trắng (digest `1211933317`) do Server Component truyền function component icon Lucide qua ranh giới Client Component. Đã đổi prop sang chuỗi định danh và ánh xạ icon bên trong client component. Typecheck và dev compilation thành công. Truy vấn chart 7 ngày cũng đã được cô lập best-effort như mitigation riêng. Next Exact Step: tải lại `/admin/salework/customers` trong phiên Admin để xác nhận trang hiển thị.
 
 Trang `/admin/ecommerce` được làm lại theo ảnh với ba biểu đồ doanh thu 7 snapshot, tỷ trọng doanh số Shopee/TikTok và đơn thành công theo sàn; tooltip hiện khi hover/focus. Dữ liệu lấy từ snapshot Pancake, không có số giả. TypeScript và `git diff --check` pass. Next Exact Step: tải lại `/admin/ecommerce` khi đã đăng nhập Admin để xem dữ liệu trực tiếp.
+
+Đã cài `@icons-pack/react-simple-icons` và dùng logo TikTok/Shopee ở biểu đồ, thẻ tài chính và form Ads. Next Exact Step: reload trang để thấy icon mới.
