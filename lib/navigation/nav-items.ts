@@ -31,6 +31,8 @@ export type NavKey =
   | 'ADMIN_SALEWORK'
   | 'ADMIN_ECOMMERCE'
   | 'ADMIN_HATDE'
+  | 'ADMIN_ORDERS'
+  | 'ADMIN_INVENTORY'
   | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_CUSTOMER_CARE'
   | 'ADMIN_ACCOUNT';
@@ -136,6 +138,18 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
 /** Module bổ sung chỉ hiện trong sidebar desktop, không chen vào bottom nav. */
 export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
   {
+    key: 'ADMIN_INVENTORY',
+    label: 'Tồn kho',
+    href: '/admin/inventory',
+    matchPrefixes: ['/admin/inventory'],
+  },
+  {
+    key: 'ADMIN_ORDERS',
+    label: 'Đơn hàng',
+    href: '/admin/orders',
+    matchPrefixes: ['/admin/orders'],
+  },
+  {
     key: 'ADMIN_CUSTOMER_CARE',
     label: 'Duyệt chăm sóc',
     href: '/admin/customer-care',
@@ -185,24 +199,53 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
   },
 ];
 
-/**
- * `pathname` khớp `prefix` khi nó **là** tiền tố đó hoặc nằm dưới nó một đoạn
- * đường dẫn thật.
- *
- * So sánh bằng `startsWith(prefix)` trần là sai: `/sales/todayxyz` sẽ khớp
- * `/sales/today`. Phải đòi ký tự kế tiếp là `/`.
- */
+export type NavSection = {
+  readonly title: string;
+  readonly keys: readonly NavKey[];
+};
+
+/** Phân nhóm sidebar desktop của Admin theo chức năng nghiệp vụ. */
+export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
+  {
+    title: 'Tổng quan',
+    keys: ['ADMIN_OVERVIEW', 'ADMIN_REPORTS', 'ADMIN_RECONCILIATION'],
+  },
+  {
+    title: 'Kinh doanh',
+    keys: ['ADMIN_SALES', 'ADMIN_TARGETS'],
+  },
+  {
+    title: 'Hệ thống',
+    keys: ['ADMIN_ACCOUNT'],
+  },
+  {
+    title: 'Quản lý kho',
+    keys: [
+      'ADMIN_INVENTORY',
+      'ADMIN_ORDERS',
+      'ADMIN_CUSTOMER_CARE',
+      'ADMIN_MISA_EMPLOYEES',
+    ],
+  },
+  {
+    title: 'Vận hành',
+    keys: [
+      'ADMIN_TRAVEL_EXPENSES',
+      'ADMIN_SALARIES',
+      'ADMIN_MONTHLY_SUMMARIES',
+      'ADMIN_SALEWORK',
+    ],
+  },
+  {
+    title: 'Tiện ích',
+    keys: ['ADMIN_ECOMMERCE', 'ADMIN_HATDE'],
+  },
+];
+
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-/**
- * Mục điều hướng đang hoạt động, hoặc `null` nếu đường dẫn không thuộc mục nào.
- *
- * **Tiền tố dài nhất thắng.** Nếu không, `/admin/reports` sẽ khớp cả `/admin`
- * (Tổng quan) lẫn `/admin/reports` (Báo cáo) và kết quả phụ thuộc vào thứ tự
- * khai báo mảng — một sự phụ thuộc ngầm mà không ai nhớ khi thêm mục mới.
- */
 export function activeNavKey(items: readonly NavItem[], pathname: string): NavKey | null {
   if (typeof pathname !== 'string' || pathname === '') return null;
 

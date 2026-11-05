@@ -210,5 +210,9 @@ describe('activeNavKey — module bổ sung trên sidebar Admin', () => {
       'ADMIN_MONTHLY_SUMMARIES',
     );
     expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_MONTHLY_SUMMARIES')).toBe(false);
+    expect(activeNavKey(allItems, '/admin/orders')).toBe('ADMIN_ORDERS');
+    expect(activeNavKey(allItems, '/admin/inventory')).toBe('ADMIN_INVENTORY');
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_ORDERS')).toBe(false);
+    expect(ADMIN_NAV_ITEMS.some((item) => item.key === 'ADMIN_INVENTORY')).toBe(false);
   });
 });

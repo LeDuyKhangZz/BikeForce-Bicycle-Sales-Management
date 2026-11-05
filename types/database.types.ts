@@ -1767,6 +1767,26 @@ export type Database = {
           target_visit_points: number
         }[]
       }
+      get_admin_inventory_warehouses: {
+        Args: never
+        Returns: {
+          in_stock_count: number
+          latest_synced_at: string | null
+          product_count: number
+          quantity_on_hand: number
+          warehouse_code: string
+        }[]
+      }
+      get_admin_order_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          customer_count: number
+          latest_synced_at: string | null
+          order_count: number
+          outstanding_amount: number
+          total_amount: number
+        }[]
+      }
       get_latest_pancake_report_image: { Args: never; Returns: Json }
       get_marketplace_ad_finance_summary: {
         Args: never
