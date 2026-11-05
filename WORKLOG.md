@@ -4175,3 +4175,7 @@ Làm lại `/admin/ecommerce` theo ảnh tham chiếu với tổng quan nhiều 
 Thêm package `@icons-pack/react-simple-icons` theo yêu cầu và thay các icon chung bằng logo TikTok/Shopee tại biểu đồ, thẻ tài chính và form tiền nạp Ads. Typecheck thành công.
 
 Sửa nhãn trục X biểu đồ doanh thu: dùng ngày/tháng từ snapshot (`dd/MM`) thay vì cắt chuỗi đầy đủ có tên thứ trong tuần.
+
+### 2026-11-05 — Tình trạng đồng bộ trên Tổng quan
+
+Nối `listSyncSourceSnapshots` vào `/admin`, thêm trạng thái theo ngày Việt Nam dựa trên `synced_at` cho AMIS, MISA tồn kho/đơn hàng, Pancake đơn hàng/tài chính, SaleWork Zalo, số dư Ads TikTok/Shopee và webhook Hạt Dẻ. MISA Report 119/44 cùng worker tổng kết tháng hiển thị lịch tháng riêng. Các thẻ có trạng thái, lần đồng bộ mới nhất và liên kết đến nguồn. TypeScript và `git diff --check` thành công.

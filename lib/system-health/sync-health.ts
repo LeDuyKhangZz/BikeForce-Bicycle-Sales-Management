@@ -1,3 +1,5 @@
+import { getVietnamDateFromTimestamp } from '@/lib/date';
+
 export type SyncCadence = 'DAILY' | 'MONTHLY' | 'ON_DEMAND';
 
 export type SyncSourceSnapshot = {
@@ -19,6 +21,7 @@ export type SyncHealthItem = SyncSourceSnapshot & {
   status: SyncHealthStatus;
   statusLabel: string;
   ageHours: number | null;
+  syncedToday: boolean;
 };
 
 export type SyncHealthSummary = {
@@ -61,6 +64,7 @@ export function buildSyncHealthSummary(
 ): SyncHealthSummary {
   const checkedTimestamp = Date.parse(checkedAt);
   const safeCheckedTimestamp = Number.isNaN(checkedTimestamp) ? Date.now() : checkedTimestamp;
+  const today = getVietnamDateFromTimestamp(checkedAt);
 
   const items = sources.map((source): SyncHealthItem => {
     const syncedTimestamp = source.latestSyncedAt === null ? Number.NaN : Date.parse(source.latestSyncedAt);
@@ -69,7 +73,17 @@ export function buildSyncHealthSummary(
       : Math.max(0, (safeCheckedTimestamp - syncedTimestamp) / 3_600_000);
     const status = resolveStatus(source, ageHours);
 
-    return { ...source, status, statusLabel: STATUS_LABEL[status], ageHours };
+    const syncedDate = source.latestSyncedAt === null
+      ? null
+      : getVietnamDateFromTimestamp(source.latestSyncedAt);
+
+    return {
+      ...source,
+      status,
+      statusLabel: STATUS_LABEL[status],
+      ageHours,
+      syncedToday: today !== null && syncedDate === today,
+    };
   });
 
   const healthyCount = items.filter((item) => item.status === 'HEALTHY').length;

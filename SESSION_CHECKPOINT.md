@@ -3026,3 +3026,5 @@ Trang `/admin/ecommerce` được làm lại theo ảnh với ba biểu đồ do
 Đã cài `@icons-pack/react-simple-icons` và dùng logo TikTok/Shopee ở biểu đồ, thẻ tài chính và form Ads. Next Exact Step: reload trang để thấy icon mới.
 
 Trục X doanh thu đã đổi sang nhãn ngày/tháng cụ thể từ report date (`dd/MM`), không còn hiển thị tên thứ.
+
+Trang `/admin` có khối **Tình trạng đồng bộ hôm nay**, theo timestamp Vietnam của AMIS, MISA tồn kho/đơn hàng, Pancake, SaleWork Zalo, số dư Ads và Hạt Dẻ. MISA 119/44 và worker tháng được đánh dấu theo lịch tháng. TypeScript/`git diff --check` pass. Next Exact Step: mở trang Tổng quan trong phiên Admin để đối chiếu trạng thái nguồn với lần chạy hôm nay.

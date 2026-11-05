@@ -1677,3 +1677,9 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] TypeScript kiểm tra thành công.
 - [x] Cài `@icons-pack/react-simple-icons`; gắn logo TikTok/Shopee vào biểu đồ, tài chính và form tiền Ads.
 - [x] Trục ngày biểu đồ doanh thu hiển thị ngày/tháng thay vì tên thứ.
+
+## 2026-11-05 — Trạng thái đồng bộ trên Tổng quan
+- [x] Hiển thị nguồn đã/chưa đồng bộ trong ngày theo `synced_at` và ngày Việt Nam.
+- [x] Theo dõi MISA tồn kho/đơn hàng, AMIS, Pancake, SaleWork Zalo và số dư Ads Shopee/TikTok.
+- [x] Nguồn định kỳ tháng được ghi lịch riêng, không tính là chưa đồng bộ hôm nay.
+- [x] TypeScript kiểm tra thành công.

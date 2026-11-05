@@ -8,11 +8,14 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MissingReportAlerts } from '@/features/admin-dashboard/missing-report-alerts';
 import { OverviewTiles } from '@/features/admin-dashboard/overview-tiles';
+import { SyncTodayOverview } from '@/features/admin-dashboard/sync-today-overview';
 import { requireRole } from '@/features/auth/queries';
 import { formatVietnamDate, getVietnamToday } from '@/lib/date';
 import { toAdminOverview } from '@/lib/reports/admin-overview';
+import { buildSyncHealthSummary } from '@/lib/system-health/sync-health';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminTodayOverview, getMissingReportAlerts } from '@/services/admin';
+import { listSyncSourceSnapshots } from '@/services/system-health';
 
 export const metadata: Metadata = {
   title: 'Tổng quan · BikeForce',
@@ -74,30 +77,32 @@ export default async function AdminDashboardPage() {
 async function DashboardContent({ today }: { today: string }) {
   const supabase = await createClient();
 
-  const [overviewSource, alerts] = await Promise.all([
+  const checkedAt = new Date().toISOString();
+  const [overviewSource, alerts, sourceSnapshots] = await Promise.all([
     getAdminTodayOverview(supabase, today),
     getMissingReportAlerts(supabase, today),
+    listSyncSourceSnapshots(supabase),
   ]);
 
   const overview = toAdminOverview(overviewSource);
-
-  // Chưa có Sales nào trong hệ thống là trạng thái RỖNG thật sự — khác hẳn
-  // "có Sales nhưng chưa ai báo cáo". Hiện 12 số 0 ở đây chỉ gây hoang mang.
-  if (overviewSource.active_sales_count === 0) {
-    return (
-      <Card className="flex flex-col items-center gap-3 py-8 text-center">
-        <p className="text-base font-medium text-foreground">Chưa có Sales nào đang hoạt động</p>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          Hãy tạo tài khoản Sales trước. Khi có người báo cáo, số liệu toàn đội sẽ hiện ở đây.
-        </p>
-      </Card>
-    );
-  }
+  const syncSummary = buildSyncHealthSummary(sourceSnapshots, checkedAt);
 
   return (
     <>
-      <OverviewTiles overview={overview} />
-      <MissingReportAlerts alerts={alerts} />
+      {overviewSource.active_sales_count === 0 ? (
+        <Card className="flex flex-col items-center gap-3 py-8 text-center">
+          <p className="text-base font-medium text-foreground">Chưa có Sales nào đang hoạt động</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Hãy tạo tài khoản Sales trước. Khi có người báo cáo, số liệu toàn đội sẽ hiện ở đây.
+          </p>
+        </Card>
+      ) : (
+        <>
+          <OverviewTiles overview={overview} />
+          <MissingReportAlerts alerts={alerts} />
+        </>
+      )}
+      <SyncTodayOverview summary={syncSummary} />
     </>
   );
 }

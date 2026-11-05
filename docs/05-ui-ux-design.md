@@ -1552,3 +1552,5 @@ Khung Admin và Sales sử dụng toàn bộ chiều rộng khả dụng bên c�
 ## 2026-11-05 — Dashboard Sàn TMĐT
 
 Trang `/admin/ecommerce` dùng nền xanh nhạt, thẻ tổng quan nhiều màu và ba biểu đồ: doanh thu theo ngày, tỷ trọng doanh thu Shopee/TikTok và đơn thành công theo sàn. Trục X doanh thu hiện ngày/tháng (`dd/MM`) theo snapshot Pancake, không dùng tên thứ. Hover hoặc focus điểm/cột để xem tooltip. Khi thiếu snapshot tài chính, giao diện báo chưa có dữ liệu thay vì dựng số. Logo TikTok và Shopee dùng icon thương hiệu từ `@icons-pack/react-simple-icons` trên biểu đồ, thẻ tài chính và form nạp Ads.
+
+Trang Tổng quan có mục **Tình trạng đồng bộ hôm nay**: mỗi nguồn hiển thị đã/chưa cập nhật theo ngày Việt Nam dựa trên `synced_at`, thời điểm gần nhất và liên kết tới trang nguồn. Nguồn có lịch tháng được gắn nhãn riêng, không báo là bị trễ đồng bộ hằng ngày.
