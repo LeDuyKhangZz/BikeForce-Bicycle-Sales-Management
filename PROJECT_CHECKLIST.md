@@ -1683,3 +1683,5 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] Theo dõi MISA tồn kho/đơn hàng, AMIS, Pancake, SaleWork Zalo và số dư Ads Shopee/TikTok.
 - [x] Nguồn định kỳ tháng được ghi lịch riêng, không tính là chưa đồng bộ hôm nay.
 - [x] TypeScript kiểm tra thành công.
+- [x] Đưa khối trạng thái đồng bộ lên đầu trang và bố trí phần cam kết/thực đạt ở dưới.
+- [x] Thêm thẻ tổng trạng thái, nguồn cần kiểm tra, donut, nhóm hệ thống, danh sách và bộ lọc trạng thái.

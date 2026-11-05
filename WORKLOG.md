@@ -4179,3 +4179,5 @@ Sửa nhãn trục X biểu đồ doanh thu: dùng ngày/tháng từ snapshot (`
 ### 2026-11-05 — Tình trạng đồng bộ trên Tổng quan
 
 Nối `listSyncSourceSnapshots` vào `/admin`, thêm trạng thái theo ngày Việt Nam dựa trên `synced_at` cho AMIS, MISA tồn kho/đơn hàng, Pancake đơn hàng/tài chính, SaleWork Zalo, số dư Ads TikTok/Shopee và webhook Hạt Dẻ. MISA Report 119/44 cùng worker tổng kết tháng hiển thị lịch tháng riêng. Các thẻ có trạng thái, lần đồng bộ mới nhất và liên kết đến nguồn. TypeScript và `git diff --check` thành công.
+
+Theo ảnh tham chiếu, đưa khu vực đồng bộ lên đầu trang và dời cam kết/thực đạt xuống dưới. Bố cục gồm bốn thẻ trạng thái, dải liên kết nguồn cần kiểm tra, donut tỷ lệ, tổng quan theo hệ thống, bảng nguồn trên desktop, card trên mobile và bộ lọc trạng thái. TypeScript và `git diff --check` thành công.

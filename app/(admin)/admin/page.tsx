@@ -89,6 +89,7 @@ async function DashboardContent({ today }: { today: string }) {
 
   return (
     <>
+      <SyncTodayOverview summary={syncSummary} />
       {overviewSource.active_sales_count === 0 ? (
         <Card className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-base font-medium text-foreground">Chưa có Sales nào đang hoạt động</p>
@@ -102,7 +103,6 @@ async function DashboardContent({ today }: { today: string }) {
           <MissingReportAlerts alerts={alerts} />
         </>
       )}
-      <SyncTodayOverview summary={syncSummary} />
     </>
   );
 }

@@ -3028,3 +3028,5 @@ Trang `/admin/ecommerce` được làm lại theo ảnh với ba biểu đồ do
 Trục X doanh thu đã đổi sang nhãn ngày/tháng cụ thể từ report date (`dd/MM`), không còn hiển thị tên thứ.
 
 Trang `/admin` có khối **Tình trạng đồng bộ hôm nay**, theo timestamp Vietnam của AMIS, MISA tồn kho/đơn hàng, Pancake, SaleWork Zalo, số dư Ads và Hạt Dẻ. MISA 119/44 và worker tháng được đánh dấu theo lịch tháng. TypeScript/`git diff --check` pass. Next Exact Step: mở trang Tổng quan trong phiên Admin để đối chiếu trạng thái nguồn với lần chạy hôm nay.
+
+Khu vực đồng bộ đã được đưa lên đầu trang theo ảnh mới: bộ đếm trạng thái, dải cần kiểm tra, donut, nhóm hệ thống, danh sách nguồn và filter. Cam kết/thực đạt nằm bên dưới. Next Exact Step: tải lại trang Tổng quan trong phiên Admin.
