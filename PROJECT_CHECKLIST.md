@@ -1669,3 +1669,9 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] Bổ sung donut phân bổ nguồn, biểu đồ cột/đường theo các mốc cập nhật gần nhất và cột nguồn.
 - [x] Thẻ số liệu mở popup danh sách nhóm tương ứng; popup có tìm kiếm, phân trang và API Admin-only.
 - [x] Lỗi truy vấn biểu đồ phụ không còn làm hỏng bảng và phân trang danh bạ.
+
+## 2026-11-05 — Dashboard Sàn TMĐT
+- [x] Làm lại bố cục trang theo dashboard tham chiếu, giữ dữ liệu báo cáo Pancake hiện hữu.
+- [x] Thêm biểu đồ doanh thu 7 ngày, tỷ trọng doanh thu Shopee/TikTok và số đơn thành công theo sàn.
+- [x] Biểu đồ có tooltip; thiếu dữ liệu thì hiển thị trạng thái rỗng, không bịa số.
+- [x] TypeScript kiểm tra thành công.

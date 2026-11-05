@@ -4167,3 +4167,7 @@ Theo ảnh dashboard mới: thêm donut cơ cấu nguồn, cột xếp chồng s
 Biến bốn thẻ tổng số thành nút mở popup danh sách theo nhóm; popup có tìm kiếm, phân trang 10 liên hệ và API route kiểm tra Admin đang hoạt động. Danh sách được tải theo trang thay vì gửi toàn bộ 1.244 dòng xuống trình duyệt. Typecheck exit 0.
 
 Sửa lỗi trang trắng `/admin/salework/customers` (digest `1211933317`): nguyên nhân là truyền function component Lucide qua ranh giới Server/Client. Thay bằng chuỗi định danh icon và ánh xạ icon bên trong client component. Typecheck và dev compilation thành công; cần tải lại trang để xác nhận trên trình duyệt.
+
+### 2026-11-05 — Làm mới dashboard Sàn TMĐT
+
+Làm lại `/admin/ecommerce` theo ảnh tham chiếu với tổng quan nhiều thẻ màu, ba biểu đồ có tooltip (doanh thu theo bảy snapshot gần nhất, cơ cấu doanh số theo Shopee/TikTok và số đơn thành công theo sàn), tài chính quảng cáo và chi tiết nguồn Việt Nam/Singapore. Chuỗi biểu đồ truy vấn snapshot Pancake thật; trạng thái rỗng không dựng số. `npx.cmd tsc --noEmit --pretty false` và `git diff --check` thành công. Chưa xác nhận bằng phiên đăng nhập trình duyệt.

@@ -2,7 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
 import { pancakeReportImageSchema } from '@/lib/validation/pancake-report';
-import { PANCAKE_REPORT_SHOP_IDS } from '@/lib/pancake/shops';
+import { PANCAKE_REPORT_SHOP_IDS, PANCAKE_VIETNAM_SHOP_ID } from '@/lib/pancake/shops';
+import type { PancakeEcommerceTrendRows } from '@/types/pancake-dashboard';
 
 type PancakeDailyReportRow = Database['public']['Tables']['pancake_daily_reports']['Row'];
 type PancakeSourceReportRow =
@@ -204,6 +205,38 @@ export async function getLatestPancakeDailyReports(
   const available = reports.filter((report): report is PancakeDailyReport => report !== null);
   if (available.length === 0) return null;
   return enrichCancelledRevenueIfNeeded({ reports: available });
+}
+
+export async function getRecentPancakeEcommerceTrend(
+  supabase: SupabaseClient<Database>,
+): Promise<PancakeEcommerceTrendRows> {
+  const { data: daily, error } = await supabase
+    .from('pancake_daily_reports')
+    .select('report_date,revenue,order_count,cancelled_count')
+    .eq('shop_id', PANCAKE_VIETNAM_SHOP_ID)
+    .eq('market_code', 'VN')
+    .order('report_date', { ascending: false })
+    .limit(7);
+
+  if (error || !daily?.length) {
+    if (error) console.error('[getRecentPancakeEcommerceTrend:daily]', error.code, error.message);
+    return { daily: [], financials: [] };
+  }
+
+  const dates = daily.map((row) => row.report_date);
+  const { data: financials, error: financialError } = await supabase
+    .from('pancake_marketplace_financial_reports')
+    .select('report_date,marketplace_code,gross_sales,delivered_count')
+    .eq('shop_id', PANCAKE_VIETNAM_SHOP_ID)
+    .in('report_date', dates)
+    .order('report_date', { ascending: true });
+
+  if (financialError) {
+    console.error('[getRecentPancakeEcommerceTrend:financials]', financialError.code, financialError.message);
+    return { daily, financials: [] };
+  }
+
+  return { daily, financials: financials ?? [] };
 }
 
 export async function getLatestPancakeReportForImage(

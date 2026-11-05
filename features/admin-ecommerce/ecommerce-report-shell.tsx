@@ -1,170 +1,39 @@
-import {
-  BarChart3,
-  CheckCircle2,
-  CircleUserRound,
-  DatabaseZap,
-  ShoppingBag,
-} from 'lucide-react';
-
+import { BarChart3, CheckCircle2, CircleUserRound, DatabaseZap, Globe2, ShoppingBag, Store } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import type {
-  EcommerceReportViewModel,
-} from '@/features/admin-ecommerce/queries';
-import type { AdFinanceViewModel } from '@/lib/reports/ad-finance';
 import { AdTopUpForm } from '@/features/admin-ecommerce/ad-top-up-form';
+import { EcommerceCharts } from '@/features/admin-ecommerce/ecommerce-charts';
+import type { EcommerceReportViewModel } from '@/lib/reports/ecommerce-report';
+import type { EcommerceDashboardTrend } from '@/lib/reports/ecommerce-dashboard';
+import type { AdFinanceViewModel } from '@/lib/reports/ad-finance';
 
-type Props = {
-  report: EcommerceReportViewModel | null;
-  adFinance: AdFinanceViewModel;
-};
+type Props = { report: EcommerceReportViewModel | null; adFinance: AdFinanceViewModel; trend: EcommerceDashboardTrend };
+const METRIC_TONES = ['bg-sky-100 text-sky-700', 'bg-emerald-100 text-emerald-700', 'bg-fuchsia-100 text-fuchsia-700', 'bg-amber-100 text-amber-700', 'bg-cyan-100 text-cyan-700', 'bg-orange-100 text-orange-700', 'bg-blue-100 text-blue-700'] as const;
 
-export function EcommerceReportShell({ report, adFinance }: Props) {
+export function EcommerceReportShell({ report, adFinance, trend }: Props) {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold tracking-wide text-accent-text uppercase">Pancake</p>
-        <h1 className="text-2xl font-bold tracking-tight text-heading">Sàn TMĐT</h1>
-        <p className="max-w-prose text-sm text-muted-foreground">
-          Khung báo cáo dành cho nhân viên phụ trách kênh thương mại điện tử.
-        </p>
-      </div>
+    <div className="relative isolate flex flex-col gap-5 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50/80 via-slate-50 to-indigo-50/50 p-3 sm:p-5">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 -z-10 size-96 rounded-full bg-sky-200/20 blur-3xl" />
+      <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div className="flex items-start gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm"><Store aria-hidden="true" className="size-6" /></span><div><p className="text-xs font-bold tracking-wide text-amber-700 uppercase">Pancake</p><h1 className="text-2xl font-bold tracking-tight text-heading">Sàn TMĐT</h1><p className="text-sm text-muted-foreground">Tổng quan doanh thu, đơn hàng và quảng cáo theo sàn.</p></div></div>
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center lg:items-end"><p className="text-xs text-muted-foreground">{report ? `Cập nhật lần cuối: ${report.syncedAt}` : 'Chưa nhận dữ liệu đồng bộ'}</p><span className={`inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold ${report === null ? 'bg-status-warning-bg text-status-warning-fg' : 'bg-status-success-bg text-status-success-fg'}`}>{report === null ? <DatabaseZap aria-hidden="true" className="size-4" /> : <CheckCircle2 aria-hidden="true" className="size-4" />}{report === null ? 'Chờ dữ liệu Pancake' : 'Đã đồng bộ Pancake'}</span></div>
+      </header>
+      <Card className="flex flex-wrap items-center justify-between gap-4 bg-white/90 px-4 py-3 sm:px-5"><div className="flex min-w-0 items-center gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-700"><CircleUserRound aria-hidden="true" className="size-5" /></span><div className="min-w-0"><p className="truncate font-bold text-heading">{report?.employeeName ?? 'Nhân viên Sàn TMĐT'}</p><p className="text-sm text-muted-foreground">Nhân viên phụ trách kênh thương mại điện tử</p></div></div><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{report?.reportDate ? `Báo cáo ngày ${report.reportDate}` : 'Chưa có ngày báo cáo'}</span></Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-md bg-status-info-bg text-status-info-fg">
-              <CircleUserRound aria-hidden="true" className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <CardTitle>{report?.employeeName ?? 'Nguyễn Ngọc Triết'}</CardTitle>
-              <p className="text-sm text-muted-foreground">Nhân viên Sàn TMĐT</p>
-            </div>
-          </div>
-          <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 text-xs font-semibold ${report === null ? 'bg-status-warning-bg text-status-warning-fg' : 'bg-status-success-bg text-status-success-fg'}`}>
-            {report === null ? <DatabaseZap aria-hidden="true" className="size-4" /> : <CheckCircle2 aria-hidden="true" className="size-4" />}
-            {report === null ? 'Chờ dữ liệu Pancake' : 'Đã đồng bộ Pancake'}
-          </span>
-        </CardHeader>
-      </Card>
+      <section aria-labelledby="ad-top-up-title" className="flex flex-col gap-3"><div className="flex items-center gap-2"><BarChart3 aria-hidden="true" className="size-5 text-primary" /><h2 id="ad-top-up-title" className="text-lg font-bold text-heading">Cập nhật thông tin Ads</h2></div><div className="grid gap-3 lg:grid-cols-2"><AdTopUpForm marketplaceCode="TIKTOK" label="Tiền nạp Ads TikTok" amount={adFinance.tikTokTopUp} /><AdTopUpForm marketplaceCode="SHOPEE" label="Tiền nạp Ads Shopee" amount={adFinance.shopeeTopUp} /></div></section>
 
-      <section aria-labelledby="ad-top-up-title" className="flex flex-col gap-3">
-        <h2 id="ad-top-up-title" className="text-lg font-semibold text-heading">Cập nhật tiền nạp Ads</h2>
-        <div className="grid gap-3 lg:grid-cols-2">
-          <AdTopUpForm marketplaceCode="TIKTOK" label="Tiền nạp Ads TikTok" amount={adFinance.tikTokTopUp} />
-          <AdTopUpForm marketplaceCode="SHOPEE" label="Tiền nạp Ads Shopee" amount={adFinance.shopeeTopUp} />
-        </div>
+      <section aria-labelledby="ecommerce-overview-title" className="flex flex-col gap-3"><div className="flex items-center gap-2"><BarChart3 aria-hidden="true" className="size-5 text-primary" /><h2 id="ecommerce-overview-title" className="text-lg font-bold text-heading">Tổng quan báo cáo</h2></div>
+        {report === null ? <Card className="flex flex-col items-center gap-3 py-8 text-center"><span className="grid size-12 place-items-center rounded-full bg-status-info-bg text-status-info-fg"><ShoppingBag aria-hidden="true" className="size-6" /></span><CardTitle>Chưa có dữ liệu từ Pancake</CardTitle><p className="max-w-lg text-sm text-muted-foreground">Hãy chạy workflow Pancake sau khi migration đã được áp dụng vào Supabase.</p></Card> : <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-7">{report.metrics.map((metric, index) => <Card key={metric.label} className="flex min-h-28 items-center gap-3 bg-white/90 p-3 sm:p-4"><span className={`grid size-10 shrink-0 place-items-center rounded-full ${METRIC_TONES[index % METRIC_TONES.length]}`}><BarChart3 aria-hidden="true" className="size-5" /></span><div className="min-w-0"><p className="text-xs font-medium text-muted-foreground">{metric.label}</p><p className="mt-1 break-words text-lg font-bold tabular-nums text-heading sm:text-xl">{metric.display}</p></div></Card>)}</div>}
       </section>
 
-      <section aria-labelledby="ecommerce-overview-title" className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <BarChart3 aria-hidden="true" className="size-5 text-primary" />
-          <h2 id="ecommerce-overview-title" className="text-lg font-semibold text-heading">
-            Tổng quan báo cáo
-          </h2>
-        </div>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {(report?.metrics ?? []).map((metric) => (
-            <Card key={metric.label} className="flex min-h-28 flex-col justify-between gap-3">
-              <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
-              <p
-                className={`break-words font-bold tabular-nums text-heading ${
-                  metric.display.length > 14 ? 'text-base sm:text-lg' : 'text-2xl'
-                }`}
-              >
-                {metric.display}
-              </p>
-            </Card>
-          ))}
-        </div>
-        {report?.cancelledNote ? (
-          <p className="rounded-md border border-border bg-status-info-bg px-4 py-3 text-sm font-semibold text-status-info-fg">
-            {report.cancelledNote}
-          </p>
-        ) : null}
-      </section>
-
-      {report === null ? (
-        <Card className="flex flex-col items-center gap-3 py-8 text-center">
-          <span className="grid size-12 place-items-center rounded-full bg-status-info-bg text-status-info-fg">
-            <ShoppingBag aria-hidden="true" className="size-6" />
-          </span>
-          <CardTitle>Chưa có dữ liệu từ Pancake</CardTitle>
-          <p className="max-w-lg text-sm text-muted-foreground">
-            Hãy chạy workflow Pancake sau khi migration đã được áp dụng vào Supabase.
-          </p>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-6">
-        <section aria-labelledby="ecommerce-financial-title" className="flex flex-col gap-3">
-          <div>
-            <h2 id="ecommerce-financial-title" className="text-lg font-semibold text-heading">Tài chính theo sàn</h2>
-            <p className="text-sm text-muted-foreground">Đơn thành công theo báo cáo Pancake trong ngày.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {adFinance.metrics.map((metric) => (
-              <Card key={metric.label} className="flex min-h-28 flex-col justify-between gap-3">
-                <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
-                <p className="text-xl font-bold tabular-nums text-heading">{metric.display}</p>
-              </Card>
-            ))}
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {report.marketplaceFinancials.map((marketplace) => (
-              <Card key={marketplace.name} className="flex flex-col gap-3">
-                <div>
-                  <CardTitle>{marketplace.name}</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">{marketplace.deliveredCount} đơn thành công</p>
-                </div>
-                <dl className="grid gap-2 text-sm">
-                  {[
-                    ['Doanh số', marketplace.grossSalesDisplay],
-                    ['Giảm giá cửa hàng', marketplace.shopDiscountDisplay],
-                    ['Voucher từ sàn', marketplace.marketplaceVoucherDisplay],
-                    ['Tổng phí sàn', marketplace.marketplaceFeeDisplay],
-                    ['Tiền sàn trả', marketplace.platformReceivableDisplay],
-                    ['Tiền nạp quảng cáo', marketplace.adsSpendDisplay],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex min-h-11 items-center justify-between gap-4 border-b border-border py-2 last:border-b-0">
-                      <dt className="text-muted-foreground">{label}</dt>
-                      <dd className="font-semibold tabular-nums text-heading">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </Card>
-            ))}
-          </div>
+      {report !== null && <EcommerceCharts trend={trend} />}
+      {report !== null && <>
+        {report.cancelledNote && <p className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">{report.cancelledNote}</p>}
+        <section aria-labelledby="ecommerce-financial-title" className="flex flex-col gap-3"><div><h2 id="ecommerce-financial-title" className="text-lg font-bold text-heading">Tài chính theo sàn</h2><p className="text-sm text-muted-foreground">Báo cáo Pancake trong ngày; tiền nạp Ads không đồng nghĩa chi phí Ads thực tế.</p></div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{adFinance.metrics.map((metric, index) => <Card key={metric.label} className="flex min-h-24 items-center gap-3 bg-white/90 p-3 sm:p-4"><span className={`grid size-10 shrink-0 place-items-center rounded-full ${index < 2 ? 'bg-fuchsia-100 text-fuchsia-700' : 'bg-orange-100 text-orange-700'}`}><BarChart3 aria-hidden="true" className="size-5" /></span><div className="min-w-0"><p className="text-xs text-muted-foreground">{metric.label}</p><p className="mt-1 break-words font-bold tabular-nums text-heading">{metric.display}</p></div></Card>)}</div>
+          <div className="grid gap-4 lg:grid-cols-2">{report.marketplaceFinancials.map((marketplace) => <Card key={marketplace.name} className="flex flex-col gap-3 bg-white/90"><CardHeader><CardTitle>{marketplace.name}</CardTitle><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{marketplace.deliveredCount} đơn thành công</span></CardHeader><dl className="grid gap-2 text-sm">{[['Doanh số', marketplace.grossSalesDisplay], ['Giảm giá cửa hàng', marketplace.shopDiscountDisplay], ['Voucher từ sàn', marketplace.marketplaceVoucherDisplay], ['Tổng phí sàn', marketplace.marketplaceFeeDisplay], ['Tiền sàn trả', marketplace.platformReceivableDisplay], ['Tiền nạp quảng cáo', marketplace.adsSpendDisplay]].map(([label, value]) => <div key={label} className="flex min-h-10 items-center justify-between gap-4 border-b border-border py-2 last:border-b-0"><dt className="text-muted-foreground">{label}</dt><dd className="text-right font-semibold tabular-nums text-heading">{value}</dd></div>)}</dl></Card>)}</div>
         </section>
-        <section aria-labelledby="ecommerce-source-title" className="flex flex-col gap-3">
-          <div>
-            <h2 id="ecommerce-source-title" className="text-lg font-semibold text-heading">Theo nguồn đơn</h2>
-            <p className="text-sm text-muted-foreground">Ngày {report.reportDate} · đồng bộ {report.syncedAt}</p>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {report.sourceGroups.map((group) => (
-              <Card key={group.label} className="flex flex-col gap-3">
-                <div>
-                  <CardTitle>{group.label}</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Ngày {group.reportDate} · đồng bộ {group.syncedAt}
-                  </p>
-                </div>
-                <div className="grid gap-3">
-                  {group.sources.map((source) => (
-                    <div key={source.name} className="flex min-h-16 items-center justify-between gap-4 rounded-md border border-border p-3">
-                      <div>
-                        <p className="font-semibold text-heading">{source.name}</p>
-                        <p className="text-sm text-muted-foreground">{source.orderCount} đơn không hủy</p>
-                      </div>
-                      <p className="text-lg font-bold tabular-nums text-heading">{source.revenueDisplay}</p>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-        </div>
-      )}
+        <section aria-labelledby="ecommerce-source-title" className="flex flex-col gap-3"><div className="flex items-center gap-2"><Globe2 aria-hidden="true" className="size-5 text-primary" /><div><h2 id="ecommerce-source-title" className="text-lg font-bold text-heading">Theo nguồn đơn</h2><p className="text-sm text-muted-foreground">Ngày {report.reportDate} · đồng bộ {report.syncedAt}</p></div></div><div className="grid gap-4 lg:grid-cols-2">{report.sourceGroups.map((group) => <Card key={group.label} className="flex flex-col gap-3 bg-white/90"><div><CardTitle>{group.label}</CardTitle><p className="mt-1 text-xs text-muted-foreground">Ngày {group.reportDate} · đồng bộ {group.syncedAt}</p></div><div className="grid gap-2">{group.sources.map((source) => <div key={source.name} className="flex min-h-16 items-center justify-between gap-4 rounded-xl bg-slate-50 px-3 py-2"><div><p className="font-semibold text-heading">{source.name}</p><p className="text-xs text-muted-foreground">{source.orderCount} đơn trong ngày</p></div><p className="text-base font-bold tabular-nums text-heading">{source.revenueDisplay}</p></div>)}</div></Card>)}</div></section>
+      </>}
     </div>
   );
 }

@@ -1548,3 +1548,7 @@ Bảng web và ảnh PNG Hạt Dẻ dùng cùng bố cục cột: thứ hạng, 
 ## Chiều rộng nội dung desktop (2026-11-05)
 
 Khung Admin và Sales sử dụng toàn bộ chiều rộng khả dụng bên cạnh sidebar. Header Admin căn cùng chiều rộng với nội dung. Các form và hộp thoại riêng vẫn giữ giới hạn chiều rộng để dễ đọc.
+
+## 2026-11-05 — Dashboard Sàn TMĐT
+
+Trang `/admin/ecommerce` dùng nền xanh nhạt, thẻ tổng quan nhiều màu và ba biểu đồ: doanh thu theo ngày, tỷ trọng doanh thu Shopee/TikTok và đơn thành công theo sàn. Biểu đồ lấy dữ liệu Pancake đã lưu; hover hoặc focus điểm/cột để xem tooltip. Khi thiếu snapshot tài chính, giao diện báo chưa có dữ liệu thay vì dựng số.

@@ -5,12 +5,22 @@ import {
 import { formatCurrencyVND } from '@/lib/currency';
 import { formatVietnamDateTime } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
-import { getLatestPancakeDailyReports } from '@/services/pancake-reports';
+import {
+  getLatestPancakeDailyReports,
+  getRecentPancakeEcommerceTrend,
+} from '@/services/pancake-reports';
 import { getLatestTikTokAdBalance } from '@/services/tiktok-ad-balances';
 import { buildAdFinanceViewModel, type AdFinanceViewModel } from '@/lib/reports/ad-finance';
 import { getAdFinanceRows } from '@/services/ad-finance';
+import { buildEcommerceDashboardTrend, type EcommerceDashboardTrend } from '@/lib/reports/ecommerce-dashboard';
 
 export type { EcommerceReportViewModel } from '@/lib/reports/ecommerce-report';
+export type { EcommerceDashboardTrend } from '@/lib/reports/ecommerce-dashboard';
+
+export async function getEcommerceDashboardTrend(): Promise<EcommerceDashboardTrend> {
+  const supabase = await createClient();
+  return buildEcommerceDashboardTrend(await getRecentPancakeEcommerceTrend(supabase));
+}
 
 export type TikTokAdBalanceViewModel = {
   balanceDisplay: string;
