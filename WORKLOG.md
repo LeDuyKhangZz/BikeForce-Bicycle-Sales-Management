@@ -4115,3 +4115,55 @@ Theo yêu cầu DEC-118, đã đưa ảnh Halloween mới nhất từ Downloads 
 ## 2026-10-27 — Chỉnh bảng thi đua Hạt Dẻ theo mẫu tham chiếu
 
 Đã đồng bộ web/PNG sang bố cục bảng xếp hạng có header cột, hàng chi nhánh gọn, cột giao dịch riêng, pill so sánh ngang và thanh tổng toàn chiều rộng. Ảnh cơ sở đổi sang 1080×1450 cho tối đa bảy chi nhánh; số hàng lớn hơn tiếp tục tăng chiều cao động. Fixture 7 chi nhánh đã được render và xem trực tiếp; targeted unit 5/5, typecheck, lint và production build 37/37 route pass.
+
+### 2026-11-05 — Popup kết quả đồng bộ tồn kho
+- Thay thông báo dưới nút bằng hộp thoại khi đồng bộ kết thúc, gồm kết quả thành công hoặc lỗi; đóng bằng nút Đóng hoặc Escape.
+- Kiểm tra: ESLint file thay đổi và npm run typecheck hoàn tất thành công. Chưa chạy đồng bộ thật để kiểm tra giao diện.
+
+### 2026-11-05 — Đồng bộ danh bạ SaleWork Zalo vào BikeForce
+
+Lấy đủ 1.244 liên hệ từ SaleWork: 960 bạn bè, 126 Danh bạ Salework, 158 lời mời. Ghi bằng RPC `sync_salework_zalo_customers` (service_role chỉ được gọi RPC, không cấp DML trực tiếp bảng customers). Thêm trang Admin `/admin/salework/customers` với bộ đếm nhóm, tìm tên/số điện thoại và phân trang; thêm mục sidebar SaleWork. `npx tsc --noEmit --pretty false` thành công. CSV cục bộ `tmp/salework-zalo-contacts.csv` có 1.244 dòng dữ liệu.
+
+### 2026-11-05 — Mở rộng khung nội dung
+
+Bỏ giới hạn `max-w-7xl` của khung Admin và `max-w-3xl` của khung Sales; header Admin cùng giãn theo nội dung. Các form nhỏ giữ giới hạn riêng để dễ đọc.
+
+Tiếp theo 2026-11-05: theo ảnh người dùng gửi, mở rộng shell Admin/Sales và bỏ trần 1.500/1.600px ở các trang danh sách nhân viên/khách hàng. Nội dung giờ dùng hết chiều ngang khả dụng sau sidebar.
+
+### 2026-11-05 — Biểu đồ công tác phí theo nhân viên
+
+Dashboard công tác phí có biểu đồ thanh theo tháng đang chọn, xếp nhân viên theo số tiền; hiển thị nhãn tiền và trạng thái đã nhập/chưa nhập. Dùng SVG/HTML sẵn có, không thêm thư viện chart.
+
+Cập nhật theo mẫu người dùng gửi: thay thanh ngang bằng donut tình trạng đã nhập/chưa nhập và biểu đồ cột chi phí theo nhân viên; thêm bảng chi tiết mở rộng. TypeScript kiểm tra thành công.
+
+Cập nhật theo làm rõ của người dùng: biểu đồ không phân tích trạng thái khai báo; donut thể hiện tỷ trọng số tiền tháng đang chọn so với các tháng còn lại trong năm, biểu đồ cột thể hiện tổng chi phí từng tháng. Nguồn là các khoản lưu trong hai bảng công tác phí, phân trang truy vấn theo năm. Typecheck exit 0.
+
+### 2026-11-05 — Tooltip biểu đồ công tác phí
+
+Rê chuột hoặc focus bàn phím trên cột tháng sẽ hiện tooltip gồm tháng/năm và tổng tiền công tác phí. Vùng tương tác phủ toàn slot tháng để cả tháng chưa phát sinh tiền vẫn xem được; danh sách mobile tiếp tục hiện số tiền cạnh từng thanh. Typecheck exit 0.
+
+### 2026-11-05 — Làm lại trang tài khoản Admin
+
+Đổi `/admin/account` sang bố cục theo ảnh tham chiếu: hồ sơ và chỉnh sửa đặt cạnh nhau; đổi mật khẩu và trạng thái phiên hiện tại ở hàng dưới; thêm biểu tượng, phân cấp và nhãn trường ngang trên màn hình rộng. Giữ nguyên action sửa hồ sơ/đổi mật khẩu. Vì ứng dụng chưa lưu lịch sử thiết bị/IP, giao diện nêu rõ phiên hiện tại và không tạo dữ liệu lịch sử giả. Typecheck exit 0.
+
+Theo chỉnh sửa vị trí: bỏ nút đăng xuất khỏi header dùng chung Admin; lời chào/tên tài khoản trên `/admin/account` mở dropdown chứa email và hành động đăng xuất. Luồng xác nhận đăng xuất dùng lại component hiện có. Typecheck exit 0.
+
+Tách mục điều hướng **Hệ thống** thành **Cá nhân** (`/admin/account`) và **Tất cả tài khoản** (`/admin/accounts`). Trang danh sách mới hiển thị hồ sơ cả Admin/Sales, trạng thái hoạt động và phân trang 50 dòng; không cho sửa quyền/tài khoản từ bảng này. Typecheck exit 0.
+
+Thêm thao tác có xác nhận để Admin vô hiệu hóa hoặc mở lại tài khoản trong danh sách. Server Action kiểm tra phiên/quyền Admin bằng Supabase chịu RLS, chặn tự vô hiệu hóa, ghi trực tiếp `profiles.is_active`; dữ liệu báo cáo không bị xóa. Typecheck exit 0.
+
+Theo làm rõ tương tác: bấm vào nguyên dòng tài khoản mở popup chi tiết; nút xác nhận vô hiệu hóa/mở lại nằm trong popup, không hiển thị nút thao tác riêng ở bảng. Typecheck và `git diff --check` exit 0.
+
+### 2026-11-05 — Nút đồng bộ khách SaleWork
+
+Thêm nút **Đồng bộ ngay** tại `/admin/salework/customers`, gọi script Playwright `scripts/salework-zalo-sync.ts` phía server; xác thực Admin đang hoạt động, chờ kết quả tối đa 10 phút, báo số lượng hoặc lỗi và revalidate trang khi xong. Secrets chỉ được script đọc từ `.env.local`, không gửi xuống client. Typecheck exit 0.
+
+Theo mẫu giao diện: làm lại phần đầu trang, bốn thẻ nhóm màu, thanh tìm kiếm/bộ lọc nguồn và tháng, bảng có avatar chữ cái và phân trang 8 liên hệ. Nối lọc nguồn/tháng vào query thật; không dựng xu hướng tăng trưởng vì chưa có snapshot lịch sử. Typecheck và `git diff --check` exit 0.
+
+Thêm xử lý best-effort cho truy vấn biểu đồ phụ 7 ngày. Lỗi khiến trang trắng sau đó được xác định riêng là truyền component icon Lucide từ Server Component sang Client Component; xem mục sửa lỗi phía dưới.
+
+Theo ảnh dashboard mới: thêm donut cơ cấu nguồn, cột xếp chồng số liên hệ theo nguồn theo ngày cập nhật gần nhất trong 7 ngày, biểu đồ đường cùng chuỗi số liệu và cột nguồn trong bảng. Biểu đồ ghi rõ dữ liệu là mốc `synced_at` gần nhất, không diễn giải thành tổng historical growth. Typecheck exit 0.
+
+Biến bốn thẻ tổng số thành nút mở popup danh sách theo nhóm; popup có tìm kiếm, phân trang 10 liên hệ và API route kiểm tra Admin đang hoạt động. Danh sách được tải theo trang thay vì gửi toàn bộ 1.244 dòng xuống trình duyệt. Typecheck exit 0.
+
+Sửa lỗi trang trắng `/admin/salework/customers` (digest `1211933317`): nguyên nhân là truyền function component Lucide qua ranh giới Server/Client. Thay bằng chuỗi định danh icon và ánh xạ icon bên trong client component. Typecheck và dev compilation thành công; cần tải lại trang để xác nhận trên trình duyệt.

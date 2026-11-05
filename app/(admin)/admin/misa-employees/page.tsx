@@ -38,7 +38,7 @@ export default async function MisaEmployeesPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:max-w-[1500px] xl:-translate-x-1/2">
+    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:-translate-x-1/2">
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/5 via-background to-primary/5 p-5 sm:p-7">
         <div className="relative z-10 max-w-3xl">
           <h1 className="text-3xl font-bold tracking-tight text-heading sm:text-4xl">Nhân viên</h1>

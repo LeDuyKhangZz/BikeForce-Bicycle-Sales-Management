@@ -2976,3 +2976,47 @@ DEC-118: nền Halloween mới đã được gán riêng cho Nguyễn Ngọc Tri
 ISSUE-063 đã đóng: footer của ba báo cáo nền Halloween nay dùng “HAPPY HALLOWEEN · 31/10”; Hải TeleSale, Nguyễn Thị Kim Hương và Nguyễn Ngọc Triết không còn nhận nội dung 20/10. Targeted unit 14/14, typecheck, lint và production build 37/37 route pass. **Next Exact Step:** kiểm tra trực quan ba preview rồi deploy.
 
 Bảng thi đua Hạt Dẻ đã được chỉnh theo ảnh tham chiếu: web và PNG có header cột, bảy hàng gọn, pill phần trăm ngang và thanh tổng toàn chiều rộng. Fixture 1080×1450 đã xem trực tiếp; targeted unit 5/5, typecheck, lint và production build 37/37 route pass. **Next Exact Step:** kiểm tra route `/admin/hatde/board` ở 375px và desktop trước deploy.
+
+### 2026-11-05 — Popup kết quả đồng bộ tồn kho
+- Thay thông báo dưới nút bằng hộp thoại khi đồng bộ kết thúc, gồm kết quả thành công hoặc lỗi; đóng bằng nút Đóng hoặc Escape.
+- Kiểm tra: ESLint file thay đổi và npm run typecheck hoàn tất thành công. Chưa chạy đồng bộ thật để kiểm tra giao diện.
+
+## 2026-11-05 — SaleWork Zalo contacts
+
+Đã đồng bộ 1.244 liên hệ lên BikeForce (960 bạn bè, 126 danh bạ Salework, 158 lời mời). Trang xem tại `/admin/salework/customers` trong sidebar Admin → SaleWork → Khách SaleWork. SQL RPC đã được người dùng áp dụng; quyền chỉ cấp EXECUTE cho service_role, không cấp DML trực tiếp bảng khách hàng. Kiểm tra: script báo thành công, CSV có 1.244 dòng, `npx tsc --noEmit --pretty false` exit 0.
+
+Next Exact Step: mở trang `/admin/salework/customers` sau khi web dev server cập nhật route; nếu đang dùng production thì deploy code mới.
+
+## 2026-11-05 — Mở rộng nội dung
+
+Đã bỏ max-width ở shell chung Admin/Sales, căn header Admin cùng nội dung; các form/hộp thoại có giới hạn riêng vẫn giữ nguyên. Next dev server đang chạy và phản hồi route Admin; reload trang để xem layout mới.
+
+Bổ sung: đã bỏ giới hạn max-width ở các trang danh sách nhân viên Admin, chi tiết/hoạt động nhân viên và danh sách khách hàng Sales để cùng giãn theo khung chung.
+
+## 2026-11-05 — Biểu đồ công tác phí
+
+Đã thêm biểu đồ thanh theo nhân viên trên dashboard `/admin/travel-expenses`, bám theo tháng đang chọn; người chưa nhập có trạng thái riêng. Typecheck gần nhất exit 0. Next Exact Step: tải lại dashboard để xem biểu đồ.
+
+Cập nhật giao diện theo ảnh mẫu: donut thể hiện tỷ lệ đã/chưa nhập và biểu đồ cột chi phí theo nhân viên; chart đặt ngay sau bộ chọn tháng, trước các thẻ tổng quan. Typecheck exit 0. Next Exact Step: tải lại `/admin/travel-expenses` để xem bản mới.
+
+Cập nhật theo làm rõ mới nhất: biểu đồ tài chính theo tháng, không phải trạng thái nhập. Trang truy vấn các bản ghi trong năm theo trang; cột là tổng từng tháng, donut là tỷ trọng tháng đang chọn so với phần còn lại. TypeScript exit 0.
+
+Tooltip biểu đồ công tác phí đã được thêm cho từng slot tháng: rê chuột hoặc focus bằng Tab để xem tháng/năm và số tiền, kể cả tháng không phát sinh. Typecheck `npx.cmd tsc --noEmit --pretty false` exit 0. Next Exact Step: tải lại `/admin/travel-expenses` để xem tooltip.
+
+Trang `/admin/account` đã được bố trí lại theo ảnh tham chiếu: thẻ thông tin hồ sơ và chỉnh sửa nằm cạnh nhau, hàng dưới có đổi mật khẩu và trạng thái phiên. Tên tài khoản mở dropdown có email và hành động đăng xuất; nút đã bỏ khỏi header Admin dùng chung. Hệ thống không có bảng lịch sử thiết bị/IP nên không bịa dữ liệu lịch sử; giao diện ghi rõ giới hạn này. `npx.cmd tsc --noEmit --pretty false` exit 0. Next Exact Step: tải lại `/admin/account` để xem bố cục.
+
+Mục Hệ thống đã tách thành **Cá nhân** và **Tất cả tài khoản**. Trang `/admin/accounts` liệt kê mọi hồ sơ Admin/Sales, trạng thái hoạt động, mã nhân viên và email; phân trang 50 hồ sơ. Được phép xem bởi Admin; truy vấn dùng client chịu RLS. Typecheck exit 0. Next Exact Step: mở `/admin/accounts` và kiểm tra dữ liệu thực.
+
+Danh sách tài khoản có nút **Vô hiệu hóa/Mở lại** kèm xác nhận, qua Server Action xác thực Admin và client chịu RLS; chặn Admin khóa chính tài khoản đang dùng. Rà typecheck thành công. Next Exact Step: thử vô hiệu hóa một tài khoản không dùng rồi thử đăng nhập bằng tài khoản đó để xác nhận quyền bị chặn.
+
+Đã đổi tương tác theo yêu cầu: click nguyên dòng mở popup chi tiết tài khoản; chọn xác nhận trong popup để vô hiệu hóa hoặc mở lại. Không còn nút thao tác riêng trên mỗi dòng. Typecheck và `git diff --check` exit 0.
+
+Trang `/admin/salework/customers` có nút **Đồng bộ ngay** chạy `scripts/salework-zalo-sync.ts` ở máy chủ sau khi xác thực Admin đang hoạt động. Nút hiển thị loading và kết quả; thành công thì revalidate dữ liệu. Dùng secrets trong `.env.local`; chưa chạy sync thật ở lượt này. Typecheck exit 0. Next Exact Step: bấm nút trên localhost để đồng bộ và xác nhận cấu hình SaleWork còn hiệu lực.
+
+Dashboard SaleWork Zalo đã được bố cục theo ảnh tham chiếu: thẻ thống kê theo nhóm, search, lọc nhóm và tháng, bảng liên hệ có initials avatar, phân trang 8 dòng. Lọc tháng dựa vào `synced_at`, nhóm dựa `source_id`; không hiển thị trend giả. `npx.cmd tsc --noEmit --pretty false` và `git diff --check` exit 0. Next Exact Step: reload `/admin/salework/customers` và thử search, lọc nhóm, lọc tháng.
+
+Ảnh tham chiếu tiếp theo được áp dụng: dashboard có donut tỷ trọng nguồn, cột xếp chồng theo nguồn và line chart 7 ngày, thêm cột nguồn trong bảng. Cả hai chart theo ngày dùng số liên hệ có `synced_at` gần nhất vào ngày đó; dữ liệu không phải tổng số contacts lịch sử. Typecheck exit 0.
+
+Bốn thẻ số liệu có thể bấm để mở popup danh sách đã lọc theo nhóm, tìm kiếm và phân trang 10 dòng. API route xác thực Admin đang hoạt động; không tải toàn bộ contacts lên client. Typecheck exit 0. Next Exact Step: mở popup từng thẻ, thử tìm kiếm và chuyển trang.
+
+Trang `/admin/salework/customers` lỗi trắng (digest `1211933317`) do Server Component truyền function component icon Lucide qua ranh giới Client Component. Đã đổi prop sang chuỗi định danh và ánh xạ icon bên trong client component. Typecheck và dev compilation thành công. Truy vấn chart 7 ngày cũng đã được cô lập best-effort như mitigation riêng. Next Exact Step: tải lại `/admin/salework/customers` trong phiên Admin để xác nhận trang hiển thị.

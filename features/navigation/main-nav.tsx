@@ -50,6 +50,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_SALARIES: Banknote,
   ADMIN_MONTHLY_SUMMARIES: CalendarRange,
   ADMIN_SALEWORK: MessagesSquare,
+  ADMIN_SALEWORK_CUSTOMERS: ContactRound,
   ADMIN_ECOMMERCE: ShoppingBag,
   ADMIN_HATDE: Store,
   ADMIN_ORDERS: ClipboardList,
@@ -57,6 +58,7 @@ const NAV_ICON: Record<NavKey, LucideIcon> = {
   ADMIN_MISA_EMPLOYEES: Users,
   ADMIN_CUSTOMER_CARE: ShieldCheck,
   ADMIN_ACCOUNT: User,
+  ADMIN_ALL_ACCOUNTS: ContactRound,
 };
 
 type Props = {

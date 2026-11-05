@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { LogOut } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -37,7 +36,6 @@ export function SignOutButton() {
   if (!confirming) {
     return (
       <Button variant="secondary" onClick={() => setConfirming(true)}>
-        <LogOut aria-hidden="true" className="size-4" />
         Đăng xuất
       </Button>
     );

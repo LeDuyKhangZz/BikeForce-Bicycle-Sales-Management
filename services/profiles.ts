@@ -381,3 +381,50 @@ export async function getAccountProfile(
 
   return data;
 }
+
+export type SystemAccountSummary = Pick<
+  SessionProfile,
+  'id' | 'full_name' | 'email' | 'employee_code' | 'role' | 'is_active'
+>;
+
+export async function listSystemAccounts(
+  supabase: SupabaseClient<Database>,
+  page: number,
+  pageSize = 50,
+): Promise<{ rows: SystemAccountSummary[]; total: number } | null> {
+  const start = (page - 1) * pageSize;
+  const { data, count, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, employee_code, role, is_active', { count: 'exact' })
+    .order('full_name', { ascending: true })
+    .range(start, start + pageSize - 1);
+
+  if (error) {
+    console.error('[listSystemAccounts]', error.code, error.message);
+    return null;
+  }
+
+  return { rows: data ?? [], total: count ?? 0 };
+}
+
+export async function setSystemAccountActive(
+  supabase: SupabaseClient<Database>,
+  accountId: string,
+  isActive: boolean,
+): Promise<ProfileWriteResult> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ is_active: isActive })
+    .eq('id', accountId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    console.error('[setSystemAccountActive]', error.code, error.message);
+    if (error.code && PG_REJECTED_CODES.has(error.code)) return { ok: false, error: 'REJECTED' };
+    return { ok: false, error: 'UNKNOWN' };
+  }
+
+  if (data === null) return { ok: false, error: 'NOT_FOUND' };
+  return { ok: true };
+}

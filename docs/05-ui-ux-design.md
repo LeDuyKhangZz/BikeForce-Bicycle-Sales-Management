@@ -1394,6 +1394,10 @@ Mỗi tiêu chí đã chọn có menu điều kiện theo kiểu dữ liệu. C�
 Thanh điều hướng Sales có mục **Khách hàng**. Trang hiển thị riêng khách hàng MISA của tài khoản, hỗ trợ đổi tháng, tìm kiếm, bộ lọc, phân trang và xuất trang hiện tại ra CSV.
 Trên desktop, module dùng toàn bộ chiều rộng khả dụng bên phải sidebar; trên màn hình nhỏ, bảng chuyển thành danh sách thẻ và các control được phép xuống dòng, không cuộn ngang.
 
+## Danh bạ khách hàng SaleWork Zalo (2026-11-05)
+
+Admin xem danh sách liên hệ SaleWork tại `/admin/salework/customers`, trong mục SaleWork ở sidebar. Trang hiển thị số tổng và ba nhóm bạn bè, Danh bạ Salework, lời mời kết bạn; hỗ trợ tìm theo tên/số điện thoại và phân trang. Dữ liệu nguồn `SALEWORK_ZALO` được phân biệt với danh mục MISA.
+
 Theo yêu cầu ngày 2026-09-23, giao diện Sales không còn mục **Đối chiếu**; route `/sales/reconciliation` đã được gỡ. Module đối chiếu của Admin được giữ nguyên.
 
 Danh sách khách hàng của cả Admin và Sales có badge **Nhóm A/B/C/D**, kèm chú thích ngưỡng phía trên bảng. Trên mobile, badge nằm ở đầu từng thẻ khách hàng.
@@ -1507,6 +1511,20 @@ Poster dùng trực tiếp tài sản thương hiệu `public/images/nenhatde.pn
 ## Dashboard công tác phí (2026-10-12)
 
 Mục sidebar **Công tác phí** mở dashboard theo tháng. CTA cùng tên đặt ở đầu trang, đủ 44px và giữ tháng khi đi vào màn nhập. Dashboard dùng lưới 2 cột trên mobile, 4 cột trên desktop; số liệu tiền được phép xuống dòng và danh sách thiếu dùng card dọc nên không phát sinh cuộn ngang. Màn nhập cũ chuyển nguyên vẹn sang `/admin/travel-expenses/entries` và có nút quay lại dashboard.
+
+Dashboard có bố cục biểu đồ theo tiền: vòng tròn thể hiện tỷ trọng tháng đang xem so với các tháng còn lại trong năm; biểu đồ cột thể hiện tổng công tác phí của từng tháng. Tháng được chọn làm nổi bật trên biểu đồ cột; bộ chọn tháng điều khiển tháng được so sánh.
+
+Mỗi cột biểu đồ có tooltip khi rê chuột hoặc focus bằng bàn phím, hiển thị tháng/năm và số tiền công tác phí. Danh sách tháng trên mobile luôn hiển thị số tiền cạnh thanh.
+
+Trang Admin `/admin/account` dùng lưới hồ sơ hai cột trên màn hình rộng: thông tin nhận diện và chỉnh sửa hồ sơ; bên dưới là đổi mật khẩu và phiên hiện tại. Tên tài khoản mở dropdown chứa email và hành động đăng xuất; không đặt nút đăng xuất ở header dùng chung. Lịch sử đăng nhập theo thiết bị/IP chưa được lưu trong hệ thống nên trang chỉ nêu trạng thái phiên hiện tại, không hiển thị dữ liệu giả.
+
+Trong nhóm điều hướng **Hệ thống**, mục **Cá nhân** mở hồ sơ và bảo mật của Admin đang đăng nhập; mục **Tất cả tài khoản** mở danh sách phân trang mọi hồ sơ Admin/Sales, gồm email, mã nhân viên, vai trò và trạng thái hoạt động. Bấm vào một dòng mở popup thông tin; thao tác vô hiệu hóa/mở lại cần xác nhận trong popup. Không cho Admin tự vô hiệu hóa tài khoản đang đăng nhập; dữ liệu báo cáo vẫn được giữ.
+
+Trang `/admin/salework/customers` có nút **Đồng bộ ngay** gọi quy trình Playwright SaleWork hiện hữu phía server. Chỉ Admin đang hoạt động được gọi; trạng thái chờ, kết quả/lỗi và thời điểm đồng bộ gần nhất được hiển thị cạnh nút. Tiến trình dùng cấu hình SaleWork/Supabase từ `.env.local`, không gửi khóa xuống trình duyệt.
+
+Giao diện danh bạ dùng bốn thẻ số liệu có màu theo nhóm; biểu đồ donut phân bổ nguồn; biểu đồ cột theo nguồn và biểu đồ đường đếm liên hệ theo ngày cập nhật gần nhất trong 7 ngày; thanh tìm kiếm/bộ lọc nhóm/tháng; bảng liên hệ có avatar chữ cái, nhóm, nguồn và phân trang 8 dòng. Bộ lọc nhóm lấy từ tiền tố nguồn; bộ lọc tháng dùng thời điểm đồng bộ. `synced_at` chỉ giữ lần thay đổi gần nhất của từng liên hệ, nên biểu đồ 7 ngày là phân bố mốc cập nhật hiện tại, không đại diện tổng lịch sử liên hệ theo ngày.
+
+Bốn thẻ số liệu là nút mở popup danh sách liên hệ đã lọc theo đúng nhóm; popup tìm kiếm và phân trang 10 dòng qua API Admin-only, không tải toàn bộ danh sách vào trình duyệt cùng lúc.
 ## 26/10/2026 — Tài chính theo sàn
 
 `/admin/ecommerce` có thêm bốn thẻ tổng hợp: Doanh số thành công, Tổng phí sàn, Tiền sàn trả và Tiền nạp quảng cáo; bên dưới là card Shopee/TikTok với sáu dòng chi tiết. Mobile dùng card, không dùng bảng ngang; số liệu tabular, nhãn và giá trị cùng hiển thị. `ads_top_up` không được gọi là chi phí quảng cáo thực tiêu.
@@ -1522,3 +1540,11 @@ Footer phải đi cùng chủ đề: ba tài khoản dùng nền Halloween hiể
 ## 27/10/2026 — Bảng thi đua Hạt Dẻ dạng bảng xếp hạng
 
 Bảng web và ảnh PNG Hạt Dẻ dùng cùng bố cục cột: thứ hạng, chi nhánh/doanh thu, số giao dịch, so với hôm qua và so với tuần trước. Mỗi tỷ lệ nằm trong pill trạng thái chỉ gồm icon + giá trị; nhãn cột nằm ở header. Thanh tổng doanh thu chuỗi và tổng giao dịch chạy toàn chiều rộng bên dưới tối đa bảy hàng cơ sở. Mobile vẫn chuyển về card hai tầng để không cuộn ngang.
+
+### 2026-11-05 — Popup kết quả đồng bộ tồn kho
+- Thay thông báo dưới nút bằng hộp thoại khi đồng bộ kết thúc, gồm kết quả thành công hoặc lỗi; đóng bằng nút Đóng hoặc Escape.
+- Kiểm tra: ESLint file thay đổi và npm run typecheck hoàn tất thành công. Chưa chạy đồng bộ thật để kiểm tra giao diện.
+
+## Chiều rộng nội dung desktop (2026-11-05)
+
+Khung Admin và Sales sử dụng toàn bộ chiều rộng khả dụng bên cạnh sidebar. Header Admin căn cùng chiều rộng với nội dung. Các form và hộp thoại riêng vẫn giữ giới hạn chiều rộng để dễ đọc.

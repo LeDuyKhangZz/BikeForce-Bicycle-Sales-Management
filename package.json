@@ -10,6 +10,8 @@
     "build": "next build",
     "start": "next start",
     "salework:sync": "tsx scripts/salework-sync.ts && python scripts/amis-sync/fetch_call_statistics.py",
+    "salework:zalo:export": "tsx scripts/salework-zalo-export.ts",
+    "salework:zalo:sync": "tsx scripts/salework-zalo-sync.ts",
     "salework:sync:month": "tsx scripts/salework-monthly-sync.ts",
     "monthly-sync:worker": "tsx scripts/monthly-sync-worker.ts",
     "monthly-sync:install": "powershell -ExecutionPolicy Bypass -File scripts/install-monthly-sync-worker.ps1",

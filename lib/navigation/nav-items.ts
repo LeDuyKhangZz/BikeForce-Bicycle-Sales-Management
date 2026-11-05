@@ -29,13 +29,15 @@ export type NavKey =
   | 'ADMIN_SALARIES'
   | 'ADMIN_MONTHLY_SUMMARIES'
   | 'ADMIN_SALEWORK'
+  | 'ADMIN_SALEWORK_CUSTOMERS'
   | 'ADMIN_ECOMMERCE'
   | 'ADMIN_HATDE'
   | 'ADMIN_ORDERS'
   | 'ADMIN_INVENTORY'
   | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_CUSTOMER_CARE'
-  | 'ADMIN_ACCOUNT';
+  | 'ADMIN_ACCOUNT'
+  | 'ADMIN_ALL_ACCOUNTS';
 
 export type NavItem = {
   readonly key: NavKey;
@@ -129,7 +131,7 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   },
   {
     key: 'ADMIN_ACCOUNT',
-    label: 'Tài khoản',
+    label: 'Cá nhân',
     href: '/admin/account',
     matchPrefixes: ['/admin/account'],
   },
@@ -137,6 +139,12 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
 
 /** Module bổ sung chỉ hiện trong sidebar desktop, không chen vào bottom nav. */
 export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
+  {
+    key: 'ADMIN_ALL_ACCOUNTS',
+    label: 'Tất cả tài khoản',
+    href: '/admin/accounts',
+    matchPrefixes: ['/admin/accounts'],
+  },
   {
     key: 'ADMIN_INVENTORY',
     label: 'Tồn kho',
@@ -186,6 +194,12 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
     matchPrefixes: ['/admin/salework'],
   },
   {
+    key: 'ADMIN_SALEWORK_CUSTOMERS',
+    label: 'Khách SaleWork',
+    href: '/admin/salework/customers',
+    matchPrefixes: ['/admin/salework/customers'],
+  },
+  {
     key: 'ADMIN_ECOMMERCE',
     label: 'Sàn TMĐT',
     href: '/admin/ecommerce',
@@ -216,7 +230,7 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
   },
   {
     title: 'Hệ thống',
-    keys: ['ADMIN_ACCOUNT'],
+    keys: ['ADMIN_ACCOUNT', 'ADMIN_ALL_ACCOUNTS'],
   },
   {
     title: 'Quản lý kho',
@@ -234,6 +248,7 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
       'ADMIN_SALARIES',
       'ADMIN_MONTHLY_SUMMARIES',
       'ADMIN_SALEWORK',
+      'ADMIN_SALEWORK_CUSTOMERS',
     ],
   },
   {

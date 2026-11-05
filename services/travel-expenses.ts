@@ -4,10 +4,13 @@ import { isMonthlySalaryParticipant } from '@/lib/reports/monthly-summary-partic
 import type { Database } from '@/types/database.types';
 
 const MAX_TEAM_SIZE = 200;
+const MAX_YEAR_ENTRIES = MAX_TEAM_SIZE * 12;
+const YEAR_QUERY_PAGE_SIZE = 1000;
 
 type TravelExpenseTable = Database['public']['Tables']['sales_monthly_travel_expenses'];
 export type MonthlyTravelExpenseRow = Pick<TravelExpenseTable['Row'], 'sales_id' | 'amount'>;
 export type MonthlyTravelExpenseWrite = Pick<TravelExpenseTable['Insert'], 'sales_id' | 'amount'>;
+export type YearTravelExpenseEntry = { period_month: string; sales_id: string; amount: number | null };
 
 export async function getMonthlyTravelExpense(
   supabase: SupabaseClient<Database>,
@@ -68,6 +71,58 @@ export async function listTravelExpenseEntries(supabase: SupabaseClient<Database
     return salesRows;
   }
   return [...salesRows, ...(participantResult.data ?? []).map(row => ({ sales_id: row.participant_key, amount: row.amount }))];
+}
+
+export async function listTravelExpenseYearEntries(
+  supabase: SupabaseClient<Database>,
+  year: string,
+): Promise<YearTravelExpenseEntry[]> {
+  const firstDay = `${year}-01-01`;
+  const nextYear = `${Number(year) + 1}-01-01`;
+  const salesRows: YearTravelExpenseEntry[] = [];
+  const participantRows: YearTravelExpenseEntry[] = [];
+
+  for (let from = 0; from < MAX_YEAR_ENTRIES; from += YEAR_QUERY_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('sales_monthly_travel_expenses')
+      .select('period_month,sales_id,amount')
+      .gte('period_month', firstDay)
+      .lt('period_month', nextYear)
+      .order('period_month')
+      .order('sales_id')
+      .range(from, from + YEAR_QUERY_PAGE_SIZE - 1)
+      .returns<Pick<TravelExpenseTable['Row'], 'period_month' | 'sales_id' | 'amount'>[]>();
+    if (error) {
+      console.error('[listTravelExpenseYearEntries:sales]', error.code, error.message);
+      break;
+    }
+    salesRows.push(...(data ?? []));
+    if (!data || data.length < YEAR_QUERY_PAGE_SIZE) break;
+  }
+
+  for (let from = 0; from < MAX_YEAR_ENTRIES; from += YEAR_QUERY_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('monthly_participant_travel_expenses')
+      .select('period_month,participant_key,amount')
+      .gte('period_month', firstDay)
+      .lt('period_month', nextYear)
+      .order('period_month')
+      .order('participant_key')
+      .range(from, from + YEAR_QUERY_PAGE_SIZE - 1)
+      .returns<Pick<Database['public']['Tables']['monthly_participant_travel_expenses']['Row'], 'period_month' | 'participant_key' | 'amount'>[]>();
+    if (error) {
+      console.error('[listTravelExpenseYearEntries:participants]', error.code, error.message);
+      break;
+    }
+    participantRows.push(...(data ?? []).map((row) => ({
+      period_month: row.period_month,
+      sales_id: row.participant_key,
+      amount: row.amount,
+    })));
+    if (!data || data.length < YEAR_QUERY_PAGE_SIZE) break;
+  }
+
+  return [...salesRows, ...participantRows];
 }
 
 export async function saveTravelExpenseEntries(

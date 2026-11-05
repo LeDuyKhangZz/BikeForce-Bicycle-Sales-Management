@@ -8,7 +8,7 @@ import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { getTravelExpensePageData } from '@/features/admin-travel-expenses/queries';
 import { TravelExpenseDashboard } from '@/features/admin-travel-expenses/travel-expense-dashboard';
 import { requireRole } from '@/features/auth/queries';
-import { buildTravelExpenseDashboard } from '@/lib/admin/travel-expense-dashboard';
+import { buildTravelExpenseDashboard, buildTravelExpenseMonthlyChart } from '@/lib/admin/travel-expense-dashboard';
 import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,7 @@ export default async function AdminTravelExpensesDashboardPage({ searchParams }:
   const supabase = await createClient();
   const data = await getTravelExpensePageData(supabase, periodMonthOf(month));
   const dashboard = buildTravelExpenseDashboard(data.salesRows, data.currentAmounts);
+  const monthlyChart = buildTravelExpenseMonthlyChart(data.monthlyAmounts, periodMonthOf(month));
 
   return (
     <div className="flex flex-col gap-4">
@@ -67,7 +68,7 @@ export default async function AdminTravelExpensesDashboardPage({ searchParams }:
         />
       </Card>
 
-      <TravelExpenseDashboard dashboard={dashboard} />
+      <TravelExpenseDashboard dashboard={dashboard} monthlyChart={monthlyChart} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ export default async function SalesLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
-      <main className="mx-auto w-full max-w-3xl flex-1 animate-rise-in px-4 py-5 pb-28">
+      <main className="w-full min-w-0 flex-1 animate-rise-in px-4 py-5 pb-28">
         {children}
       </main>
       <MainNav items={SALES_NAV_ITEMS} label="Điều hướng Sales" />

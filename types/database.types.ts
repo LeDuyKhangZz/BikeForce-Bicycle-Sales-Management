@@ -1866,6 +1866,10 @@ export type Database = {
           period_month: string
         }[]
       }
+      sync_salework_zalo_customers: {
+        Args: { p_contacts: Json }
+        Returns: number
+      }
       upsert_hatde_snapshot: {
         Args: {
           p_branches: Json

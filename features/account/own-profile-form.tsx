@@ -74,7 +74,7 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
   }
 
   return (
-    <form action={handleSubmit} className="flex flex-col gap-4" noValidate>
+    <form action={handleSubmit} className="flex flex-col gap-3" noValidate>
       {notice && (
         <p
           role="status"
@@ -94,8 +94,8 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
         </p>
       )}
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="own_full_name" required>
+      <div className="grid gap-x-4 gap-y-2 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
+        <Label htmlFor="own_full_name" required className="sm:mb-0">
           Họ và tên
         </Label>
         <Input
@@ -106,18 +106,18 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
           disabled={isPending}
           enterKeyHint="next"
           invalid={Boolean(errorFor('full_name'))}
-          aria-describedby={errorFor('full_name') ? 'own-full_name-error' : undefined}
+          aria-describedby={errorFor('full_name') ? 'own_full_name-error' : undefined}
           onBlur={(event) => validateOnBlur('full_name', event.currentTarget.value)}
         />
         {errorFor('full_name') && (
-          <p id="own-full_name-error" role="alert" className="text-sm text-destructive">
+          <p id="own_full_name-error" role="alert" className="text-sm text-destructive sm:col-start-2">
             {errorFor('full_name')}
           </p>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="own_phone">Số điện thoại</Label>
+      <div className="grid gap-x-4 gap-y-2 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
+        <Label htmlFor="own_phone" className="sm:mb-0">Số điện thoại</Label>
         <Input
           id="own_phone"
           name="phone"
@@ -131,14 +131,14 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
           onBlur={(event) => validateOnBlur('phone', event.currentTarget.value)}
         />
         {errorFor('phone') && (
-          <p id="own-phone-error" role="alert" className="text-sm text-destructive">
+          <p id="own-phone-error" role="alert" className="text-sm text-destructive sm:col-start-2">
             {errorFor('phone')}
           </p>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="own_employee_code">Mã nhân viên</Label>
+      <div className="grid gap-x-4 gap-y-2 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
+        <Label htmlFor="own_employee_code" className="sm:mb-0">Mã nhân viên</Label>
         <Input
           id="own_employee_code"
           name="employee_code"
@@ -151,7 +151,7 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
           onBlur={(event) => validateOnBlur('employee_code', event.currentTarget.value)}
         />
         {errorFor('employee_code') && (
-          <p id="own-employee_code-error" role="alert" className="text-sm text-destructive">
+          <p id="own-employee_code-error" role="alert" className="text-sm text-destructive sm:col-start-2">
             {errorFor('employee_code')}
           </p>
         )}
@@ -162,13 +162,12 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
         thấy đủ hồ sơ ở một chỗ, nhưng chúng không có `name` nên không bao giờ
         đi theo `FormData` — và Server Action cũng không đọc tới.
       */}
-      <dl className="flex flex-col gap-3 border-t border-border/70 pt-4">
-        <div className="flex flex-col gap-0.5">
+      <dl className="grid gap-x-4 gap-y-2 border-t border-border/70 pt-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
+        <div className="contents">
           <dt className="text-sm text-muted-foreground">Email</dt>
-          {/* Email dài xuống dòng chứ không cắt (rule truncation-strategy). */}
-          <dd className="text-base font-medium break-words text-foreground">{readOnly.email}</dd>
+          <dd className="min-w-0 break-words text-base font-medium text-foreground">{readOnly.email}</dd>
         </div>
-        <div className="flex flex-col gap-0.5">
+        <div className="contents">
           <dt className="text-sm text-muted-foreground">Vai trò</dt>
           <dd className="text-base font-medium text-foreground">{readOnly.roleLabel}</dd>
         </div>
@@ -178,7 +177,7 @@ export function OwnProfileForm({ initialValues, readOnly }: Props) {
         Email và vai trò không đổi được tại đây — đó là định danh đăng nhập và quyền truy cập.
       </p>
 
-      <Button type="submit" size="lg" loading={isPending} loadingText="Đang lưu hồ sơ…">
+      <Button type="submit" size="lg" loading={isPending} loadingText="Đang lưu hồ sơ…" className="sm:self-end">
         <Save aria-hidden="true" className="size-5" />
         Lưu hồ sơ
       </Button>

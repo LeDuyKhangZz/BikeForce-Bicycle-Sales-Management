@@ -76,7 +76,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
   const visiblePages = result ? Array.from({ length: Math.min(5, result.totalPages) }, (_, index) => pageStart + index) : [];
 
   return (
-    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:max-w-[1500px] xl:-translate-x-1/2">
+    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:-translate-x-1/2">
       <header className="grid gap-4 rounded-2xl bg-gradient-to-r from-primary/5 via-background to-primary/5 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="min-w-0">
           <Link href={`/admin/misa-employees?month=${month}`} className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-primary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">

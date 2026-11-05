@@ -1628,3 +1628,44 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] Thu gọn pill so sánh còn icon + phần trăm; đưa nhãn lên header.
 - [x] Mở rộng thanh tổng toàn chiều ngang và giữ layout mobile không cuộn ngang.
 - [x] Render fixture 1080×1450 và kiểm tra trực quan; targeted unit 5/5, typecheck, lint và production build 37/37 route pass.
+
+### 2026-11-05 — Popup kết quả đồng bộ tồn kho
+- Thay thông báo dưới nút bằng hộp thoại khi đồng bộ kết thúc, gồm kết quả thành công hoặc lỗi; đóng bằng nút Đóng hoặc Escape.
+- Kiểm tra: ESLint file thay đổi và npm run typecheck hoàn tất thành công. Chưa chạy đồng bộ thật để kiểm tra giao diện.
+
+## 2026-11-05 — Danh bạ khách hàng SaleWork Zalo
+- [x] Đồng bộ đủ 1.244 liên hệ lên `customers` với nguồn `SALEWORK_ZALO` qua RPC giới hạn quyền.
+- [x] Thêm trang Admin `/admin/salework/customers`: tổng số theo nhóm, tìm kiếm tên/số điện thoại và phân trang.
+- [x] Đưa mục Khách SaleWork vào sidebar Admin; typecheck thành công.
+
+## 2026-11-05 — Khung nội dung full width
+- [x] Admin và Sales dùng hết chiều ngang khả dụng bên cạnh sidebar trên desktop.
+- [x] Header Admin cùng chiều rộng với nội dung.
+- [x] Giữ giới hạn riêng cho form/hộp thoại vốn cần chiều rộng dễ đọc.
+- [x] Gỡ giới hạn max-width còn lại ở trang danh sách nhân viên Admin, chi tiết nhân viên, hoạt động nhân viên và khách hàng Sales.
+
+## 2026-11-05 — Biểu đồ công tác phí
+- [x] Thêm biểu đồ so sánh số tiền công tác phí theo từng nhân viên trong tháng được chọn.
+- [x] Thể hiện nhân viên chưa nhập bằng nhãn trạng thái, kèm nhãn văn bản dễ đọc; không thêm dependency.
+- [x] TypeScript kiểm tra thành công.
+- [x] Cập nhật theo mẫu tham chiếu: biểu đồ donut cho tình trạng nhập và biểu đồ cột chi phí theo nhân viên; có bảng dữ liệu chi tiết.
+- [x] Theo yêu cầu làm rõ: biểu đồ thể hiện số tiền công tác phí theo từng tháng; donut so sánh tháng đang chọn với phần còn lại trong năm, cột biểu diễn tổng tiền từng tháng.
+- [x] Tooltip từng tháng hiển thị tháng/năm và số tiền khi rê chuột hoặc focus bàn phím.
+
+## 2026-11-05 — Trang tài khoản Admin
+- [x] Sắp xếp hồ sơ, chỉnh sửa, đổi mật khẩu và phiên hiện tại theo bố cục tham chiếu.
+- [x] Giữ nguyên các hành động hồ sơ/mật khẩu; ghi rõ hệ thống chưa lưu lịch sử đăng nhập thiết bị/IP.
+- [x] Đặt email và hành động đăng xuất trong dropdown tên tài khoản; bỏ nút đăng xuất khỏi header Admin dùng chung.
+- [x] Typecheck thành công.
+- [x] Tách điều hướng thành hồ sơ Admin cá nhân và danh sách phân trang tất cả tài khoản Admin/Sales.
+- [x] Thêm thao tác vô hiệu hóa/mở lại có xác nhận; chặn tự vô hiệu hóa tài khoản đang đăng nhập.
+- [x] Bấm vào dòng tài khoản mở popup xác nhận; bỏ nút thao tác riêng khỏi danh sách.
+
+## 2026-11-05 — Đồng bộ khách SaleWork
+- [x] Thêm nút chạy đồng bộ SaleWork Zalo trên trang khách hàng.
+- [x] Chỉ Admin đang hoạt động được gọi; hiển thị loading/kết quả và làm mới dữ liệu khi hoàn tất.
+- [x] Typecheck thành công.
+- [x] Làm mới dashboard theo mẫu; bộ lọc nhóm/tháng hoạt động và bảng phân trang 8 dòng.
+- [x] Bổ sung donut phân bổ nguồn, biểu đồ cột/đường theo các mốc cập nhật gần nhất và cột nguồn.
+- [x] Thẻ số liệu mở popup danh sách nhóm tương ứng; popup có tìm kiếm, phân trang và API Admin-only.
+- [x] Lỗi truy vấn biểu đồ phụ không còn làm hỏng bảng và phân trang danh bạ.

@@ -5,7 +5,6 @@ import { Eye } from 'lucide-react';
 import { BrandMark } from '@/components/ui/brand-mark';
 import { buttonClassName } from '@/components/ui/button';
 import { MainNav } from '@/features/navigation/main-nav';
-import { HeaderSignOut } from '@/features/auth/header-sign-out';
 import { requireRole } from '@/features/auth/queries';
 import { CustomerCareNotificationButton } from '@/features/customer-care/customer-care-notification-button';
 import { ADMIN_NAV_ITEMS, ADMIN_SIDEBAR_ITEMS } from '@/lib/navigation/nav-items';
@@ -23,7 +22,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-56">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-card/85 shadow-xs supports-backdrop-filter:backdrop-blur-lg">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex sm:gap-3">
+        <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex sm:gap-3">
           <span
             aria-hidden="true"
             className="grid size-11 shrink-0 place-items-center rounded-md bg-accent/15 lg:hidden"
@@ -52,12 +51,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               pendingCount={pendingCareCount}
               notifications={pendingCareNotifications}
             />
-            <HeaderSignOut />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 animate-rise-in px-4 py-5 pb-28">
+      <main className="w-full min-w-0 flex-1 animate-rise-in px-4 py-5 pb-28">
         {children}
       </main>
 

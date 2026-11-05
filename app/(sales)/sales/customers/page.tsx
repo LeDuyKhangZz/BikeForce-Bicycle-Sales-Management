@@ -123,7 +123,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
   ) : null;
 
   return (
-    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:max-w-[1600px] xl:-translate-x-1/2">
+    <div className="flex flex-col gap-4 xl:relative xl:left-1/2 xl:w-[calc(100vw-18rem)] xl:-translate-x-1/2">
       <header className="rounded-2xl bg-gradient-to-r from-primary/5 via-background to-primary/5 p-5">
         <h1 className="text-2xl font-bold tracking-tight text-heading sm:text-3xl">Khách hàng của tôi</h1>
         <p className="mt-2 text-sm text-muted-foreground">
