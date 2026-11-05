@@ -1676,3 +1676,4 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] Biểu đồ có tooltip; thiếu dữ liệu thì hiển thị trạng thái rỗng, không bịa số.
 - [x] TypeScript kiểm tra thành công.
 - [x] Cài `@icons-pack/react-simple-icons`; gắn logo TikTok/Shopee vào biểu đồ, tài chính và form tiền Ads.
+- [x] Trục ngày biểu đồ doanh thu hiển thị ngày/tháng thay vì tên thứ.

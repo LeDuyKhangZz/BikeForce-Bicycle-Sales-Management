@@ -3024,3 +3024,5 @@ Trang `/admin/salework/customers` lỗi trắng (digest `1211933317`) do Server 
 Trang `/admin/ecommerce` được làm lại theo ảnh với ba biểu đồ doanh thu 7 snapshot, tỷ trọng doanh số Shopee/TikTok và đơn thành công theo sàn; tooltip hiện khi hover/focus. Dữ liệu lấy từ snapshot Pancake, không có số giả. TypeScript và `git diff --check` pass. Next Exact Step: tải lại `/admin/ecommerce` khi đã đăng nhập Admin để xem dữ liệu trực tiếp.
 
 Đã cài `@icons-pack/react-simple-icons` và dùng logo TikTok/Shopee ở biểu đồ, thẻ tài chính và form Ads. Next Exact Step: reload trang để thấy icon mới.
+
+Trục X doanh thu đã đổi sang nhãn ngày/tháng cụ thể từ report date (`dd/MM`), không còn hiển thị tên thứ.

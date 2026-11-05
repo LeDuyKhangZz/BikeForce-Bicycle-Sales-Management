@@ -1,5 +1,5 @@
 import { formatCurrencyVND } from '@/lib/currency';
-import { formatVietnamDate } from '@/lib/date';
+import { formatVietnamDate, formatVietnamShortDate } from '@/lib/date';
 import type { PancakeEcommerceTrendRows } from '@/types/pancake-dashboard';
 
 export type EcommerceDashboardTrend = {
@@ -36,7 +36,7 @@ export function buildEcommerceDashboardTrend(
   const daily = [...rows.daily].sort((left, right) => left.report_date.localeCompare(right.report_date));
   const dailyRevenue = daily.map((row) => ({
     date: row.report_date,
-    label: formatVietnamDate(row.report_date).slice(0, 5),
+    label: formatVietnamShortDate(row.report_date).slice(0, 5),
     revenue: row.revenue,
     display: formatCurrencyVND(row.revenue),
   }));
