@@ -6,6 +6,7 @@ import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LinkSpinner } from '@/components/ui/link-spinner';
 import { OrdersFilterBar } from '@/features/admin-orders/orders-filter-bar';
+import { OrderSummaryCards } from '@/features/admin-orders/order-summary-cards';
 import { OrdersPaginationNav } from '@/features/admin-orders/orders-pagination-nav';
 import { OrdersTable } from '@/features/admin-orders/orders-table';
 import { SyncOrdersButton } from '@/features/admin-orders/sync-orders-button';
@@ -78,15 +79,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
         </div>
       </div>
 
-      <section aria-label="Tổng hợp đơn hàng trong tháng" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {viewModel.summaryCards.map((card) => (
-          <Card key={card.label} className="flex flex-col justify-between gap-2">
-            <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
-            <p className="tabular text-2xl font-bold text-heading">{card.valueDisplay}</p>
-            <p className="text-xs text-muted-foreground">{card.hintDisplay}</p>
-          </Card>
-        ))}
-      </section>
+      <OrderSummaryCards cards={viewModel.summaryCards} rows={viewModel.rows} />
 
       <OrdersFilterBar filters={filters} />
 

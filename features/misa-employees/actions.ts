@@ -5,12 +5,49 @@ import { revalidatePath } from 'next/cache';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
 import { misaCustomerPlanImportSchema, misaCustomerPlanSchema } from '@/lib/validation/misa-customer-plan';
 import { createClient } from '@/lib/supabase/server';
-import { upsertMisaCustomerPlan, upsertMisaCustomerPlans } from '@/services/misa-customer-plans';
-import { getSalesIdForMisaEmployee } from '@/services/misa-customer-plans';
+import { getSalesIdForMisaEmployee, upsertMisaCustomerPlan, upsertMisaCustomerPlans } from '@/services/misa-customer-plans';
 import { getSessionProfile } from '@/services/profiles';
+import { customerAlertCutoff, type CustomerAlert } from '@/lib/amis/customer-alerts';
+import { listMisaCustomerAlerts } from '@/services/misa-customer-alerts';
 import type { ActionResult } from '@/types/action-result';
 
 export type MisaCustomerPlanState = ActionResult | null;
+
+export async function loadMisaCustomerAlertList(input: {
+  month: string;
+  employeeId: number;
+  alert: CustomerAlert;
+}): Promise<{ ok: true; rows: Awaited<ReturnType<typeof listMisaCustomerAlerts>> } | { ok: false; message: string }> {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month) ||
+      !Number.isSafeInteger(input.employeeId) || input.employeeId <= 0 ||
+      (input.alert !== 'purchase' && input.alert !== 'care')) {
+    return { ok: false, message: 'Thông tin danh sách khách hàng không hợp lệ.' };
+  }
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, message: 'Phiên đăng nhập đã hết hạn.' };
+    const profile = await getSessionProfile(supabase, user.id);
+    if (!profile || !profile.is_active) return { ok: false, message: 'Tài khoản không thể truy cập danh sách này.' };
+    if (profile.role !== 'ADMIN') {
+      const salesId = profile.role === 'SALES'
+        ? await getSalesIdForMisaEmployee(supabase, `${input.month}-01`, input.employeeId)
+        : null;
+      if (salesId !== user.id) return { ok: false, message: 'Bạn không có quyền xem danh sách khách hàng này.' };
+    }
+    const rows = await listMisaCustomerAlerts(
+      supabase,
+      input.month,
+      input.employeeId,
+      input.alert,
+      customerAlertCutoff(input.month),
+    );
+    return { ok: true, rows };
+  } catch (error) {
+    console.error('[loadMisaCustomerAlertList]', error);
+    return { ok: false, message: 'Không tải được danh sách khách hàng. Vui lòng thử lại.' };
+  }
+}
 
 export async function saveMisaCustomerPlan(
   _previousState: MisaCustomerPlanState,

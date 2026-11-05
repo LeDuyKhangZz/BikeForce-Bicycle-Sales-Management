@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, ChevronRight, Coins, MapPin, ShoppingCart } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronRight, Coins, MapPin, Phone, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CustomerCareStatus } from '@/features/misa-employees/customer-care-status';
 import { CustomerCareReviewBadge } from '@/features/misa-employees/customer-care-review-badge';
@@ -28,6 +28,7 @@ export function CustomerPopupCard({ customer, index, report44Month, alertCutoff 
             <span className="block break-words text-sm font-bold leading-snug text-heading sm:text-base">{customer.name || '—'}</span>
             <span className="mt-1 block"><CustomerCareReviewBadge review={customer.careReview} /></span>
             <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><MapPin aria-hidden="true" className="size-3.5 shrink-0 text-primary" />{customer.billingProvince || '—'}</span>
+            {customer.phone && <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Phone aria-hidden="true" className="size-3.5 shrink-0 text-primary" />{customer.phone}</span>}
           </span>
           <Badge tone={GROUP_TONES[group]} className="grid size-8 shrink-0 place-items-center rounded-full p-0 text-sm" aria-label={customerRevenueGroupLabel(group)}>{group}</Badge>
           <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground group-open:rotate-90" />

@@ -54,10 +54,12 @@ function customerFromRow(value: unknown): MisaCustomer | null {
   const daysWithoutPurchase = 'days_without_purchase' in value && typeof value.days_without_purchase === 'number' && Number.isFinite(value.days_without_purchase) ? value.days_without_purchase : null;
   const recentPurchaseDate = 'recent_purchase_date' in value && typeof value.recent_purchase_date === 'string' ? value.recent_purchase_date : null;
   const lastVisitDate = 'last_visit_date' in value && typeof value.last_visit_date === 'string' ? value.last_visit_date : null;
+  const phone = 'phone' in value && typeof value.phone === 'string' && value.phone.trim() !== '' ? value.phone : null;
   return {
     id: value.misa_customer_id,
     code: value.customer_code,
     name: value.customer_name,
+    phone,
     billingProvince: value.billing_province,
     debt,
     orderSales,
@@ -149,7 +151,7 @@ export async function getCachedMisaEmployeeCustomers(
 
   let query = supabase
     .from('misa_report119_customers')
-    .select('misa_customer_id,customer_code,customer_name,billing_province,debt,order_sales,recent_purchase_date,days_without_purchase,last_visit_date,owner_name', { count: 'exact' })
+    .select('misa_customer_id,customer_code,customer_name,phone,billing_province,debt,order_sales,recent_purchase_date,days_without_purchase,last_visit_date,owner_name', { count: 'exact' })
     .eq('period_month', periodMonth)
     .eq('misa_employee_id', params.employeeId);
 

@@ -782,6 +782,7 @@ export type Database = {
           order_sales: number | null
           owner_name: string
           period_month: string
+          phone: string | null
           recent_purchase_date: string | null
           synced_at: string
         }
@@ -797,6 +798,7 @@ export type Database = {
           order_sales?: number | null
           owner_name?: string
           period_month: string
+          phone?: string | null
           recent_purchase_date?: string | null
           synced_at?: string
         }
@@ -812,6 +814,7 @@ export type Database = {
           order_sales?: number | null
           owner_name?: string
           period_month?: string
+          phone?: string | null
           recent_purchase_date?: string | null
           synced_at?: string
         }
@@ -1868,6 +1871,10 @@ export type Database = {
       }
       sync_salework_zalo_customers: {
         Args: { p_contacts: Json }
+        Returns: number
+      }
+      sync_misa_crm_customer_directory: {
+        Args: { p_customers: Json }
         Returns: number
       }
       upsert_hatde_snapshot: {

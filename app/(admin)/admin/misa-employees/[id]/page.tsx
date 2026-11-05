@@ -110,7 +110,7 @@ export default async function MisaEmployeeCustomersPage({ params, searchParams }
       </header>
 
       <div className="grid min-w-0 gap-4">
-        {!error && result && <CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} />}
+        {!error && result && <CustomerAlertSummary counts={alertCounts} path={path} month={month} employeeId={employeeId} active={alert} />}
         <CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} />
         <CustomerCommitmentProgress stats={commitmentStats} />
         <Card flush className="order-2 min-w-0 overflow-hidden rounded-2xl">

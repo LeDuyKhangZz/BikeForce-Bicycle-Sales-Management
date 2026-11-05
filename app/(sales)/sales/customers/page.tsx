@@ -142,7 +142,7 @@ export default async function SalesCustomersPage({ searchParams }: Props) {
           <Link href={`${path}?month=${month}`} className={buttonClassName({ variant: 'secondary' })}>Thử lại</Link>
         </Card>
       ) : result ? (
-        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} path={path} month={month} salesMonth={selectedSalesMonth} />
+        <><CustomerAlertSummary counts={alertCounts} path={path} month={month} employeeId={employeeId} active={alert} /><CustomerGroupSummary counts={groupCounts} path={path} month={month} active={group} /><CustomerCommitmentProgress stats={commitmentStats} path={path} month={month} salesMonth={selectedSalesMonth} />
           {showResultsDialog ? <CustomerResultsDialog title={dialogTitle} closeHref={closeHref}>{customerResults}</CustomerResultsDialog> : <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">{customerResults}<CustomerFilterPanel employeeId={employeeId} path={path} month={month} filters={filters} searchQuery={searchQuery} alert={alert} group={group} /></div>}
         </>
       ) : null}

@@ -131,7 +131,7 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   },
   {
     key: 'ADMIN_ACCOUNT',
-    label: 'Cá nhân',
+    label: 'Tôi',
     href: '/admin/account',
     matchPrefixes: ['/admin/account'],
   },
@@ -230,7 +230,7 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
   },
   {
     title: 'Hệ thống',
-    keys: ['ADMIN_ACCOUNT', 'ADMIN_ALL_ACCOUNTS'],
+    keys: [],
   },
   {
     title: 'Quản lý kho',
@@ -254,6 +254,10 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
   {
     title: 'Tiện ích',
     keys: ['ADMIN_ECOMMERCE', 'ADMIN_HATDE'],
+  },
+  {
+    title: 'Quản lý tài khoản',
+    keys: ['ADMIN_ACCOUNT', 'ADMIN_ALL_ACCOUNTS'],
   },
 ];
 

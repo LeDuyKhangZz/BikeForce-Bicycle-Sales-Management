@@ -7,6 +7,7 @@ import {
   Banknote,
   Boxes,
   CalendarRange,
+  ChevronDown,
   ClipboardList,
   ContactRound,
   FileText,
@@ -69,6 +70,7 @@ type Props = {
 
 export function MainNav({ items, sidebarItems = [], label }: Props) {
   const pathname = usePathname();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const allItems = [...items, ...sidebarItems];
   const activeKey = activeNavKey(allItems, pathname);
   const isAdmin = items.some((item) => item.key === 'ADMIN_OVERVIEW');
@@ -83,6 +85,12 @@ export function MainNav({ items, sidebarItems = [], label }: Props) {
       ]
     : [];
   const itemByKey = new Map<NavKey, NavItem>(allItems.map((item) => [item.key, item]));
+
+  useEffect(() => {
+    if (activeKey === 'ADMIN_ACCOUNT' || activeKey === 'ADMIN_ALL_ACCOUNTS') {
+      setAccountMenuOpen(true);
+    }
+  }, [activeKey]);
 
   return (
     <>
@@ -120,6 +128,34 @@ export function MainNav({ items, sidebarItems = [], label }: Props) {
                 .map((key) => itemByKey.get(key))
                 .filter((item): item is NavItem => item !== undefined);
               if (sectionItems.length === 0) return null;
+              if (section.title === 'Quản lý tài khoản') {
+                return (
+                  <div key={section.title} className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      aria-expanded={accountMenuOpen}
+                      aria-controls="admin-account-submenu"
+                      onClick={() => setAccountMenuOpen((open) => !open)}
+                      className="flex min-h-10 items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-muted-foreground hover:bg-background hover:text-foreground"
+                    >
+                      <span>{section.title}</span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={cn('size-4 transition-transform', accountMenuOpen && 'rotate-180')}
+                      />
+                    </button>
+                    {accountMenuOpen && (
+                      <ul id="admin-account-submenu" className="flex flex-col gap-0.5 pl-2">
+                        {sectionItems.map((item) => (
+                          <li key={item.key}>
+                            <NavLink item={item} isActive={item.key === activeKey} layout="sidebar" />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              }
               return (
                 <div key={section.title} className="flex flex-col gap-1">
                   <p className="px-3 pb-0.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">

@@ -2,6 +2,7 @@ export type MisaCustomer = {
   id: number;
   code: string;
   name: string;
+  phone?: string | null;
   billingProvince: string;
   debt: number | null;
   orderSales: number | null;
