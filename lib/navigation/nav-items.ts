@@ -33,6 +33,7 @@ export type NavKey =
   | 'ADMIN_ECOMMERCE'
   | 'ADMIN_HATDE'
   | 'ADMIN_ORDERS'
+  | 'ADMIN_CUSTOMERS'
   | 'ADMIN_INVENTORY'
   | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_CUSTOMER_CARE'
@@ -146,6 +147,12 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
     matchPrefixes: ['/admin/accounts'],
   },
   {
+    key: 'ADMIN_CUSTOMERS',
+    label: 'Danh bạ CRM',
+    href: '/admin/customers',
+    matchPrefixes: ['/admin/customers'],
+  },
+  {
     key: 'ADMIN_INVENTORY',
     label: 'Tồn kho',
     href: '/admin/inventory',
@@ -235,6 +242,7 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
   {
     title: 'Quản lý kho',
     keys: [
+      'ADMIN_CUSTOMERS',
       'ADMIN_INVENTORY',
       'ADMIN_ORDERS',
       'ADMIN_CUSTOMER_CARE',

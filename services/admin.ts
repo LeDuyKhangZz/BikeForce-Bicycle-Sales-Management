@@ -10,9 +10,8 @@
  *   • KHÔNG format tiền, KHÔNG tính `%` — `lib/kpi.ts` là nguồn duy nhất (BR-011).
  *   • Nhận `supabase` client làm tham số, không tự tạo.
  *
- * Mọi hàm trả về **giá trị an toàn khi lỗi** (số 0 / mảng rỗng) thay vì ném:
- * một khối dashboard hỏng không được phép kéo sập cả trang. Chi tiết kỹ thuật
- * chỉ ghi log ở server (NFR-014).
+ * Lỗi RPC phải được giữ tách biệt với kết quả hợp lệ rỗng/0; không biến lỗi
+ * kết nối thành số liệu nghiệp vụ. Chi tiết kỹ thuật chỉ ghi log ở server (NFR-014).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -84,15 +83,15 @@ export async function getAdminTodayOverview(
   supabase: SupabaseClient<Database>,
   date: string,
 ): Promise<AdminTodayOverview> {
-  const { data, error } = await supabase.rpc('admin_today_overview', { p_date: date });
+  const result = await supabase.rpc('admin_today_overview', { p_date: date });
 
-  if (error) {
-    console.error('[getAdminTodayOverview]', error.code, error.message);
-    return EMPTY_OVERVIEW;
+  if (result.error) {
+    console.error('[getAdminTodayOverview]', result.error.code, result.error.message);
+    throw new Error('Không tải được số liệu tổng quan từ Supabase.');
   }
 
   // Hàm `returns table` luôn cho đúng một dòng khi là Admin, 0 dòng khi không.
-  return data?.[0] ?? EMPTY_OVERVIEW;
+  return result.data?.[0] ?? EMPTY_OVERVIEW;
 }
 
 /** Hai nhóm cảnh báo của ngày `date` — UC-20, FR-033, AF-02. */

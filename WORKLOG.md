@@ -4181,3 +4181,25 @@ Sửa nhãn trục X biểu đồ doanh thu: dùng ngày/tháng từ snapshot (`
 Nối `listSyncSourceSnapshots` vào `/admin`, thêm trạng thái theo ngày Việt Nam dựa trên `synced_at` cho AMIS, MISA tồn kho/đơn hàng, Pancake đơn hàng/tài chính, SaleWork Zalo, số dư Ads TikTok/Shopee và webhook Hạt Dẻ. MISA Report 119/44 cùng worker tổng kết tháng hiển thị lịch tháng riêng. Các thẻ có trạng thái, lần đồng bộ mới nhất và liên kết đến nguồn. TypeScript và `git diff --check` thành công.
 
 Theo ảnh tham chiếu, đưa khu vực đồng bộ lên đầu trang và dời cam kết/thực đạt xuống dưới. Bố cục gồm bốn thẻ trạng thái, dải liên kết nguồn cần kiểm tra, donut tỷ lệ, tổng quan theo hệ thống, bảng nguồn trên desktop, card trên mobile và bộ lọc trạng thái. TypeScript và `git diff --check` thành công.
+# 2026-11-05 — Đồng bộ danh bạ AMIS CRM “Tất cả khách hàng” (DEC-120)
+
+## 2026-11-05 — Hiển thị danh bạ AMIS CRM trong Admin
+
+Thêm trang `/admin/customers` để xem dữ liệu `public.customers` vừa đồng bộ. Service phân trang 50 dòng, exact count, tìm tên/mã phía database và đọc `phone_raw`; page xác thực Admin và chịu RLS. Thêm nav “Danh bạ CRM” trong sidebar Admin desktop/“Thêm” trên mobile. `/sales/customers` vẫn là trang Report 119. Types linked remote được thử generate nhưng schema remote thiếu một số hàm/cột đang được source hiện hữu dùng, khiến typecheck phát sinh nhiều lỗi ngoài phạm vi; đã khôi phục types đang dùng trong repo và khai báo typed select boundary cho cột `phone_raw` mới bằng `.returns<T>()`, không chỉnh file generate bằng tay.
+
+Verification: `npm run typecheck`, ESLint trên page/service/nav/utilities và `git diff --check` đều exit 0. Dev server chạy tại `http://localhost:3000`; chưa xác minh UI trực quan bằng phiên Admin localhost.
+
+Đã bắt request thật tại `/crm/account/list`: `POST /crm/g1/api/business/Account/Grid`; request danh sách không filter, 100 dòng/trang. Response dùng `OfficeTel` cho điện thoại. API response `Total=0`, còn footer UI báo 3.423 nên script đọc qua phân trang giao diện và đối chiếu tổng UI với đủ số dòng, ID/mã duy nhất trước RPC. Lệnh `npm run amis:customers:dry-run` đã đọc đủ 35/35 trang: 3.423 khách, 3.227 có điện thoại, 0 ID/mã trùng, không ghi Supabase. `npm run typecheck` và lint hai file AMIS đều exit 0.
+
+Thêm `scripts/amis-sync/sync_crm_customers.ts`, hai lệnh npm, tùy chọn giữ nguyên tab Chrome khi ngắt kết nối, migration RPC worker-only và cập nhật tài liệu DEC-120. Luồng Report 119 không đổi.
+
+**Chưa ghi Supabase:** `supabase migration list --linked` cho thấy migration history remote thiếu 27 migration cũ. `supabase db push --linked --dry-run` xác nhận `db push --include-all` sẽ áp các migration đó ngoài phạm vi. Cần áp riêng nội dung `supabase/migrations/20261105100000_sync_operational_customers_from_amis_crm.sql` trên project đã link, rồi chạy `npm run amis:customers:sync`. Không chạy `db push --include-all` cho task này.
+
+Lần chạy sync thử tiếp theo đã tới được RPC CRM trên Supabase nhưng bị từ chối nguyên tử vì 198 `OfficeTel` vi phạm constraint 9–15 chữ số; không có dữ liệu nào được ghi. Theo lựa chọn của người dùng, thêm migration `20261105120000_preserve_amis_crm_office_tel.sql` tạo `customers.phone_raw` và cập nhật RPC. Worker giữ nguyên `OfficeTel` tại `phone_raw`, chỉ đưa giá trị hợp lệ vào `phone`. Chưa áp migration này vì workspace không có kết nối PostgreSQL DDL BikeForce; không dùng `db push --include-all` do remote migration history lệch. Cần người dùng chạy migration bổ sung trong SQL Editor rồi mới chạy sync.
+
+Người dùng xác nhận đã áp migrations. `npm run amis:customers:sync` hoàn tất sau khi đọc và kiểm tra đủ 35/35 trang: 3.423 khách, 3.227 có `OfficeTel`, 198 giá trị ngoài độ dài 9–15 được giữ nguyên ở `phone_raw`, 0 ID/mã trùng. RPC trả `inserted_or_updated = 3307`. Không đọc trực tiếp bảng được bằng worker service_role do thiếu quyền SELECT; ghi chỉ đi qua RPC như thiết kế. Report 119 không đổi.
+## 2026-11-05 — Không giả dữ liệu tổng quan bằng số 0 khi Supabase lỗi
+
+Local `/admin` hiện empty state vì `getAdminTodayOverview` trả `EMPTY_OVERVIEW` trên mọi RPC lỗi. Sửa service để lỗi ghi server-side rồi ném lỗi cho Admin error boundary; error UI nêu rõ dữ liệu chưa tải được và cho phép thử lại. RPC thành công trả 0 dòng vẫn giữ empty state hợp lệ. URL local dùng cùng Supabase project với worker CRM, không có lệnh nào xoá bảng dữ liệu. Cần xác minh lại bằng phiên Admin localhost; nguyên nhân gốc của `fetch failed` chưa được xác nhận do chưa có cookie phiên Admin trong công cụ.
+
+Kiểm chứng sau thay đổi: đang chạy typecheck và ESLint file service/error boundary.

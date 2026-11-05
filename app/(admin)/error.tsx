@@ -24,7 +24,9 @@ export default function AdminError({
     <Card className="flex flex-col items-start gap-3">
       <TriangleAlert aria-hidden="true" className="size-6 text-destructive" />
       <CardTitle>Đã có lỗi xảy ra</CardTitle>
-      <p className="text-sm text-muted-foreground">Không tải được nội dung.</p>
+      <p className="text-sm text-muted-foreground">
+        Không tải được dữ liệu tổng quan. Hãy thử tải lại; dữ liệu 0 chỉ hiển thị khi Supabase trả kết quả thành công.
+      </p>
       {error.digest && (
         <p className="text-sm text-muted-foreground tabular">Mã lỗi: {error.digest}</p>
       )}

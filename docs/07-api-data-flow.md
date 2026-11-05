@@ -839,6 +839,18 @@ Giao diện chi tiết mới dùng `PageSize: 10` cho `Account/Grid`. Ô tìm ki
 
 `/sales/customers` lấy tên AMIS từ hồ sơ phiên server-side, tìm nhân viên trong snapshot tháng rồi đọc danh sách khách hàng có phân trang và lọc tại database. Client không gửi tên hoặc ID nhân viên để quyết định quyền truy cập; RLS kiểm tra lại ánh xạ.
 
+## Danh bạ “Tất cả khách hàng” AMIS CRM — DEC-120
+
+`npm run amis:customers:sync` đọc riêng trang `https://amisapp.misa.vn/crm/account/list` bằng Chrome/profile dùng chung đã đăng nhập, bắt request thật `POST /crm/g1/api/business/Account/Grid`, rồi đi qua các trang bằng điều khiển phân trang của giao diện (100 dòng/trang). Không dùng AMIS Kế toán hoặc Report 119 cho danh bạ này. Request quan sát được có `LayoutCode=Account`, `Filters=[]`, `AISearchKeyword=""`; cột điện thoại CRM trả là `OfficeTel`.
+
+CRM trả `Total=0` trong response dù footer giao diện hiển thị tổng. Worker dùng `.total-count` từ footer làm tổng nguồn, kiểm tra tổng này không đổi, đủ số dòng từng trang, Page/Start đúng, ID không trùng và mã khách không xung đột trước khi gọi RPC. Bất kỳ HTTP/lỗi cấu trúc/thiếu trang/không khớp tổng nào đều dừng mà không ghi. `npm run amis:customers:dry-run` thực hiện toàn bộ lượt đọc/đối chiếu và chỉ in tổng khách, số khách có `OfficeTel`; không gọi Supabase.
+
+Khi đồng bộ thật, `sync_operational_customers_from_amis_crm` upsert nguyên tử vào `customers` theo `(source_system='MISA', source_id=ID CRM)`, lưu tên/mã/điện thoại và giữ nguyên mapping Sales do Report 119 quản lý. RPC chỉ cấp EXECUTE cho service role. Không xóa các customer không còn xuất hiện trong danh sách nguồn.
+
+### Hiển thị danh bạ CRM trong BikeForce
+
+Admin mở `/admin/customers` (điều hướng “Danh bạ CRM”). Server Component xác thực Admin rồi gọi `services/operational-customers.ts` bằng session client chịu RLS, truy vấn `public.customers` theo trang 50 dòng và tìm tên/mã ở database. Trang hiển thị `phone_raw` để giữ đúng dữ liệu nguồn, kể cả số chưa chuẩn hóa. Route này không thay thế `/sales/customers`, vốn tiếp tục dùng snapshot Report 119 và quyền truy cập Sales hiện hữu.
+
 Sau khi đọc một trang khách hàng, service đọc kế hoạch của đúng các customer ID trên trang rồi ghép vào view model. Server Action xác thực Zod, xác thực Sales server-side và upsert bảng kế hoạch dưới client chịu RLS. Worker MISA chỉ thay hai bảng snapshot, không ghi bảng kế hoạch.
 
 ### Nhập hàng loạt kế hoạch khách hàng (DEC-097)
@@ -918,6 +930,10 @@ Hai Supabase Cron `0 2 * * *` và `0 10 * * *` gọi `pancake-sync` qua `pg_net`
 ## Đọc dashboard công tác phí (2026-10-12)
 
 `/admin/travel-expenses?month=YYYY-MM` → auth Admin → `getTravelExpensePageData` → hai service query hiện hữu chạy song song → `buildTravelExpenseDashboard` dựng các tổng và danh sách thiếu. Nút **Công tác phí** chuyển sang `/admin/travel-expenses/entries?month=YYYY-MM`; Server Action và RPC lưu hiện hữu không đổi.
+
+## Dashboard Admin phân biệt dữ liệu rỗng và lỗi RPC (2026-11-05)
+
+`/admin` chỉ hiển thị trạng thái “Chưa có Sales nào đang hoạt động” khi RPC `admin_today_overview` chạy thành công và trả về 0 dòng. RPC lỗi hoặc Supabase không kết nối được thì service ghi log server và ném lỗi để route error boundary hiển thị nút **Thử lại**; không chuyển lỗi mạng thành số liệu 0.
 
 ## Bổ sung 21/10/2026 — Báo cáo SaleWork-only của Cô Lê
 

@@ -1,5 +1,24 @@
 # BikeForce Project Checklist
 
+## 05/11/2026 — Hiển thị danh bạ AMIS CRM trong Admin
+
+- [x] Thêm `/admin/customers` đọc bảng canonical `customers` bằng session Admin/RLS.
+- [x] Tìm kiếm tên/mã server-side, phân trang exact-count 50 dòng, hiển thị `phone_raw`.
+- [x] Thêm mục “Danh bạ CRM” vào điều hướng Admin; giữ trang Sales Report 119 hiện tại.
+- [x] Typecheck, ESLint các file liên quan và `git diff --check` pass.
+- [ ] Mở `/admin/customers` bằng phiên Admin đã đăng nhập để kiểm tra dữ liệu thật trên giao diện.
+
+## 05/11/2026 — Danh bạ AMIS CRM “Tất cả khách hàng” (DEC-120)
+
+- [x] Bắt request thật từ trang CRM và xác nhận phân trang `PageSize=100`, trường điện thoại `OfficeTel`.
+- [x] Thêm script riêng, lệnh `amis:customers:sync` và `amis:customers:dry-run`; giữ nguyên Report 119.
+- [x] Dry-run đọc đủ 3.423/3.423 khách, 3.227 có điện thoại, 0 ID/mã trùng; không ghi Supabase.
+- [x] Typecheck và lint liên quan pass.
+- [x] Thêm migration RPC worker-only để upsert `customers` theo khóa MISA hiện hữu.
+- [x] Thêm `phone_raw` và cập nhật worker/RPC để giữ nguyên 198 `OfficeTel` vượt constraint; chỉ đưa số hợp lệ vào `phone`.
+- [x] Áp migration CRM và migration `phone_raw` trong SQL Editor của project `rnmywhwanpxmipqducqu` theo xác nhận của người dùng.
+- [x] Chạy `npm run amis:customers:sync`: đọc đủ 3.423/3.423, 0 ID/mã trùng; RPC báo 3.307 dòng thêm/cập nhật.
+
 ## 03/11/2026 — Đồng bộ số dư quảng cáo Shopee
 
 - [x] Tạo bảng snapshot Shopee force-RLS và index thời điểm mới nhất.

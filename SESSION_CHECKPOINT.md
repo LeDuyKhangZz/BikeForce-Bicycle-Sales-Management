@@ -1,5 +1,25 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-05 — Sửa tổng quan local báo nhầm không có Sales
+
+Local `/admin` từng hiện “Chưa có Sales nào đang hoạt động” khi RPC Supabase lỗi, vì `getAdminTodayOverview` đổi mọi lỗi thành `EMPTY_OVERVIEW`. Đã đổi service để lỗi RPC được ghi server-side và chuyển sang `(admin)/error.tsx` có nút thử lại; trạng thái rỗng chỉ còn khi RPC thành công nhưng thật sự không trả Sales. Project URL local trùng Supabase production; không có thao tác xoá dữ liệu. Typecheck/lint cần chạy lại sau thay đổi.
+
+**Next Exact Steps:** mở lại `http://localhost:3000/admin` trong browser đã đăng nhập Admin. Nếu hiện màn lỗi thay vì dashboard, dùng “Thử lại” và lấy log `[getAdminTodayOverview]` từ terminal để xử lý nguyên nhân RPC/session/kết nối cụ thể. Không dùng service-role để đọc dashboard.
+
+## 2026-11-05 — Đã thêm màn hình danh bạ CRM Admin
+
+Thêm route `/admin/customers`, service `services/operational-customers.ts` và mục điều hướng Admin “Danh bạ CRM”. Page tìm kiếm tên/mã ở database, phân trang 50 dòng, hiển thị `phone_raw`; xác thực Admin và đọc bằng session client chịu RLS. `/sales/customers` giữ nguyên Report 119. Typecheck, ESLint liên quan và `git diff --check` pass. `npm run dev` đang phục vụ `http://localhost:3000`.
+
+**Next Exact Steps:** mở `http://localhost:3000/admin/customers` trong browser đã đăng nhập Admin để kiểm tra giao diện và dữ liệu. Request chưa có browser session localhost nên UI chưa được kiểm tra trực quan.
+
+## 2026-11-05 — Danh bạ AMIS CRM đã đồng bộ
+
+DEC-120: script riêng đã bắt request thật `POST /crm/g1/api/business/Account/Grid`, đọc qua giao diện “Tất cả khách hàng”, xác nhận `OfficeTel` là điện thoại. Dry-run 35/35 trang: 3.423 khách, 3.227 có điện thoại, 0 ID/mã trùng; chưa ghi Supabase. RPC cũ từ chối nguyên tử do 198 số vượt constraint, nên không có dòng nào được ghi. Theo DEC-121 đã thêm migration `20261105120000_preserve_amis_crm_office_tel.sql` và worker lưu số thô vào `phone_raw`, chỉ ghi số hợp lệ vào `phone`. Typecheck đã pass; lint cần chạy lại sau chỉnh sửa. Report 119 được giữ nguyên.
+
+Người dùng xác nhận đã áp migration. `npm run amis:customers:sync` đã đọc 35/35 trang: 3.423/3.423 khách, 3.227 có `OfficeTel`, 198 số vượt constraint được lưu nguyên văn ở `phone_raw`, 0 ID/mã trùng. RPC hoàn tất, trả 3.307 dòng thêm/cập nhật. Truy vấn `customers` trực tiếp qua REST bị service_role từ chối SELECT (theo quyền bảng); số dòng ghi được xác nhận từ RPC. Typecheck/lint cuối đang chạy. Report 119 không đổi.
+
+**Next Exact Steps:** không còn bước đồng bộ CRM đang chờ. Nếu cần kiểm tra danh sách sau sync qua UI/SQL, dùng tài khoản có quyền đọc `customers`; worker service_role chỉ được ghi qua RPC.
+
 ## 2026-11-03 — Backend số dư Shopee đã sẵn sàng để deploy
 
 DEC-119 thêm `shopee_ad_balance_snapshots`, RPC ghi chỉ dành cho worker, Edge Function/token Shopee riêng và cập nhật `get_marketplace_ad_finance_summary()`. Types đã regenerate. Local migration chạy thành công; parser 7/7, RLS 3/3, typecheck pass. Reset local toàn bộ bị các migration cũ phụ thuộc hồ sơ/snapshot production chặn; để kiểm thử đã repair local-only hai migration ánh xạ nhân sự và thêm fixture Report119 rồi chạy tiếp, không sửa lịch sử migration source.

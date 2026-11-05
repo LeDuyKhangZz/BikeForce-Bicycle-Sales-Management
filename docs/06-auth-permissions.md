@@ -943,3 +943,7 @@ Route `GET /api/hatde/board/image` không dùng cookie Admin. Middleware chỉ m
 
 `shopee_ad_balance_snapshots` chỉ cấp `SELECT` cho `authenticated`, đồng thời policy yêu cầu `(select public.is_admin())`; vì vậy Sales nhận 0 dòng và anon bị từ chối. `service_role` bị revoke mọi quyền bảng, chỉ được execute `insert_shopee_ad_balance_snapshot`. Power Automate chỉ giữ `SHOPEE_BALANCE_SYNC_TOKEN`, tuyệt đối không giữ Supabase service-role key.
 
+## 05/11/2026 — Quyền xem danh bạ CRM
+
+`/admin/customers` xác thực `requireRole('ADMIN')` ở server và đọc `public.customers` qua session client chịu RLS. Policy `customers_admin_all` hiện hữu cho Admin đọc; Sales chỉ đọc khách được gán qua `customers_sales_select`. Không cấp thêm quyền Sales để hiển thị danh bạ toàn CRM. Worker đồng bộ vẫn chỉ gọi RPC bằng `service_role`, không đọc trực tiếp bảng.
+

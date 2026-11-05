@@ -38,8 +38,11 @@ async function browserIsReady(): Promise<boolean> {
   } catch { return false; }
 }
 
-/** Tái sử dụng profile đăng nhập; mỗi lượt mở một tab và đóng tab khi hoàn tất. */
-export async function connectToSharedAmisBrowser() {
+/** Tái sử dụng profile đăng nhập; mặc định vẫn chỉ dùng một tab và đóng tab khi hoàn tất. */
+export async function connectToSharedAmisBrowser(options: {
+  pageUrl?: RegExp;
+  closePageOnDisconnect?: boolean;
+} = {}) {
   const releaseLock = acquireLock();
   let connectedBrowser: Browser | undefined;
   try {
@@ -72,18 +75,26 @@ export async function connectToSharedAmisBrowser() {
       await browser.close();
       throw new Error('Chrome AMIS không có context mặc định; không tạo context đăng nhập thứ hai.');
     }
-    const page = await getSingleBrowserPage(context);
+    const matchingPage = options.pageUrl
+      ? context.pages().find((candidate) => options.pageUrl?.test(candidate.url()))
+      : undefined;
+    const page = matchingPage ?? (options.pageUrl ? await context.newPage() : await getSingleBrowserPage(context));
     console.log('   -> Dung chung Google Chrome AMIS tai 127.0.0.1:9223 (mot profile, mot tab).');
     return {
       context,
       page,
-      async disconnect() {
+      async disconnect(disconnectOptions: {
+        closePage?: boolean;
+        closeBrowserConnection?: boolean;
+      } = {}) {
         try {
-          await page.close();
+          if (disconnectOptions.closePage ?? options.closePageOnDisconnect ?? true) {
+            await page.close();
+          }
         } finally {
           try {
-            // Ngắt transport sau khi đóng tab, kể cả khi đóng tab gặp lỗi.
-            await browser.close();
+            // Caller mới có thể cần giữ Chrome/profile mở sau khi hoàn tất.
+            if (disconnectOptions.closeBrowserConnection ?? true) await browser.close();
           } finally { releaseLock(); }
         }
       },

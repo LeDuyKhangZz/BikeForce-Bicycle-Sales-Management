@@ -1537,6 +1537,10 @@ Bốn thẻ số liệu là nút mở popup danh sách liên hệ đã lọc the
 
 Footer phải đi cùng chủ đề: ba tài khoản dùng nền Halloween hiển thị “HAPPY HALLOWEEN · 31/10” và tuyệt đối không vẽ lời chúc Phụ nữ Việt Nam 20/10; các tài khoản dùng `background2010.png` giữ footer 20/10.
 
+## 05/11/2026 — Danh bạ AMIS CRM
+
+Trang Admin `/admin/customers` hiển thị danh sách “Tất cả khách hàng” đã đồng bộ từ CRM, tách khỏi `/sales/customers` vốn dùng Report 119. Trang có tìm kiếm theo tên/mã, phân trang 50 dòng và hiển thị `OfficeTel` gốc; số không chuẩn hóa có nhãn giải thích. Mobile dùng card xếp dọc, không cuộn ngang; mục điều hướng nằm trong “Thêm” trên mobile và sidebar Admin desktop.
+
 ## 27/10/2026 — Bảng thi đua Hạt Dẻ dạng bảng xếp hạng
 
 Bảng web và ảnh PNG Hạt Dẻ dùng cùng bố cục cột: thứ hạng, chi nhánh/doanh thu, số giao dịch, so với hôm qua và so với tuần trước. Mỗi tỷ lệ nằm trong pill trạng thái chỉ gồm icon + giá trị; nhãn cột nằm ở header. Thanh tổng doanh thu chuỗi và tổng giao dịch chạy toàn chiều rộng bên dưới tối đa bảy hàng cơ sở. Mobile vẫn chuyển về card hai tầng để không cuộn ngang.

@@ -3007,3 +3007,21 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Gửi số Shopee vào `tiktok-balance-sync` bị loại vì sai nguồn; lưu trực tiếp từ client bằng service-role key bị loại vì làm lộ secret; ghép hai sàn vào một payload không định kiểu bị loại vì tăng nguy cơ ghi nhầm.
 - **Impact:** Thêm bảng force-RLS Admin-only, RPC chỉ `service_role` được execute, Edge Function/token riêng, cập nhật RPC tổng hợp tài chính và test parser/RLS. Không cấp DML trực tiếp trên bảng cho `service_role`.
 - **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp ngày 03/11/2026.
+
+## DEC-120 — Danh bạ khách hàng lấy từ AMIS CRM “Tất cả khách hàng”
+
+- **Date:** 2026-11-05.
+- **Decision:** Tách script `amis:customers:sync` khỏi luồng báo cáo. Script dùng Chrome/profile AMIS đã đăng nhập, bắt request thực từ trang `/crm/account/list`, lấy mọi trang qua UI và xác minh số dòng khớp tổng footer cùng ID duy nhất trước khi ghi. Điện thoại lấy từ trường response `OfficeTel`. Ghi qua RPC atomic vào `customers` bằng khóa hiện hữu `('MISA', ID)`; `--dry-run` chỉ đọc.
+- **Reason:** Danh bạ cần lấy từ AMIS CRM “Tất cả khách hàng”; Report 119 là luồng báo cáo doanh thu/nhân viên và không đại diện cho toàn bộ CRM.
+- **Alternatives:** Dùng Report 119 làm danh bạ hoặc đoán body/field của API — không đạt nguồn/phạm vi đã xác nhận; gọi API bằng token riêng — bỏ qua request/filter thật của giao diện.
+- **Impact:** Thêm RPC `sync_operational_customers_from_amis_crm` chỉ `service_role` được EXECUTE. Không đổi luồng Report 119, không xóa bản ghi vắng nguồn. CRM response `Total` thực tế là 0 trong khi footer giao diện báo 3.423; worker đối chiếu số hàng gom với tổng footer, dừng nếu không khớp.
+- **Status:** APPROVED.
+
+## DEC-121 — Giữ nguyên điện thoại AMIS CRM không hợp lệ ở cột thô
+
+- **Date:** 2026-11-05.
+- **Decision:** Thêm `customers.phone_raw` để giữ nguyên nội dung `OfficeTel`. Chỉ ghi `customers.phone` khi giá trị chuẩn hóa có 9–15 chữ số; các giá trị khác không bị cắt hoặc bỏ mà được lưu ở `phone_raw`.
+- **Reason:** Snapshot CRM có 198 giá trị vượt constraint độ dài hiện tại. Cần bảo toàn nguồn mà không làm hỏng `normalized_phone` và các truy vấn đang dựa trên số điện thoại hợp lệ.
+- **Alternatives:** Cắt số/đoán cách tách nhiều số; bỏ các giá trị lỗi; nới constraint hiện hữu. Các phương án này làm mất hoặc thay đổi dữ liệu, hoặc làm suy yếu quy tắc dữ liệu đang dùng.
+- **Impact:** Migration bổ sung cột và thay thế thân RPC CRM; worker gửi cả `phone` hợp lệ lẫn `phone_raw`. Migration phải được áp dụng trước khi chạy sync. Report 119 không đổi.
+- **Status:** APPROVED theo lựa chọn của người dùng ngày 2026-11-05.
