@@ -130,6 +130,15 @@ async function saveReportsToSupabase(
   }
 }
 
+async function dismissSaleWorkPopups(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const closeButton = page.getByRole('button', { name: 'Đóng', exact: true }).last();
+    if (!(await closeButton.isVisible().catch(() => false))) break;
+    await closeButton.click({ timeout: 5_000 }).catch(() => {});
+    await page.waitForTimeout(300);
+  }
+}
+
 async function main(): Promise<void> {
   const context = await retryAsync(
     () =>
@@ -223,17 +232,24 @@ async function main(): Promise<void> {
       console.log(`SaleWork v2: chuẩn bị thao tác tại ${page.url()}`);
       const messageTab = page.getByText('Tin nhắn', { exact: true }).first();
       await messageTab.waitFor({ state: 'visible', timeout: 60_000 });
+      await page.waitForTimeout(1_500);
       console.log('SaleWork v2: đã thấy tab Tin nhắn; đang đóng popup…');
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const closeButton = page.getByRole('button', { name: 'Đóng', exact: true }).last();
-        if (!(await closeButton.isVisible().catch(() => false))) break;
-        await closeButton.click();
-        await page.waitForTimeout(300);
+      await dismissSaleWorkPopups(page);
+      try {
+        await messageTab.click({ timeout: 10_000 });
+      } catch {
+        await dismissSaleWorkPopups(page);
+        await messageTab.click({ timeout: 15_000 });
       }
-      await messageTab.click();
       console.log('SaleWork v2: đã mở tab Tin nhắn; đang mở bộ chọn tài khoản…');
       await accountSelect.waitFor({ state: 'visible', timeout: 30_000 });
-      await accountSelect.click();
+      await dismissSaleWorkPopups(page);
+      try {
+        await accountSelect.click({ timeout: 10_000 });
+      } catch {
+        await dismissSaleWorkPopups(page);
+        await accountSelect.click({ timeout: 15_000 });
+      }
       await accountSearchInput.waitFor({ state: 'visible', timeout: 30_000 });
       console.log('SaleWork v2: bộ chọn tài khoản đã sẵn sàng.');
       return;
@@ -244,12 +260,7 @@ async function main(): Promise<void> {
 
     // Đóng popup "BẠN CÓ TÀI KHOẢN HẾT HẠN LIÊN KẾT VỚI ZALO" nếu xuất hiện —
     // popup này che ô chọn tài khoản và khiến các bước click phía dưới bị treo.
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const closeButton = page.getByRole('button', { name: 'Đóng', exact: true }).last();
-      if (!(await closeButton.isVisible().catch(() => false))) break;
-      await closeButton.click();
-      await page.waitForTimeout(300);
-    }
+    await dismissSaleWorkPopups(page);
 
     // Đúng chuỗi thao tác đã ghi bằng Playwright Codegen trên giao diện SaleWork:
     // mở nhóm tài khoản trước, sau đó chọn tab Tin nhắn bên trong nhóm đó.
@@ -273,6 +284,7 @@ async function main(): Promise<void> {
 
   }, () => console.log('SaleWork loading timeout; reload and retry once.'));
 
+  const activeTargetAccountNames: string[] = [];
   for (const accountName of targetAccountNames) {
     // SaleWork dùng danh sách dài/ảo hóa. Gõ từng tên vào ô tìm kiếm trước khi
     // click giúp kết quả luôn có trong DOM, đúng thao tác đã xác nhận thủ công.
@@ -285,9 +297,23 @@ async function main(): Promise<void> {
       const accountDropdown = accountSearchInput.locator(
         'xpath=ancestor::div[contains(@class,"absolute")][1]',
       );
-      const accountOption = accountDropdown.getByText(selectionName, { exact: true }).last();
-      await accountOption.waitFor({ state: 'visible', timeout: 10_000 });
+      // Không dùng exact: true vì SaleWork gắn tiền tố "(OFF) " khi tài khoản tạm mất kết nối Zalo
+      const accountOption = accountDropdown.getByText(selectionName).last();
+      const foundOption = await accountOption
+        .waitFor({ state: 'visible', timeout: 8_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!foundOption) {
+        await accountSearchInput.fill('');
+        await page.waitForTimeout(300);
+        const availableTexts = await accountDropdown.innerText().catch(() => '');
+        console.warn(
+          `[SaleWork v2] Không tìm thấy tài khoản "${selectionName}" (${accountName}) trong dropdown — bỏ qua để tiếp tục đồng bộ các tài khoản còn lại. Danh sách hiện có: ${availableTexts.replace(/\s+/g, ' ').slice(0, 400)}`,
+        );
+        continue;
+      }
       await accountOption.click();
+      activeTargetAccountNames.push(accountName);
       await page.waitForTimeout(750);
       continue;
     }
@@ -299,7 +325,10 @@ async function main(): Promise<void> {
     if (
       selectedAccountText.includes(accountName) ||
       selectedAccountText.includes(selectionName)
-    ) continue;
+    ) {
+      activeTargetAccountNames.push(accountName);
+      continue;
+    }
 
     let accountOption = page
       .locator('.el-select-dropdown__item')
@@ -349,7 +378,11 @@ async function main(): Promise<void> {
       /(^|\s)(is-selected|selected)(\s|$)/.test(optionClass);
 
     if (!isSelected) await accountOption.click();
+    activeTargetAccountNames.push(accountName);
   }
+
+  const effectiveTargetAccountNames =
+    activeTargetAccountNames.length > 0 ? activeTargetAccountNames : targetAccountNames;
 
   if (isSaleWorkV2) {
     const selectionState = await accountSearchInput.evaluate((input) => {
@@ -380,7 +413,7 @@ async function main(): Promise<void> {
     await aggregateButton.waitFor({ state: 'visible', timeout: 30_000 });
   } catch {
     throw new Error(
-      `Không thấy nút Tổng hợp sau khi chọn ${targetAccountNames.join(', ')}. Trang hiện tại: ${await summarizePage()}`,
+      `Không thấy nút Tổng hợp sau khi chọn ${effectiveTargetAccountNames.join(', ')}. Trang hiện tại: ${await summarizePage()}`,
     );
   }
 
@@ -390,7 +423,7 @@ async function main(): Promise<void> {
       throw new Error('SALEWORK_SYNC_MONTH không hợp lệ; cần định dạng YYYY-MM.');
     }
     await selectSaleWorkMonth(page, requestedMonth);
-    await aggregateSaleWorkReport(page, targetAccountNames.length);
+    await aggregateSaleWorkReport(page, effectiveTargetAccountNames.length);
     console.log(`Đang đọc riêng dữ liệu SaleWork tháng ${requestedMonth}…`);
     await page.waitForTimeout(1000);
     await waitForSaleWorkIdle(page);
@@ -410,7 +443,7 @@ async function main(): Promise<void> {
       );
       monthlyAttempts.push(monthlyResult.reports);
       stableMonthlyReports = findStableCompleteSaleWorkReports(
-        targetAccountNames,
+        effectiveTargetAccountNames,
         monthlyAttempts,
       );
       if (stableMonthlyReports !== null) break;
@@ -432,14 +465,14 @@ async function main(): Promise<void> {
   }
 
   const reportDate = getVietnamToday();
-  await aggregateSaleWorkReport(page, targetAccountNames.length);
+  await aggregateSaleWorkReport(page, effectiveTargetAccountNames.length);
   console.log('Đã bấm Tổng hợp; đang cuộn và đọc toàn bộ bảng SaleWork…');
   const dailyAttempts: SaleWorkReport[][] = [];
   let completeDailyReports: SaleWorkReport[] | null = null;
   for (let attempt = 1; attempt <= DAILY_READ_MAX_ATTEMPTS; attempt += 1) {
     const result = await readPaginatedReports(page);
     dailyAttempts.push(result.reports);
-    completeDailyReports = findStableCompleteSaleWorkReports(targetAccountNames, dailyAttempts);
+    completeDailyReports = findStableCompleteSaleWorkReports(effectiveTargetAccountNames, dailyAttempts);
     if (completeDailyReports !== null) break;
     console.log(
       `Bảng SaleWork ngày chưa đủ hoặc chưa ổn định ` +

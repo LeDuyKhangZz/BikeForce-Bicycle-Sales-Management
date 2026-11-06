@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { getVietnamDateFromTimestamp } from '@/lib/date';
 import type { SyncSourceSnapshot } from '@/lib/system-health/sync-health';
+import { getLatestSaleWorkSyncTimestamp } from '@/services/salework';
 import type { Database } from '@/types/database.types';
 
 type Client = SupabaseClient<Database>;
@@ -109,6 +111,19 @@ async function latestMisaOrders(client: Client): Promise<SyncSourceSnapshot> {
   };
 }
 
+async function latestSaleWorkReports(_client: Client): Promise<SyncSourceSnapshot> {
+  const latestSyncedAt = await getLatestSaleWorkSyncTimestamp();
+  return {
+    key: 'salework-reports',
+    label: 'SaleWork · Tin nhắn và cuộc gọi',
+    description: 'Thống kê hội thoại, tin nhắn và cuộc gọi Zalo theo ngày.',
+    cadence: 'DAILY',
+    latestSyncedAt,
+    dataPeriod: latestSyncedAt === null ? null : getVietnamDateFromTimestamp(latestSyncedAt),
+    href: '/admin/salework',
+  };
+}
+
 async function latestSaleWorkContacts(client: Client): Promise<SyncSourceSnapshot> {
   const { data, error } = await client
     .from('customers')
@@ -193,6 +208,7 @@ const LOADERS = [
   latestMisaOrders,
   latestPancake,
   latestPancakeFinancials,
+  latestSaleWorkReports,
   latestSaleWorkContacts,
   latestTikTokAds,
   latestShopeeAds,
@@ -208,6 +224,7 @@ const SOURCE_FAILURES = [
   { key: 'misa-orders', label: 'MISA · Đơn hàng', description: 'Đơn bán hàng và công nợ đồng bộ từ MISA.', cadence: 'DAILY', href: '/admin/orders' },
   { key: 'pancake-orders', label: 'Pancake · Đơn hàng', description: 'Đơn hàng và doanh thu theo sàn thương mại điện tử.', cadence: 'DAILY', href: '/admin/ecommerce' },
   { key: 'pancake-financials', label: 'Pancake · Tài chính sàn', description: 'Phí sàn, tiền sàn trả và tiền nạp quảng cáo.', cadence: 'DAILY', href: '/admin/ecommerce' },
+  { key: 'salework-reports', label: 'SaleWork · Tin nhắn và cuộc gọi', description: 'Thống kê hội thoại, tin nhắn và cuộc gọi Zalo theo ngày.', cadence: 'DAILY', href: '/admin/salework' },
   { key: 'salework-contacts', label: 'SaleWork · Khách hàng và liên hệ', description: 'Danh bạ đồng bộ từ tài khoản SaleWork Zalo.', cadence: 'ON_DEMAND', href: '/admin/salework/customers' },
   { key: 'tiktok-ads', label: 'TikTok · Số dư Ads', description: 'Snapshot số dư tài khoản quảng cáo TikTok.', cadence: 'DAILY', href: '/admin/ecommerce' },
   { key: 'shopee-ads', label: 'Shopee · Số dư Ads', description: 'Snapshot số dư tài khoản quảng cáo Shopee.', cadence: 'DAILY', href: '/admin/ecommerce' },
@@ -234,4 +251,3 @@ export async function listSyncSourceSnapshots(client: Client): Promise<SyncSourc
         };
   });
 }
-

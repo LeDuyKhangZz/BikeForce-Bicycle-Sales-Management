@@ -107,9 +107,10 @@ export async function GET(request: Request) {
 
   if (accountName === ECOMMERCE_REPORT_ACCOUNT) {
     const automationClient = createReportAutomationClient();
+    const adFinanceClient = authorizedByKey ? automationClient : await createClient();
     const [report, adFinanceRows] = await Promise.all([
       getLatestPancakeReportForImage(automationClient),
-      getAdFinanceRows(automationClient),
+      getAdFinanceRows(adFinanceClient),
     ]);
     if (report === null) {
       return NextResponse.json({ error: 'Chưa có dữ liệu Pancake' }, { status: 404 });

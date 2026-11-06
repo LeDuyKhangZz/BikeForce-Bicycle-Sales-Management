@@ -308,3 +308,29 @@ export async function getMonthlySaleWorkReportByAccountName(
     return null;
   }
 }
+
+/** Lấy thời điểm cập nhật mới nhất của các dòng báo cáo ngày SaleWork. */
+export async function getLatestSaleWorkSyncTimestamp(): Promise<string | null> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from('salework_reports')
+      .select('account_name,updated_at')
+      .not('account_name', 'like', `${CRM_CALL_ROW_PREFIX}%`)
+      .not('account_name', 'like', `${MONTHLY_SALEWORK_ROW_PREFIX}%`)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+    return data?.updated_at ?? null;
+  } catch (error) {
+    console.error(
+      '[getLatestSaleWorkSyncTimestamp]',
+      error instanceof Error ? error.message : error,
+    );
+    throw error;
+  }
+}
