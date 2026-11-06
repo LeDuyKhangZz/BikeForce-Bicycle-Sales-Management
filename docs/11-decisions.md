@@ -2988,6 +2988,14 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Dùng cookie `pos_jwt` bị loại vì ngắn hạn và đã lộ trong hội thoại; lấy trực tiếp API Shopee/TikTok bị hoãn vì Pancake đã tổng hợp đủ; suy ra phí từ đơn hàng bị loại vì sai quyết toán.
 - **Impact:** Thêm bảng force-RLS, RPC upsert service-role-only, mở rộng Edge Function 09:00/17:00, service/view model/UI Admin và test. `ads_top_up` hiển thị đúng là “Tiền nạp quảng cáo”, không khẳng định là chi phí quảng cáo thực tiêu. Không cấp SELECT/DML bảng cho service role; Sales/anon không đọc được.
 - **Image impact:** RPC ảnh trả thêm `financials`; ảnh 9:16 thêm khối bốn chỉ số tài chính và bỏ hai ô Ads cũ để nhãn trên ảnh khớp nguồn dữ liệu đã xác minh.
+
+### DEC-121 — Ghi lịch sử từng lần nạp Ads TikTok/Shopee
+- **Date:** 2026-11-06
+- **Decision:** Form Admin nhận khoản tiền nạp thêm; giữ tổng lũy kế và ghi atomically số trước, khoản nạp, số sau, thời điểm và người ghi vào lịch sử. Tổng đang có trở thành mốc mở đầu, không giả lập các lần nạp cũ.
+- **Reason:** Người dùng cần đối chiếu mỗi lần tăng tiền nạp thay vì ghi đè một con số tổng.
+- **Alternatives:** Tiếp tục sửa tổng thủ công; dựng lịch sử quá khứ từ tổng hiện tại.
+- **Impact:** Thêm bảng force-RLS, cập nhật RPC, service/view model và UI Admin `/admin/ecommerce`.
+- **Status:** APPROVED
 - **Status:** APPROVED — người dùng yêu cầu triển khai trực tiếp.
 
 ## DEC-118 — Nền Halloween cho ba báo cáo được chọn
@@ -3025,3 +3033,20 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Cắt số/đoán cách tách nhiều số; bỏ các giá trị lỗi; nới constraint hiện hữu. Các phương án này làm mất hoặc thay đổi dữ liệu, hoặc làm suy yếu quy tắc dữ liệu đang dùng.
 - **Impact:** Migration bổ sung cột và thay thế thân RPC CRM; worker gửi cả `phone` hợp lệ lẫn `phone_raw`. Migration phải được áp dụng trước khi chạy sync. Report 119 không đổi.
 - **Status:** APPROVED theo lựa chọn của người dùng ngày 2026-11-05.
+## DEC-122 — Chuẩn định danh khách hàng và mã alias sản phẩm
+
+- **Date:** 2026-11-06.
+- **Decision:** Mã khách MISA là khóa định danh chuẩn; khách SaleWork/Zalo chỉ được đề xuất khi `normalized_phone` trùng chính xác và Admin phải duyệt liên kết từng bản ghi. Không tự gộp khách. Mã sản phẩm MISA là mã chuẩn; màu và size xác định biến thể. Mã khác nguồn là alias được Admin gán vào biến thể MISA cùng màu/size.
+- **Reason:** Cần đối chiếu chéo nguồn mà vẫn bảo toàn ID nguồn, đơn hàng, công nợ và lịch sử chăm sóc hiện có.
+- **Alternatives:** Gộp/xóa record trùng hoặc tự ghép gần đúng theo tên/số điện thoại một phần bị loại vì có thể làm mất lịch sử hoặc nối nhầm người/sản phẩm.
+- **Impact:** Migration thêm hai bảng force-RLS, RPC Admin-only có kiểm tra lại điều kiện và audit; `/admin/master-data` cung cấp danh sách duyệt. Không thay đổi luồng đồng bộ nguồn hiện tại.
+- **Status:** APPROVED — người dùng yêu cầu triển khai ngày 2026-11-06.
+
+## DEC-123 — Hiển thị toàn bộ khách cần rà soát định danh
+
+- **Date:** 2026-11-06.
+- **Decision:** Bên dưới danh sách khớp chính xác, hiển thị toàn bộ khách SaleWork/Zalo chưa liên kết và chưa có khách MISA đủ điều kiện khớp số chính xác. Cho phép gợi ý MISA theo cùng 7 số điện thoại cuối hoặc tên sau chuẩn hóa để Admin đối chiếu thủ công; không tự liên kết và không cho duyệt gợi ý gần khớp. Điều kiện ghi của DEC-122 giữ nguyên.
+- **Reason:** Danh sách chỉ có exact match chưa cho thấy những bản ghi thiếu số, số chưa đồng nhất hoặc có thể cần rà soát.
+- **Alternatives:** Tự nối theo số/tên gần giống bị loại vì có thể gắn nhầm người và làm sai các luồng sau này.
+- **Impact:** Thêm RPC đọc Admin-only có phân trang, hiển thị cả điện thoại nguồn và gợi ý giới hạn; không sửa dữ liệu nguồn, RLS hay điều kiện RPC duyệt.
+- **Status:** APPROVED theo yêu cầu người dùng ngày 2026-11-06.

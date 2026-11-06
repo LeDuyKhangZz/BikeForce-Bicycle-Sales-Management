@@ -3050,3 +3050,23 @@ Trục X doanh thu đã đổi sang nhãn ngày/tháng cụ thể từ report da
 Trang `/admin` có khối **Tình trạng đồng bộ hôm nay**, theo timestamp Vietnam của AMIS, MISA tồn kho/đơn hàng, Pancake, SaleWork Zalo, số dư Ads và Hạt Dẻ. MISA 119/44 và worker tháng được đánh dấu theo lịch tháng. TypeScript/`git diff --check` pass. Next Exact Step: mở trang Tổng quan trong phiên Admin để đối chiếu trạng thái nguồn với lần chạy hôm nay.
 
 Khu vực đồng bộ đã được đưa lên đầu trang theo ảnh mới: bộ đếm trạng thái, dải cần kiểm tra, donut, nhóm hệ thống, danh sách nguồn và filter. Cam kết/thực đạt nằm bên dưới. Next Exact Step: tải lại trang Tổng quan trong phiên Admin.
+
+## 2026-11-06 — Lịch sử tiền nạp Ads
+Đã thêm migration 20261106120000_marketplace_ad_top_up_history.sql, cập nhật RPC set_marketplace_ad_top_up theo nghĩa cộng khoản nạp, summary RPC trả lịch sử gần đây, và UI form/lịch sử TikTok/Shopee. Chưa áp migration lên production. Next Exact Steps: chạy npm run typecheck; sau đó yêu cầu người dùng áp migration trong Supabase SQL Editor theo quy trình của project rồi deploy app. Form mới chưa dùng được với production schema cũ.
+## 2026-11-06 — Chuẩn hóa dữ liệu nguồn
+
+Đã triển khai mã và migration theo DEC-122. Trang mới `/admin/master-data` có hai danh sách duyệt: ứng viên khách SaleWork/Zalo trùng chính xác số đã chuẩn hóa với MISA; mã sản phẩm ngoài MISA chờ gán vào biến thể MISA cùng màu/size. Mỗi duyệt giữ nguyên record/key nguồn và tạo audit. Thay đổi typecheck exit 0; không sửa tay `types/database.types.ts`.
+
+**Next Exact Steps:** áp `supabase/migrations/20261106130000_master_data_identity_links.sql` trong SQL Editor của project Supabase, sau đó reload `/admin/master-data` bằng phiên Admin. Kiểm tra một liên kết thử và xác nhận các dòng xuất hiện/biến mất đúng như mong đợi. Migration chưa được áp và giao diện chưa được kiểm tra với production.
+
+## 2026-11-06 — Hàng chờ rà soát khách chưa khớp (DEC-123)
+
+Trang `/admin/master-data` có danh sách exact match ở trên và thêm danh sách toàn bộ khách SaleWork/Zalo chưa liên kết/chưa có MISA đủ điều kiện khớp chính xác ở dưới. RPC đọc mới `list_customer_identity_review` trả điện thoại nguồn, lý do chưa khớp và tối đa 3 gợi ý theo 7 số cuối hoặc tên chuẩn hóa. Đây chỉ là gợi ý; `approve_customer_identity_link` vẫn bắt buộc số điện thoại trùng hoàn toàn. Migration `20261106140000_customer_identity_review_candidates.sql` chưa được áp; chưa chạy build/typecheck/test.
+
+**Next Exact Steps:** áp riêng migration `20261106140000_customer_identity_review_candidates.sql` lên đúng Supabase project (không dùng `db push --include-all`), sau đó reload `/admin/master-data` và rà các trang của nhóm “Chưa khớp hoặc cần rà soát”.
+
+## 2026-11-06 — Theo dõi sau khi áp RPC rà soát
+
+Người dùng đã áp migration `20261106140000_customer_identity_review_candidates.sql`. RPC tồn tại trên Supabase; probe anon trả permission denied như dự kiến vì function chỉ cấp execute cho authenticated. Log local cho thấy route gặp lỗi RPC khi render phiên Admin, nhưng log cũ chỉ có thông báo tổng quát nên nguyên nhân chưa được chứng minh. Đã thêm `20261106150000_fix_customer_identity_review_order.sql` qualify cột sort để loại bỏ khả năng đụng tên với output params và thêm log server status/code/message.
+
+**Next Exact Steps:** áp migration `20261106150000_fix_customer_identity_review_order.sql`, rồi tải lại `/admin/master-data`. Nếu lỗi còn, lấy dòng `[admin-master-data-rpc]` từ terminal và xử lý theo status/code.

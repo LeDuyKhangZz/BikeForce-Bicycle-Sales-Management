@@ -4203,3 +4203,20 @@ Người dùng xác nhận đã áp migrations. `npm run amis:customers:sync` ho
 Local `/admin` hiện empty state vì `getAdminTodayOverview` trả `EMPTY_OVERVIEW` trên mọi RPC lỗi. Sửa service để lỗi ghi server-side rồi ném lỗi cho Admin error boundary; error UI nêu rõ dữ liệu chưa tải được và cho phép thử lại. RPC thành công trả 0 dòng vẫn giữ empty state hợp lệ. URL local dùng cùng Supabase project với worker CRM, không có lệnh nào xoá bảng dữ liệu. Cần xác minh lại bằng phiên Admin localhost; nguyên nhân gốc của `fetch failed` chưa được xác nhận do chưa có cookie phiên Admin trong công cụ.
 
 Kiểm chứng sau thay đổi: đang chạy typecheck và ESLint file service/error boundary.
+
+## 2026-11-06 — Lịch sử tiền nạp Ads TikTok/Shopee
+Đổi thao tác tiền nạp từ ghi đè tổng sang cộng khoản nạp mới. Migration thêm lịch sử append-only trước/nạp/sau, seed tổng hiện tại làm opening balance để không dựng giao dịch cũ, cập nhật RPC transactionally và summary trả tối đa 20 lịch sử mỗi sàn. UI /admin/ecommerce hiển thị tổng, form nạp thêm và lịch sử. Cần áp migration production trước khi deploy code mới.
+## 2026-11-06 — Chuẩn hóa định danh khách hàng và sản phẩm
+Thêm migration `20261106130000_master_data_identity_links.sql`: liên kết khách SaleWork/Zalo tới MISA chỉ khi số chuẩn hóa trùng; nối alias sản phẩm tới biến thể MISA cùng màu/size; force-RLS, RPC tự kiểm quyền Admin, lưu audit. Thêm trang `/admin/master-data`, service parse RPC bằng Zod và mục điều hướng Admin. Source ID, record khách/sản phẩm và lịch sử hiện có được giữ nguyên. `npm.cmd run typecheck` exit 0. Chưa áp migration lên Supabase và chưa xác nhận UI với dữ liệu cloud.
+
+Next Exact Steps: trong Supabase SQL Editor của project BikeForce, áp migration `supabase/migrations/20261106130000_master_data_identity_links.sql`; sau đó mở `/admin/master-data` bằng Admin. Chỉ các nguồn có số điện thoại hợp lệ giống hệt và các sản phẩm ngoài MISA đã được đồng bộ mới xuất hiện trong hàng chờ.
+
+## 2026-11-06 — Hiển thị toàn bộ khách cần rà soát định danh (DEC-123)
+Mở rộng `/admin/master-data` thêm danh sách thứ hai gồm toàn bộ khách SaleWork/Zalo chưa liên kết và chưa có MISA đủ điều kiện khớp số chính xác. Gợi ý MISA theo trùng 7 số cuối hoặc tên sau chuẩn hóa chỉ để xem xét; duyệt liên kết vẫn bị RPC giới hạn exact phone. Thêm RPC Admin-only phân trang trong `20261106140000_customer_identity_review_candidates.sql`, service Zod và cập nhật tài liệu theo DEC-123. Chưa áp migration mới lên Supabase; chưa chạy build/typecheck/test.
+
+Next Exact Steps: áp `supabase/migrations/20261106140000_customer_identity_review_candidates.sql` trong SQL Editor của đúng project, rồi tải lại `/admin/master-data`. Danh sách cần rà soát phân trang 50 khách/lần; các gợi ý gần khớp không có thao tác duyệt.
+
+## 2026-11-06 — Sửa RPC hàng chờ rà soát khách
+Người dùng đã áp migration `20261106140000_customer_identity_review_candidates.sql`; probe anon nhận `permission denied for function`, phù hợp với quyền execute bị revoke. Log local cho thấy trang vẫn gặp lỗi RPC. Thêm migration `20261106150000_fix_customer_identity_review_order.sql` qualify cột sort để tránh xung đột có thể xảy ra với output params, đồng thời thêm log server status/code/message. Chưa xác nhận bằng request Admin có session và chưa chạy build/typecheck/test.
+
+Next Exact Steps: áp migration `supabase/migrations/20261106150000_fix_customer_identity_review_order.sql` trong cùng project rồi reload trang Admin. Nếu còn lỗi, đọc dòng `[admin-master-data-rpc]` trong log dev để lấy status/code cụ thể.

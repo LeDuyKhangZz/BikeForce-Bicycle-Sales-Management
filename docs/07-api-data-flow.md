@@ -952,3 +952,8 @@ RPC ảnh `get_latest_pancake_report_image` trả thêm mảng `financials` cùn
 
 `Power Automate Desktop` → `POST /functions/v1/shopee-balance-sync` với header `x-shopee-balance-token` → validate số nguyên VND → RPC `insert_shopee_ad_balance_snapshot` → `shopee_ad_balance_snapshots`. `get_marketplace_ad_finance_summary()` chọn snapshot Shopee mới nhất để trả `available_balance` và `balance_captured_at` cho `/admin/ecommerce`. Endpoint cũng nhận query parameter `available_cash_balance` hoặc body JSON/plain text để Power Automate Desktop cấu hình ổn định.
 
+## 06/11/2026 — Duyệt liên kết định danh
+
+Admin mở `/admin/master-data`. Trang gọi RPC phân trang bằng session bearer token và anon key, không dùng service role. Khách được chia thành danh sách khớp `normalized_phone` chính xác và danh sách tất cả khách SaleWork/Zalo chưa liên kết/chưa có MISA đủ điều kiện. Danh sách rà soát gợi ý tối đa ba MISA theo 7 số điện thoại cuối hoặc tên chuẩn hóa; gợi ý chỉ đọc. `approve_customer_identity_link` vẫn kiểm tra số điện thoại chính xác ở DB trước khi ghi liên kết/audit. Với sản phẩm, Admin chọn một biến thể MISA có màu/size khớp rồi `approve_product_alias_mapping` kiểm tra lại và lưu alias/audit. Bản ghi nguồn, khóa nguồn và đơn/lịch sử hiện tại không bị sửa.
+
+RPC rà soát qualify cột sort theo migration `20261106150000_fix_customer_identity_review_order.sql` để tránh xung đột tên với tham số output của function.

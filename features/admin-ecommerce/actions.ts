@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { requireRole } from '@/features/auth/queries';
 import { createClient } from '@/lib/supabase/server';
 
-const schema = z.object({ marketplace_code: z.enum(['TIKTOK', 'SHOPEE']), amount: z.coerce.number().int().nonnegative() });
+const schema = z.object({ marketplace_code: z.enum(['TIKTOK', 'SHOPEE']), amount: z.coerce.number().int().positive().safe() });
 
 export async function saveMarketplaceAdTopUp(formData: FormData): Promise<void> {
   await requireRole('ADMIN');

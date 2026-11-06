@@ -1704,3 +1704,20 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] TypeScript kiểm tra thành công.
 - [x] Đưa khối trạng thái đồng bộ lên đầu trang và bố trí phần cam kết/thực đạt ở dưới.
 - [x] Thêm thẻ tổng trạng thái, nguồn cần kiểm tra, donut, nhóm hệ thống, danh sách và bộ lọc trạng thái.
+
+## 2026-11-06 — Lịch sử tiền nạp Ads TikTok/Shopee
+- [x] Đổi form tiền Ads thành khoản nạp thêm, giữ tổng lũy kế và ghi số trước/nạp/sau.
+- [x] Lưu lịch sử mỗi lần nạp, hiển thị tối đa 20 dòng gần nhất mỗi sàn; tổng cũ được giữ làm mốc mở đầu.
+- [ ] Áp migration supabase/migrations/20261106120000_marketplace_ad_top_up_history.sql lên Supabase production trước khi dùng form mới.
+## 06/11/2026 — Chuẩn hóa định danh khách hàng/sản phẩm (DEC-122)
+
+- [x] Thêm migration liên kết khách SaleWork/Zalo → MISA chỉ khi số chuẩn hóa khớp; lưu audit và giữ nguyên source ID/FK.
+- [x] Thêm mapping alias sản phẩm ngoài MISA → biến thể MISA cùng màu/size.
+- [x] Thêm trang Admin `/admin/master-data`, RPC qua session Admin và điều hướng.
+- [x] Typecheck: `npm.cmd run typecheck` exit 0.
+- [ ] Áp migration `20261106130000_master_data_identity_links.sql` lên Supabase trước khi mở trang; sau đó kiểm tra dữ liệu thật.
+
+## 06/11/2026 — Rà soát toàn bộ khách chưa khớp (DEC-123)
+- [x] Thêm danh sách phân trang cho toàn bộ khách SaleWork/Zalo chưa liên kết và chưa có exact MISA match đủ điều kiện.
+- [x] Hiển thị gợi ý theo 7 số cuối/tên để đối chiếu thủ công; giữ nguyên xác nhận exact-phone trong RPC ghi.
+- [ ] Áp migration `20261106140000_customer_identity_review_candidates.sql` lên Supabase rồi tải lại `/admin/master-data`.

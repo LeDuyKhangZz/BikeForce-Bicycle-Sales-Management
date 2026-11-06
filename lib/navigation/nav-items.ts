@@ -34,6 +34,7 @@ export type NavKey =
   | 'ADMIN_HATDE'
   | 'ADMIN_ORDERS'
   | 'ADMIN_CUSTOMERS'
+  | 'ADMIN_MASTER_DATA'
   | 'ADMIN_INVENTORY'
   | 'ADMIN_MISA_EMPLOYEES'
   | 'ADMIN_CUSTOMER_CARE'
@@ -153,6 +154,12 @@ export const ADMIN_SIDEBAR_ITEMS: readonly NavItem[] = [
     matchPrefixes: ['/admin/customers'],
   },
   {
+    key: 'ADMIN_MASTER_DATA',
+    label: 'Chuẩn hóa dữ liệu',
+    href: '/admin/master-data',
+    matchPrefixes: ['/admin/master-data'],
+  },
+  {
     key: 'ADMIN_INVENTORY',
     label: 'Tồn kho',
     href: '/admin/inventory',
@@ -243,6 +250,7 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
     title: 'Quản lý kho',
     keys: [
       'ADMIN_CUSTOMERS',
+      'ADMIN_MASTER_DATA',
       'ADMIN_INVENTORY',
       'ADMIN_ORDERS',
       'ADMIN_CUSTOMER_CARE',

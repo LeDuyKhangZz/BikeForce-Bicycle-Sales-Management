@@ -1379,6 +1379,8 @@ Migration `20261011140000_hatde_image_automation_read.sql` chỉ cấp `SELECT` 
 
 `pancake_marketplace_financial_reports` có khóa `(report_date, shop_id, marketplace_code)`, force RLS và chỉ Admin được SELECT. Bảng lưu số đơn thành công, giá trị hàng, giảm giá cửa hàng, voucher sàn, tổng phí sàn, tiền sàn trả, COD, trả trước, phí thành phần và tiền nạp quảng cáo. RPC `upsert_pancake_marketplace_financials` thay snapshot một ngày, chỉ `service_role` được EXECUTE; role này không có SELECT/DML trực tiếp trên bảng (DEC-117).
 
+`marketplace_ad_top_ups.amount` là tổng lũy kế đã nạp cho TikTok/Shopee. Ghi nhận lần nạp mới bằng RPC Admin `set_marketplace_ad_top_up(code, amount)`, trong đó `amount` là khoản **cộng thêm**. Cùng transaction, RPC cập nhật tổng và thêm dòng vào `marketplace_ad_top_up_history` với số trước, khoản nạp, số sau, thời điểm và Admin thực hiện. Dòng `OPENING_BALANCE` giữ tổng cũ làm mốc khi lịch sử được bật; không suy diễn các lần nạp trước đó. Lịch sử force-RLS, chỉ Admin SELECT; RPC tổng hợp trả tối đa 20 sự kiện gần nhất mỗi sàn.
+
 ## 05/11/2026 — Danh bạ khách hàng AMIS CRM (DEC-120)
 
 `customers` tiếp tục dùng khóa nguồn `(source_system, source_id)` với `source_system = 'MISA'`, chung identity với snapshot Report 119. RPC `sync_operational_customers_from_amis_crm(jsonb, integer)` chỉ cấp EXECUTE cho `service_role`; nhận snapshot CRM đã được worker kiểm tra đủ tổng số và không trùng ID, rồi upsert `customer_code`, `customer_name`, `phone`, `phone_raw`, `synced_at`. `phone_raw` giữ nguyên nội dung `OfficeTel`; chỉ giá trị có độ dài chuẩn hóa 9–15 chữ số được đưa vào `phone` để không vi phạm constraint và không làm hỏng tìm kiếm/khử trùng hiện có. Không xóa khách vắng khỏi nguồn CRM, không sửa mapping Sales/địa chỉ do Report 119 quản lý. `normalized_phone` vẫn là generated column từ `phone`.
@@ -1386,3 +1388,12 @@ Migration `20261011140000_hatde_image_automation_read.sql` chỉ cấp `SELECT` 
 
 `shopee_ad_balance_snapshots` lưu số dư nguyên VND theo thời điểm Power Automate Desktop chụp. Bảng bật và ép RLS; chỉ Admin đọc qua policy `shopee_ad_balance_select_admin`. `anon`, Sales và `service_role` không có DML trực tiếp. Worker chỉ được execute RPC security-definer `insert_shopee_ad_balance_snapshot(bigint,text,timestamptz)`, có kiểm tra số không âm, VND và thời điểm trong cửa sổ 7 ngày đến 5 phút tương lai. Index `shopee_ad_balance_captured_idx` phục vụ truy vấn snapshot mới nhất. `get_marketplace_ad_finance_summary()` nối snapshot mới nhất tương ứng cho cả `TIKTOK` và `SHOPEE`.
 
+## 06/11/2026 — Liên kết định danh dữ liệu chuẩn (DEC-122)
+
+`customer_identity_links` giữ liên kết đã được Admin duyệt từ một bản ghi `SALEWORK_ZALO` sang bản ghi `MISA`. RPC chỉ chấp nhận khi `normalized_phone` hai phía trùng chính xác và không null. Không đổi `customers.id`, khóa nguồn hay FK lịch sử. `product_alias_mappings` liên kết bản ghi sản phẩm ngoài MISA tới biến thể MISA có cùng màu và size; mã nguồn vẫn được giữ làm alias.
+
+Migration `20261106140000_customer_identity_review_candidates.sql` thêm RPC Admin-only `list_customer_identity_review(integer, integer)`, phân trang toàn bộ khách SaleWork/Zalo chưa liên kết và chưa có MISA đủ điều kiện khớp số chính xác. RPC trả tối đa ba gợi ý MISA theo số điện thoại trùng 7 số cuối hoặc tên sau chuẩn hóa; đây chỉ là dữ liệu rà soát, không nới điều kiện ghi của `approve_customer_identity_link`.
+
+Migration `20261106150000_fix_customer_identity_review_order.sql` thay thân RPC trên và qualify cột sắp xếp, tránh nhập nhằng với output parameters của `RETURNS TABLE`.
+
+Hai bảng force-RLS, chỉ Admin được SELECT; mọi ghi đi qua RPC `SECURITY DEFINER` có kiểm tra `is_admin()`, lưu người duyệt/thời điểm và audit vào `audit_log`. Danh sách RPC có phân trang; API không cấp quyền ghi trực tiếp cho authenticated, anon hoặc service_role. Đồng bộ nguồn hiện hữu không bị đổi.

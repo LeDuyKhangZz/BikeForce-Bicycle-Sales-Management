@@ -1557,4 +1557,9 @@ Khung Admin và Sales sử dụng toàn bộ chiều rộng khả dụng bên c�
 
 Trang `/admin/ecommerce` dùng nền xanh nhạt, thẻ tổng quan nhiều màu và ba biểu đồ: doanh thu theo ngày, tỷ trọng doanh thu Shopee/TikTok và đơn thành công theo sàn. Trục X doanh thu hiện ngày/tháng (`dd/MM`) theo snapshot Pancake, không dùng tên thứ. Hover hoặc focus điểm/cột để xem tooltip. Khi thiếu snapshot tài chính, giao diện báo chưa có dữ liệu thay vì dựng số. Logo TikTok và Shopee dùng icon thương hiệu từ `@icons-pack/react-simple-icons` trên biểu đồ, thẻ tài chính và form nạp Ads.
 
+Form tiền nạp Ads hiển thị tổng đã nạp, nhận khoản nạp thêm (không ghi đè tổng) và đặt cạnh lịch sử từng sàn. Mỗi dòng lịch sử cho biết số trước, khoản nạp, số sau và thời điểm; mốc mở đầu ghi rõ rằng các giao dịch cũ chưa được lưu.
+
 Trang Tổng quan đặt **Tình trạng đồng bộ hôm nay** lên đầu: thẻ tổng theo trạng thái, dải nguồn cần kiểm tra, donut trạng thái, nhóm hệ thống và danh sách lọc theo trạng thái. Phần cam kết/thực đạt của Sales nằm bên dưới. Mỗi nguồn hiển thị trạng thái theo ngày Việt Nam dựa trên `synced_at`, thời điểm gần nhất và liên kết tới trang nguồn; nguồn có lịch tháng được gắn nhãn riêng.
+## 06/11/2026 — Chuẩn hóa dữ liệu nền
+
+Trang Admin `/admin/master-data` trình bày các danh sách dạng thẻ, dùng được trên mobile: khách SaleWork/Zalo có số chuẩn hóa trùng chính xác với MISA; nhóm khách chưa khớp hoặc cần rà soát có gợi ý theo 7 số cuối/tên; và mã sản phẩm ngoài MISA chờ gán alias. Gợi ý gần khớp chỉ để đối chiếu, không có nút duyệt liên kết; RPC ghi vẫn đòi số chính xác. Sản phẩm MISA chỉ hiện biến thể cùng màu/size. Không có nút gộp/xóa dữ liệu nguồn.
