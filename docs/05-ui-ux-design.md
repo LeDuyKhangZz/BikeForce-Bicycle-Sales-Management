@@ -1267,6 +1267,8 @@ riêng ở bottom nav — nav Admin đã chạm trần 5 mục của DEC-018.
 
 **Bố cục, từ 375px lên:**
 
+Biểu đồ doanh số nằm ngay sau điều hướng tháng: hai đường cho tổng chỉ tiêu doanh số và tổng thực hiện của 12 tháng thuộc năm đang xem. Biểu đồ có chú giải bằng chữ, nhãn tháng và phương án dữ liệu dạng bảng trong `<details>`, nên màu không là kênh thông tin duy nhất.
+
 | Khối | Mô tả |
 |---|---|
 | Điều hướng tháng | Card một hàng: `‹` · tên tháng · `›`. **Cho phép sang tháng sau** (đặt kế hoạch), khác `/admin/analytics` |

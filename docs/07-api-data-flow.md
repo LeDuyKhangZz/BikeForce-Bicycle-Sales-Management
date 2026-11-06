@@ -518,6 +518,8 @@ Cả hai bắt buộc `Cache-Control: private, no-store`, và cả hai đứng s
 
 **RPC đọc (Server Component gọi qua `services/admin.ts`):** năm hàm của migration 0006 + 0007 — xem `docs/02 § CẬP NHẬT PHASE 8–11`.
 
+Trang `/admin/targets` gọi `admin_monthly_sales_target_trend(p_year)` qua `services/monthly-targets.ts` để vẽ 12 tháng chỉ tiêu doanh số/thực hiện. RPC gom tổng ngay trong PostgreSQL, chỉ lấy `daily_reports` đã `COMPLETED`, không truyền báo cáo ngày xuống UI để tự cộng.
+
 ### B. Quy tắc mới rút ra ở Phase 11 — hằng số KHÔNG nằm trong file `'use server'`
 
 Một file `'use server'` chỉ được export **async function** và `export type`. Export một object hằng số làm module ném lỗi **lúc chạy** trong khi build/typecheck/lint/unit test đều xanh (ISSUE-016, DEC-045).

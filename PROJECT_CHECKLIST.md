@@ -1,5 +1,17 @@
 # BikeForce Project Checklist
 
+## 2026-11-06 — Hiệu chỉnh số dư gốc TikTok Ads
+
+- [x] Thêm migration đặt lại số dư/mốc mở đầu TikTok thành 84.700.000 VND, không tạo khoản nạp giả.
+- [ ] Áp tuần tự migration `20261106120000_marketplace_ad_top_up_history.sql` rồi `20261106180000_correct_tiktok_ad_opening_balance.sql`.
+
+## 2026-11-06 — Biểu đồ mục tiêu doanh thu theo tháng
+
+- [x] Thêm biểu đồ đường tại `/admin/targets`: tổng chỉ tiêu doanh thu và tổng thực hiện theo 12 tháng của năm đang xem.
+- [x] Tổng hợp bằng RPC Admin-only, chỉ dùng báo cáo `COMPLETED`; có phương án xem dữ liệu dạng bảng.
+- [x] `npm.cmd run typecheck`, unit test model biểu đồ và `git diff --check` đã chạy sạch.
+- [ ] Áp migration `supabase/migrations/20261106160000_admin_monthly_sales_target_trend.sql`, rồi tái sinh `types/database.types.ts` từ schema đã áp dụng.
+
 ## 2026-11-06 — Nhóm thao tác nhập theo Nhân viên
 
 - [x] Added the three entry buttons on `/admin/sales`; salary and travel expenses accept only the preceding month.

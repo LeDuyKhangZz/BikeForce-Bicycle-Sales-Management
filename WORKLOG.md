@@ -1,5 +1,17 @@
 # BikeForce Worklog
 
+## 2026-11-06 — Hiệu chỉnh số dư gốc Ads TikTok
+
+Theo xác nhận nghiệp vụ, tổng TikTok gốc là 84.700.000 VND; 16.500.000 VND là kết quả RPC cũ ghi đè, không phải số dư thực hoặc khoản nạp thật. Migration `20261106180000_correct_tiktok_ad_opening_balance.sql` đặt lại tổng và mốc `OPENING_BALANCE` thành 84.700.000 VND, không tạo dòng `DEPOSIT` giả 68.200.000 VND. Migration dừng an toàn nếu đã tồn tại khoản nạp thật trong lịch sử TikTok.
+
+## 2026-11-06 — Biểu đồ mục tiêu doanh thu theo tháng
+
+Đã sửa biểu đồ đường tại `/admin/targets` sang đúng cặp số form đang dùng: đường xanh lá là tổng chỉ tiêu doanh thu tháng từ `sales_monthly_targets`; đường xanh dương là tổng `actual_revenue` của các `daily_reports` đã `COMPLETED`. RPC `admin_monthly_revenue_target_trend(p_year)` tổng hợp 12 tháng trong PostgreSQL, có guard Admin và `security invoker`. Biểu đồ dùng SVG server-rendered, chú giải văn bản và bảng dữ liệu mở rộng.
+
+Kiểm tra: `npm.cmd run typecheck`, `npm.cmd run test:unit -- lib/admin/monthly-sales-target-trend.test.ts` và `git diff --check` thành công. Local Supabase chưa chạy vì Docker Desktop không khả dụng, nên chưa thể áp migration/tái sinh types từ local DB.
+
+Next Exact Steps: áp `supabase/migrations/20261106160000_admin_monthly_sales_target_trend.sql` trên project Supabase đúng thứ tự migration, sau đó chạy `supabase gen types typescript --linked > types/database.types.ts`, deploy và mở `/admin/targets` bằng Admin để xác nhận số liệu thực.
+
 ## 2026-11-06 — Nhóm thao tác nhập theo Nhân viên
 
 Added three entry buttons to `/admin/sales`: current-month targets, previous-month travel expenses, and previous-month salaries. Salary and travel-expense routes and Server Actions reject every month except the immediately preceding Vietnam month. Targeted unit tests (6/6) and typecheck passed.

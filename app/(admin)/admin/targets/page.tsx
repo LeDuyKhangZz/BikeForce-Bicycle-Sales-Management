@@ -10,11 +10,16 @@ import {
   MonthlyTargetsForm,
   type TargetSalesRow,
 } from '@/features/admin-targets/monthly-targets-form';
+import { MonthlySalesTargetChart } from '@/features/admin-targets/monthly-sales-target-chart';
 import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
-import { listMonthlyTargets, type MonthlyTargetRow } from '@/services/monthly-targets';
+import {
+  getMonthlyRevenueTargetTrend,
+  listMonthlyTargets,
+  type MonthlyTargetRow,
+} from '@/services/monthly-targets';
 import { listSalesOptions } from '@/services/profiles';
 
 export const metadata: Metadata = {
@@ -74,12 +79,13 @@ export default async function AdminTargetsPage({ searchParams }: Props) {
    * trước — nó phục vụ nút "giữ nguyên chỉ tiêu tháng trước", và đọc sẵn ở đây
    * để cú bấm không phải chờ thêm một lượt round-trip.
    */
-  const [salesList, currentRows, previousRows] = await Promise.all([
+  const [salesList, currentRows, previousRows, trend] = await Promise.all([
     listSalesOptions(supabase),
     listMonthlyTargets(supabase, periodMonthOf(month)),
     previousMonth === null
       ? Promise.resolve([])
       : listMonthlyTargets(supabase, periodMonthOf(previousMonth)),
+    getMonthlyRevenueTargetTrend(supabase, Number(month.slice(0, 4))),
   ]);
 
   const salesRows: TargetSalesRow[] = salesList.map((sales) => ({
@@ -114,6 +120,15 @@ export default async function AdminTargetsPage({ searchParams }: Props) {
           icon={<ChevronRight aria-hidden="true" className="size-5" />}
         />
       </Card>
+
+      <MonthlySalesTargetChart
+        month={month}
+        points={trend.map((point) => ({
+          periodMonth: point.period_month,
+          targetSalesAmount: point.target_revenue,
+          actualSalesAmount: point.actual_revenue,
+        }))}
+      />
 
       {salesRows.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 py-8 text-center">

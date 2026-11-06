@@ -25,6 +25,13 @@ export type MonthlyTargets = Pick<
 
 export type MonthlyTargetRow = MonthlyTargets & { sales_id: string };
 
+/** Một điểm của biểu đồ tổng chỉ tiêu/doanh số thực hiện theo tháng. */
+export type MonthlyRevenueTargetTrendRow = {
+  period_month: string;
+  target_revenue: number;
+  actual_revenue: number;
+};
+
 const TARGET_COLUMNS = 'sales_id, target_sales_amount, target_revenue';
 
 /**
@@ -76,6 +83,26 @@ export async function listMonthlyTargets(
 
   if (error) {
     console.error('[listMonthlyTargets]', error.code, error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+/**
+ * Tổng chỉ tiêu doanh số tháng và thực hiện của cả đội theo 12 tháng một năm.
+ *
+ * Hai tổng đều nằm trong RPC để không tải `daily_reports` về Node rồi cộng.
+ * RPC tự guard Admin và vẫn chạy dưới `security invoker`/RLS.
+ */
+export async function getMonthlyRevenueTargetTrend(
+  supabase: SupabaseClient<Database>,
+  year: number,
+): Promise<MonthlyRevenueTargetTrendRow[]> {
+  const { data, error } = await supabase.rpc('admin_monthly_revenue_target_trend', { p_year: year });
+
+  if (error) {
+    console.error('[getMonthlyRevenueTargetTrend]', error.code, error.message);
     return [];
   }
 

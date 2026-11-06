@@ -1,5 +1,17 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-06 — Hiệu chỉnh số dư Ads TikTok
+
+Theo người dùng, tổng gốc TikTok phải là 84.700.000 VND; không được ghi thêm 68.200.000 VND vì đó không phải giao dịch thật. Đã thêm migration `20261106180000_correct_tiktok_ad_opening_balance.sql`: cập nhật tổng và `OPENING_BALANCE`, đồng thời chặn chạy nếu lịch sử đã có `DEPOSIT` thật.
+
+Next Exact Steps: áp `20261106120000_marketplace_ad_top_up_history.sql`, sau đó áp `20261106180000_correct_tiktok_ad_opening_balance.sql`; reload `/admin/ecommerce` và xác nhận tổng/mốc đầu đều là 84.700.000 VND.
+
+## 2026-11-06 — Biểu đồ mục tiêu doanh thu
+
+Đã sửa biểu đồ mục tiêu/thực hiện 12 tháng vào `/admin/targets` sang doanh thu, với RPC `admin_monthly_revenue_target_trend(p_year)` trong migration `20261106170000_admin_monthly_revenue_target_trend.sql`. Chỉ Admin có quyền execute; số thực hiện chỉ cộng báo cáo `COMPLETED`. Typecheck, unit test model và `git diff --check` đã pass. Chưa áp migration/chưa xem UI thật vì local Docker/Supabase không chạy.
+
+Next Exact Steps: áp migration mới trên Supabase, chạy lại generate types từ schema đã áp dụng, deploy/reload `/admin/targets` bằng phiên Admin và kiểm tra cả mobile 375px lẫn desktop.
+
 ## 2026-11-06 — Nhóm thao tác nhập theo Nhân viên
 
 `/admin/sales` now exposes three buttons: targets for the current month plus travel expenses and salaries for the preceding month. The two historical entry pages redirect to the preceding month and their Server Actions enforce the same rule. Verification: targeted unit 6/6 and `npm.cmd run typecheck`. Next Exact Step: open `/admin/sales` as Admin and confirm the buttons show November targets plus October salary/travel expense.

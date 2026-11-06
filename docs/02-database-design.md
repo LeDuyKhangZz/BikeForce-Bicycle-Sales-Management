@@ -1207,6 +1207,7 @@ Ngoài chín câu trên, hai câu sau tuy không đổi cột nào nhưng **ch�
 | `admin_today_overview(p_date)` | ngày nghiệp vụ | 1 dòng × 12 cột | 12 chỉ số dashboard — FR-024, UC-12, AF-01 |
 | `admin_missing_report_alerts(p_date)` | ngày nghiệp vụ | n dòng (`id`, `full_name`, `employee_code`, `alert_kind`) | Cảnh báo chưa báo cáo — FR-033, UC-20, AF-02 |
 | `admin_monthly_summary(p_from, p_to)` | khoảng ngày | 1 dòng × 10 cột | Tổng target vs actual tháng — FR-028, UC-15, AF-05 |
+| `admin_monthly_sales_target_trend(p_year)` | 12 dòng, mỗi tháng 1 dòng | `period_month`, tổng chỉ tiêu doanh số, tổng doanh số thực đạt | Biểu đồ `/admin/targets`; chỉ Admin, `security invoker`, chỉ cộng báo cáo `COMPLETED` |
 | `admin_sales_performance(p_from, p_to)` | khoảng ngày | 1 dòng / Sales | Bảng hiệu suất + số ngày đạt KPI — FR-029, UC-16, AF-06 |
 
 ### B. `0007_admin_daily_trend.sql` — chuỗi số liệu theo ngày

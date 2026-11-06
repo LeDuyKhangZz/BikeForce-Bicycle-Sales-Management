@@ -1695,6 +1695,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_monthly_revenue_target_trend: {
+        Args: { p_year: number }
+        Returns: {
+          actual_revenue: number
+          period_month: string
+          target_revenue: number
+        }[]
+      }
+      admin_monthly_sales_target_trend: {
+        Args: { p_year: number }
+        Returns: {
+          actual_sales_amount: number
+          period_month: string
+          target_sales_amount: number
+        }[]
+      }
       admin_daily_trend: {
         Args: { p_from: string; p_to: string }
         Returns: {
