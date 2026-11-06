@@ -1,5 +1,13 @@
 # BikeForce Worklog
 
+## 2026-11-06 — Nhóm thao tác nhập theo Nhân viên
+
+Added three entry buttons to `/admin/sales`: current-month targets, previous-month travel expenses, and previous-month salaries. Salary and travel-expense routes and Server Actions reject every month except the immediately preceding Vietnam month. Targeted unit tests (6/6) and typecheck passed.
+
+## 2026-11-06 — Money-input normalization
+
+Travel-expense, salary, and target fields now normalize digit-and-dot VND input on blur (for example, `394.00001212` becomes `39.400.001.212`). Unit 60/60, typecheck, and lint passed.
+
 ## 2026-11-03 — Đồng bộ số dư quảng cáo Shopee (DEC-119)
 
 Đã tách hoàn toàn luồng Shopee khỏi TikTok: thêm bảng snapshot force-RLS, RPC worker-only, Edge Function `shopee-balance-sync` với token/header riêng, nối snapshot mới nhất vào báo cáo tài chính sàn và generate lại database types. Parser nhận `ShopeeBalanceClean` dạng chuỗi số nguyên, từ chối payload không an toàn. Migration áp dụng thành công trên local sau khi xử lý riêng ba migration cũ phụ thuộc dữ liệu production; migration production đã áp riêng an toàn do lịch sử CLI cũ bị drift, secret riêng đã đặt và function đã deploy. Smoke production bằng số thật `4.748.231 ₫` trả `ok:true`, snapshot và báo cáo tổng hợp khớp. Kiểm chứng cuối: unit 7/7, RLS 3/3, typecheck, lint và production build 37/37 trang đều pass. Power Automate còn cần thêm action HTTP và gọi subflow Shopee từ Main.

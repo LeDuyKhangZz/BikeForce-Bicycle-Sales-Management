@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { TRAVEL_EXPENSE_MESSAGES } from '@/lib/admin/messages';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
+import { getVietnamCurrentMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import {
   travelExpenseFieldName,
@@ -28,6 +29,10 @@ export async function saveTravelExpensesAction(
   const monthResult = travelExpenseMonthSchema.safeParse(formData.get('month'));
   if (!monthResult.success) {
     return { ok: false, code: 'VALIDATION', message: TRAVEL_EXPENSE_MESSAGES.INVALID_MONTH };
+  }
+  const previousMonth = shiftVietnamMonth(getVietnamCurrentMonth(), -1);
+  if (monthResult.data !== previousMonth) {
+    return { ok: false, code: 'VALIDATION', message: TRAVEL_EXPENSE_MESSAGES.ONLY_PREVIOUS_MONTH };
   }
 
   const supabase = await createClient();

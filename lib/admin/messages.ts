@@ -40,6 +40,7 @@ export const MONTHLY_TARGET_MESSAGES = {
 } as const;
 
 export const TRAVEL_EXPENSE_MESSAGES = {
+  ONLY_PREVIOUS_MONTH: 'Chỉ được nhập công tác phí cho tháng liền trước.',
   SAVED: 'Đã lưu công tác phí tháng.',
   VALIDATION: 'Vui lòng kiểm tra lại các ô được đánh dấu.',
   INVALID_MONTH: 'Tháng không hợp lệ.',
@@ -49,6 +50,7 @@ export const TRAVEL_EXPENSE_MESSAGES = {
 } as const;
 
 export const SALARY_MESSAGES = {
+  ONLY_PREVIOUS_MONTH: 'Chỉ được nhập lương cho tháng liền trước.',
   SAVED: 'Đã lưu lương tháng.',
   VALIDATION: 'Vui lòng kiểm tra lại các ô được đánh dấu.',
   INVALID_MONTH: 'Tháng không hợp lệ.',

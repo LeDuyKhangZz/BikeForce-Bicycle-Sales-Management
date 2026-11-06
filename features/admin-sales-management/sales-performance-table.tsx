@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { Banknote, ChevronRight, ReceiptText, Target } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { buttonClassName } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { AchievementBadge } from '@/features/report-comparison/achievement-badge';
@@ -27,9 +28,10 @@ import type { SalesPerformanceRow } from '@/services/admin';
 
 type Props = {
   rows: readonly SalesPerformanceRow[];
+  entryLinks: { target: string; travelExpense: string; salary: string };
 };
 
-export function SalesPerformanceTable({ rows }: Props) {
+export function SalesPerformanceTable({ rows, entryLinks }: Props) {
   const views = rows.map((row) => ({
     id: row.sales_id,
     name: row.full_name,
@@ -120,6 +122,9 @@ export function SalesPerformanceTable({ rows }: Props) {
             <th scope="col" className="py-2 text-right font-medium text-muted-foreground">
               Chi tiết
             </th>
+            <th scope="col" className="py-2 text-center font-medium text-muted-foreground">
+              Nhập liệu
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -145,6 +150,9 @@ export function SalesPerformanceTable({ rows }: Props) {
                 {view.kpiAchievedDays}/{view.reportCount}
               </td>
               <td className="py-3 pl-3">
+                <EntryButtons links={entryLinks} salesId={view.id} />
+              </td>
+              <td className="py-3 pl-3">
                 <div className="flex justify-end">
                   <AchievementBadge result={view.revenueResult} />
                 </div>
@@ -165,5 +173,31 @@ export function SalesPerformanceTable({ rows }: Props) {
         </tbody>
       </table>
     </Card>
+  );
+}
+
+type EntryButtonsProps = {
+  links: Props['entryLinks'];
+  salesId: string;
+  className?: string;
+};
+
+function EntryButtons({ links, salesId, className }: EntryButtonsProps) {
+  const query = `&salesId=${encodeURIComponent(salesId)}`;
+  return (
+    <div className={`flex items-center justify-end gap-2 ${className ?? ''}`}>
+      <Link href={`${links.target}${query}`} className={buttonClassName({ variant: 'secondary', className: 'min-w-11 px-3' })} aria-label="Nhập chỉ tiêu tháng này" title="Nhập chỉ tiêu tháng này">
+        <Target aria-hidden="true" className="size-4" />
+        <span className="sr-only">Nhập chỉ tiêu tháng này</span>
+      </Link>
+      <Link href={`${links.travelExpense}${query}`} className={buttonClassName({ variant: 'secondary', className: 'min-w-11 px-3' })} aria-label="Nhập công tác phí tháng trước" title="Nhập công tác phí tháng trước">
+        <ReceiptText aria-hidden="true" className="size-4" />
+        <span className="sr-only">Nhập công tác phí tháng trước</span>
+      </Link>
+      <Link href={`${links.salary}${query}`} className={buttonClassName({ variant: 'secondary', className: 'min-w-11 px-3' })} aria-label="Nhập lương tháng trước" title="Nhập lương tháng trước">
+        <Banknote aria-hidden="true" className="size-4" />
+        <span className="sr-only">Nhập lương tháng trước</span>
+      </Link>
+    </div>
   );
 }

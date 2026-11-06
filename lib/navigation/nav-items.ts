@@ -240,7 +240,7 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
   },
   {
     title: 'Kinh doanh',
-    keys: ['ADMIN_SALES', 'ADMIN_TARGETS'],
+    keys: ['ADMIN_SALES'],
   },
   {
     title: 'Hệ thống',
@@ -261,7 +261,6 @@ export const ADMIN_SIDEBAR_SECTIONS: readonly NavSection[] = [
     title: 'Vận hành',
     keys: [
       'ADMIN_TRAVEL_EXPENSES',
-      'ADMIN_SALARIES',
       'ADMIN_MONTHLY_SUMMARIES',
       'ADMIN_SALEWORK',
       'ADMIN_SALEWORK_CUSTOMERS',

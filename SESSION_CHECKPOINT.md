@@ -1,5 +1,13 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-06 — Nhóm thao tác nhập theo Nhân viên
+
+`/admin/sales` now exposes three buttons: targets for the current month plus travel expenses and salaries for the preceding month. The two historical entry pages redirect to the preceding month and their Server Actions enforce the same rule. Verification: targeted unit 6/6 and `npm.cmd run typecheck`. Next Exact Step: open `/admin/sales` as Admin and confirm the buttons show November targets plus October salary/travel expense.
+
+## 2026-11-06 — Money-input normalization
+
+Added `normalizeCurrencyInput` to Travel expenses, Salaries, and Targets. Reload `/admin/travel-expenses/entries?month=2026-10`, enter `394.00001212`, then blur the field to verify `39.400.001.212`.
+
 ## 2026-11-05 — Sửa tổng quan local báo nhầm không có Sales
 
 Local `/admin` từng hiện “Chưa có Sales nào đang hoạt động” khi RPC Supabase lỗi, vì `getAdminTodayOverview` đổi mọi lỗi thành `EMPTY_OVERVIEW`. Đã đổi service để lỗi RPC được ghi server-side và chuyển sang `(admin)/error.tsx` có nút thử lại; trạng thái rỗng chỉ còn khi RPC thành công nhưng thật sự không trả Sales. Project URL local trùng Supabase production; không có thao tác xoá dữ liệu. Typecheck/lint cần chạy lại sau thay đổi.

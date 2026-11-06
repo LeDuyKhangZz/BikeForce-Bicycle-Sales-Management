@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { SALARY_MESSAGES } from '@/lib/admin/messages';
 import { AUTH_MESSAGES } from '@/lib/auth/messages';
+import { getVietnamCurrentMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { salaryFieldName, salaryInputSchema, salaryMonthSchema } from '@/lib/validation/salaries';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
@@ -21,6 +22,10 @@ export async function saveSalariesAction(
   const monthResult = salaryMonthSchema.safeParse(formData.get('month'));
   if (!monthResult.success) {
     return { ok: false, code: 'VALIDATION', message: SALARY_MESSAGES.INVALID_MONTH };
+  }
+  const previousMonth = shiftVietnamMonth(getVietnamCurrentMonth(), -1);
+  if (monthResult.data !== previousMonth) {
+    return { ok: false, code: 'VALIDATION', message: SALARY_MESSAGES.ONLY_PREVIOUS_MONTH };
   }
 
   const supabase = await createClient();

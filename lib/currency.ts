@@ -156,3 +156,23 @@ export function parseCurrencyInput(raw: string): number | null {
 
   return value;
 }
+
+/**
+ * Chuẩn hoá giá trị người dùng gõ trong ô tiền khi ô mất focus.
+ *
+ * Dấu chấm trong ô nhập chỉ là dấu phân cách hàng nghìn, không phải phần thập
+ * phân (VND luôn là số nguyên). Vì vậy một dãy chữ số có các dấu chấm đặt chưa
+ * đúng vị trí, ví dụ khi dán `394.00001212`, vẫn có thể được hiển thị lại thành
+ * `39.400.001.212`. Chuỗi có ký tự khác vẫn trả `null` để UI giữ nguyên và
+ * Server Action/Zod báo lỗi thay vì âm thầm sửa dữ liệu không phải là tiền.
+ */
+export function normalizeCurrencyInput(raw: string): string | null {
+  const parsed = parseCurrencyInput(raw);
+  if (parsed !== null) return formatThousands(parsed);
+
+  const digits = raw.replace(/\./g, '');
+  if (!PLAIN_INTEGER.test(digits)) return null;
+
+  const value = Number(digits);
+  return Number.isSafeInteger(value) ? formatThousands(value) : null;
+}

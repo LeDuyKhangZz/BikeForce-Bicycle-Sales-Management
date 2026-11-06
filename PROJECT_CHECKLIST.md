@@ -1,5 +1,13 @@
 # BikeForce Project Checklist
 
+## 2026-11-06 — Nhóm thao tác nhập theo Nhân viên
+
+- [x] Added the three entry buttons on `/admin/sales`; salary and travel expenses accept only the preceding month.
+
+## 2026-11-06 — Money-input normalization
+
+- [x] Normalize VND thousands separators in Travel expenses, Salaries, and Targets on blur; unit 60/60, typecheck, and lint passed.
+
 ## 05/11/2026 — Hiển thị danh bạ AMIS CRM trong Admin
 
 - [x] Thêm `/admin/customers` đọc bảng canonical `customers` bằng session Admin/RLS.

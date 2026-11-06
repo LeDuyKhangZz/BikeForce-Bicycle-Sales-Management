@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatCurrencyVND, formatThousands, parseCurrencyInput } from '@/lib/currency';
+import { formatCurrencyVND, formatThousands, normalizeCurrencyInput, parseCurrencyInput } from '@/lib/currency';
 import { monthlyTargetFieldName, type MonthlyTargetKind } from '@/lib/validation/monthly-targets';
 
 import { saveMonthlyTargetsAction, type SaveMonthlyTargetsState } from './actions';
@@ -105,10 +105,10 @@ export function MonthlyTargetsForm({
   }
 
   function formatCell(salesId: string, kind: MonthlyTargetKind, raw: string) {
-    const amount = parseCurrencyInput(raw);
+    const formatted = normalizeCurrencyInput(raw);
     // Chuỗi rác giữ NGUYÊN để người dùng nhìn thấy đúng thứ mình đã gõ cạnh
     // thông báo lỗi — cùng cách làm với `CurrencyField`.
-    if (amount !== null) setCell(salesId, kind, formatThousands(amount));
+    if (formatted !== null) setCell(salesId, kind, formatted);
   }
 
   function copyPreviousMonth() {

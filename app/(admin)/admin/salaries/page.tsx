@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Banknote, ChevronLeft, ChevronRight, UsersRound } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { LinkPendingIcon } from '@/components/ui/link-pending-icon';
 import { MonthlySalariesForm } from '@/features/admin-salaries/monthly-salaries-form';
 import { getSalaryPageData } from '@/features/admin-salaries/queries';
 import { requireRole } from '@/features/auth/queries';
-import { formatVietnamMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
+import { formatVietnamMonth, getVietnamCurrentMonth, resolveVietnamMonth, shiftVietnamMonth } from '@/lib/date';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 import { periodMonthOf } from '@/lib/validation/monthly-targets';
@@ -21,6 +22,8 @@ type Props = { searchParams: Promise<{ month?: string }> };
 export default async function AdminSalariesPage({ searchParams }: Props) {
   await requireRole('ADMIN');
   const { month } = resolveVietnamMonth((await searchParams).month);
+  const entryMonth = shiftVietnamMonth(getVietnamCurrentMonth(), -1);
+  if (entryMonth === null || month !== entryMonth) redirect(`${PAGE_PATH}?month=${entryMonth ?? month}`);
   const previousMonth = shiftVietnamMonth(month, -1);
   const nextMonth = shiftVietnamMonth(month, 1);
   const supabase = await createClient();

@@ -12,6 +12,7 @@ import {
   formatCurrencySGDFromCents,
   formatCurrencyVND,
   formatThousands,
+  normalizeCurrencyInput,
   parseCurrencyInput,
 } from './currency';
 
@@ -134,6 +135,17 @@ describe('parseCurrencyInput (BR-006, BR-010)', () => {
     for (const value of [0, 1000, 125000000, 99999999999, 100000000000]) {
       expect(parseCurrencyInput(formatCurrencyVND(value))).toBe(value);
     }
+  });
+});
+
+describe('normalizeCurrencyInput', () => {
+  it('đặt lại dấu phân cách hàng nghìn khi người dùng dán dấu chấm sai vị trí', () => {
+    expect(normalizeCurrencyInput('394.00001212')).toBe('39.400.001.212');
+  });
+
+  it('giữ nguyên nguyên tắc an toàn với ký tự không phải là số hoặc dấu chấm', () => {
+    expect(normalizeCurrencyInput('394.000a1212')).toBeNull();
+    expect(normalizeCurrencyInput('99999999999999999999')).toBeNull();
   });
 });
 

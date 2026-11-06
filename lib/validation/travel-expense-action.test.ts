@@ -16,7 +16,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 function form() {
   const data = new FormData();
-  data.set('month', '2026-08');
+  data.set('month', '2026-10');
   data.set('amount__salework-accounting-sales', '15.000.000');
   data.set('amount__amis-kim-huong', '16.000.000');
   data.set('amount__amis-dang-khoa', '17.000.000');
@@ -31,7 +31,7 @@ describe('nhập công tác phí nhân viên báo cáo tháng', () => {
   it('lưu đủ ba khóa đúng kỳ bằng một RPC; không nhận người nhận giả từ payload', async () => {
     const data = form(); data.set('amount__forged-id', '999999');
     expect(await saveTravelExpensesAction(null, data)).toMatchObject({ ok: true });
-    expect(saveTravelExpenseEntries).toHaveBeenCalledExactlyOnceWith(expect.anything(), '2026-08-01', [
+    expect(saveTravelExpenseEntries).toHaveBeenCalledExactlyOnceWith(expect.anything(), '2026-10-01', [
       { sales_id: 'salework-accounting-sales', amount: 15000000 },
       { sales_id: 'amis-kim-huong', amount: 16000000 },
       { sales_id: 'amis-dang-khoa', amount: 17000000 },

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, UserPlus, Users } from 'lucide-react';
+import { Banknote, ChevronLeft, ChevronRight, ReceiptText, Target, UserPlus, Users } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -55,6 +55,7 @@ export default async function AdminSalesPage({ searchParams }: Props) {
   const previousMonth = shiftVietnamMonth(month, -1);
   const nextMonth = shiftVietnamMonth(month, 1);
   const canGoNext = nextMonth !== null && nextMonth <= currentMonth;
+  const previousEntryMonth = shiftVietnamMonth(currentMonth, -1);
 
   return (
     <div className="flex flex-col gap-4">
@@ -70,6 +71,24 @@ export default async function AdminSalesPage({ searchParams }: Props) {
             và người dùng bác thẳng ngày 2026-08-18: chỉ tiêu là **module riêng**,
             có mục điều hướng riêng (DEC-072), không phải một nút phụ của trang
             nhân viên. */}
+        <div className="hidden w-full flex-wrap gap-2 lg:w-auto">
+          <Link href={`/admin/targets?month=${currentMonth}`} className={buttonClassName({ variant: 'secondary' })}>
+            <Target aria-hidden="true" className="size-4" />
+            Nhập chỉ tiêu {formatVietnamMonth(currentMonth)}
+          </Link>
+          {previousEntryMonth !== null && (
+            <>
+              <Link href={`/admin/travel-expenses/entries?month=${previousEntryMonth}`} className={buttonClassName({ variant: 'secondary' })}>
+                <ReceiptText aria-hidden="true" className="size-4" />
+                Nhập công tác phí {formatVietnamMonth(previousEntryMonth)}
+              </Link>
+              <Link href={`/admin/salaries?month=${previousEntryMonth}`} className={buttonClassName({ variant: 'secondary' })}>
+                <Banknote aria-hidden="true" className="size-4" />
+                Nhập lương {formatVietnamMonth(previousEntryMonth)}
+              </Link>
+            </>
+          )}
+        </div>
         <Link href="/admin/sales/new" className={buttonClassName()}>
           <UserPlus aria-hidden="true" className="size-4" />
           Tạo tài khoản
@@ -108,7 +127,14 @@ export default async function AdminSalesPage({ searchParams }: Props) {
           </Link>
         </Card>
       ) : (
-        <SalesPerformanceTable rows={rows} />
+        <SalesPerformanceTable
+          rows={rows}
+          entryLinks={{
+            target: `/admin/targets?month=${currentMonth}`,
+            travelExpense: `/admin/travel-expenses/entries?month=${previousEntryMonth ?? currentMonth}`,
+            salary: `/admin/salaries?month=${previousEntryMonth ?? currentMonth}`,
+          }}
+        />
       )}
     </div>
   );

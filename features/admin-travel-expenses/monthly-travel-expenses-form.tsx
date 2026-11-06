@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatCurrencyVND, formatThousands, parseCurrencyInput } from '@/lib/currency';
+import { formatCurrencyVND, formatThousands, normalizeCurrencyInput, parseCurrencyInput } from '@/lib/currency';
 import { travelExpenseFieldName } from '@/lib/validation/travel-expenses';
 
 import { saveTravelExpensesAction, type SaveTravelExpensesState } from './actions';
@@ -63,8 +63,8 @@ export function MonthlyTravelExpensesForm({
   }
 
   function formatAmount(salesId: string, value: string) {
-    const amount = parseCurrencyInput(value);
-    if (amount !== null) setAmount(salesId, formatThousands(amount));
+    const formatted = normalizeCurrencyInput(value);
+    if (formatted !== null) setAmount(salesId, formatted);
   }
 
   return (
