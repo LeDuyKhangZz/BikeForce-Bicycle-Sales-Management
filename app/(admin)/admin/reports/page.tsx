@@ -3,22 +3,35 @@ import Link from 'next/link';
 import { Download, SearchX } from 'lucide-react';
 
 import { buttonClassName } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardTitle } from '@/components/ui/card';
 import { LinkSpinner } from '@/components/ui/link-spinner';
-import { AdminReportTable } from '@/features/admin-reports/admin-report-table';
 import { AdminPaginationNav } from '@/features/admin-reports/admin-pagination-nav';
+import { AdminReportTable } from '@/features/admin-reports/admin-report-table';
+import { EmployeeQuickSelect } from '@/features/admin-reports/employee-quick-select';
+import { EmployeeReportFilterControls } from '@/features/admin-reports/employee-report-filter-controls';
+import { EmployeeReportOverview } from '@/features/admin-reports/employee-report-overview';
 import { ReportFilterBar } from '@/features/admin-reports/report-filter-bar';
 import { requireRole } from '@/features/auth/queries';
+import { getVietnamMonthRange } from '@/lib/date';
 import {
+  adminReportsEmployeePath,
+  adminReportsPathWithoutFilter,
+  buildAdminReportMonthNavigation,
   buildAdminReportQuery,
   hasActiveFilters,
   parseAdminReportFilters,
+  resolveAdminReportAnchorMonth,
   type AdminReportSearchParams,
 } from '@/lib/reports/admin-filters';
+import { buildEmployeeMonthOverview } from '@/lib/reports/employee-month-overview';
 import { parsePageParam } from '@/lib/reports/pagination';
 import { createClient } from '@/lib/supabase/server';
 import { listSalesOptions } from '@/services/profiles';
-import { CSV_EXPORT_MAX_ROWS, getAdminReports } from '@/services/reports';
+import {
+  CSV_EXPORT_MAX_ROWS,
+  getAdminReports,
+  listEmployeeMonthReportStatuses,
+} from '@/services/reports';
 
 export const metadata: Metadata = {
   title: 'Báo cáo toàn đội · BikeForce',
@@ -35,8 +48,9 @@ export const metadata: Metadata = {
  *  `getAdminReports()`, và truy vấn chỉ lấy **đúng 20 dòng** của trang đang
  *  xem. Không có bước nào tải cả bảng rồi lọc bằng JavaScript (FR-026, NFR-002).
  *
- *  Ba lời gọi độc lập chạy song song bằng `Promise.all` — dropdown Sales không
- *  phụ thuộc kết quả lọc, chờ nối tiếp là cộng dồn thời gian vô ích.
+ *  Khi Admin bấm vào một nhân viên (`filters.salesId !== null`), màn hình hiển
+ *  thị thêm khối "Báo cáo nhân viên" gồm tổng quan tháng (biểu đồ tròn Đủ báo
+ *  cáo / Đã cam kết / Chưa báo cáo) và lưới lịch tháng T2..CN.
  */
 
 type Props = {
@@ -49,12 +63,22 @@ export default async function AdminReportsPage({ searchParams }: Props) {
   const params = await searchParams;
   const filters = parseAdminReportFilters(params);
   const page = parsePageParam(params.page);
+  const anchorMonth = resolveAdminReportAnchorMonth(filters);
+  const anchorMonthRange = getVietnamMonthRange(anchorMonth);
 
   const supabase = await createClient();
-  const [{ rows, pageInfo }, salesOptions] = await Promise.all([
+  const [{ rows, pageInfo }, salesOptions, employeeMonthStatuses] = await Promise.all([
     getAdminReports(supabase, filters, page),
     listSalesOptions(supabase),
+    filters.salesId !== null && anchorMonthRange !== null
+      ? listEmployeeMonthReportStatuses(supabase, filters.salesId, anchorMonthRange)
+      : Promise.resolve([]),
   ]);
+
+  const selectedSales =
+    filters.salesId !== null
+      ? (salesOptions.find((option) => option.id === filters.salesId) ?? null)
+      : null;
 
   // Link CSV mang ĐÚNG bộ lọc đang hiển thị (FR-034: "đúng tập dữ liệu đang
   // filter, không phải toàn bảng"). Cùng một `buildAdminReportQuery` với thanh
@@ -64,6 +88,67 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     exportQuery === ''
       ? '/api/admin/reports/export'
       : `/api/admin/reports/export?${exportQuery}`;
+
+  if (filters.salesId !== null) {
+    const monthNavigation = buildAdminReportMonthNavigation(filters);
+    const overview = buildEmployeeMonthOverview(anchorMonth, employeeMonthStatuses);
+    const employeeName =
+      selectedSales?.full_name ?? rows[0]?.sales.full_name ?? 'Nhân viên đã chọn';
+    const filterControls = (
+      <EmployeeReportFilterControls
+        salesId={filters.salesId}
+        month={anchorMonth}
+        isCurrentMonth={monthNavigation.isCurrentMonth}
+        status={filters.status}
+        salesOptions={salesOptions}
+      />
+    );
+
+    return (
+      <div className="flex flex-col gap-4">
+        <EmployeeReportOverview
+          employeeName={employeeName}
+          overview={overview}
+          monthNavigation={monthNavigation}
+          allEmployeesHref={adminReportsPathWithoutFilter(filters, 'SALES')}
+        />
+
+        <EmployeeQuickSelect filters={filters} salesOptions={salesOptions} />
+
+        {rows.length === 0 ? (
+          <Card className="flex flex-col gap-4 md:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="text-lg font-bold">Chi tiết báo cáo</CardTitle>
+              {filterControls}
+            </div>
+            <EmptyState hasFilters={hasActiveFilters(filters)} />
+          </Card>
+        ) : (
+          <>
+            <AdminReportTable
+              reports={rows}
+              buildHref={(id) => `/admin/reports/${id}`}
+              buildEmployeeHref={(salesId) => adminReportsEmployeePath(filters, salesId)}
+              headerControls={filterControls}
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Link
+                href={exportHref}
+                prefetch={false}
+                className={buttonClassName({ variant: 'secondary' })}
+              >
+                <Download aria-hidden="true" className="size-4" />
+                Tải CSV theo bộ lọc
+              </Link>
+            </div>
+
+            <AdminPaginationNav filters={filters} pageInfo={pageInfo} />
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -77,6 +162,8 @@ export default async function AdminReportsPage({ searchParams }: Props) {
       </div>
 
       <ReportFilterBar filters={filters} salesOptions={salesOptions} />
+
+      <EmployeeQuickSelect filters={filters} salesOptions={salesOptions} />
 
       {rows.length === 0 ? (
         <EmptyState hasFilters={hasActiveFilters(filters)} />
@@ -105,7 +192,11 @@ export default async function AdminReportsPage({ searchParams }: Props) {
             )}
           </div>
 
-          <AdminReportTable reports={rows} buildHref={(id) => `/admin/reports/${id}`} />
+          <AdminReportTable
+            reports={rows}
+            buildHref={(id) => `/admin/reports/${id}`}
+            buildEmployeeHref={(salesId) => adminReportsEmployeePath(filters, salesId)}
+          />
 
           <AdminPaginationNav filters={filters} pageInfo={pageInfo} />
         </>

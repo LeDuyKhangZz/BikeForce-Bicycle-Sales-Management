@@ -252,6 +252,43 @@ function removeTimeParams(search: URLSearchParams): void {
   search.delete(ADMIN_REPORT_PARAMS.PAGE);
 }
 
+/** Tháng neo `'YYYY-MM'` đang xem, dùng cho điều hướng tháng và lịch nhân viên. */
+export function resolveAdminReportAnchorMonth(filters: AdminReportFilters): string {
+  const currentMonth = getVietnamCurrentMonth();
+
+  if (filters.dateMode === 'MONTH' || filters.dateMode === 'CURRENT_MONTH') {
+    return filters.raw.month ?? currentMonth;
+  }
+  if (filters.dateMode === 'DAY' && filters.raw.date !== null) {
+    return filters.raw.date.slice(0, 7);
+  }
+  if (filters.dateMode === 'RANGE' && filters.raw.to !== null) {
+    return filters.raw.to.slice(0, 7);
+  }
+
+  return currentMonth;
+}
+
+/** Đường dẫn mở bảng tổng quan + lịch tháng của một nhân viên cụ thể. */
+export function adminReportsEmployeePath(
+  filters: AdminReportFilters,
+  salesId: string,
+): string {
+  const normalizedSalesId = normalizeSalesId(salesId);
+  if (normalizedSalesId === null) return ADMIN_REPORTS_PATH;
+
+  const anchorMonth = resolveAdminReportAnchorMonth(filters);
+  const currentMonth = getVietnamCurrentMonth();
+  const search = new URLSearchParams();
+
+  if (anchorMonth !== currentMonth || filters.dateMode === 'MONTH') {
+    search.set(ADMIN_REPORT_PARAMS.MONTH, anchorMonth);
+  }
+  search.set(ADMIN_REPORT_PARAMS.SALES, normalizedSalesId);
+
+  return `${ADMIN_REPORTS_PATH}?${search.toString()}`;
+}
+
 /** Giữ mọi bộ lọc khác và chuyển thẳng sang một tháng cụ thể. */
 export function adminReportsMonthPath(filters: AdminReportFilters, month: string): string {
   const range = getVietnamMonthRange(month);
@@ -343,10 +380,7 @@ export function buildAdminReportMonthNavigation(
   filters: AdminReportFilters,
 ): AdminReportMonthNavigation {
   const currentMonth = getVietnamCurrentMonth();
-  const anchorMonth =
-    filters.dateMode === 'MONTH' || filters.dateMode === 'CURRENT_MONTH'
-      ? (filters.raw.month ?? currentMonth)
-      : currentMonth;
+  const anchorMonth = resolveAdminReportAnchorMonth(filters);
   const previousMonth = shiftVietnamMonth(anchorMonth, -1) ?? currentMonth;
   const nextMonth = shiftVietnamMonth(anchorMonth, 1);
 

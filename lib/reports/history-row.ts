@@ -1,19 +1,19 @@
 /**
- * View model của MỘT dòng trong `/sales/history` — FR-021, UC-09.
+ * View model của MỘT dòng trong `/sales/history` và `/admin/reports` — FR-021, UC-09, UC-13.
  *
  * ─────────────────────────────────────────────────────────────────────────
  *  VÌ SAO LÀ HÀM THUẦN Ở `lib/`
  * ─────────────────────────────────────────────────────────────────────────
- *  Mỗi dòng danh sách phải trả lời ba câu: ngày nào, trạng thái gì, và **ngày
- *  đó có đạt KPI không** (BR-024 — cả 4 chỉ tiêu ≥ 100%). Câu thứ ba là một
- *  phép tính nghiệp vụ thật, chạy 20 lần mỗi trang. Viết nó trong `.tsx` là vi
+ *  Mỗi dòng danh sách phải trả lời: ngày nào, trạng thái gì, giờ gửi cam kết
+ *  đầu ngày / thực đạt cuối ngày, ghi chú tóm tắt, và **ngày đó có đạt KPI
+ *  không** (BR-024 — cả 4 chỉ tiêu ≥ 100%). Viết phép tính trong `.tsx` là vi
  *  phạm AGENTS.md §1.3 và cũng làm nó không kiểm được nếu không dựng DOM.
  *
  *  Ở đây KHÔNG có công thức nào: mọi con số đi qua `calculateAchievement()` và
- *  `isKpiAchievedDay()` của `lib/kpi.ts`, mọi chuỗi đi qua `formatMetricValue()`
- *  và `formatVietnamDate()`. File này chỉ **gộp** chúng lại đúng một lần.
+ *  `isKpiAchievedDay()` của `lib/kpi.ts`, mọi chuỗi đi qua `formatVietnamDate()`
+ *  và `formatVietnamTime()`. File này chỉ **gộp** chúng lại đúng một lần.
  */
-import { formatVietnamDate } from '@/lib/date';
+import { formatVietnamDate, formatVietnamTime, INVALID_DATE_DISPLAY } from '@/lib/date';
 import { calculateAchievement, isKpiAchievedDay, type AchievementResult } from '@/lib/kpi';
 import { KPI_METRIC_ROWS, type KpiMetricSource } from '@/lib/reports/metric-rows';
 import {
@@ -31,6 +31,8 @@ export type HistoryRowSource = KpiMetricSource & {
   id: string;
   report_date: string;
   status: ReportStatus;
+  morning_submitted_at?: string | null;
+  evening_submitted_at?: string | null;
 };
 
 export type HistoryRow = {
@@ -43,6 +45,18 @@ export type HistoryRow = {
   statusLabel: string;
   statusTone: ReportStatusTone;
   isCompleted: boolean;
+  /** `'07:55'` hoặc `null` khi không có mốc thời gian hợp lệ. */
+  morningSubmittedTime: string | null;
+  /** `'17:36'` hoặc `null` khi chưa hoàn tất cuối ngày. */
+  eveningSubmittedTime: string | null;
+  /** `'Đã gửi (07:55)'` · `'Đã gửi'` · `'—'`. */
+  morningSubmittedLabel: string;
+  /** `'Đã gửi (17:36)'` · `'Đã gửi'` · `'—'`. */
+  eveningSubmittedLabel: string;
+  hasMorningSubmission: boolean;
+  hasEveningSubmission: boolean;
+  /** Ghi chú tóm tắt trạng thái nộp trong ngày cho bảng chi tiết của Admin. */
+  summaryNote: string;
   /**
    * BR-024 — `null` khi báo cáo **chưa** hoàn tất. Cố ý không phải `false`:
    * "chưa kết luận được" khác hẳn "đã kết luận là không đạt", và một badge đỏ
@@ -67,6 +81,8 @@ export function toHistoryRow(source: HistoryRowSource): HistoryRow {
   // Dựa vào `status` chứ không dựa vào việc "có kết quả PENDING nào không":
   // `status` là sự thật đã persist (BR-008), còn suy từ dữ liệu là đoán.
   const isCompleted = source.status === 'COMPLETED';
+  const morningSubmittedTime = formatVietnamTime(source.morning_submitted_at);
+  const eveningSubmittedTime = isCompleted ? formatVietnamTime(source.evening_submitted_at) : null;
 
   return {
     id: source.id,
@@ -76,6 +92,18 @@ export function toHistoryRow(source: HistoryRowSource): HistoryRow {
     statusLabel: REPORT_STATUS_LABEL[source.status],
     statusTone: REPORT_STATUS_TONE[source.status],
     isCompleted,
+    morningSubmittedTime,
+    eveningSubmittedTime,
+    morningSubmittedLabel:
+      morningSubmittedTime !== null ? `Đã gửi (${morningSubmittedTime})` : 'Đã gửi',
+    eveningSubmittedLabel: isCompleted
+      ? eveningSubmittedTime !== null
+        ? `Đã gửi (${eveningSubmittedTime})`
+        : 'Đã gửi'
+      : INVALID_DATE_DISPLAY,
+    hasMorningSubmission: true,
+    hasEveningSubmission: isCompleted,
+    summaryNote: isCompleted ? 'Đủ báo cáo trong ngày' : 'Đã có báo cáo đầu ngày',
     kpiAchieved: isCompleted ? isKpiAchievedDay(results) : null,
     achievedCount: isCompleted
       ? results.filter((result) => result.status === 'EXCEEDED').length

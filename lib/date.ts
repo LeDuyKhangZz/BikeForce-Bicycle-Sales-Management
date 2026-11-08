@@ -61,6 +61,29 @@ export function getVietnamDateFromTimestamp(isoTimestamp: string): string | null
 }
 
 /**
+ * ISO timestamp → `'07:55'` (24h) theo giờ TP.HCM, hoặc `null` nếu không hợp lệ.
+ *
+ * Phục vụ cột "Báo cáo đầu ngày" / "Báo cáo cuối ngày" (`Đã gửi (07:55)`) trên
+ * bảng chi tiết báo cáo của Admin.
+ */
+export function formatVietnamTime(isoTimestamp: string | null | undefined): string | null {
+  if (typeof isoTimestamp !== 'string') return null;
+
+  const parsed = Date.parse(isoTimestamp);
+  if (Number.isNaN(parsed)) return null;
+
+  const parts = new Map(
+    vietnamDateTimeFormatter.formatToParts(new Date(parsed)).map((p) => [p.type, p.value]),
+  );
+
+  const hour = parts.get('hour');
+  const minute = parts.get('minute');
+  if (!hour || !minute) return null;
+
+  return `${hour}:${minute}`;
+}
+
+/**
  * Kiểm tra `'YYYY-MM-DD'` là ngày CÓ THẬT trên lịch.
  *
  * Cần thiết vì `new Date('2026-02-30')` KHÔNG ném lỗi — JavaScript cuộn sang

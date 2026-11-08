@@ -572,8 +572,8 @@ async function countMonthRows(
  * ========================================================================= */
 
 /**
- * Tập cột của bảng Admin. Có thêm tên Sales (embedded resource) so với danh
- * sách của Sales, vì cột "Nhân viên" là thứ đầu tiên Admin nhìn.
+ * Tập cột của bảng Admin. Có thêm tên Sales (embedded resource) và mốc giờ gửi
+ * đầu/cuối ngày so với danh sách của Sales.
  *
  * `sales:profiles!inner(...)` — `!inner` là BẮT BUỘC ở đây, không phải tuỳ chọn:
  * nó biến quan hệ thành INNER JOIN, và chỉ khi đó PostgREST mới cho phép **lọc**
@@ -585,6 +585,8 @@ const ADMIN_REPORT_COLUMNS = [
   'sales_id',
   'report_date',
   'status',
+  'morning_submitted_at',
+  'evening_submitted_at',
   'target_visit_points',
   'target_sales_amount',
   'target_revenue',
@@ -598,6 +600,8 @@ const ADMIN_REPORT_COLUMNS = [
 
 export type AdminReportListItem = ReportListItem & {
   sales_id: string;
+  morning_submitted_at: string;
+  evening_submitted_at: string | null;
   sales: Pick<Database['public']['Tables']['profiles']['Row'], 'full_name' | 'employee_code'>;
 };
 
@@ -605,6 +609,43 @@ export type AdminReportListPage = {
   rows: AdminReportListItem[];
   pageInfo: PageInfo;
 };
+
+const EMPLOYEE_MONTH_STATUS_COLUMNS = ['id', 'report_date', 'status'].join(', ');
+
+export type EmployeeMonthReportStatus = Pick<
+  DailyReportRow,
+  'id' | 'report_date' | 'status'
+>;
+
+/**
+ * Các ngày đã có báo cáo của một nhân viên trong một tháng — phục vụ khối
+ * "Tổng quan tháng" + lưới lịch tháng trên `/admin/reports`.
+ *
+ * `uq_daily_reports_sales_date` giới hạn tối đa 31 dòng cho một tháng của một
+ * nhân viên; `.range(0, 30)` đặt trần tường minh theo AGENTS.md §5.
+ */
+export async function listEmployeeMonthReportStatuses(
+  supabase: SupabaseClient<Database>,
+  salesId: string,
+  range: { from: string; to: string },
+): Promise<EmployeeMonthReportStatus[]> {
+  const { data, error } = await supabase
+    .from('daily_reports')
+    .select(EMPLOYEE_MONTH_STATUS_COLUMNS)
+    .eq('sales_id', salesId)
+    .gte('report_date', range.from)
+    .lte('report_date', range.to)
+    .order('report_date', { ascending: true })
+    .range(0, 30)
+    .returns<EmployeeMonthReportStatus[]>();
+
+  if (error) {
+    console.error('[listEmployeeMonthReportStatuses]', error.code, error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
 
 /** Bộ lọc đã CHUẨN HOÁ — dựng bởi `lib/reports/admin-filters.ts`, không phải chuỗi URL thô. */
 export type AdminReportQuery = {

@@ -12,6 +12,7 @@ import {
   formatVietnamMonth,
   formatVietnamDateTime,
   formatVietnamShortDate,
+  formatVietnamTime,
   getVietnamCurrentMonth,
   getVietnamDateFromTimestamp,
   getVietnamMonthRange,
@@ -322,6 +323,20 @@ describe('getVietnamDateFromTimestamp — chặn snapshot SaleWork khác ngày',
   it('trả null cho timestamp không hợp lệ', () => {
     expect(getVietnamDateFromTimestamp('')).toBeNull();
     expect(getVietnamDateFromTimestamp('không-phải-ngày')).toBeNull();
+  });
+});
+
+describe('formatVietnamTime — giờ nộp báo cáo đầu/cuối ngày theo TP.HCM', () => {
+  it('quy đổi UTC sang HH:mm giờ Việt Nam', () => {
+    expect(formatVietnamTime('2026-10-31T00:55:00Z')).toBe('07:55');
+    expect(formatVietnamTime('2026-10-27T10:36:00Z')).toBe('17:36');
+  });
+
+  it('trả null cho đầu vào rỗng hoặc rác', () => {
+    expect(formatVietnamTime(null)).toBeNull();
+    expect(formatVietnamTime(undefined)).toBeNull();
+    expect(formatVietnamTime('')).toBeNull();
+    expect(formatVietnamTime('không-hợp-lệ')).toBeNull();
   });
 });
 

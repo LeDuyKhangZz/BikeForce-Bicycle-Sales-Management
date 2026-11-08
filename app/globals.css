@@ -81,6 +81,8 @@
   --color-status-pending-fg: #334155; /* 9.45:1 */
   --color-status-info-bg: #e0f0fb; /* xanh logo rất nhạt */
   --color-status-info-fg: #0b4a76; /* 7.99:1 · AAA */
+  --color-surface-mint: #f0fdf4; /* nền thẻ tổng quan tháng nhân viên — chữ foreground 17.60:1 */
+  --color-surface-mint-border: #bbf7d0;
 
   /* --- Bảng thi đua Hạt Dẻ ---------------------------------------------- */
   --color-hatde-green-deep: #07552f;

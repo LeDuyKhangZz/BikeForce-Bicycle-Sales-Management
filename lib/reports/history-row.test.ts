@@ -42,6 +42,8 @@ describe('toHistoryRow — trạng thái MORNING_SUBMITTED', () => {
     expect(row.statusLabel).toBe('Đã cam kết');
     expect(row.statusTone).toBe('info');
     expect(row.isCompleted).toBe(false);
+    expect(row.summaryNote).toBe('Đã có báo cáo đầu ngày');
+    expect(row.eveningSubmittedLabel).toBe('—');
   });
 
   it('kpiAchieved là null — "chưa kết luận được", KHÔNG phải false', () => {
@@ -67,6 +69,8 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
     const row = toHistoryRow(
       makeSource({
         status: 'COMPLETED',
+        morning_submitted_at: '2026-10-27T00:48:00Z',
+        evening_submitted_at: '2026-10-27T10:36:00Z',
         actual_visit_points: 5,
         actual_sales_amount: 12,
         actual_revenue: 100_000_000,
@@ -79,6 +83,9 @@ describe('toHistoryRow — trạng thái COMPLETED', () => {
     expect(row.isCompleted).toBe(true);
     expect(row.statusLabel).toBe('Đã hoàn thành');
     expect(row.statusTone).toBe('success');
+    expect(row.morningSubmittedLabel).toBe('Đã gửi (07:48)');
+    expect(row.eveningSubmittedLabel).toBe('Đã gửi (17:36)');
+    expect(row.summaryNote).toBe('Đủ báo cáo trong ngày');
   });
 
   it('thiếu ĐÚNG MỘT chỉ tiêu → kpiAchieved false, 3/4', () => {
