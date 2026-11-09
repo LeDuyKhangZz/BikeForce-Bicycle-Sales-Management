@@ -1,6 +1,7 @@
 const CRM_CALL_EMPLOYEE_CODE_BY_ACCOUNT: Readonly<Record<string, string>> = {
   'Abraham Kế Toán Bánhàng': 'CT-QL-003',
   'Hải TeleSale': 'VP-TLS-004',
+  'Nguyễn Nhật Chỉnh': 'KD-MT4-003',
 };
 
 /** Nối chính xác tài khoản SaleWork với mã nhân viên của AMIS CRM Report 70. */

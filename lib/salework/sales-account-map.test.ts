@@ -26,6 +26,7 @@ describe('getSaleWorkAccountName', () => {
     ['Võ Thanh Nhâm', 'Abraham Nhâm Miền Trung'],
     ['Võ Trí Tính', 'Abraham Bà Rịa - Vũng Tàu'],
     ['Dương Văn Thịnh', 'Abraham Thịnh Miền Trung'],
+    ['Nguyễn Nhật Chỉnh', 'Nguyễn Nhật Chỉnh'],
   ])('ánh xạ %s sang %s', (salesName, accountName) => {
     expect(getSaleWorkAccountName(salesName)).toBe(accountName);
   });
@@ -39,20 +40,22 @@ describe('getSaleWorkAccountName', () => {
   });
 
   it('đưa tài khoản của Nguyễn Minh Khải và Võ Thanh Nhâm vào tập đồng bộ ngày', () => {
-    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(8);
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toHaveLength(9);
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Khải Hcm');
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhâm Miền Trung');
     expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhân Đồng Nai');
+    expect(SALES_SALEWORK_ACCOUNT_NAMES).toContain('Nguyễn Nhật Chỉnh');
   });
 
-  it('chỉ thêm Dương Văn Thịnh và Nguyễn Trần Đăng Khoa vào tập tháng, không đổi tập ngày', () => {
+  it('đưa Dương Văn Thịnh, Nguyễn Trần Đăng Khoa và Nguyễn Nhật Chỉnh vào tập tháng', () => {
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Abraham Thịnh Miền Trung');
     expect(SALES_SALEWORK_ACCOUNT_NAMES).not.toContain('Tàu - MT');
-    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(10);
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toHaveLength(11);
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Thịnh Miền Trung');
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Tàu - MT');
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhâm Miền Trung');
     expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Abraham Nhân Đồng Nai');
+    expect(MONTHLY_SALEWORK_ACCOUNT_NAMES).toContain('Nguyễn Nhật Chỉnh');
   });
 
   it('gộp Khải MT với tài khoản Abraham Nhân Đồng Nai', () => {
@@ -155,5 +158,10 @@ describe('AMIS_EMPLOYEE_MAP', () => {
 
   it('ghép tài khoản SaleWork của Võ Thanh Nhâm với đúng tên AMIS', () => {
     expect(AMIS_EMPLOYEE_MAP['Abraham Nhâm Miền Trung']).toBe('Võ Thanh Nhâm');
+  });
+
+  it('ghép Nguyễn Nhật Chỉnh với đúng nguồn SaleWork, AMIS và CRM', () => {
+    expect(AMIS_EMPLOYEE_MAP['Nguyễn Nhật Chỉnh']).toBe('Nguyễn Nhật Chỉnh');
+    expect(getCrmCallEmployeeCode('Nguyễn Nhật Chỉnh')).toBe('KD-MT4-003');
   });
 });

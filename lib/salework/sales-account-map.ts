@@ -14,6 +14,8 @@ const SALES_SALEWORK_ACCOUNT_MAP: Readonly<Record<string, string>> = {
   'Võ Thanh Nhâm': 'Abraham Nhâm Miền Trung',
   'Võ Trí Tính': 'Abraham Bà Rịa - Vũng Tàu',
   'Dương Văn Thịnh': 'Abraham Thịnh Miền Trung',
+  // SaleWork dùng đúng tên nhân viên, không có tiền tố Abraham.
+  'Nguyễn Nhật Chỉnh': 'Nguyễn Nhật Chỉnh',
 };
 
 const SALEWORK_DISPLAY_NAME_MAP: Readonly<Record<string, string>> = {
@@ -79,6 +81,7 @@ export const SALES_SALEWORK_ACCOUNT_NAMES: readonly string[] = [
   'Abraham Sang Miền Tây',
   'Abraham Nhâm Miền Trung',
   'Abraham Bà Rịa - Vũng Tàu',
+  'Nguyễn Nhật Chỉnh',
 ];
 
 /** Tập Sales cần snapshot tháng cho màn Tổng kết tháng. */

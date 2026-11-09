@@ -70,6 +70,7 @@ export const AMIS_EMPLOYEE_MAP: Record<string, string> = {
   'Abraham Kế Toán Bánhàng': 'Nguyễn Thị Kim Hương',
   'Hải TeleSale': 'Đặng Thanh Hải',
   'Abraham Nhâm Miền Trung': 'Võ Thanh Nhâm',
+  'Nguyễn Nhật Chỉnh': 'Nguyễn Nhật Chỉnh',
 };
 
 const CRM_CALL_ROW_PREFIX = '__CRM70__:';
