@@ -64,6 +64,15 @@ async function claimNextJob(): Promise<Job | null> {
 }
 
 async function main(): Promise<void> {
+  const dashboardJobCommand = buildLocalTsxCommand(
+    process.cwd(),
+    process.execPath,
+    'scripts/amis-sync/process-dashboard-report26-job.ts',
+  );
+  await run(dashboardJobCommand.command, dashboardJobCommand.args).catch((error: unknown) => {
+    console.error(`Dashboard Report 26: ${error instanceof Error ? error.message : 'loi khong xac dinh'}`);
+  });
+
   const job = await claimNextJob();
   if (job === null) {
     console.log('Không có yêu cầu đồng bộ tháng đang chờ.');
