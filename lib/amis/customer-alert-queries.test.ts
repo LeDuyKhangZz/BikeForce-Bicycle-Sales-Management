@@ -1,12 +1,53 @@
 import { createClient } from '@supabase/supabase-js';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getMisaCustomerAlertCounts } from '@/services/misa-customer-alerts';
 import { getCachedMisaEmployeeCustomers } from '@/services/misa-report119-cache';
 
 vi.mock('server-only', () => ({}));
+afterEach(() => vi.unstubAllEnvs());
 
 describe('truy vấn cảnh báo khách hàng', () => {
+  it('production chưa bật chăm sóc mới vẫn dùng bảng cũ và giữ phiếu đã duyệt', async () => {
+    vi.stubEnv('SALEWORK_CARE_SYNC_ENABLED', 'false');
+    const client = createClient('http://localhost:54321', 'test-anon', { global: {
+      fetch: async (input) => {
+        const url = new URL(String(input));
+        expect(url.pathname).not.toContain('misa_customer_care_snapshot');
+        if (url.pathname.endsWith('customer_care_submissions')) {
+          return Response.json([{ misa_customer_id: 7 }], { headers: { 'content-range': '0-0/1' } });
+        }
+        const condition = url.searchParams.get('or');
+        if (condition?.includes('last_visit_date')) {
+          expect(url.searchParams.get('misa_customer_id')).toBe('not.in.(7)');
+        }
+        return new Response(null, { status: 200, headers: { 'content-range': '*/4' } });
+      },
+    } });
+    expect(await getMisaCustomerAlertCounts(client, '2026-10', 42, '2026-09-01')).toEqual({ purchase: 4, care: 4 });
+  });
+
+  it('danh sách khi chưa bật không truy vấn view hoặc cột mới chưa có trên production', async () => {
+    vi.stubEnv('SALEWORK_CARE_SYNC_ENABLED', 'false');
+    const client = createClient('http://localhost:54321', 'test-anon', { global: {
+      fetch: async (input) => {
+        const url = new URL(String(input));
+        expect(url.pathname).not.toContain('misa_customer_care_snapshot');
+        if (url.pathname.endsWith('misa_report119_employees')) {
+          return Response.json({ misa_employee_id: 42, employee_name: 'Sales A', customer_count: 0 });
+        }
+        if (url.pathname.endsWith('misa_report119_customers')) {
+          expect(url.searchParams.get('select')).toContain('last_care_date:last_visit_date');
+          expect(url.searchParams.get('or')).toContain('last_visit_date.is.null');
+        }
+        return Response.json([], { headers: { 'content-range': '*/0' } });
+      },
+    } });
+    expect(await getCachedMisaEmployeeCustomers(client, {
+      month: '2026-10', employeeId: 42, page: 1, filters: {}, searchQuery: '', alert: 'care', alertCutoff: '2026-09-01',
+    })).toMatchObject({ total: 0, rows: [] });
+  });
+
   it('đếm toàn bộ dữ liệu đúng nhân viên/tháng, không tải các dòng về để đếm', async () => {
     const requests: URL[] = [];
     const client = createClient('http://localhost:54321', 'test-anon', { global: {

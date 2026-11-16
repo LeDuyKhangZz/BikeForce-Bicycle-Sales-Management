@@ -4,6 +4,16 @@ export type CustomerAlert = 'purchase' | 'care';
 export type CustomerAlertCounts = { purchase: number; care: number };
 export const CUSTOMER_ALERT_DAYS = 30;
 
+/** Chỉ đọc schema chăm sóc mới khi môi trường đã được bật sau migration. */
+export function customerCareSnapshotConfig() {
+  const enabled = process.env.SALEWORK_CARE_SYNC_ENABLED === 'true';
+  return {
+    enabled,
+    table: enabled ? 'misa_customer_care_snapshot' : 'misa_report119_customers',
+    dateColumn: enabled ? 'last_care_date' : 'last_visit_date',
+  } as const;
+}
+
 export function parseCustomerAlert(value: string | undefined): CustomerAlert | undefined {
   return value === 'purchase' || value === 'care' ? value : undefined;
 }
@@ -21,8 +31,12 @@ export function needsCustomerCare(lastVisitDate: string | null, cutoff: string):
 }
 
 /** Cùng điều kiện cho số đếm và danh sách; các giá trị đều do server tạo. */
-export function customerAlertCondition(alert: CustomerAlert, cutoff: string): string {
+export function customerAlertCondition(
+  alert: CustomerAlert,
+  cutoff: string,
+  careColumn: 'last_care_date' | 'last_visit_date' = 'last_care_date',
+): string {
   return alert === 'purchase'
     ? `days_without_purchase.gte.${CUSTOMER_ALERT_DAYS}`
-    : `last_care_date.is.null,last_care_date.lte.${cutoff}`;
+    : `${careColumn}.is.null,${careColumn}.lte.${cutoff}`;
 }

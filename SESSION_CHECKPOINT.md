@@ -3122,3 +3122,11 @@ Ki?m ch?ng: `npm run build`, `npm run typecheck`, lint ri?ng `features/admin-eco
 **Production chưa đổi.** Bộ duyệt tự động từ chối db push vì user chưa xác nhận exact production deployment. Không thử vòng qua bằng SQL query hoặc cách khác. Lịch vẫn tắt do SALEWORK_CARE_SYNC_ENABLED chưa true. Workspace tmp/salework-care-deploy (gitignored) chứa migration fetch từ cloud + duy nhất migration mới; đã copy pooler-url để dùng IPv4. Dry-run chỉ liệt kê 20261116100000_salework_care_sync.sql. Không chạy --include-all, không repair lịch sử cũ.
 
 **Next Exact Steps:** sau xác nhận rõ, chạy node node_modules/supabase/dist/supabase.js db push --yes --workdir tmp/salework-care-deploy; generate types --linked thay bản local hiện có; dry-run/ghi theo khoảng ngày đã xác nhận và kiểm tra unmatched_sales/unmatched_customers/unlinked. Mọi log phải giữ kín token/nội dung chat. Sau migration mới push web; chỉ bật lịch khi đối soát đủ. Không ghép khách tự động theo tên/số gần giống.
+
+## 2026-11-16 — User đã yêu cầu push code
+
+Đã thêm compatibility gate trước push: khi SALEWORK_CARE_SYNC_ENABLED không phải true, các query dùng đúng schema/phiếu đã duyệt cũ, không yêu cầu migration chăm sóc mới. Sau này cần bật biến trên cả môi trường web và máy chạy worker sau khi migration và đối soát. Unit mới 62/62, RLS 13/13, typecheck/lint file sửa pass. E2E rerun chưa chạy được vì build Turbopack vướng logs/auto-sync.lock; E2E trước đó 3/3 pass. Chưa áp migration/chưa backfill production. Quyền user hiện tại cho push origin/main; không coi đó là quyền triển khai database đã bị auto-review từ chối.
+
+Build cuối của bản có compatibility gate: `npm run build -- --webpack` exit 0; typecheck, 62 unit và 13 RLS pass. E2E rerun bị chặn ở bước build Turbopack bởi file auto-sync.lock, không phải kết quả 3/3 mới.
+
+**Push hiện bị chặn bởi xác thực GitHub:** HTTPS không lấy được password, SSH không có publickey hợp lệ; gh/token môi trường không có. Remote main đã xác minh vẫn edcd638. Các commit chăm sóc còn ở local. Next Exact Step: người dùng chạy git push origin main trong terminal tương tác để hoàn tất GitHub login; hoặc sau khi đăng nhập lại yêu cầu agent push. Đây là lỗi credential đã thực sự xảy ra, không phải hạn chế chung của agent.

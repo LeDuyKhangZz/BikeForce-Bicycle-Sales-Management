@@ -1644,3 +1644,7 @@ Unit test khóa parser: nhận chuỗi số nguyên sạch từ Power Automate, 
 ## 16/11/2026 — Kiểm chứng chăm sóc SaleWork
 
 Unit liên quan 60/60 pass: chiều gửi, tin hệ thống/nhóm, timestamp gốc, ngày Việt Nam, tin trùng, lẫn hội thoại, tên mâu thuẫn, cursor lặp và đọc trang sau. RLS/integration 13/13 pass gồm ingestion nguyên tử, quyền RPC/bảng, canonical link được duyệt, idempotent và snapshot lịch sử; chạy Supabase local với JWT thật. E2E 3/3 pass trên mobile-375/desktop-1440/zalo-like: số đếm đúng, mở Server Action popup loại khách vừa chăm, nút ít nhất 44px và không cuộn ngang. Worker dry-run thật hai hội thoại: 8 tin, 3 sự kiện gửi đi. Chưa đối soát đủ 95% khách thực tế.
+
+## 16/11/2026 — Regression triển khai trước migration
+
+Bổ sung hai unit test chứng minh count/list không chạm view/cột mới khi cờ chăm sóc false và vẫn loại khách có phiếu đã duyệt. Unit liên quan hiện 62/62 pass; RLS local 13/13 pass. Bộ test local chủ động bật cờ để tiếp tục bao phủ nhánh mới. Lượt E2E rerun bị chặn ở build vì logs/auto-sync.lock đang khóa, không được ghi là pass cho lượt đó; bộ E2E trước thay đổi cờ là 3/3 pass.

@@ -34,6 +34,8 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url));
  * một, vì bộ test này XOÁ dữ liệu.
  */
 const env = loadEnv('test', rootDir, '');
+// Test nhánh mới trên local đã áp migration; production mặc định giữ nhánh cũ.
+env.SALEWORK_CARE_SYNC_ENABLED = 'true';
 
 const alias = { '@': rootDir.replace(/\/$/, '') };
 

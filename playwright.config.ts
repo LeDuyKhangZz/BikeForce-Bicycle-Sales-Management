@@ -117,6 +117,7 @@ export default defineConfig({
     stderr: 'pipe',
     env: {
       ...env,
+      SALEWORK_CARE_SYNC_ENABLED: 'true',
       NEXT_PUBLIC_SITE_URL: E2E_BASE_URL,
     },
   },

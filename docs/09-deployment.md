@@ -1323,3 +1323,7 @@ Sau migration bảng tài chính, áp tiếp `20261026100000_pancake_image_finan
 ## 16/11/2026 — Triển khai chăm sóc SaleWork
 
 Áp migration `20261116100000_salework_care_sync.sql` trước deploy web có view mới, generate types từ schema thực rồi mới chạy worker ghi. Lịch sử cloud hiện thiếu nhiều migration từng áp thủ công: không dùng `db push --include-all`. Workspace tạm `tmp/salework-care-deploy` được tạo từ `migration fetch --linked` cùng pooler IPv4 hiện hữu; thêm duy nhất migration chăm sóc mới. Dry-run workspace này xác nhận chỉ một migration được push, không seed/roles và không sửa lịch sử cũ. Workspace tạm nằm trong gitignore. Sau triển khai, dry-run phạm vi đã chọn, kiểm tra các bộ đếm chưa khớp/chưa liên kết; chỉ bật `SALEWORK_CARE_SYNC_ENABLED=true` khi đã đối soát. Xem runbook `docs/salework-care-sync.md`.
+
+## 16/11/2026 — Cập nhật: cho phép push web trước migration khi cờ chăm sóc tắt
+
+Bản web có compatibility gate mặc định false. Khi SALEWORK_CARE_SYNC_ENABLED chưa true, mọi query khách vẫn dùng misa_report119_customers, last_visit_date và cơ chế phiếu đã duyệt cũ. Vì vậy có thể push code theo yêu cầu hiện tại mà không áp migration production. Chỉ bật biến trên môi trường web và worker sau khi migration mới đã có và đối soát phù hợp. Không bật biến chỉ để làm build xanh.

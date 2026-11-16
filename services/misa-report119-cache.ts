@@ -1,7 +1,7 @@
 import 'server-only';
 import type { CustomerCommitmentFilter } from '@/lib/amis/customer-commitment-filter';
 import { customerRevenueGroupCondition, type CustomerRevenueGroup } from '@/lib/amis/customer-revenue-group';
-import { customerAlertCondition, type CustomerAlert } from '@/lib/amis/customer-alerts';
+import { customerAlertCondition, customerCareSnapshotConfig, type CustomerAlert } from '@/lib/amis/customer-alerts';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { shiftVietnamMonth } from '@/lib/date';
@@ -10,7 +10,7 @@ import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/ami
 import { misaRelativeDateRange } from '@/lib/amis/customer-filter-date-range';
 import type { MisaCustomer } from '@/types/misa-customer';
 import type { MisaCustomerPage, MisaEmployee } from '@/services/misa-report119';
-import { getLatestCareReviewByCustomerIds } from '@/services/customer-care';
+import { getLatestCareReviewByCustomerIds, listRecentlyApprovedCustomerIds } from '@/services/customer-care';
 
 const PAGE_SIZE = 10;
 
@@ -151,9 +151,11 @@ export async function getCachedMisaEmployeeCustomers(
   if (employeeValue === null) return null;
   if (!isEmployeeRow(employeeValue)) throw new Error('Snapshot nhân viên MISA không hợp lệ.');
 
+  const careConfig = customerCareSnapshotConfig();
+  const careColumn = careConfig.enabled ? 'last_care_date' : 'last_care_date:last_visit_date';
   let query = supabase
-    .from('misa_customer_care_snapshot')
-    .select('misa_customer_id,customer_code,customer_name,phone,billing_province,debt,order_sales,recent_purchase_date,days_without_purchase,last_visit_date,last_care_date,owner_name', { count: 'exact' })
+    .from(careConfig.table)
+    .select(`misa_customer_id,customer_code,customer_name,phone,billing_province,debt,order_sales,recent_purchase_date,days_without_purchase,last_visit_date,${careColumn},owner_name`, { count: 'exact' })
     .eq('period_month', periodMonth)
     .eq('misa_employee_id', params.employeeId);
 
@@ -180,7 +182,11 @@ export async function getCachedMisaEmployeeCustomers(
     else if (committedIds.length) query = query.not('misa_customer_id', 'in', `(${committedIds.join(',')})`);
   }
   if (params.alert && params.alertCutoff) {
-    query = query.or(customerAlertCondition(params.alert, params.alertCutoff));
+    query = query.or(customerAlertCondition(params.alert, params.alertCutoff, careConfig.dateColumn));
+    if (!careConfig.enabled && params.alert === 'care') {
+      const approvedIds = await listRecentlyApprovedCustomerIds(supabase, params.alertCutoff);
+      if (approvedIds.length > 0) query = query.not('misa_customer_id', 'in', `(${approvedIds.join(',')})`);
+    }
   }
   if (params.searchQuery) {
     const safe = params.searchQuery.replace(/[,%()]/g, ' ');

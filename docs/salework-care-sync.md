@@ -34,3 +34,7 @@ Exit 0: đọc/ghi hoàn tất trong phạm vi đã chọn. Exit 1: lỗi đọc
 ## Nghiệm thu
 
 Đối chiếu theo cùng khoảng ngày Việt Nam trên từng tài khoản và khách đã duyệt định danh. So sánh tin gửi đi gần nhất với SaleWork; ghi rõ số khách có thể ghép, số chưa ghép và phần lịch sử API không trả. Mục tiêu khớp 95% là điều kiện nghiệm thu chưa đạt cho tới khi có đối soát đầy đủ. Unit/RLS và thử hai hội thoại không thay thế phép đo này.
+
+## Chốt tương thích khi chưa triển khai database
+
+SALEWORK_CARE_SYNC_ENABLED mặc định false trên web và worker. Web giữ bảng/filter/ngày cũ và phiếu chăm sóc đã duyệt; worker lịch bỏ qua bước chăm sóc. Chỉ đặt true trên từng môi trường sau migration. Lệnh --write trực tiếp vẫn là yêu cầu ghi rõ ràng và không phụ thuộc cờ lịch. Việc push code không tự bật tính năng hoặc đồng bộ dữ liệu thật.

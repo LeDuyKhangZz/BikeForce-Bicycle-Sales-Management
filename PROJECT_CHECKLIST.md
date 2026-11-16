@@ -1776,3 +1776,13 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [ ] Xác nhận và áp migration production (automatic approval review đã từ chối lần triển khai chưa được xác nhận rõ).
 - [ ] Generate types --linked sau rollout; backfill/đối soát định danh và mức khớp từ 95%.
 - [ ] Push web sau migration và bật lịch khi đủ điều kiện; hiện chưa bật.
+
+## 2026-11-16 — Push code chăm sóc có chốt tương thích
+
+- [x] Mặc định dùng schema cũ khi chưa bật SALEWORK_CARE_SYNC_ENABLED; không làm trang khách phụ thuộc migration chưa áp.
+- [x] Thêm hai regression test cho nhánh chưa bật; unit liên quan 62/62, RLS 13/13 và typecheck/lint file thay đổi pass.
+- [ ] Migration, backfill và bật chăm sóc production vẫn chờ xác nhận riêng.
+
+- [x] Build bản có chốt tương thích: `npm run build -- --webpack` exit 0.
+
+- [ ] Push origin/main: đã thử thực tế, đang chặn bởi GitHub credential; remote vẫn edcd638.

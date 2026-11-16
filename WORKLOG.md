@@ -4274,3 +4274,11 @@ Kiểm chứng thực tế: 25 tài khoản đọc được; dry-run hai hội t
 CLI Management API đọc được schema production. Không chạy db push --include-all vì lịch sử cloud thiếu nhiều migration từng áp tay. Đã fetch đúng lịch sử cloud vào workspace tạm được gitignore và dry-run xác nhận chỉ migration 20261116100000_salework_care_sync.sql, không seed/roles. Lệnh db push thực tế bị automatic approval review từ chối vì chưa có xác nhận triển khai chính xác lên production. Không có thay đổi schema/data production, chưa bật lịch và chưa push web. ISSUE-055 vẫn IN_PROGRESS; chưa chứng minh mức khớp 95%.
 
 Next Exact Steps: nhận xác nhận triển khai đúng migration chăm sóc trên project rnmywhwanpxmipqducqu; chạy db push --yes --workdir tmp/salework-care-deploy; generate types --linked và kiểm tra diff; chạy dry-run đầy đủ rồi đồng bộ có đối soát định danh, chưa bật lịch nếu còn nguồn không khớp; commit/push web khi migration đã áp.
+
+## 2026-11-16 — Chuẩn bị push chăm sóc theo yêu cầu người dùng
+
+Người dùng yêu cầu push code, chưa xác nhận migration hoặc backfill production. Thêm chốt tương thích: `SALEWORK_CARE_SYNC_ENABLED` mặc định false thì count/filter/danh sách vẫn dùng bảng MISA và cơ chế loại phiếu đã duyệt cũ; không chạm view/cột mới. Chỉ môi trường bật cờ mới đọc ngày chăm sóc SaleWork. Local test/E2E bật cờ rõ ràng; hai regression test chứng minh nhánh production chưa có migration vẫn hoạt động. Unit liên quan 62/62, RLS 13/13, typecheck và lint riêng thay đổi pass. Lượt E2E mới bị chặn trước chạy bởi Turbopack không đọc được logs/auto-sync.lock đang có tiến trình giữ; E2E trước đó 3/3 đã pass. Không thay schema/dữ liệu production, không bật lịch.
+
+Kiểm tra cuối trước push: `npm run build -- --webpack` exit 0 sau khi cho phép tải font; đủ 44 trang static được tạo. Turbopack vẫn vướng file khóa auto-sync của tiến trình khác nên không ghi pass cho lượt Turbopack. Không thay đổi cấu hình compiler của dự án.
+
+Push theo yêu cầu đã chạy nhưng chưa thành công: lượt đầu kẹt ở Git Credential Manager, đã ngắt; lượt không tương tác báo không lấy được password. Không có GitHub CLI/token môi trường; SSH hiện có bị từ chối publickey. Đã kiểm tra remote chỉ đọc, main vẫn ở edcd638. Cần người dùng đăng nhập GitHub qua terminal/Git Credential Manager để push. Không ghi trạng thái push thành công.
