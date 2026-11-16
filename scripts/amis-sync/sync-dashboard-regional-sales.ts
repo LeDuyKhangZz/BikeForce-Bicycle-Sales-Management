@@ -18,7 +18,11 @@ function selectedMonth(): string {
 }
 
 function crmDateRange(monthValue: string) {
-  const [year, month] = monthValue.split('-').map(Number);
+  const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(monthValue);
+  if (!match) throw new Error('Cần truyền --month YYYY-MM.');
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
   const lastDay = new Date(year, month, 0).getDate();
   // AMIS trả các mốc theo UTC; giờ này tương ứng 00:00 và 23:59:59 tại Việt Nam.
   return {
@@ -49,31 +53,41 @@ async function main(): Promise<void> {
   const secret = process.env.DASHBOARD_REPORT_SYNC_SECRET?.trim() || '';
   if (!syncUrl || !secret) throw new Error('Thiếu cấu hình URL hoặc mã bảo mật đồng bộ Dashboard.');
 
-  const parameters = widgetParameter(month);
+  const expectedFromDate = crmDateRange(month).fromDate;
   const shared = await connectToSharedAmisBrowser({ pageUrl: /amisapp\.misa\.vn/ });
-  try {
-    await shared.page.goto('https://amisapp.misa.vn/crm/dashboard/main', { waitUntil: 'domcontentloaded', timeout: 90_000 });
-    const result = await shared.page.evaluate(async (body) => {
-      const response = await fetch('/crm/g1/api/dashboard/Dashboard/18/data', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      return { status: response.status, payload: await response.json() as { Data?: unknown } };
-    }, { DashboardType: 9, IsGetNew: true, Param: JSON.stringify(parameters), DashboardID: 18, DashboardName: 'Mục tiêu doanh số theo đơn vị' });
-    if (result.status !== 200) throw new Error(`AMIS Dashboard 18 HTTP ${result.status}`);
-    const source = typeof result.payload.Data === 'string' ? JSON.parse(result.payload.Data) : result.payload.Data;
-    if (!Array.isArray(source)) throw new Error('AMIS Dashboard 18 trả dữ liệu không hợp lệ.');
-    const rows: RegionRow[] = (source as AmisRegionRow[]).map((row) => ({
+  let captured: { parameters: Record<string, unknown>; rows: RegionRow[] } | null = null;
+  const captureWidget = async (response: import('@playwright/test').Response) => {
+    if (!/\/crm\/g\d+\/api\/dashboard\/Dashboard\/18\/data/.test(response.url()) || !response.ok()) return;
+    try {
+      const requestBody = response.request().postDataJSON() as { Param?: unknown } | null;
+      const parameters = typeof requestBody?.Param === 'string' ? JSON.parse(requestBody.Param) as Record<string, unknown> : null;
+      if (!parameters || parameters.FromDate !== expectedFromDate) return;
+      const result = await response.json() as { Data?: unknown; data?: unknown };
+      const rawData = result.Data ?? result.data;
+      const source = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+      if (!Array.isArray(source)) return;
+      const rows = (source as AmisRegionRow[]).map((row) => ({
       name: typeof row.FullName === 'string' ? row.FullName : 'Không rõ', value: Number(row.CurrentAmount || 0),
       organizationUnitId: Number(row.ID || 0), misaCode: typeof row.MISACode === 'string' ? row.MISACode : '',
-    })).filter((row) => Number.isFinite(row.value));
-    const publish = await fetch(syncUrl, {
+      })).filter((row) => Number.isFinite(row.value));
+      if (rows.length > 0) captured = { parameters, rows };
+    } catch { /* The widget can be reloaded while the CRM page is navigating. */ }
+  };
+  try {
+    shared.context.on('response', captureWidget);
+    await shared.page.goto('https://amisapp.misa.vn/crm/dashboard/main', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await shared.page.waitForTimeout(25_000);
+  } finally {
+    shared.context.off('response', captureWidget);
+    await shared.disconnect();
+  }
+  if (!captured) throw new Error(`Không nhận được biểu đồ AMIS cho ${month}. Giữ AMIS CRM đang đăng nhập và thử lại.`);
+  const publish = await fetch(syncUrl, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'x-amis-report-sync-secret': secret },
-      body: JSON.stringify({ month, generatedAt: new Date().toISOString(), parameters, rows }), cache: 'no-store',
-    });
-    if (!publish.ok) throw new Error(`Dashboard doanh số khu vực HTTP ${publish.status}`);
-    console.log(`Đã đồng bộ doanh số theo đơn vị ${month} (${rows.length} đơn vị) sang Dashboard.`);
-  } finally { await shared.disconnect(); }
+      body: JSON.stringify({ month, generatedAt: new Date().toISOString(), parameters: captured.parameters, rows: captured.rows }), cache: 'no-store',
+  });
+  if (!publish.ok) throw new Error(`Dashboard doanh số khu vực HTTP ${publish.status}`);
+  console.log(`Đã đồng bộ doanh số theo đơn vị ${month} (${captured.rows.length} đơn vị) sang Dashboard.`);
 }
 
 main().catch((error: unknown) => { console.error(error instanceof Error ? error.message : 'Đồng bộ doanh số khu vực thất bại.'); process.exitCode = 1; });

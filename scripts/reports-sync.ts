@@ -32,6 +32,7 @@ async function main(): Promise<void> {
       name: 'AMIS',
       run: async () => {
         await runTsx('scripts/amis-sync/amis-harvest.ts');
+        await runTsx('scripts/amis-sync/sync-dashboard-report26.ts');
         await run(python, ['scripts/amis-sync/push_amis.py']);
         await run(python, ['scripts/amis-sync/fetch_report119.py', '--snapshot-only']);
       },

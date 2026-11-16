@@ -28,11 +28,13 @@ import { formatVietnamShortDate, getVietnamCurrentMonth, getVietnamMonthRange } 
 import { sendTelegramAlert } from './telegram-alert';
 import { scrapeReceivableEmployeeSummaries } from './receivable-report-scraper';
 import { connectToSharedAmisBrowser } from './shared-browser';
+import { syncDebtAgeDashboard } from './debt-age-dashboard-sync';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = resolve(HERE, '.env');
 const ALERT_PATH = resolve(HERE, 'alert.log');
 const RECEIVABLE_SUMMARY_PATH = resolve(HERE, 'receivable-employee-summary.json');
+const ACCOUNTING_OVERVIEW_PATH = resolve(HERE, 'accounting-overview.json');
 
 config({ path: ENV_PATH, quiet: true });
 
@@ -41,6 +43,7 @@ const CRM_TARGET = /\/crm\/g\d\/api\/dashboard\/Dashboard\/\d+\/data/;
 
 const ACT_URL =
   'https://actapp.misa.vn/app/RP/ReportList/RPDynamicViewer/SummaryCustomerReceivableByEmployee';
+const ACT_OVERVIEW_URL = 'https://actapp.misa.vn/app/Overview/dashboard';
 const ACT_TARGET = /\/report\/dynamic\/v2\/paging_filter/;
 
 const WANTED_COOKIES = [
@@ -292,6 +295,7 @@ async function harvestAct(ctx: BrowserContext, page: Page, got: Harvested): Prom
     console.log(
       `   -> Da lay ${receivableSummaries.length} dong tong cong no rieng cho thang ${reportMonth}.`,
     );
+    await syncDebtAgeDashboard(page);
   } else {
     // Tu dong bam nut "Xem bao cao" trong popup "Chon tham so" neu no xuat hien.
     // Playwright thao tac tren DOM, khong bi anh huong boi viec cua so hien
@@ -333,6 +337,43 @@ async function harvestAct(ctx: BrowserContext, page: Page, got: Harvested): Prom
       'Hay chay: npx tsx scripts/amis-sync/amis-harvest.ts --login',
       'act-session-expired',
     );
+  }
+
+  // This is intentionally a non-blocking extension: the existing report sync
+  // remains usable even when the accounting Overview layout changes.
+  try {
+    await page.goto(ACT_OVERVIEW_URL, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.getByText('Nợ phải thu theo hạn nợ', { exact: true }).waitFor({ state: 'visible', timeout: 90_000 });
+    const overviewText = (await page.locator('body').innerText()).replace(/\s+/gu, ' ');
+    const section = overviewText.slice(overviewText.indexOf('Nợ phải thu theo hạn nợ'));
+    const parseMillion = (label: string) => {
+      const match = new RegExp(`${label}\\s*([\\d.]+)\\s*Triệu đồng`, 'u').exec(section);
+      return match ? Number(match[1].replace(/\./gu, '')) * 1_000_000 : null;
+    };
+    const total = parseMillion('Tổng');
+    const overdue = parseMillion('Quá hạn');
+    const current = parseMillion('Trong Hạn');
+    if (total === null || overdue === null || current === null) {
+      throw new Error('Không đọc được Tổng/Quá hạn/Trong hạn trên Overview Kế toán.');
+    }
+    writeFileSync(
+      ACCOUNTING_OVERVIEW_PATH,
+      JSON.stringify({ generatedAt: new Date().toISOString(), receivable: { total, overdue, current } }, null, 2),
+      { encoding: 'utf8' },
+    );
+    const dashboardBase = (process.env.DASHBOARD_REPORT26_SYNC_URL ?? '').replace(/\/amis-report-sync$/, '');
+    const dashboardSecret = process.env.DASHBOARD_REPORT_SYNC_SECRET ?? '';
+    if (dashboardBase && dashboardSecret) {
+      const response = await fetch(`${dashboardBase}/amis-accounting-overview-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-amis-report-sync-secret': dashboardSecret },
+        body: JSON.stringify({ month: getVietnamCurrentMonth(), generatedAt: new Date().toISOString(), receivable: { total, overdue, current } }),
+      });
+      if (!response.ok) throw new Error(`Dashboard Overview Kế toán HTTP ${response.status}.`);
+    }
+    console.log(`   -> Overview Kế toán: phải thu ${total.toLocaleString('vi-VN')} ₫.`);
+  } catch (error) {
+    console.warn(`   -> Không lấy được Overview Kế toán: ${error instanceof Error ? error.message : String(error)}`);
   }
 
 }
