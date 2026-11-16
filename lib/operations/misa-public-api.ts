@@ -313,6 +313,23 @@ export async function fetchMisaAccessToken(
   const payload = (await response.json()) as unknown;
   const token = findMisaAccessToken(payload);
   if (token === null) {
+    // Only allowlisted metadata: never log response text, credentials or tokens.
+    const envelope = isRecord(payload) ? payload : {};
+    const code = envelope['code'] ?? envelope['Code'];
+    const success = envelope['success'] ?? envelope['Success'];
+    const data = 'data' in envelope ? envelope['data'] : envelope['Data'];
+    console.error('[misa-account-diagnostic]', {
+      httpStatus: response.status,
+      success: typeof success === 'boolean' ? success : null,
+      code: typeof code === 'number' && Number.isFinite(code)
+        ? code
+        : typeof code === 'string' && /^-?\d{1,10}$/.test(code)
+          ? code
+          : null,
+      payloadType: payload === null ? 'null' : Array.isArray(payload) ? 'array' : typeof payload,
+      dataType: data === null ? 'null' : Array.isArray(data) ? 'array' : typeof data,
+      dataLength: typeof data === 'string' || Array.isArray(data) ? data.length : null,
+    });
     throw new Error('Không tìm thấy access token từ MISA /Account');
   }
 

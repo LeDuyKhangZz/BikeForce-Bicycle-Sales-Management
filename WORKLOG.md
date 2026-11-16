@@ -1,5 +1,11 @@
 # BikeForce Worklog
 
+## 2026-11-16 — Chẩn đoán xác thực MISA trên Production
+
+Build hoàn tất exit 0 sau khi cấp quyền mạng tải font; ESLint hai file thay đổi exit 0. Cảnh báo tracing filesystem và deprecation có sẵn vẫn còn.
+
+Thêm `[misa-account-diagnostic]` khi HTTP thành công nhưng không tìm được token: chỉ ghi HTTP status, success boolean, code dạng số, kiểu payload/data và độ dài data. Không ghi body, message upstream, token, URL hay credentials. 8 test liên quan pass; typecheck không cache pass. Lint toàn repo còn 10 lỗi/2 cảnh báo ngoài phần thay đổi. Chưa xác định nguyên nhân Production; chờ log từ deployment mới.
+
 ## 2026-11-06 — Hiệu chỉnh số dư gốc Ads TikTok
 
 Theo xác nhận nghiệp vụ, tổng TikTok gốc là 84.700.000 VND; 16.500.000 VND là kết quả RPC cũ ghi đè, không phải số dư thực hoặc khoản nạp thật. Migration `20261106180000_correct_tiktok_ad_opening_balance.sql` đặt lại tổng và mốc `OPENING_BALANCE` thành 84.700.000 VND, không tạo dòng `DEPOSIT` giả 68.200.000 VND. Migration dừng an toàn nếu đã tồn tại khoản nạp thật trong lịch sử TikTok.

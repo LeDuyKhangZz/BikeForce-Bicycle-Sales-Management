@@ -1,5 +1,9 @@
 # 09 — Deployment (Supabase + Vercel)
 
+## Chẩn đoán MISA Account — 2026-11-16
+
+Khi đồng bộ không tìm thấy token dù HTTP thành công, tìm `[misa-account-diagnostic]` trong runtime logs. Log chỉ ghi `httpStatus`, `success`, `code` dạng số, `payloadType`, `dataType`, `dataLength`; mã khác dạng số được bỏ. Không ghi response body, message upstream hay secrets. Sau deploy Ready, bấm đồng bộ một lần rồi đọc metadata này. Sự hiện diện của biến môi trường không chứng minh giá trị đúng; thành công ở local cũng không xác nhận nguyên nhân lỗi Production.
+
 **2026-09-23 — DEC-092:** push migration `20260923110000_misa_report119_directory.sql` trước khi chạy sync mới. Worker cần các biến server-only Supabase/MISA trong file gitignored; không đưa token hoặc key vào `NEXT_PUBLIC_*`.
 
 **DEC-090 (2026-09-14):** Auto-sync Windows chạy mỗi 10 phút. Cập nhật task hiện có qua `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-hidden-report-sync.ps1 -IntervalMinutes 10`; backup XML trong logs, giữ launcher ẩn và IgnoreNew. Đã xác minh trigger thực tế PT10M. Tab AMIS đóng sau thao tác, lượt tiếp theo mở bằng cùng profile; không cần deploy Vercel cho thay đổi script/task này.

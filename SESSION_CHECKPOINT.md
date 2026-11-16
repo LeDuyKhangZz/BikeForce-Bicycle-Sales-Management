@@ -1,5 +1,11 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-16 — MISA Account chưa trả token trên Production
+
+Deployment dc5bf18 đã Ready theo ảnh người dùng. Local lấy được token không chứng minh credentials Production sai. Bổ sung log `[misa-account-diagnostic]` với metadata allowlist, không ghi nội dung phản hồi/secret/token. 8 test liên quan và typecheck không cache pass; lint toàn repo còn lỗi ngoài phạm vi.
+
+Next Exact Steps: sau deployment mới Ready, bấm đồng bộ tồn kho một lần; lấy log `[misa-account-diagnostic]` để phân biệt success/code/dataType. Chưa kết luận nguyên nhân và chưa đánh dấu lỗi đồng bộ đã sửa.
+
 ## 2026-11-06 — Hiệu chỉnh số dư Ads TikTok
 
 Theo người dùng, tổng gốc TikTok phải là 84.700.000 VND; không được ghi thêm 68.200.000 VND vì đó không phải giao dịch thật. Đã thêm migration `20261106180000_correct_tiktok_ad_opening_balance.sql`: cập nhật tổng và `OPENING_BALANCE`, đồng thời chặn chạy nếu lịch sử đã có `DEPOSIT` thật.

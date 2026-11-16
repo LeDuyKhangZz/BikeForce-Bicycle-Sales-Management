@@ -1,5 +1,11 @@
 # BikeForce Project Checklist
 
+## 2026-11-16 — Chẩn đoán MISA Account
+
+- [x] Thêm log metadata an toàn, có test không ghi secret/token; 8 test liên quan pass và typecheck pass.
+- [ ] Xác định nguyên nhân từ log Production `[misa-account-diagnostic]` sau deploy.
+- [ ] Lint toàn repo: còn 10 lỗi và 2 cảnh báo ngoài phần thay đổi.
+
 ## 2026-11-06 — Hiệu chỉnh số dư gốc TikTok Ads
 
 - [x] Thêm migration đặt lại số dư/mốc mở đầu TikTok thành 84.700.000 VND, không tạo khoản nạp giả.
