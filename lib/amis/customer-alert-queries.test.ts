@@ -22,7 +22,7 @@ describe('truy vấn cảnh báo khách hàng', () => {
     } });
     expect(await getMisaCustomerAlertCounts(client, '2026-10', 42, '2026-09-01')).toEqual({ purchase: 23, care: 17 });
     expect(requests.map(url => url.searchParams.get('or'))).toEqual([
-      '(days_without_purchase.gte.30)', '(last_visit_date.is.null,last_visit_date.lte.2026-09-01)',
+      '(days_without_purchase.gte.30)', '(last_care_date.is.null,last_care_date.lte.2026-09-01)',
     ]);
   });
 
@@ -38,7 +38,7 @@ describe('truy vấn cảnh báo khách hàng', () => {
         expect(url.searchParams.get('offset')).toBe('10');
         expect(url.searchParams.get('limit')).toBe('10');
         expect(url.searchParams.getAll('or')).toEqual([
-          '(last_visit_date.is.null,last_visit_date.lte.2026-09-01)',
+          '(last_care_date.is.null,last_care_date.lte.2026-09-01)',
           '(customer_code.ilike.%ABC%,customer_name.ilike.%ABC%,billing_province.ilike.%ABC%,owner_name.ilike.%ABC%)',
         ]);
         return Response.json([], { headers: { 'content-range': '10-19/23' } });

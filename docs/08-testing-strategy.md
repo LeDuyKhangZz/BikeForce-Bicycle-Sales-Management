@@ -1640,3 +1640,7 @@ Regression ảnh Sàn TMĐT khóa đủ bốn nhãn tài chính và xác nhận 
 
 Unit test khóa parser: nhận chuỗi số nguyên sạch từ Power Automate, từ chối số âm, chuỗi còn dấu chấm, `NaN`, số lẻ, tiền tệ khác VND và thời gian sai. RLS test dùng JWT thật xác nhận Admin đọc snapshot và RPC tổng hợp, Sales/anon không đọc, còn `service_role` chỉ execute RPC mà không có SELECT/INSERT trực tiếp trên bảng.
 
+
+## 16/11/2026 — Kiểm chứng chăm sóc SaleWork
+
+Unit liên quan 60/60 pass: chiều gửi, tin hệ thống/nhóm, timestamp gốc, ngày Việt Nam, tin trùng, lẫn hội thoại, tên mâu thuẫn, cursor lặp và đọc trang sau. RLS/integration 13/13 pass gồm ingestion nguyên tử, quyền RPC/bảng, canonical link được duyệt, idempotent và snapshot lịch sử; chạy Supabase local với JWT thật. E2E 3/3 pass trên mobile-375/desktop-1440/zalo-like: số đếm đúng, mở Server Action popup loại khách vừa chăm, nút ít nhất 44px và không cuộn ngang. Worker dry-run thật hai hội thoại: 8 tin, 3 sự kiện gửi đi. Chưa đối soát đủ 95% khách thực tế.

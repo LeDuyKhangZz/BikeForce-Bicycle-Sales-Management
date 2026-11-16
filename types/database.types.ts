@@ -374,6 +374,49 @@ export type Database = {
           },
         ]
       }
+      customer_identity_links: {
+        Row: {
+          canonical_customer_id: string
+          linked_at: string
+          linked_by: string
+          source_customer_id: string
+        }
+        Insert: {
+          canonical_customer_id: string
+          linked_at?: string
+          linked_by: string
+          source_customer_id: string
+        }
+        Update: {
+          canonical_customer_id?: string
+          linked_at?: string
+          linked_by?: string
+          source_customer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_identity_links_canonical_customer_id_fkey"
+            columns: ["canonical_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_identity_links_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_identity_links_source_customer_id_fkey"
+            columns: ["source_customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           assigned_sales_id: string | null
@@ -385,6 +428,7 @@ export type Database = {
           is_active: boolean
           normalized_phone: string | null
           phone: string | null
+          phone_raw: string | null
           province: string | null
           region: string | null
           salework_account: string | null
@@ -405,6 +449,7 @@ export type Database = {
           is_active?: boolean
           normalized_phone?: string | null
           phone?: string | null
+          phone_raw?: string | null
           province?: string | null
           region?: string | null
           salework_account?: string | null
@@ -425,6 +470,7 @@ export type Database = {
           is_active?: boolean
           normalized_phone?: string | null
           phone?: string | null
+          phone_raw?: string | null
           province?: string | null
           region?: string | null
           salework_account?: string | null
@@ -698,6 +744,47 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_ad_top_up_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deposit_amount: number
+          event_type: string
+          id: number
+          marketplace_code: string
+          new_amount: number
+          previous_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deposit_amount: number
+          event_type: string
+          id?: never
+          marketplace_code: string
+          new_amount: number
+          previous_amount: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deposit_amount?: number
+          event_type?: string
+          id?: never
+          marketplace_code?: string
+          new_amount?: number
+          previous_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_ad_top_up_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1280,6 +1367,49 @@ export type Database = {
         }
         Relationships: []
       }
+      product_alias_mappings: {
+        Row: {
+          canonical_product_id: string
+          mapped_at: string
+          mapped_by: string
+          source_product_id: string
+        }
+        Insert: {
+          canonical_product_id: string
+          mapped_at?: string
+          mapped_by: string
+          source_product_id: string
+        }
+        Update: {
+          canonical_product_id?: string
+          mapped_at?: string
+          mapped_by?: string
+          source_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_alias_mappings_canonical_product_id_fkey"
+            columns: ["canonical_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_alias_mappings_mapped_by_fkey"
+            columns: ["mapped_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_alias_mappings_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           color: string
@@ -1693,24 +1823,70 @@ export type Database = {
           },
         ]
       }
+      misa_customer_care_snapshot: {
+        Row: {
+          billing_province: string | null
+          customer_code: string | null
+          customer_name: string | null
+          days_without_purchase: number | null
+          debt: number | null
+          last_care_date: string | null
+          last_visit_date: string | null
+          misa_customer_id: number | null
+          misa_employee_id: number | null
+          order_sales: number | null
+          owner_name: string | null
+          period_month: string | null
+          phone: string | null
+          recent_purchase_date: string | null
+          synced_at: string | null
+        }
+        Insert: {
+          billing_province?: string | null
+          customer_code?: string | null
+          customer_name?: string | null
+          days_without_purchase?: number | null
+          debt?: number | null
+          last_care_date?: never
+          last_visit_date?: string | null
+          misa_customer_id?: number | null
+          misa_employee_id?: number | null
+          order_sales?: number | null
+          owner_name?: string | null
+          period_month?: string | null
+          phone?: string | null
+          recent_purchase_date?: string | null
+          synced_at?: string | null
+        }
+        Update: {
+          billing_province?: string | null
+          customer_code?: string | null
+          customer_name?: string | null
+          days_without_purchase?: number | null
+          debt?: number | null
+          last_care_date?: never
+          last_visit_date?: string | null
+          misa_customer_id?: number | null
+          misa_employee_id?: number | null
+          order_sales?: number | null
+          owner_name?: string | null
+          period_month?: string | null
+          phone?: string | null
+          recent_purchase_date?: string | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "misa_report119_customers_period_month_misa_employee_id_fkey"
+            columns: ["period_month", "misa_employee_id"]
+            isOneToOne: false
+            referencedRelation: "misa_report119_employees"
+            referencedColumns: ["period_month", "misa_employee_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      admin_monthly_revenue_target_trend: {
-        Args: { p_year: number }
-        Returns: {
-          actual_revenue: number
-          period_month: string
-          target_revenue: number
-        }[]
-      }
-      admin_monthly_sales_target_trend: {
-        Args: { p_year: number }
-        Returns: {
-          actual_sales_amount: number
-          period_month: string
-          target_sales_amount: number
-        }[]
-      }
       admin_daily_trend: {
         Args: { p_from: string; p_to: string }
         Returns: {
@@ -1733,6 +1909,14 @@ export type Database = {
           employee_code: string
           full_name: string
           id: string
+        }[]
+      }
+      admin_monthly_revenue_target_trend: {
+        Args: { p_year: number }
+        Returns: {
+          actual_revenue: number
+          period_month: string
+          target_revenue: number
         }[]
       }
       admin_monthly_summary: {
@@ -1786,11 +1970,19 @@ export type Database = {
           target_visit_points: number
         }[]
       }
+      approve_customer_identity_link: {
+        Args: { p_canonical_customer_id: string; p_source_customer_id: string }
+        Returns: undefined
+      }
+      approve_product_alias_mapping: {
+        Args: { p_canonical_product_id: string; p_source_product_id: string }
+        Returns: undefined
+      }
       get_admin_inventory_warehouses: {
         Args: never
         Returns: {
           in_stock_count: number
-          latest_synced_at: string | null
+          latest_synced_at: string
           product_count: number
           quantity_on_hand: number
           warehouse_code: string
@@ -1800,13 +1992,17 @@ export type Database = {
         Args: { p_from: string; p_to: string }
         Returns: {
           customer_count: number
-          latest_synced_at: string | null
+          latest_synced_at: string
           order_count: number
           outstanding_amount: number
           total_amount: number
         }[]
       }
       get_latest_pancake_report_image: { Args: never; Returns: Json }
+      get_linked_salework_care_date: {
+        Args: { p_customer_code: string; p_reference_date: string }
+        Returns: string
+      }
       get_marketplace_ad_finance_summary: {
         Args: never
         Returns: {
@@ -1857,6 +2053,48 @@ export type Database = {
       }
       is_active_sales: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      list_customer_identity_candidates: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          canonical_code: string
+          canonical_customer_id: string
+          canonical_name: string
+          normalized_phone: string
+          source_code: string
+          source_customer_id: string
+          source_id: string
+          source_name: string
+          total_count: number
+        }[]
+      }
+      list_customer_identity_review: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          normalized_phone: string
+          phone_raw: string
+          review_reason: string
+          source_code: string
+          source_customer_id: string
+          source_id: string
+          source_name: string
+          suggested_misa: Json
+          total_count: number
+        }[]
+      }
+      list_unmapped_product_aliases: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          color: string
+          misa_variants: Json
+          product_code: string
+          product_name: string
+          size: string
+          source_id: string
+          source_product_id: string
+          source_system: string
+          total_count: number
+        }[]
+      }
       normalize_vn_phone: { Args: { p_phone: string }; Returns: string }
       replace_misa_report119_snapshot: {
         Args: { p_customers: Json; p_employees: Json; p_period_month: string }
@@ -1878,6 +2116,16 @@ export type Database = {
         Args: { p_amount: number; p_marketplace_code: string }
         Returns: undefined
       }
+      sync_misa_crm_customer_directory: {
+        Args: { p_customers: Json }
+        Returns: number
+      }
+      sync_operational_customers_from_amis_crm: {
+        Args: { p_customers: Json; p_source_total: number }
+        Returns: {
+          inserted_or_updated: number
+        }[]
+      }
       sync_operational_customers_from_report119: {
         Args: { p_period_month?: string }
         Returns: {
@@ -1885,12 +2133,9 @@ export type Database = {
           period_month: string
         }[]
       }
+      sync_salework_care_logs: { Args: { p_events: Json }; Returns: Json }
       sync_salework_zalo_customers: {
         Args: { p_contacts: Json }
-        Returns: number
-      }
-      sync_misa_crm_customer_directory: {
-        Args: { p_customers: Json }
         Returns: number
       }
       upsert_hatde_snapshot: {

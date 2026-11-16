@@ -959,3 +959,7 @@ RPC ảnh `get_latest_pancake_report_image` trả thêm mảng `financials` cùn
 Admin mở `/admin/master-data`. Trang gọi RPC phân trang bằng session bearer token và anon key, không dùng service role. Khách được chia thành danh sách khớp `normalized_phone` chính xác và danh sách tất cả khách SaleWork/Zalo chưa liên kết/chưa có MISA đủ điều kiện. Danh sách rà soát gợi ý tối đa ba MISA theo 7 số điện thoại cuối hoặc tên chuẩn hóa; gợi ý chỉ đọc. `approve_customer_identity_link` vẫn kiểm tra số điện thoại chính xác ở DB trước khi ghi liên kết/audit. Với sản phẩm, Admin chọn một biến thể MISA có màu/size khớp rồi `approve_product_alias_mapping` kiểm tra lại và lưu alias/audit. Bản ghi nguồn, khóa nguồn và đơn/lịch sử hiện tại không bị sửa.
 
 RPC rà soát qualify cột sort theo migration `20261106150000_fix_customer_identity_review_order.sql` để tránh xung đột tên với tham số output của function.
+
+## 16/11/2026 — Luồng chăm sóc SaleWork
+
+`GET /api/account/getAll` → `POST /api/conversation` theo account/cursor → `POST /api/message/filter` theo conversation/timestamp. Worker chỉ gọi ba endpoint đọc, không gửi tin và không gọi đánh dấu đã đọc. Sau khi đọc đủ phạm vi, gửi batch tối đa 500 sự kiện metadata vào RPC ghi; không lưu nội dung chat. API giao diện là phụ thuộc chưa có hợp đồng công khai: schema/cursor lỗi thì dừng, không nhận định lượt đồng bộ đã đủ. View mới phục vụ chung count/filter/danh sách.

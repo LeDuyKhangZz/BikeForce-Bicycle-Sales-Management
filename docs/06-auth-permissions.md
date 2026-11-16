@@ -948,3 +948,7 @@ Route `GET /api/hatde/board/image` không dùng cookie Admin. Middleware chỉ m
 `/admin/customers` xác thực `requireRole('ADMIN')` ở server và đọc `public.customers` qua session client chịu RLS. Policy `customers_admin_all` hiện hữu cho Admin đọc; Sales chỉ đọc khách được gán qua `customers_sales_select`. Không cấp thêm quyền Sales để hiển thị danh bạ toàn CRM. Worker đồng bộ vẫn chỉ gọi RPC bằng `service_role`, không đọc trực tiếp bảng.
 
 `/admin/master-data` xác thực Admin ở Server Component và Server Action. RPC tra cứu/duyệt kiểm tra lại `public.is_admin()`; bảng liên kết bật + force RLS, chỉ policy Admin SELECT và không có DML grant trực tiếp. RPC khách giới hạn nguồn `SALEWORK_ZALO` → `MISA` và số đã chuẩn hóa phải khớp; RPC sản phẩm giới hạn đích MISA và màu/size phải khớp. Ghi nhận mọi lần duyệt/đổi liên kết vào `audit_log`. RPC rà soát bổ sung chỉ đọc, phân trang và trả gợi ý gần khớp để Admin kiểm tra; nó không thể ghi liên kết hoặc thay đổi điều kiện duyệt chính xác.
+
+## 16/11/2026 — Quyền chăm sóc SaleWork
+
+RPC ghi mới chỉ cấp EXECUTE cho service_role; anon/authenticated, kể cả Admin, không gọi được. Service role vẫn không SELECT/DML care_logs trực tiếp. Helper đọc security-definer kiểm tra Admin hoặc Sales active có log của mình/khách canonical được giao; Sales khác và inactive không nhận ngày chăm. View security-invoker giữ RLS snapshot gốc. Không nới policy bảng và không cấp Sales quyền đọc toàn bộ identity links. RLS local bằng JWT thật đã kiểm các ranh giới này.

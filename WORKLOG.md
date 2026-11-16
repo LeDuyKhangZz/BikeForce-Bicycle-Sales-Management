@@ -4258,3 +4258,19 @@ Ki?m ch?ng b? sung: `npm run lint` th?t b?i v?i 10 l?i/2 c?nh b?o ? c?c file ngo
 Theo y?u c?u ng??i d?ng, `/admin/ecommerce` b? bi?u ?? ?T? tr?ng doanh thu theo s?n? v? ???n h?ng theo ngu?n? ch?a m?c ?Ch?a ph?n lo?i?. Bi?u ?? doanh thu theo ng?y n?m tr?n m?t h?ng ri?ng; ph?n danh s?ch ngu?n Vi?t Nam/Singapore gi? nguy?n.
 
 Ki?m ch?ng: `npm run build`, `npm run typecheck`, lint ri?ng `features/admin-ecommerce/ecommerce-charts.tsx` v? `git diff --check` ??u exit 0. Lint to?n d? ?n c?n 9 l?i/2 c?nh b?o ? file ngo?i thay ??i. Ch?a ki?m tra giao di?n b?ng tr?nh duy?t 375px. Next Exact Steps: m? `/admin/ecommerce` v? x?c nh?n ch? c?n bi?u ?? doanh thu theo ng?y tr?n h?ng bi?u ??.
+
+## 2026-11-16 ? Ki?m tra d? li?u ch?m s?c SaleWork tr?c ti?p
+
+?? ??ng nh?p b?ng c?u h?nh SaleWork hi?n c? v? ki?m tra API m? giao di?n s? d?ng, kh?ng g?i tin nh?n/kh?ng m? h?i tho?i ?? ??nh d?u ?? ??c. `GET /api/account/getAll` tr? 25 t?i kho?n; `POST /api/conversation` tr? danh s?ch c? accountId, toId, lastMessageTime. `POST /api/message/filter` tr?n m?t h?i tho?i ri?ng tr? HTTP 200, 30 tin nh?n c? msgId/conversationId/uidFrom/idTo, msgType v? ts; c? 30 ts h?p l?. M?u c? uidFrom=0 v? sendBy=null: ch?a ch?ng minh ng??i thao t?c c? th? ho?c quy ??c chi?u g?i b?ng ??i so?t th?c t?. Kh?ng log token, s? ?i?n tho?i ho?c n?i dung chat.
+
+??y l? ki?m ch?ng kh? n?ng ??c d? li?u, ch?a ??ng b? care_logs, ch?a thay ??i ch? s? ch?m s?c, ch?a ch?ng minh ?? kh?p 95%. Next Exact Steps: x?c minh quy ??c chi?u g?i trong frontend/m?u ??i so?t; b? sung ??c l?ch s? ph?n trang theo t?i kho?n; ch? gh?p kh?ch qua li?n k?t ??nh danh ?? x?c minh tr??c khi thi?t k? worker ghi care_logs. Kh?ng c?n y?u c?u ng??i d?ng h?i h? tr? SaleWork ?? ti?p t?c ki?m tra ???ng API giao di?n hi?n c?.
+
+## 2026-11-16 — Triển khai phần code chăm sóc SaleWork (DEC-124 / ISSUE-055)
+
+Đã thêm parser và worker đọc API giao diện bằng phiên đăng nhập hiện có; phân trang hội thoại/tin nhắn, chỉ lấy chiều gửi đi và nhóm loại tin đã xác định, không mở hội thoại/đánh dấu đã đọc. Ánh xạ tài khoản Sales theo cấu hình, định danh khách nguồn chính xác và canonical link phải được Admin duyệt. Thêm RPC service-role-only idempotent và helper ngày chăm sóc có kiểm tra quyền, view chịu RLS; UI/count/filter cùng dùng last_care_date, giữ nguyên last_visit_date MISA. Lịch cũ chỉ thêm bước chăm sóc khi SALEWORK_CARE_SYNC_ENABLED=true. Types generate bằng Supabase CLI từ local sau khi áp các dependency schema còn thiếu; không sửa tay.
+
+Kiểm chứng thực tế: 25 tài khoản đọc được; dry-run hai hội thoại có 8 tin/3 sự kiện gửi đi. Unit liên quan 60/60, RLS/integration 13/13 bằng JWT thật và E2E 3/3 trên mobile-375/desktop-1440/zalo-like đều pass; E2E chạm Server Action popup, đo nút >=44px và không cuộn ngang. Build/typecheck pass. Lint file thay đổi được chạy riêng; lint toàn repo còn 8 lỗi/2 cảnh báo ở file ngoài task.
+
+CLI Management API đọc được schema production. Không chạy db push --include-all vì lịch sử cloud thiếu nhiều migration từng áp tay. Đã fetch đúng lịch sử cloud vào workspace tạm được gitignore và dry-run xác nhận chỉ migration 20261116100000_salework_care_sync.sql, không seed/roles. Lệnh db push thực tế bị automatic approval review từ chối vì chưa có xác nhận triển khai chính xác lên production. Không có thay đổi schema/data production, chưa bật lịch và chưa push web. ISSUE-055 vẫn IN_PROGRESS; chưa chứng minh mức khớp 95%.
+
+Next Exact Steps: nhận xác nhận triển khai đúng migration chăm sóc trên project rnmywhwanpxmipqducqu; chạy db push --yes --workdir tmp/salework-care-deploy; generate types --linked và kiểm tra diff; chạy dry-run đầy đủ rồi đồng bộ có đối soát định danh, chưa bật lịch nếu còn nguồn không khớp; commit/push web khi migration đã áp.

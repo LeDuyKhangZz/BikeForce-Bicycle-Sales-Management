@@ -1573,3 +1573,7 @@ Theo y?u c?u ng??i d?ng, kh?i t?nh tr?ng ??ng b? t?i `/admin` b? d?ng ?Pancake ?
 ## 2026-11-16 ? B? hai bi?u ?? theo s?n
 
 Theo y?u c?u ng??i d?ng, `/admin/ecommerce` b? bi?u ?? ?T? tr?ng doanh thu theo s?n? v? ???n h?ng theo ngu?n? ch?a m?c ?Ch?a ph?n lo?i?. Bi?u ?? doanh thu theo ng?y n?m tr?n m?t h?ng ri?ng; ph?n danh s?ch ngu?n Vi?t Nam/Singapore gi? nguy?n.
+
+## 16/11/2026 — Ngày chăm sóc hiệu lực
+
+Nhãn khách hàng đổi thành “Chăm sóc gần nhất”; nội dung lấy ngày chăm sóc hiệu lực, vẫn giữ ngày ghé thăm MISA trong dữ liệu riêng. Số đếm cảnh báo, bộ lọc và popup dùng cùng `last_care_date`, tránh khách vừa nhắn qua Zalo vẫn xuất hiện ở danh sách chưa chăm. E2E đã kiểm tra 375px/1440px/Zalo: popup đúng một khách cần chăm, không cuộn ngang và nút mở cao ít nhất 44px.

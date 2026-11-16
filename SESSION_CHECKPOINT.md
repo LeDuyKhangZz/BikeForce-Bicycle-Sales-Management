@@ -3108,3 +3108,17 @@ Ki?m ch?ng b? sung: `npm run lint` th?t b?i v?i 10 l?i/2 c?nh b?o ? c?c file ngo
 Theo y?u c?u ng??i d?ng, `/admin/ecommerce` b? bi?u ?? ?T? tr?ng doanh thu theo s?n? v? ???n h?ng theo ngu?n? ch?a m?c ?Ch?a ph?n lo?i?. Bi?u ?? doanh thu theo ng?y n?m tr?n m?t h?ng ri?ng; ph?n danh s?ch ngu?n Vi?t Nam/Singapore gi? nguy?n.
 
 Ki?m ch?ng: `npm run build`, `npm run typecheck`, lint ri?ng `features/admin-ecommerce/ecommerce-charts.tsx` v? `git diff --check` ??u exit 0. Lint to?n d? ?n c?n 9 l?i/2 c?nh b?o ? file ngo?i thay ??i. Ch?a ki?m tra giao di?n b?ng tr?nh duy?t 375px. Next Exact Steps: m? `/admin/ecommerce` v? x?c nh?n ch? c?n bi?u ?? doanh thu theo ng?y tr?n h?ng bi?u ??.
+
+## 2026-11-16 ? Ki?m tra d? li?u ch?m s?c SaleWork tr?c ti?p
+
+?? ??ng nh?p b?ng c?u h?nh SaleWork hi?n c? v? ki?m tra API m? giao di?n s? d?ng, kh?ng g?i tin nh?n/kh?ng m? h?i tho?i ?? ??nh d?u ?? ??c. `GET /api/account/getAll` tr? 25 t?i kho?n; `POST /api/conversation` tr? danh s?ch c? accountId, toId, lastMessageTime. `POST /api/message/filter` tr?n m?t h?i tho?i ri?ng tr? HTTP 200, 30 tin nh?n c? msgId/conversationId/uidFrom/idTo, msgType v? ts; c? 30 ts h?p l?. M?u c? uidFrom=0 v? sendBy=null: ch?a ch?ng minh ng??i thao t?c c? th? ho?c quy ??c chi?u g?i b?ng ??i so?t th?c t?. Kh?ng log token, s? ?i?n tho?i ho?c n?i dung chat.
+
+??y l? ki?m ch?ng kh? n?ng ??c d? li?u, ch?a ??ng b? care_logs, ch?a thay ??i ch? s? ch?m s?c, ch?a ch?ng minh ?? kh?p 95%. Next Exact Steps: x?c minh quy ??c chi?u g?i trong frontend/m?u ??i so?t; b? sung ??c l?ch s? ph?n trang theo t?i kho?n; ch? gh?p kh?ch qua li?n k?t ??nh danh ?? x?c minh tr??c khi thi?t k? worker ghi care_logs. Kh?ng c?n y?u c?u ng??i d?ng h?i h? tr? SaleWork ?? ti?p t?c ki?m tra ???ng API giao di?n hi?n c?.
+
+## 2026-11-16 — Chăm sóc SaleWork: code và kiểm thử xong, rollout chờ xác nhận
+
+Đọc docs/salework-care-sync.md, DEC-124 và ISSUE-055. Parser/worker/RPC/view/UI đã có; 60 unit, 13 RLS/integration, 3 E2E và build/typecheck pass. Dry-run SaleWork thật hai hội thoại: 8 tin, 3 gửi đi. Lint toàn repo còn 8 lỗi/2 cảnh báo ngoài task. Có bộ test e2e/salework-care.spec.ts cho count/popup/375px và đúng Server Action hiện hữu. Chưa khẳng định đạt 95%.
+
+**Production chưa đổi.** Bộ duyệt tự động từ chối db push vì user chưa xác nhận exact production deployment. Không thử vòng qua bằng SQL query hoặc cách khác. Lịch vẫn tắt do SALEWORK_CARE_SYNC_ENABLED chưa true. Workspace tmp/salework-care-deploy (gitignored) chứa migration fetch từ cloud + duy nhất migration mới; đã copy pooler-url để dùng IPv4. Dry-run chỉ liệt kê 20261116100000_salework_care_sync.sql. Không chạy --include-all, không repair lịch sử cũ.
+
+**Next Exact Steps:** sau xác nhận rõ, chạy node node_modules/supabase/dist/supabase.js db push --yes --workdir tmp/salework-care-deploy; generate types --linked thay bản local hiện có; dry-run/ghi theo khoảng ngày đã xác nhận và kiểm tra unmatched_sales/unmatched_customers/unlinked. Mọi log phải giữ kín token/nội dung chat. Sau migration mới push web; chỉ bật lịch khi đối soát đủ. Không ghép khách tự động theo tên/số gần giống.

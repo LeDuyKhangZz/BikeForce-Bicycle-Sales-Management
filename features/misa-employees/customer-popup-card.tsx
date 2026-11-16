@@ -35,7 +35,7 @@ export function CustomerPopupCard({ customer, index, report44Month, alertCutoff 
         </summary>
         <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-xs">
           <div><dt className="text-muted-foreground">Số ngày chưa mua</dt><dd>{customer.daysWithoutPurchase ?? '—'}</dd></div>
-          <div><dt className="text-muted-foreground">Ghé thăm gần nhất</dt><dd><CustomerCareStatus lastVisitDate={customer.lastVisitDate} cutoff={alertCutoff} /></dd></div>
+          <div><dt className="text-muted-foreground">Chăm sóc gần nhất</dt><dd><CustomerCareStatus lastVisitDate={customer.lastVisitDate} lastCareDate={customer.lastCareDate} cutoff={alertCutoff} /></dd></div>
           <div><dt className="text-muted-foreground">Tần suất/tháng</dt><dd>{customer.monthlyFrequency ?? defaultMonthlyFrequency(group)} lần</dd></div>
           <div><dt className="text-muted-foreground">Doanh số cam kết</dt><dd>{formatMisaAmount(customer.committedSales ?? null)}</dd></div>
         </dl>

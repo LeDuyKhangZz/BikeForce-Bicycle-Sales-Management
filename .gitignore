@@ -113,3 +113,6 @@ artifacts/pancake-report-*.csv
 pancake-report-*.csv
 *pancake*key*
 *.secrets.json
+
+# Workspace triển khai tạm lấy lịch sử migration từ Supabase, không phải source.
+/tmp/salework-care-deploy/

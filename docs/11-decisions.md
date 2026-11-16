@@ -3050,3 +3050,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Tự nối theo số/tên gần giống bị loại vì có thể gắn nhầm người và làm sai các luồng sau này.
 - **Impact:** Thêm RPC đọc Admin-only có phân trang, hiển thị cả điện thoại nguồn và gợi ý giới hạn; không sửa dữ liệu nguồn, RLS hay điều kiện RPC duyệt.
 - **Status:** APPROVED theo yêu cầu người dùng ngày 2026-11-06.
+
+## DEC-124 — Đồng bộ chăm sóc qua API giao diện SaleWork hiện có
+
+- **Date:** 2026-11-16.
+- **Decision:** Worker dùng phiên SaleWork hiện hữu, đọc API tài khoản/hội thoại/lịch sử đã quan sát trực tiếp. Tin phía tài khoản gửi (`uidFrom=0`) trong hội thoại riêng được ghi idempotent vào `care_logs` bằng RPC service-role-only. Ánh xạ sale dùng cấu hình chính xác; khách MISA dùng liên kết Admin đã duyệt theo DEC-122. View chịu RLS cung cấp ngày chăm sóc hiệu lực dùng chung cho count/filter/UI, giữ ngày ghé thăm MISA gốc.
+- **Reason:** Báo cáo tổng hội thoại và danh bạ không có ngày chăm sóc từng khách; API giao diện đang hoạt động và đọc được tin nhắn riêng, không cần chờ hỗ trợ Open API.
+- **Alternatives:** Chỉ dùng thời gian tin cuối sẽ tính nhầm tin khách gửi đến; tự ghép theo tên hoặc số điện thoại gần giống bị loại theo DEC-122; webhook mới cần quyền riêng và không tự cung cấp lịch sử.
+- **Impact:** Thêm migration `20261116100000_salework_care_sync.sql`, worker có dry-run và bước lịch opt-in `SALEWORK_CARE_SYNC_ENABLED`. Không cấp DML bảng cho service role. Chưa tính cuộc gọi hoặc chứng minh người thao tác cụ thể trong tài khoản dùng chung. Mức khớp 95% phải được đối soát thực tế, chưa được tuyên bố đạt từ mẫu.
+- **Status:** APPROVED về triển khai theo xác nhận tiếp tục của người dùng ngày 16/11/2026; nghiệm thu dữ liệu thực tế còn mở.

@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom';
 import { AlertTriangle, LoaderCircle, Store, ShoppingCart, X } from 'lucide-react';
 
 import { loadMisaCustomerAlertList } from '@/features/misa-employees/actions';
-import { misaCustomerQuery } from '@/lib/amis/customer-filters';
 import type { CustomerAlert, CustomerAlertCounts } from '@/lib/amis/customer-alerts';
 import type { MisaCustomerAlertRow } from '@/services/misa-customer-alerts';
 import { formatCurrencyVND } from '@/lib/currency';
@@ -68,7 +67,7 @@ export function CustomerAlertSummary({ counts, path, month, employeeId, active }
           Khách hàng cần quan tâm
         </h2>
         <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-          Toàn bộ khách hàng trong tháng đang xem. Chăm sóc tính theo ngày ghé thăm, gồm khách chưa có ngày ghé thăm.
+          Toàn bộ khách hàng trong tháng đang xem. Ngày chăm sóc gồm ghé thăm, minh chứng được duyệt và tin nhắn SaleWork đã đối chiếu đúng khách.
         </p>
         <div className="mt-1 grid grid-cols-2 gap-2 md:mt-3 md:gap-3">
           {items.map(({ key, count, icon: Icon }) => (
@@ -140,7 +139,7 @@ export function CustomerAlertSummary({ counts, path, month, employeeId, active }
                             <th className="px-4 py-3 font-semibold">Tên khách hàng</th>
                             <th className="px-4 py-3 font-semibold">Tỉnh/thành</th>
                             <th className="px-4 py-3 text-right font-semibold">Công nợ</th>
-                            <th className="px-4 py-3 text-right font-semibold">{selectedAlert === 'purchase' ? 'Ngày chưa mua' : 'Ghé thăm gần nhất'}</th>
+                            <th className="px-4 py-3 text-right font-semibold">{selectedAlert === 'purchase' ? 'Ngày chưa mua' : 'Chăm sóc gần nhất'}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -150,7 +149,7 @@ export function CustomerAlertSummary({ counts, path, month, employeeId, active }
                               <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
                               <td className="px-4 py-3 text-muted-foreground">{row.province || '—'}</td>
                               <td className="tabular px-4 py-3 text-right text-foreground">{row.debt === null ? '—' : formatCurrencyVND(row.debt)}</td>
-                              <td className="tabular px-4 py-3 text-right text-foreground">{selectedAlert === 'purchase' ? `${row.daysWithoutPurchase ?? '—'} ngày` : row.lastVisitDate ? formatVietnamDate(row.lastVisitDate) : 'Chưa có lần ghé thăm'}</td>
+                              <td className="tabular px-4 py-3 text-right text-foreground">{selectedAlert === 'purchase' ? `${row.daysWithoutPurchase ?? '—'} ngày` : row.lastCareDate ? formatVietnamDate(row.lastCareDate) : 'Chưa có lần chăm sóc'}</td>
                             </tr>
                           ))}
                         </tbody>

@@ -2400,3 +2400,15 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 **Fix:** dùng chung `isHalloweenReportAccount()` cho nền và nội dung; renderer SaleWork và Sàn TMĐT đổi footer theo đúng chủ đề tài khoản.
 
 **Verification:** unit hồi quy xác nhận Hải TeleSale, Nguyễn Thị Kim Hương và Nguyễn Ngọc Triết có nội dung Halloween, không còn chuỗi 20/10; targeted unit 14/14, typecheck, lint và production build 37/37 route pass.
+
+## ISSUE-055 — Chỉ số chưa chăm chưa nhận tương tác SaleWork từng khách
+
+- **Severity:** P0 theo ưu tiên người dùng.
+- **Status:** IN_PROGRESS.
+- **Module:** SaleWork / cảnh báo khách MISA.
+- **Description:** Có thống kê tổng nhưng chưa ingest chăm sóc từng khách nên tin sale gửi chưa cập nhật cảnh báo.
+- **Expected:** Ngày chăm sóc phản ánh nguồn đã liên kết đúng; đối soát đạt từ 95% theo cùng phạm vi dữ liệu SaleWork.
+- **Actual:** Trước thay đổi chỉ có ngày thăm MISA và phiếu đã duyệt; chưa có worker tin nhắn.
+- **Root Cause:** Luồng cũ lấy tổng theo tài khoản và danh bạ, không lấy lịch sử tin riêng hoặc nối care_logs.
+- **Fix:** DEC-124, worker phân trang, RPC idempotent và view dùng chung cho count/filter/UI.
+- **Verification:** 60 unit, 13 RLS/integration và 3 E2E liên quan pass; dry-run thật hai hội thoại có 3 sự kiện trong 8 tin. Chưa đóng vì còn triển khai/backfill và đo mức khớp 95% trên dữ liệu thật.

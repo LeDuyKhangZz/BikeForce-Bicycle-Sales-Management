@@ -24,5 +24,5 @@ export function needsCustomerCare(lastVisitDate: string | null, cutoff: string):
 export function customerAlertCondition(alert: CustomerAlert, cutoff: string): string {
   return alert === 'purchase'
     ? `days_without_purchase.gte.${CUSTOMER_ALERT_DAYS}`
-    : `last_visit_date.is.null,last_visit_date.lte.${cutoff}`;
+    : `last_care_date.is.null,last_care_date.lte.${cutoff}`;
 }

@@ -1151,3 +1151,7 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 ## Đồng bộ tài chính Pancake (DEC-117)
 
 Trong lượt 09:00/17:00, worker Việt Nam gọi thêm `analytics/sale` với cùng API key và khoảng ngày UTC+7. Kết quả tách Shopee/TikTok, tính tiền sàn trả theo công thức của giao diện rồi gọi RPC thay snapshot. Lỗi analytics làm lượt shop Việt Nam báo lỗi thay vì ghi trạng thái thành công giả; snapshot đơn hàng đã ghi trước đó vẫn giữ để không mất dữ liệu vận hành.
+
+## 16/11/2026 — Chăm sóc SaleWork
+
+Đăng nhập bằng cấu hình hiện hữu → tài khoản khớp cấu hình Sales → hội thoại riêng có tương tác trong khoảng ngày → phân trang lịch sử → chỉ tin gửi đi hợp lệ → RPC chống trùng → ngày chăm sóc hiệu lực cho khách đã duyệt định danh. Nguồn thiếu/không khớp được báo riêng, không tự liên kết. Lịch `salework:sync` chỉ chạy thêm bước này khi `SALEWORK_CARE_SYNC_ENABLED=true`; dry-run không ghi DB. Chi tiết: `docs/salework-care-sync.md`.

@@ -754,3 +754,7 @@ Route `/admin/travel-expenses` và route nhập `/admin/travel-expenses/entries`
 
 Power Automate Desktop chỉ đọc và làm sạch số dư Shopee thành số nguyên. Nó POST qua HTTPS tới `shopee-balance-sync` bằng token Shopee riêng; Edge Function giữ service-role key, validate payload rồi gọi RPC ghi snapshot. UI Admin tiếp tục đọc qua client người dùng chịu RLS và RPC tổng hợp, không nhận secret automation.
 
+
+## 16/11/2026 — Worker chăm sóc SaleWork
+
+CLI điều phối login/headless Chrome; `services/salework-care-source.ts` đọc endpoint được giới hạn và phân trang; `lib/salework/care-events.ts` chuẩn hóa/rút bằng chứng; `services/salework-care-sync.ts` nhận Supabase client để gọi RPC. UI và count/filter đọc cùng view chịu RLS. Worker không truyền token hay nội dung chat sang client và không dùng client service role đọc bảng nghiệp vụ.

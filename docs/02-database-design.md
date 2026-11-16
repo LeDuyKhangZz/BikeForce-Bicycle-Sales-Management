@@ -1398,3 +1398,7 @@ Migration `20261106140000_customer_identity_review_candidates.sql` thêm RPC Adm
 Migration `20261106150000_fix_customer_identity_review_order.sql` thay thân RPC trên và qualify cột sắp xếp, tránh nhập nhằng với output parameters của `RETURNS TABLE`.
 
 Hai bảng force-RLS, chỉ Admin được SELECT; mọi ghi đi qua RPC `SECURITY DEFINER` có kiểm tra `is_admin()`, lưu người duyệt/thời điểm và audit vào `audit_log`. Danh sách RPC có phân trang; API không cấp quyền ghi trực tiếp cho authenticated, anon hoặc service_role. Đồng bộ nguồn hiện hữu không bị đổi.
+
+## 16/11/2026 — Ingest chăm sóc SaleWork (DEC-124)
+
+Migration `20261116100000_salework_care_sync.sql` thêm RPC `sync_salework_care_logs(jsonb)` chỉ service_role EXECUTE, tối đa 500 sự kiện/lượt. Khóa care log là `SALEWORK` + `ZALO:<account>:<peer>:<msgId>`. Không thêm quyền bảng. Tin nguồn chưa liên kết lưu trên khách nguồn, sau duyệt có thể đọc qua identity link; chạy lại chuyển sang canonical idempotent. Helper `get_linked_salework_care_date(text,date)` giới hạn Admin/Sales được phép và ngày tham chiếu Việt Nam. View `misa_customer_care_snapshot` dùng security_invoker, giữ các cột snapshot và thêm `last_care_date`. Index sẵn có customers source/code, care_logs customer/time và identity links canonical phục vụ truy vấn. Không sửa cột MISA gốc.

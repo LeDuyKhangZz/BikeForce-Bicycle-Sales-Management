@@ -10,7 +10,7 @@ import { MISA_CUSTOMER_FILTER_FIELDS, type MisaCustomerFilters } from '@/lib/ami
 import { misaRelativeDateRange } from '@/lib/amis/customer-filter-date-range';
 import type { MisaCustomer } from '@/types/misa-customer';
 import type { MisaCustomerPage, MisaEmployee } from '@/services/misa-report119';
-import { getLatestCareReviewByCustomerIds, listRecentlyApprovedCustomerIds } from '@/services/customer-care';
+import { getLatestCareReviewByCustomerIds } from '@/services/customer-care';
 
 const PAGE_SIZE = 10;
 
@@ -54,6 +54,7 @@ function customerFromRow(value: unknown): MisaCustomer | null {
   const daysWithoutPurchase = 'days_without_purchase' in value && typeof value.days_without_purchase === 'number' && Number.isFinite(value.days_without_purchase) ? value.days_without_purchase : null;
   const recentPurchaseDate = 'recent_purchase_date' in value && typeof value.recent_purchase_date === 'string' ? value.recent_purchase_date : null;
   const lastVisitDate = 'last_visit_date' in value && typeof value.last_visit_date === 'string' ? value.last_visit_date : null;
+  const lastCareDate = 'last_care_date' in value && typeof value.last_care_date === 'string' ? value.last_care_date : null;
   const phone = 'phone' in value && typeof value.phone === 'string' && value.phone.trim() !== '' ? value.phone : null;
   return {
     id: value.misa_customer_id,
@@ -66,6 +67,7 @@ function customerFromRow(value: unknown): MisaCustomer | null {
     recentPurchaseDate,
     daysWithoutPurchase,
     lastVisitDate,
+    lastCareDate,
     owner: value.owner_name,
   };
 }
@@ -150,8 +152,8 @@ export async function getCachedMisaEmployeeCustomers(
   if (!isEmployeeRow(employeeValue)) throw new Error('Snapshot nhân viên MISA không hợp lệ.');
 
   let query = supabase
-    .from('misa_report119_customers')
-    .select('misa_customer_id,customer_code,customer_name,phone,billing_province,debt,order_sales,recent_purchase_date,days_without_purchase,last_visit_date,owner_name', { count: 'exact' })
+    .from('misa_customer_care_snapshot')
+    .select('misa_customer_id,customer_code,customer_name,phone,billing_province,debt,order_sales,recent_purchase_date,days_without_purchase,last_visit_date,last_care_date,owner_name', { count: 'exact' })
     .eq('period_month', periodMonth)
     .eq('misa_employee_id', params.employeeId);
 
@@ -179,12 +181,6 @@ export async function getCachedMisaEmployeeCustomers(
   }
   if (params.alert && params.alertCutoff) {
     query = query.or(customerAlertCondition(params.alert, params.alertCutoff));
-    if (params.alert === 'care') {
-      const recentlyApprovedCustomerIds = await listRecentlyApprovedCustomerIds(supabase, params.alertCutoff);
-      if (recentlyApprovedCustomerIds.length > 0) {
-        query = query.not('misa_customer_id', 'in', `(${recentlyApprovedCustomerIds.join(',')})`);
-      }
-    }
   }
   if (params.searchQuery) {
     const safe = params.searchQuery.replace(/[,%()]/g, ' ');

@@ -93,6 +93,15 @@ export function getSaleWorkAccountName(salesFullName: string): string | null {
   return SALES_SALEWORK_ACCOUNT_MAP[salesFullName.trim()] ?? null;
 }
 
+/** Chỉ ánh xạ ngược các tên đã cấu hình; không đoán nhân viên theo tên gần giống. */
+export function getSalesNameForSaleWorkAccount(names: readonly string[]): string | null {
+  const normalized = new Set(names.map(normalizeSaleWorkAccountName));
+  const matches = Object.entries(SALES_SALEWORK_ACCOUNT_MAP).filter(([, account]) =>
+    getMergedSaleWorkAccountNames(account).some((name) => normalized.has(normalizeSaleWorkAccountName(name))),
+  );
+  return matches.length === 1 ? matches[0]?.[0] ?? null : null;
+}
+
 /** Các tài khoản nguồn được cộng vào cùng một báo cáo SaleWork. */
 export function getMergedSaleWorkAccountNames(accountName: string): readonly string[] {
   return SALEWORK_MERGED_ACCOUNT_NAMES[accountName] ?? [accountName];

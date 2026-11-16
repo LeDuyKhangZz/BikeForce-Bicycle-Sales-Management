@@ -89,7 +89,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
             <th scope="col" className="px-2 py-3 text-right font-semibold">Doanh số cam kết</th>
             <th scope="col" className="px-2 py-3 font-semibold">Ngày mua hàng gần nhất</th>
             <th scope="col" className="px-2 py-3 text-center font-semibold">Số ngày chưa mua hàng</th>
-            <th scope="col" className="px-2 py-3 font-semibold">Ngày ghé thăm gần nhất</th>
+            <th scope="col" className="px-2 py-3 font-semibold">Ngày chăm sóc gần nhất</th>
           </tr>
         </thead>
         <tbody>
@@ -111,7 +111,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
               <td className="px-2 py-2 text-center align-top tabular-nums">
                 <CustomerDormancyBadge days={customer.daysWithoutPurchase} />
               </td>
-              <td className="px-2 py-2 align-top tabular-nums"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} cutoff={alertCutoff} />{salesMobileCards && <Link href={careHref(customer.id)} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Gửi minh chứng</Link>}</td>
+              <td className="px-2 py-2 align-top tabular-nums"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} lastCareDate={customer.lastCareDate} cutoff={alertCutoff} />{salesMobileCards && <Link href={careHref(customer.id)} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Gửi minh chứng</Link>}</td>
             </tr>
             );
           })}
@@ -149,7 +149,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
 
                   <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-border p-3">
                     <div className="min-w-0"><dt className="text-xs text-muted-foreground">Số ngày chưa mua hàng</dt><dd className="mt-1"><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div>
-                    <div className="min-w-0"><dt className="text-xs text-muted-foreground">Ghé thăm gần nhất</dt><dd className="mt-1"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} cutoff={alertCutoff} /></dd></div>
+                    <div className="min-w-0"><dt className="text-xs text-muted-foreground">Chăm sóc gần nhất</dt><dd className="mt-1"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} lastCareDate={customer.lastCareDate} cutoff={alertCutoff} /></dd></div>
                   </dl>
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div><p className="text-xs text-muted-foreground">Tần suất/tháng</p><p className="mt-1 flex min-h-12 items-center rounded-xl border border-border bg-primary/[0.025] px-3 font-semibold text-heading">{frequency} lần</p></div>
@@ -174,7 +174,7 @@ export function MisaCustomerTable({ rows, employeeName, startIndex, employeeId, 
               <div className="flex min-h-20 items-center gap-3 rounded-xl bg-status-info-bg p-3 text-status-info-fg"><BarChart3 aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Doanh số đơn hàng</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaAmount(customer.orderSales)}</dd></div></div>
               <div className="flex min-h-20 items-center gap-3 rounded-xl bg-primary/5 p-3 text-heading"><ShoppingCart aria-hidden="true" className="size-7 shrink-0 text-primary" /><div><dt className="text-xs text-muted-foreground">Ngày mua gần nhất</dt><dd className="mt-1 text-base font-bold tabular-nums">{formatMisaDate(customer.recentPurchaseDate)}</dd></div></div>
               <div className="flex min-h-20 items-center gap-3 rounded-xl border border-border bg-card p-3 text-heading"><CalendarDays aria-hidden="true" className="size-7 shrink-0 text-primary" /><div><dt className="text-xs text-muted-foreground">Số ngày chưa mua hàng</dt><dd className="mt-1"><CustomerDormancyBadge days={customer.daysWithoutPurchase} /></dd></div></div>
-              <div className="flex min-h-20 items-center gap-3 rounded-xl bg-primary/5 p-3 text-heading sm:col-span-2"><Store aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Ngày ghé thăm gần nhất</dt><dd className="mt-1 text-base tabular-nums"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} cutoff={alertCutoff} /></dd></div></div>
+              <div className="flex min-h-20 items-center gap-3 rounded-xl bg-primary/5 p-3 text-heading sm:col-span-2"><Store aria-hidden="true" className="size-7 shrink-0" /><div><dt className="text-xs">Ngày chăm sóc gần nhất</dt><dd className="mt-1 text-base tabular-nums"><CustomerCareStatus lastVisitDate={customer.lastVisitDate} lastCareDate={customer.lastCareDate} cutoff={alertCutoff} /></dd></div></div>
             </dl>
             <div className="mt-3 border-t border-border pt-3">
               <dl className="grid grid-cols-2 gap-3"><div><dt className="text-muted-foreground">Tần suất/tháng</dt><dd className="font-semibold">{frequency} lần</dd></div><div><dt className="text-muted-foreground">Doanh số cam kết</dt><dd className="font-semibold tabular-nums">{customer.committedSales === undefined || customer.committedSales === null ? 'Chưa cam kết' : formatMisaAmount(customer.committedSales)}</dd></div></dl>

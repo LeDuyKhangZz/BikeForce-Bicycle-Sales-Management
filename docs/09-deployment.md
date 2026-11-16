@@ -1319,3 +1319,7 @@ Sau migration bảng tài chính, áp tiếp `20261026100000_pancake_image_finan
 4. Trong Power Automate Desktop, gửi `POST` tới `https://<project-ref>.supabase.co/functions/v1/shopee-balance-sync?available_cash_balance=%ShopeeBalanceClean%`, thêm header token và chỉ coi HTTP 200 với body `{"ok":true,...}` là thành công.
 5. Mở `/admin/ecommerce` bằng Admin và xác nhận “Shopee · Số dư Ads” cùng thời điểm cập nhật. Không đưa token vào source, docs hoặc biến `NEXT_PUBLIC_*`.
 
+
+## 16/11/2026 — Triển khai chăm sóc SaleWork
+
+Áp migration `20261116100000_salework_care_sync.sql` trước deploy web có view mới, generate types từ schema thực rồi mới chạy worker ghi. Lịch sử cloud hiện thiếu nhiều migration từng áp thủ công: không dùng `db push --include-all`. Workspace tạm `tmp/salework-care-deploy` được tạo từ `migration fetch --linked` cùng pooler IPv4 hiện hữu; thêm duy nhất migration chăm sóc mới. Dry-run workspace này xác nhận chỉ một migration được push, không seed/roles và không sửa lịch sử cũ. Workspace tạm nằm trong gitignore. Sau triển khai, dry-run phạm vi đã chọn, kiểm tra các bộ đếm chưa khớp/chưa liên kết; chỉ bật `SALEWORK_CARE_SYNC_ENABLED=true` khi đã đối soát. Xem runbook `docs/salework-care-sync.md`.

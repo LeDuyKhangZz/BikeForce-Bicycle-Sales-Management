@@ -1757,3 +1757,22 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 
 - [x] B? bi?u ?? t? tr?ng doanh thu v? bi?u ?? ??n h?ng theo ngu?n theo y?u c?u ng??i d?ng.
 - [x] Bi?u ?? doanh thu theo ng?y d?ng m?t h?ng ri?ng.
+
+## 2026-11-16 ? Kh?o s?t ??ng b? ch?m s?c SaleWork
+
+- [x] Ki?m tra tr?c ti?p API t?i kho?n, h?i tho?i v? l?ch s? tin nh?n ri?ng b?ng phi?n SaleWork hi?n c?; l?ch s? tr? HTTP 200 v?i 30 timestamp h?p l?.
+- [ ] X?c minh chi?u g?i/nh?n, ??ng b? ph?n trang v? gh?p ??ng sale/kh?ch v?o care_logs.
+- [ ] N?i d? li?u ch?m s?c v? ??i so?t ch? s? ??t ?t nh?t 95%.
+
+## 2026-11-16 — Worker chăm sóc SaleWork (DEC-124 / ISSUE-055)
+
+- [x] Đọc API hội thoại/tin nhắn hiện có, xác minh uidFrom=0 là phía tài khoản gửi.
+- [x] Phân trang có chặn cursor lặp; ngày Việt Nam; mã tin chống trùng; không lưu nội dung chat/token.
+- [x] RPC ghi hẹp, kiểm tra định danh và profile; canonical link theo DEC-122; không cấp quyền bảng cho service role.
+- [x] Ngày chăm sóc hiệu lực dùng chung trong filter/count/UI và giữ ngày MISA gốc.
+- [x] Unit liên quan 60/60, RLS/integration 13/13, E2E 3/3, build và typecheck pass; lint riêng file thay đổi.
+- [x] Dry-run worker thật: 2 hội thoại / 8 tin / 3 sự kiện gửi đi.
+- [x] Dry-run production chỉ đúng một migration mới; không áp thay đổi cũ.
+- [ ] Xác nhận và áp migration production (automatic approval review đã từ chối lần triển khai chưa được xác nhận rõ).
+- [ ] Generate types --linked sau rollout; backfill/đối soát định danh và mức khớp từ 95%.
+- [ ] Push web sau migration và bật lịch khi đủ điều kiện; hiện chưa bật.

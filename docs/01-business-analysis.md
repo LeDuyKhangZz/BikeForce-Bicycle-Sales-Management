@@ -959,3 +959,7 @@ Sales chọn khách thuộc phạm vi MISA của mình, gửi 1–5 ảnh và ng
 ## Bổ sung 07/10/2026 — Võ Thanh Nhâm
 
 Võ Thanh Nhâm dùng tài khoản SaleWork `Abraham Nhâm Miền Trung`. Tài khoản này tham gia cả đồng bộ ngày và snapshot tháng; dữ liệu AMIS tiếp tục ghép bằng đúng tên `Võ Thanh Nhâm`, không tìm gần đúng và không suy diễn số liệu khi nguồn thiếu.
+
+## 16/11/2026 — Nguồn ngày chăm sóc SaleWork (DEC-124)
+
+Ngày chăm sóc hiệu lực kết hợp ngày ghé thăm MISA, phiếu chăm sóc đã được duyệt và thời điểm tin nhắn gửi từ tài khoản sale trong hội thoại Zalo riêng đã liên kết đúng khách. Tin khách gửi đến không tự chứng minh sale đã chăm. Giữ ngưỡng cảnh báo 30 ngày hiện hữu. Không suy đoán định danh, không coi tài khoản dùng chung là bằng chứng về người gõ tin cụ thể. Mục tiêu đối soát 95% còn chờ đo thực tế.
