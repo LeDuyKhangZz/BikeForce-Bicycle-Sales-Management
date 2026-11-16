@@ -348,7 +348,8 @@ async function harvestAct(ctx: BrowserContext, page: Page, got: Harvested): Prom
     const section = overviewText.slice(overviewText.indexOf('Nợ phải thu theo hạn nợ'));
     const parseMillion = (label: string) => {
       const match = new RegExp(`${label}\\s*([\\d.]+)\\s*Triệu đồng`, 'u').exec(section);
-      return match ? Number(match[1].replace(/\./gu, '')) * 1_000_000 : null;
+      const amount = match?.[1];
+      return amount ? Number(amount.replace(/\./gu, '')) * 1_000_000 : null;
     };
     const total = parseMillion('Tổng');
     const overdue = parseMillion('Quá hạn');

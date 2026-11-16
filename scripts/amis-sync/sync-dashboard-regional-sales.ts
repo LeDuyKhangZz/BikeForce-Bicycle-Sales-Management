@@ -9,6 +9,7 @@ config({ path: resolve(here, '.env'), quiet: true, override: true });
 
 type AmisRegionRow = { ID?: unknown; FullName?: unknown; CurrentAmount?: unknown; MISACode?: unknown };
 type RegionRow = { name: string; value: number; organizationUnitId: number; misaCode: string };
+type CapturedWidget = { parameters: Record<string, unknown>; rows: RegionRow[] };
 
 function selectedMonth(): string {
   const index = process.argv.indexOf('--month');
@@ -55,7 +56,7 @@ async function main(): Promise<void> {
 
   const expectedFromDate = crmDateRange(month).fromDate;
   const shared = await connectToSharedAmisBrowser({ pageUrl: /amisapp\.misa\.vn/ });
-  let captured: { parameters: Record<string, unknown>; rows: RegionRow[] } | null = null;
+  const captured: { current: CapturedWidget | null } = { current: null };
   const captureWidget = async (response: import('@playwright/test').Response) => {
     if (!/\/crm\/g\d+\/api\/dashboard\/Dashboard\/18\/data/.test(response.url()) || !response.ok()) return;
     try {
@@ -70,7 +71,7 @@ async function main(): Promise<void> {
       name: typeof row.FullName === 'string' ? row.FullName : 'Không rõ', value: Number(row.CurrentAmount || 0),
       organizationUnitId: Number(row.ID || 0), misaCode: typeof row.MISACode === 'string' ? row.MISACode : '',
       })).filter((row) => Number.isFinite(row.value));
-      if (rows.length > 0) captured = { parameters, rows };
+      if (rows.length > 0) captured.current = { parameters, rows };
     } catch { /* The widget can be reloaded while the CRM page is navigating. */ }
   };
   try {
@@ -81,13 +82,14 @@ async function main(): Promise<void> {
     shared.context.off('response', captureWidget);
     await shared.disconnect();
   }
-  if (!captured) throw new Error(`Không nhận được biểu đồ AMIS cho ${month}. Giữ AMIS CRM đang đăng nhập và thử lại.`);
+  if (!captured.current) throw new Error(`Không nhận được biểu đồ AMIS cho ${month}. Giữ AMIS CRM đang đăng nhập và thử lại.`);
+  const widget = captured.current;
   const publish = await fetch(syncUrl, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'x-amis-report-sync-secret': secret },
-      body: JSON.stringify({ month, generatedAt: new Date().toISOString(), parameters: captured.parameters, rows: captured.rows }), cache: 'no-store',
+      body: JSON.stringify({ month, generatedAt: new Date().toISOString(), parameters: widget.parameters, rows: widget.rows }), cache: 'no-store',
   });
   if (!publish.ok) throw new Error(`Dashboard doanh số khu vực HTTP ${publish.status}`);
-  console.log(`Đã đồng bộ doanh số theo đơn vị ${month} (${captured.rows.length} đơn vị) sang Dashboard.`);
+  console.log(`Đã đồng bộ doanh số theo đơn vị ${month} (${widget.rows.length} đơn vị) sang Dashboard.`);
 }
 
 main().catch((error: unknown) => { console.error(error instanceof Error ? error.message : 'Đồng bộ doanh số khu vực thất bại.'); process.exitCode = 1; });
