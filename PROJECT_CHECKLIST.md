@@ -1747,3 +1747,8 @@ Kiểm chứng ban đầu: 7/7 test tích hợp HTTP giả lập đạt. Chưa x
 - [x] Thêm danh sách phân trang cho toàn bộ khách SaleWork/Zalo chưa liên kết và chưa có exact MISA match đủ điều kiện.
 - [x] Hiển thị gợi ý theo 7 số cuối/tên để đối chiếu thủ công; giữ nguyên xác nhận exact-phone trong RPC ghi.
 - [ ] Áp migration `20261106140000_customer_identity_review_candidates.sql` lên Supabase rồi tải lại `/admin/master-data`.
+
+## 2026-11-16 ? T?nh tr?ng ??ng b? Pancake
+
+- [x] B? d?ng ?Pancake ? T?i ch?nh s?n? c?ng truy v?n tr?ng th?i kh?i T?ng quan theo y?u c?u ng??i d?ng.
+- [x] Typecheck exit 0; unit tr?ng th?i ??ng b? 3/3 pass.

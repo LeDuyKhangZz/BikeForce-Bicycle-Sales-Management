@@ -4246,3 +4246,9 @@ Next Exact Steps: áp `supabase/migrations/20261106140000_customer_identity_revi
 Người dùng đã áp migration `20261106140000_customer_identity_review_candidates.sql`; probe anon nhận `permission denied for function`, phù hợp với quyền execute bị revoke. Log local cho thấy trang vẫn gặp lỗi RPC. Thêm migration `20261106150000_fix_customer_identity_review_order.sql` qualify cột sort để tránh xung đột có thể xảy ra với output params, đồng thời thêm log server status/code/message. Chưa xác nhận bằng request Admin có session và chưa chạy build/typecheck/test.
 
 Next Exact Steps: áp migration `supabase/migrations/20261106150000_fix_customer_identity_review_order.sql` trong cùng project rồi reload trang Admin. Nếu còn lỗi, đọc dòng `[admin-master-data-rpc]` trong log dev để lấy status/code cụ thể.
+
+## 2026-11-16 ? B? d?ng tr?ng th?i t?i ch?nh Pancake
+
+Theo y?u c?u ng??i d?ng, x?a loader t?i ch?nh Pancake v? c?u h?nh fallback t??ng ?ng trong `services/system-health.ts`. Danh s?ch v? b? ??m t? c?p nh?t theo c?c ngu?n c?n l?i. Kh?ng thay ??i schema hay worker t?i ch?nh. Typecheck exit 0; unit tr?ng th?i ??ng b? 3/3 pass.
+
+Ki?m ch?ng b? sung: `npm run lint` th?t b?i v?i 10 l?i/2 c?nh b?o ? c?c file ngo?i thay ??i; `npm run build` th?t b?i v? Turbopack kh?ng ??c ???c `logs/auto-sync.lock` ?ang b? ti?n tr?nh kh?c kh?a (os error 32). Ch?a ki?m tra tr?nh duy?t 375px.

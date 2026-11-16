@@ -65,21 +65,6 @@ async function latestPancake(client: Client): Promise<SyncSourceSnapshot> {
   };
 }
 
-async function latestPancakeFinancials(client: Client): Promise<SyncSourceSnapshot> {
-  const { data, error } = await client
-    .from('pancake_marketplace_financial_reports')
-    .select('report_date,synced_at')
-    .order('synced_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return {
-    key: 'pancake-financials', label: 'Pancake · Tài chính sàn', description: 'Phí sàn, tiền sàn trả và tiền nạp quảng cáo.',
-    cadence: 'DAILY', latestSyncedAt: data?.synced_at ?? null, dataPeriod: data?.report_date ?? null,
-    href: '/admin/ecommerce',
-  };
-}
-
 async function latestMisaInventory(client: Client): Promise<SyncSourceSnapshot> {
   const { data, error } = await client
     .from('inventory')
@@ -207,7 +192,6 @@ const LOADERS = [
   latestMisaInventory,
   latestMisaOrders,
   latestPancake,
-  latestPancakeFinancials,
   latestSaleWorkReports,
   latestSaleWorkContacts,
   latestTikTokAds,
@@ -223,7 +207,6 @@ const SOURCE_FAILURES = [
   { key: 'misa-inventory', label: 'MISA · Tồn kho', description: 'Số lượng tồn theo kho và sản phẩm.', cadence: 'DAILY', href: '/admin/inventory' },
   { key: 'misa-orders', label: 'MISA · Đơn hàng', description: 'Đơn bán hàng và công nợ đồng bộ từ MISA.', cadence: 'DAILY', href: '/admin/orders' },
   { key: 'pancake-orders', label: 'Pancake · Đơn hàng', description: 'Đơn hàng và doanh thu theo sàn thương mại điện tử.', cadence: 'DAILY', href: '/admin/ecommerce' },
-  { key: 'pancake-financials', label: 'Pancake · Tài chính sàn', description: 'Phí sàn, tiền sàn trả và tiền nạp quảng cáo.', cadence: 'DAILY', href: '/admin/ecommerce' },
   { key: 'salework-reports', label: 'SaleWork · Tin nhắn và cuộc gọi', description: 'Thống kê hội thoại, tin nhắn và cuộc gọi Zalo theo ngày.', cadence: 'DAILY', href: '/admin/salework' },
   { key: 'salework-contacts', label: 'SaleWork · Khách hàng và liên hệ', description: 'Danh bạ đồng bộ từ tài khoản SaleWork Zalo.', cadence: 'ON_DEMAND', href: '/admin/salework/customers' },
   { key: 'tiktok-ads', label: 'TikTok · Số dư Ads', description: 'Snapshot số dư tài khoản quảng cáo TikTok.', cadence: 'DAILY', href: '/admin/ecommerce' },

@@ -1565,3 +1565,7 @@ Trang Tổng quan đặt **Tình trạng đồng bộ hôm nay** lên đầu: th
 ## 06/11/2026 — Chuẩn hóa dữ liệu nền
 
 Trang Admin `/admin/master-data` trình bày các danh sách dạng thẻ, dùng được trên mobile: khách SaleWork/Zalo có số chuẩn hóa trùng chính xác với MISA; nhóm khách chưa khớp hoặc cần rà soát có gợi ý theo 7 số cuối/tên; và mã sản phẩm ngoài MISA chờ gán alias. Gợi ý gần khớp chỉ để đối chiếu, không có nút duyệt liên kết; RPC ghi vẫn đòi số chính xác. Sản phẩm MISA chỉ hiện biến thể cùng màu/size. Không có nút gộp/xóa dữ liệu nguồn.
+
+## 16/11/2026 ? B? ngu?n t?i ch?nh Pancake kh?i t?nh tr?ng ??ng b?
+
+Theo y?u c?u ng??i d?ng, kh?i t?nh tr?ng ??ng b? t?i `/admin` b? d?ng ?Pancake ? T?i ch?nh s?n? kh?i danh s?ch, b? ??m v? nh?m c?n ki?m tra. B? truy v?n tr?ng th?i ngu?n n?y; lu?ng ??ng b? t?i ch?nh v? d? li?u t?i `/admin/ecommerce` gi? nguy?n.

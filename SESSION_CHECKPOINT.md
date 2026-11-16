@@ -3096,3 +3096,9 @@ Trang `/admin/master-data` có danh sách exact match ở trên và thêm danh s
 Người dùng đã áp migration `20261106140000_customer_identity_review_candidates.sql`. RPC tồn tại trên Supabase; probe anon trả permission denied như dự kiến vì function chỉ cấp execute cho authenticated. Log local cho thấy route gặp lỗi RPC khi render phiên Admin, nhưng log cũ chỉ có thông báo tổng quát nên nguyên nhân chưa được chứng minh. Đã thêm `20261106150000_fix_customer_identity_review_order.sql` qualify cột sort để loại bỏ khả năng đụng tên với output params và thêm log server status/code/message.
 
 **Next Exact Steps:** áp migration `20261106150000_fix_customer_identity_review_order.sql`, rồi tải lại `/admin/master-data`. Nếu lỗi còn, lấy dòng `[admin-master-data-rpc]` từ terminal và xử lý theo status/code.
+
+## 2026-11-16 ? B? t?i ch?nh Pancake kh?i T?ng quan
+
+?? b? loader v? fallback `pancake-financials` kh?i t?nh tr?ng ??ng b? `/admin`; danh s?ch, b? ??m v? nh?m c?n ki?m tra d?ng c?c ngu?n c?n l?i. D? li?u v? ??ng b? t?i ch?nh ? S?n TM?T gi? nguy?n. Typecheck exit 0; unit tr?ng th?i ??ng b? 3/3 pass. Next Exact Steps: t?i l?i `/admin` trong phi?n Admin ?? xem danh s?ch ?? b? d?ng t?i ch?nh Pancake.
+
+Ki?m ch?ng b? sung: `npm run lint` th?t b?i v?i 10 l?i/2 c?nh b?o ? c?c file ngo?i thay ??i; `npm run build` th?t b?i v? Turbopack kh?ng ??c ???c `logs/auto-sync.lock` ?ang b? ti?n tr?nh kh?c kh?a (os error 32). Ch?a ki?m tra tr?nh duy?t 375px.
