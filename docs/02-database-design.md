@@ -1373,6 +1373,7 @@ Một row là một yêu cầu đồng bộ một `period_month`. Trạng thái 
 - Cả hai bảng bật và force RLS. `authenticated` chỉ được SELECT khi `(select public.is_admin())`; `anon`, Sales và service role không có DML bảng.
 - RPC security-definer `upsert_hatde_snapshot` kiểm tra lại mã, số không âm, trùng mã và tổng; chỉ `service_role` được execute. Index mới phục vụ snapshot mới nhất và xếp doanh thu theo chi nhánh.
 - DEC-115 giữ các dòng chi nhánh có `revenue = 0` và `transactions = 0`; CHECK hiện hữu dùng `>= 0` nên không đổi bảng. Migration tiến tới `20261011130000_allow_zero_hatde_branches.sql` chỉ thay thân RPC và khóa số phần tử ở 1–6.
+- **DEC-125 (20/11/2026):** migration `20261120030000_hatde_oik_q11_branch.sql` bổ sung `bep_trung_tam`, `77_oik_q11` vào CHECK và RPC, giữ sáu mã lịch sử; payload nhận 1–8 mã khác nhau, không bắt buộc đủ tám. `branch_code` vẫn là `text`; không có cột theo từng chi nhánh hoặc enum. FK `snapshot_id` và unique `(snapshot_id, branch_code)` giữ nguyên. `branch_revenue` nội bộ dùng `numeric` theo kiểu trả về của `sum(bigint)`, chữ ký RPC/bảng không đổi. Quyền/RLS giữ nguyên.
 ## Automation ảnh bảng thi đua Hạt Dẻ
 
 Migration `20261011140000_hatde_image_automation_read.sql` chỉ cấp `SELECT` trên `hatde_snapshots` và `hatde_branch_snapshots` cho `service_role`. Quyền này phục vụ route server-side xuất PNG; `anon` không được cấp và `authenticated` vẫn chịu policy Admin. Không cấp `INSERT`, `UPDATE` hoặc `DELETE` trực tiếp cho automation.

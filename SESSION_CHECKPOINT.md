@@ -1,5 +1,15 @@
 # BikeForce Session Checkpoint
 
+## 2026-11-20 — Hạt Dẻ nhận 77 OIK Q11 (DEC-125 / ISSUE-064)
+
+Đã chuẩn bị migration `20261120030000_hatde_oik_q11_branch.sql`: CHECK bảng và RPC nhận thêm `bep_trung_tam`, `77_oik_q11`, giữ sáu mã lịch sử, payload 1–8 mã không trùng. Mapping ứng dụng thêm `77 OIK Q11`; Zod lấy giới hạn theo danh mục. Không đổi RLS/quyền/cột/chữ ký RPC. SQL cloud chưa được người dùng cung cấp, nên phân tích dựa vào migration repo và local, chưa khẳng định cloud giống hệt.
+
+Đã tái hiện lỗi trước sửa; áp riêng migration trên Supabase local và chạy đúng payload người dùng trong transaction rollback: đủ sáu dòng/tổng 0. Integration/RLS 16/16, unit liên quan 42/42 pass; production build, typecheck và ESLint riêng file thay đổi exit 0. Build ban đầu bị chặn tải font, lượt có quyền mạng thành công. Lint toàn repo còn 8 lỗi/2 cảnh báo cũ ngoài task. Generate types local bằng CLI xác nhận hai bảng Hạt Dẻ và RPC không đổi shape; giữ nguyên file types hiện hữu. Agent chưa áp migration production.
+
+Người dùng báo thêm lỗi Vercel `Snapshot Hạt Dẻ chứa mã chi nhánh không hợp lệ`. Xác nhận GitHub main và deployment Production thành công còn ở `130c7f0`, chưa có mapping `77_oik_q11`. Bổ sung regression gọi route ảnh với view model thật và payload sáu mã; response 200/image/png. Chuẩn bị commit/push mapping để Vercel triển khai; không chạy lại SQL production. Máy local không có `HATDE_BOARD_IMAGE_API_KEY` để smoke ảnh production có xác thực.
+
+**Next Exact Steps:** đối chiếu cloud bằng `scripts/inspect-hatde-schema.sql`; triển khai mapping web mới, áp migration mới bằng SQL Editor theo yêu cầu người dùng rồi chạy `scripts/test-hatde-oik-snapshot.sql` (ROLLBACK); chạy lại workflow n8n và kiểm tra chi nhánh mới trong ảnh. Generate types --linked sau rollout theo quy trình repo. Nếu cloud có logic khác, đối chiếu trước khi thay hàm. Thiết kế bảng danh mục động chỉ là đề xuất cho bước sau.
+
 ## 2026-11-16 — MISA Account chưa trả token trên Production
 
 Deployment dc5bf18 đã Ready theo ảnh người dùng. Local lấy được token không chứng minh credentials Production sai. Bổ sung log `[misa-account-diagnostic]` với metadata allowlist, không ghi nội dung phản hồi/secret/token. 8 test liên quan và typecheck không cache pass; lint toàn repo còn lỗi ngoài phạm vi.

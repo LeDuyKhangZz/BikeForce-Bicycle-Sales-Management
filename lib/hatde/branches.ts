@@ -6,6 +6,7 @@ export const HATDE_BRANCHES = {
   passio_pho_quang: 'PASSIO PHỔ QUANG',
   passio_dong_den: 'PASSIO ĐỒNG ĐEN',
   bep_trung_tam: 'BẾP TRUNG TÂM',
+  '77_oik_q11': '77 OIK Q11',
 } as const;
 
 export type HatdeBranchCode = keyof typeof HATDE_BRANCHES;

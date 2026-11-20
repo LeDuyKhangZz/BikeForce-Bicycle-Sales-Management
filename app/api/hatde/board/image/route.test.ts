@@ -86,6 +86,34 @@ describe('GET /api/hatde/board/image', () => {
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([137, 80, 78, 71]));
   });
 
+  it('xuất ảnh với snapshot sáu chi nhánh có 77 OIK Q11', async () => {
+    const codes = [
+      'lotte_gold_coast', 'lotte_2310', 'lotte_vung_tau',
+      'passio_dong_den', 'bep_trung_tam', '77_oik_q11',
+    ];
+    mocks.getLatest.mockResolvedValue({
+      ...report,
+      branches: codes.map((branch_code) => ({
+        branch_code, revenue: 0, transactions: 0,
+        vs_yesterday: -100, vs_last_week: -100,
+      })),
+    });
+
+    const response = await GET(request());
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/png');
+    expect(mocks.draw).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        branches: expect.arrayContaining([
+          expect.objectContaining({ code: '77_oik_q11', name: '77 OIK Q11' }),
+        ]),
+      }),
+      expect.anything(),
+    );
+  });
+
   it('tạo canvas với chiều cao 1450px khi có 7 chi nhánh', async () => {
     const validCodes = [
       'cn_15h',

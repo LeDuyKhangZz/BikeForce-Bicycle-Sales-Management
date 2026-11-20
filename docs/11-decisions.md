@@ -3059,3 +3059,12 @@ schema hoặc RLS để có thể bật lại mà không mất dữ liệu. Tổ
 - **Alternatives:** Chỉ dùng thời gian tin cuối sẽ tính nhầm tin khách gửi đến; tự ghép theo tên hoặc số điện thoại gần giống bị loại theo DEC-122; webhook mới cần quyền riêng và không tự cung cấp lịch sử.
 - **Impact:** Thêm migration `20261116100000_salework_care_sync.sql`, worker có dry-run và bước lịch opt-in `SALEWORK_CARE_SYNC_ENABLED`. Không cấp DML bảng cho service role. Chưa tính cuộc gọi hoặc chứng minh người thao tác cụ thể trong tài khoản dùng chung. Mức khớp 95% phải được đối soát thực tế, chưa được tuyên bố đạt từ mẫu.
 - **Status:** APPROVED về triển khai theo xác nhận tiếp tục của người dùng ngày 16/11/2026; nghiệm thu dữ liệu thực tế còn mở.
+
+## DEC-125 — Hạt Dẻ nhận 77 OIK Q11 và đồng bộ danh mục chi nhánh
+
+- **Date:** 2026-11-20.
+- **Decision:** Bổ sung `77_oik_q11` và `bep_trung_tam` vào CHECK/RPC, giữ sáu mã SQL cũ; cho phép tập con 1–8 mã khác nhau. Thêm tên `77 OIK Q11` vào mapping ứng dụng. Giữ validation tổng, số không âm, dòng 0/0, atomic upsert và quyền hiện hữu.
+- **Reason:** Payload sáu chi nhánh bị loại bởi allowlist SQL; Bếp trung tâm đã có trong ứng dụng nhưng chưa có migration SQL tương ứng trong repository. Code ứng dụng cũng chưa nhận mã 77 OIK Q11.
+- **Alternatives:** Chỉ sửa RPC sẽ vẫn vướng CHECK bảng; bỏ allowlist làm mất kiểm soát mã. Bảng danh mục `hatde_branches` với FK và lookup động được đề xuất cho bước sau, chưa triển khai trong bản sửa này.
+- **Impact:** Migration tiến tới `20261120030000_hatde_oik_q11_branch.sql`; đổi giới hạn DEC-115 từ sáu lên tám mã hợp lệ, không yêu cầu đủ tám dòng. Không đổi cột/chữ ký RPC/RLS/quyền. Cần deploy mapping website trước khi workflow ghi mã mới. Định nghĩa cloud cần đối chiếu vì người dùng cho biết Bếp trung tâm đã chạy được.
+- **Status:** APPROVED về bản sửa theo yêu cầu người dùng; đã kiểm thử local, chưa áp production.

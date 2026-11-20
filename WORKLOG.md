@@ -1,5 +1,15 @@
 # BikeForce Worklog
 
+## 2026-11-20 — Sửa danh mục chi nhánh RPC Hạt Dẻ
+
+Người dùng yêu cầu SQL sửa lỗi khi thêm 77 OIK Q11. SQL repo thiếu cả mã mới và Bếp trung tâm trong allowlist/CHECK; payload sáu dòng chỉ còn bốn dòng hợp lệ, gây exception. Biên 1–6 không phải nguyên nhân với sáu dòng, tổng 0 và so sánh -100 hợp lệ. Production có thể đã khác repo vì người dùng cho biết Bếp trung tâm từng chạy được.
+
+DEC-125 / ISSUE-064: migration tiến tới bổ sung hai mã, giữ mã lịch sử, giới hạn 1–8 suy từ danh mục; giữ kiểm tra tổng/trùng/null/số âm, transaction upsert và quyền. Mapping ứng dụng thêm tên mới để Zod/view model không từ chối dữ liệu sau ingest. Bổ sung SQL inspect schema thực tế và test nguyên payload trong transaction rollback. Không chạy trên production hoặc sửa migrations cũ.
+
+Tái hiện unit Zod và lỗi `P0001` local trước sửa; sau migration 16 integration/RLS và 42 unit liên quan pass. Test quyền dùng JWT thật Admin/Sales/anon, giữ forced RLS và chặn DML trực tiếp worker. Build exit 0 với 44 trang static sau khi cho phép tải font; typecheck/ESLint riêng file thay đổi exit 0. Lint toàn repo còn 8 lỗi/2 cảnh báo ngoài thay đổi. Generate types local bằng Supabase CLI và so sánh hai bảng/RPC Hạt Dẻ: không đổi shape, không sửa file generated.
+
+Sau khi người dùng báo exception mã chi nhánh ở Vercel, xác nhận GitHub main/Production đang ở `130c7f0`, thiếu mapping mới. Thêm test xuyên route ảnh/view model thật với sáu mã có `77_oik_q11`, xác nhận 200/image/png; chuẩn bị commit/push bản sửa. Không chạy lại SQL production. Chưa smoke ảnh production do local không có image API key.
+
 ## 2026-11-16 — Chẩn đoán xác thực MISA trên Production
 
 Build hoàn tất exit 0 sau khi cấp quyền mạng tải font; ESLint hai file thay đổi exit 0. Cảnh báo tracing filesystem và deprecation có sẵn vẫn còn.

@@ -34,7 +34,11 @@ describe('buildHatdeSnapshotViewModel', () => {
     expect(result.branches[0]?.vsLastWeek.direction).toBe('UP');
   });
 
-  it('giữ và format chi nhánh doanh thu, giao dịch cùng bằng 0', () => {
+  it.each([
+    ['cn_15h', '15H'],
+    ['bep_trung_tam', 'BẾP TRUNG TÂM'],
+    ['77_oik_q11', '77 OIK Q11'],
+  ])('giữ và format chi nhánh %s doanh thu, giao dịch cùng bằng 0', (code, name) => {
     const result = buildHatdeSnapshotViewModel({
       snapshot: {
         id: '17abcf76-a9e4-42e4-8b99-e785b0e39fb3',
@@ -47,7 +51,7 @@ describe('buildHatdeSnapshotViewModel', () => {
       branches: [{
         id: '0e3e5a8f-2723-4dc1-ac63-222fce53b134',
         snapshot_id: '17abcf76-a9e4-42e4-8b99-e785b0e39fb3',
-        branch_code: 'cn_15h',
+        branch_code: code,
         revenue: 0,
         transactions: 0,
         vs_yesterday: 0,
@@ -56,6 +60,7 @@ describe('buildHatdeSnapshotViewModel', () => {
     });
 
     expect(result.branches).toHaveLength(1);
+    expect(result.branches[0]?.name).toBe(name);
     expect(result.branches[0]?.revenueDisplay).toBe('0 VND');
     expect(result.branches[0]?.transactionsDisplay).toBe('0');
   });

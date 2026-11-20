@@ -1,5 +1,17 @@
 # BikeForce Project Checklist
 
+## 2026-11-20 — Thêm chi nhánh Hạt Dẻ 77 OIK Q11
+
+- [x] Tái hiện lỗi RPC/validation trước sửa; chỉ rõ allowlist và CHECK thiếu mã.
+- [x] Migration mới nhận Bếp trung tâm/77 OIK Q11, giữ mã cũ, từ 1–8 chi nhánh; không nới quyền.
+- [x] Mapping Zod/view model và SQL inspect/test rollback hoàn chỉnh.
+- [x] Áp riêng migration local; test đúng payload lưu sáu dòng/tổng 0 rồi rollback.
+- [x] 16/16 integration/RLS và 42/42 unit liên quan; build/typecheck/lint riêng file thay đổi exit 0.
+- [x] Xác nhận Production `130c7f0` thiếu mapping; thêm regression route ảnh/view model thật với mã `77_oik_q11`.
+- [x] Generate types local và đối chiếu hai bảng/RPC: không đổi kiểu public.
+- [ ] Đối chiếu schema production, deploy mapping ứng dụng, áp migration rồi kiểm tra workflow n8n và ảnh.
+- [ ] Lint toàn repo: còn 8 lỗi/2 cảnh báo hiện hữu ngoài task.
+
 ## 2026-11-16 — Chẩn đoán MISA Account
 
 - [x] Thêm log metadata an toàn, có test không ghi secret/token; 8 test liên quan pass và typecheck pass.

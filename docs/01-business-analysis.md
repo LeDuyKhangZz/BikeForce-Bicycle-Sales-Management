@@ -1,5 +1,9 @@
 # 01 — Business Analysis (Phân tích nghiệp vụ)
 
+## Cập nhật Hạt Dẻ 20/11/2026 — DEC-125
+
+Theo yêu cầu người dùng, tiếp nhận chi nhánh `77_oik_q11` (77 OIK Q11, UUID nguồn `269e5c36-a095-4905-ac6e-c46e96a9b80a`) và giữ Bếp trung tâm trong payload hiện hành. Danh mục kỹ thuật gồm tám mã cũ/mới để bảo toàn lịch sử; báo cáo có thể gửi một tập con từ 1–8 mã khác nhau. Giữ chi nhánh doanh thu/giao dịch cùng bằng 0, so sánh âm hợp lệ và tổng toàn snapshot phải bằng tổng chi nhánh. Đây là bản mở rộng danh mục của DEC-115, không đổi nghiệp vụ báo cáo Sales.
+
 ## Bổ sung 12/09/2026 — DEC-089
 
 Admin nhập công tác phí theo tháng cho Nguyễn Trần Đăng Khoa, Abraham Kế Toán Bánhàng, Nguyễn Thị Kim Hương; báo cáo tháng hiển thị đúng khoản đã lưu. Không tạo tài khoản Sales giả, không thêm giao diện nhập công tác phí cho nhân viên.

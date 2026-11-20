@@ -1,5 +1,9 @@
 # 08 — Testing Strategy
 
+## Hạt Dẻ — bổ sung 77 OIK Q11 (20/11/2026)
+
+Đã tái hiện payload sáu chi nhánh bị `P0001` trên Supabase local trước migration, và unit Zod từ chối mã mới. Sau migration: 13 integration test xác nhận payload 0/0, đủ tám mã, tập con một mã, idempotency, CHECK bảng, mã lạ/trùng, tổng lệch, số âm/null, mảng rỗng/sai kiểu/quá giới hạn; các lượt lỗi không thay snapshot đã lưu. Ba RLS test qua JWT thật xác nhận Admin đọc được, Sales không đọc, anon/authenticated không gọi RPC và forced RLS/quyền DML worker giữ nguyên. 42 unit liên quan schema/view model/webhook/ảnh pass, gồm route ảnh dùng view model thật trả 200/image/png với sáu mã có 77 OIK Q11. `scripts/test-hatde-oik-snapshot.sql` dùng đúng payload người dùng trong transaction kết thúc `ROLLBACK`. Chưa chạy trên production.
+
 ## 19/10/2026 — Pancake Singapore
 
 Unit test khóa biên ngày UTC+8, lọc nguồn TikTok, định dạng cent SGD và view model không trộn VND/SGD. RLS test phải xác nhận Admin đọc được hai shop, Sales/anon không đọc được, và RPC ảnh trả hai snapshot trong khi quyền service role không đổi.
