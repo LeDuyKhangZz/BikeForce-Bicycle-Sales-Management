@@ -9,7 +9,9 @@
 - [x] 16/16 integration/RLS và 42/42 unit liên quan; build/typecheck/lint riêng file thay đổi exit 0.
 - [x] Xác nhận Production `130c7f0` thiếu mapping; thêm regression route ảnh/view model thật với mã `77_oik_q11`.
 - [x] Generate types local và đối chiếu hai bảng/RPC: không đổi kiểu public.
-- [ ] Đối chiếu schema production, deploy mapping ứng dụng, áp migration rồi kiểm tra workflow n8n và ảnh.
+- [x] Commit bản sửa `969727f`; đã thử push và ghi nhận lỗi credential GitHub.
+- [ ] Đăng nhập GitHub, `git push origin main`, đợi Production triển khai mapping rồi kiểm tra ảnh n8n.
+- [ ] Đối chiếu schema production/trạng thái SQL người dùng đã áp; generate types linked sau khi xác nhận DB.
 - [ ] Lint toàn repo: còn 8 lỗi/2 cảnh báo hiện hữu ngoài task.
 
 ## 2026-11-16 — Chẩn đoán MISA Account

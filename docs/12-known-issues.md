@@ -2416,11 +2416,11 @@ Full unit 778/778, typecheck/lint sạch và production build 29 route thành c�
 ## ISSUE-064 — RPC Hạt Dẻ từ chối chi nhánh 77 OIK Q11
 
 - **Severity:** P1.
-- **Status:** IN_PROGRESS — bản sửa local đã kiểm chứng, chưa áp production.
+- **Status:** IN_PROGRESS — bản sửa local đã kiểm chứng/commit `969727f`; push bị chặn bởi thiếu credential GitHub, Vercel chưa nhận bản sửa.
 - **Module:** n8n / `upsert_hatde_snapshot` / danh mục Hạt Dẻ.
 - **Description:** Thêm `77_oik_q11` vào payload sáu chi nhánh ngày 20/11 gây `P0001: Invalid or inconsistent Hat De branch data`.
 - **Expected:** Nhận payload sáu chi nhánh 0/0, gồm Bếp trung tâm và 77 OIK Q11; giữ kiểm tra tổng, chống mã lạ/trùng và quyền hiện hữu.
 - **Actual:** RPC trong repository lọc cả `bep_trung_tam` lẫn `77_oik_q11`, còn 4/6 dòng; CHECK bảng cũng thiếu hai mã. Zod/view model chưa biết 77 OIK Q11. Sau đó Vercel phát sinh `Snapshot Hạt Dẻ chứa mã chi nhánh không hợp lệ`; main/Production còn ở `130c7f0`, thiếu mapping mới.
 - **Root Cause:** Danh mục hardcode lệch giữa DB và ứng dụng. Payload sáu dòng không vượt giới hạn 1–6, tổng bằng 0 và so sánh -100 không phải nguyên nhân. Cloud có thể khác repository vì người dùng cho biết năm chi nhánh cũ đã chạy được.
 - **Fix:** DEC-125; migration thay CHECK/RPC, danh mục tám mã cũ/mới, mapping ứng dụng mới; kèm SQL đọc schema và test rollback. Không sửa migration cũ hoặc nới quyền.
-- **Verification:** Tái hiện lỗi trước sửa trên local; sau sửa 16 integration/RLS + 42 unit pass, gồm route ảnh với view model thật nhận mã mới. Test SQL chính xác payload trả snapshot với sáu dòng/tổng 0 rồi rollback. Chưa xác nhận schema/n8n production; deployment bản sửa đang chuẩn bị.
+- **Verification:** Tái hiện lỗi trước sửa trên local; sau sửa 16 integration/RLS + 42 unit pass, gồm route ảnh với view model thật nhận mã mới. Test SQL chính xác payload trả snapshot với sáu dòng/tổng 0 rồi rollback. Main/Production vẫn `130c7f0` trước lượt push thất bại vì thiếu credential; chưa xác nhận schema/n8n production hoặc deploy bản sửa.

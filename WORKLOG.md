@@ -8,7 +8,7 @@ DEC-125 / ISSUE-064: migration tiến tới bổ sung hai mã, giữ mã lịch 
 
 Tái hiện unit Zod và lỗi `P0001` local trước sửa; sau migration 16 integration/RLS và 42 unit liên quan pass. Test quyền dùng JWT thật Admin/Sales/anon, giữ forced RLS và chặn DML trực tiếp worker. Build exit 0 với 44 trang static sau khi cho phép tải font; typecheck/ESLint riêng file thay đổi exit 0. Lint toàn repo còn 8 lỗi/2 cảnh báo ngoài thay đổi. Generate types local bằng Supabase CLI và so sánh hai bảng/RPC Hạt Dẻ: không đổi shape, không sửa file generated.
 
-Sau khi người dùng báo exception mã chi nhánh ở Vercel, xác nhận GitHub main/Production đang ở `130c7f0`, thiếu mapping mới. Thêm test xuyên route ảnh/view model thật với sáu mã có `77_oik_q11`, xác nhận 200/image/png; chuẩn bị commit/push bản sửa. Không chạy lại SQL production. Chưa smoke ảnh production do local không có image API key.
+Sau khi người dùng báo exception mã chi nhánh ở Vercel, xác nhận GitHub main/Production đang ở `130c7f0`, thiếu mapping mới. Thêm test xuyên route ảnh/view model thật với sáu mã có `77_oik_q11`, xác nhận 200/image/png; commit bản sửa `969727f`. Push đã chạy và thất bại do Git thiếu credential (`Cannot prompt because user interactivity has been disabled` / `unable to get password from user`); cần người dùng đăng nhập GitHub rồi `git push origin main`. Không có GitHub CLI/token hoặc Vercel CLI auth sẵn dùng. Vercel chưa nhận bản sửa; không chạy lại SQL production. Chưa smoke ảnh production do local không có image API key.
 
 ## 2026-11-16 — Chẩn đoán xác thực MISA trên Production
 
